@@ -227,16 +227,14 @@ class KeystoneClientV3(object):
         # can't lookup the ID in keystoneclient unless they're admin
         # workaround this by getting the user_id from admin_client
 
-        # NOTE(jamielennox): These should use the plugin get_user_id and
-        # get_project_id that will be available in the v1.1 keystoneclient
-
         try:
-            trustee = self.admin_auth.get_access(self.session)
+            trustee_user_id = self.admin_auth.get_user_id(self.session)
         except kc_exception.Unauthorized:
             LOG.error(_LE("Domain admin client authentication failed"))
             raise exception.AuthorizationFailure()
 
-        trustor = self.context.auth_plugin.get_access(self.session)
+        trustor_user_id = self.context.auth_plugin.get_user_id(self.session)
+        trustor_proj_id = self.context.auth_plugin.get_project_id(self.session)
 
         # inherit the roles of the trustor, unless set trusts_delegated_roles
         if cfg.CONF.trusts_delegated_roles:
@@ -244,21 +242,21 @@ class KeystoneClientV3(object):
         else:
             roles = self.context.roles
         try:
-            trust = self.client.trusts.create(trustor_user=trustor.user_id,
-                                              trustee_user=trustee.user_id,
-                                              project=trustor.project_id,
+            trust = self.client.trusts.create(trustor_user=trustor_user_id,
+                                              trustee_user=trustee_user_id,
+                                              project=trustor_proj_id,
                                               impersonation=True,
                                               role_names=roles)
         except kc_exception.NotFound:
             LOG.debug("Failed to find roles %s for user %s"
-                      % (roles, trustor.user_id))
+                      % (roles, trustor_user_id))
             raise exception.MissingCredentialError(
                 required=_("roles %s") % roles)
 
         trust_context = context.RequestContext.from_dict(
             self.context.to_dict())
         trust_context.trust_id = trust.id
-        trust_context.trustor_user_id = trustor.user_id
+        trust_context.trustor_user_id = trustor_user_id
         return trust_context
 
     def delete_trust(self, trust_id):

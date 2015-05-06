@@ -71,12 +71,10 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def _stub_admin_auth(self, auth_ok=True):
         mock_ks_auth = self.m.CreateMockAnything()
-        auth_ref = self.m.CreateMockAnything()
 
-        a = mock_ks_auth.get_access(mox.IsA(ks_session.Session))
+        a = mock_ks_auth.get_user_id(mox.IsA(ks_session.Session))
         if auth_ok:
-            auth_ref.user_id = '1234'
-            a.AndReturn(auth_ref)
+            a.AndReturn('1234')
         else:
             a.AndRaise(kc_exception.Unauthorized)
 
@@ -108,8 +106,8 @@ class KeystoneClientTest(common.HeatTestCase):
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
 
     def _stubs_v3(self, method='token', trust_scoped=True,
-                  user_id='trustor_user_id', auth_ref=None, client=True,
-                  times=1):
+                  user_id=None, auth_ref=None, client=True, project_id=None,
+                  stub_trust_context=False):
         mock_auth_ref = self.m.CreateMockAnything()
         mock_ks_auth = self.m.CreateMockAnything()
 
@@ -125,7 +123,7 @@ class KeystoneClientTest(common.HeatTestCase):
             p = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                                     username='test_username',
                                     password='password',
-                                    project_id='test_tenant_id',
+                                    project_id=project_id or 'test_tenant_id',
                                     user_domain_id='default')
 
         elif method == 'trust':
@@ -135,7 +133,8 @@ class KeystoneClientTest(common.HeatTestCase):
                                     user_domain_id='default',
                                     trust_id='atrust123')
 
-            mock_auth_ref.user_id = user_id
+            mock_auth_ref.user_id = user_id or 'trustor_user_id'
+            mock_auth_ref.project_id = project_id or 'test_tenant_id'
             mock_auth_ref.trust_scoped = trust_scoped
             mock_auth_ref.auth_token = 'atrusttoken'
 
@@ -146,9 +145,15 @@ class KeystoneClientTest(common.HeatTestCase):
                              auth=mock_ks_auth)
             c.AndReturn(self.mock_ks_v3_client)
 
-            for x in six.moves.xrange(0, times):
-                m = mock_ks_auth.get_access(mox.IsA(ks_session.Session))
-                m.AndReturn(mock_auth_ref)
+            if stub_trust_context:
+                m = mock_ks_auth.get_user_id(mox.IsA(ks_session.Session))
+                m.AndReturn(user_id)
+
+                m = mock_ks_auth.get_project_id(mox.IsA(ks_session.Session))
+                m.AndReturn(project_id)
+
+            m = mock_ks_auth.get_access(mox.IsA(ks_session.Session))
+            m.AndReturn(mock_auth_ref)
 
         return mock_ks_auth, mock_auth_ref
 
@@ -514,7 +519,9 @@ class KeystoneClientTest(common.HeatTestCase):
             id = 'atrust123'
 
         self._stub_admin_auth()
-        mock_ks_auth, mock_auth_ref = self._stubs_v3(times=2)
+        mock_ks_auth, mock_auth_ref = self._stubs_v3(user_id='5678',
+                                                     project_id='42',
+                                                     stub_trust_context=True)
 
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         if delegate_roles:
@@ -523,8 +530,6 @@ class KeystoneClientTest(common.HeatTestCase):
         trustor_roles = ['heat_stack_owner', 'admin', '__member__']
         trustee_roles = delegate_roles or trustor_roles
 
-        mock_auth_ref.user_id = '5678'
-        mock_auth_ref.project_id = '42'
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
 
         mock_auth_ref.user_id = '5678'
@@ -552,15 +557,13 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test create_trust_context when creating a trust."""
 
         self._stub_admin_auth()
-        # get_access gets called 2 times and so mox needs to have it registered
-        # twice, once for the trust check, then once to get the user_id
-        mock_auth, mock_auth_ref = self._stubs_v3(times=2)
+
+        mock_auth, mock_auth_ref = self._stubs_v3(user_id='5678',
+                                                  project_id='42',
+                                                  stub_trust_context=True)
 
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
-
-        mock_auth_ref.user_id = '5678'
-        mock_auth_ref.project_id = '42'
 
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.create(
