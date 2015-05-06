@@ -322,23 +322,13 @@ class KeystoneClientV3(object):
         # catalog (the token is expected to be used inside an instance
         # where a specific endpoint will be specified, and user-data
         # space is limited..)
-        # Note we do this directly via a post as there's currently
-        # no way to get a nocatalog token via keystoneclient
-        token_url = "%s/auth/tokens?nocatalog" % self.v3_endpoint
-        headers = {'Accept': 'application/json'}
-        if self._stack_domain_id:
-            domain = {'id': self._stack_domain_id}
-        else:
-            domain = {'name': self.stack_domain_name}
-        body = {'auth': {'scope':
-                         {'project': {'id': project_id}},
-                         'identity': {'password': {'user': {
-                             'domain': domain,
-                             'password': password, 'id': user_id}},
-                             'methods': ['password']}}}
-        t = self.session.post(token_url, headers=headers,
-                              json=body, authenticated=False)
-        return t.headers['X-Subject-Token']
+        auth = kc_auth_v3.Password(auth_url=self.v3_endpoint,
+                                   user_id=user_id,
+                                   password=password,
+                                   project_id=project_id,
+                                   include_catalog=False)
+
+        return auth.get_token(self.session)
 
     def create_stack_domain_user(self, username, project_id, password=None):
         """Create a domain user defined as part of a stack.
