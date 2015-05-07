@@ -56,8 +56,19 @@ class TemplateResource(stack_resource.StackResource):
         self.stack = stack
         self.validation_exception = None
 
-        tri = stack.env.get_resource_info(
-            json_snippet['Type'],
+        self._get_resource_info(json_snippet)
+
+        self.properties_schema = {}
+        self.attributes_schema = {}
+
+        # run Resource.__init__() so we can call self.nested()
+        super(TemplateResource, self).__init__(name, json_snippet, stack)
+        if self.validation_exception is None:
+            self._generate_schema(self.t)
+
+    def _get_resource_info(self, rsrc_defn):
+        tri = self.stack.env.get_resource_info(
+            rsrc_defn['Type'],
             registry_type=environment.TemplateResourceInfo)
         if tri is None:
             self.validation_exception = ValueError(_(
@@ -70,13 +81,6 @@ class TemplateResource(stack_resource.StackResource):
                 self.allowed_schemes = ('http', 'https')
             else:
                 self.allowed_schemes = ('http', 'https', 'file')
-
-        # run Resource.__init__() so we can call self.nested()
-        self.properties_schema = {}
-        self.attributes_schema = {}
-        super(TemplateResource, self).__init__(name, json_snippet, stack)
-        if self.validation_exception is None:
-            self._generate_schema(self.t)
 
     def _generate_schema(self, definition):
         self._parsed_nested = None
@@ -256,6 +260,7 @@ class TemplateResource(stack_resource.StackResource):
                                          self.child_params())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        self._get_resource_info(json_snippet)
         self._generate_schema(json_snippet)
         return self.update_with_template(self.child_template(),
                                          self.child_params())
