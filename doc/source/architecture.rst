@@ -14,14 +14,14 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Heat Architecture
+Heat architecture
 =================
 
 Heat is a service to orchestrate multiple composite cloud applications using the .. _AWS CloudFormation: http://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078 template format, through both an OpenStack-native ReST API and a CloudFormation-compatible Query API.
 
 
 --------------------
-Detailed Description
+Detailed description
 --------------------
 
 What is the purpose of the project and vision for it?
@@ -30,14 +30,14 @@ What is the purpose of the project and vision for it?
 
 Describe the relevance of the project to other OpenStack projects and the OpenStack mission to provide a ubiquitous cloud computing platform:
 
-*The software integrates other core components of OpenStack into a one-file template system. The templates allow creation of most OpenStack resource types (such as instances, floating ips, volumes, security groups, users, etc), as well as some more advanced functionality such as instance high availability, instance autoscaling, and nested stacks. By providing very tight integration with other OpenStack core projects, all OpenStack core projects could receive a larger user base.*
+*The software integrates other core components of OpenStack into a one-file template system. The templates allow creation of most OpenStack resource types (such as instances, floating IPs, volumes, security groups and users), as well as some more advanced functionality such as instance high availability, instance autoscaling, and nested stacks. By providing very tight integration with other OpenStack core projects, all OpenStack core projects could receive a larger user base.*
 *Currently no other CloudFormation implementation exists for OpenStack. The developers believe cloud developers have a strong desire to move workloads from AWS to OpenStack deployments. Given the missing gap of a well-implemented and integrated CloudFormation API in OpenStack, we provide a high quality implementation of this gap improving the ubiquity of OpenStack.*
 
 -------------
-Heat Services
+Heat services
 -------------
 
-The developers are focused on creating an OpenStack style project using OpenStack design tenets, implemented in Python. We have started with full integration with Keystone. We have a number of components.
+The developers are focused on creating an OpenStack style project using OpenStack design tenets, implemented in Python. We have started with full integration with keystone. We have a number of components.
 
 As the developers have only started development in March 2012, the architecture is evolving rapidly.
 
