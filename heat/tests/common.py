@@ -100,19 +100,22 @@ class HeatTestCase(testscenarios.WithScenarios,
         messaging.setup("fake://", optional=True)
         self.addCleanup(messaging.cleanup)
 
-        tri = resources.global_env().get_resource_info(
-            'AWS::RDS::DBInstance',
-            registry_type=environment.TemplateResourceInfo)
-        if tri is not None:
-            cur_path = tri.template_name
-            templ_path = os.path.join(project_dir, 'etc', 'heat', 'templates')
-            if templ_path not in cur_path:
-                tri.template_name = cur_path.replace('/etc/heat/templates',
-                                                     templ_path)
+        tri_names = ['AWS::RDS::DBInstance', 'AWS::CloudWatch::Alarm']
+        tris = []
+        for name in tri_names:
+            tris.append(resources.global_env().get_resource_info(
+                name,
+                registry_type=environment.TemplateResourceInfo))
+        for tri in tris:
+            if tri is not None:
+                cur_path = tri.template_name
+                templ_path = os.path.join(project_dir, 'etc',
+                                          'heat', 'templates')
+                if templ_path not in cur_path:
+                    tri.template_name = cur_path.replace(
+                        '/etc/heat/templates',
+                        templ_path)
 
-        # use CWLiteAlarm for testing.
-        resources.global_env().registry.load(
-            {"AWS::CloudWatch::Alarm": "OS::Heat::CWLiteAlarm"})
         if mock_keystone:
             self.stub_keystoneclient()
         utils.setup_dummy_db()

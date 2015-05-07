@@ -15,6 +15,8 @@ import mock
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
+from heat.engine import resources
 from heat.engine.resources.openstack.heat import cloud_watch
 from heat.engine import scheduler
 from heat.engine import watchrule
@@ -43,11 +45,22 @@ class CloudWatchAlarmTest(common.HeatTestCase):
 
     def setUp(self):
         super(CloudWatchAlarmTest, self).setUp()
+
+        def clear_register_class():
+            env = resources.global_env()
+            env.registry._registry.pop('CWLiteAlarmForTest')
+
         self.ctx = utils.dummy_context()
+        resource._register_class('CWLiteAlarmForTest',
+                                 cloud_watch.CloudWatchAlarm)
+        self.addCleanup(clear_register_class)
 
     def parse_stack(self):
         t = template_format.parse(AWS_CloudWatch_Alarm)
-        self.stack = utils.parse_stack(t)
+        env = {'resource_registry': {
+            'AWS::CloudWatch::Alarm': 'CWLiteAlarmForTest'
+        }}
+        self.stack = utils.parse_stack(t, params=env)
         return self.stack
 
     def test_resource_create_good(self):
