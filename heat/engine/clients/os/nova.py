@@ -22,7 +22,6 @@ import string
 
 from novaclient import client as nc
 from novaclient import exceptions
-from novaclient import shell as novashell
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
@@ -65,8 +64,16 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         management_url = self.url_for(service_type=self.service_types[0],
                                       endpoint_type=endpoint_type)
 
-        computeshell = novashell.OpenStackComputeShell()
-        extensions = computeshell._discover_extensions(NOVACLIENT_VERSION)
+        if hasattr(nc, 'discover_extensions'):
+            extensions = nc.discover_extensions(NOVACLIENT_VERSION)
+        else:
+            # TODO(lyj): The else condition is for backward compatibility,
+            #            once novaclient bump to a newer version with
+            #            discover_extensions exists, this should be safely
+            #            removed.
+            from novaclient import shell as novashell
+            computeshell = novashell.OpenStackComputeShell()
+            extensions = computeshell._discover_extensions(NOVACLIENT_VERSION)
 
         args = {
             'project_id': self.context.tenant,
