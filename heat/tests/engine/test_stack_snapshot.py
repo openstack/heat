@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import service
 from heat.engine import stack
+from heat.objects import snapshot as snapshot_objects
 from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests import utils
@@ -153,6 +154,23 @@ class SnapshotServiceTest(common.HeatTestCase):
 
         mock_load.assert_called_once_with(self.ctx, stack=mock.ANY)
         mock_load.reset_mock()
+
+    @mock.patch.object(stack.Stack, 'load')
+    def test_delete_snapshot_in_progress(self, mock_load):
+        # can not delete the snapshot in snapshotting
+        stk = self._create_stack('test_delete_snapshot_in_progress')
+        mock_load.return_value = stk
+        snapshot = mock.Mock()
+        snapshot.id = str(uuid.uuid4())
+        snapshot.status = 'IN_PROGRESS'
+        self.patchobject(snapshot_objects.Snapshot,
+                         'get_snapshot_by_stack').return_value = snapshot
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.delete_snapshot,
+                               self.ctx, stk.identifier(), snapshot.id)
+        msg = 'Deleting in-progress snapshot is not supported'
+        self.assertIn(msg, six.text_type(ex.exc_info[1]))
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])
 
     @mock.patch.object(stack.Stack, 'load')
     def test_delete_snapshot(self, mock_load):

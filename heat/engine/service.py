@@ -1326,6 +1326,10 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=s)
         snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
             cnxt, snapshot_id, s)
+        if snapshot.status == stack.IN_PROGRESS:
+            msg = _('Deleting in-progress snapshot')
+            raise exception.NotSupported(feature=msg)
+
         self.thread_group_mgr.start(
             stack.id, _delete_snapshot, stack, snapshot)
 
