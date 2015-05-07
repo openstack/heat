@@ -29,3 +29,12 @@ class KeystoneDomainNotFound(exception.HeatException):
 
 class KeystoneGroupNotFound(exception.HeatException):
     msg_fmt = _("Keystone group %(group_id)s does not found")
+
+
+class KeystoneServiceNotFound(exception.HeatException):
+    msg_fmt = _("Keystone service %(service_id)s does not found")
+
+
+class KeystoneServiceNameConflict(exception.HeatException):
+    msg_fmt = _("Keystone has more than one service with same name "
+                "%(service)s. Please use service id instead of name")
