@@ -162,3 +162,18 @@ class ResourceWithCustomConstraint(GenericResource):
         'Foo': properties.Schema(
             properties.Schema.STRING,
             constraints=[constraints.CustomConstraint('neutron.network')])}
+
+
+class ResourceWithAttributeType(GenericResource):
+    attributes_schema = {
+        'attr1': attributes.Schema('A generic attribute',
+                                   type=attributes.Schema.STRING),
+        'attr2': attributes.Schema('Another generic attribute',
+                                   type=attributes.Schema.MAP)
+    }
+
+    def _resolve_attribute(self, name):
+        if name == 'attr1':
+            return "valid_sting"
+        elif name == 'attr2':
+            return "invalid_type"

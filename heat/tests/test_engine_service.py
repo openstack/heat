@@ -2629,6 +2629,24 @@ class StackServiceTest(common.HeatTestCase):
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)
 
+    def test_resource_schema_with_attr_type(self):
+        res._register_class('ResourceWithAttributeType',
+                            generic_rsrc.ResourceWithAttributeType)
+
+        type_name = 'ResourceWithAttributeType'
+        expected = {
+            'resource_type': type_name,
+            'properties': {},
+            'attributes': {
+                'attr1': {'description': 'A generic attribute',
+                          'type': 'string'},
+                'attr2': {'description': 'Another generic attribute',
+                          'type': 'map'},
+            },
+        }
+        schema = self.eng.resource_schema(self.ctx, type_name=type_name)
+        self.assertEqual(expected, schema)
+
     def _no_template_file(self, function):
         env = environment.Environment()
         info = environment.ResourceInfo(env.registry,

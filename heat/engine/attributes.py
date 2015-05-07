@@ -20,6 +20,10 @@ from heat.common.i18n import _
 from heat.engine import constraints as constr
 from heat.engine import support
 
+from oslo_log import log as logging
+
+LOG = logging.getLogger(__name__)
+
 
 class Schema(constr.Schema):
     """
@@ -30,9 +34,9 @@ class Schema(constr.Schema):
     """
 
     KEYS = (
-        DESCRIPTION,
+        DESCRIPTION, TYPE
     ) = (
-        'description',
+        'description', 'type',
     )
 
     CACHE_MODES = (
@@ -43,17 +47,29 @@ class Schema(constr.Schema):
         'cache_none'
     )
 
+    TYPES = (
+        STRING, MAP, LIST,
+    ) = (
+        'String', 'Map', 'List',
+    )
+
     def __init__(self, description=None,
                  support_status=support.SupportStatus(),
-                 cache_mode=CACHE_LOCAL):
+                 cache_mode=CACHE_LOCAL,
+                 type=None):
         self.description = description
         self.support_status = support_status
         self.cache_mode = cache_mode
+        self.type = type
 
     def __getitem__(self, key):
         if key == self.DESCRIPTION:
             if self.description is not None:
                 return self.description
+
+        elif key == self.TYPE:
+            if self.type is not None:
+                return self.type.lower()
 
         raise KeyError(key)
 
@@ -156,6 +172,24 @@ class Attributes(collections.Mapping):
                         for k, v in json_snippet.items())
         return {}
 
+    def _validate_type(self, attrib, value):
+        if attrib.schema.type == attrib.schema.STRING:
+            if not isinstance(value, six.string_types):
+                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                         {'name': attrib.name,
+                          'att_type': attrib.schema.STRING})
+        elif attrib.schema.type == attrib.schema.LIST:
+            if (not isinstance(value, collections.Sequence)
+                    or isinstance(value, six.string_types)):
+                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                         {'name': attrib.name,
+                          'att_type': attrib.schema.LIST})
+        elif attrib.schema.type == attrib.schema.MAP:
+            if not isinstance(value, collections.Mapping):
+                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                         {'name': attrib.name,
+                          'att_type': attrib.schema.MAP})
+
     def __getitem__(self, key):
         if key not in self:
             raise KeyError(_('%(resource)s: Invalid attribute %(key)s') %
@@ -169,7 +203,10 @@ class Attributes(collections.Mapping):
             return self._resolved_values[key]
 
         value = self._resolver(key)
+
         if value is not None:
+            # validate the value against its type
+            self._validate_type(attrib, value)
             # only store if not None, it may resolve to an actual value
             # on subsequent calls
             self._resolved_values[key] = value
