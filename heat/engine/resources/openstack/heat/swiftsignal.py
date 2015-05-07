@@ -251,7 +251,7 @@ class SwiftSignal(resource.Resource):
             try:
                 signal = self.client().get_object(self.stack.id, obj['name'])
             except Exception as exc:
-                self.client_plugin().ignore_not_found()
+                self.client_plugin().ignore_not_found(exc)
                 continue
 
             body = signal[1]
