@@ -158,13 +158,6 @@ class Graph(collections.defaultdict):
         text = '{%s}' % ', '.join(pairs)
         return encodeutils.safe_decode(text)
 
-    def leaves(self):
-        '''
-        Return an iterator over all of the leaf nodes in the graph.
-        '''
-        return (requirer for requirer, required in self.items()
-                if not required)
-
     @staticmethod
     def toposort(graph):
         '''
@@ -255,6 +248,13 @@ class Dependencies(object):
             edges = get_edges(last)
 
         return Dependencies(edges)
+
+    def leaves(self):
+        '''
+        Return an iterator over all of the leaf nodes in the graph.
+        '''
+        return (requirer for requirer, required in self._graph.items()
+                if not required)
 
     def translate(self, transform):
         '''
