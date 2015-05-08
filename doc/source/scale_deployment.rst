@@ -33,7 +33,7 @@ This guide, using a devstack installation of OpenStack, assumes that:
 
     1. You have configured devstack from `Single Machine Installation Guide
        <http://devstack.org/guides/single-machine.html>`_;
-    2. You have set up Heat on devstack, as defined at `Heat and Devstack
+    2. You have set up heat on devstack, as defined at `heat and Devstack
        <http://docs.openstack.org/developer/heat/getting_started/
        on_devstack.html>`_;
     3. You have installed `HAProxy <http://haproxy.1wt.eu>`_ on the devstack
@@ -42,16 +42,16 @@ This guide, using a devstack installation of OpenStack, assumes that:
 Architecture
 ============
 
-This section shows the basic Heat architecture, the load balancing mechanism
+This section shows the basic heat architecture, the load balancing mechanism
 used and the target scaled out architecture.
 
 Basic Architecture
 ------------------
 
-The Heat architecture is as defined at `Heat Architecture
+The heat architecture is as defined at `heat architecture
 <http://docs.openstack.org/developer/heat/architecture.html>`_ and shown in the
 diagram below, where we have a CLI that sends HTTP requests to the ReST and CFN
-APIs, which in turn make calls using AMQP to the Heat engine.
+APIs, which in turn make calls using AMQP to the heat engine.
 ::
 
                    |- [REST API] -|
@@ -64,7 +64,7 @@ Load Balancing
 As there is a need to use a load balancer mechanism between the multiple APIs
 and the CLI, a proxy has to be deployed.
 
-Because the Heat CLI and APIs communicate by exchanging HTTP requests and
+Because the heat CLI and APIs communicate by exchanging HTTP requests and
 responses, a `HAProxy <http://haproxy.1wt.eu>`_ HTTP load balancer server will
 be deployed between them.
 
@@ -79,7 +79,7 @@ distribute messages round-robin (RabbitMQ does this by default).
 Target Architecture
 -------------------
 
-A scaled out Heat architecture is represented in the diagram below:
+A scaled out heat architecture is represented in the diagram below:
 ::
 
                               |- [REST-API] -|
@@ -102,8 +102,8 @@ Thus, a request sent from the CLI looks like:
 Deploying Multiple APIs
 =======================
 
-In order to run a Heat component separately, you have to execute one of the
-python scripts located at the *bin* directory of your Heat repository.
+In order to run a heat component separately, you have to execute one of the
+python scripts located at the *bin* directory of your heat repository.
 
 These scripts take as argument a configuration file. When using devstack, the
 configuration file is located at */etc/heat/heat.conf*. For instance, to start
@@ -238,7 +238,7 @@ For this sample, consider that:
 
     1. We have an architecture composed by 3 machines configured in a LAN, with
        the addresses A: 10.0.0.1; B: 10.0.0.2; and C: 10.0.0.3;
-    2. The OpenStack devstack installation, including the Heat module, has been
+    2. The OpenStack devstack installation, including the heat module, has been
        done in the machine A, as shown in the
        :ref:`scale_deployment_assumptions` section.
 
@@ -246,7 +246,7 @@ Target Architecture
 ^^^^^^^^^^^^^^^^^^^
 
 At this moment, everything is running in a single devstack server. The next
-subsections show how to deploy a scaling out Heat architecture by:
+subsections show how to deploy a scaling out heat architecture by:
 
     1. Running one ReST and one CFN API on the machines B and C;
     2. Setting up the HAProxy server on the machine A.
@@ -256,11 +256,11 @@ Running the API and Engine Services
 
 For each machine, B and C, you must do the following steps:
 
-    1. Clone the Heat repository https://github.com/openstack/heat;
+    1. Clone the heat repository https://github.com/openstack/heat;
     2. Create a local copy of the configuration file */etc/heat/heat.conf* from
        the machine A;
     3. Make required changes on the configuration file;
-    4. Enter the Heat local repository and run:
+    4. Enter the heat local repository and run:
 
     ::
 

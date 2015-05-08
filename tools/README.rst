@@ -17,8 +17,8 @@ cfn-json2yaml
 Package lists
 =============
 
-Lists of Linux packages to install in order to successfully run Heat's
-unit test suit on a clean new Linux distro.
+Lists of Linux packages to install in order to successfully run heat's
+unit test suit on a clean new Linux distribution.
 
 test-requires-deb
   list of DEB packages as of Ubuntu 14.04 Trusty

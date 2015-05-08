@@ -24,7 +24,7 @@ Build the REST API reference manual:
   cd api-ref
   mvn clean generate-sources
 
-Build the Heat admin guide:
+Build the heat admin guide:
 
   cd heat-admin
   mvn clean generate-sources

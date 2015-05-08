@@ -1,5 +1,5 @@
 ====
-HEAT
+Heat
 ====
 
 Heat is a service to orchestrate multiple composite cloud applications using
