@@ -115,6 +115,36 @@ resource_registry:
         self._stack_delete(nested_ident)
         self._stack_delete(stack_identifier)
 
+    def test_change_in_file_path(self):
+        stack_identifier = self.stack_create(
+            template=self.template,
+            files={'nested.yaml': self.nested_templ},
+            environment=self.env_templ)
+        stack = self.client.stacks.get(stack_identifier)
+        secret_out1 = self._stack_output(stack, 'secret-out')
+
+        nested_templ_2 = '''
+heat_template_version: 2013-05-23
+resources:
+  secret2:
+    type: OS::Heat::RandomString
+outputs:
+  value:
+    value: freddy
+'''
+        env_templ_2 = '''
+resource_registry:
+  "OS::Heat::RandomString": new/nested.yaml
+'''
+        self.update_stack(stack_identifier,
+                          template=self.template,
+                          files={'new/nested.yaml': nested_templ_2},
+                          environment=env_templ_2)
+        stack = self.client.stacks.get(stack_identifier)
+        secret_out2 = self._stack_output(stack, 'secret-out')
+        self.assertNotEqual(secret_out1, secret_out2)
+        self.assertEqual('freddy', secret_out2)
+
 
 class NestedAttributesTest(test.HeatIntegrationTest):
     """Prove that we can use the template resource references."""
