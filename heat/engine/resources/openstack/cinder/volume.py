@@ -34,11 +34,11 @@ class CinderVolume(vb.BaseVolume):
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, SNAPSHOT_ID, BACKUP_ID, NAME,
         DESCRIPTION, VOLUME_TYPE, METADATA, IMAGE_REF, IMAGE,
-        SOURCE_VOLID, CINDER_SCHEDULER_HINTS,
+        SOURCE_VOLID, CINDER_SCHEDULER_HINTS, READ_ONLY,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'backup_id', 'name',
         'description', 'volume_type', 'metadata', 'imageRef', 'image',
-        'source_volid', 'scheduler_hints',
+        'source_volid', 'scheduler_hints', 'read_only',
     )
 
     ATTRIBUTES = (
@@ -131,6 +131,12 @@ class CinderVolume(vb.BaseVolume):
               'the Cinder scheduler creating a volume.'),
             support_status=support.SupportStatus(version='2015.1')
         ),
+        READ_ONLY: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Enables or disables read-only access mode of volume.'),
+            support_status=support.SupportStatus(version='2015.2'),
+            update_allowed=True,
+        ),
     }
 
     attributes_schema = {
@@ -221,6 +227,15 @@ class CinderVolume(vb.BaseVolume):
                 return vol.description
         return six.text_type(getattr(vol, name))
 
+    def handle_create(self):
+        vol_id = super(CinderVolume, self).handle_create()
+        read_only_flag = self.properties.get(self.READ_ONLY)
+        if read_only_flag is not None:
+            self.client().volumes.update_readonly_flag(vol_id,
+                                                       read_only_flag)
+
+        return vol_id
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
         checkers = []
@@ -288,6 +303,10 @@ class CinderVolume(vb.BaseVolume):
                     extend_task = vol_task.VolumeExtendTask(
                         self.stack, vol.id, new_size)
                     checkers.append(scheduler.TaskRunner(extend_task))
+        # update read_only access mode
+        if self.READ_ONLY in prop_diff:
+            flag = prop_diff.get(self.READ_ONLY)
+            cinder.volumes.update_readonly_flag(self.resource_id, flag)
 
         if checkers:
             checkers[0].start()
