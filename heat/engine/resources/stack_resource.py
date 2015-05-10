@@ -325,6 +325,9 @@ class StackResource(resource.Resource):
         if nested is None:
             return True
 
+        if nested.action != action:
+            return False
+
         # Has the action really started?
         #
         # The rpc call to update does not guarantee that the stack will be
