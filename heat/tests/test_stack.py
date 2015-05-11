@@ -232,6 +232,37 @@ class StackTest(common.HeatTestCase):
         all_resources = list(self.stack.iter_resources(1))
         self.assertEqual(5, len(all_resources))
 
+    @mock.patch.object(stack.Stack, 'db_resource_get')
+    def test_iter_resources_cached(self, mock_drg):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg',
+                                 cache_data={})
+
+        def get_more(nested_depth=0):
+            yield 'X'
+            yield 'Y'
+            yield 'Z'
+
+        self.stack['A'].nested = mock.MagicMock()
+        self.stack['A'].nested.return_value.iter_resources = mock.MagicMock(
+            side_effect=get_more)
+
+        resource_generator = self.stack.iter_resources()
+        self.assertIsNot(resource_generator, list)
+
+        first_level_resources = list(resource_generator)
+        self.assertEqual(2, len(first_level_resources))
+        all_resources = list(self.stack.iter_resources(1))
+        self.assertEqual(5, len(all_resources))
+
+        # A cache supplied means we should never query the database.
+        self.assertFalse(mock_drg.called)
+
     def test_root_stack_no_parent(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
@@ -295,7 +326,7 @@ class StackTest(common.HeatTestCase):
                              current_traversal=None,
                              tags=mox.IgnoreArg(),
                              prev_raw_template_id=None,
-                             current_deps=None)
+                             current_deps=None, cache_data=None)
 
         self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id)
@@ -1864,6 +1895,72 @@ class StackTest(common.HeatTestCase):
 
         self.assertEqual(
             'foo', self.stack.resources['A'].properties['a_string'])
+
+    @mock.patch.object(stack.Stack, 'db_resource_get')
+    def test_lightweight_stack_getatt(self, mock_drg):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+                'bar': {
+                    'Type': 'ResourceWithPropsType',
+                    'Properties': {
+                        'Foo': {'Fn::GetAtt': ['foo', 'bar']},
+                    }
+                }
+            }
+        })
+
+        cache_data = {'foo': {'attributes': {'bar': 'baz'}}}
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl_stack.store()
+        lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,
+                                             cache_data=cache_data)
+
+        # Check if the property has the appropriate resolved value.
+        cached_property = lightweight_stack['bar'].properties['Foo']
+        self.assertEqual(cached_property, 'baz')
+
+        # Make sure FnGetAtt returns the cached value.
+        attr_value = lightweight_stack['foo'].FnGetAtt('bar')
+        self.assertEqual('baz', attr_value)
+
+        # Make sure calls are not made to the database to retrieve the
+        # resource state.
+        self.assertFalse(mock_drg.called)
+
+    @mock.patch.object(stack.Stack, 'db_resource_get')
+    def test_lightweight_stack_getrefid(self, mock_drg):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+                'bar': {
+                    'Type': 'ResourceWithPropsType',
+                    'Properties': {
+                        'Foo': {'Ref': 'foo'},
+                    }
+                }
+            }
+        })
+
+        cache_data = {'foo': {'id': 'physical-resource-id'}}
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl_stack.store()
+        lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,
+                                             cache_data=cache_data)
+
+        # Check if the property has the appropriate resolved value.
+        cached_property = lightweight_stack['bar'].properties['Foo']
+        self.assertEqual(cached_property, 'physical-resource-id')
+
+        # Make sure FnGetRefId returns the cached value.
+        resource_id = lightweight_stack['foo'].FnGetRefId()
+        self.assertEqual('physical-resource-id', resource_id)
+
+        # Make sure calls are not made to the database to retrieve the
+        # resource state.
+        self.assertFalse(mock_drg.called)
 
 
 class StackKwargsForCloningTest(common.HeatTestCase):

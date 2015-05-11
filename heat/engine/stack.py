@@ -89,11 +89,16 @@ class Stack(collections.Mapping):
                  use_stored_context=False, username=None,
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
-                 current_deps=None):
+                 current_deps=None, cache_data=None):
+
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
         stack is already in the database.
+
+        Creating a stack with cache_data creates a lightweight stack which
+        will not load any resources from the database and resolve the
+        functions from the cache_data specified.
         '''
 
         def _validate_stack_name(name):
@@ -135,6 +140,7 @@ class Stack(collections.Mapping):
         self.tags = tags
         self.prev_raw_template_id = prev_raw_template_id
         self.current_deps = current_deps
+        self.cache_data = cache_data
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -339,8 +345,8 @@ class Stack(collections.Mapping):
         return deps
 
     @classmethod
-    def load(cls, context, stack_id=None, stack=None,
-             show_deleted=True, use_stored_context=False, force_reload=False):
+    def load(cls, context, stack_id=None, stack=None, show_deleted=True,
+             use_stored_context=False, force_reload=False, cache_data=None):
         '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = stack_object.Stack.get_by_id(
@@ -356,7 +362,8 @@ class Stack(collections.Mapping):
             stack.refresh()
 
         return cls._from_db(context, stack,
-                            use_stored_context=use_stored_context)
+                            use_stored_context=use_stored_context,
+                            cache_data=cache_data)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -384,7 +391,7 @@ class Stack(collections.Mapping):
 
     @classmethod
     def _from_db(cls, context, stack, resolve_data=True,
-                 use_stored_context=False):
+                 use_stored_context=False, cache_data=None):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
         tags = None
@@ -407,7 +414,7 @@ class Stack(collections.Mapping):
                    username=stack.username, convergence=stack.convergence,
                    current_traversal=stack.current_traversal, tags=tags,
                    prev_raw_template_id=stack.prev_raw_template_id,
-                   current_deps=stack.current_deps)
+                   current_deps=stack.current_deps, cache_data=cache_data)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.
@@ -1568,3 +1575,16 @@ class Stack(collections.Mapping):
         # of other resources, so ensure that attributes are re-calculated
         for res in six.itervalues(self.resources):
             res.attributes.reset_resolved_values()
+
+    def has_cache_data(self):
+        if self.cache_data is not None:
+            return True
+
+        return False
+
+    def cache_data_resource_id(self, resource_name):
+        return self.cache_data.get(resource_name, {}).get('id')
+
+    def cache_data_resource_attribute(self, resource_name, attribute_key):
+        return self.cache_data.get(
+            resource_name, {}).get('attributes', {}).get(attribute_key)

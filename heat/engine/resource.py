@@ -184,9 +184,10 @@ class Resource(object):
         self.replaced_by = None
         self.current_template_id = None
 
-        resource = stack.db_resource_get(name)
-        if resource:
-            self._load_data(resource)
+        if not stack.has_cache_data():
+            resource = stack.db_resource_get(name)
+            if resource:
+                self._load_data(resource)
 
     def rpc_client(self):
         '''Return a client for making engine RPC calls.'''
@@ -1095,6 +1096,9 @@ class Resource(object):
 
         :results: the id or name of the resource.
         '''
+        if self.stack.has_cache_data():
+            return self.stack.cache_data_resource_id(self.name)
+
         if self.resource_id is not None:
             return six.text_type(self.resource_id)
         else:
@@ -1115,13 +1119,18 @@ class Resource(object):
         :param path: a list of path components to select from the attribute.
         :returns: the attribute value.
         '''
-        try:
-            attribute = self.attributes[key]
-        except KeyError:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
+        if self.stack.has_cache_data():
+            # Load from cache for lightweight resources.
+            attribute = self.stack.cache_data_resource_attribute(
+                self.name, key)
         else:
-            return attributes.select_from_attribute(attribute, path)
+            try:
+                attribute = self.attributes[key]
+            except KeyError:
+                raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                         key=key)
+
+        return attributes.select_from_attribute(attribute, path)
 
     def FnBase64(self, data):
         '''

@@ -198,6 +198,10 @@ class GetAtt(function.Function):
         r = self._resource()
         if (r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME, r.UPDATE)):
             return r.FnGetAtt(attribute)
+        # NOTE(sirushtim): Add r.INIT to states above once convergence
+        # is the default.
+        elif r.stack.has_cache_data() and r.action == r.INIT:
+            return r.FnGetAtt(attribute)
         else:
             return None
 
