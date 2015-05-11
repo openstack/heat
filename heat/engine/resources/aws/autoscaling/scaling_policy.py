@@ -87,7 +87,8 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
 
     attributes_schema = {
         ALARM_URL: attributes.Schema(
-            _("A signed url to handle the alarm. (Heat extension).")
+            _("A signed url to handle the alarm. (Heat extension)."),
+            type=attributes.Schema.STRING
         ),
     }
 

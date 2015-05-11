@@ -420,21 +420,26 @@ class LoadBalancer(stack_resource.StackResource):
     attributes_schema = {
         CANONICAL_HOSTED_ZONE_NAME: attributes.Schema(
             _("The name of the hosted zone that is associated with the "
-              "LoadBalancer.")
+              "LoadBalancer."),
+            type=attributes.Schema.STRING
         ),
         CANONICAL_HOSTED_ZONE_NAME_ID: attributes.Schema(
             _("The ID of the hosted zone name that is associated with the "
-              "LoadBalancer.")
+              "LoadBalancer."),
+            type=attributes.Schema.STRING
         ),
         DNS_NAME: attributes.Schema(
-            _("The DNS name for the LoadBalancer.")
+            _("The DNS name for the LoadBalancer."),
+            type=attributes.Schema.STRING
         ),
         SOURCE_SECURITY_GROUP_GROUP_NAME: attributes.Schema(
             _("The security group that you can use as part of your inbound "
-              "rules for your LoadBalancer's back-end instances.")
+              "rules for your LoadBalancer's back-end instances."),
+            type=attributes.Schema.STRING
         ),
         SOURCE_SECURITY_GROUP_OWNER_ALIAS: attributes.Schema(
-            _("Owner of the source security group.")
+            _("Owner of the source security group."),
+            type=attributes.Schema.STRING
         ),
     }
 

@@ -99,10 +99,12 @@ class S3Bucket(resource.Resource):
 
     attributes_schema = {
         DOMAIN_NAME: attributes.Schema(
-            _('The DNS name of the specified bucket.')
+            _('The DNS name of the specified bucket.'),
+            type=attributes.Schema.STRING
         ),
         WEBSITE_URL: attributes.Schema(
-            _('The website endpoint for the specified bucket.')
+            _('The website endpoint for the specified bucket.'),
+            type=attributes.Schema.STRING
         ),
     }
 
