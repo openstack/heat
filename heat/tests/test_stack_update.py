@@ -1535,3 +1535,71 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('foo', self.stack['AResource'].properties['Foo'])
+
+    def test_delete_stack_when_update_failed_twice(self):
+        """Test when stack update failed twice and delete the stack.
+
+        Test checks the following scenario:
+        1. Create stack
+        2. Update stack (failed)
+        3. Update stack (failed)
+        4. Delete stack
+        The test checks the behavior of backup stack when update is failed.
+        If some resources were not backed up correctly then test will fail.
+        """
+        tmpl_create = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'}
+            }
+        }
+        # create a stack
+        self.stack = stack.Stack(self.ctx, 'update_fail_test_stack',
+                                 template.Template(tmpl_create),
+                                 disable_rollback=True)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl_update = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'},
+                'Bres': {'type': 'GenericResourceType'},
+                'Cres': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {
+                        'Foo': {'get_resource': 'Bres'},
+                    }
+                }
+            }
+        }
+
+        mock_create = self.patchobject(
+            generic_rsrc.ResourceWithProps,
+            'handle_create',
+            side_effect=[Exception, Exception])
+
+        updated_stack_first = stack.Stack(self.ctx,
+                                          'update_fail_test_stack',
+                                          template.Template(tmpl_update))
+        self.stack.update(updated_stack_first)
+        self.stack.resources['Cres'].resource_id_set('c_res')
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
+                         self.stack.state)
+
+        # try to update the stack again
+        updated_stack_second = stack.Stack(self.ctx,
+                                           'update_fail_test_stack',
+                                           template.Template(tmpl_update))
+        self.stack.update(updated_stack_second)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
+                         self.stack.state)
+
+        self.assertEqual(mock_create.call_count, 2)
+
+        # delete the failed stack
+        self.stack.delete()
+        self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
+                         self.stack.state)
