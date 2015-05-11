@@ -616,6 +616,9 @@ Outputs:
                          info['template'])
         self.assertEqual(self._yaml_to_json(self.nested_templ),
                          info['resources']['the_nested']['template'])
+        # TODO(james combs): Implement separate test cases for export
+        # once export REST API is available.  Also test reverse order
+        # of invocation: export -> abandon AND abandon -> export
 
     def test_adopt(self):
         data = {
