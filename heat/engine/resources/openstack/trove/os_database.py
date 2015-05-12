@@ -265,10 +265,12 @@ class OSDBInstance(resource.Resource):
 
     attributes_schema = {
         HOSTNAME: attributes.Schema(
-            _("Hostname of the instance.")
+            _("Hostname of the instance."),
+            type=attributes.Schema.STRING
         ),
         HREF: attributes.Schema(
-            _("Api endpoint reference of the instance.")
+            _("Api endpoint reference of the instance."),
+            type=attributes.Schema.STRING
         ),
     }
 

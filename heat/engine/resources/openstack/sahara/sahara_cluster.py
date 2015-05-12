@@ -107,9 +107,11 @@ class SaharaCluster(resource.Resource):
     attributes_schema = {
         STATUS: attributes.Schema(
             _("Cluster status."),
+            type=attributes.Schema.STRING
         ),
         INFO: attributes.Schema(
             _("Cluster information."),
+            type=attributes.Schema.MAP
         ),
     }
 

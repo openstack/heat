@@ -73,11 +73,13 @@ class KeyPair(resource.Resource):
 
     attributes_schema = {
         PUBLIC_KEY_ATTR: attributes.Schema(
-            _('The public key.')
+            _('The public key.'),
+            type=attributes.Schema.STRING
         ),
         PRIVATE_KEY_ATTR: attributes.Schema(
             _('The private key if it has been saved.'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
     }
 
