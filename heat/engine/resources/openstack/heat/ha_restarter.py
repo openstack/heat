@@ -63,7 +63,8 @@ class Restarter(signal_responder.SignalResponder):
 
     attributes_schema = {
         ALARM_URL: attributes.Schema(
-            _("A signed url to handle the alarm (Heat extension).")
+            _("A signed url to handle the alarm (Heat extension)."),
+            type=attributes.Schema.STRING
         ),
     }
 

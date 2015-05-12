@@ -74,9 +74,10 @@ class HeatWaitCondition(resource.Resource):
 
     attributes_schema = {
         DATA: attributes.Schema(
-            _('JSON serialized dict containing data associated with wait '
+            _('JSON string containing data associated with wait '
               'condition signals sent to the handle.'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
     }
 

@@ -100,7 +100,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
     attributes_schema = {
         ALARM_URL: attributes.Schema(
-            _("A signed url to handle the alarm.")
+            _("A signed url to handle the alarm."),
+            type=attributes.Schema.STRING
         ),
         SIGNAL_URL: attributes.Schema(
             _("A url to handle the alarm using native API."),

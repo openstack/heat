@@ -88,10 +88,12 @@ class RemoteStack(resource.Resource):
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
-            _('Name of the stack.')
+            _('Name of the stack.'),
+            type=attributes.Schema.STRING
         ),
         OUTPUTS: attributes.Schema(
-            _('A dict of key-value pairs output from the stack.')
+            _('A dict of key-value pairs output from the stack.'),
+            type=attributes.Schema.MAP
         ),
     }
 
