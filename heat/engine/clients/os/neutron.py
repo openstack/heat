@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import netaddr
+
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
@@ -180,3 +182,10 @@ class IPConstraint(constraints.BaseCustomConstraint):
     def validate(self, value, context):
         self._error_message = 'Invalid IP address'
         return netutils.is_valid_ip(value)
+
+
+class MACConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        self._error_message = 'Invalid MAC address.'
+        return netaddr.valid_mac(value)
