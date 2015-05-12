@@ -345,7 +345,7 @@ class Workflow(signal_responder.SignalResponder,
             execution = self.mistral().executions.create(
                 self._workflow_name(),
                 jsonutils.dumps(result_input),
-                jsonutils.dumps(result_params))
+                **result_params)
         except Exception as ex:
             raise exception.ResourceFailure(ex, self)
         executions = [execution.id]

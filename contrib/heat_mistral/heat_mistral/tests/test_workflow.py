@@ -23,6 +23,7 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
+from mistralclient.api.v2 import executions
 
 from .. import client  # noqa
 from ..resources import workflow  # noqa
@@ -387,7 +388,11 @@ class TestWorkflow(common.HeatTestCase):
         details = {'input': {'flavor': '3'}}
         execution = mock.Mock()
         execution.id = '12345'
-        self.mistral.executions.create.return_value = execution
+        # Invoke the real create method (bug 1453539)
+        exec_manager = executions.ExecutionManager(wf.client('mistral'))
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: exec_manager.create(*args, **kw))
+        self.patchobject(exec_manager, '_create', return_value=execution)
         scheduler.TaskRunner(wf.signal, details)()
         self.assertEqual({'executions': '12345'}, wf.data())
         scheduler.TaskRunner(wf.delete)()
