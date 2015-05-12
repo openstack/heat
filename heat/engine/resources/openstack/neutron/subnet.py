@@ -185,37 +185,48 @@ class Subnet(neutron.NeutronResource):
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
-            _("Friendly name of the subnet.")
+            _("Friendly name of the subnet."),
+            type=attributes.Schema.STRING
         ),
         NETWORK_ID_ATTR: attributes.Schema(
-            _("Parent network of the subnet.")
+            _("Parent network of the subnet."),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID_ATTR: attributes.Schema(
-            _("Tenant owning the subnet.")
+            _("Tenant owning the subnet."),
+            type=attributes.Schema.STRING
         ),
         ALLOCATION_POOLS_ATTR: attributes.Schema(
-            _("Ip allocation pools and their ranges.")
+            _("Ip allocation pools and their ranges."),
+            type=attributes.Schema.LIST
         ),
         GATEWAY_IP_ATTR: attributes.Schema(
-            _("Ip of the subnet's gateway.")
+            _("Ip of the subnet's gateway."),
+            type=attributes.Schema.STRING
         ),
         HOST_ROUTES_ATTR: attributes.Schema(
-            _("Additional routes for this subnet.")
+            _("Additional routes for this subnet."),
+            type=attributes.Schema.LIST
         ),
         IP_VERSION_ATTR: attributes.Schema(
-            _("Ip version for the subnet.")
+            _("Ip version for the subnet."),
+            type=attributes.Schema.STRING
         ),
         CIDR_ATTR: attributes.Schema(
-            _("CIDR block notation for this subnet.")
+            _("CIDR block notation for this subnet."),
+            type=attributes.Schema.STRING
         ),
         DNS_NAMESERVERS_ATTR: attributes.Schema(
-            _("List of dns nameservers.")
+            _("List of dns nameservers."),
+            type=attributes.Schema.LIST
         ),
         ENABLE_DHCP_ATTR: attributes.Schema(
-            _("'true' if DHCP is enabled for this subnet; 'false' otherwise.")
+            _("'true' if DHCP is enabled for this subnet; 'false' otherwise."),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _("All attributes.")
+            _("All attributes."),
+            type=attributes.Schema.MAP
         ),
     }
 

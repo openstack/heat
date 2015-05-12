@@ -76,13 +76,16 @@ class ProviderNet(net.Net):
 
     attributes_schema = {
         STATUS: attributes.Schema(
-            _("The status of the network.")
+            _("The status of the network."),
+            type=attributes.Schema.STRING
         ),
         SUBNETS: attributes.Schema(
-            _("Subnets of this network.")
+            _("Subnets of this network."),
+            type=attributes.Schema.LIST
         ),
         SHOW: attributes.Schema(
-            _("All attributes.")
+            _("All attributes."),
+            type=attributes.Schema.MAP
         ),
     }
 

@@ -92,25 +92,32 @@ class FloatingIP(neutron.NeutronResource):
     attributes_schema = {
         ROUTER_ID: attributes.Schema(
             _('ID of the router used as gateway, set when associated with a '
-              'port.')
+              'port.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('The tenant owning this floating IP.')
+            _('The tenant owning this floating IP.'),
+            type=attributes.Schema.STRING
         ),
         FLOATING_NETWORK_ID_ATTR: attributes.Schema(
-            _('ID of the network in which this IP is allocated.')
+            _('ID of the network in which this IP is allocated.'),
+            type=attributes.Schema.STRING
         ),
         FIXED_IP_ADDRESS_ATTR: attributes.Schema(
-            _('IP address of the associated port, if specified.')
+            _('IP address of the associated port, if specified.'),
+            type=attributes.Schema.STRING
         ),
         FLOATING_IP_ADDRESS_ATTR: attributes.Schema(
-            _('The allocated address of this IP.')
+            _('The allocated address of this IP.'),
+            type=attributes.Schema.STRING
         ),
         PORT_ID_ATTR: attributes.Schema(
-            _('ID of the port associated with this IP.')
+            _('ID of the port associated with this IP.'),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _('All attributes.')
+            _('All attributes.'),
+            type=attributes.Schema.MAP
         ),
     }
 

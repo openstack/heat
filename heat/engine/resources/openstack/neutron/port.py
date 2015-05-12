@@ -209,44 +209,57 @@ class Port(neutron.NeutronResource):
 
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _("The administrative state of this port.")
+            _("The administrative state of this port."),
+            type=attributes.Schema.STRING
         ),
         DEVICE_ID_ATTR: attributes.Schema(
-            _("Unique identifier for the device.")
+            _("Unique identifier for the device."),
+            type=attributes.Schema.STRING
         ),
         DEVICE_OWNER: attributes.Schema(
-            _("Name of the network owning the port.")
+            _("Name of the network owning the port."),
+            type=attributes.Schema.STRING
         ),
         FIXED_IPS_ATTR: attributes.Schema(
-            _("Fixed IP addresses.")
+            _("Fixed IP addresses."),
+            type=attributes.Schema.LIST
         ),
         MAC_ADDRESS_ATTR: attributes.Schema(
-            _("MAC address of the port.")
+            _("MAC address of the port."),
+            type=attributes.Schema.STRING
         ),
         NAME_ATTR: attributes.Schema(
-            _("Friendly name of the port.")
+            _("Friendly name of the port."),
+            type=attributes.Schema.STRING
         ),
         NETWORK_ID_ATTR: attributes.Schema(
-            _("Unique identifier for the network owning the port.")
+            _("Unique identifier for the network owning the port."),
+            type=attributes.Schema.STRING
         ),
         SECURITY_GROUPS_ATTR: attributes.Schema(
-            _("A list of security groups for the port.")
+            _("A list of security groups for the port."),
+            type=attributes.Schema.LIST
         ),
         STATUS: attributes.Schema(
-            _("The status of the port.")
+            _("The status of the port."),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _("Tenant owning the port.")
+            _("Tenant owning the port."),
+            type=attributes.Schema.STRING
         ),
         ALLOWED_ADDRESS_PAIRS_ATTR: attributes.Schema(
             _("Additional MAC/IP address pairs allowed to pass through "
-              "a port.")
+              "a port."),
+            type=attributes.Schema.LIST
         ),
         SHOW: attributes.Schema(
-            _("All attributes.")
+            _("All attributes."),
+            type=attributes.Schema.MAP
         ),
         SUBNETS_ATTR: attributes.Schema(
-            _("A list of all subnet attributes for the port.")
+            _("A list of all subnet attributes for the port."),
+            type=attributes.Schema.LIST
         ),
     }
 
