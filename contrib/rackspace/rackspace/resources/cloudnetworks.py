@@ -11,10 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import netaddr
 from oslo_log import log as logging
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
@@ -79,7 +77,10 @@ class CloudNetwork(resource.Resource):
             properties.Schema.STRING,
             _("The IP block from which to allocate the network. For example, "
               "172.16.0.0/24 or 2001:DB8::/64."),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('net_cidr')
+            ]
         )
     }
 
@@ -154,10 +155,6 @@ class CloudNetwork(resource.Resource):
 
     def validate(self):
         super(CloudNetwork, self).validate()
-        try:
-            netaddr.IPNetwork(self.properties[self.CIDR])
-        except netaddr.core.AddrFormatError:
-            raise exception.StackValidationFailed(message=_("Invalid cidr"))
 
     def _resolve_attribute(self, name):
         net = self.network()

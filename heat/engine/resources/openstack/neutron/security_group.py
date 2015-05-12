@@ -99,7 +99,10 @@ class SecurityGroup(neutron.NeutronResource):
         RULE_REMOTE_IP_PREFIX: properties.Schema(
             properties.Schema.STRING,
             _('The remote IP prefix (CIDR) to be associated with this '
-              'security group rule.')
+              'security group rule.'),
+            constraints=[
+                constraints.CustomConstraint('net_cidr')
+            ]
         ),
     }
 

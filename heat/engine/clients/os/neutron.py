@@ -12,6 +12,7 @@
 #    under the License.
 
 import netaddr
+import six
 
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
@@ -189,3 +190,21 @@ class MACConstraint(constraints.BaseCustomConstraint):
     def validate(self, value, context):
         self._error_message = 'Invalid MAC address.'
         return netaddr.valid_mac(value)
+
+
+class CIDRConstraint(constraints.BaseCustomConstraint):
+
+    def _validate_whitespace(self, data):
+        self._error_message = ("Invalid net cidr '%s' contains "
+                               "whitespace" % data)
+        if len(data.split()) > 1:
+            return False
+        return True
+
+    def validate(self, value, context):
+        try:
+            netaddr.IPNetwork(value)
+            return self._validate_whitespace(value)
+        except Exception as ex:
+            self._error_message = 'Invalid net cidr %s ' % six.text_type(ex)
+            return False
