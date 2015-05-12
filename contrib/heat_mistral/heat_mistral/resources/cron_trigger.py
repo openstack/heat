@@ -34,9 +34,9 @@ class CronTrigger(resource.Resource):
     )
 
     ATTRIBUTES = (
-        NEXT_EXECUTION_TIME,
+        NEXT_EXECUTION_TIME, REMAINING_EXECUTIONS
     ) = (
-        'next_execution_time',
+        'next_execution_time', 'remaining_executions'
     )
 
     properties_schema = {
@@ -75,8 +75,11 @@ class CronTrigger(resource.Resource):
 
     attributes_schema = {
         NEXT_EXECUTION_TIME: attributes.Schema(
-            _('Time of the next execution in format "YYYY-MM-DD HH:MM".')
+            _('Time of the next execution in format "YYYY-MM-DD HH:MM:SS".')
         ),
+        REMAINING_EXECUTIONS: attributes.Schema(
+            _('Number of remaining executions.')
+        )
     }
 
     default_client_name = 'mistral'
@@ -108,9 +111,15 @@ class CronTrigger(resource.Resource):
             self.client_plugin().ignore_not_found(ex)
 
     def _resolve_attribute(self, name):
-        if name == self.NEXT_EXECUTION_TIME:
+        try:
             trigger = self.client().cron_triggers.get(self.resource_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return ''
+        if name == self.NEXT_EXECUTION_TIME:
             return trigger.next_execution_time
+        elif name == self.REMAINING_EXECUTIONS:
+            return trigger.remaining_executions
 
 
 def resource_mapping():
