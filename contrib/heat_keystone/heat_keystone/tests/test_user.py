@@ -19,8 +19,7 @@ from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources.user import KeystoneUser  # noqa
-from ..resources.user import resource_mapping  # noqa
+from ..resources import user  # noqa
 
 keystone_user_template = {
     'heat_template_version': '2013-05-23',
@@ -52,7 +51,7 @@ class KeystoneUserTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE, KeystoneUser)
+        resource._register_class(RESOURCE_TYPE, user.KeystoneUser)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
@@ -90,10 +89,10 @@ class KeystoneUserTest(common.HeatTestCase):
         return value
 
     def test_resource_mapping(self):
-        mapping = resource_mapping()
+        mapping = user.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(KeystoneUser, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_user, KeystoneUser)
+        self.assertEqual(user.KeystoneUser, mapping[RESOURCE_TYPE])
+        self.assertIsInstance(self.test_user, user.KeystoneUser)
 
     def test_user_handle_create(self):
         mock_user = self._get_mock_user()
@@ -103,28 +102,28 @@ class KeystoneUserTest(common.HeatTestCase):
         # validate the properties
         self.assertEqual(
             'test_user_1',
-            self.test_user.properties.get(KeystoneUser.NAME))
+            self.test_user.properties.get(user.KeystoneUser.NAME))
         self.assertEqual(
             'Test user',
-            self.test_user.properties.get(KeystoneUser.DESCRIPTION))
+            self.test_user.properties.get(user.KeystoneUser.DESCRIPTION))
         self.assertEqual(
             'default',
-            self.test_user.properties.get(KeystoneUser.DOMAIN))
+            self.test_user.properties.get(user.KeystoneUser.DOMAIN))
         self.assertEqual(
             True,
-            self.test_user.properties.get(KeystoneUser.ENABLED))
+            self.test_user.properties.get(user.KeystoneUser.ENABLED))
         self.assertEqual(
             'abc@xyz.com',
-            self.test_user.properties.get(KeystoneUser.EMAIL))
+            self.test_user.properties.get(user.KeystoneUser.EMAIL))
         self.assertEqual(
             'password',
-            self.test_user.properties.get(KeystoneUser.PASSWORD))
+            self.test_user.properties.get(user.KeystoneUser.PASSWORD))
         self.assertEqual(
             'project_1',
-            self.test_user.properties.get(KeystoneUser.DEFAULT_PROJECT))
+            self.test_user.properties.get(user.KeystoneUser.DEFAULT_PROJECT))
         self.assertEqual(
             ['group1', 'group2'],
-            self.test_user.properties.get(KeystoneUser.GROUPS))
+            self.test_user.properties.get(user.KeystoneUser.GROUPS))
 
         self.test_user.handle_create()
 
@@ -148,26 +147,26 @@ class KeystoneUserTest(common.HeatTestCase):
                 group)
 
     def _get_property_schema_value_default(self, name):
-        schema = KeystoneUser.properties_schema[name]
+        schema = user.KeystoneUser.properties_schema[name]
         return schema.default
 
     def test_user_handle_create_default(self):
         values = {
-            KeystoneUser.NAME: None,
-            KeystoneUser.DESCRIPTION:
+            user.KeystoneUser.NAME: None,
+            user.KeystoneUser.DESCRIPTION:
             (self._get_property_schema_value_default(
-             KeystoneUser.DESCRIPTION)),
-            KeystoneUser.DOMAIN:
+             user.KeystoneUser.DESCRIPTION)),
+            user.KeystoneUser.DOMAIN:
             (self._get_property_schema_value_default(
-             KeystoneUser.DOMAIN)),
-            KeystoneUser.ENABLED:
+             user.KeystoneUser.DOMAIN)),
+            user.KeystoneUser.ENABLED:
             (self._get_property_schema_value_default(
-             KeystoneUser.ENABLED)),
-            KeystoneUser.ROLES: None,
-            KeystoneUser.GROUPS: None,
-            KeystoneUser.PASSWORD: 'password',
-            KeystoneUser.EMAIL: 'abc@xyz.com',
-            KeystoneUser.DEFAULT_PROJECT: 'default_project'
+             user.KeystoneUser.ENABLED)),
+            user.KeystoneUser.ROLES: None,
+            user.KeystoneUser.GROUPS: None,
+            user.KeystoneUser.PASSWORD: 'password',
+            user.KeystoneUser.EMAIL: 'abc@xyz.com',
+            user.KeystoneUser.DEFAULT_PROJECT: 'default_project'
         }
 
         def _side_effect(key):
@@ -203,13 +202,13 @@ class KeystoneUserTest(common.HeatTestCase):
         }
 
         # add new group group3 and remove group group2
-        prop_diff = {KeystoneUser.NAME: 'test_user_1_updated',
-                     KeystoneUser.DESCRIPTION: 'Test User updated',
-                     KeystoneUser.ENABLED: False,
-                     KeystoneUser.EMAIL: 'xyz@abc.com',
-                     KeystoneUser.PASSWORD: 'passWORD',
-                     KeystoneUser.DEFAULT_PROJECT: 'project_2',
-                     KeystoneUser.GROUPS: ['group1', 'group3']}
+        prop_diff = {user.KeystoneUser.NAME: 'test_user_1_updated',
+                     user.KeystoneUser.DESCRIPTION: 'Test User updated',
+                     user.KeystoneUser.ENABLED: False,
+                     user.KeystoneUser.EMAIL: 'xyz@abc.com',
+                     user.KeystoneUser.PASSWORD: 'passWORD',
+                     user.KeystoneUser.DEFAULT_PROJECT: 'project_2',
+                     user.KeystoneUser.GROUPS: ['group1', 'group3']}
 
         self.test_user.handle_update(json_snippet=None,
                                      tmpl_diff=None,
@@ -218,13 +217,14 @@ class KeystoneUserTest(common.HeatTestCase):
         # validate user update
         self.users.update.assert_called_once_with(
             user=self.test_user.resource_id,
-            domain=self.test_user._stored_properties_data[KeystoneUser.DOMAIN],
-            name=prop_diff[KeystoneUser.NAME],
-            description=prop_diff[KeystoneUser.DESCRIPTION],
-            email=prop_diff[KeystoneUser.EMAIL],
-            password=prop_diff[KeystoneUser.PASSWORD],
-            default_project=prop_diff[KeystoneUser.DEFAULT_PROJECT],
-            enabled=prop_diff[KeystoneUser.ENABLED]
+            domain=self.test_user._stored_properties_data[
+                user.KeystoneUser.DOMAIN],
+            name=prop_diff[user.KeystoneUser.NAME],
+            description=prop_diff[user.KeystoneUser.DESCRIPTION],
+            email=prop_diff[user.KeystoneUser.EMAIL],
+            password=prop_diff[user.KeystoneUser.PASSWORD],
+            default_project=prop_diff[user.KeystoneUser.DEFAULT_PROJECT],
+            enabled=prop_diff[user.KeystoneUser.ENABLED]
         )
 
         # validate the new groups added

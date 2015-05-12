@@ -21,8 +21,7 @@ from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources.project import KeystoneProject  # noqa
-from ..resources.project import resource_mapping  # noqa
+from ..resources import project  # noqa
 
 keystone_project_template = {
     'heat_template_version': '2013-05-23',
@@ -49,7 +48,7 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE, KeystoneProject)
+        resource._register_class(RESOURCE_TYPE, project.KeystoneProject)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
@@ -81,10 +80,10 @@ class KeystoneProjectTest(common.HeatTestCase):
         return value
 
     def test_resource_mapping(self):
-        mapping = resource_mapping()
+        mapping = project.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(KeystoneProject, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_project, KeystoneProject)
+        self.assertEqual(project.KeystoneProject, mapping[RESOURCE_TYPE])
+        self.assertIsInstance(self.test_project, project.KeystoneProject)
 
     def test_project_handle_create(self):
         mock_project = self._get_mock_project()
@@ -93,16 +92,17 @@ class KeystoneProjectTest(common.HeatTestCase):
         # validate the properties
         self.assertEqual(
             'test_project_1',
-            self.test_project.properties.get(KeystoneProject.NAME))
+            self.test_project.properties.get(project.KeystoneProject.NAME))
         self.assertEqual(
             'Test project',
-            self.test_project.properties.get(KeystoneProject.DESCRIPTION))
+            self.test_project.properties.get(
+                project.KeystoneProject.DESCRIPTION))
         self.assertEqual(
             'default',
-            self.test_project.properties.get(KeystoneProject.DOMAIN))
+            self.test_project.properties.get(project.KeystoneProject.DOMAIN))
         self.assertEqual(
             True,
-            self.test_project.properties.get(KeystoneProject.ENABLED))
+            self.test_project.properties.get(project.KeystoneProject.ENABLED))
 
         self.test_project.handle_create()
 
@@ -118,10 +118,10 @@ class KeystoneProjectTest(common.HeatTestCase):
 
     def test_properties_title(self):
         property_title_map = {
-            KeystoneProject.NAME: 'name',
-            KeystoneProject.DESCRIPTION: 'description',
-            KeystoneProject.DOMAIN: 'domain',
-            KeystoneProject.ENABLED: 'enabled'
+            project.KeystoneProject.NAME: 'name',
+            project.KeystoneProject.DESCRIPTION: 'description',
+            project.KeystoneProject.DOMAIN: 'domain',
+            project.KeystoneProject.ENABLED: 'enabled'
         }
 
         for actual_title, expected_title in property_title_map.items():
@@ -132,117 +132,121 @@ class KeystoneProjectTest(common.HeatTestCase):
                 actual_title)
 
     def test_property_name_validate_schema(self):
-        schema = KeystoneProject.properties_schema[KeystoneProject.NAME]
+        schema = project.KeystoneProject.properties_schema[
+            project.KeystoneProject.NAME]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneProject.NAME)
+            project.KeystoneProject.NAME)
 
         self.assertEqual(properties.Schema.STRING,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneProject.NAME)
+                         project.KeystoneProject.NAME)
 
         self.assertEqual('Name of keystone project.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneProject.NAME)
+                         project.KeystoneProject.NAME)
 
     def test_property_description_validate_schema(self):
-        schema = KeystoneProject.properties_schema[KeystoneProject.DESCRIPTION]
+        schema = project.KeystoneProject.properties_schema[
+            project.KeystoneProject.DESCRIPTION]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneProject.DESCRIPTION)
+            project.KeystoneProject.DESCRIPTION)
 
         self.assertEqual(properties.Schema.STRING,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneProject.DESCRIPTION)
+                         project.KeystoneProject.DESCRIPTION)
 
         self.assertEqual('Description of keystone project.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneProject.DESCRIPTION)
+                         project.KeystoneProject.DESCRIPTION)
 
         self.assertEqual(
             '',
             schema.default,
             'default for property %s is modified' %
-            KeystoneProject.DESCRIPTION)
+            project.KeystoneProject.DESCRIPTION)
 
     def test_property_domain_validate_schema(self):
-        schema = KeystoneProject.properties_schema[KeystoneProject.DOMAIN]
+        schema = project.KeystoneProject.properties_schema[
+            project.KeystoneProject.DOMAIN]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneProject.DOMAIN)
+            project.KeystoneProject.DOMAIN)
 
         self.assertEqual(properties.Schema.STRING,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneProject.DOMAIN)
+                         project.KeystoneProject.DOMAIN)
 
         self.assertEqual('Name or id of keystone domain.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneProject.DOMAIN)
+                         project.KeystoneProject.DOMAIN)
 
         self.assertEqual(
             [constraints.CustomConstraint('keystone.domain')],
             schema.constraints,
             'constrains for property %s is modified' %
-            KeystoneProject.DOMAIN)
+            project.KeystoneProject.DOMAIN)
 
         self.assertEqual(
             'default',
             schema.default,
             'default for property %s is modified' %
-            KeystoneProject.DOMAIN)
+            project.KeystoneProject.DOMAIN)
 
     def test_property_enabled_validate_schema(self):
-        schema = KeystoneProject.properties_schema[KeystoneProject.ENABLED]
+        schema = project.KeystoneProject.properties_schema[
+            project.KeystoneProject.ENABLED]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneProject.DOMAIN)
+            project.KeystoneProject.DOMAIN)
 
         self.assertEqual(properties.Schema.BOOLEAN,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneProject.ENABLED)
+                         project.KeystoneProject.ENABLED)
 
         self.assertEqual('This project is enabled or disabled.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneProject.ENABLED)
+                         project.KeystoneProject.ENABLED)
 
         self.assertEqual(
             True,
             schema.default,
             'default for property %s is modified' %
-            KeystoneProject.ENABLED)
+            project.KeystoneProject.ENABLED)
 
     def _get_property_schema_value_default(self, name):
-        schema = KeystoneProject.properties_schema[name]
+        schema = project.KeystoneProject.properties_schema[name]
         return schema.default
 
     def test_project_handle_create_default(self):
         values = {
-            KeystoneProject.NAME: None,
-            KeystoneProject.DESCRIPTION:
+            project.KeystoneProject.NAME: None,
+            project.KeystoneProject.DESCRIPTION:
             (self._get_property_schema_value_default(
-             KeystoneProject.DESCRIPTION)),
-            KeystoneProject.DOMAIN:
+             project.KeystoneProject.DESCRIPTION)),
+            project.KeystoneProject.DOMAIN:
             (self._get_property_schema_value_default(
-             KeystoneProject.DOMAIN)),
-            KeystoneProject.ENABLED:
+             project.KeystoneProject.DOMAIN)),
+            project.KeystoneProject.ENABLED:
             (self._get_property_schema_value_default(
-             KeystoneProject.ENABLED))
+             project.KeystoneProject.ENABLED))
         }
 
         def _side_effect(key):
@@ -259,16 +263,17 @@ class KeystoneProjectTest(common.HeatTestCase):
         # validate the properties
         self.assertEqual(
             None,
-            self.test_project.properties.get(KeystoneProject.NAME))
+            self.test_project.properties.get(project.KeystoneProject.NAME))
         self.assertEqual(
             '',
-            self.test_project.properties.get(KeystoneProject.DESCRIPTION))
+            self.test_project.properties.get(
+                project.KeystoneProject.DESCRIPTION))
         self.assertEqual(
             'default',
-            self.test_project.properties.get(KeystoneProject.DOMAIN))
+            self.test_project.properties.get(project.KeystoneProject.DOMAIN))
         self.assertEqual(
             True,
-            self.test_project.properties.get(KeystoneProject.ENABLED))
+            self.test_project.properties.get(project.KeystoneProject.ENABLED))
 
         self.test_project.handle_create()
 
@@ -282,10 +287,11 @@ class KeystoneProjectTest(common.HeatTestCase):
     def test_project_handle_update(self):
         self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
-        prop_diff = {KeystoneProject.NAME: 'test_project_1_updated',
-                     KeystoneProject.DESCRIPTION: 'Test Project updated',
-                     KeystoneProject.ENABLED: False,
-                     KeystoneProject.DOMAIN: 'test_domain'}
+        prop_diff = {project.KeystoneProject.NAME: 'test_project_1_updated',
+                     project.KeystoneProject.DESCRIPTION:
+                     'Test Project updated',
+                     project.KeystoneProject.ENABLED: False,
+                     project.KeystoneProject.DOMAIN: 'test_domain'}
 
         self.test_project.handle_update(json_snippet=None,
                                         tmpl_diff=None,
@@ -293,9 +299,9 @@ class KeystoneProjectTest(common.HeatTestCase):
 
         self.projects.update.assert_called_once_with(
             project=self.test_project.resource_id,
-            name=prop_diff[KeystoneProject.NAME],
-            description=prop_diff[KeystoneProject.DESCRIPTION],
-            enabled=prop_diff[KeystoneProject.ENABLED],
+            name=prop_diff[project.KeystoneProject.NAME],
+            description=prop_diff[project.KeystoneProject.DESCRIPTION],
+            enabled=prop_diff[project.KeystoneProject.ENABLED],
             domain='test_domain'
         )
 
@@ -305,8 +311,9 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.test_project.physical_resource_name = mock.MagicMock()
         self.test_project.physical_resource_name.return_value = 'foo'
 
-        prop_diff = {KeystoneProject.DESCRIPTION: 'Test Project updated',
-                     KeystoneProject.ENABLED: False}
+        prop_diff = {project.KeystoneProject.DESCRIPTION:
+                     'Test Project updated',
+                     project.KeystoneProject.ENABLED: False}
 
         self.test_project.handle_update(json_snippet=None,
                                         tmpl_diff=None,
@@ -317,8 +324,8 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.projects.update.assert_called_once_with(
             project=self.test_project.resource_id,
             name='foo',
-            description=prop_diff[KeystoneProject.DESCRIPTION],
-            enabled=prop_diff[KeystoneProject.ENABLED],
+            description=prop_diff[project.KeystoneProject.DESCRIPTION],
+            enabled=prop_diff[project.KeystoneProject.ENABLED],
             domain='default'
         )
 

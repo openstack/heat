@@ -21,8 +21,7 @@ from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources.group import KeystoneGroup  # noqa
-from ..resources.group import resource_mapping  # noqa
+from ..resources import group  # noqa
 
 keystone_group_template = {
     'heat_template_version': '2013-05-23',
@@ -48,7 +47,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE, KeystoneGroup)
+        resource._register_class(RESOURCE_TYPE, group.KeystoneGroup)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
@@ -82,16 +81,16 @@ class KeystoneGroupTest(common.HeatTestCase):
         return value
 
     def test_resource_mapping(self):
-        mapping = resource_mapping()
+        mapping = group.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(KeystoneGroup, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_group, KeystoneGroup)
+        self.assertEqual(group.KeystoneGroup, mapping[RESOURCE_TYPE])
+        self.assertIsInstance(self.test_group, group.KeystoneGroup)
 
     def test_properties_title(self):
         property_title_map = {
-            KeystoneGroup.NAME: 'name',
-            KeystoneGroup.DESCRIPTION: 'description',
-            KeystoneGroup.DOMAIN: 'domain'
+            group.KeystoneGroup.NAME: 'name',
+            group.KeystoneGroup.DESCRIPTION: 'description',
+            group.KeystoneGroup.DOMAIN: 'domain'
         }
 
         for actual_title, expected_title in property_title_map.items():
@@ -102,78 +101,81 @@ class KeystoneGroupTest(common.HeatTestCase):
                 actual_title)
 
     def test_property_name_validate_schema(self):
-        schema = KeystoneGroup.properties_schema[KeystoneGroup.NAME]
+        schema = group.KeystoneGroup.properties_schema[
+            group.KeystoneGroup.NAME]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneGroup.NAME)
+            group.KeystoneGroup.NAME)
 
         self.assertEqual(properties.Schema.STRING,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneGroup.NAME)
+                         group.KeystoneGroup.NAME)
 
         self.assertEqual('Name of keystone group.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneGroup.NAME)
+                         group.KeystoneGroup.NAME)
 
     def test_property_description_validate_schema(self):
-        schema = KeystoneGroup.properties_schema[KeystoneGroup.DESCRIPTION]
+        schema = group.KeystoneGroup.properties_schema[
+            group.KeystoneGroup.DESCRIPTION]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneGroup.DESCRIPTION)
+            group.KeystoneGroup.DESCRIPTION)
 
         self.assertEqual(properties.Schema.STRING,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneGroup.DESCRIPTION)
+                         group.KeystoneGroup.DESCRIPTION)
 
         self.assertEqual('Description of keystone group.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneGroup.DESCRIPTION)
+                         group.KeystoneGroup.DESCRIPTION)
 
         self.assertEqual(
             '',
             schema.default,
             'default for property %s is modified' %
-            KeystoneGroup.DESCRIPTION)
+            group.KeystoneGroup.DESCRIPTION)
 
     def test_property_domain_validate_schema(self):
-        schema = KeystoneGroup.properties_schema[KeystoneGroup.DOMAIN]
+        schema = group.KeystoneGroup.properties_schema[
+            group.KeystoneGroup.DOMAIN]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneGroup.DOMAIN)
+            group.KeystoneGroup.DOMAIN)
 
         self.assertEqual(properties.Schema.STRING,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneGroup.DOMAIN)
+                         group.KeystoneGroup.DOMAIN)
 
         self.assertEqual('Name or id of keystone domain.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneGroup.DOMAIN)
+                         group.KeystoneGroup.DOMAIN)
 
         self.assertEqual([constraints.CustomConstraint('keystone.domain')],
                          schema.constraints,
                          'constrains for property %s is modified' %
-                         KeystoneGroup.DOMAIN)
+                         group.KeystoneGroup.DOMAIN)
 
         self.assertEqual(
             'default',
             schema.default,
             'default for property %s is modified' %
-            KeystoneGroup.DOMAIN)
+            group.KeystoneGroup.DOMAIN)
 
     def _get_property_schema_value_default(self, name):
-        schema = KeystoneGroup.properties_schema[name]
+        schema = group.KeystoneGroup.properties_schema[name]
         return schema.default
 
     def test_group_handle_create(self):
@@ -183,13 +185,13 @@ class KeystoneGroupTest(common.HeatTestCase):
         # validate the properties
         self.assertEqual(
             'test_group_1',
-            self.test_group.properties.get(KeystoneGroup.NAME))
+            self.test_group.properties.get(group.KeystoneGroup.NAME))
         self.assertEqual(
             'Test group',
-            self.test_group.properties.get(KeystoneGroup.DESCRIPTION))
+            self.test_group.properties.get(group.KeystoneGroup.DESCRIPTION))
         self.assertEqual(
             'default',
-            self.test_group.properties.get(KeystoneGroup.DOMAIN))
+            self.test_group.properties.get(group.KeystoneGroup.DOMAIN))
 
         self.test_group.handle_create()
 
@@ -204,14 +206,14 @@ class KeystoneGroupTest(common.HeatTestCase):
 
     def test_group_handle_create_default(self):
         values = {
-            KeystoneGroup.NAME: None,
-            KeystoneGroup.DESCRIPTION:
+            group.KeystoneGroup.NAME: None,
+            group.KeystoneGroup.DESCRIPTION:
             (self._get_property_schema_value_default(
-             KeystoneGroup.DESCRIPTION)),
-            KeystoneGroup.DOMAIN:
+             group.KeystoneGroup.DESCRIPTION)),
+            group.KeystoneGroup.DOMAIN:
             (self._get_property_schema_value_default(
-             KeystoneGroup.DOMAIN)),
-            KeystoneGroup.ROLES: None
+             group.KeystoneGroup.DOMAIN)),
+            group.KeystoneGroup.ROLES: None
         }
 
         def _side_effect(key):
@@ -228,13 +230,13 @@ class KeystoneGroupTest(common.HeatTestCase):
         # validate the properties
         self.assertEqual(
             None,
-            self.test_group.properties.get(KeystoneGroup.NAME))
+            self.test_group.properties.get(group.KeystoneGroup.NAME))
         self.assertEqual(
             '',
-            self.test_group.properties.get(KeystoneGroup.DESCRIPTION))
+            self.test_group.properties.get(group.KeystoneGroup.DESCRIPTION))
         self.assertEqual(
             'default',
-            self.test_group.properties.get(KeystoneGroup.DOMAIN))
+            self.test_group.properties.get(group.KeystoneGroup.DOMAIN))
 
         self.test_group.handle_create()
 
@@ -248,9 +250,9 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.test_group.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         self.test_group._stored_properties_data = dict(roles=None)
 
-        prop_diff = {KeystoneGroup.NAME: 'test_group_1_updated',
-                     KeystoneGroup.DESCRIPTION: 'Test Group updated',
-                     KeystoneGroup.DOMAIN: 'test_domain'}
+        prop_diff = {group.KeystoneGroup.NAME: 'test_group_1_updated',
+                     group.KeystoneGroup.DESCRIPTION: 'Test Group updated',
+                     group.KeystoneGroup.DOMAIN: 'test_domain'}
 
         self.test_group.handle_update(json_snippet=None,
                                       tmpl_diff=None,
@@ -258,8 +260,8 @@ class KeystoneGroupTest(common.HeatTestCase):
 
         self.groups.update.assert_called_once_with(
             group=self.test_group.resource_id,
-            name=prop_diff[KeystoneGroup.NAME],
-            description=prop_diff[KeystoneGroup.DESCRIPTION],
+            name=prop_diff[group.KeystoneGroup.NAME],
+            description=prop_diff[group.KeystoneGroup.DESCRIPTION],
             domain_id='test_domain'
         )
 
@@ -269,7 +271,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.test_group.physical_resource_name = mock.MagicMock()
         self.test_group.physical_resource_name.return_value = 'foo'
 
-        prop_diff = {KeystoneGroup.DESCRIPTION: 'Test Project updated'}
+        prop_diff = {group.KeystoneGroup.DESCRIPTION: 'Test Project updated'}
 
         self.test_group.handle_update(json_snippet=None,
                                       tmpl_diff=None,
@@ -280,7 +282,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.groups.update.assert_called_once_with(
             group=self.test_group.resource_id,
             name='foo',
-            description=prop_diff[KeystoneGroup.DESCRIPTION],
+            description=prop_diff[group.KeystoneGroup.DESCRIPTION],
             domain_id='default'
         )
 
