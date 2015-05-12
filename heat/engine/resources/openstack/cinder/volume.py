@@ -76,7 +76,8 @@ class CinderVolume(vb.BaseVolume):
         ),
         BACKUP_ID: properties.Schema(
             properties.Schema.STRING,
-            _('If specified, the backup to create the volume from.')
+            _('If specified, the backup to create the volume from.'),
+            update_allowed=True,
         ),
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -301,12 +302,43 @@ class CinderVolume(vb.BaseVolume):
         LOG.info(_LI('Volume %(id)s resize complete'), {'id': vol.id})
         return True
 
+    def _backup_restore(self, vol_id, backup_id):
+        try:
+            self.client().restores.restore(backup_id, vol_id)
+        except Exception as ex:
+            if self.client_plugin().is_client_exception(ex):
+                raise exception.Error(_(
+                    "Failed to restore volume %(vol)s from backup %(backup)s "
+                    "- %(err)s") % {'vol': vol_id,
+                                    'backup': backup_id,
+                                    'err': ex})
+            else:
+                raise
+        return True
+
+    def _check_backup_restore_complete(self):
+        vol = self.client().volumes.get(self.resource_id)
+        if vol.status == 'restoring-backup':
+            LOG.debug("Volume %s is being restoring from backup" % vol.id)
+            return False
+
+        if vol.status != 'available':
+            LOG.info(_LI("Restore failed: Volume %(vol)s is in %(status)s "
+                         "state."), {'vol': vol.id, 'status': vol.status})
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status,
+                result=_('Volume backup restore failed'))
+
+        LOG.info(_LI('Volume %(id)s backup restore complete'), {'id': vol.id})
+        return True
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
         cinder = self.client()
         prg_resize = None
         prg_attach = None
         prg_detach = None
+        prg_backup_restore = None
         # update the name and description for cinder volume
         if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
             vol = cinder.volumes.get(self.resource_id)
@@ -339,6 +371,11 @@ class CinderVolume(vb.BaseVolume):
         if self.READ_ONLY in prop_diff:
             flag = prop_diff.get(self.READ_ONLY)
             cinder.volumes.update_readonly_flag(self.resource_id, flag)
+        # restore the volume from backup
+        if self.BACKUP_ID in prop_diff:
+            prg_backup_restore = heat_cinder.VolumeBackupRestoreProgress(
+                vol_id=self.resource_id,
+                backup_id=prop_diff.get(self.BACKUP_ID))
         # extend volume size
         if self.SIZE in prop_diff:
             if not vol:
@@ -366,7 +403,7 @@ class CinderVolume(vb.BaseVolume):
                     prg_attach = heat_cinder.VolumeAttachProgress(
                         server_id, vol.id, device)
 
-        return prg_detach, prg_resize, prg_attach
+        return prg_backup_restore, prg_detach, prg_resize, prg_attach
 
     def _detach_volume_to_complete(self, prg_detach):
         if not prg_detach.called:
@@ -396,7 +433,17 @@ class CinderVolume(vb.BaseVolume):
             return prg_attach.complete
 
     def check_update_complete(self, checkers):
-        prg_detach, prg_resize, prg_attach = checkers
+        prg_backup_restore, prg_detach, prg_resize, prg_attach = checkers
+        if prg_backup_restore:
+            if not prg_backup_restore.called:
+                prg_backup_restore.called = self._backup_restore(
+                    prg_backup_restore.vol_id,
+                    prg_backup_restore.backup_id)
+                return False
+            if not prg_backup_restore.complete:
+                prg_backup_restore.complete = \
+                    self._check_backup_restore_complete()
+                return prg_backup_restore.complete and not prg_resize
         if not prg_resize:
             return True
         # detach volume
@@ -518,8 +565,11 @@ class CinderVolume(vb.BaseVolume):
 
     def handle_restore(self, defn, restore_data):
         backup_id = restore_data['resource_data']['backup_id']
+        # we can't ignore 'size' property: if user update the size
+        # of volume after snapshot, we need to change to old size
+        # when restore the volume.
         ignore_props = (
-            self.IMAGE_REF, self.IMAGE, self.SOURCE_VOLID, self.SIZE)
+            self.IMAGE_REF, self.IMAGE, self.SOURCE_VOLID)
         props = dict(
             (key, value) for (key, value) in
             six.iteritems(defn.properties(self.properties_schema))

@@ -998,9 +998,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             stack_name, combinations,
             err_msg, exception.StackValidationFailed)
 
-    def test_volume_restore(self):
-        stack_name = 'test_cvolume_restore_stack'
-
+    def _test_volume_restore(self, stack_name, final_status='available',
+                             stack_final_status=('RESTORE', 'COMPLETE')):
         # create script
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
@@ -1023,12 +1022,12 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         # restore script
         fvbr = vt_base.FakeBackupRestore('vol-123')
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
-        self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
-        self.cinder_fc.volumes.update('vol-123',
-                                      description='test_description',
-                                      name='test_name')
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+        self.cinder_fc.restores.restore('backup-123',
+                                        'vol-123').AndReturn(fvbr)
+        fv_restoring = vt_base.FakeVolume('restoring-backup', id=fv.id)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv_restoring)
+        fv_final = vt_base.FakeVolume(final_status, id=fv.id)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv_final)
 
         self.m.ReplayAll()
 
@@ -1048,9 +1047,17 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         stack.restore(fake_snapshot)
 
-        self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
+        self.assertEqual(stack_final_status, stack.state)
 
         self.m.VerifyAll()
+
+    def test_volume_restore_success(self):
+        self._test_volume_restore(stack_name='test_volume_restore_success')
+
+    def test_volume_restore_failed(self):
+        self._test_volume_restore(stack_name='test_volume_restore_failed',
+                                  final_status='error',
+                                  stack_final_status=('RESTORE', 'FAILED'))
 
     def test_handle_delete_snapshot_no_backup(self):
         stack_name = 'test_handle_delete_snapshot_no_backup'
