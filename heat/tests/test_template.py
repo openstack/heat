@@ -775,7 +775,7 @@ Mappings:
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template),
                           parent_resource='parent', owner_id=45)
-        stk._parent_resource = parent_resource
+        stk._parent_stack = dict(parent=parent_resource)
         self.assertEqual({"foo": "bar"},
                          self.resolve(metadata_snippet, stk.t, stk))
         self.assertEqual('Retain',
@@ -799,7 +799,7 @@ Mappings:
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template),
                           parent_resource='parent')
-        stk._parent_resource = parent_resource
+        stk._parent_stack = dict(parent=parent_resource)
         self.assertEqual('Retain',
                          self.resolve(deletion_policy_snippet, stk.t, stk))
 
@@ -823,7 +823,7 @@ Mappings:
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template),
                           parent_resource='parent', owner_id=78)
-        stk._parent_resource = parent_resource
+        stk._parent_stack = dict(parent=parent_resource)
         self.assertEqual('Delete', self.resolve(snippet, stk.t, stk))
 
     def test_prevent_parameters_access(self):

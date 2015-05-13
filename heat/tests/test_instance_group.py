@@ -34,13 +34,13 @@ class TestInstanceGroup(common.HeatTestCase):
     def setUp(self):
         super(TestInstanceGroup, self).setUp()
         t = template_format.parse(inline_templates.as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.defn = rsrc_defn.ResourceDefinition(
             'asg', 'OS::Heat::InstanceGroup',
             {'Size': 2, 'AvailabilityZones': ['zoneb'],
              'LaunchConfigurationName': 'config'})
         self.instance_group = instgrp.InstanceGroup('asg',
-                                                    self.defn, stack)
+                                                    self.defn, self.stack)
 
     def test_child_template(self):
         self.instance_group._create_template = mock.Mock(return_value='tpl')
@@ -327,14 +327,14 @@ class ReplaceTest(common.HeatTestCase):
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
         t = template_format.parse(inline_templates.as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        lc = self.create_launch_config(t, stack)
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        lc = self.create_launch_config(t, self.stack)
         lcid = lc.FnGetRefId()
         self.defn = rsrc_defn.ResourceDefinition(
             'asg', 'OS::Heat::InstanceGroup',
             {'Size': 2, 'AvailabilityZones': ['zoneb'],
              'LaunchConfigurationName': lcid})
-        self.group = instgrp.InstanceGroup('asg', self.defn, stack)
+        self.group = instgrp.InstanceGroup('asg', self.defn, self.stack)
 
         self.group._lb_reload = mock.Mock()
         self.group.update_with_template = mock.Mock()

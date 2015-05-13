@@ -178,9 +178,9 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        self.stack_name = stack.name
-        self.policy = stack['my-policy']
+        self.stack = utils.parse_stack(t, params=as_params)
+        self.stack_name = self.stack.name
+        self.policy = self.stack['my-policy']
         self.assertIsNone(self.policy.validate())
         scheduler.TaskRunner(self.policy.create)()
         self.assertEqual((self.policy.CREATE, self.policy.COMPLETE),

@@ -88,10 +88,11 @@ class NeutronProviderNetTest(common.HeatTestCase):
         ).AndReturn(stpna)
 
         t = template_format.parse(provider_network_template)
-        stack = utils.parse_stack(t)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(t)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = provider_net.ProviderNet(
-            'provider_net', resource_defns['provider_network_vlan'], stack)
+            'provider_net', resource_defns['provider_network_vlan'],
+            self.stack)
 
         return rsrc
 

@@ -15,6 +15,7 @@ import base64
 import contextlib
 import datetime as dt
 import warnings
+import weakref
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -210,6 +211,16 @@ class Resource(object):
         self.replaces = resource.replaces
         self.replaced_by = resource.replaced_by
         self.current_template_id = resource.current_template_id
+
+    @property
+    def stack(self):
+        stack = self._stackref()
+        assert stack is not None, "Need a reference to the Stack object"
+        return stack
+
+    @stack.setter
+    def stack(self, stack):
+        self._stackref = weakref.ref(stack)
 
     def reparse(self):
         self.properties = self.t.properties(self.properties_schema,

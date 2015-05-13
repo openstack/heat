@@ -592,7 +592,8 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        wait_condition_handle = self.stack['WaitHandle']
+        handle_stack = self.stack
+        wait_condition_handle = handle_stack['WaitHandle']
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '1'}
         self._handle_signal(wait_condition_handle, test_metadata, 2)

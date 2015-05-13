@@ -89,12 +89,12 @@ class NovaFloatingIPTest(common.HeatTestCase):
         )
 
         template = template_format.parse(floating_ip_template)
-        stack = utils.parse_stack(template)
-        floating_ip = stack.t.resource_definitions(stack)['MyFloatingIP']
+        self.stack = utils.parse_stack(template)
+        defns = self.stack.t.resource_definitions(self.stack)
 
         return nova_floatingip.NovaFloatingIp('MyFloatingIP',
-                                              floating_ip,
-                                              stack)
+                                              defns['MyFloatingIP'],
+                                              self.stack)
 
     def prepare_floating_ip_assoc(self):
         nova.NovaClientPlugin._create().AndReturn(
@@ -109,12 +109,12 @@ class NovaFloatingIPTest(common.HeatTestCase):
         )
 
         template = template_format.parse(floating_ip_template_with_assoc)
-        stack = utils.parse_stack(template)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(template)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         floating_ip_assoc = resource_defns['MyFloatingIPAssociation']
 
         return nova_floatingip.NovaFloatingIpAssociation(
-            'MyFloatingIPAssociation', floating_ip_assoc, stack)
+            'MyFloatingIPAssociation', floating_ip_assoc, self.stack)
 
     def test_floating_ip_create(self):
         rsrc = self.prepare_floating_ip()

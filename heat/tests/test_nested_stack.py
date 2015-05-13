@@ -310,8 +310,9 @@ Outputs:
 
         self.ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
-        stack = parser.Stack(self.ctx, 'test', parser.Template(empty_template))
-        stack.store()
+        self.stack = parser.Stack(self.ctx, 'test',
+                                  parser.Template(empty_template))
+        self.stack.store()
 
         self.patchobject(urlfetch, 'get', return_value=self.nested_template)
         self.nested_parsed = yaml.load(self.nested_template)
@@ -322,7 +323,7 @@ Outputs:
             {"TemplateURL": "https://server.test/the.template",
              "Parameters": self.nested_params})
         self.res = stack_res.NestedStack('test_t_res',
-                                         self.defn, stack)
+                                         self.defn, self.stack)
         self.assertIsNone(self.res.validate())
         self.res._store()
 

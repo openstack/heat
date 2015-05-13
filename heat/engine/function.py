@@ -14,6 +14,7 @@
 import abc
 import collections
 import itertools
+import weakref
 
 import six
 
@@ -33,9 +34,19 @@ class Function(object):
             { <fn_name> : <args> }
         """
         super(Function, self).__init__()
-        self.stack = stack
+        self._stackref = weakref.ref(stack) if stack is not None else None
         self.fn_name = fn_name
         self.args = args
+
+    @property
+    def stack(self):
+        ref = self._stackref
+        if ref is None:
+            return None
+
+        stack = ref()
+        assert stack is not None, "Need a reference to the Stack object"
+        return stack
 
     def validate(self):
         """
