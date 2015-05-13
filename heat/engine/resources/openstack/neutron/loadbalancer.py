@@ -658,7 +658,10 @@ class LoadBalancer(resource.Resource):
         PROTOCOL_PORT: properties.Schema(
             properties.Schema.INTEGER,
             _('Port number on which the servers are running on the members.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.Range(0, 65535),
+            ]
         ),
         MEMBERS: properties.Schema(
             properties.Schema.LIST,
