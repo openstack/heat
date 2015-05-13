@@ -31,7 +31,6 @@ from heat.common import service_utils
 from heat.common import template_format
 from heat.engine import dependencies
 from heat.engine import environment
-from heat.engine import properties
 from heat.engine import resource as res
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import service
@@ -556,104 +555,14 @@ class StackCreateTest(common.HeatTestCase):
         self.assertEqual('COMPLETE', db_s.status, )
 
 
-class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
+class StackServiceAdoptUpdateDeleteTest(common.HeatTestCase):
 
     def setUp(self):
-        super(StackServiceCreateUpdateDeleteTest, self).setUp()
+        super(StackServiceAdoptUpdateDeleteTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
-
-    def _test_stack_create(self, stack_name):
-        params = {'foo': 'bar'}
-        template = '{ "Template": "data" }'
-
-        stack = tools.get_stack(stack_name, self.ctx)
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
-        self.m.StubOutWithMock(parser, 'Stack')
-
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
-        environment.Environment(params).AndReturn(stack.env)
-        parser.Stack(self.ctx, stack.name,
-                     stack.t, owner_id=None,
-                     nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None,
-                     convergence=False,
-                     parent_resource=None).AndReturn(stack)
-
-        self.m.StubOutWithMock(stack, 'validate')
-        stack.validate().AndReturn(None)
-
-        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
-
-        self.m.ReplayAll()
-
-        result = self.man.create_stack(self.ctx, stack_name,
-                                       template, params, None, {})
-        self.assertEqual(stack.identifier(), result)
-        self.assertIsInstance(result, dict)
-        self.assertTrue(result['stack_id'])
-        self.m.VerifyAll()
-
-    def test_stack_create(self):
-        stack_name = 'service_create_test_stack'
-        self._test_stack_create(stack_name)
-
-    def test_stack_create_equals_max_per_tenant(self):
-        cfg.CONF.set_override('max_stacks_per_tenant', 1)
-        stack_name = 'service_create_test_stack_equals_max'
-        self._test_stack_create(stack_name)
-
-    def test_stack_create_exceeds_max_per_tenant(self):
-        cfg.CONF.set_override('max_stacks_per_tenant', 0)
-        stack_name = 'service_create_test_stack_exceeds_max'
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self._test_stack_create, stack_name)
-        self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
-        self.assertIn("You have reached the maximum stacks per tenant",
-                      six.text_type(ex.exc_info[1]))
-
-    def test_stack_create_verify_err(self):
-        stack_name = 'service_create_verify_err_test_stack'
-        params = {'foo': 'bar'}
-        template = '{ "Template": "data" }'
-
-        stack = tools.get_stack(stack_name, self.ctx)
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
-        self.m.StubOutWithMock(parser, 'Stack')
-
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
-        environment.Environment(params).AndReturn(stack.env)
-        parser.Stack(self.ctx, stack.name,
-                     stack.t,
-                     owner_id=None,
-                     nested_depth=0,
-                     user_creds_id=None,
-                     stack_user_project_id=None,
-                     convergence=False,
-                     parent_resource=None).AndReturn(stack)
-
-        self.m.StubOutWithMock(stack, 'validate')
-        stack.validate().AndRaise(exception.StackValidationFailed(
-            message='fubar'))
-
-        self.m.ReplayAll()
-
-        ex = self.assertRaises(
-            dispatcher.ExpectedException,
-            self.man.create_stack,
-            self.ctx, stack_name,
-            template, params, None, {})
-        self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
-        self.m.VerifyAll()
 
     def _get_stack_adopt_data_and_template(self, environment=None):
         template = {
@@ -743,182 +652,6 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
             {'adopt_stack_data': str(adopt_data)})
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
         self.assertIn('Stack Adopt', six.text_type(ex.exc_info[1]))
-
-    def test_stack_create_invalid_stack_name(self):
-        stack_name = 'service_create_test_stack_invalid_name'
-        stack = tools.get_stack('test_stack', self.ctx)
-
-        self.assertRaises(dispatcher.ExpectedException,
-                          self.man.create_stack,
-                          self.ctx, stack_name, stack.t.t, {}, None, {})
-
-    def test_stack_create_invalid_resource_name(self):
-        stack_name = 'service_create_test_stack_invalid_res'
-        stack = tools.get_stack(stack_name, self.ctx)
-        tmpl = dict(stack.t)
-        tmpl['resources']['Web/Server'] = tmpl['resources']['WebServer']
-        del tmpl['resources']['WebServer']
-
-        self.assertRaises(dispatcher.ExpectedException,
-                          self.man.create_stack,
-                          self.ctx, stack_name,
-                          stack.t.t, {}, None, {})
-
-    def test_stack_create_AuthorizationFailure(self):
-        stack_name = 'service_create_test_stack_AuthorizationFailure'
-        stack = tools.get_stack(stack_name, self.ctx)
-        self.m.StubOutWithMock(parser.Stack, 'create_stack_user_project_id')
-        parser.Stack.create_stack_user_project_id().AndRaise(
-            exception.AuthorizationFailure)
-        self.assertRaises(dispatcher.ExpectedException,
-                          self.man.create_stack,
-                          self.ctx, stack_name,
-                          stack.t.t, {}, None, {})
-
-    def test_stack_create_no_credentials(self):
-        cfg.CONF.set_default('deferred_auth_method', 'password')
-        stack_name = 'test_stack_create_no_credentials'
-        params = {'foo': 'bar'}
-        template = '{ "Template": "data" }'
-
-        stack = tools.get_stack(stack_name, self.ctx)
-        # force check for credentials on create
-        stack['WebServer'].requires_deferred_auth = True
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
-        self.m.StubOutWithMock(parser, 'Stack')
-
-        ctx_no_pwd = utils.dummy_context(password=None)
-        ctx_no_user = utils.dummy_context(user=None)
-
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
-        environment.Environment(params).AndReturn(stack.env)
-        parser.Stack(ctx_no_pwd, stack.name,
-                     stack.t, owner_id=None,
-                     nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None,
-                     convergence=False,
-                     parent_resource=None).AndReturn(stack)
-
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
-        environment.Environment(params).AndReturn(stack.env)
-        parser.Stack(ctx_no_user, stack.name,
-                     stack.t, owner_id=None,
-                     nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None,
-                     convergence=False,
-                     parent_resource=None).AndReturn(stack)
-
-        self.m.ReplayAll()
-
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.create_stack,
-                               ctx_no_pwd, stack_name,
-                               template, params, None, {}, None)
-        self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
-        self.assertEqual(
-            'Missing required credential: X-Auth-Key',
-            six.text_type(ex.exc_info[1]))
-
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.create_stack,
-                               ctx_no_user, stack_name,
-                               template, params, None, {})
-        self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
-        self.assertEqual(
-            'Missing required credential: X-Auth-User',
-            six.text_type(ex.exc_info[1]))
-
-    def test_stack_create_total_resources_equals_max(self):
-        stack_name = 'service_create_stack_total_resources_equals_max'
-        params = {}
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
-        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
-               'Resources': {
-                   'A': {'Type': 'GenericResourceType'},
-                   'B': {'Type': 'GenericResourceType'},
-                   'C': {'Type': 'GenericResourceType'}}}
-
-        template = templatem.Template(tpl)
-        stack = parser.Stack(self.ctx, stack_name, template)
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
-        self.m.StubOutWithMock(parser, 'Stack')
-
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
-        environment.Environment(params).AndReturn(stack.env)
-        parser.Stack(self.ctx, stack.name,
-                     stack.t,
-                     owner_id=None,
-                     nested_depth=0,
-                     user_creds_id=None,
-                     stack_user_project_id=None,
-                     convergence=False,
-                     parent_resource=None).AndReturn(stack)
-
-        self.m.ReplayAll()
-
-        cfg.CONF.set_override('max_resources_per_stack', 3)
-
-        result = self.man.create_stack(self.ctx, stack_name, template, params,
-                                       None, {})
-        self.m.VerifyAll()
-        self.assertEqual(stack.identifier(), result)
-        self.assertEqual(3, stack.total_resources())
-        self.man.thread_group_mgr.groups[stack.id].wait()
-        stack.delete()
-
-    def test_stack_create_total_resources_exceeds_max(self):
-        stack_name = 'service_create_stack_total_resources_exceeds_max'
-        params = {}
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
-        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
-               'Resources': {
-                   'A': {'Type': 'GenericResourceType'},
-                   'B': {'Type': 'GenericResourceType'},
-                   'C': {'Type': 'GenericResourceType'}}}
-        cfg.CONF.set_override('max_resources_per_stack', 2)
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.create_stack, self.ctx, stack_name,
-                               tpl, params, None, {})
-        self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
-        self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      six.text_type(ex.exc_info[1]))
-
-    def test_stack_validate(self):
-        stack_name = 'service_create_test_validate'
-        stack = tools.get_stack(stack_name, self.ctx)
-        tools.setup_mocks(self.m, stack, mock_image_constraint=False)
-        resource = stack['WebServer']
-
-        tools.setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
-        self.m.ReplayAll()
-
-        resource.properties = properties.Properties(
-            resource.properties_schema,
-            {
-                'ImageId': 'CentOS 5.2',
-                'KeyName': 'test',
-                'InstanceType': 'm1.large'
-            },
-            context=self.ctx)
-        stack.validate()
-
-        resource.properties = properties.Properties(
-            resource.properties_schema,
-            {
-                'KeyName': 'test',
-                'InstanceType': 'm1.large'
-            },
-            context=self.ctx)
-        self.assertRaises(exception.StackValidationFailed, stack.validate)
 
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
@@ -1582,46 +1315,6 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
             six.text_type(ex.exc_info[1]))
 
         self.m.VerifyAll()
-
-    def test_validate_deferred_auth_context_trusts(self):
-        stack = tools.get_stack('test_deferred_auth', self.ctx)
-        stack['WebServer'].requires_deferred_auth = True
-        ctx = utils.dummy_context(user=None, password=None)
-        cfg.CONF.set_default('deferred_auth_method', 'trusts')
-
-        # using trusts, no username or password required
-        self.man._validate_deferred_auth_context(ctx, stack)
-
-    def test_validate_deferred_auth_context_not_required(self):
-        stack = tools.get_stack('test_deferred_auth', self.ctx)
-        stack['WebServer'].requires_deferred_auth = False
-        ctx = utils.dummy_context(user=None, password=None)
-        cfg.CONF.set_default('deferred_auth_method', 'password')
-
-        # stack performs no deferred operations, so no username or
-        # password required
-        self.man._validate_deferred_auth_context(ctx, stack)
-
-    def test_validate_deferred_auth_context_missing_credentials(self):
-        stack = tools.get_stack('test_deferred_auth', self.ctx)
-        stack['WebServer'].requires_deferred_auth = True
-        cfg.CONF.set_default('deferred_auth_method', 'password')
-
-        # missing username
-        ctx = utils.dummy_context(user=None)
-        ex = self.assertRaises(exception.MissingCredentialError,
-                               self.man._validate_deferred_auth_context,
-                               ctx, stack)
-        self.assertEqual('Missing required credential: X-Auth-User',
-                         six.text_type(ex))
-
-        # missing password
-        ctx = utils.dummy_context(password=None)
-        ex = self.assertRaises(exception.MissingCredentialError,
-                               self.man._validate_deferred_auth_context,
-                               ctx, stack)
-        self.assertEqual('Missing required credential: X-Auth-Key',
-                         six.text_type(ex))
 
 
 class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
