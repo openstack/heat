@@ -16,6 +16,8 @@
 
 localrc_path=$BASE/new/devstack/localrc
 localconf=$BASE/new/devstack/local.conf
+
+echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localrc_path
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path
 echo -e '[[post-config|$HEAT_CONF]]\n[DEFAULT]\n' >> $localconf
 echo -e 'notification_driver=messagingv2\n' >> $localconf
