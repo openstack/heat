@@ -78,13 +78,19 @@ class FloatingIP(neutron.NeutronResource):
         FIXED_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('IP address to use if the port has multiple addresses.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('ip_addr')
+            ]
         ),
         FLOATING_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('IP address of the floating IP. NOTE: The default policy '
               'setting in Neutron restricts usage of this property to '
               'administrative users only.'),
+            constraints=[
+                constraints.CustomConstraint('ip_addr')
+            ],
             support_status=support.SupportStatus(version='2015.2'),
         ),
     }
@@ -257,7 +263,10 @@ class FloatingIPAssociation(neutron.NeutronResource):
         FIXED_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('IP address to use if the port has multiple addresses.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('ip_addr')
+            ]
         ),
     }
 

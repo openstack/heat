@@ -201,7 +201,10 @@ class ElasticIpAssociation(resource.Resource):
         EIP: properties.Schema(
             properties.Schema.STRING,
             _('EIP address to associate with instance.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('ip_addr')
+            ]
         ),
         ALLOCATION_ID: properties.Schema(
             properties.Schema.STRING,

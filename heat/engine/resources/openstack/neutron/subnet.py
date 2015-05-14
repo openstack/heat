@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import netutils
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -130,11 +132,17 @@ class Subnet(neutron.NeutronResource):
                 schema={
                     ALLOCATION_POOL_START: properties.Schema(
                         properties.Schema.STRING,
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                     ALLOCATION_POOL_END: properties.Schema(
                         properties.Schema.STRING,
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                 },
             )
@@ -155,7 +163,10 @@ class Subnet(neutron.NeutronResource):
                     ),
                     ROUTE_NEXTHOP: properties.Schema(
                         properties.Schema.STRING,
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                 },
             ),
@@ -245,6 +256,13 @@ class Subnet(neutron.NeutronResource):
         if ra_mode and address_mode and (ra_mode != address_mode):
             msg = _('When both ipv6_ra_mode and ipv6_address_mode are set, '
                     'they must be equal.')
+            raise exception.StackValidationFailed(message=msg)
+
+        gateway_ip = self.properties.get(self.GATEWAY_IP)
+        if (gateway_ip and gateway_ip not in ['~', ''] and
+                not netutils.is_valid_ip(gateway_ip)):
+            msg = (_('Gateway IP address "%(gateway)" is in '
+                     'invalid format.'), gateway_ip)
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):

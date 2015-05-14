@@ -132,7 +132,10 @@ class Port(neutron.NeutronResource):
                     ),
                     FIXED_IP_IP_ADDRESS: properties.Schema(
                         properties.Schema.STRING,
-                        _('IP address desired in the subnet for this port.')
+                        _('IP address desired in the subnet for this port.'),
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                 },
             ),
@@ -166,7 +169,10 @@ class Port(neutron.NeutronResource):
                     ALLOWED_ADDRESS_PAIR_IP_ADDRESS: properties.Schema(
                         properties.Schema.STRING,
                         _('IP address to allow through this port.'),
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                 },
             )

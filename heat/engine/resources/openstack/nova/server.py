@@ -339,7 +339,10 @@ class Server(stack_user.StackUser):
                     NETWORK_FIXED_IP: properties.Schema(
                         properties.Schema.STRING,
                         _('Fixed IP address to specify for the port '
-                          'created on the requested network.')
+                          'created on the requested network.'),
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                     NETWORK_PORT: properties.Schema(
                         properties.Schema.STRING,
