@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import six
 
 from heat.common import exception
@@ -21,25 +20,22 @@ from heat.tests import common
 
 
 class SchemaTest(common.HeatTestCase):
-    @mock.patch('warnings.warn')
-    def test_warn_required_with_default(self, mock_warn):
-        constraints.Schema(constraints.Schema.STRING, 'A string',
-                           default='wibble', required=True)
+    def test_warn_required_with_default(self):
         msg = ("Option 'required=True' should not be used with any 'default' "
-               "value (wibble)")
-        mock_warn.assert_called_once_with(msg)
+               "value \(wibble\)")
+        with self.assertWarnsRegex(UserWarning, msg):
+            constraints.Schema(constraints.Schema.STRING, 'A string',
+                               default='wibble', required=True)
 
-    @mock.patch('warnings.warn')
-    def test_without_warn_only_default(self, mock_warn):
+    def test_without_warn_only_default(self):
         constraints.Schema(constraints.Schema.STRING, 'A string',
                            default='wibble')
-        self.assertEqual(0, mock_warn.call_count)
+        self.assertEqual(0, len(self.warnings.captures))
 
-    @mock.patch('warnings.warn')
-    def test_without_warn_only_required(self, mock_warn):
+    def test_without_warn_only_required(self):
         constraints.Schema(constraints.Schema.STRING, 'A string',
                            required=True)
-        self.assertEqual(0, mock_warn.call_count)
+        self.assertEqual(0, len(self.warnings.captures))
 
     def test_range_schema(self):
         d = {'range': {'min': 5, 'max': 10}, 'description': 'a range'}

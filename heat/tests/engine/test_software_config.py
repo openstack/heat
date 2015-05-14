@@ -37,7 +37,6 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
     def setUp(self):
         super(SoftwareConfigServiceTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.patch('heat.engine.service.warnings')
         self.engine = service.EngineService('a-host', 'a-topic')
 
     def _create_software_config(

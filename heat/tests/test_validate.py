@@ -820,7 +820,6 @@ class validateTest(common.HeatTestCase):
         self.gc = fakes_nova.FakeClient()
         resources.initialise()
         self.ctx = utils.dummy_context()
-        self.patch('heat.engine.service.warnings')
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')

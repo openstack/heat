@@ -77,6 +77,7 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
         self.setup_logging()
+        self.warnings = self.useFixture(fixtures.WarningsCapture())
         scheduler.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',

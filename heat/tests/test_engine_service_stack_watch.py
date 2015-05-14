@@ -23,9 +23,7 @@ class StackServiceWatcherTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackServiceWatcherTest, self).setUp()
-
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-        self.patch('heat.engine.service.warnings')
 
     @mock.patch.object(service_stack_watch.stack_object.Stack,
                        'get_all_by_owner_id')
