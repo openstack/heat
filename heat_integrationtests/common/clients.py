@@ -12,6 +12,7 @@
 
 import os
 
+import ceilometerclient.client
 import cinderclient.client
 import heatclient.client
 import keystoneclient.exceptions
@@ -30,6 +31,7 @@ class ClientManager(object):
     CINDERCLIENT_VERSION = '1'
     HEATCLIENT_VERSION = '1'
     NOVACLIENT_VERSION = '2'
+    CEILOMETER_VERSION = '2'
 
     def __init__(self, conf):
         self.conf = conf
@@ -39,6 +41,7 @@ class ClientManager(object):
         self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
         self.object_client = self._get_object_client()
+        self.metering_client = self._get_metering_client()
 
     def _get_orchestration_client(self):
         region = self.conf.region
@@ -136,3 +139,27 @@ class ClientManager(object):
             'insecure': dscv,
         }
         return swiftclient.client.Connection(**args)
+
+    def _get_metering_client(self):
+        dscv = self.conf.disable_ssl_certificate_validation
+
+        keystone = self._get_identity_client()
+        endpoint = keystone.service_catalog.url_for(
+            attr='region',
+            filter_value=self.conf.region,
+            service_type='metering',
+            endpoint_type='publicURL')
+
+        args = {
+            'username': self.conf.username,
+            'password': self.conf.password,
+            'tenant_name': self.conf.tenant_name,
+            'auth_url': self.conf.auth_url,
+            'insecure': dscv,
+            'region_name': self.conf.region,
+            'endpoint_type': 'publicURL',
+            'service_type': 'metering',
+        }
+
+        return ceilometerclient.client.Client(self.CEILOMETER_VERSION,
+                                              endpoint, **args)

@@ -1,0 +1,33 @@
+heat_template_version: 2013-05-23
+resources:
+  asg:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      max_size: 5
+      min_size: 1
+      resource:
+        type: OS::Heat::RandomString
+  scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: asg}
+      cooldown: 0
+      scaling_adjustment: 1
+  alarm:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 1 minute
+      meter_name: test_meter
+      statistic: count
+      comparison_operator: ge
+      threshold: 1
+      period: 60
+      evaluation_periods: 1
+      alarm_actions:
+        - {get_attr: [scaleup_policy, alarm_url]}
+      matching_metadata:
+        metadata.metering.stack_id: {get_param: "OS::stack_id"}
+outputs:
+  asg_size:
+    value: {get_attr: [asg, current_size]}
