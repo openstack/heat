@@ -33,6 +33,7 @@ from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
 from heat.engine import dependencies
+from heat.engine import event
 from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parameter_groups as param_groups
@@ -643,6 +644,14 @@ class Stack(collections.Mapping):
         '''
         return any(res.requires_deferred_auth for res in self.values())
 
+    def _add_event(self, action, status, reason):
+        '''Add a state change event to the database.'''
+        ev = event.Event(self.context, self, action, status, reason,
+                         self.id, {},
+                         self.name, 'OS::Heat::Stack')
+
+        ev.store()
+
     @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):
         '''Update the stack state in the database.'''
@@ -671,6 +680,7 @@ class Stack(collections.Mapping):
                       'name': self.name,
                       'reason': reason})
             notification.send(self)
+            self._add_event(action, status, reason)
 
     @property
     def state(self):
