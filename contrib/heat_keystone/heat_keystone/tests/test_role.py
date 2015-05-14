@@ -19,8 +19,7 @@ from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources.role import KeystoneRole  # noqa
-from ..resources.role import resource_mapping  # noqa
+from ..resources import role  # noqa
 
 keystone_role_template = {
     'heat_template_version': '2013-05-23',
@@ -44,7 +43,7 @@ class KeystoneRoleTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE, KeystoneRole)
+        resource._register_class(RESOURCE_TYPE, role.KeystoneRole)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
@@ -66,10 +65,10 @@ class KeystoneRoleTest(common.HeatTestCase):
         return value
 
     def test_resource_mapping(self):
-        mapping = resource_mapping()
+        mapping = role.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(KeystoneRole, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_role, KeystoneRole)
+        self.assertEqual(role.KeystoneRole, mapping[RESOURCE_TYPE])
+        self.assertIsInstance(self.test_role, role.KeystoneRole)
 
     def test_role_handle_create(self):
         mock_role = self._get_mock_role()
@@ -77,7 +76,7 @@ class KeystoneRoleTest(common.HeatTestCase):
 
         # validate the properties
         self.assertEqual('test_role_1',
-                         self.test_role.properties.get(KeystoneRole.NAME))
+                         self.test_role.properties.get(role.KeystoneRole.NAME))
 
         self.test_role.handle_create()
 
@@ -103,7 +102,7 @@ class KeystoneRoleTest(common.HeatTestCase):
         self.test_role.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
         # update the name property
-        prop_diff = {KeystoneRole.NAME: 'test_role_1_updated'}
+        prop_diff = {role.KeystoneRole.NAME: 'test_role_1_updated'}
 
         self.test_role.handle_update(json_snippet=None,
                                      tmpl_diff=None,
@@ -111,7 +110,7 @@ class KeystoneRoleTest(common.HeatTestCase):
 
         self.roles.update.assert_called_once_with(
             role=self.test_role.resource_id,
-            name=prop_diff[KeystoneRole.NAME]
+            name=prop_diff[role.KeystoneRole.NAME]
         )
 
     def test_role_handle_delete(self):

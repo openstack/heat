@@ -21,7 +21,7 @@ from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources.role_assignments import KeystoneRoleAssignment  # noqa
+from ..resources import role_assignments  # noqa
 
 RESOURCE_TYPE = 'OS::Keystone::DummyRoleAssignment'
 
@@ -55,7 +55,8 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE, KeystoneRoleAssignment)
+        resource._register_class(RESOURCE_TYPE,
+                                 role_assignments.KeystoneRoleAssignment)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
@@ -96,7 +97,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
 
     def test_properties_title(self):
         property_title_map = {
-            KeystoneRoleAssignment.ROLES: 'roles'
+            role_assignments.KeystoneRoleAssignment.ROLES: 'roles'
         }
 
         for actual_title, expected_title in property_title_map.items():
@@ -107,23 +108,24 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
                 actual_title)
 
     def test_property_roles_validate_schema(self):
-        schema = (KeystoneRoleAssignment.
-                  properties_schema[KeystoneRoleAssignment.ROLES])
+        schema = (role_assignments.KeystoneRoleAssignment.
+                  properties_schema[
+                      role_assignments.KeystoneRoleAssignment.ROLES])
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            KeystoneRoleAssignment.ROLES)
+            role_assignments.KeystoneRoleAssignment.ROLES)
 
         self.assertEqual(properties.Schema.LIST,
                          schema.type,
                          'type for property %s is modified' %
-                         KeystoneRoleAssignment.ROLES)
+                         role_assignments.KeystoneRoleAssignment.ROLES)
 
         self.assertEqual('List of role assignments.',
                          schema.description,
                          'description for property %s is modified' %
-                         KeystoneRoleAssignment.ROLES)
+                         role_assignments.KeystoneRoleAssignment.ROLES)
 
     def test_role_assignment_handle_create_user(self):
         # validate the properties
@@ -139,7 +141,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
                 'domain': 'domain_1'
             }],
             (self.test_role_assignment.properties.
-             get(KeystoneRoleAssignment.ROLES)))
+             get(role_assignments.KeystoneRoleAssignment.ROLES)))
 
         self.test_role_assignment.handle_create(user_id='user_1',
                                                 group_id=None)
@@ -171,7 +173,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
                 'domain': 'domain_1'
             }],
             (self.test_role_assignment.properties.
-             get(KeystoneRoleAssignment.ROLES)))
+             get(role_assignments.KeystoneRoleAssignment.ROLES)))
 
         self.test_role_assignment.handle_create(user_id=None,
                                                 group_id='group_1')
@@ -204,7 +206,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
         }
 
         prop_diff = {
-            KeystoneRoleAssignment.ROLES: [
+            role_assignments.KeystoneRoleAssignment.ROLES: [
                 {
                     'role': 'role_2',
                     'project': 'project_1'
@@ -262,7 +264,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
         }
 
         prop_diff = {
-            KeystoneRoleAssignment.ROLES: [
+            role_assignments.KeystoneRoleAssignment.ROLES: [
                 {
                     'role': 'role_2',
                     'project': 'project_1'
