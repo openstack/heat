@@ -72,12 +72,11 @@ class AttributeSchemaTest(common.HeatTestCase):
                          attrs._attributes['bar_dep'].support_status().message)
 
     def test_old_attribute_schema_format(self):
-        with mock.patch('heat.engine.attributes.warnings'):
-            s = 'Test description.'
-            self.assertIsInstance(attributes.Schema.from_attribute(s),
-                                  attributes.Schema)
-            self.assertEqual('Test description.',
-                             attributes.Schema.from_attribute(s).description)
+        s = 'Test description.'
+        self.assertIsInstance(attributes.Schema.from_attribute(s),
+                              attributes.Schema)
+        self.assertEqual('Test description.',
+                         attributes.Schema.from_attribute(s).description)
 
 
 class AttributeTest(common.HeatTestCase):

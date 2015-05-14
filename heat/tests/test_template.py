@@ -13,7 +13,6 @@
 
 import copy
 import json
-import warnings
 
 import fixtures
 from oslotest import mockpatch
@@ -1021,19 +1020,12 @@ class ResolveDataTest(common.HeatTestCase):
                           template.Template(empty_template),
                           tenant_id='bar')
 
-        with warnings.catch_warnings(record=True) as ws:
-            warnings.filterwarnings('always')
-
-            # Work around http://bugs.python.org/issue4180
-            getattr(stack, '__warningregistry__', {}).clear()
-
-            test_data = {'foo': 'bar'}
+        test_data = {'foo': 'bar'}
+        msg = ('Stack.resolve_runtime_data\(\) is deprecated.'
+               ' Use heat.engine.function.resolve\(\) instead')
+        with self.assertWarnsRegex(DeprecationWarning, msg):
             resolved = stk.resolve_runtime_data(test_data)
-
-            self.assertTrue(ws)
-            self.assertTrue(issubclass(ws[0].category, DeprecationWarning))
-
-            self.assertEqual(test_data, resolved)
+        self.assertEqual(test_data, resolved)
 
     def test_join_split(self):
         # join

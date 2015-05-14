@@ -29,7 +29,6 @@ class StackServiceActionsTest(common.HeatTestCase):
     def setUp(self):
         super(StackServiceActionsTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -132,7 +131,6 @@ class StackServiceUpdateActionsNotSupportedTest(common.HeatTestCase):
     def setUp(self):
         super(StackServiceUpdateActionsNotSupportedTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
 
     @mock.patch.object(stack.Stack, 'load')

@@ -561,7 +561,6 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -1630,7 +1629,6 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         super(StackConvergenceServiceCreateUpdateTest, self).setUp()
         cfg.CONF.set_override('convergence_engine', True)
         self.ctx = utils.dummy_context()
-        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -1740,7 +1738,6 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
         super(StackServiceAuthorizeTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-        self.patch('heat.engine.service.warnings')
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
@@ -1833,7 +1830,6 @@ class StackServiceTest(common.HeatTestCase):
         super(StackServiceTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-        self.patch('heat.engine.service.warnings')
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.create_periodic_tasks()
         self.eng.engine_id = 'engine-fake-uuid'

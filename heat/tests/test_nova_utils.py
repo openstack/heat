@@ -35,10 +35,6 @@ class NovaUtilsTests(common.HeatTestCase):
     def setUp(self):
         super(NovaUtilsTests, self).setUp()
         self.nova_client = self.m.CreateMockAnything()
-        self.mock_warnings = mock.patch(
-            'heat.engine.nova_utils.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
 
     def test_get_ip(self):
         my_image = self.m.CreateMockAnything()
@@ -130,13 +126,6 @@ class NovaUtilsTests(common.HeatTestCase):
 
 class NovaUtilsRefreshServerTests(common.HeatTestCase):
 
-    def setUp(self):
-        super(NovaUtilsRefreshServerTests, self).setUp()
-        self.mock_warnings = mock.patch(
-            'heat.engine.nova_utils.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
-
     def test_successful_refresh(self):
         server = self.m.CreateMockAnything()
         server.get().AndReturn(None)
@@ -181,10 +170,6 @@ class NovaUtilsUserdataTests(common.HeatTestCase):
     def setUp(self):
         super(NovaUtilsUserdataTests, self).setUp()
         self.nova_client = self.m.CreateMockAnything()
-        self.mock_warnings = mock.patch(
-            'heat.engine.nova_utils.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
 
     def test_build_userdata(self):
         """Tests the build_userdata function."""
@@ -242,13 +227,6 @@ class NovaUtilsUserdataTests(common.HeatTestCase):
 
 
 class NovaUtilsMetadataTests(common.HeatTestCase):
-
-    def setUp(self):
-        super(NovaUtilsMetadataTests, self).setUp()
-        self.mock_warnings = mock.patch(
-            'heat.engine.nova_utils.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
 
     def test_serialize_string(self):
         original = {'test_key': 'simple string value'}

@@ -211,8 +211,6 @@ class MetadataRefreshTest(common.HeatTestCase):
 class WaitCondMetadataUpdateTest(common.HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
-        self.patch('heat.engine.service.warnings')
-
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
         cfg.CONF.set_default('heat_waitcondition_server_url',
