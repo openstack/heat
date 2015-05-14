@@ -48,8 +48,8 @@ class StackUserTest(common.HeatTestCase):
                      resource_name='user', create_project=True,
                      password=None):
         t = template_format.parse(user_template)
-        stack = utils.parse_stack(t, stack_name=stack_name)
-        rsrc = stack[resource_name]
+        self.stack = utils.parse_stack(t, stack_name=stack_name)
+        rsrc = self.stack[resource_name]
 
         self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
         stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fc)
@@ -58,9 +58,9 @@ class StackUserTest(common.HeatTestCase):
             self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                    'create_stack_domain_project')
             fakes.FakeKeystoneClient.create_stack_domain_project(
-                stack.id).AndReturn(project_id)
+                self.stack.id).AndReturn(project_id)
         else:
-            stack.set_stack_user_project_id(project_id)
+            self.stack.set_stack_user_project_id(project_id)
 
         rsrc._store()
         self.m.StubOutWithMock(short_id, 'get_id')

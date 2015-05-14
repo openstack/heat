@@ -65,10 +65,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     def create_container(self, resource_name):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
+        self.stack = utils.parse_stack(t)
         resource = docker_container.DockerContainer(
             resource_name,
-            stack.t.resource_definitions(stack)[resource_name], stack)
+            self.stack.t.resource_definitions(self.stack)[resource_name],
+            self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
             fakeclient.FakeDockerClient())
@@ -94,11 +95,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_create_with_name(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['name'] = 'super-blog'
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
             fakeclient.FakeDockerClient())
@@ -133,13 +134,13 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_bindings_and_links(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['port_bindings'] = {
             '80/tcp': [{'HostPort': '80'}]}
         definition['Properties']['links'] = {'db': 'mysql'}
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
             fakeclient.FakeDockerClient())
@@ -223,12 +224,12 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_restart_policy_no(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['restart_policy'] = {
             'Name': 'no', 'MaximumRetryCount': 0}
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(resource.validate())
@@ -242,12 +243,12 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_restart_policy_on_failure(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['restart_policy'] = {
             'Name': 'on-failure', 'MaximumRetryCount': 10}
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(resource.validate())
@@ -261,12 +262,12 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_restart_policy_always(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['restart_policy'] = {
             'Name': 'always', 'MaximumRetryCount': 0}
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(resource.validate())
@@ -280,12 +281,12 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_caps(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['cap_add'] = ['NET_ADMIN']
         definition['Properties']['cap_drop'] = ['MKNOD']
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(resource.validate())
@@ -299,11 +300,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_read_only(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['read_only'] = True
         resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         get_client_mock.return_value.set_api_version('1.17')
@@ -317,11 +318,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     def arg_for_low_api_version(self, arg, value, low_version):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties'][arg] = value
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         get_client_mock.return_value.set_api_version(low_version)
@@ -343,11 +344,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_create_with_cpu_shares(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['cpu_shares'] = 512
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(my_resource.validate())
@@ -363,8 +364,8 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_mapping_devices(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['devices'] = (
             [{'path_on_host': '/dev/sda',
               'path_in_container': '/dev/xvdc',
@@ -373,7 +374,7 @@ class DockerContainerTest(common.HeatTestCase):
               'path_in_container': '/dev/xvdd',
               'permissions': 'rw'}])
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(my_resource.validate())
@@ -388,15 +389,15 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_mapping_devices_also_with_privileged(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['devices'] = (
             [{'path_on_host': '/dev/sdb',
               'path_in_container': '/dev/xvdc',
               'permissions': 'r'}])
         definition['Properties']['privileged'] = True
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(my_resource.validate())
@@ -415,13 +416,13 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_start_with_mapping_devices_not_set_path_in_container(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['devices'] = (
             [{'path_on_host': '/dev/sda',
               'permissions': 'rwm'}])
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(my_resource.validate())
@@ -435,11 +436,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_create_with_cpu_set(self):
         t = template_format.parse(template)
-        stack = utils.parse_stack(t)
-        definition = stack.t.resource_definitions(stack)['Blog']
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
         definition['Properties']['cpu_set'] = '0-8,16-24,28'
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, stack)
+            'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = fakeclient.FakeDockerClient()
         self.assertIsNone(my_resource.validate())

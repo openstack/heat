@@ -92,9 +92,9 @@ class CloudServersTest(common.HeatTestCase):
         templ = template.Template(
             t, env=environment.Environment({'key_name': 'test'}))
 
-        stack = parser.Stack(self.ctx, stack_name, templ,
-                             stack_id=uuidutils.generate_uuid())
-        return (templ, stack)
+        self.stack = parser.Stack(self.ctx, stack_name, templ,
+                                  stack_id=uuidutils.generate_uuid())
+        return (templ, self.stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,
                            override_name=False, stub_create=True, exit_code=0):

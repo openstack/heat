@@ -54,8 +54,8 @@ class TestScalingGroupTags(common.HeatTestCase):
     def setUp(self):
         super(TestScalingGroupTags, self).setUp()
         t = template_format.parse(inline_templates.as_heat_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['my-group']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['my-group']
 
     def test_tags_default(self):
         expected = [{'Key': 'metering.groupname',
@@ -118,8 +118,8 @@ class TestGroupAdjust(common.HeatTestCase):
                                  generic_resource.ResourceWithPropsAndAttrs)
 
         t = template_format.parse(inline_templates.as_heat_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['my-group']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['my-group']
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -292,8 +292,8 @@ class TestGroupCrud(common.HeatTestCase):
         self.stub_SnapshotConstraint_validate()
 
         t = template_format.parse(inline_templates.as_heat_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['my-group']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['my-group']
         self.assertIsNone(self.group.validate())
 
     def test_handle_create(self):
@@ -370,8 +370,8 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
                                  generic_resource.ResourceWithPropsAndAttrs)
 
         t = template_format.parse(inline_templates.as_heat_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['my-group']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['my-group']
         self.assertIsNone(self.group.validate())
 
     def test_no_instance_list(self):

@@ -47,8 +47,8 @@ class NovaServerGroupTest(common.HeatTestCase):
 
     def _init_template(self, sg_template):
         template = template_format.parse(json.dumps(sg_template))
-        stack = utils.parse_stack(template)
-        self.sg = stack['ServerGroup']
+        self.stack = utils.parse_stack(template)
+        self.sg = self.stack['ServerGroup']
         # create mock clients and objects
         nova = mock.MagicMock()
         self.sg.nova = mock.MagicMock(return_value=nova)
@@ -56,24 +56,24 @@ class NovaServerGroupTest(common.HeatTestCase):
 
     def _create_sg(self, name):
         if name:
-                sg = sg_template['resources']['ServerGroup']
-                sg['properties']['name'] = name
-                self._init_template(sg_template)
-                self.sg_mgr.create.return_value = FakeGroup(name)
+            sg = sg_template['resources']['ServerGroup']
+            sg['properties']['name'] = name
+            self._init_template(sg_template)
+            self.sg_mgr.create.return_value = FakeGroup(name)
         else:
-                try:
-                        sg = sg_template['resources']['ServerGroup']
-                        del sg['properties']['name']
-                except Exception:
-                        pass
-                self._init_template(sg_template)
-                name = 'test'
-                n = name
+            try:
+                sg = sg_template['resources']['ServerGroup']
+                del sg['properties']['name']
+            except Exception:
+                pass
+            self._init_template(sg_template)
+            name = 'test'
+            n = name
 
-                def fake_create(name, policies):
-                        self.assertTrue(len(name) > 1)
-                        return FakeGroup(n)
-                self.sg_mgr.create = fake_create
+            def fake_create(name, policies):
+                self.assertTrue(len(name) > 1)
+                return FakeGroup(n)
+            self.sg_mgr.create = fake_create
         scheduler.TaskRunner(self.sg.create)()
         self.assertEqual((self.sg.CREATE, self.sg.COMPLETE),
                          self.sg.state)

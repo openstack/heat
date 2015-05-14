@@ -125,10 +125,10 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
             }
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(gnocchi_resources_alarm_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.CeilometerGnocchiResourcesAlarm(
-            'GnoResAlarm', resource_defns['GnoResAlarm'], stack)
+            'GnoResAlarm', resource_defns['GnoResAlarm'], self.stack)
 
     def test_update(self):
         rsrc = self.create_alarm()
@@ -151,8 +151,8 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
 
     def _prepare_check_resource(self):
         snippet = template_format.parse(gnocchi_resources_alarm_template)
-        stack = utils.parse_stack(snippet)
-        res = stack['GnoResAlarm']
+        self.stack = utils.parse_stack(snippet)
+        res = self.stack['GnoResAlarm']
         res.ceilometer = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.ceilometer().alarms.get.return_value = mock_alarm
@@ -260,11 +260,11 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(
             gnocchi_aggregation_by_metrics_alarm_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.CeilometerGnocchiAggregationByMetricsAlarm(
             'GnoAggregationByMetricsAlarm',
-            resource_defns['GnoAggregationByMetricsAlarm'], stack)
+            resource_defns['GnoAggregationByMetricsAlarm'], self.stack)
 
     def test_update(self):
         rsrc = self.create_alarm()
@@ -290,8 +290,8 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
     def _prepare_check_resource(self):
         snippet = template_format.parse(
             gnocchi_aggregation_by_metrics_alarm_template)
-        stack = utils.parse_stack(snippet)
-        res = stack['GnoAggregationByMetricsAlarm']
+        self.stack = utils.parse_stack(snippet)
+        res = self.stack['GnoAggregationByMetricsAlarm']
         res.ceilometer = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.ceilometer().alarms.get.return_value = mock_alarm
@@ -327,11 +327,11 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(
             gnocchi_aggregation_by_resources_alarm_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.CeilometerGnocchiAggregationByResourcesAlarm(
             'GnoAggregationByResourcesAlarm',
-            resource_defns['GnoAggregationByResourcesAlarm'], stack)
+            resource_defns['GnoAggregationByResourcesAlarm'], self.stack)
 
     def test_update(self):
         rsrc = self.create_alarm()
@@ -355,8 +355,8 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
     def _prepare_check_resource(self):
         snippet = template_format.parse(
             gnocchi_aggregation_by_resources_alarm_template)
-        stack = utils.parse_stack(snippet)
-        res = stack['GnoAggregationByResourcesAlarm']
+        self.stack = utils.parse_stack(snippet)
+        res = self.stack['GnoAggregationByResourcesAlarm']
         res.ceilometer = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.ceilometer().alarms.get.return_value = mock_alarm

@@ -47,14 +47,14 @@ class ManilaShareTypeTest(common.HeatTestCase):
         resource._register_class("OS::Manila::ShareType",
                                  mshare_type.ManilaShareType)
 
-    @staticmethod
-    def _init_share(stack_name, share_type_name="test_share_type"):
+    def _init_share(self, stack_name, share_type_name="test_share_type"):
         # parse stack
         tmp = template_format.parse(manila_template)
-        stack = utils.parse_stack(tmp, stack_name=stack_name)
-        res_def = stack.t.resource_definitions(stack)["test_share_type"]
+        self.stack = utils.parse_stack(tmp, stack_name=stack_name)
+        defns = self.stack.t.resource_definitions(self.stack)
+        res_def = defns["test_share_type"]
         share_type = mshare_type.ManilaShareType(
-            share_type_name, res_def, stack)
+            share_type_name, res_def, self.stack)
         # mock clients and plugins
         mock_client = mock.MagicMock()
         client = mock.MagicMock(return_value=mock_client)

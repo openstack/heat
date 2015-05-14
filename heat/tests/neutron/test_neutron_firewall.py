@@ -86,10 +86,10 @@ class FirewallTest(common.HeatTestCase):
         ).AndReturn({'firewall': {'id': '5678'}})
 
         snippet = template_format.parse(firewall_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return firewall.Firewall(
-            'firewall', resource_defns['firewall'], stack)
+            'firewall', resource_defns['firewall'], self.stack)
 
     def test_create(self):
         rsrc = self.create_firewall()
@@ -214,10 +214,10 @@ class FirewallPolicyTest(common.HeatTestCase):
         ).AndReturn({'firewall_policy': {'id': '5678'}})
 
         snippet = template_format.parse(firewall_policy_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return firewall.FirewallPolicy(
-            'firewall_policy', resource_defns['firewall_policy'], stack)
+            'firewall_policy', resource_defns['firewall_policy'], self.stack)
 
     def test_create(self):
         rsrc = self.create_firewall_policy()
@@ -340,10 +340,10 @@ class FirewallRuleTest(common.HeatTestCase):
         ).AndReturn({'firewall_rule': {'id': '5678'}})
 
         snippet = template_format.parse(firewall_rule_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return firewall.FirewallRule(
-            'firewall_rule', resource_defns['firewall_rule'], stack)
+            'firewall_rule', resource_defns['firewall_rule'], self.stack)
 
     def test_create(self):
         rsrc = self.create_firewall_rule()

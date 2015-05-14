@@ -129,11 +129,11 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
         t = template_format.parse(gw_template)
 
-        stack = utils.parse_stack(t)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(t)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
-            resource_defns['NetworkGateway'], stack)
+            resource_defns['NetworkGateway'], self.stack)
         return rsrc
 
     def prepare_create_network_gateway(self, resolve_neutron=True):
@@ -180,11 +180,11 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         else:
             t = template_format.parse(gw_template_deprecated)
 
-        stack = utils.parse_stack(t)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(t)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
-            resource_defns['NetworkGateway'], stack)
+            resource_defns['NetworkGateway'], self.stack)
         return rsrc
 
     def _test_network_gateway_create(self, resolve_neutron=True):

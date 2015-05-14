@@ -1102,7 +1102,10 @@ class PropertiesTest(common.HeatTestCase):
         class rsrc(object):
             action = INIT = "INIT"
 
-        stack = {'another_res': rsrc()}
+        class DummyStack(dict):
+            pass
+
+        stack = DummyStack(another_res=rsrc())
 
         # define properties with function and constraint
         props = properties.Properties(
