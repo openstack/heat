@@ -143,7 +143,10 @@ class Port(neutron.NeutronResource):
         ),
         MAC_ADDRESS: properties.Schema(
             properties.Schema.STRING,
-            _('MAC address to give to this port.')
+            _('MAC address to give to this port.'),
+            constraints=[
+                constraints.CustomConstraint('mac_addr')
+            ]
         ),
         DEVICE_ID: properties.Schema(
             properties.Schema.STRING,
@@ -164,7 +167,10 @@ class Port(neutron.NeutronResource):
                 schema={
                     ALLOWED_ADDRESS_PAIR_MAC_ADDRESS: properties.Schema(
                         properties.Schema.STRING,
-                        _('MAC address to allow through this port.')
+                        _('MAC address to allow through this port.'),
+                        constraints=[
+                            constraints.CustomConstraint('mac_addr')
+                        ]
                     ),
                     ALLOWED_ADDRESS_PAIR_IP_ADDRESS: properties.Schema(
                         properties.Schema.STRING,
