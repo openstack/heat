@@ -119,10 +119,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone='nova',
             description='test_description',
             name='test_name',
-            imageRef='46988116-6703-4623-9dbc-2bc6d284021b',
-            snapshot_id='snap-123',
             metadata={'key': 'value'},
-            source_volid='vol-012',
             volume_type='lvm').AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
@@ -132,12 +129,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.t['resources']['volume']['properties'].update({
             'volume_type': 'lvm',
-            # Note that specifying all these arguments doesn't work in
-            # practice, as they are conflicting, but we just want to check they
-            # are sent to the backend.
-            'imageRef': '46988116-6703-4623-9dbc-2bc6d284021b',
-            'snapshot_id': 'snap-123',
-            'source_volid': 'vol-012',
         })
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume')
@@ -893,6 +884,72 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertIn('Scheduler hints are not supported by the current '
                       'volume API.', six.text_type(ex))
         self.m.VerifyAll()
+
+    def test_cinder_create_with_image_and_imageRef(self):
+        stack_name = 'test_create_with_size_snapshot_and_image'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        vp = stack.t['Resources']['volume2']['Properties']
+        vp['imageRef'] = 'image-456'
+        vp['image'] = 'image-123'
+        vp.pop('size')
+        rsrc = stack['volume2']
+        self.stub_ImageConstraint_validate()
+        ex = self.assertRaises(exception.ResourcePropertyConflict,
+                               rsrc.validate)
+        self.assertEqual("Cannot define the following properties at the same "
+                         "time: image, imageRef.",
+                         six.text_type(ex))
+
+    def test_cinder_create_with_size_snapshot_and_image(self):
+        stack_name = 'test_create_with_size_snapshot_and_image'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        vp = stack.t['Resources']['volume2']['Properties']
+        vp['snapshot_id'] = 'snapshot-123'
+        vp['image'] = 'image-123'
+        rsrc = stack['volume2']
+        self.stub_ImageConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               rsrc.validate)
+        self.assertIn('If "backup_id" is not specified, you can specify '
+                      '"size" or/and one of "image/imageRef", '
+                      '"source_volid" or "snapshot_id", but currently '
+                      'specified options: [\'snapshot_id\', \'image\']',
+                      six.text_type(ex))
+
+    def test_cinder_create_with_snapshot_and_source_volume(self):
+        stack_name = 'test_create_with_snapshot_and_source_volume'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        vp = stack.t['Resources']['volume2']['Properties']
+        vp['snapshot_id'] = 'snapshot-123'
+        vp['source_volid'] = 'source_volume-123'
+        vp.pop('size')
+        rsrc = stack['volume2']
+        self.stub_VolumeConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               rsrc.validate)
+        self.assertIn('If neither "backup_id" nor "size" is specified, you '
+                      'should specify only one of "image/imageRef", '
+                      '"source_volid" or "snapshot_id", but currently '
+                      'specified options: [\'snapshot_id\', \'source_volid\']',
+                      six.text_type(ex))
+
+    def test_cinder_create_no_size_no_options(self):
+        stack_name = 'test_create_no_size_no_options'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        vp = stack.t['Resources']['volume2']['Properties']
+        vp.pop('size')
+        rsrc = stack['volume2']
+        self.stub_VolumeConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               rsrc.validate)
+        self.assertIn('If neither "backup_id" nor "size" is specified, you '
+                      'should specify only one of "image/imageRef", '
+                      '"source_volid" or "snapshot_id", but currently '
+                      'specified options: []',
+                      six.text_type(ex))
 
     def test_volume_restore(self):
         stack_name = 'test_cvolume_restore_stack'

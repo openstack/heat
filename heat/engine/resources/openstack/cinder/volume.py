@@ -353,6 +353,49 @@ class CinderVolume(vb.BaseVolume):
     def check_delete_snapshot_complete(self, delete_task):
         return delete_task.step()
 
+    def _build_exclusive_options(self):
+        exclusive_options = []
+        if self.properties.get(self.SNAPSHOT_ID):
+            exclusive_options.append(self.SNAPSHOT_ID)
+        if self.properties.get(self.SOURCE_VOLID):
+            exclusive_options.append(self.SOURCE_VOLID)
+        if self.properties.get(self.IMAGE):
+            exclusive_options.append(self.IMAGE)
+        if self.properties.get(self.IMAGE_REF):
+            exclusive_options.append(self.IMAGE_REF)
+        return exclusive_options
+
+    def _validate_create_sources(self):
+        exclusive_options = self._build_exclusive_options()
+        size = self.properties.get(self.SIZE)
+        if not size and len(exclusive_options) != 1:
+                msg = (_('If neither "%(backup_id)s" nor "%(size)s" is '
+                         'specified, you should specify only one of '
+                         '"%(image)s/%(image_ref)s", "%(source_vol)s" '
+                         'or "%(snapshot_id)s", but currently specified '
+                         'options: %(exclusive_options)s.')
+                       % {'backup_id': self.BACKUP_ID,
+                          'size': self.SIZE,
+                          'image': self.IMAGE,
+                          'image_ref': self.IMAGE_REF,
+                          'source_vol': self.SOURCE_VOLID,
+                          'snapshot_id': self.SNAPSHOT_ID,
+                          'exclusive_options': exclusive_options})
+                raise exception.StackValidationFailed(message=msg)
+        elif size and len(exclusive_options) > 1:
+            msg = (_('If "%(backup_id)s" is not specified, you can specify '
+                     '"%(size)s" or/and one of "%(image)s/%(image_ref)s", '
+                     '"%(source_vol)s" or "%(snapshot_id)s", but currently '
+                     'specified options: %(exclusive_options)s.')
+                   % {'backup_id': self.BACKUP_ID,
+                      'size': self.SIZE,
+                      'image': self.IMAGE,
+                      'image_ref': self.IMAGE_REF,
+                      'source_vol': self.SOURCE_VOLID,
+                      'snapshot_id': self.SNAPSHOT_ID,
+                      'exclusive_options': exclusive_options})
+            raise exception.StackValidationFailed(message=msg)
+
     def validate(self):
         """Validate provided params."""
         res = super(CinderVolume, self).validate()
@@ -365,6 +408,15 @@ class CinderVolume(vb.BaseVolume):
             raise exception.StackValidationFailed(
                 message=_('Scheduler hints are not supported by the current '
                           'volume API.'))
+        # can not specify both image and imageRef
+        image = self.properties.get(self.IMAGE)
+        imageRef = self.properties.get(self.IMAGE_REF)
+        if image and imageRef:
+            raise exception.ResourcePropertyConflict(self.IMAGE,
+                                                     self.IMAGE_REF)
+        # if not create from backup, need to check other create sources
+        if not self.properties.get(self.BACKUP_ID):
+            self._validate_create_sources()
 
     def handle_restore(self, defn, restore_data):
         backup_id = restore_data['resource_data']['backup_id']
