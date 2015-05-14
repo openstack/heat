@@ -217,28 +217,23 @@ class RemoteStack(resource.Resource):
 
     def _check_action_complete(self, action):
         stack = self.heat().stacks.get(stack_id=self.resource_id)
-        if stack.action == action:
-            if stack.status == self.IN_PROGRESS:
-                return False
-            elif stack.status == self.COMPLETE:
-                return True
-            elif stack.status == self.FAILED:
-                raise resource.ResourceInError(
-                    resource_status=stack.stack_status,
-                    status_reason=stack.stack_status_reason)
-            else:
-                # Note: this should never happen, so it really means that
-                # the resource/engine is in serious problem if it happens.
-                raise resource.ResourceUnknownStatus(
-                    resource_status=stack.stack_status,
-                    status_reason=stack.stack_status_reason)
+        if stack.action != action:
+            return False
+
+        if stack.status == self.IN_PROGRESS:
+            return False
+        elif stack.status == self.COMPLETE:
+            return True
+        elif stack.status == self.FAILED:
+            raise resource.ResourceInError(
+                resource_status=stack.stack_status,
+                status_reason=stack.stack_status_reason)
         else:
-            msg = _('Resource action mismatch detected: expected=%(expected)s '
-                    'actual=%(actual)s') % dict(expected=action,
-                                                actual=stack.action)
+            # Note: this should never happen, so it really means that
+            # the resource/engine is in serious problem if it happens.
             raise resource.ResourceUnknownStatus(
                 resource_status=stack.stack_status,
-                status_reason=msg)
+                status_reason=stack.stack_status_reason)
 
     def check_create_complete(self, *args):
         return self._check_action_complete(action=self.CREATE)

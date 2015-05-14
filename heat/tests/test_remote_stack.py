@@ -593,24 +593,3 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.heat.stacks.get = mock.MagicMock(side_effect=side_effect)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-
-    def test_stack_status_error(self):
-        returns = [get_stack(stack_status='DELETE_IN_PROGRESS'),
-                   get_stack(stack_status='UPDATE_COMPLETE')]
-
-        def side_effect_d(*args, **kwargs):
-            return returns.pop(0)
-
-        rsrc = self.create_remote_stack()
-
-        self.heat.stacks.get = mock.MagicMock(side_effect=side_effect_d)
-        self.heat.stacks.delete = mock.MagicMock()
-        remote_stack_id = rsrc.resource_id
-        error = self.assertRaises(exception.ResourceFailure,
-                                  scheduler.TaskRunner(rsrc.delete))
-        reason = ('Resource action mismatch detected: expected=DELETE '
-                  'actual=UPDATE')
-        error_msg = ('ResourceUnknownStatus: Resource failed - Unknown '
-                     'status UPDATE_COMPLETE due to "%s"') % reason
-        self.assertEqual(error_msg, six.text_type(error))
-        self.heat.stacks.delete.assert_called_with(stack_id=remote_stack_id)
