@@ -429,7 +429,6 @@ class Stack(collections.Mapping):
           status, action and status_reason.
         - We sometimes only want the DB attributes.
         """
-
         stack = {
             'owner_id': self.owner_id,
             'username': self.username,
@@ -471,6 +470,7 @@ class Stack(collections.Mapping):
         s['backup'] = backup
         s['updated_at'] = self.updated_time
         if self.t.id is None:
+            stack_object.Stack.encrypt_hidden_parameters(self.t)
             s['raw_template_id'] = self.t.store(self.context)
         else:
             s['raw_template_id'] = self.t.id

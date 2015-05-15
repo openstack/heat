@@ -24,6 +24,7 @@ class YamlEnvironmentTest(common.HeatTestCase):
         yaml1 = ''
         yaml2 = '''
 parameters: {}
+encrypted_param_names: []
 parameter_defaults: {}
 resource_registry: {}
 '''

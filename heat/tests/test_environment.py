@@ -38,6 +38,7 @@ class EnvironmentTest(common.HeatTestCase):
     def test_load_old_parameters(self):
         old = {u'a': u'ff', u'b': u'ss'}
         expected = {u'parameters': old,
+                    u'encrypted_param_names': [],
                     u'parameter_defaults': {},
                     u'resource_registry': {u'resources': {}}}
         env = environment.Environment(old)
@@ -45,6 +46,7 @@ class EnvironmentTest(common.HeatTestCase):
 
     def test_load_new_env(self):
         new_env = {u'parameters': {u'a': u'ff', u'b': u'ss'},
+                   u'encrypted_param_names': [],
                    u'parameter_defaults': {u'ff': 'new_def'},
                    u'resource_registry': {u'OS::Food': u'fruity.yaml',
                                           u'resources': {}}}
@@ -56,6 +58,7 @@ class EnvironmentTest(common.HeatTestCase):
         prev_params = {'foo': 'bar', 'tester': 'Yes'}
         params = {}
         expected = {'parameters': prev_params,
+                    'encrypted_param_names': [],
                     'parameter_defaults': {},
                     'resource_registry': {'resources': {}}}
         prev_env = environment.Environment(
@@ -70,6 +73,7 @@ class EnvironmentTest(common.HeatTestCase):
         prev_params = {'foo': 'bar', 'tester': 'Yes'}
         params = {'tester': 'patched'}
         expected = {'parameters': {'foo': 'bar', 'tester': 'patched'},
+                    'encrypted_param_names': [],
                     'parameter_defaults': {},
                     'resource_registry': {'resources': {}}}
         prev_env = environment.Environment(
@@ -85,6 +89,7 @@ class EnvironmentTest(common.HeatTestCase):
                        'another_tester': 'Yes'}
         params = {'tester': 'patched'}
         expected = {'parameters': {'foo': 'bar', 'tester': 'patched'},
+                    'encrypted_param_names': [],
                     'parameter_defaults': {},
                     'resource_registry': {'resources': {}}}
         prev_env = environment.Environment(
@@ -99,6 +104,7 @@ class EnvironmentTest(common.HeatTestCase):
         prev_params = {'foo': 'bar', 'tester': 'Yes'}
         params = {}
         expected = {'parameters': {'foo': 'bar'},
+                    'encrypted_param_names': [],
                     'parameter_defaults': {},
                     'resource_registry': {'resources': {}}}
         prev_env = environment.Environment(
@@ -487,6 +493,7 @@ class ChildEnvTest(common.HeatTestCase):
         new_params = {'foo': 'bar', 'tester': 'Yes'}
         penv = environment.Environment()
         expected = {'parameters': new_params,
+                    'encrypted_param_names': [],
                     'parameter_defaults': {},
                     'resource_registry': {'resources': {}}}
         cenv = environment.get_child_environment(penv, new_params)
@@ -496,6 +503,7 @@ class ChildEnvTest(common.HeatTestCase):
         new_params = {'parameters': {'foo': 'bar', 'tester': 'Yes'}}
         penv = environment.Environment()
         expected = {'parameter_defaults': {},
+                    'encrypted_param_names': [],
                     'resource_registry': {'resources': {}}}
         expected.update(new_params)
         cenv = environment.get_child_environment(penv, new_params)
@@ -506,6 +514,7 @@ class ChildEnvTest(common.HeatTestCase):
         parent_params = {'parameters': {'gone': 'hopefully'}}
         penv = environment.Environment(env=parent_params)
         expected = {'parameter_defaults': {},
+                    'encrypted_param_names': [],
                     'resource_registry': {'resources': {}}}
         expected.update(new_params)
         cenv = environment.get_child_environment(penv, new_params)
