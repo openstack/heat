@@ -1173,8 +1173,7 @@ class EngineService(service.Service):
                           implementation.
         '''
 
-        def _resource_signal(rsrc, details):
-            stack = rsrc.stack
+        def _resource_signal(stack, rsrc, details):
             LOG.debug("signaling resource %s:%s" % (stack.name, rsrc.name))
             rsrc.signal(details)
 
@@ -1199,11 +1198,11 @@ class EngineService(service.Service):
         rsrc = stack[resource_name]
         if callable(rsrc.signal):
             if sync_call:
-                _resource_signal(rsrc, details)
+                _resource_signal(stack, rsrc, details)
                 return rsrc.metadata_get()
             else:
                 self.thread_group_mgr.start(stack.id, _resource_signal,
-                                            rsrc, details)
+                                            stack, rsrc, details)
 
     @context.request_context
     def find_physical_resource(self, cnxt, physical_resource_id):

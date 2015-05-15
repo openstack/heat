@@ -2937,6 +2937,7 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.thread_group_mgr.start(stack.id,
                                         mox.IgnoreArg(),
                                         mox.IgnoreArg(),
+                                        mox.IgnoreArg(),
                                         mox.IgnoreArg()).AndReturn(None)
 
         self.m.ReplayAll()
