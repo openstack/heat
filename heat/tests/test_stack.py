@@ -279,10 +279,12 @@ class StackTest(common.HeatTestCase):
                {'A': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
-                                 status_reason='blarg')
+                                 status_reason='blarg',
+                                 parent_resource='parent')
 
-        self.stack._parent_resource = mock.Mock()
-        self.stack._parent_resource.stack = None
+        parent_resource = mock.Mock()
+        parent_resource.stack = None
+        self.stack._parent_stack = dict(parent=parent_resource)
         self.assertEqual(self.stack, self.stack.root_stack)
 
     def test_root_stack_with_parent(self):
@@ -290,10 +292,11 @@ class StackTest(common.HeatTestCase):
                'Resources':
                {'A': {'Type': 'GenericResourceType'}}}
         stk = stack.Stack(self.ctx, 'test_stack', template.Template(tpl),
-                          status_reason='blarg')
+                          status_reason='blarg', parent_resource='parent')
 
-        stk._parent_resource = mock.Mock()
-        stk._parent_resource.stack.root_stack = 'test value'
+        parent_resource = mock.Mock()
+        parent_resource.stack.root_stack = 'test value'
+        stk._parent_stack = dict(parent=parent_resource)
         self.assertEqual('test value', stk.root_stack)
 
     def test_load_parent_resource(self):

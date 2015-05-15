@@ -797,7 +797,7 @@ class HOTemplateTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_tpl_empty),
                              parent_resource='parent')
-        stack._parent_resource = parent_resource
+        stack._parent_stack = dict(parent=parent_resource)
         self.assertEqual({"foo": "bar"},
                          self.resolve(metadata_snippet, stack.t, stack))
         self.assertEqual('Retain',
@@ -823,7 +823,7 @@ class HOTemplateTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_tpl_empty),
                              parent_resource='parent')
-        stack._parent_resource = parent_resource
+        stack._parent_stack = dict(parent=parent_resource)
         self.assertEqual('Retain',
                          self.resolve(deletion_policy_snippet, stack.t, stack))
 
@@ -843,13 +843,14 @@ class HOTemplateTest(common.HeatTestCase):
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = rsrc_defn.ResourceDefinition('parent', 'SomeType')
-        parent_resource.stack = parser.Stack(utils.dummy_context(),
-                                             'toplevel_stack',
-                                             template.Template(hot_tpl_empty))
+        parent_stack = parser.Stack(utils.dummy_context(),
+                                    'toplevel_stack',
+                                    template.Template(hot_tpl_empty))
+        parent_stack._resources = {'parent': parent_resource}
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_tpl_empty),
                              parent_resource='parent')
-        stack._parent_resource = parent_resource
+        stack._parent_stack = parent_stack
         self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
 
     def test_removed_function(self):
