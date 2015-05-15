@@ -358,9 +358,9 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def _mock_loadbalancer(self, lb_template, expected_name, expected_body):
         t = template_format.parse(json.dumps(lb_template))
-        s = utils.parse_stack(t, stack_name=utils.random_name())
+        self.stack = utils.parse_stack(t, stack_name=utils.random_name())
 
-        rsrc, fake_loadbalancer = self._mock_create(s.t, s,
+        rsrc, fake_loadbalancer = self._mock_create(self.stack.t, self.stack,
                                                     self.
                                                     _get_first_resource_name(
                                                         lb_template),

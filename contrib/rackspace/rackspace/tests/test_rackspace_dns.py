@@ -103,15 +103,15 @@ class RackspaceDnsTest(common.HeatTestCase):
         t = parsed_t
         templ = template.Template(
             t, env=environment.Environment({'name': 'test'}))
-        stack = parser.Stack(utils.dummy_context(),
-                             stack_name,
-                             templ,
-                             stack_id=str(uuid.uuid4()))
+        self.stack = parser.Stack(utils.dummy_context(),
+                                  stack_name,
+                                  templ,
+                                  stack_id=str(uuid.uuid4()))
 
         instance = cloud_dns.CloudDns(
             '%s_name' % name,
-            templ.resource_definitions(stack)['domain'],
-            stack)
+            templ.resource_definitions(self.stack)['domain'],
+            self.stack)
         return instance
 
     def _stubout_create(self, instance, fake_dnsinstance, **create_args):

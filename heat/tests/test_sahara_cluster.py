@@ -73,8 +73,8 @@ class SaharaClusterTest(common.HeatTestCase):
         self.t = template_format.parse(cluster_stack_template)
 
     def _init_cluster(self, template):
-        stack = utils.parse_stack(template)
-        cluster = stack['super-cluster']
+        self.stack = utils.parse_stack(template)
+        cluster = self.stack['super-cluster']
         return cluster
 
     def _create_cluster(self, template):

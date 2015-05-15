@@ -441,8 +441,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
 
     def _prepare_check_resource(self):
         snippet = template_format.parse(not_string_alarm_template)
-        stack = utils.parse_stack(snippet)
-        res = stack['MEMAlarmHigh']
+        self.stack = utils.parse_stack(snippet)
+        res = self.stack['MEMAlarmHigh']
         res.ceilometer = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.ceilometer().alarms.get.return_value = mock_alarm
@@ -499,10 +499,10 @@ class CombinationAlarmTest(common.HeatTestCase):
                               'operator': u'and'}
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(combination_alarm_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return alarm.CombinationAlarm(
-            'CombinAlarm', resource_defns['CombinAlarm'], stack)
+            'CombinAlarm', resource_defns['CombinAlarm'], self.stack)
 
     def test_create(self):
         rsrc = self.create_alarm()
@@ -596,8 +596,8 @@ class CombinationAlarmTest(common.HeatTestCase):
 
     def _prepare_check_resource(self):
         snippet = template_format.parse(combination_alarm_template)
-        stack = utils.parse_stack(snippet)
-        res = stack['CombinAlarm']
+        self.stack = utils.parse_stack(snippet)
+        res = self.stack['CombinAlarm']
         res.ceilometer = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.ceilometer().alarms.get.return_value = mock_alarm

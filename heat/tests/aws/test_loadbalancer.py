@@ -159,11 +159,11 @@ class LoadBalancerTest(common.HeatTestCase):
         if not include_magic:
             del template['Parameters']['KeyName']
             del template['Parameters']['LbFlavor']
-        stack = utils.parse_stack(template)
+        self.stack = utils.parse_stack(template)
 
         resource_name = 'LoadBalancer'
-        lb_defn = stack.t.resource_definitions(stack)[resource_name]
-        return lb.LoadBalancer(resource_name, lb_defn, stack)
+        lb_defn = self.stack.t.resource_definitions(self.stack)[resource_name]
+        return lb.LoadBalancer(resource_name, lb_defn, self.stack)
 
     def test_loadbalancer_refid(self):
         rsrc = self.setup_loadbalancer()
@@ -253,10 +253,10 @@ class LoadBalancerTest(common.HeatTestCase):
 class HaProxyConfigTest(common.HeatTestCase):
     def setUp(self):
         super(HaProxyConfigTest, self).setUp()
-        stack = utils.parse_stack(template_format.parse(lb_template))
+        self.stack = utils.parse_stack(template_format.parse(lb_template))
         resource_name = 'LoadBalancer'
-        lb_defn = stack.t.resource_definitions(stack)[resource_name]
-        self.lb = lb.LoadBalancer(resource_name, lb_defn, stack)
+        lb_defn = self.stack.t.resource_definitions(self.stack)[resource_name]
+        self.lb = lb.LoadBalancer(resource_name, lb_defn, self.stack)
         self.lb.client_plugin = mock.Mock()
 
     def _mock_props(self, props):

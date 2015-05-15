@@ -67,10 +67,10 @@ class MeteringLabelTest(common.HeatTestCase):
         }).AndReturn({'metering_label': {'id': '1234'}})
 
         snippet = template_format.parse(metering_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return metering.MeteringLabel(
-            'label', resource_defns['label'], stack)
+            'label', resource_defns['label'], self.stack)
 
     def test_create(self):
         rsrc = self.create_metering_label()
@@ -180,10 +180,10 @@ class MeteringRuleTest(common.HeatTestCase):
         }).AndReturn({'metering_label_rule': {'id': '5678'}})
 
         snippet = template_format.parse(metering_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return metering.MeteringRule(
-            'rule', resource_defns['rule'], stack)
+            'rule', resource_defns['rule'], self.stack)
 
     def test_create(self):
         rsrc = self.create_metering_label_rule()

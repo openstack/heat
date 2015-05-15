@@ -235,8 +235,8 @@ class TestScalingGroupTags(common.HeatTestCase):
     def setUp(self):
         super(TestScalingGroupTags, self).setUp()
         t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['WebServerGroup']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['WebServerGroup']
 
     def test_tags_default(self):
         expected = [{'Key': 'metering.groupname',
@@ -299,8 +299,8 @@ class TestGroupAdjust(common.HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['WebServerGroup']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['WebServerGroup']
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -468,8 +468,8 @@ class TestGroupCrud(common.HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        self.group = stack['WebServerGroup']
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['WebServerGroup']
         self.assertIsNone(self.group.validate())
 
     def test_handle_create(self):

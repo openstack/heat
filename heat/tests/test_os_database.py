@@ -107,15 +107,15 @@ class OSDBInstanceTest(common.HeatTestCase):
     def _setup_test_clouddbinstance(self, name, t):
         stack_name = '%s_stack' % name
         template = tmpl.Template(t)
-        stack = parser.Stack(utils.dummy_context(),
-                             stack_name,
-                             template,
-                             stack_id=str(uuid.uuid4()))
+        self.stack = parser.Stack(utils.dummy_context(),
+                                  stack_name,
+                                  template,
+                                  stack_id=str(uuid.uuid4()))
 
         instance = os_database.OSDBInstance(
             '%s_name' % name,
-            template.resource_definitions(stack)['MySqlCloudDB'],
-            stack)
+            template.resource_definitions(self.stack)['MySqlCloudDB'],
+            self.stack)
         return instance
 
     def _stubout_common_create(self):
