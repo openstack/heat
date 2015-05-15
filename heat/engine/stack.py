@@ -712,17 +712,17 @@ class Stack(collections.Mapping):
 
         stack = stack_object.Stack.get_by_id(self.context, self.id)
         if stack is not None:
-            stack.update_and_save({'action': action,
-                                   'status': status,
-                                   'status_reason': reason})
+            notification.send(self)
+            self._add_event(action, status, reason)
             LOG.info(_LI('Stack %(action)s %(status)s (%(name)s): '
                          '%(reason)s'),
                      {'action': action,
                       'status': status,
                       'name': self.name,
                       'reason': reason})
-            notification.send(self)
-            self._add_event(action, status, reason)
+            stack.update_and_save({'action': action,
+                                   'status': status,
+                                   'status_reason': reason})
 
     @property
     def state(self):
@@ -1182,12 +1182,11 @@ class Stack(collections.Mapping):
         self.status = stack_status
         self.status_reason = reason
 
+        notification.send(self)
         self.store()
         lifecycle_plugin_utils.do_post_ops(self.context, self,
                                            newstack, action,
                                            (self.status == self.FAILED))
-
-        notification.send(self)
 
     def _delete_backup_stack(self, stack):
         # Delete resources in the backup stack referred to by 'stack'
