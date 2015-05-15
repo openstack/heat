@@ -219,7 +219,13 @@ class IPsecSiteConnection(neutron.NeutronResource):
         PEER_CIDRS: properties.Schema(
             properties.Schema.LIST,
             _('Remote subnet(s) in CIDR format.'),
-            required=True
+            required=True,
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                constraints=[
+                    constraints.CustomConstraint('net_cidr')
+                ]
+            )
         ),
         MTU: properties.Schema(
             properties.Schema.INTEGER,

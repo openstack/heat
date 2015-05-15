@@ -84,7 +84,10 @@ class Subnet(neutron.NeutronResource):
         CIDR: properties.Schema(
             properties.Schema.STRING,
             _('The CIDR.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('net_cidr')
+            ]
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,

@@ -254,3 +254,30 @@ class TestMACConstraint(common.HeatTestCase):
         ]
         for mac in invalidate_format:
             self.assertFalse(self.constraint.validate(mac, None))
+
+
+class TestCIDRConstraint(common.HeatTestCase):
+
+    def setUp(self):
+        super(TestCIDRConstraint, self).setUp()
+        self.constraint = neutron.CIDRConstraint()
+
+    def test_valid_cidr_format(self):
+        validate_format = [
+            '10.0.0.0/24',
+            '6000::/64',
+            '8.8.8.8'
+        ]
+        for cidr in validate_format:
+            self.assertTrue(self.constraint.validate(cidr, None))
+
+    def test_invalid_cidr_format(self):
+        invalidate_format = [
+            '::/129',
+            'Invalid cidr',
+            '300.0.0.0/24',
+            '10.0.0.0/33',
+            '8.8.8.0/ 24'
+        ]
+        for cidr in invalidate_format:
+            self.assertFalse(self.constraint.validate(cidr, None))

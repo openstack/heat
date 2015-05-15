@@ -298,12 +298,18 @@ class FirewallRule(neutron.NeutronResource):
         SOURCE_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('Source IP address or CIDR.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('net_cidr')
+            ]
         ),
         DESTINATION_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('Destination IP address or CIDR.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('net_cidr')
+            ]
         ),
         SOURCE_PORT: properties.Schema(
             properties.Schema.STRING,

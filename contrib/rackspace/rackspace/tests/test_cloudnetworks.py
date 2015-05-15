@@ -116,12 +116,15 @@ class CloudNetworkTest(common.HeatTestCase):
         self.assertEqual(expect_label, res.FnGetAtt('label'))
         self.assertEqual(expect_cidr, res.FnGetAtt('cidr'))
 
-    def test_create_bad_cider(self, mock_client):
-        self._template['resources']['cnw']['properties']['cidr'] = "bad cidr"
+    def test_create_bad_cidr(self, mock_client):
+        prop = self._template['resources']['cnw']['properties']
+        prop['cidr'] = "bad cidr"
         self._parse_stack()
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.stack.validate)
-        self.assertIn("Invalid cidr", six.text_type(exc))
+        self.assertIn("Invalid net cidr", six.text_type(exc))
+        # reset property
+        prop['cidr'] = "172.16.0.0/24"
 
     def test_check(self, mock_client):
         self._setup_stack(mock_client)
