@@ -149,10 +149,10 @@ class Router(neutron.NeutronResource):
 
     def validate(self):
         super(Router, self).validate()
-        is_distributed = self.properties.get(self.DISTRIBUTED)
-        l3_agent_id = self.properties.get(self.L3_AGENT_ID)
-        l3_agent_ids = self.properties.get(self.L3_AGENT_IDS)
-        is_ha = self.properties.get(self.HA)
+        is_distributed = self.properties[self.DISTRIBUTED]
+        l3_agent_id = self.properties[self.L3_AGENT_ID]
+        l3_agent_ids = self.properties[self.L3_AGENT_IDS]
+        is_ha = self.properties[self.HA]
         if l3_agent_id and l3_agent_ids:
             raise exception.ResourcePropertyConflict(self.L3_AGENT_ID,
                                                      self.L3_AGENT_IDS)
@@ -170,7 +170,7 @@ class Router(neutron.NeutronResource):
 
     def add_dependencies(self, deps):
         super(Router, self).add_dependencies(deps)
-        external_gw = self.properties.get(self.EXTERNAL_GATEWAY)
+        external_gw = self.properties[self.EXTERNAL_GATEWAY]
         if external_gw:
             external_gw_net = external_gw.get(self.EXTERNAL_GATEWAY_NETWORK)
             for res in six.itervalues(self.stack):
@@ -442,7 +442,7 @@ class RouterGateway(neutron.NeutronResource):
             if resource.has_interface('OS::Neutron::RouterInterface'):
                 dep_router_id = resource.properties.get(
                     RouterInterface.ROUTER_ID)
-                router_id = self.properties.get(self.ROUTER_ID)
+                router_id = self.properties[self.ROUTER_ID]
                 if dep_router_id == router_id:
                     deps += (self, resource)
             # depend on any subnet in this template with the same network_id
@@ -452,13 +452,13 @@ class RouterGateway(neutron.NeutronResource):
                 dep_network = resource.properties.get(
                     subnet.Subnet.NETWORK) or resource.properties.get(
                         subnet.Subnet.NETWORK_ID)
-                network = self.properties.get(
-                    self.NETWORK) or self.properties.get(self.NETWORK_ID)
+                network = self.properties[
+                    self.NETWORK] or self.properties[self.NETWORK_ID]
                 if dep_network == network:
                     deps += (self, resource)
 
     def handle_create(self):
-        router_id = self.properties.get(self.ROUTER_ID)
+        router_id = self.properties[self.ROUTER_ID]
         network_id = self.client_plugin().resolve_network(
             dict(self.properties), self.NETWORK, 'network_id')
         self.neutron().add_gateway_router(

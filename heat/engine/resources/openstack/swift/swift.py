@@ -109,7 +109,7 @@ class SwiftContainer(resource.Resource):
     default_client_name = 'swift'
 
     def physical_resource_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
 
@@ -138,7 +138,7 @@ class SwiftContainer(resource.Resource):
             "account", self.properties[self.X_ACCOUNT_META])
 
         for key in (self.X_CONTAINER_READ, self.X_CONTAINER_WRITE):
-            if self.properties.get(key) is not None:
+            if self.properties[key] is not None:
                 container_headers[key] = self.properties[key]
 
         LOG.debug('SwiftContainer create container %(container)s with '

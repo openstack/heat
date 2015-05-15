@@ -502,7 +502,7 @@ class Server(stack_user.StackUser):
             self._register_access_key()
 
     def _server_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
 
@@ -510,7 +510,7 @@ class Server(stack_user.StackUser):
 
     def _config_drive(self):
         # This method is overridden by the derived CloudServer resource
-        return self.properties.get(self.CONFIG_DRIVE)
+        return self.properties[self.CONFIG_DRIVE]
 
     def _populate_deployments_metadata(self, meta):
         meta['deployments'] = meta.get('deployments', [])
@@ -596,23 +596,23 @@ class Server(stack_user.StackUser):
             self.data_set('password', password, True)
 
     def user_data_raw(self):
-        return self.properties.get(self.USER_DATA_FORMAT) == self.RAW
+        return self.properties[self.USER_DATA_FORMAT] == self.RAW
 
     def user_data_software_config(self):
-        return self.properties.get(
-            self.USER_DATA_FORMAT) == self.SOFTWARE_CONFIG
+        return self.properties[
+            self.USER_DATA_FORMAT] == self.SOFTWARE_CONFIG
 
     def transport_poll_server_cfn(self):
-        return self.properties.get(
-            self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_SERVER_CFN
+        return self.properties[
+            self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_SERVER_CFN
 
     def transport_poll_server_heat(self):
-        return self.properties.get(
-            self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_SERVER_HEAT
+        return self.properties[
+            self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_SERVER_HEAT
 
     def transport_poll_temp_url(self):
-        return self.properties.get(
-            self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_TEMP_URL
+        return self.properties[
+            self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_TEMP_URL
 
     def get_software_config(self, ud_content):
         try:
@@ -624,10 +624,10 @@ class Server(stack_user.StackUser):
             return ud_content
 
     def handle_create(self):
-        security_groups = self.properties.get(self.SECURITY_GROUPS)
+        security_groups = self.properties[self.SECURITY_GROUPS]
 
-        user_data_format = self.properties.get(self.USER_DATA_FORMAT)
-        ud_content = self.properties.get(self.USER_DATA)
+        user_data_format = self.properties[self.USER_DATA_FORMAT]
+        ud_content = self.properties[self.USER_DATA]
         if self.user_data_software_config() or self.user_data_raw():
             if uuidutils.is_uuid_like(ud_content):
                 # attempt to load the userdata from software config
@@ -655,18 +655,18 @@ class Server(stack_user.StackUser):
         flavor = self.properties[self.FLAVOR]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
 
-        image = self.properties.get(self.IMAGE)
+        image = self.properties[self.IMAGE]
         if image:
             image = self.client_plugin('glance').get_image_id(image)
 
         flavor_id = self.client_plugin().get_flavor_id(flavor)
 
-        instance_meta = self.properties.get(self.METADATA)
+        instance_meta = self.properties[self.METADATA]
         if instance_meta is not None:
             instance_meta = self.client_plugin().meta_serialize(
                 instance_meta)
 
-        scheduler_hints = self.properties.get(self.SCHEDULER_HINTS)
+        scheduler_hints = self.properties[self.SCHEDULER_HINTS]
         if cfg.CONF.stack_scheduler_hints:
             if scheduler_hints is None:
                 scheduler_hints = {}
@@ -675,16 +675,16 @@ class Server(stack_user.StackUser):
             scheduler_hints['heat_stack_name'] = self.stack.name
             scheduler_hints['heat_path_in_stack'] = self.stack.path_in_stack()
             scheduler_hints['heat_resource_name'] = self.name
-        nics = self._build_nics(self.properties.get(self.NETWORKS))
+        nics = self._build_nics(self.properties[self.NETWORKS])
         block_device_mapping = self._build_block_device_mapping(
-            self.properties.get(self.BLOCK_DEVICE_MAPPING))
+            self.properties[self.BLOCK_DEVICE_MAPPING])
         block_device_mapping_v2 = self._build_block_device_mapping_v2(
-            self.properties.get(self.BLOCK_DEVICE_MAPPING_V2))
-        reservation_id = self.properties.get(self.RESERVATION_ID)
-        disk_config = self.properties.get(self.DISK_CONFIG)
-        admin_pass = self.properties.get(self.ADMIN_PASS) or None
-        personality_files = self.properties.get(self.PERSONALITY)
-        key_name = self.properties.get(self.KEY_NAME)
+            self.properties[self.BLOCK_DEVICE_MAPPING_V2])
+        reservation_id = self.properties[self.RESERVATION_ID]
+        disk_config = self.properties[self.DISK_CONFIG]
+        admin_pass = self.properties[self.ADMIN_PASS] or None
+        personality_files = self.properties[self.PERSONALITY]
+        key_name = self.properties[self.KEY_NAME]
 
         server = None
         try:
@@ -915,7 +915,7 @@ class Server(stack_user.StackUser):
         # It is not known which subnet a server might be assigned
         # to so all subnets in a network should be created before
         # the servers in that network.
-        nets = self.properties.get(self.NETWORKS)
+        nets = self.properties[self.NETWORKS]
         if not nets:
             return
         for res in six.itervalues(self.stack):
@@ -1005,7 +1005,7 @@ class Server(stack_user.StackUser):
     def _update_flavor(self, server, prop_diff):
         flavor_update_policy = (
             prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
-            self.properties.get(self.FLAVOR_UPDATE_POLICY))
+            self.properties[self.FLAVOR_UPDATE_POLICY])
         flavor = prop_diff[self.FLAVOR]
 
         if flavor_update_policy == 'REPLACE':
@@ -1020,7 +1020,7 @@ class Server(stack_user.StackUser):
     def _update_image(self, server, prop_diff):
         image_update_policy = (
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
-            self.properties.get(self.IMAGE_UPDATE_POLICY))
+            self.properties[self.IMAGE_UPDATE_POLICY])
         if image_update_policy == 'REPLACE':
             raise resource.UpdateReplace(self.name)
         image = prop_diff[self.IMAGE]
@@ -1030,7 +1030,7 @@ class Server(stack_user.StackUser):
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
         password = (prop_diff.get(self.ADMIN_PASS) or
-                    self.properties.get(self.ADMIN_PASS))
+                    self.properties[self.ADMIN_PASS])
         return scheduler.TaskRunner(
             self.client_plugin().rebuild, server, image_id,
             password=password,
@@ -1043,7 +1043,7 @@ class Server(stack_user.StackUser):
         if not new_networks:
             new_networks = []
             attach_first_free_port = True
-        old_networks = self.properties.get(self.NETWORKS)
+        old_networks = self.properties[self.NETWORKS]
 
         if not server:
             server = self.nova().servers.get(self.resource_id)
@@ -1183,7 +1183,7 @@ class Server(stack_user.StackUser):
 
         # either volume_id or snapshot_id needs to be specified, but not both
         # for block device mapping.
-        bdm = self.properties.get(self.BLOCK_DEVICE_MAPPING) or []
+        bdm = self.properties[self.BLOCK_DEVICE_MAPPING] or []
         bootable_vol = False
         for mapping in bdm:
             device_name = mapping[self.BLOCK_DEVICE_MAPPING_DEVICE_NAME]
@@ -1201,7 +1201,7 @@ class Server(stack_user.StackUser):
                         ' device mapping %s') % device_name
                 raise exception.StackValidationFailed(message=msg)
 
-        bdm_v2 = self.properties.get(self.BLOCK_DEVICE_MAPPING_V2) or []
+        bdm_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2] or []
         if bdm and bdm_v2:
             raise exception.ResourcePropertyConflict(
                 self.BLOCK_DEVICE_MAPPING, self.BLOCK_DEVICE_MAPPING_V2)
@@ -1240,7 +1240,7 @@ class Server(stack_user.StackUser):
         bootable_vol = self._validate_block_device_mapping()
 
         # make sure the image exists if specified.
-        image = self.properties.get(self.IMAGE)
+        image = self.properties[self.IMAGE]
         if not image and not bootable_vol:
             msg = _('Neither image nor bootable volume is specified for'
                     ' instance %s') % self.name
@@ -1248,7 +1248,7 @@ class Server(stack_user.StackUser):
 
         # network properties 'uuid' and 'network' shouldn't be used
         # both at once for all networks
-        networks = self.properties.get(self.NETWORKS) or []
+        networks = self.properties[self.NETWORKS] or []
         # record if any networks include explicit ports
         networks_with_port = False
         for network in networks:
@@ -1287,14 +1287,14 @@ class Server(stack_user.StackUser):
                               server=self.name))
 
         # retrieve provider's absolute limits if it will be needed
-        metadata = self.properties.get(self.METADATA)
-        personality = self.properties.get(self.PERSONALITY)
+        metadata = self.properties[self.METADATA]
+        personality = self.properties[self.PERSONALITY]
         if metadata is not None or personality:
             limits = self.client_plugin().absolute_limits()
 
         # if 'security_groups' present for the server and explict 'port'
         # in one or more entries in 'networks', raise validation error
-        if networks_with_port and self.properties.get(self.SECURITY_GROUPS):
+        if networks_with_port and self.properties[self.SECURITY_GROUPS]:
             raise exception.ResourcePropertyConflict(
                 self.SECURITY_GROUPS,
                 "/".join([self.NETWORKS, self.NETWORK_PORT]))

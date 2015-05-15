@@ -122,7 +122,7 @@ class SaharaCluster(resource.Resource):
             raise exception.ResourcePropertyConflict(value, depr_value)
 
     def _cluster_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
         return self.physical_resource_name()
@@ -146,8 +146,8 @@ class SaharaCluster(resource.Resource):
                         'img': self.IMAGE, 'tmpl': cluster_template_id}
             raise exception.StackValidationFailed(message=msg)
 
-        key_name = self.properties.get(self.KEY_NAME)
-        net_id = self.properties.get(self.MANAGEMENT_NETWORK)
+        key_name = self.properties[self.KEY_NAME]
+        net_id = self.properties[self.MANAGEMENT_NETWORK]
         if net_id:
             if self.is_using_neutron():
                 net_id = self.client_plugin('neutron').find_neutron_resource(
@@ -220,7 +220,7 @@ class SaharaCluster(resource.Resource):
         self._validate_depr_keys(self.properties, self.IMAGE_ID, self.IMAGE)
         # check if running on neutron and MANAGEMENT_NETWORK missing
         if (self.is_using_neutron() and
-                not self.properties.get(self.MANAGEMENT_NETWORK)):
+                not self.properties[self.MANAGEMENT_NETWORK]):
             msg = _("%s must be provided"
                     ) % self.MANAGEMENT_NETWORK
             raise exception.StackValidationFailed(message=msg)

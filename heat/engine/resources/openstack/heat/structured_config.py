@@ -135,8 +135,8 @@ class StructuredDeployment(sd.SoftwareDeployment):
     def _build_derived_config(self, action, source,
                               derived_inputs, derived_options):
         cfg = source.get(sc.SoftwareConfig.CONFIG)
-        input_key = self.properties.get(self.INPUT_KEY)
-        check_input_val = self.properties.get(self.INPUT_VALUES_VALIDATE)
+        input_key = self.properties[self.INPUT_KEY]
+        check_input_val = self.properties[self.INPUT_VALUES_VALIDATE]
 
         inputs = dict((i['name'], i['value']) for i in derived_inputs)
 

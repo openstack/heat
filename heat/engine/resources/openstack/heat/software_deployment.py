@@ -179,20 +179,20 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     default_client_name = 'heat'
 
     def _signal_transport_cfn(self):
-        return self.properties.get(
-            self.SIGNAL_TRANSPORT) == self.CFN_SIGNAL
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.CFN_SIGNAL
 
     def _signal_transport_heat(self):
-        return self.properties.get(
-            self.SIGNAL_TRANSPORT) == self.HEAT_SIGNAL
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.HEAT_SIGNAL
 
     def _signal_transport_none(self):
-        return self.properties.get(
-            self.SIGNAL_TRANSPORT) == self.NO_SIGNAL
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.NO_SIGNAL
 
     def _signal_transport_temp_url(self):
-        return self.properties.get(
-            self.SIGNAL_TRANSPORT) == self.TEMP_URL_SIGNAL
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.TEMP_URL_SIGNAL
 
     def _build_properties(self, properties, config_id, action):
         props = {
@@ -360,7 +360,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             scl.NAME: self.DEPLOY_SERVER_ID,
             scl.DESCRIPTION: _('ID of the server being deployed to'),
             scl.TYPE: 'String',
-            'value': self.properties.get(self.SERVER)
+            'value': self.properties[self.SERVER]
         }, {
             scl.NAME: self.DEPLOY_ACTION,
             scl.DESCRIPTION: _('Name of the current action being deployed'),
@@ -382,7 +382,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             scl.DESCRIPTION: _('How the server should signal to heat with '
                                'the deployment output values.'),
             scl.TYPE: 'String',
-            'value': self.properties.get(self.SIGNAL_TRANSPORT)
+            'value': self.properties[self.SIGNAL_TRANSPORT]
         }])
         if self._signal_transport_cfn():
             inputs.append({
@@ -565,7 +565,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         :raises StackValidationFailed: if any property failed validation.
         '''
         super(SoftwareDeployment, self).validate()
-        server = self.properties.get(self.SERVER)
+        server = self.properties[self.SERVER]
         if server:
             res = self.stack.resource_by_refid(server)
             if res:

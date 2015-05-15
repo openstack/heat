@@ -200,10 +200,10 @@ class CinderVolume(vb.BaseVolume):
             'size': self.properties[self.SIZE],
             'availability_zone': self.properties[self.AVAILABILITY_ZONE]
         }
-        if self.properties.get(self.IMAGE):
+        if self.properties[self.IMAGE]:
             arguments['imageRef'] = self.client_plugin('glance').get_image_id(
                 self.properties[self.IMAGE])
-        elif self.properties.get(self.IMAGE_REF):
+        elif self.properties[self.IMAGE_REF]:
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 
         optionals = (self.SNAPSHOT_ID, self.VOLUME_TYPE, self.SOURCE_VOLID,
@@ -244,9 +244,9 @@ class CinderVolume(vb.BaseVolume):
         if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
             vol = cinder.volumes.get(self.resource_id)
             update_name = (prop_diff.get(self.NAME) or
-                           self.properties.get(self.NAME))
+                           self.properties[self.NAME])
             update_description = (prop_diff.get(self.DESCRIPTION) or
-                                  self.properties.get(self.DESCRIPTION))
+                                  self.properties[self.DESCRIPTION])
             kwargs = self._fetch_name_and_description(
                 cinder.volume_api_version, update_name, update_description)
             cinder.volumes.update(vol, **kwargs)
@@ -403,7 +403,7 @@ class CinderVolume(vb.BaseVolume):
             return res
 
         # Scheduler hints are only supported from Cinder API v2
-        if (self.properties.get(self.CINDER_SCHEDULER_HINTS)
+        if (self.properties[self.CINDER_SCHEDULER_HINTS]
                 and self.client().volume_api_version == 1):
             raise exception.StackValidationFailed(
                 message=_('Scheduler hints are not supported by the current '
@@ -470,11 +470,11 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             # could be updated in UpdateReplace manner,
             # we still first detach the old resource so that
             # self.resource_id is not replaced prematurely
-            volume_id = self.properties.get(self.VOLUME_ID)
+            volume_id = self.properties[self.VOLUME_ID]
             if self.VOLUME_ID in prop_diff:
                 volume_id = prop_diff.get(self.VOLUME_ID)
 
-            device = self.properties.get(self.DEVICE)
+            device = self.properties[self.DEVICE]
             if self.DEVICE in prop_diff:
                 device = prop_diff.get(self.DEVICE)
 

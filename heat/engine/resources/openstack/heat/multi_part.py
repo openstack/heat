@@ -107,7 +107,7 @@ class MultipartMime(software_config.SoftwareConfig):
             return self.message
 
         subparts = []
-        for item in self.properties.get(self.PARTS):
+        for item in self.properties[self.PARTS]:
             config = item.get(self.CONFIG)
             part_type = item.get(self.TYPE, self.TEXT)
             part = config

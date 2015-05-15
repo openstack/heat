@@ -276,7 +276,7 @@ class OSDBInstance(resource.Resource):
         return self._dbinstance
 
     def _dbinstance_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
 
@@ -289,14 +289,14 @@ class OSDBInstance(resource.Resource):
         self.flavor = self.client_plugin().get_flavor_id(
             self.properties[self.FLAVOR])
         self.volume = {'size': self.properties[self.SIZE]}
-        self.databases = self.properties.get(self.DATABASES)
-        self.users = self.properties.get(self.USERS)
-        restore_point = self.properties.get(self.RESTORE_POINT)
+        self.databases = self.properties[self.DATABASES]
+        self.users = self.properties[self.USERS]
+        restore_point = self.properties[self.RESTORE_POINT]
         if restore_point:
             restore_point = {"backupRef": restore_point}
-        zone = self.properties.get(self.AVAILABILITY_ZONE)
-        self.datastore_type = self.properties.get(self.DATASTORE_TYPE)
-        self.datastore_version = self.properties.get(self.DATASTORE_VERSION)
+        zone = self.properties[self.AVAILABILITY_ZONE]
+        self.datastore_type = self.properties[self.DATASTORE_TYPE]
+        self.datastore_version = self.properties[self.DATASTORE_VERSION]
 
         # convert user databases to format required for troveclient.
         # that is, list of database dictionaries
@@ -306,7 +306,7 @@ class OSDBInstance(resource.Resource):
 
         # convert networks to format required by troveclient
         nics = []
-        for nic in self.properties.get(self.NICS):
+        for nic in self.properties[self.NICS]:
             nic_dict = {}
             net = nic.get(self.NET)
             if net:
@@ -433,17 +433,17 @@ class OSDBInstance(resource.Resource):
         if res:
             return res
 
-        datastore_type = self.properties.get(self.DATASTORE_TYPE)
-        datastore_version = self.properties.get(self.DATASTORE_VERSION)
+        datastore_type = self.properties[self.DATASTORE_TYPE]
+        datastore_version = self.properties[self.DATASTORE_VERSION]
 
         self.client_plugin().validate_datastore(
             datastore_type, datastore_version,
             self.DATASTORE_TYPE, self.DATASTORE_VERSION)
 
         # check validity of user and databases
-        users = self.properties.get(self.USERS)
+        users = self.properties[self.USERS]
         if users:
-            databases = self.properties.get(self.DATABASES)
+            databases = self.properties[self.DATABASES]
             if not databases:
                 msg = _('Databases property is required if users property '
                         'is provided for resource %s.') % self.name
@@ -462,7 +462,7 @@ class OSDBInstance(resource.Resource):
 
         # check validity of NICS
         is_neutron = self.is_using_neutron()
-        nics = self.properties.get(self.NICS)
+        nics = self.properties[self.NICS]
         for nic in nics:
             if not is_neutron and nic.get(self.PORT):
                 msg = _("Can not use %s property on Nova-network.") % self.PORT

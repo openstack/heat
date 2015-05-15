@@ -50,8 +50,9 @@ class CloudConfig(software_config.SoftwareConfig):
     }
 
     def handle_create(self):
-        cloud_config = template_format.yaml.dump(self.properties.get(
-            self.CLOUD_CONFIG), Dumper=template_format.yaml_dumper)
+        cloud_config = template_format.yaml.dump(
+            self.properties[self.CLOUD_CONFIG],
+            Dumper=template_format.yaml_dumper)
         props = {
             self.NAME: self.physical_resource_name(),
             self.CONFIG: '#cloud-config\n%s' % cloud_config,
