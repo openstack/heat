@@ -333,6 +333,10 @@ class InvalidResourceType(HeatException):
     msg_fmt = _("%(message)s")
 
 
+class InvalidBreakPointHook(HeatException):
+    msg_fmt = _("%(message)s")
+
+
 class ResourceNotAvailable(HeatException):
     msg_fmt = _("The Resource (%(resource_name)s) is not available.")
 

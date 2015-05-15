@@ -20,6 +20,7 @@ from oslo_config import cfg
 import six
 
 from heat.common import environment_format
+from heat.common import exception
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine.resources.aws.ec2 import instance
@@ -746,6 +747,22 @@ class ResourceRegistryTest(common.HeatTestCase):
                          resources['both']['hooks'])
         self.assertEqual('pre-create',
                          resources['nested']['res']['hooks'])
+
+    def test_load_registry_invalid_hook_type(self):
+        resources = {
+            u'resources': {
+                u'a': {
+                    u'hooks': 'invalid-type',
+                }
+            }
+        }
+
+        registry = environment.ResourceRegistry(None, {})
+        msg = ('Invalid hook type "invalid-type" for resource breakpoint, '
+               'acceptable hook types are: (\'pre-create\', \'pre-update\')')
+        ex = self.assertRaises(exception.InvalidBreakPointHook,
+                               registry.load, {'resources': resources})
+        self.assertEqual(msg, six.text_type(ex))
 
 
 class HookMatchTest(common.HeatTestCase):
