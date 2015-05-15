@@ -885,71 +885,114 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
                       'volume API.', six.text_type(ex))
         self.m.VerifyAll()
 
-    def test_cinder_create_with_image_and_imageRef(self):
-        stack_name = 'test_create_with_size_snapshot_and_image'
+    def _test_cinder_create_invalid_property_combinations(
+            self, stack_name, combinations, err_msg, exc):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         vp = stack.t['Resources']['volume2']['Properties']
-        vp['imageRef'] = 'image-456'
-        vp['image'] = 'image-123'
         vp.pop('size')
+        vp.update(combinations)
         rsrc = stack['volume2']
+        ex = self.assertRaises(exc, rsrc.validate)
+        self.assertEqual(err_msg, six.text_type(ex))
+
+    def test_cinder_create_with_image_and_imageRef(self):
+        stack_name = 'test_create_with_image_and_imageRef'
+        combinations = {'imageRef': 'image-456', 'image': 'image-123'}
+        err_msg = ("Cannot define the following properties at the same "
+                   "time: image, imageRef.")
         self.stub_ImageConstraint_validate()
-        ex = self.assertRaises(exception.ResourcePropertyConflict,
-                               rsrc.validate)
-        self.assertEqual("Cannot define the following properties at the same "
-                         "time: image, imageRef.",
-                         six.text_type(ex))
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.ResourcePropertyConflict)
 
     def test_cinder_create_with_size_snapshot_and_image(self):
         stack_name = 'test_create_with_size_snapshot_and_image'
-        stack = utils.parse_stack(self.t, stack_name=stack_name)
-        vp = stack.t['Resources']['volume2']['Properties']
-        vp['snapshot_id'] = 'snapshot-123'
-        vp['image'] = 'image-123'
-        rsrc = stack['volume2']
+        combinations = {
+            'size': 1,
+            'image': 'image-123',
+            'snapshot_id': 'snapshot-123'}
         self.stub_ImageConstraint_validate()
         self.stub_SnapshotConstraint_validate()
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               rsrc.validate)
-        self.assertIn('If "backup_id" is not specified, you can specify '
-                      '"size" or/and one of "image/imageRef", '
-                      '"source_volid" or "snapshot_id", but currently '
-                      'specified options: [\'snapshot_id\', \'image\']',
-                      six.text_type(ex))
+        err_msg = ('If "size" is provided, only one of "image", "imageRef", '
+                   '"source_volid", "snapshot_id" can be specified, but '
+                   'currently specified options: '
+                   '[\'snapshot_id\', \'image\'].')
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.StackValidationFailed)
+
+    def test_cinder_create_with_size_snapshot_and_imageRef(self):
+        stack_name = 'test_create_with_size_snapshot_and_imageRef'
+        combinations = {
+            'size': 1,
+            'imageRef': 'image-123',
+            'snapshot_id': 'snapshot-123'}
+        self.stub_ImageConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        err_msg = ('If "size" is provided, only one of "image", "imageRef", '
+                   '"source_volid", "snapshot_id" can be specified, but '
+                   'currently specified options: '
+                   '[\'snapshot_id\', \'imageRef\'].')
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.StackValidationFailed)
+
+    def test_cinder_create_with_size_snapshot_and_sourcevol(self):
+        stack_name = 'test_create_with_size_snapshot_and_sourcevol'
+        combinations = {
+            'size': 1,
+            'source_volid': 'volume-123',
+            'snapshot_id': 'snapshot-123'}
+        self.stub_VolumeConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        err_msg = ('If "size" is provided, only one of "image", "imageRef", '
+                   '"source_volid", "snapshot_id" can be specified, but '
+                   'currently specified options: '
+                   '[\'snapshot_id\', \'source_volid\'].')
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.StackValidationFailed)
 
     def test_cinder_create_with_snapshot_and_source_volume(self):
         stack_name = 'test_create_with_snapshot_and_source_volume'
-        stack = utils.parse_stack(self.t, stack_name=stack_name)
-        vp = stack.t['Resources']['volume2']['Properties']
-        vp['snapshot_id'] = 'snapshot-123'
-        vp['source_volid'] = 'source_volume-123'
-        vp.pop('size')
-        rsrc = stack['volume2']
+        combinations = {
+            'source_volid': 'source_volume-123',
+            'snapshot_id': 'snapshot-123'}
+        err_msg = ('If neither "backup_id" nor "size" is provided, one and '
+                   'only one of "image", "imageRef", "source_volid", '
+                   '"snapshot_id" must be specified, but currently '
+                   'specified options: [\'snapshot_id\', \'source_volid\'].')
         self.stub_VolumeConstraint_validate()
         self.stub_SnapshotConstraint_validate()
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               rsrc.validate)
-        self.assertIn('If neither "backup_id" nor "size" is specified, you '
-                      'should specify only one of "image/imageRef", '
-                      '"source_volid" or "snapshot_id", but currently '
-                      'specified options: [\'snapshot_id\', \'source_volid\']',
-                      six.text_type(ex))
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.StackValidationFailed)
 
-    def test_cinder_create_no_size_no_options(self):
-        stack_name = 'test_create_no_size_no_options'
-        stack = utils.parse_stack(self.t, stack_name=stack_name)
-        vp = stack.t['Resources']['volume2']['Properties']
-        vp.pop('size')
-        rsrc = stack['volume2']
+    def test_cinder_create_with_image_and_source_volume(self):
+        stack_name = 'test_create_with_image_and_source_volume'
+        combinations = {
+            'source_volid': 'source_volume-123',
+            'image': 'image-123'}
+        err_msg = ('If neither "backup_id" nor "size" is provided, one and '
+                   'only one of "image", "imageRef", "source_volid", '
+                   '"snapshot_id" must be specified, but currently '
+                   'specified options: [\'source_volid\', \'image\'].')
         self.stub_VolumeConstraint_validate()
-        self.stub_SnapshotConstraint_validate()
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               rsrc.validate)
-        self.assertIn('If neither "backup_id" nor "size" is specified, you '
-                      'should specify only one of "image/imageRef", '
-                      '"source_volid" or "snapshot_id", but currently '
-                      'specified options: []',
-                      six.text_type(ex))
+        self.stub_ImageConstraint_validate()
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.StackValidationFailed)
+
+    def test_cinder_create_no_size_no_combinations(self):
+        stack_name = 'test_create_no_size_no_options'
+        combinations = {}
+        err_msg = ('If neither "backup_id" nor "size" is provided, one and '
+                   'only one of "image", "imageRef", "source_volid", '
+                   '"snapshot_id" must be specified, but currently '
+                   'specified options: [].')
+        self._test_cinder_create_invalid_property_combinations(
+            stack_name, combinations,
+            err_msg, exception.StackValidationFailed)
 
     def test_volume_restore(self):
         stack_name = 'test_cvolume_restore_stack'
