@@ -216,6 +216,10 @@ class HeatTestCase(testscenarios.WithScenarios,
         validate = self.patchobject(cinder.VolumeTypeConstraint, 'validate')
         validate.return_value = True
 
+    def stub_VolumeBackupConstraint_validate(self):
+        validate = self.patchobject(cinder.VolumeBackupConstraint, 'validate')
+        validate.return_value = True
+
     def stub_ServerConstraint_validate(self):
         validate = self.patchobject(nova.ServerConstraint, 'validate')
         validate.return_value = True

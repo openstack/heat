@@ -50,7 +50,10 @@ class Volume(vb.BaseVolume):
             properties.Schema.STRING,
             _('If specified, the backup used as the source to create the '
               'volume.'),
-            immutable=True
+            immutable=True,
+            constraints=[
+                constraints.CustomConstraint('cinder.backup')
+            ]
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,

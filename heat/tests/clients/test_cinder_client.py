@@ -114,3 +114,23 @@ class VolumeTypeConstraintTest(common.HeatTestCase):
         self.mock_get_volume_type.side_effect = exception.EntityNotFound(
             entity='VolumeType', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
+
+
+class VolumeBackupConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(VolumeBackupConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_volume_backup = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'cinder').get_volume_backup = self.mock_get_volume_backup
+        self.constraint = cinder.VolumeBackupConstraint()
+
+    def test_validation(self):
+        self.mock_get_volume_backup.return_value = 'volume_backup'
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        ex = exception.EntityNotFound(entity='Volume backup', name='bar')
+        self.mock_get_volume_backup.side_effect = ex
+        self.assertFalse(self.constraint.validate("bar", self.ctx))
