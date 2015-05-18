@@ -20,6 +20,7 @@ from heat.engine import constraints as constr
 from heat.engine import function
 from heat.engine import parameters
 from heat.engine import support
+from heat.openstack.common import jsonutils
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
@@ -57,13 +58,15 @@ class Schema(constr.Schema):
                  implemented=True,
                  update_allowed=False,
                  immutable=False,
-                 support_status=support.SupportStatus()):
+                 support_status=support.SupportStatus(),
+                 allow_conversion=False):
         super(Schema, self).__init__(data_type, description, default,
                                      schema, required, constraints)
         self.implemented = implemented
         self.update_allowed = update_allowed
         self.immutable = immutable
         self.support_status = support_status
+        self.allow_conversion = allow_conversion
         # validate structural correctness of schema itself
         self.validate()
 
@@ -145,6 +148,13 @@ class Schema(constr.Schema):
             param.BOOLEAN: cls.BOOLEAN
         }
 
+        # allow_conversion allows slightly more flexible type conversion
+        # where property->parameter types don't align, primarily when
+        # a json parameter value is passed via a Map property, which requires
+        # some coercion to pass strings or lists (which are both valid for
+        # Json parameters but not for Map properties).
+        allow_conversion = param.type == param.MAP
+
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
         return cls(data_type=param_type_map.get(param.type, cls.MAP),
@@ -152,7 +162,8 @@ class Schema(constr.Schema):
                    required=param.required,
                    constraints=param.constraints,
                    update_allowed=True,
-                   immutable=False)
+                   immutable=False,
+                   allow_conversion=allow_conversion)
 
     def allowed_param_prop_type(self):
         """
@@ -268,6 +279,14 @@ class Property(object):
         if value is None:
             value = self.has_default() and self.default() or {}
         if not isinstance(value, collections.Mapping):
+            # This is to handle passing Lists via Json parameters exposed
+            # via a provider resource, in particular lists-of-dicts which
+            # cannot be handled correctly via comma_delimited_list
+            if self.schema.allow_conversion:
+                if isinstance(value, six.string_types):
+                    return value
+                elif isinstance(value, collections.Sequence):
+                    return jsonutils.dumps(value)
             raise TypeError(_('"%s" is not a map') % value)
 
         return dict(self._get_children(six.iteritems(value),

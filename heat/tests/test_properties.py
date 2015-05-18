@@ -22,6 +22,7 @@ from heat.engine import parameters
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
+from heat.openstack.common import jsonutils
 
 
 class PropertySchemaTest(testtools.TestCase):
@@ -468,6 +469,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertTrue(schema.required)
         self.assertIsNone(schema.default)
         self.assertEqual(0, len(schema.constraints))
+        self.assertFalse(schema.allow_conversion)
 
     def test_from_number_param_min(self):
         default = "42"
@@ -546,6 +548,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
+        self.assertFalse(schema.allow_conversion)
 
         allowed_constraint = schema.constraints[0]
 
@@ -563,6 +566,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(properties.Schema.LIST, schema.type)
         self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
+        self.assertFalse(schema.allow_conversion)
 
     def test_from_json_param(self):
         param = parameters.Schema.from_dict('name', {
@@ -575,6 +579,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(properties.Schema.MAP, schema.type)
         self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
+        self.assertTrue(schema.allow_conversion)
 
 
 class PropertyTest(testtools.TestCase):
@@ -861,6 +866,12 @@ class PropertyTest(testtools.TestCase):
     def test_map_list(self):
         p = properties.Property({'Type': 'Map'})
         self.assertRaises(TypeError, p.get_value, ['foo'])
+
+    def test_map_allow_conversion(self):
+        p = properties.Property({'Type': 'Map'})
+        p.schema.allow_conversion = True
+        self.assertEqual('foo', p.get_value('foo'))
+        self.assertEqual(jsonutils.dumps(['foo']), p.get_value(['foo']))
 
     def test_map_schema_good(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
