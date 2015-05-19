@@ -47,14 +47,17 @@ class RawTemplate(
             tpl[field] = db_tpl[field]
 
         # If any of the parameters were encrypted, then decrypt them
-        parameters = tpl.environment[env_fmt.PARAMETERS]
-        encrypted_param_names = tpl.environment[env_fmt.ENCRYPTED_PARAM_NAMES]
-        for param_name in encrypted_param_names:
-            decrypt_function_name = parameters[param_name][0]
-            decrypt_function = getattr(crypt, decrypt_function_name)
-            decrypted_val = decrypt_function(parameters[param_name][1])
-            parameters[param_name] = encodeutils.safe_decode(decrypted_val)
-        tpl.environment[env_fmt.PARAMETERS] = parameters
+        if env_fmt.ENCRYPTED_PARAM_NAMES in tpl.environment:
+            parameters = tpl.environment[env_fmt.PARAMETERS]
+            encrypted_param_names = tpl.environment[
+                env_fmt.ENCRYPTED_PARAM_NAMES]
+
+            for param_name in encrypted_param_names:
+                decrypt_function_name = parameters[param_name][0]
+                decrypt_function = getattr(crypt, decrypt_function_name)
+                decrypted_val = decrypt_function(parameters[param_name][1])
+                parameters[param_name] = encodeutils.safe_decode(decrypted_val)
+            tpl.environment[env_fmt.PARAMETERS] = parameters
 
         tpl._context = context
         tpl.obj_reset_changes()
