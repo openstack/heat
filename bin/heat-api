@@ -33,6 +33,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
+from oslo_reports import guru_meditation_report as gmr
 from oslo_service import systemd
 import six
 
@@ -50,8 +51,8 @@ LOG = logging.getLogger('heat.api')
 if __name__ == '__main__':
     try:
         logging.register_options(cfg.CONF)
-        version = version.version_info.version_string()
-        cfg.CONF(project='heat', prog='heat-api', version=version)
+        cfg.CONF(project='heat', prog='heat-api',
+                 version=version.version_info.version_string())
         logging.setup(cfg.CONF, 'heat-api')
         messaging.setup()
 
@@ -62,6 +63,7 @@ if __name__ == '__main__':
         LOG.info(_LI('Starting Heat ReST API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
         profiler.setup('heat-api', host)
+        gmr.TextGuruMeditation.setup_autorun(version)
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api, default_port=port)
         systemd.notify_once()

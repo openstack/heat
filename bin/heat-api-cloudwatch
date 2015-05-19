@@ -35,6 +35,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
+from oslo_reports import guru_meditation_report as gmr
 from oslo_service import systemd
 import six
 
@@ -66,6 +67,7 @@ if __name__ == '__main__':
         LOG.info(_LI('Starting Heat CloudWatch API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
         profiler.setup('heat-api-cloudwatch', host)
+        gmr.TextGuruMeditation.setup_autorun(version)
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api_cloudwatch, default_port=port)
         systemd.notify_once()

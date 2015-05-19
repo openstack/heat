@@ -54,6 +54,7 @@ Developers Documentation
    architecture
    pluginguide
    schedulerhints
+   gmr
 
 API Documentation
 ========================
