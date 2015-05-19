@@ -243,6 +243,11 @@ class Stack(collections.Mapping):
     def reset_dependencies(self):
         self._dependencies = None
 
+    def root_stack_id(self):
+        if not self.owner_id:
+            return self.id
+        return stack_object.Stack.get_root_id(self.context, self.id)
+
     @property
     def root_stack(self):
         '''

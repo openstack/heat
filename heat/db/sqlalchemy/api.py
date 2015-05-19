@@ -500,6 +500,13 @@ def stack_lock_release(stack_id, engine_id):
         return True
 
 
+def stack_get_root_id(context, stack_id):
+    s = stack_get(context, stack_id)
+    while s.owner_id:
+        s = stack_get(context, s.owner_id)
+    return s.id
+
+
 def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()

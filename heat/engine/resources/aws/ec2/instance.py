@@ -528,7 +528,7 @@ class Instance(resource.Resource):
         if cfg.CONF.stack_scheduler_hints:
             if scheduler_hints is None:
                 scheduler_hints = {}
-            scheduler_hints['heat_root_stack_id'] = self.stack.root_stack.id
+            scheduler_hints['heat_root_stack_id'] = self.stack.root_stack_id()
             scheduler_hints['heat_stack_id'] = self.stack.id
             scheduler_hints['heat_stack_name'] = self.stack.name
             scheduler_hints['heat_path_in_stack'] = self.stack.path_in_stack()

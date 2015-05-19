@@ -176,6 +176,10 @@ def stack_lock_release(stack_id, engine_id):
     return IMPL.stack_lock_release(stack_id, engine_id)
 
 
+def stack_get_root_id(context, stack_id):
+    return IMPL.stack_get_root_id(context, stack_id)
+
+
 def user_creds_create(context):
     return IMPL.user_creds_create(context)
 

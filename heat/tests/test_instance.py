@@ -547,7 +547,7 @@ class InstancesTest(common.HeatTestCase):
                 limit=instance.physical_resource_name_limit),
             security_groups=None,
             userdata=mox.IgnoreArg(),
-            scheduler_hints={'heat_root_stack_id': stack.root_stack.id,
+            scheduler_hints={'heat_root_stack_id': stack.root_stack_id(),
                              'heat_stack_id': stack.id,
                              'heat_stack_name': stack.name,
                              'heat_path_in_stack': [(None, stack.name)],
