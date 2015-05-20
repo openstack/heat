@@ -284,7 +284,7 @@ The original file from A looks like:
 
     [DEFAULT]
     ...
-    sql_connection = mysql://root:admin@127.0.0.1/heat?charset=utf8
+    sql_connection = mysql+pymysql://root:admin@127.0.0.1/heat?charset=utf8
     rabbit_host = localhost
     ...
     [heat_api]
@@ -300,7 +300,7 @@ After the changes for B, it looks like:
 
     [DEFAULT]
     ...
-    sql_connection = mysql://root:admin@10.0.0.1/heat?charset=utf8
+    sql_connection = mysql+pymysql://root:admin@10.0.0.1/heat?charset=utf8
     rabbit_host = 10.0.0.1
     ...
     [heat_api]
