@@ -520,3 +520,7 @@ class ObjectFieldInvalid(HeatException):
 class KeystoneServiceNameConflict(HeatException):
     msg_fmt = _("Keystone has more than one service with same name "
                 "%(service)s. Please use service id instead of name")
+
+
+class SIGHUPInterrupt(HeatException):
+    msg_fmt = _("System SIGHUP signal received.")

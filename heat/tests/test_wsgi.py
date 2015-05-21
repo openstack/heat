@@ -15,12 +15,15 @@
 #    under the License.
 
 
+import fixtures
 import json
-
-from oslo_config import cfg
+import mock
 import six
+import socket
 import stubout
 import webob
+
+from oslo_config import cfg
 
 from heat.api.aws import exception as aws_exception
 from heat.common import exception
@@ -398,3 +401,77 @@ class JSONRequestDeserializerTest(common.HeatTestCase):
                '(%s bytes) exceeds maximum allowed size (%s bytes).' % (
                    len(body), cfg.CONF.max_json_body_size))
         self.assertEqual(msg, six.text_type(error))
+
+
+class GetSocketTestCase(common.HeatTestCase):
+
+    def setUp(self):
+        super(GetSocketTestCase, self).setUp()
+        self.useFixture(fixtures.MonkeyPatch(
+            "heat.common.wsgi.get_bind_addr",
+            lambda x, y: ('192.168.0.13', 1234)))
+        addr_info_list = [(2, 1, 6, '', ('192.168.0.13', 80)),
+                          (2, 2, 17, '', ('192.168.0.13', 80)),
+                          (2, 3, 0, '', ('192.168.0.13', 80))]
+        self.useFixture(fixtures.MonkeyPatch(
+            "heat.common.wsgi.socket.getaddrinfo",
+            lambda *x: addr_info_list))
+        self.useFixture(fixtures.MonkeyPatch(
+            "heat.common.wsgi.time.time",
+            mock.Mock(side_effect=[0, 1, 5, 10, 20, 35])))
+        wsgi.cfg.CONF.heat_api.cert_file = '/etc/ssl/cert'
+        wsgi.cfg.CONF.heat_api.key_file = '/etc/ssl/key'
+        wsgi.cfg.CONF.heat_api.ca_file = '/etc/ssl/ca_cert'
+        wsgi.cfg.CONF.heat_api.tcp_keepidle = 600
+
+    def test_correct_configure_socket(self):
+        mock_socket = mock.Mock()
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.ssl.wrap_socket',
+            mock_socket))
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.eventlet.listen',
+            lambda *x, **y: mock_socket))
+        server = wsgi.Server(name='heat-api', conf=cfg.CONF.heat_api)
+        server.default_port = 1234
+        server.configure_socket()
+        self.assertIn(mock.call.setsockopt(
+            socket.SOL_SOCKET,
+            socket.SO_REUSEADDR,
+            1), mock_socket.mock_calls)
+        self.assertIn(mock.call.setsockopt(
+            socket.SOL_SOCKET,
+            socket.SO_KEEPALIVE,
+            1), mock_socket.mock_calls)
+        if hasattr(socket, 'TCP_KEEPIDLE'):
+            self.assertIn(mock.call().setsockopt(
+                socket.IPPROTO_TCP,
+                socket.TCP_KEEPIDLE,
+                wsgi.cfg.CONF.heat_api.tcp_keepidle), mock_socket.mock_calls)
+
+    def test_get_socket_without_all_ssl_reqs(self):
+        wsgi.cfg.CONF.heat_api.key_file = None
+        self.assertRaises(RuntimeError, wsgi.get_socket,
+                          wsgi.cfg.CONF.heat_api, 1234)
+
+    def test_get_socket_with_bind_problems(self):
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.eventlet.listen',
+            mock.Mock(side_effect=(
+                [wsgi.socket.error(socket.errno.EADDRINUSE)] * 3 + [None]))))
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.ssl.wrap_socket',
+            lambda *x, **y: None))
+
+        self.assertRaises(RuntimeError, wsgi.get_socket,
+                          wsgi.cfg.CONF.heat_api, 1234)
+
+    def test_get_socket_with_unexpected_socket_errno(self):
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.eventlet.listen',
+            mock.Mock(side_effect=wsgi.socket.error(socket.errno.ENOMEM))))
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.ssl.wrap_socket',
+            lambda *x, **y: None))
+        self.assertRaises(wsgi.socket.error, wsgi.get_socket,
+                          wsgi.cfg.CONF.heat_api, 1234)

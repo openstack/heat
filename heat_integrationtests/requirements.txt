@@ -5,6 +5,7 @@ pbr<2.0,>=0.11
 kombu>=3.0.7
 oslo.log>=1.2.0 # Apache-2.0
 oslo.messaging!=1.12.0,>=1.8.0 # Apache-2.0
+oslo.concurrency>=2.1.0
 oslo.config>=1.11.0 # Apache-2.0
 oslo.utils>=1.6.0 # Apache-2.0
 paramiko>=1.13.0
