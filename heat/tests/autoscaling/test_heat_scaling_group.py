@@ -13,7 +13,6 @@
 import json
 
 import mock
-from oslo_config import cfg
 import six
 
 from heat.common import exception
@@ -33,8 +32,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         super(TestAutoScalingGroupValidation, self).setUp()
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
         self.parsed = template_format.parse(inline_templates.as_heat_template)
 
     def test_invalid_min_size(self):
@@ -93,8 +90,6 @@ class TestInitialGroupSize(common.HeatTestCase):
 
     def setUp(self):
         super(TestInitialGroupSize, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def test_initial_size(self):
         t = template_format.parse(inline_templates.as_heat_template)
@@ -112,8 +107,6 @@ class TestInitialGroupSize(common.HeatTestCase):
 class TestGroupAdjust(common.HeatTestCase):
     def setUp(self):
         super(TestGroupAdjust, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
 
@@ -285,8 +278,6 @@ class TestGroupCrud(common.HeatTestCase):
         super(TestGroupCrud, self).setUp()
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -364,8 +355,6 @@ class TestGroupCrud(common.HeatTestCase):
 class HeatScalingGroupAttrTest(common.HeatTestCase):
     def setUp(self):
         super(HeatScalingGroupAttrTest, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
 
@@ -467,8 +456,6 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
 
     def test_parse_without_update_policy(self):
         tmpl = template_format.parse(inline_templates.as_heat_template)
@@ -531,8 +518,6 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
 
     def validate_update_policy_diff(self, current, updated):
         # load current stack
@@ -602,8 +587,6 @@ class IncorrectUpdatePolicyTest(common.HeatTestCase):
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
 
     def test_with_update_policy_aws(self):
         t = template_format.parse(inline_templates.as_heat_template)

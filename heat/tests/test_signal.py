@@ -15,7 +15,6 @@ import datetime
 import six
 
 from keystoneclient import exceptions as kc_exceptions
-from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import template_format
@@ -53,9 +52,6 @@ class SignalTest(common.HeatTestCase):
                                  generic_resource.SignalResource)
         resource._register_class('GenericResourceType',
                                  generic_resource.GenericResource)
-
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
         self.stack_id = 'STACKABCD1234'
 
@@ -146,6 +142,11 @@ class SignalTest(common.HeatTestCase):
 
     def test_FnGetAtt_Alarm_Url(self):
         self.stack = self.create_stack()
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
+
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8000/v1')
 
         self.m.ReplayAll()
         self.stack.create()
@@ -186,7 +187,11 @@ class SignalTest(common.HeatTestCase):
 
     def test_FnGetAtt_delete(self):
         self.stack = self.create_stack()
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
 
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8000/v1')
         self.m.ReplayAll()
         self.stack.create()
 

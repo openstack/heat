@@ -14,7 +14,6 @@
 import json
 
 import mock
-from oslo_config import cfg
 import six
 
 from heat.common import exception
@@ -36,8 +35,6 @@ as_template = inline_templates.as_template
 class TestAutoScalingGroupValidation(common.HeatTestCase):
     def setUp(self):
         super(TestAutoScalingGroupValidation, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def validate_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
@@ -276,8 +273,6 @@ class TestInitialGroupSize(common.HeatTestCase):
 
     def setUp(self):
         super(TestInitialGroupSize, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def test_initial_size(self):
         t = template_format.parse(as_template)
@@ -295,8 +290,6 @@ class TestInitialGroupSize(common.HeatTestCase):
 class TestGroupAdjust(common.HeatTestCase):
     def setUp(self):
         super(TestGroupAdjust, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
         t = template_format.parse(as_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
@@ -464,9 +457,6 @@ class TestGroupAdjust(common.HeatTestCase):
 class TestGroupCrud(common.HeatTestCase):
     def setUp(self):
         super(TestGroupCrud, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
-
         t = template_format.parse(as_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.group = self.stack['WebServerGroup']
@@ -587,8 +577,6 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
 
     def test_parse_without_update_policy(self):
         tmpl = template_format.parse(inline_templates.as_template)
@@ -654,8 +642,6 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         super(RollingUpdatePolicyDiffTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
 
     def validate_update_policy_diff(self, current, updated):
         # load current stack
