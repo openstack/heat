@@ -1277,13 +1277,18 @@ class EngineService(service.Service):
     @context.request_context
     def stack_snapshot(self, cnxt, stack_identity, name):
         def _stack_snapshot(stack, snapshot):
-            LOG.debug("snapshotting stack %s" % stack.name)
-            stack.snapshot()
-            data = stack.prepare_abandon()
-            snapshot_object.Snapshot.update(
-                cnxt, snapshot.id,
-                {'data': data, 'status': stack.status,
-                 'status_reason': stack.status_reason})
+
+            def save_snapshot(stack, action, status, reason):
+                """Function that saves snapshot before snapshot complete."""
+                data = stack.prepare_abandon()
+                data["status"] = status
+                snapshot_object.Snapshot.update(
+                    cnxt, snapshot.id,
+                    {'data': data, 'status': status,
+                     'status_reason': reason})
+
+            LOG.debug("Snapshotting stack %s" % stack.name)
+            stack.snapshot(save_snapshot_func=save_snapshot)
 
         s = self._get_stack(cnxt, stack_identity)
 
