@@ -24,6 +24,7 @@ from heat.engine import resource as res
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import template as templatem
+from heat.objects import stack as stack_object
 from heat.openstack.common import threadgroup
 from heat.tests import common
 from heat.tests.engine import tools
@@ -206,7 +207,8 @@ class StackCreateTest(common.HeatTestCase):
                                            convergence=False,
                                            parent_resource=None)
 
-    def test_stack_create_total_resources_equals_max(self):
+    @mock.patch.object(stack_object.Stack, 'count_total_resources')
+    def test_stack_create_total_resources_equals_max(self, ctr):
         stack_name = 'stack_create_total_resources_equals_max'
         params = {}
         res._register_class('FakeResourceType', generic_rsrc.GenericResource)
@@ -221,6 +223,7 @@ class StackCreateTest(common.HeatTestCase):
 
         template = templatem.Template(tpl)
         stk = stack.Stack(self.ctx, stack_name, template)
+        ctr.return_value = 3
 
         mock_tmpl = self.patchobject(templatem, 'Template', return_value=stk.t)
         mock_env = self.patchobject(environment, 'Environment',
@@ -242,7 +245,8 @@ class StackCreateTest(common.HeatTestCase):
                                            parent_resource=None)
 
         self.assertEqual(stk.identifier(), result)
-        self.assertEqual(3, stk.total_resources())
+        root_stack_id = stk.root_stack_id()
+        self.assertEqual(3, stk.total_resources(root_stack_id))
         self.man.thread_group_mgr.groups[stk.id].wait()
         stk.delete()
 

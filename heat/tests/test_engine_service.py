@@ -1063,7 +1063,8 @@ class StackServiceAdoptUpdateDeleteTest(common.HeatTestCase):
                       "('UPDATE', 'COMPLETE')",
                       six.text_type(ex.exc_info[1]))
 
-    def test_stack_update_equals(self):
+    @mock.patch.object(stack_object.Stack, 'count_total_resources')
+    def test_stack_update_equals(self, ctr):
         stack_name = 'test_stack_update_equals_resource_limit'
         params = {}
         res._register_class('GenericResourceType',
@@ -1080,6 +1081,7 @@ class StackServiceAdoptUpdateDeleteTest(common.HeatTestCase):
         sid = old_stack.store()
         old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
+        ctr.return_value = 3
 
         stack = parser.Stack(self.ctx, stack_name, template)
 
@@ -1115,7 +1117,8 @@ class StackServiceAdoptUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
-        self.assertEqual(3, old_stack.root_stack.total_resources())
+        root_stack_id = old_stack.root_stack_id()
+        self.assertEqual(3, old_stack.total_resources(root_stack_id))
         self.m.VerifyAll()
 
     def test_stack_update_stack_id_equal(self):
