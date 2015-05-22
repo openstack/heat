@@ -139,6 +139,10 @@ class Stack(
         return db_api.stack_count_all(context, **kwargs)
 
     @classmethod
+    def count_total_resources(cls, context, stack_id):
+        return db_api.stack_count_total_resources(context, stack_id)
+
+    @classmethod
     def create(cls, context, values):
         return db_api.stack_create(context, values)
 

@@ -1820,6 +1820,80 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertEqual(root.id, db_api.stack_get_root_id(
             self.ctx, child_1.id))
 
+    def test_stack_count_total_resources(self):
+
+        def add_resources(stack, count):
+            for i in range(count):
+                create_resource(
+                    self.ctx, stack, name='%s-%s' % (stack.name, i))
+
+        root = create_stack(self.ctx, self.template, self.user_creds,
+                            name='root stack')
+
+        # stack with 3 children
+        s_1 = create_stack(self.ctx, self.template, self.user_creds,
+                           name='s_1', owner_id=root.id)
+        s_1_1 = create_stack(self.ctx, self.template, self.user_creds,
+                             name='s_1_1', owner_id=s_1.id)
+        s_1_2 = create_stack(self.ctx, self.template, self.user_creds,
+                             name='s_1_2', owner_id=s_1.id)
+        s_1_3 = create_stack(self.ctx, self.template, self.user_creds,
+                             name='s_1_3', owner_id=s_1.id)
+
+        # stacks 4 ancestors deep
+        s_2 = create_stack(self.ctx, self.template, self.user_creds,
+                           name='s_2', owner_id=root.id)
+        s_2_1 = create_stack(self.ctx, self.template, self.user_creds,
+                             name='s_2_1', owner_id=s_2.id)
+        s_2_1_1 = create_stack(self.ctx, self.template, self.user_creds,
+                               name='s_2_1_1', owner_id=s_2_1.id)
+        s_2_1_1_1 = create_stack(self.ctx, self.template, self.user_creds,
+                                 name='s_2_1_1_1', owner_id=s_2_1_1.id)
+
+        s_3 = create_stack(self.ctx, self.template, self.user_creds,
+                           name='s_3', owner_id=root.id)
+        s_4 = create_stack(self.ctx, self.template, self.user_creds,
+                           name='s_4', owner_id=root.id)
+
+        add_resources(root, 3)
+        add_resources(s_1, 2)
+        add_resources(s_1_1, 4)
+        add_resources(s_1_2, 5)
+        add_resources(s_1_3, 6)
+
+        add_resources(s_2, 1)
+        add_resources(s_2_1_1_1, 1)
+        add_resources(s_3, 4)
+
+        self.assertEqual(26, db_api.stack_count_total_resources(
+            self.ctx, root.id))
+
+        self.assertEqual(17, db_api.stack_count_total_resources(
+            self.ctx, s_1.id))
+        self.assertEqual(4, db_api.stack_count_total_resources(
+            self.ctx, s_1_1.id))
+        self.assertEqual(5, db_api.stack_count_total_resources(
+            self.ctx, s_1_2.id))
+        self.assertEqual(6, db_api.stack_count_total_resources(
+            self.ctx, s_1_3.id))
+
+        self.assertEqual(2, db_api.stack_count_total_resources(
+            self.ctx, s_2.id))
+        self.assertEqual(1, db_api.stack_count_total_resources(
+            self.ctx, s_2_1.id))
+        self.assertEqual(1, db_api.stack_count_total_resources(
+            self.ctx, s_2_1_1.id))
+        self.assertEqual(1, db_api.stack_count_total_resources(
+            self.ctx, s_2_1_1_1.id))
+        self.assertEqual(4, db_api.stack_count_total_resources(
+            self.ctx, s_3.id))
+        self.assertEqual(0, db_api.stack_count_total_resources(
+            self.ctx, s_4.id))
+        self.assertEqual(0, db_api.stack_count_total_resources(
+            self.ctx, 'asdf'))
+        self.assertEqual(0, db_api.stack_count_total_resources(
+            self.ctx, None))
+
 
 class DBAPIResourceTest(common.HeatTestCase):
     def setUp(self):

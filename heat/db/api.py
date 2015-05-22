@@ -202,6 +202,10 @@ def stack_get_root_id(context, stack_id):
     return IMPL.stack_get_root_id(context, stack_id)
 
 
+def stack_count_total_resources(context, stack_id):
+    return IMPL.stack_count_total_resources(context, stack_id)
+
+
 def user_creds_create(context):
     return IMPL.user_creds_create(context)
 
