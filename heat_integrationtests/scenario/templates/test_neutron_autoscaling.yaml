@@ -11,7 +11,7 @@ parameters:
     type: string
     label: Capacity
     description: Auto-scaling group desired capacity
-  fixed_subnet_name:
+  fixed_subnet:
     type: string
     label: fixed subnetwork ID
     description: subnetwork ID used for autoscaling
@@ -28,7 +28,7 @@ resources:
       lb_method: ROUND_ROBIN
       name: test_pool
       protocol: HTTP
-      subnet: { get_param: fixed_subnet_name }
+      subnet: { get_param: fixed_subnet }
       vip: {
         "description": "Test VIP",
         "protocol_port": 80,
@@ -49,6 +49,7 @@ resources:
     properties:
       AvailabilityZones : ["nova"]
       LaunchConfigurationName : { get_resource : launch_config }
+      VPCZoneIdentifier: [{ get_param: fixed_subnet }]
       MinSize : 1
       MaxSize : 5
       DesiredCapacity: { get_param: capacity }

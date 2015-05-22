@@ -116,6 +116,8 @@ parameters:
     type: string
   image:
     type: string
+  network:
+    type: string
 
 resources:
   server:
@@ -123,6 +125,7 @@ resources:
     properties:
       image: {get_param: image}
       flavor: {get_param: flavor}
+      networks: [{network: {get_param: network} }]
       user_data_format: SOFTWARE_CONFIG
       user_data: {get_param: user_data}
 '''
@@ -369,6 +372,7 @@ resources:
 
         parms = {'flavor': self.conf.minimal_instance_type,
                  'image': self.conf.minimal_image_ref,
+                 'network': self.conf.fixed_network_name,
                  'user_data': ''}
         name = self._stack_rand_name()
 

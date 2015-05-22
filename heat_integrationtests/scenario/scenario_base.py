@@ -25,7 +25,6 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
         if not self.conf.fixed_network_name:
             raise self.skipException("No default network configured to test")
         self.net = self._get_network()
-        self.subnet_v4 = self._get_subnet_by_version(self.net)
 
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")

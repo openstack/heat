@@ -95,7 +95,7 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
             'flavor': self.conf.instance_type,
             'image': self.conf.image_ref,
             'timeout': self.conf.build_timeout,
-            'subnet': self.subnet_v4,
+            'subnet': self.net['subnets'][0],
         }
 
         # Launch stack

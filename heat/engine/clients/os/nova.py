@@ -25,7 +25,6 @@ from novaclient import exceptions
 from novaclient import shell as novashell
 from oslo_config import cfg
 from oslo_serialization import jsonutils
-from oslo_utils import netutils
 from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
@@ -417,9 +416,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         else:
             for n in server.networks:
                 if len(server.networks[n]) > 0:
-                    for addr in server.networks[n]:
-                        if netutils.is_valid_ipv4(addr):
-                            return addr
+                    return server.networks[n][0]
 
     def get_server(self, server):
         try:
