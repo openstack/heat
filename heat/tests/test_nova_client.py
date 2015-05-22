@@ -10,7 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-"""Tests for :module:'heat.engine.resources.nova_utls'."""
+"""Tests for :module:'heat.engine.clients.os.nova'."""
 
 import collections
 import uuid
@@ -40,7 +40,7 @@ class NovaClientPluginTestCase(common.HeatTestCase):
 class NovaClientPluginTests(NovaClientPluginTestCase):
     """
     Basic tests for the helper methods in
-    :module:'heat.engine.nova_utils'.
+    :module:'heat.engine.clients.os.nova'.
     """
 
     def test_get_ip(self):
