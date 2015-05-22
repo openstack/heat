@@ -1015,18 +1015,6 @@ class ResolveDataTest(common.HeatTestCase):
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
 
-    def test_stack_resolve_runtime_data_deprecated(self):
-        stk = stack.Stack(self.ctx, 'test_stack',
-                          template.Template(empty_template),
-                          tenant_id='bar')
-
-        test_data = {'foo': 'bar'}
-        msg = ('Stack.resolve_runtime_data\(\) is deprecated.'
-               ' Use heat.engine.function.resolve\(\) instead')
-        with self.assertWarnsRegex(DeprecationWarning, msg):
-            resolved = stk.resolve_runtime_data(test_data)
-        self.assertEqual(test_data, resolved)
-
     def test_join_split(self):
         # join
         snippet = {'Fn::Join': [';', ['one', 'two', 'three']]}
