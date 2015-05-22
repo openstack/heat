@@ -490,6 +490,10 @@ stack name, ``OS::stack_id`` for the stack identifier and
 accessible via the `get_param`_ intrinsic function just like
 user-defined parameters.
 
+.. note::
+
+  ``OS::project_id`` is available since 2015.1 (Kilo).
+
 .. _hot_spec_resources:
 
 -----------------
