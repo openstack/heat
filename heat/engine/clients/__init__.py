@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import warnings
-
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
@@ -78,54 +76,6 @@ class OpenStackClients(object):
         # which allow reissuing of a new token before the context
         # auth_token expiry (e.g trust_id or username/password)
         return self.client('keystone').auth_token
-
-    def keystone(self):
-        warnings.warn('keystone() is deprecated. '
-                      'Replace with calls to client("keystone")')
-        return self.client('keystone')
-
-    def url_for(self, **kwargs):
-        return self.client('keystone').url_for(**kwargs)
-
-    def nova(self):
-        warnings.warn('nova() is deprecated. '
-                      'Replace with calls to client("nova")')
-        return self.client('nova')
-
-    def swift(self):
-        warnings.warn('swift() is deprecated. '
-                      'Replace with calls to client("swift")')
-        return self.client('swift')
-
-    def glance(self):
-        warnings.warn('glance() is deprecated. '
-                      'Replace with calls to client("glance")')
-        return self.client('glance')
-
-    def neutron(self):
-        warnings.warn('neutron() is deprecated. '
-                      'Replace with calls to client("neutron")')
-        return self.client('neutron')
-
-    def cinder(self):
-        warnings.warn('cinder() is deprecated. '
-                      'Replace with calls to client("cinder")')
-        return self.client('cinder')
-
-    def trove(self):
-        warnings.warn('trove() is deprecated. '
-                      'Replace with calls to client("trove")')
-        return self.client('trove')
-
-    def ceilometer(self):
-        warnings.warn('ceilometer() is deprecated. '
-                      'Replace with calls to client("ceilometer")')
-        return self.client('ceilometer')
-
-    def heat(self):
-        warnings.warn('heat() is deprecated. '
-                      'Replace with calls to client("heat")')
-        return self.client('heat')
 
 
 class ClientBackend(object):

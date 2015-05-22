@@ -116,7 +116,7 @@ class RemoteStack(resource.Resource):
 
     def heat(self):
         # A convenience method overriding Resource.heat()
-        return self._context().clients.heat()
+        return self._context().clients.client("heat")
 
     def client_plugin(self):
         # A convenience method overriding Resource.client_plugin()
