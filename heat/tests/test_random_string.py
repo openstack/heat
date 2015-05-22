@@ -151,6 +151,10 @@ Resources:
         assert_min('@', random_string, 5)
         self.assertEqual(random_string, secret6.FnGetRefId())
 
+        # Prove the name is returned before create sets the ID
+        secret6.resource_id = None
+        self.assertEqual('secret6', secret6.FnGetRefId())
+
     def test_invalid_property_combination(self):
         template_random_string = '''
 HeatTemplateFormatVersion: '2012-12-12'
@@ -207,6 +211,21 @@ Resources:
                                 self.create_stack, template_random_string)
         self.assertIn('length 513 is out of range (min: 1, max: 512)',
                       six.text_type(exc))
+
+    def test_max_length(self):
+        template_random_string = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  secret:
+    Type: OS::Heat::RandomString
+    Properties:
+      length: 512
+'''
+        stack = self.create_stack(template_random_string)
+        secret = stack['secret']
+        random_string = secret.FnGetAtt('value')
+        self.assertEqual(512, len(random_string))
+        self.assertEqual(random_string, secret.FnGetRefId())
 
 
 class TestGenerateRandomString(HeatTestCase):
