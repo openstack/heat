@@ -59,6 +59,22 @@ resources:
         subnet: sub9999
 '''
 
+pool_template_with_provider = '''
+heat_template_version: 2015-04-30
+description: Template to test load balancer resources
+resources:
+  pool:
+    type: OS::Neutron::Pool
+    properties:
+      protocol: HTTP
+      subnet: sub123
+      lb_method: ROUND_ROBIN
+      provider: test_prov
+      vip:
+        protocol_port: 80
+
+'''
+
 pool_template = '''
 heat_template_version: 2015-04-30
 description: Template to test load balancer resources
@@ -545,6 +561,40 @@ class PoolTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_create_pool_with_provider(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub123'
+        ).MultipleTimes().AndReturn('sub123')
+        neutronclient.Client.create_pool({
+            'pool': {
+                'subnet_id': 'sub123', 'protocol': u'HTTP',
+                'name': utils.PhysName('test_stack', 'pool'),
+                'lb_method': 'ROUND_ROBIN', 'admin_state_up': True,
+                'provider': 'test_prov'}}
+        ).AndReturn({'pool': {'id': '5678'}})
+        neutronclient.Client.create_vip({
+            'vip': {
+                'protocol': u'HTTP', 'name': 'pool.vip',
+                'admin_state_up': True, 'subnet_id': u'sub123',
+                'pool_id': '5678', 'protocol_port': 80}}
+        ).AndReturn({'vip': {'id': 'xyz'}})
+        neutronclient.Client.show_pool('5678').MultipleTimes().AndReturn(
+            {'pool': {'status': 'ACTIVE', 'provider': 'test_prov'}})
+        neutronclient.Client.show_vip('xyz').AndReturn(
+            {'vip': {'status': 'ACTIVE'}})
+        snippet = template_format.parse(pool_template_with_provider)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        rsrc = loadbalancer.Pool(
+            'pool', resource_defns['pool'], self.stack)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual("test_prov", rsrc.FnGetAtt("provider"))
         self.m.VerifyAll()
 
     def test_failing_validation_with_session_persistence(self):
