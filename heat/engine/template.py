@@ -55,7 +55,6 @@ def _get_template_extension_manager():
     return extension.ExtensionManager(
         namespace='heat.templates',
         invoke_on_load=False,
-        verify_requirements=True,
         on_load_failure_callback=raise_extension_exception)
 
 

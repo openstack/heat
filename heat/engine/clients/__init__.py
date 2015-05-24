@@ -163,8 +163,7 @@ def initialise():
 
     _mgr = extension.ExtensionManager(
         namespace='heat.clients',
-        invoke_on_load=False,
-        verify_requirements=True)
+        invoke_on_load=False)
 
 
 def list_opts():
