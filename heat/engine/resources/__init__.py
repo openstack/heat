@@ -37,8 +37,7 @@ def _register_stack_lifecycle_plugins(env, type_pairs):
 def _get_mapping(namespace):
     mgr = extension.ExtensionManager(
         namespace=namespace,
-        invoke_on_load=False,
-        verify_requirements=True)
+        invoke_on_load=False)
     return [[name, mgr[name].plugin] for name in mgr.names()]
 
 
