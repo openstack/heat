@@ -161,6 +161,10 @@ class TemplateResource(stack_resource.StackResource):
             self._parsed_nested = template_format.parse(self.template_data())
         return self._parsed_nested
 
+    def regenerate_info_schema(self, definition):
+        self._get_resource_info(definition)
+        self._generate_schema(definition)
+
     def implementation_signature(self):
         self._generate_schema(self.t)
         return super(TemplateResource, self).implementation_signature()
@@ -267,8 +271,6 @@ class TemplateResource(stack_resource.StackResource):
             self.metadata_set(self.t.metadata())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        self._get_resource_info(json_snippet)
-        self._generate_schema(json_snippet)
         return self.update_with_template(self.child_template(),
                                          self.child_params())
 

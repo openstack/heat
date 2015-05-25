@@ -251,6 +251,22 @@ Resources:
     Type: the.yaml
     Properties:
       one: my_name
+      two: your_name
+Outputs:
+  identifier:
+    Value: {Ref: the_nested}
+  value:
+    Value: {'Fn::GetAtt': [the_nested, the_str]}
+'''
+
+    main_template_change_prop = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: the.yaml
+    Properties:
+      one: updated_name
+      two: your_name
 
 Outputs:
   identifier:
@@ -259,13 +275,30 @@ Outputs:
     Value: {'Fn::GetAtt': [the_nested, the_str]}
 '''
 
-    main_template_2 = '''
+    main_template_add_prop = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
   the_nested:
     Type: the.yaml
     Properties:
-      one: updated_name
+      one: my_name
+      two: your_name
+      three: third_name
+
+Outputs:
+  identifier:
+    Value: {Ref: the_nested}
+  value:
+    Value: {'Fn::GetAtt': [the_nested, the_str]}
+'''
+
+    main_template_remove_prop = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: the.yaml
+    Properties:
+      one: my_name
 
 Outputs:
   identifier:
@@ -280,6 +313,10 @@ Parameters:
   one:
     Default: foo
     Type: String
+  two:
+    Default: bar
+    Type: String
+
 Resources:
   NestedResource:
     Type: OS::Heat::RandomString
@@ -289,6 +326,7 @@ Outputs:
   the_str:
     Value: {'Fn::GetAtt': [NestedResource, value]}
 '''
+
     prop_change_tmpl = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
@@ -302,17 +340,62 @@ Resources:
   NestedResource:
     Type: OS::Heat::RandomString
     Properties:
+      salt: {Ref: two}
+Outputs:
+  the_str:
+    Value: {'Fn::GetAtt': [NestedResource, value]}
+'''
+
+    prop_add_tmpl = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  one:
+    Default: yikes
+    Type: String
+  two:
+    Default: foo
+    Type: String
+  three:
+    Default: bar
+    Type: String
+
+Resources:
+  NestedResource:
+    Type: OS::Heat::RandomString
+    Properties:
+      salt: {Ref: three}
+Outputs:
+  the_str:
+    Value: {'Fn::GetAtt': [NestedResource, value]}
+'''
+
+    prop_remove_tmpl = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  one:
+    Default: yikes
+    Type: String
+
+Resources:
+  NestedResource:
+    Type: OS::Heat::RandomString
+    Properties:
       salt: {Ref: one}
 Outputs:
   the_str:
     Value: {'Fn::GetAtt': [NestedResource, value]}
 '''
+
     attr_change_tmpl = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
   one:
     Default: foo
     Type: String
+  two:
+    Default: bar
+    Type: String
+
 Resources:
   NestedResource:
     Type: OS::Heat::RandomString
@@ -324,12 +407,17 @@ Outputs:
   something_else:
     Value: just_a_string
 '''
+
     content_change_tmpl = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
   one:
     Default: foo
     Type: String
+  two:
+    Default: bar
+    Type: String
+
 Resources:
   NestedResource:
     Type: OS::Heat::RandomString
@@ -345,7 +433,7 @@ Outputs:
         ('no_changes', dict(template=main_template,
                             provider=initial_tmpl,
                             expect=NOCHANGE)),
-        ('main_tmpl_change', dict(template=main_template_2,
+        ('main_tmpl_change', dict(template=main_template_change_prop,
                                   provider=initial_tmpl,
                                   expect=UPDATE)),
         ('provider_change', dict(template=main_template,
@@ -353,6 +441,12 @@ Outputs:
                                  expect=UPDATE)),
         ('provider_props_change', dict(template=main_template,
                                        provider=prop_change_tmpl,
+                                       expect=UPDATE)),
+        ('provider_props_add', dict(template=main_template_add_prop,
+                                    provider=prop_add_tmpl,
+                                    expect=UPDATE)),
+        ('provider_props_remove', dict(template=main_template_remove_prop,
+                                       provider=prop_remove_tmpl,
                                        expect=NOCHANGE)),
         ('provider_attr_change', dict(template=main_template,
                                       provider=attr_change_tmpl,
