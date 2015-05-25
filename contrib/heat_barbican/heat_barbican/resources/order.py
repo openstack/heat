@@ -108,6 +108,8 @@ class Order(resource.Resource):
         order = self.barbican().orders.create_key(**info)
         order_ref = order.submit()
         self.resource_id_set(order_ref)
+        # NOTE(pshchelo): order_ref is HATEOAS reference, i.e a string
+        # need not to be fixed re LP bug #1393268
         return order_ref
 
     def check_create_complete(self, order_href):
