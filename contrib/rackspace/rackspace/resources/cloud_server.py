@@ -11,11 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine.resources.openstack.nova import server
 
 
@@ -45,6 +49,27 @@ class CloudServer(server.Server):
     RC_STATUS_DEPLOYED = 'DEPLOYED'
     RC_STATUS_FAILED = 'FAILED'
     RC_STATUS_UNPROCESSABLE = 'UNPROCESSABLE'
+
+    properties_schema = copy.deepcopy(server.Server.properties_schema)
+    properties_schema.update(
+        {
+            server.Server.USER_DATA_FORMAT: properties.Schema(
+                properties.Schema.STRING,
+                _('How the user_data should be formatted for the server. For '
+                  'HEAT_CFNTOOLS, the user_data is bundled as part of the '
+                  'heat-cfntools cloud-init boot configuration data. For RAW '
+                  'the user_data is passed to Nova unmodified. '
+                  'For SOFTWARE_CONFIG user_data is bundled as part of the '
+                  'software config data, and metadata is derived from any '
+                  'associated SoftwareDeployment resources.'),
+                default=server.Server.RAW,
+                constraints=[
+                    constraints.AllowedValues(
+                        server.Server._SOFTWARE_CONFIG_FORMATS),
+                ]
+            ),
+        }
+    )
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
