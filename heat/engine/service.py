@@ -556,6 +556,8 @@ class EngineService(service.Service):
     def _validate_new_stack(self, cnxt, stack_name, parsed_template):
         try:
             parsed_template.validate()
+        except AssertionError:
+            raise
         except Exception as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
 

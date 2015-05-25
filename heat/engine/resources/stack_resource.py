@@ -66,6 +66,8 @@ class StackResource(resource.Resource):
                 self.child_params())
             nested_stack.strict_validate = False
             nested_stack.validate()
+        except AssertionError:
+            raise
         except Exception as ex:
             raise exception.StackValidationFailed(
                 error=_("Failed to validate"),

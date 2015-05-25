@@ -647,8 +647,10 @@ class Stack(collections.Mapping):
             try:
                 result = res.validate()
             except exception.HeatException as ex:
-                LOG.info(ex)
+                LOG.debug('%s', ex)
                 raise ex
+            except AssertionError:
+                raise
             except Exception as ex:
                 LOG.exception(_LE("Exception: %s"), ex)
                 raise exception.StackValidationFailed(
@@ -674,7 +676,9 @@ class Stack(collections.Mapping):
                     path=[self.t.OUTPUTS],
                     message=message)
             except exception.StackValidationFailed as ex:
-                raise ex
+                raise
+            except AssertionError:
+                raise
             except Exception as ex:
                 raise exception.StackValidationFailed(
                     error='Output validation error',
@@ -1559,6 +1563,8 @@ class Stack(collections.Mapping):
     def resolve_static_data(self, snippet):
         try:
             return self.t.parse(self, snippet)
+        except AssertionError:
+            raise
         except Exception as ex:
             raise exception.StackValidationFailed(
                 message=encodeutils.safe_decode(six.text_type(ex)))
