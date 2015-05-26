@@ -16,6 +16,7 @@ import copy
 
 import mock
 import mox
+from novaclient import exceptions as nova_exceptions
 from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
@@ -3472,3 +3473,97 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
 
         self.m.VerifyAll()
+
+    def test_snapshot_policy(self):
+        t = template_format.parse(wp_template)
+        t['Resources']['WebServer']['DeletionPolicy'] = 'Snapshot'
+        tmpl = template.Template(t)
+        stack = parser.Stack(
+            utils.dummy_context(), 'snapshot_policy', tmpl)
+        stack.store()
+
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
+        mock_plugin.return_value = self.fc
+
+        get_image = self.patchobject(glance.GlanceClientPlugin, 'get_image_id')
+        get_image.return_value = 744
+
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+
+        mock_create = self.patchobject(self.fc.servers, 'create')
+        mock_create.return_value = return_server
+
+        image = self.fc.servers.create_image(1234, 'name')
+        create_image = self.patchobject(self.fc.servers, 'create_image')
+        create_image.return_value = image
+
+        delete_server = self.patchobject(self.fc.servers, 'delete')
+        delete_server.side_effect = nova_exceptions.NotFound(404)
+
+        scheduler.TaskRunner(stack.create)()
+
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+
+        scheduler.TaskRunner(stack.delete)()
+
+        self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
+
+        get_image.assert_called_with('F17-x86_64-gold')
+        create_image.assert_called_once_with(
+            1234, utils.PhysName('snapshot_policy', 'WebServer'))
+
+        delete_server.assert_called_once_with(1234)
+
+    def test_snapshot_policy_image_failed(self):
+        t = template_format.parse(wp_template)
+        t['Resources']['WebServer']['DeletionPolicy'] = 'Snapshot'
+        tmpl = template.Template(t)
+        stack = parser.Stack(
+            utils.dummy_context(), 'snapshot_policy', tmpl)
+        stack.store()
+
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
+        mock_plugin.return_value = self.fc
+
+        get_image = self.patchobject(glance.GlanceClientPlugin, 'get_image_id')
+        get_image.return_value = 744
+
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+
+        mock_create = self.patchobject(self.fc.servers, 'create')
+        mock_create.return_value = return_server
+
+        image = self.fc.servers.create_image(1234, 'name')
+        create_image = self.patchobject(self.fc.servers, 'create_image')
+        create_image.return_value = image
+
+        delete_server = self.patchobject(self.fc.servers, 'delete')
+        delete_server.side_effect = nova_exceptions.NotFound(404)
+
+        scheduler.TaskRunner(stack.create)()
+
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+
+        failed_image = {
+            'id': 456,
+            'name': 'CentOS 5.2',
+            'updated': '2010-10-10T12:00:00Z',
+            'created': '2010-08-10T12:00:00Z',
+            'status': 'ERROR'}
+        self.fc.client.get_images_456 = lambda **kw: (
+            200, {'image': failed_image})
+
+        scheduler.TaskRunner(stack.delete)()
+
+        self.assertEqual((stack.DELETE, stack.FAILED), stack.state)
+        self.assertEqual(
+            'Resource DELETE failed: Error: resources.WebServer: ERROR',
+            stack.status_reason)
+
+        get_image.assert_called_with('F17-x86_64-gold')
+        create_image.assert_called_once_with(
+            1234, utils.PhysName('snapshot_policy', 'WebServer'))
+
+        delete_server.assert_not_called()

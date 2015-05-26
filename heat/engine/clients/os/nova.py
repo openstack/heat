@@ -657,3 +657,11 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, network):
         client.client_plugin('nova').get_nova_network_id(network)
+
+
+class ServerDeleteProgress(object):
+
+    def __init__(self, server_id, image_id=None, image_complete=True):
+        self.server_id = server_id
+        self.image_id = image_id
+        self.image_complete = image_complete
