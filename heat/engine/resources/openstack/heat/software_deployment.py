@@ -576,9 +576,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                         "deployments on it.") % server)
 
 
-class SoftwareDeployments(resource_group.ResourceGroup):
+class SoftwareDeploymentGroup(resource_group.ResourceGroup):
 
-    support_status = support.SupportStatus(version='2014.2')
+    support_status = support.SupportStatus(version='2015.2')
 
     PROPERTIES = (
         SERVERS,
@@ -657,7 +657,7 @@ class SoftwareDeployments(resource_group.ResourceGroup):
         }
 
     def FnGetAtt(self, key, *path):
-        rg = super(SoftwareDeployments, self)
+        rg = super(SoftwareDeploymentGroup, self)
         if key == self.STDOUTS:
             return rg.FnGetAtt(
                 rg.ATTR_ATTRIBUTES, SoftwareDeployment.STDOUT)
@@ -669,8 +669,19 @@ class SoftwareDeployments(resource_group.ResourceGroup):
                 rg.ATTR_ATTRIBUTES, SoftwareDeployment.STATUS_CODE)
 
 
+class SoftwareDeployments(SoftwareDeploymentGroup):
+
+    deprecation_msg = _('This resource is deprecated and use is discouraged. '
+                        'Please use resource OS::Heat:SoftwareDeploymentGroup '
+                        'instead.')
+    support_status = support.SupportStatus(status=support.DEPRECATED,
+                                           message=deprecation_msg,
+                                           version='2014.2')
+
+
 def resource_mapping():
     return {
         'OS::Heat::SoftwareDeployment': SoftwareDeployment,
+        'OS::Heat::SoftwareDeploymentGroup': SoftwareDeploymentGroup,
         'OS::Heat::SoftwareDeployments': SoftwareDeployments,
     }

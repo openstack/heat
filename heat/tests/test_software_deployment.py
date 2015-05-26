@@ -1026,13 +1026,13 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             self.assertIsNotNone(self.deployment._handle_action(action))
 
 
-class SoftwareDeploymentsTest(common.HeatTestCase):
+class SoftwareDeploymentGroupTest(common.HeatTestCase):
 
     template = {
         'heat_template_version': '2013-05-23',
         'resources': {
             'deploy_mysql': {
-                'type': 'OS::Heat::SoftwareDeployments',
+                'type': 'OS::Heat::SoftwareDeploymentGroup',
                 'properties': {
                     'config': 'config_uuid',
                     'servers': {'server1': 'uuid1', 'server2': 'uuid2'},
@@ -1050,7 +1050,7 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
     def test_build_resource_definition(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeployments('test', snip, stack)
+        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
         expect = {
             'type': 'OS::Heat::SoftwareDeployment',
             'properties': {
@@ -1069,7 +1069,7 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
     def test_resource_names(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeployments('test', snip, stack)
+        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
         self.assertEqual(
             set(('server1', 'server2')),
             set(resg._resource_names())
@@ -1087,7 +1087,7 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
         """
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeployments('test', snip, stack)
+        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
         templ = {
             "heat_template_version": "2013-05-23",
             "resources": {
@@ -1121,7 +1121,7 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
     def test_attributes(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeployments('test', snip, stack)
+        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
         nested = self.patchobject(resg, 'nested')
         server1 = mock.MagicMock()
         server2 = mock.MagicMock()
@@ -1160,5 +1160,5 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
     def test_validate(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeployments('deploy_mysql', snip, stack)
+        resg = sd.SoftwareDeploymentGroup('deploy_mysql', snip, stack)
         self.assertIsNone(resg.validate())
