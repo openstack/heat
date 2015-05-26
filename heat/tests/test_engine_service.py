@@ -2587,7 +2587,9 @@ class StackServiceTest(common.HeatTestCase):
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
         self.assertEqual(set(['OS::Neutron::RouterGateway',
                               'OS::Heat::CWLiteAlarm',
-                              'OS::Heat::HARestarter']), set(resources))
+                              'OS::Heat::HARestarter',
+                              'OS::Heat::SoftwareDeployments']),
+                         set(resources))
 
     def test_list_resource_types_supported(self):
         resources = self.eng.list_resource_types(self.ctx, "SUPPORTED")

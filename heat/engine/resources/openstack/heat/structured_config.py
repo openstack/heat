@@ -179,7 +179,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
             return snippet
 
 
-class StructuredDeployments(sd.SoftwareDeployments):
+class StructuredDeployments(sd.SoftwareDeploymentGroup):
 
     PROPERTIES = (
         SERVERS,
@@ -191,17 +191,17 @@ class StructuredDeployments(sd.SoftwareDeployments):
         INPUT_KEY,
         INPUT_VALUES_VALIDATE,
     ) = (
-        sd.SoftwareDeployments.SERVERS,
-        sd.SoftwareDeployments.CONFIG,
-        sd.SoftwareDeployments.INPUT_VALUES,
-        sd.SoftwareDeployments.DEPLOY_ACTIONS,
-        sd.SoftwareDeployments.NAME,
-        sd.SoftwareDeployments.SIGNAL_TRANSPORT,
+        sd.SoftwareDeploymentGroup.SERVERS,
+        sd.SoftwareDeploymentGroup.CONFIG,
+        sd.SoftwareDeploymentGroup.INPUT_VALUES,
+        sd.SoftwareDeploymentGroup.DEPLOY_ACTIONS,
+        sd.SoftwareDeploymentGroup.NAME,
+        sd.SoftwareDeploymentGroup.SIGNAL_TRANSPORT,
         StructuredDeployment.INPUT_KEY,
         StructuredDeployment.INPUT_VALUES_VALIDATE
     )
 
-    _sds_ps = sd.SoftwareDeployments.properties_schema
+    _sds_ps = sd.SoftwareDeploymentGroup.properties_schema
 
     properties_schema = {
         SERVERS: _sds_ps[SERVERS],
