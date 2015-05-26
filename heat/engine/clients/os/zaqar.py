@@ -27,6 +27,8 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = zaqar_errors
 
+    DEFAULT_TTL = 3600
+
     def _create(self):
         return self.create_for_tenant(self.context.tenant_id)
 

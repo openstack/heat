@@ -71,7 +71,7 @@ class SoftwareConfigService(service.Service):
         result = [api.format_software_config(sd.config) for sd in all_sd_s]
         return result
 
-    def _push_metadata_software_deployments(self, cnxt, server_id):
+    def _push_metadata_software_deployments(self, cnxt, server_id, sd):
         rs = (resource_object.Resource.
               get_by_physical_resource_id(cnxt, server_id))
         if not rs:
@@ -82,15 +82,24 @@ class SoftwareConfigService(service.Service):
         rs.update_and_save({'rsrc_metadata': md})
 
         metadata_put_url = None
+        metadata_queue_id = None
         for rd in rs.data:
             if rd.key == 'metadata_put_url':
                 metadata_put_url = rd.value
                 break
+            elif rd.key == 'metadata_queue_id':
+                metadata_queue_id = rd.value
+                break
         if metadata_put_url:
             json_md = jsonutils.dumps(md)
             requests.put(metadata_put_url, json_md)
+        elif metadata_queue_id:
+            zaqar_plugin = cnxt.clients.client_plugin('zaqar')
+            zaqar = zaqar_plugin.create_for_tenant(sd.stack_user_project_id)
+            queue = zaqar.queue(metadata_queue_id)
+            queue.post({'body': md, 'ttl': zaqar_plugin.DEFAULT_TTL})
 
-    def _refresh_software_deployment(self, cnxt, sd, deploy_signal_id):
+    def _refresh_swift_software_deployment(self, cnxt, sd, deploy_signal_id):
         container, object_name = urlparse.urlparse(
             deploy_signal_id).path.split('/')[-2:]
         swift_plugin = cnxt.clients.client_plugin('swift')
@@ -136,6 +145,19 @@ class SoftwareConfigService(service.Service):
         return software_deployment_object.SoftwareDeployment.get_by_id(
             cnxt, sd.id)
 
+    def _refresh_zaqar_software_deployment(self, cnxt, sd, deploy_queue_id):
+        zaqar_plugin = cnxt.clients.client_plugin('zaqar')
+        zaqar = zaqar_plugin.create_for_tenant(sd.stack_user_project_id)
+        queue = zaqar.queue(deploy_queue_id)
+
+        messages = list(queue.pop())
+        if messages:
+            self.signal_software_deployment(
+                cnxt, sd.id, messages[0].body, None)
+
+        return software_deployment_object.SoftwareDeployment.get_by_id(
+            cnxt, sd.id)
+
     def show_software_deployment(self, cnxt, deployment_id):
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             cnxt, deployment_id)
@@ -144,8 +166,11 @@ class SoftwareConfigService(service.Service):
             input_values = dict((i['name'], i['value']) for i in c['inputs'])
             transport = input_values.get('deploy_signal_transport')
             if transport == 'TEMP_URL_SIGNAL':
-                sd = self._refresh_software_deployment(
+                sd = self._refresh_swift_software_deployment(
                     cnxt, sd, input_values.get('deploy_signal_id'))
+            elif transport == 'ZAQAR_SIGNAL':
+                sd = self._refresh_zaqar_software_deployment(
+                    cnxt, sd, input_values.get('deploy_queue_id'))
         return api.format_software_deployment(sd)
 
     def create_software_deployment(self, cnxt, server_id, config_id,
@@ -161,7 +186,7 @@ class SoftwareConfigService(service.Service):
             'action': action,
             'status': status,
             'status_reason': status_reason})
-        self._push_metadata_software_deployments(cnxt, server_id)
+        self._push_metadata_software_deployments(cnxt, server_id, sd)
         return api.format_software_deployment(sd)
 
     def signal_software_deployment(self, cnxt, deployment_id, details,
@@ -252,7 +277,7 @@ class SoftwareConfigService(service.Service):
         # only push metadata if this update resulted in the config_id
         # changing, since metadata is just a list of configs
         if config_id:
-            self._push_metadata_software_deployments(cnxt, sd.server_id)
+            self._push_metadata_software_deployments(cnxt, sd.server_id, sd)
 
         return api.format_software_deployment(sd)
 

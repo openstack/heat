@@ -23,6 +23,7 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import swift
+from heat.engine.clients.os import zaqar
 from heat.engine import service
 from heat.engine import service_software_config
 from heat.objects import resource as resource_objects
@@ -376,9 +377,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         self.assertEqual(kwargs['input_values'], deployment['input_values'])
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
-                       '_refresh_software_deployment')
+                       '_refresh_swift_software_deployment')
     def test_show_software_deployment_refresh(
-            self, _refresh_software_deployment):
+            self, _refresh_swift_software_deployment):
         temp_url = ('http://192.0.2.1/v1/AUTH_a/b/c'
                     '?temp_url_sig=ctemp_url_expires=1234')
         config = self._create_software_config(inputs=[
@@ -399,13 +400,13 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         deployment_id = deployment['id']
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
-        _refresh_software_deployment.return_value = sd
+        _refresh_swift_software_deployment.return_value = sd
         self.assertEqual(
             deployment,
             self.engine.show_software_deployment(self.ctx, deployment_id))
         self.assertEqual(
             (self.ctx, sd, temp_url),
-            _refresh_software_deployment.call_args[0])
+            _refresh_swift_software_deployment.call_args[0])
 
     def test_update_software_deployment_new_config(self):
 
@@ -449,7 +450,10 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         self.assertIsNotNone(updated)
         self.assertEqual('DEPLOY', updated['action'])
         self.assertEqual('WAITING', updated['status'])
-        mock_push.assert_called_once_with(self.ctx, server_id)
+
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
+        mock_push.assert_called_once_with(self.ctx, server_id, sd)
 
     def test_update_software_deployment_fields(self):
 
@@ -519,7 +523,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         }
 
         self.engine.software_config._push_metadata_software_deployments(
-            self.ctx, '1234')
+            self.ctx, '1234', None)
         rs.update_and_save.assert_called_once_with(
             {'rsrc_metadata': result_metadata})
         put.side_effect = Exception('Unexpected requests.put')
@@ -548,7 +552,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         }
 
         self.engine.software_config._push_metadata_software_deployments(
-            self.ctx, '1234')
+            self.ctx, '1234', None)
         rs.update_and_save.assert_called_once_with(
             {'rsrc_metadata': result_metadata})
 
@@ -556,9 +560,48 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
+                       'metadata_software_deployments')
+    @mock.patch.object(service_software_config.resource_object.Resource,
+                       'get_by_physical_resource_id')
+    @mock.patch.object(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+    def test_push_metadata_software_deployments_queue(
+            self, plugin, res_get, md_sd):
+        rs = mock.Mock()
+        rs.rsrc_metadata = {'original': 'metadata'}
+        rd = mock.Mock()
+        rd.key = 'metadata_queue_id'
+        rd.value = '6789'
+        rs.data = [rd]
+        res_get.return_value = rs
+        sd = mock.Mock()
+        sd.stack_user_project_id = 'project1'
+        queue = mock.Mock()
+        zaqar_client = mock.Mock()
+        plugin.return_value = zaqar_client
+        zaqar_client.queue.return_value = queue
+
+        deployments = {'deploy': 'this'}
+        md_sd.return_value = deployments
+
+        result_metadata = {
+            'original': 'metadata',
+            'deployments': {'deploy': 'this'}
+        }
+
+        self.engine.software_config._push_metadata_software_deployments(
+            self.ctx, '1234', sd)
+        rs.update_and_save.assert_called_once_with(
+            {'rsrc_metadata': result_metadata})
+
+        plugin.assert_called_once_with('project1')
+        zaqar_client.queue.assert_called_once_with('6789')
+        queue.post.assert_called_once_with(
+            {'body': result_metadata, 'ttl': 3600})
+
+    @mock.patch.object(service_software_config.SoftwareConfigService,
                        'signal_software_deployment')
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
-    def test_refresh_software_deployment(self, scc, ssd):
+    def test_refresh_swift_software_deployment(self, scc, ssd):
         temp_url = ('http://192.0.2.1/v1/AUTH_a/b/c'
                     '?temp_url_sig=ctemp_url_expires=1234')
         container = 'b'
@@ -607,7 +650,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         self.assertEqual(
             sd,
-            self.engine.software_config._refresh_software_deployment(
+            self.engine.software_config._refresh_swift_software_deployment(
                 self.ctx, sd, temp_url))
         sc.head_object.assert_called_once_with(container, object_name)
         # no call to get_object or signal_last_modified
@@ -619,7 +662,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'Ouch', http_status=409)
         self.assertRaises(
             swift_exc.ClientException,
-            self.engine.software_config._refresh_software_deployment,
+            self.engine.software_config._refresh_swift_software_deployment,
             self.ctx,
             sd,
             temp_url)
@@ -629,7 +672,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sc.head_object.side_effect = None
 
         # first poll populates data signal_last_modified
-        self.engine.software_config._refresh_software_deployment(
+        self.engine.software_config._refresh_swift_software_deployment(
             self.ctx, sd, temp_url)
         sc.head_object.assert_called_with(container, object_name)
         sc.get_object.assert_called_once_with(container, object_name)
@@ -643,7 +686,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
         self.assertEqual(then, sd.updated_at)
-        self.engine.software_config._refresh_software_deployment(
+        self.engine.software_config._refresh_swift_software_deployment(
             self.ctx, sd, temp_url)
         sc.get_object.assert_called_once_with(container, object_name)
         # signal_software_deployment has not been called again
@@ -654,7 +697,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         headers['last-modified'] = last_modified_2
         sc.head_object.return_value = headers
         sc.get_object.return_value = (headers, '{"bar": "baz"}')
-        self.engine.software_config._refresh_software_deployment(
+        self.engine.software_config._refresh_swift_software_deployment(
             self.ctx, sd, temp_url)
 
         # two calls to signal_software_deployment, for then and now
@@ -667,6 +710,40 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, deployment_id, {'updated_at': now})
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
-        self.engine.software_config._refresh_software_deployment(
+        self.engine.software_config._refresh_swift_software_deployment(
             self.ctx, sd, temp_url)
         self.assertEqual(2, len(ssd.mock_calls))
+
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       'signal_software_deployment')
+    @mock.patch.object(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+    def test_refresh_zaqar_software_deployment(self, plugin, ssd):
+        config = self._create_software_config(inputs=[
+            {
+                'name': 'deploy_signal_transport',
+                'type': 'String',
+                'value': 'ZAQAR_SIGNAL'
+            }, {
+                'name': 'deploy_queue_id',
+                'type': 'String',
+                'value': '6789'
+            }
+        ])
+
+        queue = mock.Mock()
+        zaqar_client = mock.Mock()
+        plugin.return_value = zaqar_client
+        zaqar_client.queue.return_value = queue
+        queue.pop.return_value = [mock.Mock(body='ok')]
+
+        deployment = self._create_software_deployment(
+            status='IN_PROGRESS', config_id=config['id'])
+
+        deployment_id = deployment['id']
+        self.assertEqual(
+            deployment,
+            self.engine.show_software_deployment(self.ctx, deployment_id))
+
+        zaqar_client.queue.assert_called_once_with('6789')
+        queue.pop.assert_called_once()
+        ssd.assert_called_once_with(self.ctx, deployment_id, 'ok', None)

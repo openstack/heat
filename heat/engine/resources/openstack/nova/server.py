@@ -109,9 +109,9 @@ class Server(stack_user.StackUser):
     )
 
     _SOFTWARE_CONFIG_TRANSPORTS = (
-        POLL_SERVER_CFN, POLL_SERVER_HEAT, POLL_TEMP_URL
+        POLL_SERVER_CFN, POLL_SERVER_HEAT, POLL_TEMP_URL, ZAQAR_MESSAGE
     ) = (
-        'POLL_SERVER_CFN', 'POLL_SERVER_HEAT', 'POLL_TEMP_URL'
+        'POLL_SERVER_CFN', 'POLL_SERVER_HEAT', 'POLL_TEMP_URL', 'ZAQAR_MESSAGE'
     )
 
     ATTRIBUTES = (
@@ -530,6 +530,21 @@ class Server(stack_user.StackUser):
                 'stack_id': self.stack.identifier().stack_path(),
                 'resource_name': self.name}
             }
+        if self.transport_zaqar_message():
+            queue_id = self.physical_resource_name()
+            self.data_set('metadata_queue_id', queue_id)
+            zaqar_plugin = self.client_plugin('zaqar')
+            zaqar = zaqar_plugin.create_for_tenant(
+                self.stack.stack_user_project_id)
+            queue = zaqar.queue(queue_id)
+            queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
+            meta['os-collect-config'] = {'zaqar': {
+                'user_id': self._get_user_id(),
+                'password': self.password,
+                'auth_url': self.context.auth_url,
+                'project_id': self.stack.stack_user_project_id,
+                'queue_id': queue_id}
+            }
         elif self.transport_poll_server_cfn():
             meta['os-collect-config'] = {'cfn': {
                 'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
@@ -577,7 +592,8 @@ class Server(stack_user.StackUser):
             self._create_user()
             self._create_keypair()
 
-        elif self.transport_poll_server_heat():
+        elif (self.transport_poll_server_heat() or
+              self.transport_zaqar_message()):
             self.password = uuid.uuid4().hex
             self._create_user()
 
@@ -620,6 +636,10 @@ class Server(stack_user.StackUser):
     def transport_poll_temp_url(self):
         return self.properties[
             self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_TEMP_URL
+
+    def transport_zaqar_message(self):
+        return self.properties.get(
+            self.SOFTWARE_CONFIG_TRANSPORT) == self.ZAQAR_MESSAGE
 
     def get_software_config(self, ud_content):
         try:
@@ -1355,6 +1375,19 @@ class Server(stack_user.StackUser):
         except Exception as ex:
             self.client_plugin('swift').ignore_not_found(ex)
 
+    def _delete_queue(self):
+        queue_id = self.data().get('metadata_queue_id')
+        if not queue_id:
+            return
+        client_plugin = self.client_plugin('zaqar')
+        zaqar = client_plugin.create_for_tenant(
+            self.stack.stack_user_project_id)
+        try:
+            zaqar.queue(queue_id).delete()
+        except Exception as ex:
+            client_plugin.ignore_not_found(ex)
+        self.data_delete('metadata_queue_id')
+
     def handle_delete(self):
 
         if self.resource_id is None:
@@ -1363,6 +1396,7 @@ class Server(stack_user.StackUser):
         if self.user_data_software_config():
             self._delete_user()
             self._delete_temp_url()
+            self._delete_queue()
 
         try:
             server = self.nova().servers.get(self.resource_id)
