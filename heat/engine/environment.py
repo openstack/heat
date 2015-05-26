@@ -457,10 +457,14 @@ class ResourceRegistry(object):
 
             return cls.get_class().is_service_available(cnxt)
 
+        def not_hidden_matches(cls):
+            return cls.get_class().support_status.status != support.HIDDEN
+
         return [name for name, cls in six.iteritems(self._registry)
                 if (is_resource(name) and
                     status_matches(cls) and
-                    is_available(cls))]
+                    is_available(cls) and
+                    not_hidden_matches(cls))]
 
 
 class Environment(object):

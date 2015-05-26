@@ -51,6 +51,7 @@ from heat.engine import service_software_config
 from heat.engine import service_stack_watch
 from heat.engine import stack as parser
 from heat.engine import stack_lock
+from heat.engine import support
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
@@ -1018,8 +1019,7 @@ class EngineService(service.Service):
             return stack_info
 
     def list_resource_types(self, cnxt, support_status=None):
-        """
-        Get a list of supported resource types.
+        """Get a list of supported resource types.
 
         :param cnxt: RPC context.
         """
@@ -1051,6 +1051,9 @@ class EngineService(service.Service):
                 exception.TemplateNotFound) as ex:
             raise ex
 
+        if resource_class.support_status.status == support.HIDDEN:
+            raise exception.NotSupported(type_name)
+
         def properties_schema():
             for name, schema_dict in resource_class.properties_schema.items():
                 schema = properties.Schema.from_legacy(schema_dict)
@@ -1079,8 +1082,11 @@ class EngineService(service.Service):
         :param template_type: the template type to generate, cfn or hot.
         """
         try:
-            return resources.global_env().get_class(
-                type_name).resource_to_template(type_name, template_type)
+            resource_class = resources.global_env().get_class(type_name)
+            if resource_class.support_status.status == support.HIDDEN:
+                raise exception.NotSupported(type_name)
+            return resource_class.resource_to_template(type_name,
+                                                       template_type)
         except (exception.InvalidResourceType,
                 exception.ResourceTypeNotFound,
                 exception.TemplateNotFound) as ex:
