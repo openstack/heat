@@ -144,22 +144,26 @@ class ClientManager(object):
         dscv = self.conf.disable_ssl_certificate_validation
 
         keystone = self._get_identity_client()
-        endpoint = keystone.service_catalog.url_for(
-            attr='region',
-            filter_value=self.conf.region,
-            service_type='metering',
-            endpoint_type='publicURL')
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                attr='region',
+                filter_value=self.conf.region,
+                service_type='metering',
+                endpoint_type='publicURL')
 
-        args = {
-            'username': self.conf.username,
-            'password': self.conf.password,
-            'tenant_name': self.conf.tenant_name,
-            'auth_url': self.conf.auth_url,
-            'insecure': dscv,
-            'region_name': self.conf.region,
-            'endpoint_type': 'publicURL',
-            'service_type': 'metering',
-        }
+        except keystoneclient.exceptions.EndpointNotFound:
+            return None
+        else:
+            args = {
+                'username': self.conf.username,
+                'password': self.conf.password,
+                'tenant_name': self.conf.tenant_name,
+                'auth_url': self.conf.auth_url,
+                'insecure': dscv,
+                'region_name': self.conf.region,
+                'endpoint_type': 'publicURL',
+                'service_type': 'metering',
+            }
 
-        return ceilometerclient.client.Client(self.CEILOMETER_VERSION,
-                                              endpoint, **args)
+            return ceilometerclient.client.Client(self.CEILOMETER_VERSION,
+                                                  endpoint, **args)
