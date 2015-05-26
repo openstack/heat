@@ -134,11 +134,13 @@ class StructuredConfigTestJSON(common.HeatTestCase):
 
     def test_resource_mapping(self):
         mapping = sc.resource_mapping()
-        self.assertEqual(3, len(mapping))
+        self.assertEqual(4, len(mapping))
         self.assertEqual(sc.StructuredConfig,
                          mapping['OS::Heat::StructuredConfig'])
         self.assertEqual(sc.StructuredDeployment,
                          mapping['OS::Heat::StructuredDeployment'])
+        self.assertEqual(sc.StructuredDeploymentGroup,
+                         mapping['OS::Heat::StructuredDeploymentGroup'])
         self.assertEqual(sc.StructuredDeployments,
                          mapping['OS::Heat::StructuredDeployments'])
         self.assertIsInstance(self.config, sc.StructuredConfig)
@@ -261,13 +263,13 @@ class StructuredDeploymentParseTest(common.HeatTestCase):
             parse(self.inputs, self.input_key, self.config))
 
 
-class StructuredDeploymentsTest(common.HeatTestCase):
+class StructuredDeploymentGroupTest(common.HeatTestCase):
 
     template = {
         'heat_template_version': '2013-05-23',
         'resources': {
             'deploy_mysql': {
-                'type': 'OS::Heat::StructuredDeployments',
+                'type': 'OS::Heat::StructuredDeploymentGroup',
                 'properties': {
                     'config': 'config_uuid',
                     'servers': {'server1': 'uuid1', 'server2': 'uuid2'},
@@ -284,7 +286,7 @@ class StructuredDeploymentsTest(common.HeatTestCase):
     def test_build_resource_definition(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sc.StructuredDeployments('test', snip, stack)
+        resg = sc.StructuredDeploymentGroup('test', snip, stack)
         expect = {
             'type': 'OS::Heat::StructuredDeployment',
             'properties': {
@@ -305,7 +307,7 @@ class StructuredDeploymentsTest(common.HeatTestCase):
     def test_resource_names(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sc.StructuredDeployments('test', snip, stack)
+        resg = sc.StructuredDeploymentGroup('test', snip, stack)
         self.assertEqual(
             set(('server1', 'server2')),
             set(resg._resource_names())
@@ -323,7 +325,7 @@ class StructuredDeploymentsTest(common.HeatTestCase):
         """
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sc.StructuredDeployments('test', snip, stack)
+        resg = sc.StructuredDeploymentGroup('test', snip, stack)
         templ = {
             "heat_template_version": "2013-05-23",
             "resources": {
