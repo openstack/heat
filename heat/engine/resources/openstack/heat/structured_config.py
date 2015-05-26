@@ -179,7 +179,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
             return snippet
 
 
-class StructuredDeployments(sd.SoftwareDeploymentGroup):
+class StructuredDeploymentGroup(sd.SoftwareDeploymentGroup):
 
     PROPERTIES = (
         SERVERS,
@@ -231,9 +231,20 @@ class StructuredDeployments(sd.SoftwareDeploymentGroup):
         }
 
 
+class StructuredDeployments(StructuredDeploymentGroup):
+
+    deprecation_msg = _('This resource is deprecated and use is discouraged. '
+                        'Please use resource '
+                        'OS::Heat:StructuredDeploymentGroup instead.')
+    support_status = support.SupportStatus(status=support.DEPRECATED,
+                                           message=deprecation_msg,
+                                           version='2014.2')
+
+
 def resource_mapping():
     return {
         'OS::Heat::StructuredConfig': StructuredConfig,
         'OS::Heat::StructuredDeployment': StructuredDeployment,
+        'OS::Heat::StructuredDeploymentGroup': StructuredDeploymentGroup,
         'OS::Heat::StructuredDeployments': StructuredDeployments,
     }

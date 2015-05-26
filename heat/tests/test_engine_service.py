@@ -2588,7 +2588,8 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(set(['OS::Neutron::RouterGateway',
                               'OS::Heat::CWLiteAlarm',
                               'OS::Heat::HARestarter',
-                              'OS::Heat::SoftwareDeployments']),
+                              'OS::Heat::SoftwareDeployments',
+                              'OS::Heat::StructuredDeployments']),
                          set(resources))
 
     def test_list_resource_types_supported(self):
