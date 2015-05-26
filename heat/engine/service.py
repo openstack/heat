@@ -397,6 +397,10 @@ class EngineService(service.Service):
         LOG.info(_LI("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
 
+    def reset(self):
+        super(EngineService, self).reset()
+        logging.setup(cfg.CONF, 'heat')
+
     @context.request_context
     def identify_stack(self, cnxt, stack_name):
         """

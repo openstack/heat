@@ -3863,6 +3863,11 @@ class StackServiceTest(common.HeatTestCase):
             admin_context_method
         )
 
+    @mock.patch('oslo_log.log.setup')
+    def test_engine_service_reset(self, setup_logging_mock):
+        self.eng.reset()
+        setup_logging_mock.assertCalledOnceWith(cfg.CONF, 'heat')
+
 
 class ThreadGroupManagerTest(common.HeatTestCase):
     def setUp(self):
