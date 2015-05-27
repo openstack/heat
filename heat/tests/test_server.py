@@ -3227,9 +3227,9 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
 
-        # We mock out nova_utils.absolute_limits but we don't specify
-        # how this mock should behave, so mox will verify that this mock
-        # is NOT called during call to server.validate().
+        # We mock out nova.NovaClientPlugin.absolute_limits but we don't
+        # specify how this mock should behave, so mox will verify that this
+        # mock is NOT called during call to server.validate().
         # This is the way to validate that no excessive calls to Nova
         # are made during validation.
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'absolute_limits')
