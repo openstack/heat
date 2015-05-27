@@ -191,12 +191,15 @@ class SwiftContainer(resource.Resource):
                             'id': self.resource_id,
                             'prop': self.PURGE_ON_DELETE}
                 raise exception.ResourceActionNotSupported(action=msg)
+        # objects is either None (container is gone already) or (empty) list
+        if objects is not None:
+            objects = len(objects)
         return objects
 
     def check_delete_complete(self, objects):
         if objects is None:  # resource was not created or is gone already
             return True
-        if objects:  # an (empty) list from the first invocation
+        if objects:  # integer >=0 from the first invocation
             objs = self._get_objects()
             if objs is None:
                 return True  # container is gone already
