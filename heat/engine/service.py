@@ -535,8 +535,11 @@ class EngineService(service.Service):
                         " Please delete some stacks.") % tenant_limit
             raise exception.RequestLimitExceeded(message=message)
 
+        max_resources = cfg.CONF.max_resources_per_stack
+        if max_resources == -1:
+            return
         num_resources = len(parsed_template[parsed_template.RESOURCES])
-        if num_resources > cfg.CONF.max_resources_per_stack:
+        if num_resources > max_resources:
             message = exception.StackResourceLimitExceeded.msg_fmt
             raise exception.RequestLimitExceeded(message=message)
 
@@ -713,7 +716,8 @@ class EngineService(service.Service):
                 current_stack.env,
                 args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
         tmpl = templatem.Template(template, files=files, env=env)
-        if len(tmpl[tmpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
+        max_resources = cfg.CONF.max_resources_per_stack
+        if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
         stack_name = current_stack.name

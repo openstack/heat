@@ -204,6 +204,8 @@ class StackResource(resource.Resource):
         return parsed_template
 
     def _validate_nested_resources(self, templ):
+        if cfg.CONF.max_resources_per_stack == -1:
+            return
         root_stack_id = self.stack.root_stack_id()
         total_resources = (len(templ[templ.RESOURCES]) +
                            self.stack.total_resources(root_stack_id))
