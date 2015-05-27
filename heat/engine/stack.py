@@ -16,7 +16,6 @@ import copy
 import datetime
 import itertools
 import re
-import warnings
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -1568,13 +1567,6 @@ class Stack(collections.Mapping):
         except Exception as ex:
             raise exception.StackValidationFailed(
                 message=encodeutils.safe_decode(six.text_type(ex)))
-
-    def resolve_runtime_data(self, snippet):
-        """DEPRECATED. Use heat.engine.function.resolve() instead."""
-        warnings.warn('Stack.resolve_runtime_data() is deprecated. '
-                      'Use heat.engine.function.resolve() instead',
-                      DeprecationWarning)
-        return function.resolve(snippet)
 
     def reset_resource_attributes(self):
         # nothing is cached if no resources exist
