@@ -2110,6 +2110,7 @@ class StackServiceTest(common.HeatTestCase):
                 'status': 'SUPPORTED',
                 'version': None,
                 'message': None,
+                'previous_status': None
             },
         }
 
@@ -2132,6 +2133,7 @@ class StackServiceTest(common.HeatTestCase):
                 'status': 'SUPPORTED',
                 'version': None,
                 'message': None,
+                'previous_status': None
             },
         }
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
