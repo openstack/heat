@@ -539,3 +539,29 @@ Putting It All Together
 You can find the plugin classes in ``heat/engine/resources``.  An
 exceptionally simple one to start with is ``random_string.py``; it is
 unusual in that it does not manipulate anything in the cloud!
+
+Resource Contributions
+----------------------
+
+The Heat team is interested in adding new resources that give Heat access to
+additional OpenStack or StackForge projects. The following checklist defines
+the requirements for a candidate resource to be considered for inclusion:
+
+- Must wrap an OpenStack or StackForge project, or a third party project that
+  is relevant to OpenStack users.
+- Must have its dependencies listed in OpenStack's ``global-requirements.txt``
+  file, or else it should be able to conditionally disable itself when there
+  are missing dependencies, without crashing or otherwise affecting the normal
+  operation of the Heat engine service.
+- The resource's support status flag must be set to ``UNSUPPORTED``, to
+  indicate that the Heat team is not responsible for supporting this resource.
+- The code must be of comparable quality to official resources. The Heat team
+  can help with this during the review phase.
+
+If you have a resource that is a good fit, you are welcome to contact the Heat
+team. If for any reason your resource does not meet the above requirements,
+but you still think it can be useful to other users, you are encouraged to
+host it on your own repository and share it as a regular Python installable
+package. You can find example resource plug-ins that have all the required
+packaging files in the ``contrib`` directory of the official Heat git
+repository.
