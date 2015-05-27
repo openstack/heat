@@ -21,6 +21,7 @@ from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import properties
 from heat.engine import resource as res
+from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import template as templatem
@@ -339,3 +340,13 @@ class StackCreateTest(common.HeatTestCase):
                                ctx, stk)
         self.assertEqual('Missing required credential: X-Auth-Key',
                          six.text_type(ex))
+
+    @mock.patch.object(instances.Instance, 'validate')
+    @mock.patch.object(stack.Stack, 'total_resources')
+    def test_stack_create_max_unlimited(self, total_res_mock, validate_mock):
+        total_res_mock.return_value = 9999
+        validate_mock.return_value = None
+        cfg.CONF.set_override('max_resources_per_stack', -1)
+        stack_name = 'service_create_test_max_unlimited'
+        stack = tools.get_stack(stack_name, self.ctx)
+        self.man.create_stack(self.ctx, stack_name, stack.t.t, {}, None, {})
