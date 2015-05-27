@@ -1560,3 +1560,73 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
+
+    def test_backup_stack_synchronized_after_update(self):
+        """Test when backup stack updated correctly during stack update.
+
+        Test checks the following scenario:
+        1. Create stack
+        2. Update stack (failed - so the backup should not be deleted)
+        3. Update stack (failed - so the backup from step 2 should be updated)
+        The test checks that backup stack is synchronized with the main stack.
+        """
+        # create a stack
+        tmpl_create = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'}
+            }
+        }
+        self.stack = stack.Stack(self.ctx, 'test_update_stack_backup',
+                                 template.Template(tmpl_create),
+                                 disable_rollback=True)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        # try to update a stack with a new resource that should be backed up
+        tmpl_update = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'},
+                'Bres': {
+                    'type': 'ResWithComplexPropsAndAttrs',
+                    'properties': {
+                        'an_int': 0,
+                    }
+                },
+                'Cres': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {
+                        'Foo': {'get_resource': 'Bres'},
+                    }
+                }
+            }
+        }
+
+        self.patchobject(generic_rsrc.ResourceWithProps,
+                         'handle_create',
+                         side_effect=[Exception, Exception])
+
+        stack_with_new_resource = stack.Stack(
+            self.ctx,
+            'test_update_stack_backup',
+            template.Template(tmpl_update))
+        self.stack.update(stack_with_new_resource)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
+                         self.stack.state)
+        # assert that backup stack has been updated correctly
+        self.assertIn('Bres', self.stack._backup_stack())
+
+        # update the stack with resource that updated in-place
+        tmpl_update['resources']['Bres']['properties']['an_int'] = 1
+        updated_stack_second = stack.Stack(self.ctx,
+                                           'test_update_stack_backup',
+                                           template.Template(tmpl_update))
+        self.stack.update(updated_stack_second)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
+                         self.stack.state)
+        # assert that resource in backup stack also has been updated
+        backup = self.stack._backup_stack()
+        self.assertEqual(1, backup['Bres'].properties['an_int'])
