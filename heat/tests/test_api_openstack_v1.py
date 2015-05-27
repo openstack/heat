@@ -427,7 +427,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         params = {'limit': 'not-an-int'}
         req = self._get('/stacks', params=params)
 
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.index, req,
                                tenant_id=self.tenant)
         self.assertEqual("Only integer is acceptable by 'limit'.",
@@ -499,9 +499,10 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         params = {'with_count': 'invalid_value'}
         req = self._get('/stacks', params=params)
 
-        exc = self.assertRaises(ValueError, self.controller.index,
+        exc = self.assertRaises(webob.exc.HTTPBadRequest,
+                                self.controller.index,
                                 req, tenant_id=self.tenant)
-        excepted = ('Unrecognized value "invalid_value", '
+        excepted = ('Unrecognized value "invalid_value" for "with_count", '
                     'acceptable values are: true, false')
         self.assertIn(excepted, six.text_type(exc))
 
@@ -848,7 +849,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         req = self._post('/stacks', json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.create, req,
                                tenant_id=self.tenant, body=body)
 
@@ -1070,7 +1071,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         req = self._post('/stacks', json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.create, req,
                                tenant_id=self.tenant, body=body)
 
@@ -1588,7 +1589,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                         json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.update, req,
                                tenant_id=identity.tenant,
                                stack_name=identity.stack_name,
@@ -1708,7 +1709,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                           json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.update_patch, req,
                                tenant_id=identity.tenant,
                                stack_name=identity.stack_name,
@@ -2295,7 +2296,7 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
                         {'nested_depth': 'non-int'})
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.index, req,
                                tenant_id=self.tenant,
                                stack_name=stack_identity.stack_name,
@@ -3059,7 +3060,7 @@ class EventControllerTest(ControllerTest, common.HeatTestCase):
         req = self._get(sid._tenant_path() + '/events',
                         params={'limit': 'not-an-int'})
 
-        ex = self.assertRaises(ValueError,
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                self.controller.index, req,
                                tenant_id=self.tenant,
                                stack_name=sid.stack_name,
