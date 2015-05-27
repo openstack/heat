@@ -22,6 +22,7 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+from heat.engine import resource
 
 
 LOG = logging.getLogger(__name__)
@@ -126,6 +127,87 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return (isinstance(ex, exceptions.ClientException) and
                 ex.code == 409)
+
+    def check_detach_volume_complete(self, vol_id):
+        try:
+            vol = self.client().volumes.get(vol_id)
+        except Exception as ex:
+            self.ignore_not_found(ex)
+            return True
+
+        if vol.status in ('in-use', 'detaching'):
+            LOG.debug('%s - volume still in use' % vol_id)
+            return False
+
+        LOG.debug('Volume %(id)s - status: %(status)s' % {
+            'id': vol.id, 'status': vol.status})
+
+        if vol.status not in ('available', 'deleting'):
+            LOG.debug("Detachment failed - volume %(vol)s "
+                      "is in %(status)s status" % {"vol": vol.id,
+                                                   "status": vol.status})
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status,
+                result=_('Volume detachment failed'))
+        else:
+            return True
+
+    def check_attach_volume_complete(self, vol_id):
+        vol = self.client().volumes.get(vol_id)
+        if vol.status in ('available', 'attaching'):
+            LOG.debug("Volume %(id)s is being attached - "
+                      "volume status: %(status)s" % {'id': vol_id,
+                                                     'status': vol.status})
+            return False
+
+        if vol.status != 'in-use':
+            LOG.debug("Attachment failed - volume %(vol)s is "
+                      "in %(status)s status" % {"vol": vol_id,
+                                                "status": vol.status})
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status,
+                result=_('Volume attachment failed'))
+
+        LOG.info(_LI('Attaching volume %(id)s complete'), {'id': vol_id})
+        return True
+
+
+# NOTE(pshchelo): these Volume*Progress classes are simple key-value storages
+# meant to be passed between handle_<action> and check_<action>_complete,
+# being mutated during subsequent check_<action>_complete calls.
+class VolumeDetachProgress(object):
+    def __init__(self, srv_id, vol_id, attach_id, val=False):
+        self.called = val
+        self.cinder_complete = val
+        self.nova_complete = val
+        self.srv_id = srv_id
+        self.vol_id = vol_id
+        self.attach_id = attach_id
+
+
+class VolumeAttachProgress(object):
+    def __init__(self, srv_id, vol_id, device, val=False):
+        self.called = val
+        self.complete = val
+        self.srv_id = srv_id
+        self.vol_id = vol_id
+        self.device = device
+
+
+class VolumeDeleteProgress(object):
+    def __init__(self, val=False):
+        self.backup = {'called': val,
+                       'complete': val}
+        self.delete = {'called': val,
+                       'complete': val}
+        self.backup_id = None
+
+
+class VolumeResizeProgress(object):
+    def __init__(self, val=False, size=None):
+        self.called = val
+        self.complete = val
+        self.size = size
 
 
 class VolumeConstraint(constraints.BaseCustomConstraint):

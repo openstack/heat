@@ -13,9 +13,8 @@
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.engine.clients.os import cinder as heat_cinder
 from heat.engine import resource
-from heat.engine import scheduler
-from heat.engine import volume_tasks as vol_task
 
 
 class BaseVolume(resource.Resource):
@@ -82,55 +81,80 @@ class BaseVolume(resource.Resource):
         ]
         self._verify_check_conditions(checks)
 
-    def _backup(self):
-        cinder = self.client()
-        backup = cinder.backups.create(self.resource_id)
-        while backup.status == 'creating':
-            yield
-            backup = cinder.backups.get(backup.id)
-        if backup.status != 'available':
+    def handle_snapshot_delete(self, state):
+        backup = state not in ((self.CREATE, self.FAILED),
+                               (self.UPDATE, self.FAILED))
+        progress = heat_cinder.VolumeDeleteProgress()
+        progress.backup['called'] = not backup
+        progress.backup['complete'] = not backup
+        return progress
+
+    def handle_delete(self):
+        if self.resource_id is None:
+            return heat_cinder.VolumeDeleteProgress(True)
+        progress = heat_cinder.VolumeDeleteProgress()
+        progress.backup['called'] = True
+        progress.backup['complete'] = True
+        return progress
+
+    def _create_backup(self):
+        backup = self.client().backups.create(self.resource_id)
+        return backup.id
+
+    def _check_create_backup_complete(self, prg):
+        backup = self.client().backups.get(prg.backup_id)
+        if backup.status == 'creating':
+            return False
+        if backup.status == 'available':
+            return True
+        else:
             raise resource.ResourceUnknownStatus(
                 resource_status=backup.status,
                 result=_('Volume backup failed'))
 
-    @scheduler.wrappertask
-    def _delete(self, backup=False):
-        if self.resource_id is not None:
+    def _delete_volume(self):
+        try:
             cinder = self.client()
+            vol = cinder.volumes.get(self.resource_id)
+            if vol.status == 'in-use':
+                raise exception.Error(_('Volume in use'))
+            # if the volume is already in deleting status,
+            # just wait for the deletion to complete
+            if vol.status != 'deleting':
+                cinder.volumes.delete(self.resource_id)
+            else:
+                return True
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return True
+        else:
+            return False
+
+    def check_delete_complete(self, prg):
+        if not prg.backup['called']:
+            prg.backup_id = self._create_backup()
+            prg.backup['called'] = True
+            return False
+
+        if not prg.backup['complete']:
+            prg.backup['complete'] = self._check_create_backup_complete(prg)
+            return False
+
+        if not prg.delete['called']:
+            prg.delete['complete'] = self._delete_volume()
+            prg.delete['called'] = True
+            return False
+
+        if not prg.delete['complete']:
             try:
-                vol = cinder.volumes.get(self.resource_id)
-
-                if backup:
-                    yield self._backup()
-                    vol = cinder.volumes.get(self.resource_id)
-
-                if vol.status == 'in-use':
-                    raise exception.Error(_('Volume in use'))
-                # if the volume is already in deleting status,
-                # just wait for the deletion to complete
-                if vol.status != 'deleting':
-                    cinder.volumes.delete(self.resource_id)
-                while True:
-                    yield
-                    vol = cinder.volumes.get(self.resource_id)
+                self.client().volumes.get(self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
-
-    def handle_snapshot_delete(self, state):
-        backup = state not in ((self.CREATE, self.FAILED),
-                               (self.UPDATE, self.FAILED))
-
-        delete_task = scheduler.TaskRunner(self._delete, backup=backup)
-        delete_task.start()
-        return delete_task
-
-    def handle_delete(self):
-        delete_task = scheduler.TaskRunner(self._delete)
-        delete_task.start()
-        return delete_task
-
-    def check_delete_complete(self, delete_task):
-        return delete_task.step()
+                prg.delete['complete'] = True
+                return True
+            else:
+                return False
+        return True
 
 
 class BaseVolumeAttachment(resource.Resource):
@@ -138,31 +162,41 @@ class BaseVolumeAttachment(resource.Resource):
     Base Volume Attachment Manager.
     '''
 
+    default_client_name = 'cinder'
+
     def handle_create(self):
         server_id = self.properties[self.INSTANCE_ID]
         volume_id = self.properties[self.VOLUME_ID]
         dev = self.properties[self.DEVICE]
 
-        attach_task = vol_task.VolumeAttachTask(
-            self.stack, server_id, volume_id, dev)
-        attach_runner = scheduler.TaskRunner(attach_task)
+        attach_id = self.client_plugin('nova').attach_volume(
+            server_id, volume_id, dev)
 
-        attach_runner.start()
+        self.resource_id_set(attach_id)
 
-        self.resource_id_set(attach_task.attachment_id)
+        return volume_id
 
-        return attach_runner
-
-    def check_create_complete(self, attach_runner):
-        return attach_runner.step()
+    def check_create_complete(self, volume_id):
+        return self.client_plugin().check_attach_volume_complete(volume_id)
 
     def handle_delete(self):
         server_id = self.properties[self.INSTANCE_ID]
-        detach_task = vol_task.VolumeDetachTask(
-            self.stack, server_id, self.resource_id)
-        detach_runner = scheduler.TaskRunner(detach_task)
-        detach_runner.start()
-        return detach_runner
+        vol_id = self.properties[self.VOLUME_ID]
+        self.client_plugin('nova').detach_volume(server_id,
+                                                 self.resource_id)
+        prg = heat_cinder.VolumeDetachProgress(
+            server_id, vol_id, self.resource_id)
+        prg.called = True
+        return prg
 
-    def check_delete_complete(self, detach_runner):
-        return detach_runner.step()
+    def check_delete_complete(self, prg):
+        if not prg.cinder_complete:
+            prg.cinder_complete = self.client_plugin(
+            ).check_detach_volume_complete(prg.vol_id)
+            return False
+        if not prg.nova_complete:
+            prg.nova_complete = self.client_plugin(
+                'nova').check_detach_volume_complete(prg.srv_id,
+                                                     prg.attach_id)
+            return prg.nova_complete
+        return True
