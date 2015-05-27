@@ -167,11 +167,13 @@ class AccessKey(resource.Resource):
     attributes_schema = {
         USER_NAME: attributes.Schema(
             _('Username associated with the AccessKey.'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
         SECRET_ACCESS_KEY: attributes.Schema(
             _('Keypair secret key.'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
     }
 

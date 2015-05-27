@@ -214,7 +214,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
     attributes_schema = {
         INSTANCE_LIST: attributes.Schema(
             _("A comma-delimited list of server ip addresses. "
-              "(Heat extension).")
+              "(Heat extension)."),
+            type=attributes.Schema.STRING
         ),
     }
 

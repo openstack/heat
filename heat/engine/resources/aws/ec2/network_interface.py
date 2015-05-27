@@ -88,7 +88,8 @@ class NetworkInterface(resource.Resource):
 
     attributes_schema = {
         PRIVATE_IP_ADDRESS: attributes.Schema(
-            _('Private IP address of the network interface.')
+            _('Private IP address of the network interface.'),
+            type=attributes.Schema.STRING
         ),
     }
 

@@ -322,19 +322,24 @@ class Instance(resource.Resource):
     attributes_schema = {
         AVAILABILITY_ZONE_ATTR: attributes.Schema(
             _('The Availability Zone where the specified instance is '
-              'launched.')
+              'launched.'),
+            type=attributes.Schema.STRING
         ),
         PRIVATE_DNS_NAME: attributes.Schema(
-            _('Private DNS name of the specified instance.')
+            _('Private DNS name of the specified instance.'),
+            type=attributes.Schema.STRING
         ),
         PUBLIC_DNS_NAME: attributes.Schema(
-            _('Public DNS name of the specified instance.')
+            _('Public DNS name of the specified instance.'),
+            type=attributes.Schema.STRING
         ),
         PRIVATE_IP: attributes.Schema(
-            _('Private IP address of the specified instance.')
+            _('Private IP address of the specified instance.'),
+            type=attributes.Schema.STRING
         ),
         PUBLIC_IP: attributes.Schema(
-            _('Public IP address of the specified instance.')
+            _('Public IP address of the specified instance.'),
+            type=attributes.Schema.STRING
         ),
     }
 

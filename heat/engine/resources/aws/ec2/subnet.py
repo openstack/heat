@@ -74,7 +74,8 @@ class Subnet(resource.Resource):
 
     attributes_schema = {
         AVAILABILITY_ZONE: attributes.Schema(
-            _('Availability Zone of the subnet.')
+            _('Availability Zone of the subnet.'),
+            type=attributes.Schema.STRING
         ),
     }
 

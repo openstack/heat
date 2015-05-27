@@ -66,7 +66,8 @@ class ElasticIp(resource.Resource):
         ALLOCATION_ID: attributes.Schema(
             _('ID that AWS assigns to represent the allocation of the address '
               'for use with Amazon VPC. Returned only for VPC elastic IP '
-              'addresses.')
+              'addresses.'),
+            type=attributes.Schema.STRING
         ),
     }
 
