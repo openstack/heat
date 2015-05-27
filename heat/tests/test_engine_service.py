@@ -51,6 +51,7 @@ from heat.objects import watch_rule as watch_rule_object
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_api
+from heat.rpc import worker_client
 from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests import generic_resource as generic_rsrc
@@ -60,45 +61,6 @@ from heat.tests import utils
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 
-
-string_template_five = '''
-heat_template_version: 2013-05-23
-description: Random String templates
-
-parameters:
-    salt:
-        type: string
-        default: "quickbrownfox"
-
-resources:
-    A:
-        type: OS::Heat::RandomString
-        properties:
-            salt: {get_param: salt}
-
-    B:
-        type: OS::Heat::RandomString
-        properties:
-            salt: {get_param: salt}
-
-    C:
-        type: OS::Heat::RandomString
-        depends_on: [A, B]
-        properties:
-            salt: {get_param: salt}
-
-    D:
-        type: OS::Heat::RandomString
-        depends_on: C
-        properties:
-            salt: {get_param: salt}
-
-    E:
-        type: OS::Heat::RandomString
-        depends_on: C
-        properties:
-            salt: {get_param: salt}
-'''
 
 string_template_five_update = '''
 heat_template_version: 2013-05-23
@@ -231,14 +193,16 @@ resources:
 '''
 
 
+@mock.patch.object(worker_client.WorkerClient, 'check_resource')
 class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def setUp(self):
         super(StackConvergenceCreateUpdateDeleteTest, self).setUp()
         cfg.CONF.set_override('convergence_engine', True)
 
-    def test_conv_wordpress_single_instance_stack_create(self):
+    def test_conv_wordpress_single_instance_stack_create(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 convergence=True)
+
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
         self.assertEqual('Dependencies([((1, True), None)])',
@@ -252,11 +216,20 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self.assertEqual(stack_db.convergence, True)
         self.assertEqual({'edges': [[[1, True], None]]}, stack_db.current_deps)
+        leaves = stack.convergence_dependencies.leaves()
+        expected_calls = []
+        for rsrc_id, is_update in leaves:
+            expected_calls.append(
+                mock.call.worker_client.WorkerClient.check_resource(
+                    stack.context, rsrc_id, stack.current_traversal, {},
+                    is_update))
+        self.assertEqual(expected_calls, mock_cr.mock_calls)
 
-    def test_conv_string_five_instance_stack_create(self):
+    def test_conv_string_five_instance_stack_create(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
-                                template=string_template_five,
+                                template=tools.string_template_five,
                                 convergence=True)
+
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
@@ -299,9 +272,18 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             self.assertIsNotNone(sync_point)
             self.assertEqual(stack_db.id, sync_point.stack_id)
 
-    def test_conv_string_five_instance_stack_update(self):
+        leaves = stack.convergence_dependencies.leaves()
+        expected_calls = []
+        for rsrc_id, is_update in leaves:
+            expected_calls.append(
+                mock.call.worker_client.WorkerClient.check_resource(
+                    stack.context, rsrc_id, stack.current_traversal, {},
+                    is_update))
+        self.assertEqual(expected_calls, mock_cr.mock_calls)
+
+    def test_conv_string_five_instance_stack_update(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
-                                template=string_template_five,
+                                template=tools.string_template_five,
                                 convergence=True)
         # create stack
         stack.converge_stack(template=stack.t, action=stack.CREATE)
@@ -401,9 +383,25 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             self.assertIsNotNone(sync_point)
             self.assertEqual(stack_db.id, sync_point.stack_id)
 
-    def test_conv_empty_template_stack_update_delete(self):
+        leaves = stack.convergence_dependencies.leaves()
+        expected_calls = []
+        for rsrc_id, is_update in leaves:
+            expected_calls.append(
+                mock.call.worker_client.WorkerClient.check_resource(
+                    stack.context, rsrc_id, stack.current_traversal, {},
+                    is_update))
+
+        leaves = curr_stack.convergence_dependencies.leaves()
+        for rsrc_id, is_update in leaves:
+            expected_calls.append(
+                mock.call.worker_client.WorkerClient.check_resource(
+                    curr_stack.context, rsrc_id, curr_stack.current_traversal,
+                    {}, is_update))
+        self.assertEqual(expected_calls, mock_cr.mock_calls)
+
+    def test_conv_empty_template_stack_update_delete(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
-                                template=string_template_five,
+                                template=tools.string_template_five,
                                 convergence=True)
         # create stack
         stack.converge_stack(template=stack.t, action=stack.CREATE)
@@ -457,6 +455,22 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             )
             self.assertIsNotNone(sync_point)
             self.assertEqual(stack_db.id, sync_point.stack_id)
+
+        leaves = stack.convergence_dependencies.leaves()
+        expected_calls = []
+        for rsrc_id, is_update in leaves:
+            expected_calls.append(
+                mock.call.worker_client.WorkerClient.check_resource(
+                    stack.context, rsrc_id, stack.current_traversal, {},
+                    is_update))
+
+        leaves = curr_stack.convergence_dependencies.leaves()
+        for rsrc_id, is_update in leaves:
+            expected_calls.append(
+                mock.call.worker_client.WorkerClient.check_resource(
+                    curr_stack.context, rsrc_id, curr_stack.current_traversal,
+                    {}, is_update))
+        self.assertEqual(expected_calls, mock_cr.mock_calls)
 
 
 class StackCreateTest(common.HeatTestCase):
@@ -1339,7 +1353,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         template = '{ "Template": "data" }'
 
         stack = tools.get_stack(stack_name, self.ctx,
-                                template=string_template_five,
+                                template=tools.string_template_five,
                                 convergence=True)
 
         self.m.StubOutWithMock(templatem, 'Template')
@@ -1379,7 +1393,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
         old_stack = tools.get_stack(stack_name, self.ctx,
-                                    template=string_template_five,
+                                    template=tools.string_template_five,
                                     convergence=True)
         sid = old_stack.store()
         s = stack_object.Stack.get_by_id(self.ctx, sid)

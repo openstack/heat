@@ -16,10 +16,16 @@
 from oslo_log import log as logging
 import oslo_messaging
 from osprofiler import profiler
+import six
 
+from heat.common import context
+from heat.common import exception
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common import messaging as rpc_messaging
+from heat.engine import dependencies
+from heat.engine import resource
+from heat.engine import sync_point
 from heat.openstack.common import service
 from heat.rpc import worker_client as rpc_client
 
@@ -36,7 +42,7 @@ class WorkerService(service.Service):
     or expect replies from these messages.
     """
 
-    RPC_API_VERSION = '1.0'
+    RPC_API_VERSION = '1.1'
 
     def __init__(self,
                  host,
@@ -76,3 +82,146 @@ class WorkerService(service.Service):
             LOG.error(_LE("WorkerService is failed to stop, %s"), e)
 
         super(WorkerService, self).stop()
+
+    @context.request_context
+    def check_resource(self, cnxt, resource_id, current_traversal, data,
+                       is_update):
+        '''
+        Process a node in the dependency graph.
+
+        The node may be associated with either an update or a cleanup of its
+        associated resource.
+        '''
+        try:
+            rsrc, stack = resource.Resource.load(cnxt, resource_id, data)
+        except exception.NotFound:
+            return
+        tmpl = stack.t
+
+        if current_traversal != rsrc.stack.current_traversal:
+            LOG.debug('[%s] Traversal cancelled; stopping.', current_traversal)
+            return
+
+        current_deps = ([tuple(i), (tuple(j) if j is not None else None)]
+                        for i, j in rsrc.stack.current_deps['edges'])
+        deps = dependencies.Dependencies(edges=current_deps)
+        graph = deps.graph()
+
+        if is_update:
+            if (rsrc.replaced_by is not None and
+                    rsrc.current_template_id != tmpl.id):
+                return
+
+            try:
+                check_resource_update(rsrc, tmpl.id, data)
+            except resource.UpdateReplace:
+                # NOTE(sirushtim): Implemented by spec
+                # convergence-resource-replacement.
+                rsrc.make_replacement()
+                return
+            except resource.UpdateInProgress:
+                return
+
+            input_data = construct_input_data(rsrc)
+        else:
+            try:
+                check_resource_cleanup(rsrc, tmpl.id, data)
+            except resource.UpdateInProgress:
+                return
+
+        graph_key = (rsrc.id, is_update)
+        if graph_key not in graph and rsrc.replaces is not None:
+            # If we are a replacement, impersonate the replaced resource for
+            # the purposes of calculating whether subsequent resources are
+            # ready, since everybody has to work from the same version of the
+            # graph. Our real resource ID is sent in the input_data, so the
+            # dependencies will get updated to point to this resource in time
+            # for the next traversal.
+            graph_key = (rsrc.replaces, is_update)
+
+        try:
+            for req, fwd in deps.required_by(graph_key):
+                propagate_check_resource(
+                    cnxt, self._rpc_client, req, current_traversal,
+                    set(graph[(req, fwd)]), graph_key,
+                    input_data if fwd else rsrc.id, fwd)
+
+            check_stack_complete(cnxt, rsrc.stack, current_traversal,
+                                 rsrc.id, graph, is_update)
+        except sync_point.SyncPointNotFound:
+            # NOTE(sirushtim): Implemented by spec
+            # convergence-concurrent-workflow
+            pass
+
+
+def construct_input_data(rsrc):
+    attributes = rsrc.stack.get_dep_attrs(
+        six.itervalues(rsrc.stack.resources),
+        rsrc.stack.outputs,
+        rsrc.name)
+    resolved_attributes = {attr: rsrc.FnGetAtt(attr) for attr in attributes}
+    input_data = {'id': rsrc.id,
+                  'name': rsrc.name,
+                  'physical_resource_id': rsrc.resource_id,
+                  'attrs': resolved_attributes}
+    return input_data
+
+
+def check_stack_complete(cnxt, stack, current_traversal, sender, graph,
+                         is_update):
+    '''
+    Mark the stack complete if the update is complete.
+
+    Complete is currently in the sense that all desired resources are in
+    service, not that superfluous ones have been cleaned up.
+    '''
+    roots = set(key for (key, fwd), node in graph.items()
+                if not any(f for k, f in node.required_by()))
+
+    if sender not in roots:
+        return
+
+    def mark_complete(stack_id, data):
+        stack.mark_complete(current_traversal)
+
+    sync_point.sync(cnxt, stack.id, current_traversal, is_update,
+                    mark_complete, roots, {sender: None})
+
+
+def propagate_check_resource(cnxt, rpc_client, next_res_id,
+                             current_traversal, predecessors, sender,
+                             sender_data, is_update):
+    '''
+    Trigger processing of a node if all of its dependencies are satisfied.
+    '''
+    def do_check(entity_id, data):
+        rpc_client.check_resource(cnxt, entity_id, current_traversal,
+                                  data, is_update)
+
+    sync_point.sync(cnxt, next_res_id, current_traversal,
+                    is_update, do_check, predecessors,
+                    {sender: sender_data})
+
+
+def check_resource_update(rsrc, template_id, data):
+    '''
+    Create or update the Resource if appropriate.
+    '''
+    input_data = {in_data.name: in_data for in_data in data.values()}
+
+    if rsrc.resource_id is None:
+        rsrc.create(template_id, input_data)
+    else:
+        rsrc.update(template_id, input_data)
+
+
+def check_resource_cleanup(rsrc, template_id, data):
+    '''
+    Delete the Resource if appropriate.
+    '''
+    # Clear out deleted resources from the requirers list
+    rsrc.clear_requirers(rsrc_id for rsrc_id, id in data.items()
+                         if id is None)
+
+    if rsrc.current_template_id != template_id:
+        rsrc.delete(template_id, data)

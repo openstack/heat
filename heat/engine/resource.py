@@ -41,6 +41,7 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
+from heat.engine import template
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
 from heat.rpc import client as rpc_client
@@ -84,6 +85,12 @@ class ResourceUnknownStatus(exception.HeatException):
                  status_reason=_('Unknown'), **kwargs):
         super(ResourceUnknownStatus, self).__init__(
             result=result, status_reason=status_reason, **kwargs)
+
+
+class UpdateInProgress(Exception):
+    def __init__(self, resource_name='Unknown'):
+        msg = _("The resource %s is already being updated.") % resource_name
+        super(Exception, self).__init__(six.text_type(msg))
 
 
 class Resource(object):
@@ -228,6 +235,26 @@ class Resource(object):
     def stack(self, stack):
         self._stackref = weakref.ref(stack)
 
+    @classmethod
+    def load(cls, context, resource_id, data):
+        # FIXME(sirushtim): Import this in global space.
+        from heat.engine import stack as stack_mod
+        db_res = resource_objects.Resource.get_obj(context, resource_id)
+        stack = stack_mod.Stack.load(context, db_res.stack_id, cache_data=data)
+        # NOTE(sirushtim): Because on delete/cleanup operations, we simply
+        # update with another template, the stack object won't have the
+        # template of the previous stack-run.
+        tmpl = template.Template.load(context, db_res.current_template_id)
+        stack_res = tmpl.resource_definitions(stack)[db_res.name]
+        resource = cls(db_res.name, stack_res, stack)
+        resource._load_data(db_res)
+        return resource, stack
+
+    def make_replacement(self):
+        # NOTE(sirushtim): Used for mocking. Will be complete
+        # once convergence-resource-replacement is implemented.
+        pass
+
     def reparse(self):
         self.properties = self.t.properties(self.properties_schema,
                                             self.context)
@@ -266,6 +293,13 @@ class Resource(object):
         rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
+
+    def clear_requirers(self, gone_requires):
+        self.requires = set(self.requires) - set(gone_requires)
+        self.requires = list(self.requires)
+        self._store_or_update(self.action,
+                              self.status,
+                              self.status_reason)
 
     @classmethod
     def set_needed_by(cls, db_rsrc, needed_by):

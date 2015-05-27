@@ -85,6 +85,21 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsInstance(res, generic_rsrc.GenericResource)
         self.assertEqual("INIT", res.action)
 
+    def test_resource_load_with_state(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
+        # Store Resource
+        res = resource.Resource('aresource', snippet, self.stack)
+        res.current_template_id = self.stack.t.id
+        res.state_set('CREATE', 'IN_PROGRESS')
+        self.stack.add_resource(res)
+        loaded_res, stack = resource.Resource.load(self.stack.context,
+                                                   res.id, {})
+        self.assertEqual(loaded_res.id, res.id)
+
     def test_resource_invalid_name(self):
         snippet = rsrc_defn.ResourceDefinition('wrong/name',
                                                'GenericResourceType')

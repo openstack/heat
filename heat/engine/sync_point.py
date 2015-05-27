@@ -12,7 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo_log import log as logging
+import six
+
+from heat.common.i18n import _
 from heat.objects import sync_point as sync_point_object
+
+LOG = logging.getLogger(__name__)
+
+
+KEY_SEPERATOR = ':'
+
+
+def _dump_list(items, separator=', '):
+    return separator.join(map(str, items))
+
+
+def make_key(*components):
+    assert len(components) >= 2
+    return _dump_list(components, KEY_SEPERATOR)
 
 
 def create(context, entity_id, traversal_id, is_update, stack_id):
@@ -29,8 +47,14 @@ def get(context, entity_id, traversal_id, is_update):
     """
     Retrieves a sync point entry from DB.
     """
-    return sync_point_object.SyncPoint.get_by_key(context, entity_id,
-                                                  traversal_id, is_update)
+    sync_point = sync_point_object.SyncPoint.get_by_key(context, entity_id,
+                                                        traversal_id,
+                                                        is_update)
+    if sync_point is None:
+        key = (entity_id, traversal_id, is_update)
+        raise SyncPointNotFound(key)
+
+    return sync_point
 
 
 def delete_all(context, stack_id, traversal_id):
@@ -40,3 +64,52 @@ def delete_all(context, stack_id, traversal_id):
     return sync_point_object.SyncPoint.delete_all_by_stack_and_traversal(
         context, stack_id, traversal_id
     )
+
+
+def update_input_data(context, entity_id, current_traversal,
+                      is_update, atomic_key, input_data):
+    sync_point_object.SyncPoint.update_input_data(
+        context, entity_id, current_traversal, is_update, atomic_key,
+        input_data)
+
+
+def deserialize_input_data(db_input_data):
+    db_input_data = db_input_data.get('input_data')
+    if not db_input_data:
+        return {}
+
+    return {tuple(i): j for i, j in db_input_data}
+
+
+def serialize_input_data(input_data):
+    return {'input_data': [[list(i), j] for i, j in six.iteritems(input_data)]}
+
+
+def sync(cnxt, entity_id, current_traversal, is_update, propagate,
+         predecessors, new_data):
+    sync_point = get(cnxt, entity_id, current_traversal,
+                     is_update)
+    input_data = dict(deserialize_input_data(sync_point.input_data))
+    input_data.update(new_data)
+    waiting = predecessors - set(input_data)
+
+    # Note: update must be atomic
+    update_input_data(cnxt, entity_id, current_traversal,
+                      is_update, sync_point.atomic_key,
+                      serialize_input_data(input_data))
+
+    key = make_key(entity_id, current_traversal, is_update)
+    if waiting:
+        LOG.debug('[%s] Waiting %s: Got %s; still need %s',
+                  key, entity_id, _dump_list(input_data), _dump_list(waiting))
+    else:
+        LOG.debug('[%s] Ready %s: Got %s',
+                  key, entity_id, _dump_list(input_data))
+        propagate(entity_id, input_data)
+
+
+class SyncPointNotFound(Exception):
+    '''Raised when resource update requires replacement.'''
+    def __init__(self, sync_point):
+        msg = _("Sync Point %s not found") % (sync_point, )
+        super(Exception, self).__init__(six.text_type(msg))
