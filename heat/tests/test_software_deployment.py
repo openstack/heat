@@ -141,8 +141,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             stack_user_project_id='65728b74-cfe7-4f17-9c15-11d4f686e591'
         )
 
-        nova.NovaClientPlugin.get_server = mock.Mock(
-            return_value=mock.MagicMock())
+        self.patchobject(nova.NovaClientPlugin, 'get_server',
+                         return_value=mock.MagicMock())
         self.patchobject(sd.SoftwareDeployment, '_create_user')
         self.patchobject(sd.SoftwareDeployment, '_create_keypair')
         self.patchobject(sd.SoftwareDeployment, '_delete_user')
