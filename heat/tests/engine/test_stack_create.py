@@ -1,0 +1,337 @@
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+import mock
+from oslo_config import cfg
+from oslo_messaging.rpc import dispatcher
+import six
+
+from heat.common import exception
+from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
+from heat.engine import environment
+from heat.engine import properties
+from heat.engine import resource as res
+from heat.engine import service
+from heat.engine import stack
+from heat.engine import template as templatem
+from heat.openstack.common import threadgroup
+from heat.tests import common
+from heat.tests.engine import tools
+from heat.tests import generic_resource as generic_rsrc
+from heat.tests.nova import fakes as fakes_nova
+from heat.tests import utils
+
+
+class StackCreateTest(common.HeatTestCase):
+    def setUp(self):
+        super(StackCreateTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.man = service.EngineService('a-host', 'a-topic')
+        self.man.create_periodic_tasks()
+
+    @mock.patch.object(threadgroup, 'ThreadGroup')
+    @mock.patch.object(stack.Stack, 'validate')
+    def _test_stack_create(self, stack_name, mock_validate, mock_tg):
+        mock_tg.return_value = tools.DummyThreadGroup()
+
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        stk = tools.get_stack(stack_name, self.ctx)
+
+        mock_tmpl = self.patchobject(templatem, 'Template', return_value=stk.t)
+        mock_env = self.patchobject(environment, 'Environment',
+                                    return_value=stk.env)
+        mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
+        result = self.man.create_stack(self.ctx, stack_name,
+                                       template, params, None, {})
+        self.assertEqual(stk.identifier(), result)
+        self.assertIsInstance(result, dict)
+        self.assertTrue(result['stack_id'])
+
+        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_env.assert_called_once_with(params)
+        mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
+                                           owner_id=None, nested_depth=0,
+                                           user_creds_id=None,
+                                           stack_user_project_id=None,
+                                           convergence=False,
+                                           parent_resource=None)
+        mock_validate.assert_called_once()
+
+    def test_stack_create(self):
+        stack_name = 'service_create_test_stack'
+        self._test_stack_create(stack_name)
+
+    def test_stack_create_equals_max_per_tenant(self):
+        cfg.CONF.set_override('max_stacks_per_tenant', 1)
+        stack_name = 'service_create_test_stack_equals_max'
+        self._test_stack_create(stack_name)
+
+    def test_stack_create_exceeds_max_per_tenant(self):
+        cfg.CONF.set_override('max_stacks_per_tenant', 0)
+        stack_name = 'service_create_test_stack_exceeds_max'
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._test_stack_create, stack_name)
+        self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
+        self.assertIn("You have reached the maximum stacks per tenant",
+                      six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(stack.Stack, 'validate')
+    def test_stack_create_verify_err(self, mock_validate):
+        mock_validate.side_effect = exception.StackValidationFailed(message='')
+
+        stack_name = 'service_create_verify_err_test_stack'
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        stk = tools.get_stack(stack_name, self.ctx)
+
+        mock_tmpl = self.patchobject(templatem, 'Template', return_value=stk.t)
+        mock_env = self.patchobject(environment, 'Environment',
+                                    return_value=stk.env)
+        mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack,
+                               self.ctx, stack_name, template, params,
+                               None, {})
+        self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
+
+        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_env.assert_called_once_with(params)
+        mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
+                                           owner_id=None, nested_depth=0,
+                                           user_creds_id=None,
+                                           stack_user_project_id=None,
+                                           convergence=False,
+                                           parent_resource=None)
+
+    def test_stack_create_invalid_stack_name(self):
+        stack_name = 'service_create_test_stack_invalid_name'
+        stack = tools.get_stack('test_stack', self.ctx)
+
+        self.assertRaises(dispatcher.ExpectedException,
+                          self.man.create_stack,
+                          self.ctx, stack_name, stack.t.t, {}, None, {})
+
+    def test_stack_create_invalid_resource_name(self):
+        stack_name = 'stack_create_invalid_resource_name'
+        stk = tools.get_stack(stack_name, self.ctx)
+        tmpl = dict(stk.t)
+        tmpl['resources']['Web/Server'] = tmpl['resources']['WebServer']
+        del tmpl['resources']['WebServer']
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack,
+                               self.ctx, stack_name,
+                               stk.t.t, {}, None, {})
+        self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
+
+    @mock.patch.object(stack.Stack, 'create_stack_user_project_id')
+    def test_stack_create_authorization_failure(self, mock_create):
+        stack_name = 'stack_create_authorization_failure'
+        stk = tools.get_stack(stack_name, self.ctx)
+        mock_create.side_effect = exception.AuthorizationFailure
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack,
+                               self.ctx, stack_name,
+                               stk.t.t, {}, None, {})
+        self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
+
+    def test_stack_create_no_credentials(self):
+        cfg.CONF.set_default('deferred_auth_method', 'password')
+        stack_name = 'test_stack_create_no_credentials'
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        stk = tools.get_stack(stack_name, self.ctx)
+        # force check for credentials on create
+        stk['WebServer'].requires_deferred_auth = True
+
+        mock_tmpl = self.patchobject(templatem, 'Template', return_value=stk.t)
+        mock_env = self.patchobject(environment, 'Environment',
+                                    return_value=stk.env)
+        mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
+
+        # test stack create using context without password
+        ctx_no_pwd = utils.dummy_context(password=None)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack,
+                               ctx_no_pwd, stack_name,
+                               template, params, None, {}, None)
+        self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
+        self.assertEqual('Missing required credential: X-Auth-Key',
+                         six.text_type(ex.exc_info[1]))
+
+        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_env.assert_called_once_with(params)
+        mock_stack.assert_called_once_with(ctx_no_pwd, stack_name, stk.t,
+                                           owner_id=None, nested_depth=0,
+                                           user_creds_id=None,
+                                           stack_user_project_id=None,
+                                           convergence=False,
+                                           parent_resource=None)
+        mock_tmpl.reset_mock()
+        mock_env.reset_mock()
+        mock_stack.reset_mock()
+
+        # test stack create using context without user
+        ctx_no_pwd = utils.dummy_context(password=None)
+        ctx_no_user = utils.dummy_context(user=None)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack,
+                               ctx_no_user, stack_name,
+                               template, params, None, {})
+        self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
+        self.assertEqual('Missing required credential: X-Auth-User',
+                         six.text_type(ex.exc_info[1]))
+
+        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_env.assert_called_once_with(params)
+        mock_stack.assert_called_once_with(ctx_no_user, stack_name, stk.t,
+                                           owner_id=None, nested_depth=0,
+                                           user_creds_id=None,
+                                           stack_user_project_id=None,
+                                           convergence=False,
+                                           parent_resource=None)
+
+    def test_stack_create_total_resources_equals_max(self):
+        stack_name = 'stack_create_total_resources_equals_max'
+        params = {}
+        res._register_class('FakeResourceType', generic_rsrc.GenericResource)
+        tpl = {
+            'heat_template_version': '2014-10-16',
+            'resources': {
+                'A': {'type': 'FakeResourceType'},
+                'B': {'type': 'FakeResourceType'},
+                'C': {'type': 'FakeResourceType'}
+            }
+        }
+
+        template = templatem.Template(tpl)
+        stk = stack.Stack(self.ctx, stack_name, template)
+
+        mock_tmpl = self.patchobject(templatem, 'Template', return_value=stk.t)
+        mock_env = self.patchobject(environment, 'Environment',
+                                    return_value=stk.env)
+        mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
+
+        cfg.CONF.set_override('max_resources_per_stack', 3)
+
+        result = self.man.create_stack(self.ctx, stack_name, template, params,
+                                       None, {})
+
+        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_env.assert_called_once_with(params)
+        mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
+                                           owner_id=None, nested_depth=0,
+                                           user_creds_id=None,
+                                           stack_user_project_id=None,
+                                           convergence=False,
+                                           parent_resource=None)
+
+        self.assertEqual(stk.identifier(), result)
+        self.assertEqual(3, stk.total_resources())
+        self.man.thread_group_mgr.groups[stk.id].wait()
+        stk.delete()
+
+    def test_stack_create_total_resources_exceeds_max(self):
+        stack_name = 'stack_create_total_resources_exceeds_max'
+        params = {}
+        res._register_class('FakeResourceType', generic_rsrc.GenericResource)
+        tpl = {
+            'heat_template_version': '2014-10-16',
+            'resources': {
+                'A': {'type': 'FakeResourceType'},
+                'B': {'type': 'FakeResourceType'},
+                'C': {'type': 'FakeResourceType'}
+            }
+        }
+
+        cfg.CONF.set_override('max_resources_per_stack', 2)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack, self.ctx, stack_name,
+                               tpl, params, None, {})
+        self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
+        self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
+                      six.text_type(ex.exc_info[1]))
+
+    def test_stack_validate(self):
+        stack_name = 'stack_create_test_validate'
+        stk = tools.get_stack(stack_name, self.ctx)
+
+        fc = fakes_nova.FakeClient()
+        self.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image_id',
+                         return_value=744)
+
+        resource = stk['WebServer']
+        resource.properties = properties.Properties(
+            resource.properties_schema,
+            {
+                'ImageId': 'CentOS 5.2',
+                'KeyName': 'test',
+                'InstanceType': 'm1.large'
+            },
+            context=self.ctx)
+        stk.validate()
+
+        resource.properties = properties.Properties(
+            resource.properties_schema,
+            {
+                'KeyName': 'test',
+                'InstanceType': 'm1.large'
+            },
+            context=self.ctx)
+        self.assertRaises(exception.StackValidationFailed, stk.validate)
+
+    def test_validate_deferred_auth_context_trusts(self):
+        stk = tools.get_stack('test_deferred_auth', self.ctx)
+        stk['WebServer'].requires_deferred_auth = True
+        ctx = utils.dummy_context(user=None, password=None)
+        cfg.CONF.set_default('deferred_auth_method', 'trusts')
+
+        # using trusts, no username or password required
+        self.man._validate_deferred_auth_context(ctx, stk)
+
+    def test_validate_deferred_auth_context_not_required(self):
+        stk = tools.get_stack('test_deferred_auth', self.ctx)
+        stk['WebServer'].requires_deferred_auth = False
+        ctx = utils.dummy_context(user=None, password=None)
+        cfg.CONF.set_default('deferred_auth_method', 'password')
+
+        # stack performs no deferred operations, so no username or
+        # password required
+        self.man._validate_deferred_auth_context(ctx, stk)
+
+    def test_validate_deferred_auth_context_missing_credentials(self):
+        stk = tools.get_stack('test_deferred_auth', self.ctx)
+        stk['WebServer'].requires_deferred_auth = True
+        cfg.CONF.set_default('deferred_auth_method', 'password')
+
+        # missing username
+        ctx = utils.dummy_context(user=None)
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man._validate_deferred_auth_context,
+                               ctx, stk)
+        self.assertEqual('Missing required credential: X-Auth-User',
+                         six.text_type(ex))
+
+        # missing password
+        ctx = utils.dummy_context(password=None)
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man._validate_deferred_auth_context,
+                               ctx, stk)
+        self.assertEqual('Missing required credential: X-Auth-Key',
+                         six.text_type(ex))
