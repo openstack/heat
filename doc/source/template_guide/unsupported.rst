@@ -11,18 +11,10 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Template Guide
-==============
 
-.. toctree::
-   :maxdepth: 2
+Unsupported Heat Resource Types
+===============================
 
-   hot_guide
-   hot_spec
-   environment
-   composition
-   openstack
-   cfn
-   unsupported
-   contrib
-   functions
+.. rubric:: These resources are enabled, but are not officially supported.
+
+.. unsupportedrespages::

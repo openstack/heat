@@ -38,6 +38,10 @@ class integratedrespages(nodes.General, nodes.Element):
     pass
 
 
+class unsupportedrespages(nodes.General, nodes.Element):
+    pass
+
+
 class contribresourcepages(nodes.General, nodes.Element):
     pass
 
@@ -52,11 +56,14 @@ class ResourcePages(compat.Directive):
     def path(self):
         return None
 
+    def statuses(self):
+        return support.SUPPORT_STATUSES
+
     def run(self):
         prefix = self.arguments and self.arguments.pop() or None
         content = []
-        for resource_type, resource_classes in _filter_resources(prefix,
-                                                                 self.path()):
+        for resource_type, resource_classes in _filter_resources(
+                prefix, self.path(), self.statuses()):
             for resource_class in resource_classes:
                 self.resource_type = resource_type
                 self.resource_class = resource_class
@@ -337,6 +344,18 @@ class IntegrateResourcePages(ResourcePages):
     def path(self):
         return 'heat.engine.resources'
 
+    def statuses(self):
+        return [support.SUPPORTED]
+
+
+class UnsupportedResourcePages(ResourcePages):
+
+    def path(self):
+        return 'heat.engine.resources'
+
+    def statuses(self):
+        return [s for s in support.SUPPORT_STATUSES if s != support.SUPPORTED]
+
 
 class ContribResourcePages(ResourcePages):
 
@@ -344,18 +363,21 @@ class ContribResourcePages(ResourcePages):
         return 'heat.engine.plugins'
 
 
-def _filter_resources(prefix=None, path=None):
+def _filter_resources(prefix=None, path=None, statuses=[]):
     def prefix_match(name):
         return prefix is None or name.startswith(prefix)
 
     def path_match(cls):
         return path is None or cls.__module__.startswith(path)
 
+    def status_match(cls):
+        return cls.support_status.status in statuses
+
     filtered_resources = {}
     for name in sorted(six.iterkeys(all_resources)):
         if prefix_match(name):
             for cls in all_resources.get(name):
-                if path_match(cls):
+                if path_match(cls) and status_match(cls):
                     if filtered_resources.get(name) is not None:
                         filtered_resources[name].append(cls)
                     else:
@@ -382,6 +404,10 @@ def setup(app):
     app.add_node(integratedrespages)
 
     app.add_directive('integratedrespages', IntegrateResourcePages)
+
+    app.add_node(unsupportedrespages)
+
+    app.add_directive('unsupportedrespages', UnsupportedResourcePages)
 
     app.add_node(contribresourcepages)
 
