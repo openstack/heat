@@ -734,6 +734,45 @@ resources:
     type: OS::Nova::Server
 '''
 
+test_template_parameter_groups_not_list = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+  label: Server Group
+  description: A group of parameters for the server
+  parameters:
+    key_name: heat_key
+  label: Database Group
+  description: A group of parameters for the database
+  parameters:
+    public_net: public
+resources:
+  server:
+    type: OS::Nova::Server
+'''
+
+test_template_parameters_not_list = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+- label: Server Group
+  description: A group of parameters for the server
+  parameters:
+    key_name: heat_key
+    public_net: public
+resources:
+  server:
+    type: OS::Nova::Server
+'''
+
 test_template_allowed_integers = '''
 heat_template_version: 2013-05-23
 
@@ -1368,7 +1407,7 @@ class validateTest(common.HeatTestCase):
                                 stack.validate)
 
         self.assertEqual(_('The InstanceType parameter must be assigned to '
-                         'one Parameter Group only.'), six.text_type(exc))
+                         'one parameter group only.'), six.text_type(exc))
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
@@ -1382,8 +1421,8 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('The Parameter name (SomethingNotHere) does not '
-                         'reference an existing parameter.'),
+        self.assertEqual(_('The grouped parameter SomethingNotHere does not '
+                         'reference a valid parameter.'),
                          six.text_type(exc))
 
     def test_validate_no_parameters_in_group(self):
@@ -1393,8 +1432,28 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameters must be provided for each Parameter '
-                         'Group.'), six.text_type(exc))
+        self.assertEqual(_('The parameters must be provided for each '
+                           'parameter group.'), six.text_type(exc))
+
+    def test_validate_parameter_groups_not_list(self):
+        t = template_format.parse(test_template_parameter_groups_not_list)
+        template = hot_tmpl.HOTemplate20130523(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('The parameter_groups should be '
+                           'a list.'), six.text_type(exc))
+
+    def test_validate_parameters_not_list(self):
+        t = template_format.parse(test_template_parameters_not_list)
+        template = hot_tmpl.HOTemplate20130523(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('The parameters of parameter group should be '
+                           'a list.'), six.text_type(exc))
 
     def test_validate_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
