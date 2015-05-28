@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 
 from heatclient import exc
@@ -391,6 +392,70 @@ class RemoteStackTest(tests_common.HeatTestCase):
             'The Referenced Attribute (remote_stack non-existent_property) is '
             'incorrect.',
             six.text_type(error))
+
+    def test_snapshot(self):
+        stacks = [get_stack(stack_status='SNAPSHOT_IN_PROGRESS'),
+                  get_stack(stack_status='SNAPSHOT_COMPLETE')]
+        snapshot = {
+            'id': 'a29bc9e25aa44f99a9a3d59cd5b0e263',
+            'status': 'IN_PROGRESS'
+        }
+
+        rsrc = self.create_remote_stack()
+
+        self.heat.stacks.get = mock.MagicMock(side_effect=stacks)
+        self.heat.stacks.snapshot = mock.MagicMock(return_value=snapshot)
+        scheduler.TaskRunner(rsrc.snapshot)()
+
+        self.assertEqual((rsrc.SNAPSHOT, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual('a29bc9e25aa44f99a9a3d59cd5b0e263',
+                         rsrc.data().get('snapshot_id'))
+        self.heat.stacks.snapshot.assert_called_with(
+            stack_id=rsrc.resource_id)
+
+    def test_restore(self):
+        snapshot = {
+            'id': 'a29bc9e25aa44f99a9a3d59cd5b0e263',
+            'status': 'IN_PROGRESS'
+        }
+        remote_stack = mock.MagicMock()
+        remote_stack.action = 'SNAPSHOT'
+        remote_stack.status = 'COMPLETE'
+
+        parent, rsrc = self.create_parent_stack()
+        rsrc.action = rsrc.SNAPSHOT
+
+        heat = rsrc._context().clients.client("heat")
+        heat.stacks.snapshot = mock.MagicMock(return_value=snapshot)
+        heat.stacks.get = mock.MagicMock(return_value=remote_stack)
+        scheduler.TaskRunner(parent.snapshot, None)()
+        self.assertEqual((parent.SNAPSHOT, parent.COMPLETE), parent.state)
+
+        data = parent.prepare_abandon()
+        remote_stack_snapshot = {
+            'snapshot': {
+                'id': 'a29bc9e25aa44f99a9a3d59cd5b0e263',
+                'status': 'COMPLETE',
+                'data': {
+                    'files': data['files'],
+                    'environment': data['environment'],
+                    'template': template_format.parse(
+                        data['files']['remote_template.yaml'])
+                }
+            }
+        }
+        fake_snapshot = collections.namedtuple(
+            'Snapshot', ('data', 'stack_id'))(data, parent.id)
+        heat.stacks.snapshot_show = mock.MagicMock(
+            return_value=remote_stack_snapshot)
+        self.patchobject(rsrc, 'update').return_value = None
+        rsrc.action = rsrc.UPDATE
+        rsrc.status = rsrc.COMPLETE
+        remote_stack.action = 'UPDATE'
+
+        parent.restore(fake_snapshot)
+
+        self.assertEqual((parent.RESTORE, parent.COMPLETE), parent.state)
 
     def test_resume(self):
         stacks = [get_stack(stack_status='RESUME_IN_PROGRESS'),

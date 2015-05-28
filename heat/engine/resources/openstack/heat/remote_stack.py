@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 import six
 
 from heat.common import context
@@ -24,6 +25,7 @@ from heat.engine import environment
 from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import template
 
 LOG = logging.getLogger(__name__)
 
@@ -185,6 +187,24 @@ class RemoteStack(resource.Resource):
                                   % self.name)
         self.heat().actions.suspend(stack_id=self.resource_id)
 
+    def handle_snapshot(self):
+        snapshot = self.heat().stacks.snapshot(stack_id=self.resource_id)
+        self.data_set('snapshot_id', snapshot['id'])
+
+    def handle_restore(self, defn, restore_data):
+        snapshot_id = restore_data['resource_data']['snapshot_id']
+        snapshot = self.heat().stacks.snapshot_show(self.resource_id,
+                                                    snapshot_id)
+        s_data = snapshot['snapshot']['data']
+        env = environment.Environment(s_data['environment'])
+        files = s_data['files']
+        tmpl = template.Template(s_data['template'], env=env, files=files)
+        props = function.resolve(self.properties.data)
+        props[self.TEMPLATE] = jsonutils.dumps(tmpl.t)
+        props[self.PARAMETERS] = env.params
+
+        return defn.freeze(properties=props)
+
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource):
         # Always issue an update to the remote stack and let the individual
@@ -256,6 +276,9 @@ class RemoteStack(resource.Resource):
 
     def check_update_complete(self, *args):
         return self._check_action_complete(action=self.UPDATE)
+
+    def check_snapshot_complete(self, *args):
+        return self._check_action_complete(action=self.SNAPSHOT)
 
     def _resolve_attribute(self, name):
         try:
