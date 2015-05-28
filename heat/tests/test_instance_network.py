@@ -203,13 +203,13 @@ class instancesTest(common.HeatTestCase):
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
         template = parser.Template(t,
                                    env=environment.Environment(kwargs))
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             stack_id=str(uuid.uuid4()))
+        self.stack = parser.Stack(utils.dummy_context(), stack_name, template,
+                                  stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
-        resource_defns = stack.t.resource_definitions(stack)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         instance = instances.Instance('%s_name' % name,
-                                      resource_defns['WebServer'], stack)
+                                      resource_defns['WebServer'], self.stack)
         metadata = instance.metadata_get()
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
@@ -258,18 +258,18 @@ class instancesTest(common.HeatTestCase):
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
         template = parser.Template(t,
                                    env=environment.Environment(kwargs))
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             stack_id=str(uuid.uuid4()))
+        self.stack = parser.Stack(utils.dummy_context(), stack_name, template,
+                                  stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
 
-        resource_defns = stack.t.resource_definitions(stack)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         nic = net_interfaces.NetworkInterface('%s_nic' % name,
                                               resource_defns['nic1'],
-                                              stack)
+                                              self.stack)
 
         instance = instances.Instance('%s_name' % name,
-                                      resource_defns['WebServer'], stack)
+                                      resource_defns['WebServer'], self.stack)
         metadata = instance.metadata_get()
 
         self._mock_get_image_id_success(image_id, 1)
@@ -309,7 +309,7 @@ class instancesTest(common.HeatTestCase):
 
         # create network interface
         scheduler.TaskRunner(nic.create)()
-        stack.resources["nic1"] = nic
+        self.stack.resources["nic1"] = nic
 
         scheduler.TaskRunner(instance.create)()
         return instance

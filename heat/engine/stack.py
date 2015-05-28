@@ -113,7 +113,7 @@ class Stack(collections.Mapping):
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
         self.parent_resource_name = parent_resource
-        self._parent_resource = None
+        self._parent_stack = None
         self._resources = None
         self._dependencies = None
         self._access_allowed_handlers = {}
@@ -162,19 +162,18 @@ class Stack(collections.Mapping):
 
         Note: this should only be used by "Fn::ResourceFacade"
         """
-        if self._parent_resource is not None:
-            return self._parent_resource
+        if self._parent_stack is None:
+            # we need both parent name and owner id.
+            if self.parent_resource_name is None or self.owner_id is None:
+                return None
 
-        # we need both parent name and owner id.
-        if self.parent_resource_name is None or self.owner_id is None:
-            return None
+            try:
+                owner = self.load(self.context, stack_id=self.owner_id)
+            except exception.NotFound:
+                return None
+            self._parent_stack = owner
 
-        try:
-            owner = self.load(self.context, stack_id=self.owner_id)
-        except exception.NotFound:
-            return None
-        self._parent_resource = owner[self.parent_resource_name]
-        return self._parent_resource
+        return self._parent_stack[self.parent_resource_name]
 
     def stored_context(self):
         if self.user_creds_id:

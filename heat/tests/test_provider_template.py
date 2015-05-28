@@ -837,16 +837,16 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
-        stack = parser.Stack(self.ctx, 'test_stack',
-                             parser.Template(empty_template, files=files,
-                                             env=env),
-                             stack_id=str(uuid.uuid4()))
+        self.stack = parser.Stack(self.ctx, 'test_stack',
+                                  parser.Template(empty_template, files=files,
+                                                  env=env),
+                                  stack_id=str(uuid.uuid4()))
 
         self.defn = rsrc_defn.ResourceDefinition('test_t_res',
                                                  "DummyResource",
                                                  {"Foo": "bar"})
         self.res = template_resource.TemplateResource('test_t_res',
-                                                      self.defn, stack)
+                                                      self.defn, self.stack)
         self.assertIsNone(self.res.validate())
 
     def test_handle_create(self):

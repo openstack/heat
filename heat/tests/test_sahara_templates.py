@@ -89,8 +89,8 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.t = template_format.parse(node_group_template)
 
     def _init_ngt(self, template):
-        stack = utils.parse_stack(template)
-        return stack['node-group']
+        self.stack = utils.parse_stack(template)
+        return self.stack['node-group']
 
     def test_ngt_resource_mapping(self):
         ngt = self._init_ngt(self.t)
@@ -209,8 +209,8 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         self.t = template_format.parse(cluster_template)
 
     def _init_ct(self, template):
-        stack = utils.parse_stack(template)
-        return stack['cluster-template']
+        self.stack = utils.parse_stack(template)
+        return self.stack['cluster-template']
 
     def test_ct_resource_mapping(self):
         ct = self._init_ct(self.t)

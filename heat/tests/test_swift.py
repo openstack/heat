@@ -363,8 +363,8 @@ class swiftTest(common.HeatTestCase):
 
     def _get_check_resource(self):
         t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        res = self.create_resource(t, stack, 'SwiftContainer')
+        self.stack = utils.parse_stack(t)
+        res = self.create_resource(t, self.stack, 'SwiftContainer')
         res.swift = mock.Mock()
         return res
 

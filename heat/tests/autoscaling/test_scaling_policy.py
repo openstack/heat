@@ -177,8 +177,8 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
     def setUp(self):
         super(ScalingPolicyAttrTest, self).setUp()
         t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        self.policy = stack['WebServerScaleUpPolicy']
+        self.stack = utils.parse_stack(t, params=as_params)
+        self.policy = self.stack['WebServerScaleUpPolicy']
         self.assertIsNone(self.policy.validate())
         scheduler.TaskRunner(self.policy.create)()
         self.assertEqual((self.policy.CREATE, self.policy.COMPLETE),

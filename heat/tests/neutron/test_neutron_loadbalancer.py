@@ -238,10 +238,10 @@ class HealthMonitorTest(common.HeatTestCase):
         ).AndReturn({'health_monitor': {'id': '5678'}})
 
         snippet = template_format.parse(health_monitor_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.HealthMonitor(
-            'monitor', resource_defns['monitor'], stack)
+            'monitor', resource_defns['monitor'], self.stack)
 
     def test_create(self):
         rsrc = self.create_health_monitor()
@@ -259,10 +259,10 @@ class HealthMonitorTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         snippet = template_format.parse(health_monitor_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.HealthMonitor(
-            'monitor', resource_defns['monitor'], stack)
+            'monitor', resource_defns['monitor'], self.stack)
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
@@ -412,10 +412,10 @@ class PoolTest(common.HeatTestCase):
             snippet = template_format.parse(pool_template_deprecated)
             neutronclient.Client.create_vip(stvippsn
                                             ).AndReturn({'vip': {'id': 'xyz'}})
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.Pool(
-            'pool', resource_defns['pool'], stack)
+            'pool', resource_defns['pool'], self.stack)
 
     def test_create(self):
         self._test_create()
@@ -466,10 +466,10 @@ class PoolTest(common.HeatTestCase):
             {'vip': {'status': 'ACTIVE'}})
 
         snippet = template_format.parse(pool_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
-            'pool', resource_defns['pool'], stack)
+            'pool', resource_defns['pool'], self.stack)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -500,10 +500,10 @@ class PoolTest(common.HeatTestCase):
             {'pool': {'status': 'ERROR', 'name': '5678'}})
 
         snippet = template_format.parse(pool_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
-            'pool', resource_defns['pool'], stack)
+            'pool', resource_defns['pool'], self.stack)
         self.m.ReplayAll()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
@@ -538,10 +538,10 @@ class PoolTest(common.HeatTestCase):
             {'vip': {'status': 'SOMETHING', 'name': 'xyz'}})
 
         snippet = template_format.parse(pool_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
-            'pool', resource_defns['pool'], stack)
+            'pool', resource_defns['pool'], self.stack)
         self.m.ReplayAll()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
@@ -567,10 +567,10 @@ class PoolTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         snippet = template_format.parse(pool_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
-            'pool', resource_defns['pool'], stack)
+            'pool', resource_defns['pool'], self.stack)
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
@@ -606,10 +606,10 @@ class PoolTest(common.HeatTestCase):
             {'vip': {'status': 'ACTIVE'}})
 
         snippet = template_format.parse(pool_with_session_persistence_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
-            'pool', resource_defns['pool'], stack)
+            'pool', resource_defns['pool'], self.stack)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -626,9 +626,10 @@ class PoolTest(common.HeatTestCase):
         persistence['type'] = 'APP_COOKIE'
         persistence['cookie_name'] = None
 
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
-        resource = loadbalancer.Pool('pool', resource_defns['pool'], stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        resource = loadbalancer.Pool('pool', resource_defns['pool'],
+                                     self.stack)
 
         error = self.assertRaises(exception.StackValidationFailed,
                                   resource.validate)
@@ -637,9 +638,10 @@ class PoolTest(common.HeatTestCase):
     def test_validation_not_failing_without_session_persistence(self):
         snippet = template_format.parse(pool_template)
 
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
-        resource = loadbalancer.Pool('pool', resource_defns['pool'], stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        resource = loadbalancer.Pool('pool', resource_defns['pool'],
+                                     self.stack)
         self.stub_SubnetConstraint_validate()
         self.m.ReplayAll()
         self.assertIsNone(resource.validate())
@@ -678,9 +680,10 @@ class PoolTest(common.HeatTestCase):
         persistence['type'] = 'HTTP_COOKIE'
         del persistence['cookie_name']
 
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
-        resource = loadbalancer.Pool('pool', resource_defns['pool'], stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        resource = loadbalancer.Pool('pool', resource_defns['pool'],
+                                     self.stack)
 
         # assert that properties contain cookie_name property with None value
         persistence = resource.properties['vip']['session_persistence']
@@ -828,11 +831,11 @@ class PoolTest(common.HeatTestCase):
             '5678', {'health_monitor': {'id': 'mon789'}})
 
         snippet = template_format.parse(pool_template)
-        stack = utils.parse_stack(snippet)
+        self.stack = utils.parse_stack(snippet)
         snippet['Resources']['pool']['Properties']['monitors'] = [
             'mon123', 'mon456']
-        resource_defns = stack.t.resource_definitions(stack)
-        rsrc = loadbalancer.Pool('pool', resource_defns['pool'], stack)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        rsrc = loadbalancer.Pool('pool', resource_defns['pool'], self.stack)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
@@ -860,10 +863,10 @@ class PoolMemberTest(common.HeatTestCase):
                 'address': '1.2.3.4', 'admin_state_up': True}}
         ).AndReturn({'member': {'id': 'member5678'}})
         snippet = template_format.parse(member_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.PoolMember(
-            'member', resource_defns['member'], stack)
+            'member', resource_defns['member'], self.stack)
 
     def test_create(self):
         rsrc = self.create_member()
@@ -884,10 +887,10 @@ class PoolMemberTest(common.HeatTestCase):
         snippet = template_format.parse(member_template)
         snippet['Resources']['member']['Properties']['admin_state_up'] = False
         snippet['Resources']['member']['Properties']['weight'] = 100
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.PoolMember(
-            'member', resource_defns['member'], stack)
+            'member', resource_defns['member'], self.stack)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -961,10 +964,10 @@ class LoadBalancerTest(common.HeatTestCase):
                 'address': '1.2.3.4'}}
         ).AndReturn({'member': {'id': 'member5678'}})
         snippet = template_format.parse(lb_template)
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
+        self.stack = utils.parse_stack(snippet)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.LoadBalancer(
-            'lb', resource_defns['lb'], stack)
+            'lb', resource_defns['lb'], self.stack)
 
     def test_create(self):
         rsrc = self.create_load_balancer()

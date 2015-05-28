@@ -68,13 +68,13 @@ class ServerTagsTest(common.HeatTestCase):
         template = parser.Template(t,
                                    env=environment.Environment(
                                        {'KeyName': 'test'}))
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             stack_id=str(uuid.uuid4()))
+        self.stack = parser.Stack(utils.dummy_context(), stack_name, template,
+                                  stack_id=str(uuid.uuid4()))
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags
-        resource_defns = template.resource_definitions(stack)
+        resource_defns = template.resource_definitions(self.stack)
         instance = instances.Instance(stack_name,
-                                      resource_defns['WebServer'], stack)
+                                      resource_defns['WebServer'], self.stack)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)

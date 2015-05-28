@@ -127,9 +127,9 @@ class ServersTest(common.HeatTestCase):
         return (templ, stack)
 
     def _prepare_server_check(self):
-        templ, stack = self._setup_test_stack('server_check')
+        templ, self.stack = self._setup_test_stack('server_check')
         server = self.fc.servers.list()[1]
-        res = stack['WebServer']
+        res = self.stack['WebServer']
         res.nova = mock.Mock()
         res.nova().servers.get = mock.Mock(return_value=server)
         return res
@@ -183,11 +183,11 @@ class ServersTest(common.HeatTestCase):
                            server_rebuild=False):
         stack_name = '%s_s' % name
         server_name = str(name) if override_name else None
-        tmpl, stack = self._get_test_template(stack_name, server_name,
-                                              image_id)
-        resource_defns = tmpl.resource_definitions(stack)
+        tmpl, self.stack = self._get_test_template(stack_name, server_name,
+                                                   image_id)
+        resource_defns = tmpl.resource_definitions(self.stack)
         server = servers.Server(str(name), resource_defns['WebServer'],
-                                stack)
+                                self.stack)
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1,
                                         server_rebuild=server_rebuild)

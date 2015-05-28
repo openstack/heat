@@ -107,9 +107,10 @@ class InstancesTest(common.HeatTestCase):
     def _setup_test_instance(self, return_server, name, image_id=None,
                              stub_create=True):
         stack_name = '%s_s' % name
-        tmpl, stack = self._get_test_template(stack_name, image_id)
-        resource_defns = tmpl.resource_definitions(stack)
-        instance = instances.Instance(name, resource_defns['WebServer'], stack)
+        tmpl, self.stack = self._get_test_template(stack_name, image_id)
+        resource_defns = tmpl.resource_definitions(self.stack)
+        instance = instances.Instance(name, resource_defns['WebServer'],
+                                      self.stack)
         bdm = {"vdb": "9ef5496e-7426-446a-bbc8-01f84d9c9972:snap::True"}
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
