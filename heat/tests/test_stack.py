@@ -2033,6 +2033,42 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('foo', params.get('param1'))
         self.assertEqual('bar', params.get('param2'))
 
+    def test_parameters_stored_decrypted_successful_load(self):
+        '''
+        Test stack loading with disabled parameter value validation.
+        '''
+        tmpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
+        self.stack = stack.Stack(self.ctx, 'test',
+                                 template.Template(tmpl, env=env1))
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
+
+        # Verify that hidden parameters are stored decrypted
+        self.stack.store()
+        db_tpl = db_api.raw_template_get(self.ctx, self.stack.t.id)
+        db_params = db_tpl.environment['parameters']
+        self.assertEqual('foo', db_params['param1'])
+        self.assertEqual('bar', db_params['param2'])
+
+        # Verify that stack loads without error
+        loaded_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id)
+        params = loaded_stack.t.env.params
+        self.assertEqual('foo', params.get('param1'))
+        self.assertEqual('bar', params.get('param2'))
+
 
 class StackKwargsForCloningTest(common.HeatTestCase):
     scenarios = [
