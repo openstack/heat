@@ -1393,6 +1393,78 @@ class ResourceTest(common.HeatTestCase):
         res_obj = res_objs['test_res_enc']
         self.assertEqual('string', res_obj.properties_data['prop1'])
 
+    @mock.patch.object(resource.Resource, '_store_or_update')
+    @mock.patch.object(resource.Resource, 'create')
+    def test_create_convergence(self,
+                                mock_create,
+                                mock_store_update_method):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.create_convergence('template_key', {(1, True): {},
+                                                (1, True): {}})
+
+        mock_create.assert_called_once_with()
+        self.assertEqual('template_key', res.current_template_id)
+        self.assertEqual([1], res.requires)
+        self.assertTrue(mock_store_update_method.called)
+
+    @mock.patch.object(resource.Resource, '_store_or_update')
+    @mock.patch.object(resource.Resource, 'update')
+    def test_update_convergence(self,
+                                mock_update,
+                                mock_store_update_method
+                                ):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.requires = [2]
+        res.update_convergence('template_key', {(1, True): {},
+                                                (1, True): {}})
+
+        mock_update.assert_called_once_with(res.t)
+        self.assertEqual('template_key', res.current_template_id)
+        self.assertEqual([1, 2], res.requires)
+        self.assertTrue(mock_store_update_method.called)
+
+    def test_update_in_progress_convergence(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.status = resource.Resource.IN_PROGRESS
+        ex = self.assertRaises(resource.UpdateInProgress,
+                               res.update_convergence,
+                               'template_key',
+                               {})
+        msg = ("The resource %s is already being updated." %
+               res.name)
+        self.assertEqual(msg, six.text_type(ex))
+
+    @mock.patch.object(resource.Resource, '_store_or_update')
+    @mock.patch.object(resource.Resource, 'delete')
+    def test_delete_convergence(self,
+                                mock_delete,
+                                mock_store_update_method):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.requires = [1, 2]
+        res.delete_convergence('template_key', {(1, True): {},
+                                                (1, True): {}})
+
+        mock_delete.assert_called_once_with()
+        self.assertEqual('template_key', res.current_template_id)
+        self.assertEqual([2], res.requires)
+        self.assertTrue(mock_store_update_method.called)
+
+    def test_delete_in_progress_convergence(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.status = resource.Resource.IN_PROGRESS
+        ex = self.assertRaises(resource.UpdateInProgress,
+                               res.delete_convergence,
+                               'template_key',
+                               {})
+        msg = ("The resource %s is already being updated." %
+               res.name)
+        self.assertEqual(msg, six.text_type(ex))
+
 
 class ResourceAdoptTest(common.HeatTestCase):
     def setUp(self):

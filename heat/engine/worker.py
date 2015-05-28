@@ -210,18 +210,15 @@ def check_resource_update(rsrc, template_id, data):
     input_data = {in_data.name: in_data for in_data in data.values()}
 
     if rsrc.resource_id is None:
-        rsrc.create(template_id, input_data)
+        rsrc.create_convergence(template_id, input_data)
     else:
-        rsrc.update(template_id, input_data)
+        rsrc.update_convergence(template_id, input_data)
 
 
 def check_resource_cleanup(rsrc, template_id, data):
     '''
     Delete the Resource if appropriate.
     '''
-    # Clear out deleted resources from the requirers list
-    rsrc.clear_requirers(rsrc_id for rsrc_id, id in data.items()
-                         if id is None)
 
     if rsrc.current_template_id != template_id:
-        rsrc.delete(template_id, data)
+        rsrc.delete_convergence(template_id, data)

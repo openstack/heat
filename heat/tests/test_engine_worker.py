@@ -277,32 +277,28 @@ class MiscMethodsTest(common.HeatTestCase):
             mock.ANY, {}, True)
         self.assertTrue(mock_sync.called)
 
-    @mock.patch.object(resource.Resource, 'create')
+    @mock.patch.object(resource.Resource, 'create_convergence')
     def test_check_resource_update_create(self, mock_create):
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {})
         self.assertTrue(mock_create.called)
 
-    @mock.patch.object(resource.Resource, 'update')
+    @mock.patch.object(resource.Resource, 'update_convergence')
     def test_check_resource_update_update(self, mock_update):
         self.resource.resource_id = 'physical-res-id'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {})
         self.assertTrue(mock_update.called)
 
-    @mock.patch.object(resource.Resource, 'delete')
-    @mock.patch.object(resource.Resource, 'clear_requirers')
-    def test_check_resource_cleanup_delete(self, mock_cr, mock_delete):
+    @mock.patch.object(resource.Resource, 'delete_convergence')
+    def test_check_resource_cleanup_delete(self, mock_delete):
         self.resource.current_template_id = 'new-template-id'
         worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
                                       {})
-        self.assertTrue(mock_cr.called)
         self.assertTrue(mock_delete.called)
 
-    @mock.patch.object(resource.Resource, 'delete')
-    @mock.patch.object(resource.Resource, 'clear_requirers')
-    def test_check_resource_cleanup_nodelete(self, mock_cr, mock_delete):
+    @mock.patch.object(resource.Resource, 'delete_convergence')
+    def test_check_resource_cleanup_nodelete(self, mock_delete):
         worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
                                       {})
-        self.assertTrue(mock_cr.called)
         self.assertFalse(mock_delete.called)

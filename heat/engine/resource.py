@@ -294,13 +294,6 @@ class Resource(object):
         rs.update_and_save({'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
 
-    def clear_requirers(self, gone_requires):
-        self.requires = set(self.requires) - set(gone_requires)
-        self.requires = list(self.requires)
-        self._store_or_update(self.action,
-                              self.status,
-                              self.status_reason)
-
     @classmethod
     def set_needed_by(cls, db_rsrc, needed_by):
         if db_rsrc:
@@ -619,6 +612,25 @@ class Resource(object):
         '''
         return self
 
+    def create_convergence(self, template_id, resource_data):
+        '''
+        Creates the resource by invoking the scheduler TaskRunner
+        and it persists the resource's current_template_id to template_id and
+        resource's requires to list of the required resource id from the
+        given resource_data.
+        '''
+
+        runner = scheduler.TaskRunner(self.create)
+        runner()
+
+        # update the resource db record
+        self.current_template_id = template_id
+        self.requires = (list({graph_key[0]
+                         for graph_key, data in resource_data.items()}))
+        self._store_or_update(self.action,
+                              self.status,
+                              self.status_reason)
+
     @scheduler.wrappertask
     def create(self):
         '''
@@ -758,6 +770,32 @@ class Resource(object):
             return before_props != after_props
         except ValueError:
             return True
+
+    def update_convergence(self, template_id, resource_data):
+        '''
+        Updates the resource by invoking the scheduler TaskRunner
+        and it persists the resource's current_template_id to template_id and
+        resource's requires to list of the required resource id from the
+        given resource_data and existing resource's requires.
+        '''
+
+        if self.status == self.IN_PROGRESS:
+            ex = UpdateInProgress(self.name)
+            LOG.exception(ex)
+            raise ex
+
+        # update the resource
+        runner = scheduler.TaskRunner(self.update, self.t)
+        runner()
+
+        # update the resource db record
+        self.current_template_id = template_id
+        current_requires = {graph_key[0]
+                            for graph_key, data in resource_data.items()}
+        self.requires = (list(set(self.requires) | current_requires))
+        self._store_or_update(self.action,
+                              self.status,
+                              self.status_reason)
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
@@ -948,6 +986,31 @@ class Resource(object):
             if not callable(getattr(cls, 'handle_snapshot_delete', None)):
                 msg = _('"%s" deletion policy not supported') % policy
                 raise exception.StackValidationFailed(message=msg)
+
+    def delete_convergence(self, template_id, resource_data):
+        '''
+        Deletes the resource by invoking the scheduler TaskRunner
+        and it persists the resource's current_template_id to template_id and
+        resource's requires to list of the required resource id from the
+        given resource_data and existing resource's requires.
+        '''
+        if self.status == self.IN_PROGRESS:
+            ex = UpdateInProgress(self.name)
+            LOG.exception(ex)
+            raise ex
+
+        # delete the resource
+        runner = scheduler.TaskRunner(self.delete)
+        runner()
+
+        # update the resource db record
+        self.current_template_id = template_id
+        current_requires = {graph_key[0]
+                            for graph_key, data in resource_data.items()}
+        self.requires = (list(set(self.requires) - current_requires))
+        self._store_or_update(self.action,
+                              self.status,
+                              self.status_reason)
 
     @scheduler.wrappertask
     def delete(self):
