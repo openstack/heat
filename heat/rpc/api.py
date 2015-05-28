@@ -76,8 +76,9 @@ RES_KEYS = (
 
 RES_SCHEMA_KEYS = (
     RES_SCHEMA_RES_TYPE, RES_SCHEMA_PROPERTIES, RES_SCHEMA_ATTRIBUTES,
+    RES_SCHEMA_SUPPORT_STATUS,
 ) = (
-    RES_TYPE, 'properties', 'attributes',
+    RES_TYPE, 'properties', 'attributes', 'support_status'
 )
 
 EVENT_KEYS = (

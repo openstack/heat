@@ -2036,6 +2036,11 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                 'foo': {'description': 'A generic attribute'},
                 'Foo': {'description': 'Another generic attribute'},
             },
+            'support_status': {
+                'status': 'SUPPORTED',
+                'version': None,
+                'message': None,
+            },
         }
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
