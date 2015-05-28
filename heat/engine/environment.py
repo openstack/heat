@@ -43,14 +43,20 @@ def valid_hook_type(hook):
 
 
 def is_hook_definition(key, value):
+    is_valid_hook = False
     if key == 'hooks':
         if isinstance(value, six.string_types):
-            return valid_hook_type(value)
+            is_valid_hook = valid_hook_type(value)
         elif isinstance(value, collections.Sequence):
-            return all(valid_hook_type(hook) for hook in value)
-        else:
-            return False
-    return False
+            is_valid_hook = all(valid_hook_type(hook) for hook in value)
+
+        if not is_valid_hook:
+            msg = (_('Invalid hook type "%(value)s" for resource '
+                     'breakpoint, acceptable hook types are: %(types)s') %
+                   {'value': value, 'types': HOOK_TYPES})
+            raise exception.InvalidBreakPointHook(message=msg)
+
+    return is_valid_hook
 
 
 class ResourceInfo(object):
