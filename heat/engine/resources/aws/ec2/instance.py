@@ -837,13 +837,15 @@ class Instance(resource.Resource):
             if self.client_plugin().is_not_found(e):
                 raise exception.NotFound(_('Failed to find instance %s') %
                                          self.resource_id)
+            else:
+                raise
         else:
             LOG.debug("resuming instance %s" % self.resource_id)
             server.resume()
-            return server
+            return server.id
 
-    def check_resume_complete(self, server):
-        return self.client_plugin()._check_active(server, 'Instance')
+    def check_resume_complete(self, server_id):
+        return self.client_plugin()._check_active(server_id, 'Instance')
 
 
 def resource_mapping():

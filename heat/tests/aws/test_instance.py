@@ -1020,28 +1020,6 @@ class InstancesTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_instance_status_resume_immediate(self):
-        return_server = self.fc.servers.list()[1]
-        instance = self._create_test_instance(return_server,
-                                              'in_resume')
-
-        instance.resource_id = '1234'
-        self.m.ReplayAll()
-
-        # Override the get_servers_1234 handler status to SUSPENDED
-        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d['server']['status'] = 'ACTIVE'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d))
-        mox.Replay(get)
-        instance.state_set(instance.SUSPEND, instance.COMPLETE)
-
-        scheduler.TaskRunner(instance.resume)()
-        self.assertEqual((instance.RESUME, instance.COMPLETE), instance.state)
-
-        self.m.VerifyAll()
-
     def test_instance_status_suspend_wait(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
@@ -1068,7 +1046,7 @@ class InstancesTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_instance_status_resume_wait(self):
+    def test_instance_status_resume(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_resume_wait')
@@ -1093,6 +1071,28 @@ class InstancesTest(common.HeatTestCase):
 
         scheduler.TaskRunner(instance.resume)()
         self.assertEqual((instance.RESUME, instance.COMPLETE), instance.state)
+
+        self.m.VerifyAll()
+
+    def test_server_resume_other_exception(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'in_resume_wait')
+
+        instance.resource_id = '1234'
+        self.m.ReplayAll()
+
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndRaise(fakes_nova.fake_exception(status_code=500,
+                                                 message='VIKINGS!'))
+        self.m.ReplayAll()
+
+        instance.state_set(instance.SUSPEND, instance.COMPLETE)
+
+        resumer = scheduler.TaskRunner(instance.resume)
+        ex = self.assertRaises(exception.ResourceFailure, resumer)
+        self.assertIn('VIKINGS!', ex.message)
 
         self.m.VerifyAll()
 

@@ -1778,28 +1778,6 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_server_status_resume_immediate(self):
-        return_server = self.fc.servers.list()[1]
-        server = self._create_test_server(return_server,
-                                          'srv_resume1')
-
-        server.resource_id = '1234'
-        self.m.ReplayAll()
-
-        # Override the get_servers_1234 handler status to SUSPENDED
-        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d['server']['status'] = 'ACTIVE'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d))
-        mox.Replay(get)
-        server.state_set(server.SUSPEND, server.COMPLETE)
-
-        scheduler.TaskRunner(server.resume)()
-        self.assertEqual((server.RESUME, server.COMPLETE), server.state)
-
-        self.m.VerifyAll()
-
     def test_server_status_suspend_wait(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
@@ -1856,7 +1834,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_server_status_resume_wait(self):
+    def test_server_status_resume(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'srv_res_w')
