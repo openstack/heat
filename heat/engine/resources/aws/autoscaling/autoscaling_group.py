@@ -342,8 +342,9 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                     'group': notif['groupname']},
             })
             notification.send(**notif)
-
-        self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
+        finally:
+            self._cooldown_timestamp("%s : %s" % (adjustment_type,
+                                                  adjustment))
 
     def _tags(self):
         """Add Identifing Tags to all servers in the group.
