@@ -172,11 +172,11 @@ def clean_up_stack(stack, delete_res=True):
     if delete_res:
         m = mox.Mox()
         fc = fakes_nova.FakeClient()
-        m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().MultipleTimes().AndReturn(fc)
-        m.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().AndRaise(fakes_nova.fake_exception())
+        m.StubOutWithMock(instances.Instance, 'client')
+        instances.Instance.client().MultipleTimes().AndReturn(fc)
+        m.StubOutWithMock(fc.servers, 'delete')
+        fc.servers.delete(mox.IgnoreArg()).AndRaise(
+            fakes_nova.fake_exception())
         m.ReplayAll()
     stack.delete()
     if delete_res:

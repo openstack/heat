@@ -623,12 +623,23 @@ class InstancesTest(common.HeatTestCase):
     def test_instance_create_delete(self):
         self._test_instance_create_delete(vm_delete_status='DELETED')
 
-    def test_instance_create_error_delete_notfound(self):
-        self._test_instance_create_delete(vm_status='ERROR')
+    def test_instance_create_notfound_on_delete(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'in_cr_del')
+        instance.resource_id = '1234'
 
-    def test_instance_create_error_delete(self):
-        self._test_instance_create_delete(
-            vm_status='ERROR', vm_delete_status='DELETED')
+        # this makes sure the auto increment worked on instance creation
+        self.assertTrue(instance.id > 0)
+
+        self.m.StubOutWithMock(self.fc.client, 'delete_servers_1234')
+        self.fc.client.delete_servers_1234().AndRaise(
+            fakes_nova.fake_exception())
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.delete)()
+        self.assertEqual((instance.DELETE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
 
     def test_instance_update_metadata(self):
         return_server = self.fc.servers.list()[1]

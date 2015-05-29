@@ -1254,10 +1254,10 @@ class ServersTest(common.HeatTestCase):
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
 
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_nova.fake_exception())
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.client, 'delete_servers_1234')
+        self.fc.client.delete_servers_1234().AndRaise(
+            fakes_nova.fake_exception())
+        self.m.ReplayAll()
 
         scheduler.TaskRunner(server.delete)()
         self.assertEqual((server.DELETE, server.COMPLETE), server.state)
