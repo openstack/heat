@@ -392,7 +392,6 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual({}, res.metadata_get())
-        self.assertEqual({}, res.metadata)
 
     def test_equals_different_stacks(self):
         tmpl1 = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
@@ -1335,7 +1334,6 @@ class ResourceAdoptTest(common.HeatTestCase):
         adopt = scheduler.TaskRunner(res.adopt, res_data)
         adopt()
         self.assertEqual({}, res.metadata_get())
-        self.assertEqual({}, res.metadata)
         self.assertEqual((res.ADOPT, res.COMPLETE), res.state)
 
     def test_adopt_with_resource_data_and_metadata(self):
@@ -1366,7 +1364,6 @@ class ResourceAdoptTest(common.HeatTestCase):
             "test-value",
             resource_data_object.ResourceData.get_val(res, "test-key"))
         self.assertEqual({"os_distro": "test-distro"}, res.metadata_get())
-        self.assertEqual({"os_distro": "test-distro"}, res.metadata)
         self.assertEqual((res.ADOPT, res.COMPLETE), res.state)
 
     def test_adopt_resource_missing(self):
@@ -1912,18 +1909,11 @@ class MetadataTest(common.HeatTestCase):
 
     def test_read_initial(self):
         self.assertEqual({'Test': 'Initial metadata'}, self.res.metadata_get())
-        self.assertEqual({'Test': 'Initial metadata'}, self.res.metadata)
 
     def test_write(self):
         test_data = {'Test': 'Newly-written data'}
         self.res.metadata_set(test_data)
         self.assertEqual(test_data, self.res.metadata_get())
-
-    def test_assign_attribute(self):
-        test_data = {'Test': 'Newly-written data'}
-        self.res.metadata = test_data
-        self.assertEqual(test_data, self.res.metadata_get())
-        self.assertEqual(test_data, self.res.metadata)
 
 
 class ReducePhysicalResourceNameTest(common.HeatTestCase):
