@@ -785,10 +785,22 @@ class Stack(collections.Mapping):
     @scheduler.wrappertask
     def stack_task(self, action, reverse=False, post_func=None,
                    error_wait_time=None,
-                   aggregate_exceptions=False):
+                   aggregate_exceptions=False, pre_completion_func=None):
         '''
         A task to perform an action on the stack and all of the resources
         in forward or reverse dependency order as specified by reverse
+
+        :param action action that should be executed with stack resources
+        :param reverse defines if action on the resources need to be executed
+         in reverse order (resources - first and then res dependencies )
+        :param post_func function that need to be executed after
+        action complete on the stack
+        :param error_wait_time time to wait before cancelling all execution
+        threads when an error occurred
+        :param aggregate_exceptions defines if exceptions should be aggregated
+        :param pre_completion_func function that need to be executed right
+        before action completion. Uses stack ,action, status and reason as
+        input parameters
         '''
         try:
             lifecycle_plugin_utils.do_pre_ops(self.context, self,
@@ -836,6 +848,9 @@ class Stack(collections.Mapping):
             # see scheduler.py line 395-399
             stack_status = self.FAILED
             reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
+
+        if pre_completion_func:
+            pre_completion_func(self, action, stack_status, reason)
 
         self.state_set(action, stack_status, reason)
 
@@ -1438,12 +1453,12 @@ class Stack(collections.Mapping):
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.snapshot', hide_args=False)
-    def snapshot(self):
+    def snapshot(self, save_snapshot_func):
         '''Snapshot the stack, invoking handle_snapshot on all resources.'''
         self.updated_time = datetime.datetime.utcnow()
-        sus_task = scheduler.TaskRunner(self.stack_task,
-                                        action=self.SNAPSHOT,
-                                        reverse=False)
+        sus_task = scheduler.TaskRunner(self.stack_task, action=self.SNAPSHOT,
+                                        reverse=False,
+                                        pre_completion_func=save_snapshot_func)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.delete_snapshot', hide_args=False)

@@ -1796,6 +1796,21 @@ class StackTest(common.HeatTestCase):
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
 
+    def test_snapshot_save_called_first(self):
+        def snapshotting_called_first(stack, action, status, reason):
+            self.assertEqual(stack.status, stack.IN_PROGRESS)
+            self.assertEqual(stack.action, stack.SNAPSHOT)
+
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                    'A': {'Type': 'GenericResourceType'},
+                    'B': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'stack_details_test',
+                                 template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.stack.snapshot(save_snapshot_func=snapshotting_called_first)
+
     def test_restore(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {

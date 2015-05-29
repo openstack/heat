@@ -3213,7 +3213,7 @@ class ServersTest(common.HeatTestCase):
 
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
-        scheduler.TaskRunner(stack.snapshot)()
+        scheduler.TaskRunner(stack.snapshot, None)()
 
         self.assertEqual((stack.SNAPSHOT, stack.COMPLETE), stack.state)
 
