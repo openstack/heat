@@ -247,6 +247,7 @@ class TestGroupAdjust(common.HeatTestCase):
         notify = self.patch('heat.engine.notification.autoscaling.send')
         self.patchobject(self.group, '_cooldown_inprogress',
                          return_value=False)
+        self.patchobject(self.group, '_cooldown_timestamp')
         self.assertRaises(ValueError, self.group.adjust, 1)
 
         expected_notifies = [
@@ -276,6 +277,7 @@ class TestGroupAdjust(common.HeatTestCase):
         notify = self.patch('heat.engine.notification.autoscaling.send')
         self.patchobject(self.group, '_cooldown_inprogress',
                          return_value=False)
+        self.patchobject(self.group, '_cooldown_timestamp')
 
         self.assertRaises(ValueError, self.group.adjust,
                           5, adjustment_type='ExactCapacity')
