@@ -1407,8 +1407,11 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('The InstanceType parameter must be assigned to '
-                         'one parameter group only.'), six.text_type(exc))
+        self.assertEqual(_('Parameter Groups error : '
+                           'parameter_groups.Database '
+                           'Group: The InstanceType parameter must be '
+                           'assigned to one parameter group only.'),
+                         six.text_type(exc))
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
@@ -1422,8 +1425,10 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('The grouped parameter SomethingNotHere does not '
-                         'reference a valid parameter.'),
+        self.assertEqual(_('Parameter Groups error : '
+                           'parameter_groups.Database Group: The grouped '
+                           'parameter SomethingNotHere does not '
+                           'reference a valid parameter.'),
                          six.text_type(exc))
 
     def test_validate_no_parameters_in_group(self):
@@ -1433,7 +1438,8 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('The parameters must be provided for each '
+        self.assertEqual(_('Parameter Groups error : parameter_groups.Server '
+                           'Group: The parameters must be provided for each '
                            'parameter group.'), six.text_type(exc))
 
     def test_validate_parameter_groups_not_list(self):
@@ -1443,7 +1449,8 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('The parameter_groups should be '
+        self.assertEqual(_('Parameter Groups error : parameter_groups: '
+                           'The parameter_groups should be '
                            'a list.'), six.text_type(exc))
 
     def test_validate_parameters_not_list(self):
@@ -1453,7 +1460,9 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('The parameters of parameter group should be '
+        self.assertEqual(_('Parameter Groups error : '
+                           'parameter_groups.Server Group: '
+                           'The parameters of parameter group should be '
                            'a list.'), six.text_type(exc))
 
     def test_validate_allowed_values_integer(self):
