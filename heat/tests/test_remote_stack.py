@@ -106,7 +106,7 @@ class FakeClients(object):
         self.hc = None
         self.plugin = None
 
-    def heat(self):
+    def client(self, name):
         if self.region_name in ['RegionOne', 'RegionTwo']:
             if self.hc is None:
                 self.hc = mock.MagicMock()
@@ -147,7 +147,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
     def initialize(self):
         parent, rsrc = self.create_parent_stack(remote_region='RegionTwo')
         self.parent = parent
-        self.heat = rsrc._context().clients.heat()
+        self.heat = rsrc._context().clients.client("heat")
         self.client_plugin = rsrc._context().clients.client_plugin('heat')
 
     def create_parent_stack(self, remote_region=None, custom_template=None):
@@ -270,7 +270,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         # not setting or using self.heat because this test case is a special
         # one with the RemoteStack resource initialized but not created.
-        heat = rsrc._context().clients.heat()
+        heat = rsrc._context().clients.client("heat")
 
         # heatclient.exc.BadRequest is the exception returned by a failed
         # validation
