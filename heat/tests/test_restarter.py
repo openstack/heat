@@ -49,8 +49,8 @@ class RestarterTest(common.HeatTestCase):
         resource_defns = self.stack.t.resource_definitions(self.stack)
         restarter = ha_restarter.Restarter(
             'restarter', resource_defns['restarter'], self.stack)
-        nova.NovaClientPlugin.get_server = mock.Mock(
-            return_value=mock.MagicMock())
+        self.patchobject(nova.NovaClientPlugin, 'get_server',
+                         return_value=mock.MagicMock())
         restarter.handle_create = mock.Mock(return_value=None)
         return restarter
 
