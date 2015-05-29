@@ -265,8 +265,9 @@ class ResourceRegistry(object):
 
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:
-                warnings.warn(encodeutils.safe_encode(
-                    info.value.support_status.message))
+                if info.value.support_status.message is not None:
+                    warnings.warn(encodeutils.safe_encode(
+                        info.value.support_status.message))
 
         info.user_resource = (self.global_registry is not None)
         registry[name] = info
