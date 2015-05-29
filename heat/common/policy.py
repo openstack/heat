@@ -18,16 +18,14 @@
 """Policy Engine For Heat"""
 
 from oslo_config import cfg
+from oslo_policy import policy
 
 from heat.common import exception
-from heat.openstack.common import policy
 
 
 CONF = cfg.CONF
 
-DEFAULT_RULES = {
-    'default': policy.FalseCheck(),
-}
+DEFAULT_RULES = policy.Rules.from_dict({'default': '!'})
 
 
 class Enforcer(object):
@@ -39,7 +37,7 @@ class Enforcer(object):
         self.exc = exc
         self.default_rule = default_rule
         self.enforcer = policy.Enforcer(
-            default_rule=default_rule, policy_file=policy_file)
+            CONF, default_rule=default_rule, policy_file=policy_file)
 
     def set_rules(self, rules, overwrite=True):
         """Create a new Rules object based on the provided dict of rules."""
