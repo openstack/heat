@@ -19,9 +19,14 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
+from heat.engine import support
 
 
 class ExtraRoute(neutron.NeutronResource):
+
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
 
     PROPERTIES = (
         ROUTER_ID, DESTINATION, NEXTHOP,
