@@ -280,14 +280,14 @@ class WatchRule(object):
     def _to_ceilometer(self, data):
         clients = self.context.clients
         sample = {}
-        sample['meter_type'] = 'gauge'
+        sample['counter_type'] = 'gauge'
 
         for k, d in iter(data.items()):
             if k == 'Namespace':
                 continue
-            sample['meter_name'] = k
-            sample['sample_volume'] = d['Value']
-            sample['meter_unit'] = d['Unit']
+            sample['counter_name'] = k
+            sample['counter_volume'] = d['Value']
+            sample['counter_unit'] = d['Unit']
             dims = d.get('Dimensions', {})
             if isinstance(dims, list):
                 dims = dims[0]
