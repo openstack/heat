@@ -44,7 +44,6 @@ from heat.objects import event as event_object
 from heat.objects import resource as resource_objects
 from heat.objects import service as service_objects
 from heat.objects import stack as stack_object
-from heat.objects import stack_lock as stack_lock_object
 from heat.objects import sync_point as sync_point_object
 from heat.objects import watch_data as watch_data_object
 from heat.objects import watch_rule as watch_rule_object
@@ -555,10 +554,10 @@ class StackCreateTest(common.HeatTestCase):
         self.assertEqual('COMPLETE', db_s.status, )
 
 
-class StackServiceAdoptUpdateDeleteTest(common.HeatTestCase):
+class StackServiceAdoptUpdateTest(common.HeatTestCase):
 
     def setUp(self):
-        super(StackServiceAdoptUpdateDeleteTest, self).setUp()
+        super(StackServiceAdoptUpdateTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
@@ -651,192 +650,6 @@ class StackServiceAdoptUpdateDeleteTest(common.HeatTestCase):
             {'adopt_stack_data': str(adopt_data)})
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
         self.assertIn('Stack Adopt', six.text_type(ex.exc_info[1]))
-
-    def test_stack_delete(self):
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        s = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-
-        parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
-        self.m.VerifyAll()
-
-    def test_stack_delete_nonexist(self):
-        stack_name = 'service_delete_nonexist_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-
-        self.m.ReplayAll()
-
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.delete_stack,
-                               self.ctx, stack.identifier())
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
-        self.m.VerifyAll()
-
-    def test_stack_delete_acquired_lock(self):
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
-        stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
-        self.m.VerifyAll()
-
-    def test_stack_delete_acquired_lock_stop_timers(self):
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
-        stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
-        self.m.ReplayAll()
-
-        self.man.thread_group_mgr.add_timer(stack.id, 'test')
-        self.assertEqual(1, len(self.man.thread_group_mgr.groups[sid].timers))
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.assertEqual(0, len(self.man.thread_group_mgr.groups[sid].timers))
-        self.man.thread_group_mgr.groups[sid].wait()
-        self.m.VerifyAll()
-
-    def test_stack_delete_current_engine_active_lock(self):
-        self.man.start()
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, self.man.engine_id)
-
-        # Create a fake ThreadGroup too
-        self.man.thread_group_mgr.groups[stack.id] = tools.DummyThreadGroup()
-
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
-        stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
-        # this is to simulate lock release on DummyThreadGroup stop
-        self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
-        stack_lock.StackLock.acquire().AndReturn(None)
-
-        self.m.StubOutWithMock(self.man.thread_group_mgr, 'stop')
-        self.man.thread_group_mgr.stop(stack.id).AndReturn(None)
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.m.VerifyAll()
-
-    def test_stack_delete_other_engine_active_lock_failed(self):
-        self.man.start()
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
-
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=st).AndReturn(stack)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
-        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
-        stack_lock.StackLock.engine_alive(
-            self.ctx, "other-engine-fake-uuid").AndReturn(True)
-
-        self.m.StubOutWithMock(self.man, '_remote_call')
-        self.man._remote_call(
-            self.ctx, 'other-engine-fake-uuid', 'stop_stack',
-            stack_identity=mox.IgnoreArg()
-        ).AndReturn(False)
-        self.m.ReplayAll()
-
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.delete_stack,
-                               self.ctx, stack.identifier())
-        self.assertEqual(exception.StopActionFailed, ex.exc_info[0])
-        self.m.VerifyAll()
-
-    def test_stack_delete_other_engine_active_lock_succeeded(self):
-        self.man.start()
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
-
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
-        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
-        stack_lock.StackLock.engine_alive(
-            self.ctx, "other-engine-fake-uuid").AndReturn(True)
-
-        self.m.StubOutWithMock(self.man, '_remote_call')
-        self.man._remote_call(
-            self.ctx, 'other-engine-fake-uuid', 'stop_stack',
-            stack_identity=mox.IgnoreArg()).AndReturn(None)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
-        stack_lock.StackLock.acquire().AndReturn(None)
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
-        self.m.VerifyAll()
-
-    def test_stack_delete_other_dead_engine_active_lock(self):
-        stack_name = 'service_delete_test_stack'
-        stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
-
-        # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
-
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
-        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
-        stack_lock.StackLock.engine_alive(
-            self.ctx, "other-engine-fake-uuid").AndReturn(False)
-
-        self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
-        stack_lock.StackLock.acquire().AndReturn(None)
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
-        self.m.VerifyAll()
 
     def _stub_update_mocks(self, stack_to_load, stack_to_return):
         self.m.StubOutWithMock(parser, 'Stack')
