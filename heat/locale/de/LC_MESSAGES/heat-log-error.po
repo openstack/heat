@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-05 06:01+0000\n"
-"PO-Revision-Date: 2015-04-21 05:12+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"PO-Revision-Date: 2015-05-29 10:46+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/heat/language/"
 "de/)\n"
@@ -21,30 +21,16 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Exception in string format operation"
-msgstr "Ausnahme bei Zeichenfolgeformatoperation"
-
-msgid "SIGTERM received"
-msgstr "SIGTERM erhalten"
-
-msgid "SIGHUP received"
-msgstr "SIGHUP empfangen"
-
-#, python-format
-msgid "Removing dead child %s"
-msgstr "Entfernen von inaktivem untergeordnetem Element %s"
-
-#, python-format
-msgid "Exception handling resource: %s"
-msgstr "Ausnahmebehandlungsressource: %s"
-
 #, python-format
 msgid "DB error %s"
 msgstr "Datenbankfehler %s"
 
 #, python-format
-msgid "signal %(name)s : %(msg)s"
-msgstr "Signal %(name)s : %(msg)s"
+msgid "Exception handling resource: %s"
+msgstr "Ausnahmebehandlungsressource: %s"
+
+msgid "Exception in string format operation"
+msgstr "Ausnahme bei Zeichenfolgeformatoperation"
 
 #, python-format
 msgid "Exception: %s"
@@ -53,19 +39,25 @@ msgstr "Ausnahmesituation: %s"
 msgid "Port not specified."
 msgstr "Port nicht angegeben."
 
-msgid "in fixed duration looping call"
-msgstr "in Schleifenaufruf mit festgelegter Dauer"
+#, python-format
+msgid "Removing dead child %s"
+msgstr "Entfernen von inaktivem untergeordnetem Element %s"
+
+msgid "SIGHUP received"
+msgstr "SIGHUP empfangen"
+
+msgid "SIGTERM received"
+msgstr "SIGTERM erhalten"
+
+msgid "Unhandled exception"
+msgstr "Nicht behandelte Ausnahme"
 
 msgid "in dynamic looping call"
 msgstr "in dynamischen Schleifenaufruf"
 
-#, python-format
-msgid "Failed to understand rule %s"
-msgstr "Regel %s konnte nicht verstanden werden"
+msgid "in fixed duration looping call"
+msgstr "in Schleifenaufruf mit festgelegter Dauer"
 
 #, python-format
-msgid "No handler for matches of kind %s"
-msgstr "Kein Handler für Übereinstimmungen des Typs %s"
-
-msgid "Unhandled exception"
-msgstr "Nicht behandelte Ausnahme"
+msgid "signal %(name)s : %(msg)s"
+msgstr "Signal %(name)s : %(msg)s"

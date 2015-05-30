@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-05 06:00+0000\n"
-"PO-Revision-Date: 2015-05-05 00:15+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"PO-Revision-Date: 2015-05-29 10:46+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -20,105 +20,6 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "Checking AWS credentials.."
-msgstr "Vérification des informations de compte AWS"
-
-msgid "No AWS Signature found."
-msgstr "Signature AWS non trouvé"
-
-msgid "No AWSAccessKeyId/Authorization Credential"
-msgstr "Pas AWSAccessKeyId/Authorisation de compte"
-
-msgid "AWS credentials found, checking against keystone."
-msgstr "Information de compte AWS trouvé, vérification avec keystone."
-
-#, python-format
-msgid "Authenticating with %s"
-msgstr "Authentification avec %s"
-
-msgid "AWS authentication successful."
-msgstr "Succès de l'authentification AWS"
-
-msgid "AWS authentication failure."
-msgstr "Echec de l'authentification AWS"
-
-msgid "validate_template"
-msgstr "validate_template"
-
-#, python-format
-msgid "Fetching data from %s"
-msgstr "Recherche de donnée depuis %s"
-
-#, python-format
-msgid "Starting %d workers"
-msgstr "Démarrage des travailleurs %d"
-
-msgid "Caught keyboard interrupt. Exiting."
-msgstr "Interruption interceptée de clavier. Fermeture du programme en cours."
-
-#, python-format
-msgid "Child %d exiting normally"
-msgstr "Sortie normale de l'enfant %d"
-
-#, python-format
-msgid "Started child %s"
-msgstr "Enfant démarré %s"
-
-msgid "Starting single process server"
-msgstr "Démarrage de serveur de processus unique"
-
-#, python-format
-msgid "Loading %s"
-msgstr "Chargement %s"
-
-#, python-format
-msgid "updating %s"
-msgstr "Mise à jour %s"
-
-#, python-format
-msgid "Checking %s"
-msgstr "Vérification %s"
-
-#, python-format
-msgid "Validating %s"
-msgstr "Validation %s"
-
-#, python-format
-msgid "deleting %s"
-msgstr "Suppression %s"
-
-#, python-format
-msgid "Creating stack %s"
-msgstr "Création de la stack %s"
-
-#, python-format
-msgid "Stack create failed, status %s"
-msgstr "Echec de création de la stack, status %s"
-
-#, python-format
-msgid "Updating stack %s"
-msgstr "Mise à jour de la stack %s"
-
-#, python-format
-msgid "Deleting stack %s"
-msgstr "Suppresion de la stack %s"
-
-#, python-format
-msgid "abandoning stack %s"
-msgstr "Abandon de la stack %s"
-
-#, python-format
-msgid "Checking stack %s"
-msgstr "Vérification de la stack %s"
-
-#, python-format
-msgid "%s is already suspended"
-msgstr "%s est déjà suspendu"
-
-#, python-format
-msgid "%s - complete"
-msgstr "%s - complet "
-
 #, python-format
 msgid "%(name)s Alarm, new state %(state)s"
 msgstr "%(name)s Alarme, nouvel état %(state)s"
@@ -128,34 +29,51 @@ msgid "%(name)s Failed (%(failure)s)"
 msgstr "%(name)s Echec (%(failure)s)"
 
 #, python-format
+msgid "%s - complete"
+msgstr "%s - complet "
+
+#, python-format
 msgid "%s Succeeded"
 msgstr "%s Succès"
 
 #, python-format
-msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
-msgstr "Eventlet backdoor en écoute sur le port %(port)s for process %(pid)d"
+msgid "%s is already suspended"
+msgstr "%s est déjà suspendu"
+
+msgid "AWS authentication failure."
+msgstr "Echec de l'authentification AWS"
+
+msgid "AWS authentication successful."
+msgstr "Succès de l'authentification AWS"
+
+msgid "AWS credentials found, checking against keystone."
+msgstr "Information de compte AWS trouvé, vérification avec keystone."
 
 #, python-format
-msgid "Can not find policy directory: %s"
-msgstr "Ne peut trouver les répertoires de la politique %s"
+msgid "Authenticating with %s"
+msgstr "Authentification avec %s"
 
 #, python-format
 msgid "Caught %s, exiting"
 msgstr "%s interceptée, sortie"
 
-msgid "Parent process has died unexpectedly, exiting"
-msgstr "Processus parent arrêté de manière inattendue, sortie"
+#, python-format
+msgid "Caught %s, stopping children"
+msgstr "%s interceptée, arrêt de l'enfant"
+
+msgid "Caught keyboard interrupt. Exiting."
+msgstr "Interruption interceptée de clavier. Fermeture du programme en cours."
 
 #, python-format
-msgid "Child caught %s, exiting"
-msgstr "L'enfant a reçu %s, sortie"
+msgid "Checking %s"
+msgstr "Vérification %s"
 
-msgid "Forking too fast, sleeping"
-msgstr "Bifurcation trop rapide, pause"
+msgid "Checking AWS credentials.."
+msgstr "Vérification des informations de compte AWS"
 
 #, python-format
-msgid "Started child %d"
-msgstr "Enfant démarré %d"
+msgid "Checking stack %s"
+msgstr "Vérification de la stack %s"
 
 #, python-format
 msgid "Child %(pid)d killed by signal %(sig)d"
@@ -166,8 +84,71 @@ msgid "Child %(pid)s exited with status %(code)d"
 msgstr "Processus fils %(pid)s terminé avec le status %(code)d"
 
 #, python-format
-msgid "Caught %s, stopping children"
-msgstr "%s interceptée, arrêt de l'enfant"
+msgid "Child %d exiting normally"
+msgstr "Sortie normale de l'enfant %d"
+
+#, python-format
+msgid "Child caught %s, exiting"
+msgstr "L'enfant a reçu %s, sortie"
+
+#, python-format
+msgid "Creating stack %s"
+msgstr "Création de la stack %s"
+
+#, python-format
+msgid "Deleting stack %s"
+msgstr "Suppresion de la stack %s"
+
+#, python-format
+msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
+msgstr "Eventlet backdoor en écoute sur le port %(port)s for process %(pid)d"
+
+#, python-format
+msgid "Fetching data from %s"
+msgstr "Recherche de donnée depuis %s"
+
+msgid "Forking too fast, sleeping"
+msgstr "Bifurcation trop rapide, pause"
+
+#, python-format
+msgid "Loading %s"
+msgstr "Chargement %s"
+
+msgid "No AWS Signature found."
+msgstr "Signature AWS non trouvé"
+
+msgid "No AWSAccessKeyId/Authorization Credential"
+msgstr "Pas AWSAccessKeyId/Authorisation de compte"
+
+msgid "Parent process has died unexpectedly, exiting"
+msgstr "Processus parent arrêté de manière inattendue, sortie"
+
+#, python-format
+msgid "Stack create failed, status %s"
+msgstr "Echec de création de la stack, status %s"
+
+#, python-format
+msgid "Started child %d"
+msgstr "Enfant démarré %d"
+
+#, python-format
+msgid "Started child %s"
+msgstr "Enfant démarré %s"
+
+#, python-format
+msgid "Starting %d workers"
+msgstr "Démarrage des travailleurs %d"
+
+msgid "Starting single process server"
+msgstr "Démarrage de serveur de processus unique"
+
+#, python-format
+msgid "Updating stack %s"
+msgstr "Mise à jour de la stack %s"
+
+#, python-format
+msgid "Validating %s"
+msgstr "Validation %s"
 
 msgid "Wait called after thread killed. Cleaning up."
 msgstr "Pause demandée après suppression de thread. Nettoyage."
@@ -175,3 +156,18 @@ msgstr "Pause demandée après suppression de thread. Nettoyage."
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "En attente %d enfants pour sortie"
+
+#, python-format
+msgid "abandoning stack %s"
+msgstr "Abandon de la stack %s"
+
+#, python-format
+msgid "deleting %s"
+msgstr "Suppression %s"
+
+#, python-format
+msgid "updating %s"
+msgstr "Mise à jour %s"
+
+msgid "validate_template"
+msgstr "validate_template"

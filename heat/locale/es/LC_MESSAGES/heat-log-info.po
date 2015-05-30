@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-05 06:00+0000\n"
-"PO-Revision-Date: 2015-05-05 00:15+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"PO-Revision-Date: 2015-05-29 10:46+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -20,14 +20,11 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Checking AWS credentials.."
-msgstr "Comprobando credenciales AWS.."
+msgid "AWS authentication failure."
+msgstr "Autenticación AWS incorrecta."
 
-msgid "No AWS Signature found."
-msgstr "Firma AWS Signature no encontrada."
-
-msgid "No AWSAccessKeyId/Authorization Credential"
-msgstr "Credencial AWSAccessKeyId/Authorization no encontrada"
+msgid "AWS authentication successful."
+msgstr "Autenticación AWS correcta."
 
 msgid "AWS credentials found, checking against keystone."
 msgstr "Credenciales AWS encontradas, comprobándolas contra keystone."
@@ -36,94 +33,23 @@ msgstr "Credenciales AWS encontradas, comprobándolas contra keystone."
 msgid "Authenticating with %s"
 msgstr "Autenticándo con %s"
 
-msgid "AWS authentication successful."
-msgstr "Autenticación AWS correcta."
-
-msgid "AWS authentication failure."
-msgstr "Autenticación AWS incorrecta."
-
-msgid "validate_template"
-msgstr "validate_template"
+#, python-format
+msgid "Caught %s, exiting"
+msgstr "Se ha captado %s, saliendo"
 
 #, python-format
-msgid "Fetching data from %s"
-msgstr "Obteniendo datos desde %s"
-
-#, python-format
-msgid "Starting %d workers"
-msgstr "Iniciando %d trabajadores"
+msgid "Caught %s, stopping children"
+msgstr "Se ha captado %s, deteniendo hijos"
 
 msgid "Caught keyboard interrupt. Exiting."
 msgstr "Se ha generado interrupción de teclado. Saliendo."
 
 #, python-format
-msgid "Child %d exiting normally"
-msgstr "El hijo %d está saliendo de forma normal"
-
-#, python-format
-msgid "Started child %s"
-msgstr "Se ha iniciado el hijo %s"
-
-msgid "Starting single process server"
-msgstr "Iniciando servidor de proceso individual"
-
-#, python-format
-msgid "Registering %(path)s -> %(value)s"
-msgstr "Registrando %(path)s -> %(value)s"
-
-#, python-format
-msgid "Loading %s"
-msgstr "Cargando %s"
-
-#, python-format
-msgid "creating %s"
-msgstr "creando %s"
-
-#, python-format
 msgid "Checking %s"
 msgstr "Verificando %s"
 
-#, python-format
-msgid "suspending %s"
-msgstr "suspendiendo %s"
-
-#, python-format
-msgid "resuming %s"
-msgstr "reanudando %s"
-
-#, python-format
-msgid "snapshotting %s"
-msgstr "realizar instantáneas %s"
-
-#, python-format
-msgid "deleting %s"
-msgstr "borrando %s"
-
-#, python-format
-msgid "Stack %s processing was finished"
-msgstr "Pila %s procesando ha finalizado"
-
-#, python-format
-msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
-msgstr "Eventlet oculto escuchando en %(port)s para el proceso %(pid)d"
-
-#, python-format
-msgid "Caught %s, exiting"
-msgstr "Se ha captado %s, saliendo"
-
-msgid "Parent process has died unexpectedly, exiting"
-msgstr "El proceso padre se ha detenido inesperadamente, saliendo"
-
-#, python-format
-msgid "Child caught %s, exiting"
-msgstr "Hijo captado %s, saliendo"
-
-msgid "Forking too fast, sleeping"
-msgstr "Bifurcación demasiado rápida, en reposo"
-
-#, python-format
-msgid "Started child %d"
-msgstr "Se ha iniciado el hijo %d"
+msgid "Checking AWS credentials.."
+msgstr "Comprobando credenciales AWS.."
 
 #, python-format
 msgid "Child %(pid)d killed by signal %(sig)d"
@@ -134,9 +60,83 @@ msgid "Child %(pid)s exited with status %(code)d"
 msgstr "El hijo %(pid)s ha salido con el estado %(code)d"
 
 #, python-format
-msgid "Caught %s, stopping children"
-msgstr "Se ha captado %s, deteniendo hijos"
+msgid "Child %d exiting normally"
+msgstr "El hijo %d está saliendo de forma normal"
+
+#, python-format
+msgid "Child caught %s, exiting"
+msgstr "Hijo captado %s, saliendo"
+
+#, python-format
+msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
+msgstr "Eventlet oculto escuchando en %(port)s para el proceso %(pid)d"
+
+#, python-format
+msgid "Fetching data from %s"
+msgstr "Obteniendo datos desde %s"
+
+msgid "Forking too fast, sleeping"
+msgstr "Bifurcación demasiado rápida, en reposo"
+
+#, python-format
+msgid "Loading %s"
+msgstr "Cargando %s"
+
+msgid "No AWS Signature found."
+msgstr "Firma AWS Signature no encontrada."
+
+msgid "No AWSAccessKeyId/Authorization Credential"
+msgstr "Credencial AWSAccessKeyId/Authorization no encontrada"
+
+msgid "Parent process has died unexpectedly, exiting"
+msgstr "El proceso padre se ha detenido inesperadamente, saliendo"
+
+#, python-format
+msgid "Registering %(path)s -> %(value)s"
+msgstr "Registrando %(path)s -> %(value)s"
+
+#, python-format
+msgid "Stack %s processing was finished"
+msgstr "Pila %s procesando ha finalizado"
+
+#, python-format
+msgid "Started child %d"
+msgstr "Se ha iniciado el hijo %d"
+
+#, python-format
+msgid "Started child %s"
+msgstr "Se ha iniciado el hijo %s"
+
+#, python-format
+msgid "Starting %d workers"
+msgstr "Iniciando %d trabajadores"
+
+msgid "Starting single process server"
+msgstr "Iniciando servidor de proceso individual"
 
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "En espera de %d hijos para salir"
+
+#, python-format
+msgid "creating %s"
+msgstr "creando %s"
+
+#, python-format
+msgid "deleting %s"
+msgstr "borrando %s"
+
+#, python-format
+msgid "resuming %s"
+msgstr "reanudando %s"
+
+#, python-format
+msgid "snapshotting %s"
+msgstr "realizar instantáneas %s"
+
+#, python-format
+msgid "suspending %s"
+msgstr "suspendiendo %s"
+
+msgid "validate_template"
+msgstr "validate_template"
