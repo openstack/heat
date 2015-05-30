@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-05 06:01+0000\n"
-"PO-Revision-Date: 2015-04-21 05:12+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"PO-Revision-Date: 2015-05-29 10:46+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -20,30 +20,32 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "Ec2Token authorization failed, no auth_uri specified in config file"
-msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
+#, python-format
+msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
+msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
+
+msgid ""
+"Could not allocate floating IP. Probably there is no default floating IP "
+"pool is configured."
+msgstr ""
+"유동 IP 할당 할 수 없습니다. 아마 IP Pool이 기본으로 구성되지 않습니다."
 
 #, python-format
-msgid "Request does not contain %s parameter!"
-msgstr "%s 매개변수가 요청에 포함되지 않음 !"
-
-msgid "Request does not contain required MetricData"
-msgstr "요청에 필요한 MetricData 가 없음. "
-
-msgid "Keystone v3 API connection failed, no password trust or auth_token!"
-msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
-
-msgid "Exception in string format operation"
-msgstr "문자열 형식화 오퍼레이션의 예외"
+msgid "DB error %s"
+msgstr "DB %s에 오류가 있습니다. "
 
 msgid "Domain admin client authentication failed"
 msgstr "Domain 관리자 인증 실패."
 
-msgid "trust token re-scoping failed!"
-msgstr "신뢰할 수 있는 token 재설정 실패!"
+msgid "Ec2Token authorization failed, no auth_uri specified in config file"
+msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
 
-msgid "Trust impersonation failed"
-msgstr "트러스트의 위장이 실패했습니다."
+#, python-format
+msgid "Exception handling resource: %s"
+msgstr "자원 처리 예외: %s"
+
+msgid "Exception in string format operation"
+msgstr "문자열 형식화 오퍼레이션의 예외"
 
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
@@ -51,41 +53,13 @@ msgstr ""
 "규정 %(role)s에 사용자 %(user)s 를 추가하는데 실패했습니다. 규정을 확인하세"
 "요.!"
 
-msgid "failed to get lifecycle plug point classes"
-msgstr "라이프 사이클 플러그 포인트 클래스를 가져 오지 못했습니다"
-
-#, python-format
-msgid "failed to instantiate stack lifecycle class %s"
-msgstr "스택 수명주기 %s 클래스의 인스턴스를 실패"
-
-msgid "failed to sort lifecycle plug point classes"
-msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 실패"
-
-#, python-format
-msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
-msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
-
 #, python-format
 msgid "Failed to import module %s"
 msgstr "%s의 모듈을 가져 오는 데 실패했습니다."
 
-msgid "SIGTERM received"
-msgstr "SIGTERM 수신"
-
 #, python-format
-msgid "Exception handling resource: %s"
-msgstr "자원 처리 예외: %s"
-
-#, python-format
-msgid "Returning %(code)s to user: %(explanation)s"
-msgstr "%(code)s을(를) 사용자에게 리턴 중: %(explanation)s"
-
-msgid "Unexpected number of keys in watch_data.data!"
-msgstr "watch_data.data의 키의 예기치 않은 수!"
-
-#, python-format
-msgid "Failed to read %s"
-msgstr "%s를 읽지 못했습니다."
+msgid "Failed to load %(mapping_name)s from %(module)s"
+msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 
 #, python-format
 msgid "Failed to parse %(file_path)s"
@@ -96,35 +70,18 @@ msgid "Failed to read %(file_path)s"
 msgstr "%(file_path)s를 읽는데 실패했습니다. "
 
 #, python-format
-msgid "Failed to load %(mapping_name)s from %(module)s"
-msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
-
-#, python-format
-msgid "Invalid type for %(mapping_name)s from %(module)s"
-msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
-
-#, python-format
-msgid "DB error %s"
-msgstr "DB %s에 오류가 있습니다. "
+msgid "Failed to read %s"
+msgstr "%s를 읽지 못했습니다."
 
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
 #, python-format
-msgid "Unable to retrieve stack %s for periodic task"
-msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
+msgid "Invalid type for %(mapping_name)s from %(module)s"
+msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
-#, python-format
-msgid "Unexpected action %s passed to update!"
-msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
-
-#, python-format
-msgid "Unexpected action %s passed to delete!"
-msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
-
-#, python-format
-msgid "Resource %(name)s delete failed: %(ex)s"
-msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
+msgid "Keystone v3 API connection failed, no password trust or auth_token!"
+msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
 
 #, python-format
 msgid "Metadata failed validation for %s"
@@ -140,25 +97,60 @@ msgstr ""
 msgid "Port not specified."
 msgstr "Port가 정의되지 않았습니다."
 
-msgid ""
-"Could not allocate floating IP. Probably there is no default floating IP "
-"pool is configured."
-msgstr ""
-"유동 IP 할당 할 수 없습니다. 아마 IP Pool이 기본으로 구성되지 않습니다."
+#, python-format
+msgid "Request does not contain %s parameter!"
+msgstr "%s 매개변수가 요청에 포함되지 않음 !"
 
-msgid "in fixed duration looping call"
-msgstr "고정 기간 루프 호출에서"
+msgid "Request does not contain required MetricData"
+msgstr "요청에 필요한 MetricData 가 없음. "
+
+#, python-format
+msgid "Resource %(name)s delete failed: %(ex)s"
+msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
+
+#, python-format
+msgid "Returning %(code)s to user: %(explanation)s"
+msgstr "%(code)s을(를) 사용자에게 리턴 중: %(explanation)s"
+
+msgid "SIGTERM received"
+msgstr "SIGTERM 수신"
+
+msgid "Trust impersonation failed"
+msgstr "트러스트의 위장이 실패했습니다."
+
+#, python-format
+msgid "Unable to retrieve stack %s for periodic task"
+msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
+
+#, python-format
+msgid "Unexpected action %s passed to delete!"
+msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
+
+#, python-format
+msgid "Unexpected action %s passed to update!"
+msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
+
+msgid "Unexpected number of keys in watch_data.data!"
+msgstr "watch_data.data의 키의 예기치 않은 수!"
+
+msgid "Unhandled exception"
+msgstr "처리되지 않은 예외"
+
+msgid "failed to get lifecycle plug point classes"
+msgstr "라이프 사이클 플러그 포인트 클래스를 가져 오지 못했습니다"
+
+#, python-format
+msgid "failed to instantiate stack lifecycle class %s"
+msgstr "스택 수명주기 %s 클래스의 인스턴스를 실패"
+
+msgid "failed to sort lifecycle plug point classes"
+msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 실패"
 
 msgid "in dynamic looping call"
 msgstr "동적 루프 호출에서"
 
-#, python-format
-msgid "Failed to understand rule %s"
-msgstr "%s 규칙을 이해하는데 실패했습니다"
+msgid "in fixed duration looping call"
+msgstr "고정 기간 루프 호출에서"
 
-#, python-format
-msgid "No handler for matches of kind %s"
-msgstr "%s 유형의 일치에 대한 핸들러가 없음"
-
-msgid "Unhandled exception"
-msgstr "처리되지 않은 예외"
+msgid "trust token re-scoping failed!"
+msgstr "신뢰할 수 있는 token 재설정 실패!"

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-05 06:01+0000\n"
-"PO-Revision-Date: 2015-04-21 05:12+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"PO-Revision-Date: 2015-05-29 10:46+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/heat/"
 "language/pt_BR/)\n"
@@ -26,11 +26,8 @@ msgstr ""
 "configuração"
 
 #, python-format
-msgid "Request does not contain %s parameter!"
-msgstr "Requisição não contém parâmetro %s!"
-
-msgid "Request does not contain required MetricData"
-msgstr "Requisição não contém MetricData requerida"
+msgid "Exception handling resource: %s"
+msgstr "Exceção ao manipular recurso: %s"
 
 msgid "Exception in string format operation"
 msgstr "Exceção na operação de formato de sequência"
@@ -39,37 +36,32 @@ msgstr "Exceção na operação de formato de sequência"
 msgid "Failed to import module %s"
 msgstr "Falha ao importar módulo %s"
 
-msgid "SIGTERM received"
-msgstr "SIGTERM recebido"
-
-msgid "SIGHUP received"
-msgstr "SIGHUP recebido"
-
 #, python-format
 msgid "Removing dead child %s"
 msgstr "Removendo filho inativo %s"
 
 #, python-format
-msgid "Exception handling resource: %s"
-msgstr "Exceção ao manipular recurso: %s"
+msgid "Request does not contain %s parameter!"
+msgstr "Requisição não contém parâmetro %s!"
+
+msgid "Request does not contain required MetricData"
+msgstr "Requisição não contém MetricData requerida"
 
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "Retornando %(code)s para o usuário: %(explanation)s"
 
-msgid "in fixed duration looping call"
-msgstr "em uma chamada de laço de duração fixa"
+msgid "SIGHUP received"
+msgstr "SIGHUP recebido"
+
+msgid "SIGTERM received"
+msgstr "SIGTERM recebido"
+
+msgid "Unhandled exception"
+msgstr "Exceção não tratada"
 
 msgid "in dynamic looping call"
 msgstr "em chamada de laço dinâmico"
 
-#, python-format
-msgid "Failed to understand rule %s"
-msgstr "Falha ao interpretar regra %s"
-
-#, python-format
-msgid "No handler for matches of kind %s"
-msgstr "Nenhum manipulador para correspondências do tipo %s"
-
-msgid "Unhandled exception"
-msgstr "Exceção não tratada"
+msgid "in fixed duration looping call"
+msgstr "em uma chamada de laço de duração fixa"

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-05 06:01+0000\n"
-"PO-Revision-Date: 2015-04-21 05:12+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"PO-Revision-Date: 2015-05-29 10:46+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -20,10 +20,37 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#, python-format
+msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
+msgstr "%(opname) %(ci)s fallo por %(a)s en %(sid)s"
+
+#, python-format
+msgid "DB error %s"
+msgstr "Error de base de datos %s"
+
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 "Ec2Token autorización ha fallado, ningún auth_uri especificado en el archivo "
 "de configuración"
+
+#, python-format
+msgid "Exception handling resource: %s"
+msgstr "Excepción al manejar recurso: %s"
+
+msgid "Exception in string format operation"
+msgstr "Excepción en la operación de formato de cadena"
+
+#, python-format
+msgid "Failed to import module %s"
+msgstr "No se ha podido importar el modulo %s"
+
+#, python-format
+msgid "Failed to read %s"
+msgstr "Ha fallado leer %s"
+
+#, python-format
+msgid "Removing dead child %s"
+msgstr "Eliminando hijo muerto %s"
 
 #, python-format
 msgid "Request does not contain %s parameter!"
@@ -32,8 +59,23 @@ msgstr "Solicitud no contiene parámetro %s!"
 msgid "Request does not contain required MetricData"
 msgstr "Solicitud no contiene el requisito MetricData"
 
-msgid "Exception in string format operation"
-msgstr "Excepción en la operación de formato de cadena"
+#, python-format
+msgid "Returning %(code)s to user: %(explanation)s"
+msgstr "Devolviendo %(code)s al usuario: %(explanation)s"
+
+msgid "SIGTERM received"
+msgstr "Se ha recibido SIGTERM"
+
+#, python-format
+msgid "Unable to retrieve stack %s for periodic task"
+msgstr "No ha sido posible obtener la pila %s para tareas periódicas"
+
+#, python-format
+msgid "Unexpected error occurred serving API: %s"
+msgstr "Error inesperado ha ocurrido sirviendo API: %s"
+
+msgid "Unhandled exception"
+msgstr "Excepción no controlada"
 
 msgid "failed to get lifecycle plug point classes"
 msgstr "fallo a obtener clases de punto de conexión de ciclo de vida "
@@ -47,62 +89,12 @@ msgstr ""
 "ha ocurrido un error al ordenar las clases del punto de conexión de ciclo de "
 "vida"
 
-#, python-format
-msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
-msgstr "%(opname) %(ci)s fallo por %(a)s en %(sid)s"
-
-#, python-format
-msgid "Failed to import module %s"
-msgstr "No se ha podido importar el modulo %s"
-
-msgid "SIGTERM received"
-msgstr "Se ha recibido SIGTERM"
-
-#, python-format
-msgid "Removing dead child %s"
-msgstr "Eliminando hijo muerto %s"
-
-#, python-format
-msgid "Exception handling resource: %s"
-msgstr "Excepción al manejar recurso: %s"
-
-#, python-format
-msgid "Returning %(code)s to user: %(explanation)s"
-msgstr "Devolviendo %(code)s al usuario: %(explanation)s"
-
-#, python-format
-msgid "Unexpected error occurred serving API: %s"
-msgstr "Error inesperado ha ocurrido sirviendo API: %s"
-
-#, python-format
-msgid "Failed to read %s"
-msgstr "Ha fallado leer %s"
-
-#, python-format
-msgid "DB error %s"
-msgstr "Error de base de datos %s"
-
-#, python-format
-msgid "signal %(name)s : %(msg)s"
-msgstr "señal %(name)s : %(msg)s"
-
-#, python-format
-msgid "Unable to retrieve stack %s for periodic task"
-msgstr "No ha sido posible obtener la pila %s para tareas periódicas"
+msgid "in dynamic looping call"
+msgstr "en llamada en bucle dinámica"
 
 msgid "in fixed duration looping call"
 msgstr "en llamada en bucle de duración fija"
 
-msgid "in dynamic looping call"
-msgstr "en llamada en bucle dinámica"
-
 #, python-format
-msgid "Failed to understand rule %s"
-msgstr "Ha ocurrido un error al interpretar la regla %s"
-
-#, python-format
-msgid "No handler for matches of kind %s"
-msgstr "No hay manejador para coincidencias de clase %s"
-
-msgid "Unhandled exception"
-msgstr "Excepción no controlada"
+msgid "signal %(name)s : %(msg)s"
+msgstr "señal %(name)s : %(msg)s"

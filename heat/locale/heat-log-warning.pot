@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev82\n"
+"Project-Id-Version: heat 2015.2.0.dev423\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:00+0000\n"
+"POT-Creation-Date: 2015-05-30 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,28 +22,28 @@ msgstr ""
 msgid "Invalid filter key %s, ignoring"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:232
+#: heat/api/openstack/v1/stacks.py:295
 #, python-format
 msgid "Old Engine Version: %s"
 msgstr ""
 
-#: heat/common/config.py:307
+#: heat/common/config.py:317
 msgid ""
 "stack_user_domain_id or stack_user_domain_name not set in heat.conf "
 "falling back to using default"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:268
+#: heat/common/heat_keystoneclient.py:269
 #, python-format
 msgid "Truncating the username %s to the last 64 characters."
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:450
+#: heat/common/heat_keystoneclient.py:444
 #, python-format
 msgid "Unable to get details for project %s, not deleting"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:455
+#: heat/common/heat_keystoneclient.py:449
 msgid "Not deleting non heat-domain project"
 msgstr ""
 
@@ -64,75 +64,56 @@ msgstr ""
 msgid "Unable to serialize exception response"
 msgstr ""
 
-#: heat/engine/environment.py:233 heat/engine/environment.py:239
+#: heat/engine/environment.py:240 heat/engine/environment.py:246
 #, python-format
 msgid "Removing %(item)s from %(path)s"
 msgstr ""
 
-#: heat/engine/environment.py:252
+#: heat/engine/environment.py:259
 #, python-format
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/nova_utils.py:59 heat/engine/clients/os/nova.py:111
-#, python-format
-msgid ""
-"Server %(name)s (%(id)s) received an OverLimit response during "
-"server.get(): %(exception)s"
-msgstr ""
-
-#: heat/engine/nova_utils.py:68 heat/engine/clients/os/nova.py:119
-#, python-format
-msgid ""
-"Server \"%(name)s\" (%(id)s) received the following exception during "
-"server.get(): %(exception)s"
-msgstr ""
-
-#: heat/engine/nova_utils.py:383 heat/engine/clients/os/nova.py:410
-#, python-format
-msgid "Instance (%(server)s) not found: %(ex)s"
-msgstr ""
-
-#: heat/engine/resource.py:944
+#: heat/engine/resource.py:975
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1016
+#: heat/engine/resource.py:1047
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1168
+#: heat/engine/resource.py:1220
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:1090
+#: heat/engine/service.py:1159
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1373
+#: heat/engine/service.py:1453
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1402
+#: heat/engine/service.py:1482
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
 
-#: heat/engine/service_stack_watch.py:90
+#: heat/engine/service_stack_watch.py:91
 #, python-format
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:306
+#: heat/engine/stack.py:326
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
-#: heat/engine/stack_lock.py:125
+#: heat/engine/stack_lock.py:131
 #, python-format
 msgid "Lock was already released on stack %s!"
 msgstr ""
@@ -152,12 +133,31 @@ msgstr ""
 msgid "Unable to override state %(state)s for watch %(name)s"
 msgstr ""
 
-#: heat/engine/clients/__init__.py:72
+#: heat/engine/clients/__init__.py:70
 #, python-format
 msgid "Requested client \"%s\" not found"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:421
+#: heat/engine/clients/os/nova.py:116
+#, python-format
+msgid ""
+"Server %(name)s (%(id)s) received an OverLimit response during "
+"server.get(): %(exception)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:124
+#, python-format
+msgid ""
+"Server \"%(name)s\" (%(id)s) received the following exception during "
+"server.get(): %(exception)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:416
+#, python-format
+msgid "Instance (%(server)s) not found: %(ex)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:429
 #, python-format
 msgid "Server (%(server)s) not found: %(ex)s"
 msgstr ""
@@ -166,7 +166,7 @@ msgstr ""
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:142
+#: heat/engine/resources/stack_resource.py:160
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
@@ -175,26 +175,26 @@ msgstr ""
 msgid "Reverting to legacy user delete path"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:59
+#: heat/engine/resources/wait_condition.py:60
 #, python-format
 msgid "Overwriting Metadata item for id %s!"
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/eip.py:394
+#: heat/engine/resources/aws/ec2/eip.py:398
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:339
+#: heat/engine/resources/openstack/neutron/port.py:358
 #, python-format
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:232
+#: heat/engine/resources/openstack/swift/swift.py:235
 #, python-format
 msgid "Head container failed: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:350
+#: heat/engine/resources/openstack/trove/os_database.py:353
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
@@ -213,7 +213,7 @@ msgstr ""
 msgid "task %(func_name)r run outlasted interval by %(delay).2f sec"
 msgstr ""
 
-#: heat/openstack/common/service.py:355
+#: heat/openstack/common/service.py:353
 #, python-format
 msgid "pid %d not in child list"
 msgstr ""
@@ -243,7 +243,7 @@ msgstr ""
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:141
+#: heat/tests/generic_resource.py:143
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
