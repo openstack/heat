@@ -15,13 +15,11 @@ import mock
 
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
+from heat.engine.resources.openstack.keystone import endpoint
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import endpoint  # noqa
 
 keystone_endpoint_template = {
     'heat_template_version': '2015-04-30',
@@ -47,10 +45,6 @@ class KeystoneEndpointTest(common.HeatTestCase):
         super(KeystoneEndpointTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-
-        # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE,
-                                 endpoint.KeystoneEndpoint)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',

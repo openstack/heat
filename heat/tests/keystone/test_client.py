@@ -16,15 +16,15 @@ import six
 
 from keystoneclient import exceptions as keystone_exceptions
 
-from .. import client  # noqa
-from .. import exceptions  # noqa
+from heat.common import exception
+from heat.engine.clients.os import keystone as client
 from heat.tests import common
 
 
 class KeystoneRoleConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exceptions.KeystoneRoleNotFound,),
+        self.assertEqual((exception.KeystoneRoleNotFound,),
                          client.KeystoneRoleConstraint.expected_exceptions,
                          "KeystoneRoleConstraint expected exceptions error")
 
@@ -44,7 +44,7 @@ class KeystoneRoleConstraintTest(common.HeatTestCase):
 class KeystoneProjectConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exceptions.KeystoneProjectNotFound,),
+        self.assertEqual((exception.KeystoneProjectNotFound,),
                          client.KeystoneProjectConstraint.expected_exceptions,
                          "KeystoneProjectConstraint expected exceptions error")
 
@@ -64,7 +64,7 @@ class KeystoneProjectConstraintTest(common.HeatTestCase):
 class KeystoneGroupConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exceptions.KeystoneGroupNotFound,),
+        self.assertEqual((exception.KeystoneGroupNotFound,),
                          client.KeystoneGroupConstraint.expected_exceptions,
                          "KeystoneGroupConstraint expected exceptions error")
 
@@ -84,7 +84,7 @@ class KeystoneGroupConstraintTest(common.HeatTestCase):
 class KeystoneDomainConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exceptions.KeystoneDomainNotFound,),
+        self.assertEqual((exception.KeystoneDomainNotFound,),
                          client.KeystoneDomainConstraint.expected_exceptions,
                          "KeystoneDomainConstraint expected exceptions error")
 
@@ -106,8 +106,8 @@ class KeystoneServiceConstraintTest(common.HeatTestCase):
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
     def test_expected_exceptions(self):
-        self.assertEqual((exceptions.KeystoneServiceNotFound,
-                          exceptions.KeystoneServiceNameConflict,),
+        self.assertEqual((exception.KeystoneServiceNotFound,
+                          exception.KeystoneServiceNameConflict,),
                          client.KeystoneServiceConstraint.expected_exceptions,
                          "KeystoneServiceConstraint expected exceptions error")
 
@@ -187,7 +187,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
             context=mock.MagicMock()
         )
 
-        ex = self.assertRaises(exceptions.KeystoneServiceNameConflict,
+        ex = self.assertRaises(exception.KeystoneServiceNameConflict,
                                client_plugin.get_service_id,
                                self.sample_name)
         msg = ("Keystone has more than one service with same name "
@@ -207,9 +207,9 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
             context=mock.MagicMock()
         )
 
-        ex = self.assertRaises(exceptions.KeystoneServiceNotFound,
+        ex = self.assertRaises(exception.KeystoneServiceNotFound,
                                client_plugin.get_service_id,
                                self.sample_name)
-        msg = ("Keystone service %s does not found" %
+        msg = ("Keystone service %s not found" %
                self.sample_name)
         self.assertEqual(msg, six.text_type(ex))
