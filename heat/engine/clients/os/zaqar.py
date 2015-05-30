@@ -17,22 +17,20 @@ from heat.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
-try:
-    from zaqarclient.queues.v1 import client as zaqarclient
-    from zaqarclient.transport import errors as zaqar_errors
-except ImportError:
-    zaqarclient = None
-    zaqar_errors = None
+from zaqarclient.queues.v1 import client as zaqarclient
+from zaqarclient.transport import errors as zaqar_errors
 
 from heat.engine.clients import client_plugin
 
 
 class ZaqarClientPlugin(client_plugin.ClientPlugin):
 
-    exception_module = zaqar_errors
+    exceptions_module = zaqar_errors
 
     def _create(self):
+        return self.create_for_tenant(self.context.tenant_id)
 
+    def create_for_tenant(self, tenant_id):
         con = self.context
         if self.auth_token is None:
             LOG.error(_LE("Zaqar connection failed, no auth_token!"))
@@ -41,7 +39,7 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
         opts = {
             'os_auth_token': con.auth_token,
             'os_auth_url': con.auth_url,
-            'os_project_id': con.tenant,
+            'os_project_id': tenant_id,
             'os_service_type': 'messaging',
         }
         auth_opts = {'backend': 'keystone',
@@ -49,7 +47,7 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
         conf = {'auth_opts': auth_opts}
         endpoint = self.url_for(service_type='messaging')
 
-        client = zaqarclient.Client(url=endpoint, conf=conf)
+        client = zaqarclient.Client(url=endpoint, conf=conf, version=1.1)
 
         return client
 
