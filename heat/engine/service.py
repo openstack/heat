@@ -1382,44 +1382,6 @@ class EngineService(service.Service):
         return [api.format_snapshot(snapshot) for snapshot in data]
 
     @context.request_context
-    def metadata_update(self, cnxt, stack_identity,
-                        resource_name, metadata):
-        """
-        Update the metadata for the given resource.
-        DEPRECATED: Use resource_signal instead
-        """
-        warnings.warn('metadata_update is deprecated, '
-                      'use resource_signal instead',
-                      DeprecationWarning)
-
-        s = self._get_stack(cnxt, stack_identity)
-
-        stack = parser.Stack.load(cnxt, stack=s)
-        if resource_name not in stack:
-            raise exception.ResourceNotFound(resource_name=resource_name,
-                                             stack_name=stack.name)
-
-        resource = stack[resource_name]
-        resource.metadata_update(new_metadata=metadata)
-
-        # This is not "nice" converting to the stored context here,
-        # but this happens because the keystone user associated with the
-        # WaitCondition doesn't have permission to read the secret key of
-        # the user associated with the cfn-credentials file
-        refresh_stack = parser.Stack.load(cnxt, stack=s,
-                                          use_stored_context=True)
-
-        # Refresh the metadata for all other resources, since we expect
-        # resource_name to be a WaitCondition resource, and other
-        # resources may refer to WaitCondition Fn::GetAtt Data, which
-        # is updated here.
-        for res in refresh_stack.dependencies:
-            if res.name != resource_name and res.id is not None:
-                res.metadata_update()
-
-        return resource.metadata_get()
-
-    @context.request_context
     def create_watch_data(self, cnxt, watch_name, stats_data):
         '''
         This could be used by CloudWatch and WaitConditions
