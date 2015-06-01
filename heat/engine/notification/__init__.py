@@ -25,8 +25,6 @@ notifier_opts = [
                help='Default notification level for outgoing notifications.'),
     cfg.StrOpt('default_publisher_id',
                help='Default publisher_id for outgoing notifications.'),
-    cfg.MultiStrOpt('list_notifier_drivers',
-                    help='List of drivers to send notifications (DEPRECATED).')
 ]
 CONF = cfg.CONF
 CONF.register_opts(notifier_opts)
