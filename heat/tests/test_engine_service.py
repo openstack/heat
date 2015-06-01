@@ -3196,11 +3196,13 @@ class StackServiceTest(common.HeatTestCase):
         self.assertTrue(mock_get_all.called)
         mock_format_service.assert_called_once_with(mock.ANY)
 
+    @mock.patch.object(service_objects.Service, 'update_by_id')
     @mock.patch.object(service_objects.Service, 'create')
     @mock.patch.object(context, 'get_admin_context')
     def test_service_manage_report_start(self,
                                          mock_admin_context,
-                                         mock_service_create):
+                                         mock_service_create,
+                                         mock_service_update):
         self.eng.service_id = None
         mock_admin_context.return_value = self.ctx
         srv = dict(id='mock_id')
@@ -3215,8 +3217,11 @@ class StackServiceTest(common.HeatTestCase):
                  engine_id=self.eng.engine_id,
                  topic=self.eng.topic,
                  report_interval=cfg.CONF.periodic_interval))
-
         self.assertEqual(self.eng.service_id, srv['id'])
+        mock_service_update.assert_called_once_with(
+            self.ctx,
+            self.eng.service_id,
+            dict(deleted_at=None))
 
     @mock.patch.object(service_objects.Service, 'get_all_by_args')
     @mock.patch.object(service_objects.Service, 'delete')

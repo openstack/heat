@@ -1611,6 +1611,10 @@ class EngineService(service.Service):
                      report_interval=cfg.CONF.periodic_interval)
             )
             self.service_id = service_ref['id']
+            service_objects.Service.update_by_id(
+                cnxt,
+                self.service_id,
+                dict(deleted_at=None))
             LOG.info(_LI('Service %s is started'), self.service_id)
 
     def service_manage_cleanup(self):
