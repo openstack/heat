@@ -50,10 +50,10 @@
 #build_timeout = 1200
 
 # Network used for SSH connections. (string value)
-#network_for_ssh = private
+#network_for_ssh = heat-net
 
 # Visible fixed network name  (string value)
-#fixed_network_name = private
+#fixed_network_name = heat-net
 
 # Visible floating network name  (string value)
 #floating_network_name = public
@@ -64,7 +64,7 @@
 #boot_config_env = heat_integrationtests/scenario/templates/boot_config_none_env.yaml
 
 # Visible fixed sub-network name  (string value)
-#fixed_subnet_name = private-subnet
+#fixed_subnet_name = heat-subnet
 
 # Timeout in seconds to wait for authentication to succeed. (integer value)
 #ssh_timeout = 300
