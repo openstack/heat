@@ -110,7 +110,7 @@
                         Neutron, and so forth)</para>
                 </listitem>
                 <listitem>
-                    <para>ReSTful web services</para>
+                    <para>RESTful web services</para>
                 </listitem>
                 <listitem>
                     <para>JSON and/or YAML data serialization
@@ -178,7 +178,7 @@
     </chapter>
     <chapter xml:id="General_API_Information-d1e843">
         <title>General API Information</title>
-        <para> The &Deployment; API is implemented using a ReSTful web
+        <para> The &Deployment; API is implemented using a RESTful web
             service interface. Like other OpenStack services, the
             &Deployment; Service shares a common token-based
             authentication system that allows seamless access between

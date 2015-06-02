@@ -20,7 +20,7 @@ to be handled, the API and engine services can be overloaded. In those
 scenarios, in order to increase the system performance, it can be helpful to run
 multiple load-balanced APIs and engines.
 
-This guide details how to scale out the ReST API, the CFN API, and the engine,
+This guide details how to scale out the REST API, the CFN API, and the engine,
 also known as the *heat-api*, *heat-api-cfn*, and *heat-engine* services,
 respectively.
 
@@ -50,7 +50,7 @@ Basic Architecture
 
 The heat architecture is as defined at `heat architecture
 <http://docs.openstack.org/developer/heat/architecture.html>`_ and shown in the
-diagram below, where we have a CLI that sends HTTP requests to the ReST and CFN
+diagram below, where we have a CLI that sends HTTP requests to the REST and CFN
 APIs, which in turn make calls using AMQP to the heat engine.
 ::
 
@@ -107,14 +107,14 @@ python scripts located at the *bin* directory of your heat repository.
 
 These scripts take as argument a configuration file. When using devstack, the
 configuration file is located at */etc/heat/heat.conf*. For instance, to start
-new ReST and CFN API services, you must run:
+new REST and CFN API services, you must run:
 ::
 
     python bin/heat-api --config-file=/etc/heat/heat.conf
     python bin/heat-api-cfn --config-file=/etc/heat/heat.conf
 
 Each API service must have a unique address to listen. This address have to be
-defined in the configuration file. For ReST and CFN APIs, modify the
+defined in the configuration file. For REST and CFN APIs, modify the
 *[heat_api]* and *[heat_api_cfn]* blocks, respectively.
 ::
 
@@ -161,7 +161,7 @@ Deploying the Proxy
 ===================
 
 In order to simplify the deployment of the HAProxy server, we will replace
-the ReST and CFN APIs deployed when installing devstack by the HAProxy server.
+the REST and CFN APIs deployed when installing devstack by the HAProxy server.
 This way, there is no need to update, on the CLI, the addresses where it should
 look for the APIs. In this case, when it makes a call to any API, it will find
 the proxy, acting on their behalf.
@@ -201,7 +201,7 @@ To deploy the HAProxy server on the devstack server, run
         option  tcpka
         option  httpchk
         # The values required below are the different addresses supplied when
-        # running the ReST API instances.
+        # running the REST API instances.
         server SERVER_1 {HOST_1}:{PORT_1}
         ...
         server SERVER_N {HOST_N}:{PORT_N}
@@ -248,7 +248,7 @@ Target Architecture
 At this moment, everything is running in a single devstack server. The next
 subsections show how to deploy a scaling out heat architecture by:
 
-    1. Running one ReST and one CFN API on the machines B and C;
+    1. Running one REST and one CFN API on the machines B and C;
     2. Setting up the HAProxy server on the machine A.
 
 Running the API and Engine Services

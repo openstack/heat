@@ -17,7 +17,7 @@
 Heat architecture
 =================
 
-Heat is a service to orchestrate multiple composite cloud applications using the .. _AWS CloudFormation: http://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078 template format, through both an OpenStack-native ReST API and a CloudFormation-compatible Query API.
+Heat is a service to orchestrate multiple composite cloud applications using the .. _AWS CloudFormation: http://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078 template format, through both an OpenStack-native REST API and a CloudFormation-compatible Query API.
 
 
 --------------------
