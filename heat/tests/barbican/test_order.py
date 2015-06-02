@@ -16,13 +16,11 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resource
+from heat.engine.resources.openstack.barbican import order
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import order  # noqa
 
 stack_template = '''
 heat_template_version: 2013-05-23
@@ -59,7 +57,6 @@ class TestOrder(common.HeatTestCase):
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.res_template = resource_defns['order']
         self.props = tmpl['resources']['order']['properties']
-        self._register_resources()
 
         self.patcher_client = mock.patch.object(order.Order, 'barbican')
         mock_client = self.patcher_client.start()
@@ -68,10 +65,6 @@ class TestOrder(common.HeatTestCase):
     def tearDown(self):
         super(TestOrder, self).tearDown()
         self.patcher_client.stop()
-
-    def _register_resources(self):
-        for res_name, res_class in six.iteritems(order.resource_mapping()):
-            resource._register_class(res_name, res_class)
 
     def _create_resource(self, name, snippet, stack):
         res = order.Order(name, snippet, stack)
