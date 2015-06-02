@@ -13,14 +13,12 @@
 
 import mock
 
-from heat.engine import resource
+from heat.engine.resources.openstack.nova import nova_flavor
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests.nova import fakes
 from heat.tests import utils
-
-from ..resources import nova_flavor  # noqa
 
 flavor_template = {
     'heat_template_version': '2013-05-23',
@@ -46,10 +44,6 @@ class NovaFlavorTest(common.HeatTestCase):
         super(NovaFlavorTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-
-        # For unit testing purpose. Register resource provider
-        # explicitly.
-        resource._register_class("OS::Nova::Flavor", nova_flavor.NovaFlavor)
 
         self.stack = stack.Stack(
             self.ctx, 'nova_flavor_test_stack',
