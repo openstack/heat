@@ -14,6 +14,7 @@
 from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class NovaFlavor(resource.Resource):
@@ -28,7 +29,23 @@ class NovaFlavor(resource.Resource):
     allow specifying the name and flavorid properties for the resource.
     This is done to avoid potential naming collision upon flavor creation as
     all flavor have a global scope.
+
+    Here is an example nova flavor resource::
+
+        heat_template_version: 2013-05-23
+        description:  Heat Flavor creation example
+        resources:
+          test_flavor:
+            type: OS::Nova::Flavor
+            properties:
+              ram: 1024
+              vcpus: 1
+              disk: 20
+              swap: 2
+              extra_specs: {"quota:disk_read_bytes_sec": "10240000"}
     """
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         RAM, VCPUS, DISK, SWAP, EPHEMERAL,
