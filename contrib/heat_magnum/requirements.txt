@@ -1,1 +1,0 @@
-python-magnumclient>=0.0.1

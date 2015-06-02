@@ -24,6 +24,10 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
 
     service_types = ['container']
 
+    @staticmethod
+    def is_available():
+        return magnum_client is not None
+
     def _create(self):
         endpoint_type = self._get_client_option('magnum', 'endpoint_type')
         endpoint = self.url_for(service_type=self.service_types[0],
@@ -33,7 +37,6 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
             'magnum_url': endpoint,
             'input_auth_token': self.auth_token
         }
-
         client = magnum_client.Client(**args)
         return client
 
