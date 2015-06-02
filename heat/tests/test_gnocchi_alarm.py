@@ -16,17 +16,14 @@ import copy
 from ceilometerclient import exc as ceilometerclient_exc
 import mock
 import mox
-import six
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import ceilometer
-from heat.engine import resource
+from heat.engine.resources.openstack.ceilometer import gnocchi_alarm as gnocchi
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import gnocchi_alarm as gnocchi  # noqa
 
 gnocchi_resources_alarm_template = '''
 heat_template_version: 2013-05-23
@@ -94,11 +91,6 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
     def setUp(self):
         super(GnocchiResourcesAlarmTest, self).setUp()
         self.fc = mock.Mock()
-        self._register_resources()
-
-    def _register_resources(self):
-        for res_name, res_class in six.iteritems(gnocchi.resource_mapping()):
-            resource._register_class(res_name, res_class)
 
     def create_alarm(self):
         self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
