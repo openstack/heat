@@ -104,12 +104,6 @@ class KeystonePasswordAuthProtocol(object):
             'HTTP_X_ROLES': roles,
             'HTTP_X_SERVICE_CATALOG': service_catalog,
             'HTTP_X_AUTH_TOKEN': auth_token,
-            # DEPRECATED
-            'HTTP_X_USER': user_name,
-            'HTTP_X_TENANT_ID': tenant_id,
-            'HTTP_X_TENANT_NAME': tenant_name,
-            'HTTP_X_TENANT': tenant_name,
-            'HTTP_X_ROLE': roles,
         }
 
         return headers
