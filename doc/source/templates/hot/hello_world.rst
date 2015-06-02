@@ -11,8 +11,8 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Template
---------
+Hello World HOT Template
+------------------------
 https://github.com/openstack/heat-templates/blob/master/hot/hello_world.yaml
 
 Description
