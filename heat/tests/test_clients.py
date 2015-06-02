@@ -144,6 +144,10 @@ class FooClientsPlugin(client_plugin.ClientPlugin):
     def _create(self):
         pass
 
+    @property
+    def auth_token(self):
+        return '5678'
+
 
 class ClientPluginTest(common.HeatTestCase):
 
@@ -176,6 +180,69 @@ class ClientPluginTest(common.HeatTestCase):
         self.assertEqual('/tmp/foo',
                          plugin._get_client_option('foo', 'ca_file'))
 
+    def test_get_client_args(self):
+        plugin = FooClientsPlugin(mock.Mock())
+
+        plugin.url_for = mock.Mock(return_value='sample_endpoint_url')
+        plugin.context = mock.Mock()
+        plugin.context.auth_url = 'sample_auth_url'
+        plugin.context.tenant_id = 'sample_project_id'
+
+        mock_args = {
+            'endpoint_type': 'internalURL',
+            'ca_file': '/tmp/ca_file',
+            'cert_file': '/tmp/cert_file',
+            'key_file': '/tmp/key_file',
+            'insecure': True
+        }
+
+        def _side_effect(service_name, arg_name):
+            return mock_args[arg_name]
+
+        plugin._get_client_option = mock.Mock(side_effect=_side_effect)
+
+        args = plugin._get_client_args('sample_service',
+                                       'foo_type')
+
+        self.assertEqual('foo_type',
+                         args['service_type'],
+                         'invalid service_type')
+
+        self.assertEqual('sample_auth_url',
+                         args['auth_url'],
+                         'invalid auth_url')
+
+        self.assertEqual('sample_project_id',
+                         args['project_id'],
+                         'invalid project_id')
+
+        self.assertEqual('5678',
+                         args['token'](),
+                         'invalid auth_token')
+
+        self.assertEqual('sample_endpoint_url',
+                         args['os_endpoint'],
+                         'invalid os_endpoint')
+
+        self.assertEqual('internalURL',
+                         args['endpoint_type'],
+                         'invalid endpoint_type')
+
+        self.assertEqual('/tmp/ca_file',
+                         args['cacert'],
+                         'invalid cacert')
+
+        self.assertEqual('/tmp/cert_file',
+                         args['cert_file'],
+                         'invalid cert_file')
+
+        self.assertEqual('/tmp/key_file',
+                         args['key_file'],
+                         'invalid key_file')
+
+        self.assertTrue(args['insecure'],
+                        'invalid insecure')
+
     def test_auth_token(self):
         con = mock.Mock()
         con.auth_token = "1234"
@@ -184,9 +251,6 @@ class ClientPluginTest(common.HeatTestCase):
         c = clients.Clients(con)
         con.clients = c
 
-        con.auth_plugin = mock.Mock(name="auth_plugin")
-        con.auth_plugin.get_token = mock.Mock(name="get_token")
-        con.auth_plugin.get_token.return_value = '5678'
         plugin = FooClientsPlugin(con)
 
         # assert token is from plugin rather than context

@@ -33,6 +33,7 @@ python-barbicanclient>=3.0.1
 python-ceilometerclient>=1.0.13
 python-cinderclient>=1.2.1
 python-glanceclient>=0.18.0
+python-designateclient>=1.0.0
 python-heatclient>=0.3.0
 python-keystoneclient>=1.6.0
 python-neutronclient>=2.3.11,<3
