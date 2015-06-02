@@ -40,7 +40,7 @@ class NeutronAutoscalingTest(scenario_base.ScenarioTestsBase):
             "image_id": self.conf.minimal_image_ref,
             "capacity": "1",
             "instance_type": self.conf.minimal_instance_type,
-            "fixed_subnet_name": self.conf.fixed_subnet_name,
+            "fixed_subnet": self.net['subnets'][0],
         }
 
         # Launch stack

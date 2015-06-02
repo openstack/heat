@@ -10,6 +10,8 @@ parameters:
     type: string
   image:
     type: string
+  network:
+    type: string
   private_subnet_id:
     type: string
   external_network_id:
@@ -66,6 +68,7 @@ resources:
       image: { get_param: image }
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
+      networks: [{network: {get_param: network} }]
       security_groups: [{ get_resource: sec_group }]
       user_data_format: SOFTWARE_CONFIG
       user_data: { get_resource: config }
@@ -77,6 +80,7 @@ resources:
       image: { get_param: image }
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
+      networks: [{network: {get_param: network} }]
       security_groups: [{ get_resource: sec_group }]
       user_data_format: SOFTWARE_CONFIG
       user_data: { get_resource: config }
@@ -119,10 +123,10 @@ resources:
       - { get_resource: server1 }
 
 outputs:
-  serv1_addresses:
-    value: {get_attr: [server1, addresses, private]}
-  serv2_addresses:
-    value: {get_attr: [server2, addresses, private]}
+  serv1_ip:
+    value: {get_attr: [server1, networks, { get_param: network }, 0]}
+  serv2_ip:
+    value: {get_attr: [server2, networks, { get_param: network }, 0]}
   vip:
     value: {get_attr: [test_pool, vip, address]}
   fip:
