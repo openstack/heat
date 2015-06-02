@@ -131,7 +131,7 @@ class SoftwareConfigService(service.Service):
         if obj:
             self.signal_software_deployment(
                 cnxt, sd.id, jsonutils.loads(obj),
-                timeutils.strtime(last_modified))
+                last_modified.isoformat())
 
         return software_deployment_object.SoftwareDeployment.get_by_id(
             cnxt, sd.id)

@@ -146,7 +146,7 @@ class TestCooldownMixin(common.HeatTestCase):
         pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
 
         now = timeutils.utcnow()
-        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        previous_meta = {now.isoformat(): 'ChangeInCapacity : 1'}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertTrue(pol._cooldown_inprogress())
 
@@ -156,7 +156,7 @@ class TestCooldownMixin(common.HeatTestCase):
         pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
 
         awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
-        previous_meta = {timeutils.strtime(awhile_ago): 'ChangeInCapacity : 1'}
+        previous_meta = {awhile_ago.isoformat(): 'ChangeInCapacity : 1'}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertFalse(pol._cooldown_inprogress())
 
@@ -171,7 +171,7 @@ class TestCooldownMixin(common.HeatTestCase):
         pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
 
         now = timeutils.utcnow()
-        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        previous_meta = {now.isoformat(): 'ChangeInCapacity : 1'}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertFalse(pol._cooldown_inprogress())
 
@@ -187,7 +187,7 @@ class TestCooldownMixin(common.HeatTestCase):
         pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
 
         now = timeutils.utcnow()
-        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        previous_meta = {now.isoformat(): 'ChangeInCapacity : 1'}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertFalse(pol._cooldown_inprogress())
 
@@ -196,12 +196,12 @@ class TestCooldownMixin(common.HeatTestCase):
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
 
-        nowish = timeutils.strtime()
+        nowish = timeutils.utcnow()
         reason = 'cool as'
         meta_set = self.patchobject(pol, 'metadata_set')
-        self.patchobject(timeutils, 'strtime', return_value=nowish)
+        self.patchobject(timeutils, 'utcnow', return_value=nowish)
         pol._cooldown_timestamp(reason)
-        meta_set.assert_called_once_with({nowish: reason})
+        meta_set.assert_called_once_with({nowish.isoformat(): reason})
 
 
 class ScalingPolicyAttrTest(common.HeatTestCase):

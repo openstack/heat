@@ -635,7 +635,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sc.get_object.assert_called_once_with(container, object_name)
         # signal_software_deployment called with signal
         ssd.assert_called_once_with(self.ctx, deployment_id, {u"foo": u"bar"},
-                                    timeutils.strtime(then))
+                                    then.isoformat())
 
         # second poll updated_at populated with first poll last-modified
         software_deployment_object.SoftwareDeployment.update_by_id(
@@ -648,7 +648,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sc.get_object.assert_called_once_with(container, object_name)
         # signal_software_deployment has not been called again
         ssd.assert_called_once_with(self.ctx, deployment_id, {"foo": "bar"},
-                                    timeutils.strtime(then))
+                                    then.isoformat())
 
         # third poll last-modified changed, new signal
         headers['last-modified'] = last_modified_2
@@ -660,7 +660,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         # two calls to signal_software_deployment, for then and now
         self.assertEqual(2, len(ssd.mock_calls))
         ssd.assert_called_with(self.ctx, deployment_id, {"bar": "baz"},
-                               timeutils.strtime(now))
+                               now.isoformat())
 
         # four polls result in only two signals, for then and now
         software_deployment_object.SoftwareDeployment.update_by_id(

@@ -41,5 +41,5 @@ class CooldownMixin(object):
         # If we wanted to implement the AutoScaling API like AWS does,
         # we could maintain event history here, but since we only need
         # the latest event for cooldown, just store that for now
-        metadata = {timeutils.strtime(): reason}
+        metadata = {timeutils.utcnow().isoformat(): reason}
         self.metadata_set(metadata)
