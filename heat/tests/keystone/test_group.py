@@ -15,13 +15,11 @@ import mock
 
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
+from heat.engine.resources.openstack.keystone import group
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import group  # noqa
 
 keystone_group_template = {
     'heat_template_version': '2013-05-23',
@@ -45,9 +43,6 @@ class KeystoneGroupTest(common.HeatTestCase):
         super(KeystoneGroupTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-
-        # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE, group.KeystoneGroup)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',

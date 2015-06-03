@@ -16,12 +16,11 @@ import mock
 from heat.common import exception
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources.openstack.keystone import role_assignments
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import role_assignments  # noqa
 
 RESOURCE_TYPE = 'OS::Keystone::DummyRoleAssignment'
 
