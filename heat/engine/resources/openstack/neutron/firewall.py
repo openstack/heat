@@ -79,29 +79,37 @@ class Firewall(neutron.NeutronResource):
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
-            _('Name for the firewall.')
+            _('Name for the firewall.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('Description of the firewall.')
+            _('Description of the firewall.'),
+            type=attributes.Schema.STRING
         ),
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _('The administrative state of the firewall.')
+            _('The administrative state of the firewall.'),
+            type=attributes.Schema.STRING
         ),
         FIREWALL_POLICY_ID_ATTR: attributes.Schema(
             _('Unique identifier of the firewall policy used to create '
-              'the firewall.')
+              'the firewall.'),
+            type=attributes.Schema.STRING
         ),
         SHARED_ATTR: attributes.Schema(
-            _('Shared status of this firewall.')
+            _('Shared status of this firewall.'),
+            type=attributes.Schema.STRING
         ),
         STATUS: attributes.Schema(
-            _('The status of the firewall.')
+            _('The status of the firewall.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('Id of the tenant owning the firewall.')
+            _('Id of the tenant owning the firewall.'),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _('All attributes.')
+            _('All attributes.'),
+            type=attributes.Schema.MAP
         ),
     }
 
@@ -187,22 +195,28 @@ class FirewallPolicy(neutron.NeutronResource):
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
-            _('Name for the firewall policy.')
+            _('Name for the firewall policy.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('Description of the firewall policy.')
+            _('Description of the firewall policy.'),
+            type=attributes.Schema.STRING
         ),
         FIREWALL_RULES_ATTR: attributes.Schema(
-            _('List of firewall rules in this firewall policy.')
+            _('List of firewall rules in this firewall policy.'),
+            type=attributes.Schema.LIST
         ),
         SHARED_ATTR: attributes.Schema(
-            _('Shared status of this firewall policy.')
+            _('Shared status of this firewall policy.'),
+            type=attributes.Schema.STRING
         ),
         AUDITED_ATTR: attributes.Schema(
-            _('Audit status of this firewall policy.')
+            _('Audit status of this firewall policy.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('Id of the tenant owning the firewall policy.')
+            _('Id of the tenant owning the firewall policy.'),
+            type=attributes.Schema.STRING
         ),
     }
 

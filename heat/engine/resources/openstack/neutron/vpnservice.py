@@ -309,64 +309,81 @@ class IPsecSiteConnection(neutron.NeutronResource):
 
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _('The administrative state of the ipsec site connection.')
+            _('The administrative state of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         AUTH_MODE: attributes.Schema(
-            _('The authentication mode of the ipsec site connection.')
+            _('The authentication mode of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('The description of the ipsec site connection.')
+            _('The description of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         DPD_ATTR: attributes.Schema(
             _('The dead peer detection protocol configuration of the ipsec '
-              'site connection.')
+              'site connection.'),
+            type=attributes.Schema.MAP
         ),
         IKEPOLICY_ID_ATTR: attributes.Schema(
             _('The unique identifier of ike policy associated with the ipsec '
-              'site connection.')
+              'site connection.'),
+            type=attributes.Schema.STRING
         ),
         INITIATOR_ATTR: attributes.Schema(
-            _('The initiator of the ipsec site connection.')
+            _('The initiator of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         IPSECPOLICY_ID_ATTR: attributes.Schema(
             _('The unique identifier of ipsec policy associated with the '
-              'ipsec site connection.')
+              'ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         MTU_ATTR: attributes.Schema(
             _('The maximum transmission unit size (in bytes) of the ipsec '
-              'site connection.')
+              'site connection.'),
+            type=attributes.Schema.STRING
         ),
         NAME_ATTR: attributes.Schema(
-            _('The name of the ipsec site connection.')
+            _('The name of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         PEER_ADDRESS_ATTR: attributes.Schema(
             _('The remote branch router public IPv4 address or IPv6 address '
-              'or FQDN.')
+              'or FQDN.'),
+            type=attributes.Schema.STRING
         ),
         PEER_CIDRS_ATTR: attributes.Schema(
             _('The remote subnet(s) in CIDR format of the ipsec site '
-              'connection.')
+              'connection.'),
+            type=attributes.Schema.LIST
         ),
         PEER_ID_ATTR: attributes.Schema(
             _('The remote branch router identity of the ipsec site '
-              'connection.')
+              'connection.'),
+            type=attributes.Schema.STRING
         ),
         PSK_ATTR: attributes.Schema(
-            _('The pre-shared key string of the ipsec site connection.')
+            _('The pre-shared key string of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         ROUTE_MODE: attributes.Schema(
-            _('The route mode of the ipsec site connection.')
+            _('The route mode of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         STATUS: attributes.Schema(
-            _('The status of the ipsec site connection.')
+            _('The status of the ipsec site connection.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
             _('The unique identifier of the tenant owning the ipsec site '
-              'connection.')
+              'connection.'),
+            type=attributes.Schema.STRING
         ),
         VPNSERVICE_ID_ATTR: attributes.Schema(
             _('The unique identifier of vpn service associated with the ipsec '
-              'site connection.')
+              'site connection.'),
+            type=attributes.Schema.STRING
         ),
     }
 
@@ -502,32 +519,41 @@ class IKEPolicy(neutron.NeutronResource):
 
     attributes_schema = {
         AUTH_ALGORITHM_ATTR: attributes.Schema(
-            _('The authentication hash algorithm used by the ike policy.')
+            _('The authentication hash algorithm used by the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('The description of the ike policy.')
+            _('The description of the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         ENCRYPTION_ALGORITHM_ATTR: attributes.Schema(
-            _('The encryption algorithm used by the ike policy.')
+            _('The encryption algorithm used by the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         IKE_VERSION_ATTR: attributes.Schema(
-            _('The version of the ike policy.')
+            _('The version of the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         LIFETIME_ATTR: attributes.Schema(
             _('The safety assessment lifetime configuration for the ike '
-              'policy.')
+              'policy.'),
+            type=attributes.Schema.MAP
         ),
         NAME_ATTR: attributes.Schema(
-            _('The name of the ike policy.')
+            _('The name of the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         PFS_ATTR: attributes.Schema(
-            _('The perfect forward secrecy of the ike policy.')
+            _('The perfect forward secrecy of the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         PHASE1_NEGOTIATION_MODE_ATTR: attributes.Schema(
-            _('The negotiation mode of the ike policy.')
+            _('The negotiation mode of the ike policy.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('The unique identifier of the tenant owning the ike policy.')
+            _('The unique identifier of the tenant owning the ike policy.'),
+            type=attributes.Schema.STRING
         ),
     }
 
@@ -664,32 +690,41 @@ class IPsecPolicy(neutron.NeutronResource):
 
     attributes_schema = {
         AUTH_ALGORITHM_ATTR: attributes.Schema(
-            _('The authentication hash algorithm of the ipsec policy.')
+            _('The authentication hash algorithm of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('The description of the ipsec policy.')
+            _('The description of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         ENCAPSULATION_MODE_ATTR: attributes.Schema(
-            _('The encapsulation mode of the ipsec policy.')
+            _('The encapsulation mode of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         ENCRYPTION_ALGORITHM_ATTR: attributes.Schema(
-            _('The encryption algorithm of the ipsec policy.')
+            _('The encryption algorithm of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         LIFETIME_ATTR: attributes.Schema(
             _('The safety assessment lifetime configuration of the ipsec '
-              'policy.')
+              'policy.'),
+            type=attributes.Schema.MAP
         ),
         NAME_ATTR: attributes.Schema(
-            _('The name of the ipsec policy.')
+            _('The name of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         PFS_ATTR: attributes.Schema(
-            _('The perfect forward secrecy of the ipsec policy.')
+            _('The perfect forward secrecy of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('The unique identifier of the tenant owning the ipsec policy.')
+            _('The unique identifier of the tenant owning the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
         TRANSFORM_PROTOCOL_ATTR: attributes.Schema(
-            _('The transform protocol of the ipsec policy.')
+            _('The transform protocol of the ipsec policy.'),
+            type=attributes.Schema.STRING
         ),
     }
 
