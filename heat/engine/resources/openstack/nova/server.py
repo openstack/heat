@@ -26,6 +26,7 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
+from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
@@ -1465,10 +1466,7 @@ class Server(stack_user.StackUser):
 
     def handle_restore(self, defn, restore_data):
         image_id = restore_data['resource_data']['snapshot_image_id']
-        props = dict(
-            (key, value) for (key, value) in
-            six.iteritems(defn.properties(self.properties_schema))
-            if value is not None)
+        props = function.resolve(self.properties.data)
         props[self.IMAGE] = image_id
         return defn.freeze(properties=props)
 

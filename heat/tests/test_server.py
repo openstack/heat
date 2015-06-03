@@ -3172,6 +3172,10 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_restore(self):
         t = template_format.parse(wp_template)
+        # create server with network id
+        sp = t['Resources']['WebServer']['Properties']
+        sp['networks'] = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
+
         tmpl = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), "server_restore", tmpl)
         stack.store()
@@ -3186,9 +3190,10 @@ class ServersTest(common.HeatTestCase):
         self.fc.servers.create(
             image=744, flavor=3, key_name='test',
             name=utils.PhysName("server_restore", "WebServer"),
+            nics=[{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None,
+            meta=None, availability_zone=None,
             block_device_mapping=None, block_device_mapping_v2=None,
             config_drive=None, disk_config=None, reservation_id=None,
             files={}, admin_pass=None).AndReturn(return_server)
@@ -3198,6 +3203,10 @@ class ServersTest(common.HeatTestCase):
             'F17-x86_64-gold').MultipleTimes().AndReturn(744)
         glance.GlanceClientPlugin.get_image_id(
             'CentOS 5.2').MultipleTimes().AndReturn(1)
+
+        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+                         return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        self.stub_NetworkConstraint_validate()
 
         self.m.ReplayAll()
 
