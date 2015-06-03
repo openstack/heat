@@ -17,7 +17,7 @@ Getting Started With Heat on Fedora
 Installing OpenStack and Heat on Fedora
 ---------------------------------------
 
-Heat requires an Openstack release of Grizzly or newer, but bear in mind that Grizzly is EOL. The current stable release_ is, of course, recommended.
+Heat requires an OpenStack release of Grizzly or newer, but bear in mind that Grizzly is EOL. The current stable release_ is, of course, recommended.
 
 .. _release: https://wiki.openstack.org/wiki/Releases
 

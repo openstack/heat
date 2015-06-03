@@ -11,7 +11,7 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Heat and Devstack
+Heat and DevStack
 =================
 Heat is fully integrated into DevStack. This is a convenient way to try out or develop heat alongside the current development state of all the other OpenStack projects. Heat on DevStack works on both Ubuntu and Fedora.
 
@@ -49,7 +49,7 @@ Adding the following lines to your `localrc` file will enable the ceilometer ser
     enable_service ceilometer-acompute ceilometer-acentral ceilometer-collector ceilometer-api
     enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator
 
-Configure Devstack to enable OSprofiler
+Configure DevStack to enable OSprofiler
 ---------------------------------------
 
 Add the profiler notifier to your Ceilometer to your config::
