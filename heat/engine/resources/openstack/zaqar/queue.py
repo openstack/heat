@@ -24,6 +24,8 @@ class ZaqarQueue(resource.Resource):
 
     default_client_name = "zaqar"
 
+    support_status = support.SupportStatus(version='2014.2')
+
     PROPERTIES = (
         NAME, METADATA,
     ) = (
