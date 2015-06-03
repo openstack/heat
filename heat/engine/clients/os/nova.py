@@ -35,6 +35,7 @@ from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+from heat.engine import resource
 from heat.engine import scheduler
 
 LOG = logging.getLogger(__name__)
@@ -104,6 +105,46 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         return (isinstance(ex, exceptions.ClientException) and
                 http_status == 422)
 
+    def get_server(self, server):
+        """Return fresh server object.
+
+        Substitutes Nova's NotFound for Heat's EntityNotFound,
+        to be returned to user as HTTP error.
+        """
+        try:
+            return self.client().servers.get(server)
+        except exceptions.NotFound as ex:
+            LOG.warn(_LW('Server (%(server)s) not found: %(ex)s'),
+                     {'server': server, 'ex': ex})
+            raise exception.EntityNotFound(entity='Server', name=server)
+
+    def fetch_server(self, server_id):
+        """
+        Fetch fresh server object from Nova.
+
+        Log warnings and return None for non-critical API errors.
+        Use this method in various ``check_*_complete`` resource methods,
+        where intermittent errors can be tolerated.
+        """
+        server = None
+        try:
+            server = self.client().servers.get(server_id)
+        except exceptions.OverLimit as exc:
+            LOG.warn(_LW("Received an OverLimit response when "
+                         "fetching server (%(id)s) : %(exception)s"),
+                     {'id': server_id,
+                      'exception': exc})
+        except exceptions.ClientException as exc:
+            if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
+                 (500, 503))):
+                LOG.warn(_LW("Received the following exception when "
+                         "fetching server (%(id)s) : %(exception)s"),
+                         {'id': server_id,
+                          'exception': exc})
+            else:
+                raise
+        return server
+
     def refresh_server(self, server):
         '''
         Refresh server's attributes and log warnings for non-critical
@@ -144,6 +185,47 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         '''
         # Some clouds append extra (STATUS) strings to the status, strip it
         return server.status.split('(')[0]
+
+    def _check_active(self, server, res_name='Server'):
+        """Check server status.
+
+        Accepts both server IDs and server objects.
+        Returns True if server is ACTIVE,
+        raises errors when server has an ERROR or unknown to Heat status,
+        returns False otherwise.
+
+        :param res_name: name of the resource to use in the exception message
+
+        """
+        # not checking with is_uuid_like as most tests use strings e.g. '1234'
+        if isinstance(server, six.string_types):
+            server = self.fetch_server(server)
+            if server is None:
+                return False
+            else:
+                status = self.get_status(server)
+        else:
+            status = self.get_status(server)
+            if status != 'ACTIVE':
+                self.refresh_server(server)
+                status = self.get_status(server)
+
+        if status in self.deferred_server_statuses:
+            return False
+        elif status == 'ACTIVE':
+            return True
+        elif status == 'ERROR':
+            fault = getattr(server, 'fault', {})
+            raise resource.ResourceInError(
+                resource_status=status,
+                status_reason=_("Message: %(message)s, Code: %(code)s") % {
+                    'message': fault.get('message', _('Unknown')),
+                    'code': fault.get('code', _('Unknown'))
+                })
+        else:
+            raise resource.ResourceUnknownStatus(
+                resource_status=server.status,
+                result=_('%s is not active') % res_name)
 
     def get_flavor_id(self, flavor):
         '''
@@ -418,14 +500,6 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             for n in server.networks:
                 if len(server.networks[n]) > 0:
                     return server.networks[n][0]
-
-    def get_server(self, server):
-        try:
-            return self.client().servers.get(server)
-        except exceptions.NotFound as ex:
-            LOG.warn(_LW('Server (%(server)s) not found: %(ex)s'),
-                     {'server': server, 'ex': ex})
-            raise exception.EntityNotFound(entity='Server', name=server)
 
     def absolute_limits(self):
         """Return the absolute limits as a dictionary."""

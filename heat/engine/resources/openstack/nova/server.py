@@ -722,31 +722,7 @@ class Server(stack_user.StackUser):
         return server
 
     def check_create_complete(self, server):
-        return self._check_active(server)
-
-    def _check_active(self, server):
-        cp = self.client_plugin()
-        status = cp.get_status(server)
-        if status != 'ACTIVE':
-            cp.refresh_server(server)
-            status = cp.get_status(server)
-
-        if status in cp.deferred_server_statuses:
-            return False
-        elif status == 'ACTIVE':
-            return True
-        elif status == 'ERROR':
-            fault = getattr(server, 'fault', {})
-            raise resource.ResourceInError(
-                resource_status=status,
-                status_reason=_("Message: %(message)s, Code: %(code)s") % {
-                    'message': fault.get('message', _('Unknown')),
-                    'code': fault.get('code', _('Unknown'))
-                })
-        else:
-            raise resource.ResourceUnknownStatus(
-                resource_status=server.status,
-                result=_('Server is not active'))
+        return self.client_plugin()._check_active(server)
 
     def handle_check(self):
         server = self.client().servers.get(self.resource_id)
@@ -1452,7 +1428,7 @@ class Server(stack_user.StackUser):
             return server
 
     def check_resume_complete(self, server):
-        return self._check_active(server)
+        return self.client_plugin()._check_active(server)
 
     def handle_snapshot(self):
         image_id = self.nova().servers.create_image(
