@@ -71,8 +71,8 @@ class VolumeConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("foo", self.ctx))
 
     def test_validation_error(self):
-        self.mock_get_volume.side_effect = exception.VolumeNotFound(
-            volume='bar')
+        self.mock_get_volume.side_effect = exception.EntityNotFound(
+            entity='Volume', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
 
 

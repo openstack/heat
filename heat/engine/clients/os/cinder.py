@@ -93,7 +93,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         except exceptions.NotFound as ex:
             LOG.info(_LI('Volume (%(volume)s) not found: %(ex)s'),
                      {'volume': volume, 'ex': ex})
-            raise exception.VolumeNotFound(volume=volume)
+            raise exception.EntityNotFound(entity='Volume', name=volume)
 
     def get_volume_snapshot(self, snapshot):
         try:
@@ -212,7 +212,7 @@ class VolumeResizeProgress(object):
 
 class VolumeConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.VolumeNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, volume):
         client.client_plugin('cinder').get_volume(volume)
