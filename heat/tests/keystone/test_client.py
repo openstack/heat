@@ -24,7 +24,7 @@ from heat.tests import common
 class KeystoneRoleConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.KeystoneRoleNotFound,),
+        self.assertEqual((exception.EntityNotFound,),
                          client.KeystoneRoleConstraint.expected_exceptions,
                          "KeystoneRoleConstraint expected exceptions error")
 
@@ -44,7 +44,7 @@ class KeystoneRoleConstraintTest(common.HeatTestCase):
 class KeystoneProjectConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.KeystoneProjectNotFound,),
+        self.assertEqual((exception.EntityNotFound,),
                          client.KeystoneProjectConstraint.expected_exceptions,
                          "KeystoneProjectConstraint expected exceptions error")
 
@@ -64,7 +64,7 @@ class KeystoneProjectConstraintTest(common.HeatTestCase):
 class KeystoneGroupConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.KeystoneGroupNotFound,),
+        self.assertEqual((exception.EntityNotFound,),
                          client.KeystoneGroupConstraint.expected_exceptions,
                          "KeystoneGroupConstraint expected exceptions error")
 
@@ -84,7 +84,7 @@ class KeystoneGroupConstraintTest(common.HeatTestCase):
 class KeystoneDomainConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.KeystoneDomainNotFound,),
+        self.assertEqual((exception.EntityNotFound,),
                          client.KeystoneDomainConstraint.expected_exceptions,
                          "KeystoneDomainConstraint expected exceptions error")
 
@@ -106,7 +106,7 @@ class KeystoneServiceConstraintTest(common.HeatTestCase):
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.KeystoneServiceNotFound,
+        self.assertEqual((exception.EntityNotFound,
                           exception.KeystoneServiceNameConflict,),
                          client.KeystoneServiceConstraint.expected_exceptions,
                          "KeystoneServiceConstraint expected exceptions error")
@@ -207,9 +207,9 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
             context=mock.MagicMock()
         )
 
-        ex = self.assertRaises(exception.KeystoneServiceNotFound,
+        ex = self.assertRaises(exception.EntityNotFound,
                                client_plugin.get_service_id,
                                self.sample_name)
-        msg = ("Keystone service %s not found" %
-               self.sample_name)
+        msg = ("The KeystoneService (%(name)s) could not be found." %
+               {'name': self.sample_name})
         self.assertEqual(msg, six.text_type(ex))
