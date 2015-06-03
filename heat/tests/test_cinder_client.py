@@ -91,8 +91,8 @@ class VolumeSnapshotConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("foo", self.ctx))
 
     def test_validation_error(self):
-        self.mock_get_snapshot.side_effect = exception.VolumeSnapshotNotFound(
-            snapshot='bar')
+        self.mock_get_snapshot.side_effect = exception.EntityNotFound(
+            entity='VolumeSnapshot', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
 
 
@@ -111,6 +111,6 @@ class VolumeTypeConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("foo", self.ctx))
 
     def test_validation_error(self):
-        self.mock_get_volume_type.side_effect = exception.VolumeTypeNotFound(
-            volume_type='bar')
+        self.mock_get_volume_type.side_effect = exception.EntityNotFound(
+            entity='VolumeType', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
