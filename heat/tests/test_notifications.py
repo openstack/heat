@@ -47,7 +47,7 @@ class StackTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': timeutils.isotime(created_time),
+             'create_at': created_time.isoformat(),
              'state': 'x_f'})
 
 
@@ -83,7 +83,7 @@ class AutoScaleTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': timeutils.isotime(created_time),
+             'create_at': created_time.isoformat(),
              'state': 'x_f', 'adjustment_type': 'y',
              'groupname': 'c', 'capacity': '5',
              'message': 'fred', 'adjustment': 'x'})
@@ -114,7 +114,7 @@ class AutoScaleTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': timeutils.isotime(created_time),
+             'create_at': created_time.isoformat(),
              'state': 'x_f', 'adjustment_type': 'y',
              'groupname': 'c', 'capacity': '5',
              'message': 'error', 'adjustment': 'x'})

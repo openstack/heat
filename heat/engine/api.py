@@ -109,11 +109,12 @@ def format_stack(stack, preview=False):
     Return a representation of the given stack that matches the API output
     expectations.
     '''
-    updated_time = stack.updated_time and timeutils.isotime(stack.updated_time)
+    updated_time = stack.updated_time and stack.updated_time.isoformat()
+    created_time = stack.created_time or timeutils.utcnow()
     info = {
         rpc_api.STACK_NAME: stack.name,
         rpc_api.STACK_ID: dict(stack.identifier()),
-        rpc_api.STACK_CREATION_TIME: timeutils.isotime(stack.created_time),
+        rpc_api.STACK_CREATION_TIME: created_time.isoformat(),
         rpc_api.STACK_UPDATED_TIME: updated_time,
         rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO(?) Not implemented yet
         rpc_api.STACK_PARAMETERS: stack.parameters.map(str),
@@ -182,11 +183,11 @@ def format_stack_resource(resource, detail=True, with_props=False,
     Return a representation of the given resource that matches the API output
     expectations.
     '''
-    last_updated_time = resource.updated_time or resource.created_time
-    created_time = resource.created_time
+    created_time = resource.created_time or timeutils.utcnow()
+    last_updated_time = resource.updated_time or created_time
     res = {
-        rpc_api.RES_UPDATED_TIME: timeutils.isotime(last_updated_time),
-        rpc_api.RES_CREATION_TIME: timeutils.isotime(created_time),
+        rpc_api.RES_UPDATED_TIME: last_updated_time.isoformat(),
+        rpc_api.RES_CREATION_TIME: created_time.isoformat(),
         rpc_api.RES_NAME: resource.name,
         rpc_api.RES_PHYSICAL_ID: resource.resource_id or '',
         rpc_api.RES_ACTION: resource.action,
@@ -234,12 +235,13 @@ def format_stack_preview(stack):
 
 def format_event(event):
     stack_identifier = event.stack.identifier()
+    event_timestamp = event.timestamp or timeutils.utcnow()
 
     result = {
         rpc_api.EVENT_ID: dict(event.identifier()),
         rpc_api.EVENT_STACK_ID: dict(stack_identifier),
         rpc_api.EVENT_STACK_NAME: stack_identifier.stack_name,
-        rpc_api.EVENT_TIMESTAMP: timeutils.isotime(event.timestamp),
+        rpc_api.EVENT_TIMESTAMP: event_timestamp.isoformat(),
         rpc_api.EVENT_RES_NAME: event.resource_name,
         rpc_api.EVENT_RES_PHYSICAL_ID: event.physical_resource_id,
         rpc_api.EVENT_RES_ACTION: event.action,
@@ -268,20 +270,21 @@ def format_notification_body(stack):
         rpc_api.NOTIFY_STACK_NAME: stack.name,
         rpc_api.NOTIFY_STATE: state,
         rpc_api.NOTIFY_STATE_REASON: stack.status_reason,
-        rpc_api.NOTIFY_CREATE_AT: timeutils.isotime(stack.created_time),
+        rpc_api.NOTIFY_CREATE_AT: stack.created_time.isoformat(),
     }
     return result
 
 
 def format_watch(watch):
 
+    updated_at = watch.updated_at or timeutils.utcnow()
     result = {
         rpc_api.WATCH_ACTIONS_ENABLED: watch.rule.get(
             rpc_api.RULE_ACTIONS_ENABLED),
         rpc_api.WATCH_ALARM_ACTIONS: watch.rule.get(
             rpc_api.RULE_ALARM_ACTIONS),
         rpc_api.WATCH_TOPIC: watch.rule.get(rpc_api.RULE_TOPIC),
-        rpc_api.WATCH_UPDATED_TIME: timeutils.isotime(watch.updated_at),
+        rpc_api.WATCH_UPDATED_TIME: updated_at.isoformat(),
         rpc_api.WATCH_DESCRIPTION: watch.rule.get(rpc_api.RULE_DESCRIPTION),
         rpc_api.WATCH_NAME: watch.name,
         rpc_api.WATCH_COMPARISON: watch.rule.get(rpc_api.RULE_COMPARISON),
@@ -297,8 +300,8 @@ def format_watch(watch):
         rpc_api.WATCH_STATE_REASON: watch.rule.get(rpc_api.RULE_STATE_REASON),
         rpc_api.WATCH_STATE_REASON_DATA:
         watch.rule.get(rpc_api.RULE_STATE_REASON_DATA),
-        rpc_api.WATCH_STATE_UPDATED_TIME: timeutils.isotime(
-            watch.rule.get(rpc_api.RULE_STATE_UPDATED_TIME)),
+        rpc_api.WATCH_STATE_UPDATED_TIME: watch.rule.get(
+            rpc_api.RULE_STATE_UPDATED_TIME, timeutils.utcnow()).isoformat(),
         rpc_api.WATCH_STATE_VALUE: watch.state,
         rpc_api.WATCH_STATISTIC: watch.rule.get(rpc_api.RULE_STATISTIC),
         rpc_api.WATCH_THRESHOLD: watch.rule.get(rpc_api.RULE_THRESHOLD),
@@ -325,7 +328,7 @@ def format_watch_data(wd):
     result = {
         rpc_api.WATCH_DATA_ALARM: wd.watch_rule.name,
         rpc_api.WATCH_DATA_METRIC: metric_name,
-        rpc_api.WATCH_DATA_TIME: timeutils.isotime(wd.created_at),
+        rpc_api.WATCH_DATA_TIME: wd.created_at.isoformat(),
         rpc_api.WATCH_DATA_NAMESPACE: namespace,
         rpc_api.WATCH_DATA: metric_data
     }
@@ -411,8 +414,7 @@ def format_software_config(sc):
         rpc_api.SOFTWARE_CONFIG_INPUTS: sc.config['inputs'],
         rpc_api.SOFTWARE_CONFIG_OUTPUTS: sc.config['outputs'],
         rpc_api.SOFTWARE_CONFIG_OPTIONS: sc.config['options'],
-        rpc_api.SOFTWARE_CONFIG_CREATION_TIME: timeutils.isotime(
-            sc.created_at),
+        rpc_api.SOFTWARE_CONFIG_CREATION_TIME: sc.created_at.isoformat(),
     }
     return result
 
@@ -429,12 +431,11 @@ def format_software_deployment(sd):
         rpc_api.SOFTWARE_DEPLOYMENT_STATUS: sd.status,
         rpc_api.SOFTWARE_DEPLOYMENT_STATUS_REASON: sd.status_reason,
         rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID: sd.config.id,
-        rpc_api.SOFTWARE_DEPLOYMENT_CREATION_TIME: timeutils.isotime(
-            sd.created_at)
+        rpc_api.SOFTWARE_DEPLOYMENT_CREATION_TIME: sd.created_at.isoformat(),
     }
     if sd.updated_at:
-        result[rpc_api.SOFTWARE_DEPLOYMENT_UPDATED_TIME] = timeutils.isotime(
-            sd.updated_at)
+        result[rpc_api.SOFTWARE_DEPLOYMENT_UPDATED_TIME] = (
+            sd.updated_at.isoformat())
     return result
 
 
@@ -447,7 +448,6 @@ def format_snapshot(snapshot):
         rpc_api.SNAPSHOT_STATUS: snapshot.status,
         rpc_api.SNAPSHOT_STATUS_REASON: snapshot.status_reason,
         rpc_api.SNAPSHOT_DATA: snapshot.data,
-        rpc_api.SNAPSHOT_CREATION_TIME: timeutils.isotime(
-            snapshot.created_at),
+        rpc_api.SNAPSHOT_CREATION_TIME: snapshot.created_at.isoformat(),
     }
     return result
