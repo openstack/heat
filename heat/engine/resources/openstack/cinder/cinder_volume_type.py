@@ -19,11 +19,28 @@ from heat.engine import support
 
 class CinderVolumeType(resource.Resource):
     """
-    A resource for creating OpenStack virtual hardware templates.
+    A resource for creating cinder volume types.
 
     Note that default cinder security policy usage of this resource
     is limited to being used by administrators only.
+
+    Here is an example cinder volume_type and cinder volume resources::
+
+        heat_template_version: 2013-05-23
+        description:  Heat Cinder creation with volume_type example
+        resources:
+          my_volume_type:
+            type: OS::Cinder::VolumeType
+            properties:
+              name: volumeBackend
+              metadata: {volume_backend_name: lvmdriver}
+          my_volume:
+            type: OS::Cinder::Volume
+            properties:
+              size: 1
+              volume_type: {get_resource: my_volume_type}
     """
+
     support_status = support.SupportStatus(version='2015.1')
 
     PROPERTIES = (

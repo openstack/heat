@@ -13,14 +13,11 @@
 
 import mock
 
-from heat.engine import resource
+from heat.engine.resources.openstack.cinder import cinder_volume_type
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources.cinder_volume_type import CinderVolumeType  # noqa
-from ..resources.cinder_volume_type import resource_mapping  # noqa
 
 volume_type_template = {
     'heat_template_version': '2013-05-23',
@@ -42,10 +39,6 @@ class CinderVolumeTypeTest(common.HeatTestCase):
 
         self.ctx = utils.dummy_context()
 
-        # For unit testing purpose. Register resource provider
-        # explicitly.
-        resource._register_class('OS::Cinder::VolumeType', CinderVolumeType)
-
         self.stack = stack.Stack(
             self.ctx, 'cinder_volume_type_test_stack',
             template.Template(volume_type_template)
@@ -59,10 +52,12 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.volume_types = self.cinderclient.volume_types
 
     def test_resource_mapping(self):
-        mapping = resource_mapping()
+        mapping = cinder_volume_type.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(CinderVolumeType, mapping['OS::Cinder::VolumeType'])
-        self.assertIsInstance(self.my_volume_type, CinderVolumeType)
+        self.assertEqual(cinder_volume_type.CinderVolumeType,
+                         mapping['OS::Cinder::VolumeType'])
+        self.assertIsInstance(self.my_volume_type,
+                              cinder_volume_type.CinderVolumeType)
 
     def test_volume_type_handle_create(self):
         value = mock.MagicMock()
