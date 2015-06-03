@@ -1306,8 +1306,9 @@ class validateTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_fail('image_name',
-                                     exception.ImageNotFound(
-                                         image_name='image_name'))
+                                     exception.EntityNotFound(
+                                         entity='Image',
+                                         name='image_name'))
         self.m.ReplayAll()
 
         resource = stack['Instance']

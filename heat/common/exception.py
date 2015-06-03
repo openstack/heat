@@ -227,8 +227,8 @@ class FlavorMissing(HeatException):
     msg_fmt = _("The Flavor ID (%(flavor_id)s) could not be found.")
 
 
-class ImageNotFound(HeatException):
-    msg_fmt = _("The Image (%(image_name)s) could not be found.")
+class EntityNotFound(HeatException):
+    msg_fmt = _("The %(entity)s (%(name)s) could not be found.")
 
 
 class ServerNotFound(HeatException):

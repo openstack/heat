@@ -48,7 +48,7 @@ class GlanceUtilsTests(common.HeatTestCase):
         self.glance_client.images.list.side_effect = ([self.my_image], [])
         self.assertEqual(img_id, self.glance_plugin.get_image_id(img_id))
         self.assertEqual(img_id, self.glance_plugin.get_image_id(img_name))
-        self.assertRaises(exception.ImageNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           self.glance_plugin.get_image_id, 'noimage')
 
         calls = [mock.call(filters={'name': img_name}),
@@ -93,7 +93,7 @@ class GlanceUtilsTests(common.HeatTestCase):
             glance_exceptions.HTTPNotFound()]
         self.glance_client.images.list.return_value = []
 
-        self.assertRaises(exception.ImageNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           self.glance_plugin.get_image_id, img_name)
         self.glance_client.images.get.assert_called_once_with(img_name)
         self.glance_client.images.list.assert_called_once_with(
@@ -127,6 +127,6 @@ class ImageConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("foo", self.ctx))
 
     def test_validation_error(self):
-        self.mock_get_image.side_effect = exception.ImageNotFound(
-            image_name='bar')
+        self.mock_get_image.side_effect = exception.EntityNotFound(
+            entity='Image', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))

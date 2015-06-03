@@ -64,7 +64,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
         :param image_identifier: image name or a UUID-like identifier
         :returns: the id of the requested :image_identifier:
-        :raises: exception.ImageNotFound,
+        :raises: exception.EntityNotFound,
                  exception.PhysicalResourceNameAmbiguity
         '''
         if uuidutils.is_uuid_like(image_identifier):
@@ -82,7 +82,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
         :param image_identifier: image name
         :returns: the id of the requested :image_identifier:
-        :raises: exception.ImageNotFound,
+        :raises: exception.EntityNotFound,
                  exception.PhysicalResourceNameAmbiguity
         '''
         try:
@@ -95,7 +95,8 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         if num_matches == 0:
             LOG.info(_LI("Image %s was not found in glance"),
                      image_identifier)
-            raise exception.ImageNotFound(image_name=image_identifier)
+            raise exception.EntityNotFound(entity='Image',
+                                           name=image_identifier)
         elif num_matches > 1:
             LOG.info(_LI("Multiple images %s were found in glance with name"),
                      image_identifier)
@@ -107,7 +108,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
 class ImageConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.ImageNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, value):
         client.client_plugin('glance').get_image_id(value)
