@@ -343,30 +343,38 @@ class Pool(neutron.NeutronResource):
 
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _('The administrative state of this pool.')
+            _('The administrative state of this pool.'),
+            type=attributes.Schema.STRING
         ),
         NAME_ATTR: attributes.Schema(
-            _('Name of the pool.')
+            _('Name of the pool.'),
+            type=attributes.Schema.STRING
         ),
         PROTOCOL_ATTR: attributes.Schema(
-            _('Protocol to balance.')
+            _('Protocol to balance.'),
+            type=attributes.Schema.STRING
         ),
         SUBNET_ID_ATTR: attributes.Schema(
             _('The subnet for the port on which the members of the pool '
-              'will be connected.')
+              'will be connected.'),
+            type=attributes.Schema.STRING
         ),
         LB_METHOD_ATTR: attributes.Schema(
             _('The algorithm used to distribute load between the members '
-              'of the pool.')
+              'of the pool.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('Description of the pool.')
+            _('Description of the pool.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('Tenant owning the pool.')
+            _('Tenant owning the pool.'),
+            type=attributes.Schema.STRING
         ),
         VIP_ATTR: attributes.Schema(
-            _('Vip associated with the pool.')
+            _('Vip associated with the pool.'),
+            type=attributes.Schema.MAP
         ),
     }
 
@@ -592,26 +600,33 @@ class PoolMember(neutron.NeutronResource):
 
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _('The administrative state of this pool member.')
+            _('The administrative state of this pool member.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('Tenant owning the pool member.')
+            _('Tenant owning the pool member.'),
+            type=attributes.Schema.STRING
         ),
         WEIGHT_ATTR: attributes.Schema(
-            _('Weight of the pool member in the pool.')
+            _('Weight of the pool member in the pool.'),
+            type=attributes.Schema.STRING
         ),
         ADDRESS_ATTR: attributes.Schema(
-            _('IP address of the pool member.')
+            _('IP address of the pool member.'),
+            type=attributes.Schema.STRING
         ),
         POOL_ID_ATTR: attributes.Schema(
-            _('The ID of the load balancing pool.')
+            _('The ID of the load balancing pool.'),
+            type=attributes.Schema.STRING
         ),
         PROTOCOL_PORT_ATTR: attributes.Schema(
             _('TCP port on which the pool member listens for requests or '
-              'connections.')
+              'connections.'),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _('All attributes.')
+            _('All attributes.'),
+            type=attributes.Schema.MAP
         ),
     }
 
