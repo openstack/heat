@@ -467,26 +467,6 @@ class ObjectFieldInvalid(HeatException):
     msg_fmt = _('Field %(field)s of %(objname)s is not an instance of Field')
 
 
-class KeystoneRoleNotFound(HeatException):
-    msg_fmt = _("Keystone role %(role_id)s not found")
-
-
-class KeystoneProjectNotFound(HeatException):
-    msg_fmt = _("Keystone project %(project_id)s not found")
-
-
-class KeystoneDomainNotFound(HeatException):
-    msg_fmt = _("Keystone domain %(domain_id)s not found")
-
-
-class KeystoneGroupNotFound(HeatException):
-    msg_fmt = _("Keystone group %(group_id)s not found")
-
-
-class KeystoneServiceNotFound(HeatException):
-    msg_fmt = _("Keystone service %(service_id)s not found")
-
-
 class KeystoneServiceNameConflict(HeatException):
     msg_fmt = _("Keystone has more than one service with same name "
                 "%(service)s. Please use service id instead of name")

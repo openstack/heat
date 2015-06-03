@@ -45,7 +45,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                 if role_obj.name == role:
                     return role_obj.id
 
-        raise exception.KeystoneRoleNotFound(role_id=role)
+        raise exception.EntityNotFound(entity='KeystoneRole', name=role)
 
     def get_project_id(self, project):
         try:
@@ -57,7 +57,8 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                 if project_obj.name == project:
                     return project_obj.id
 
-        raise exception.KeystoneProjectNotFound(project_id=project)
+        raise exception.EntityNotFound(entity='KeystoneProject',
+                                       name=project)
 
     def get_domain_id(self, domain):
         try:
@@ -69,7 +70,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                 if domain_obj.name == domain:
                     return domain_obj.id
 
-        raise exception.KeystoneDomainNotFound(domain_id=domain)
+        raise exception.EntityNotFound(entity='KeystoneDomain', name=domain)
 
     def get_group_id(self, group):
         try:
@@ -81,7 +82,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                 if group_obj.name == group:
                     return group_obj.id
 
-        raise exception.KeystoneGroupNotFound(group_id=group)
+        raise exception.EntityNotFound(entity='KeystoneGroup', name=group)
 
     def get_service_id(self, service):
         try:
@@ -95,12 +96,13 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
             elif len(service_list) > 1:
                 raise exception.KeystoneServiceNameConflict(service=service)
             else:
-                raise exception.KeystoneServiceNotFound(service_id=service)
+                raise exception.EntityNotFound(entity='KeystoneService',
+                                               name=service)
 
 
 class KeystoneRoleConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.KeystoneRoleNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, role):
         client.client_plugin('keystone').get_role_id(role)
@@ -108,7 +110,7 @@ class KeystoneRoleConstraint(constraints.BaseCustomConstraint):
 
 class KeystoneDomainConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.KeystoneDomainNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, domain):
         client.client_plugin('keystone').get_domain_id(domain)
@@ -116,7 +118,7 @@ class KeystoneDomainConstraint(constraints.BaseCustomConstraint):
 
 class KeystoneProjectConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.KeystoneProjectNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, project):
         client.client_plugin('keystone').get_project_id(project)
@@ -124,7 +126,7 @@ class KeystoneProjectConstraint(constraints.BaseCustomConstraint):
 
 class KeystoneGroupConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.KeystoneGroupNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, group):
         client.client_plugin('keystone').get_group_id(group)
@@ -132,7 +134,7 @@ class KeystoneGroupConstraint(constraints.BaseCustomConstraint):
 
 class KeystoneServiceConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.KeystoneServiceNotFound,
+    expected_exceptions = (exception.EntityNotFound,
                            exception.KeystoneServiceNameConflict,)
 
     def validate_with_client(self, client, service):
