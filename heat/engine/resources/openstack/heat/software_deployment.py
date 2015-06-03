@@ -534,7 +534,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def handle_signal(self, details):
         return self.rpc_client().signal_software_deployment(
             self.context, self.resource_id, details,
-            timeutils.strtime())
+            timeutils.utcnow().isoformat())
 
     def FnGetAtt(self, key, *path):
         '''
