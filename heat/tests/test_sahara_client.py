@@ -49,7 +49,7 @@ class SaharaUtilsTests(common.HeatTestCase):
 
         self.assertEqual(img_id, self.sahara_plugin.get_image_id(img_id))
         self.assertEqual(img_id, self.sahara_plugin.get_image_id(img_name))
-        self.assertRaises(exception.ImageNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           self.sahara_plugin.get_image_id, 'noimage')
 
         calls = [mock.call(name=img_name),
@@ -97,7 +97,7 @@ class SaharaUtilsTests(common.HeatTestCase):
                                      error_name='IMAGE_NOT_REGISTERED')]
         self.sahara_client.images.find.return_value = []
 
-        self.assertRaises(exception.ImageNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           self.sahara_plugin.get_image_id, img_name)
 
         self.sahara_client.images.get.assert_called_once_with(img_name)
@@ -130,6 +130,6 @@ class ImageConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("foo", self.ctx))
 
     def test_validation_error(self):
-        self.mock_get_image.side_effect = exception.ImageNotFound(
-            image_name='bar')
+        self.mock_get_image.side_effect = exception.EntityNotFound(
+            entity='Image', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))

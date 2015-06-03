@@ -410,8 +410,9 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('Slackware',
-                                     exception.ImageNotFound(
-                                         image_name='Slackware'))
+                                     exception.EntityNotFound(
+                                         entity='Image',
+                                         name='Slackware'))
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -460,7 +461,8 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('1',
-                                     exception.ImageNotFound(image_name='1'))
+                                     exception.EntityNotFound(
+                                         entity='Image', name='1'))
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -3192,7 +3194,7 @@ class ServersTest(common.HeatTestCase):
         glance.ImageConstraint.validate(
             'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
         # verify that validate gets invoked exactly once for update
-        ex = exception.ImageNotFound(image_name='Update Image')
+        ex = exception.EntityNotFound(entity='Image', name='Update Image')
         glance.ImageConstraint.validate('Update Image',
                                         mox.IgnoreArg()).AndRaise(ex)
         self.m.ReplayAll()

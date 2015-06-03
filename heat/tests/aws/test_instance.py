@@ -378,8 +378,8 @@ class InstancesTest(common.HeatTestCase):
                                       resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('Slackware',
-                                     exception.ImageNotFound(
-                                         image_name='Slackware'))
+                                     exception.EntityNotFound(
+                                         entity='Image', name='Slackware'))
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(instance.create)
