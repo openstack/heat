@@ -42,6 +42,35 @@ resources:
             result: <% $.hello %>
 """
 
+workflow_template_with_params = """
+heat_template_version: 2013-05-23
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      params: {'test':'param_value'}
+      type: direct
+      tasks:
+        - name: hello
+          action: std.echo output='Good morning!'
+          publish:
+            result: <% $.hello %>
+"""
+workflow_template_with_params_override = """
+heat_template_version: 2013-05-23
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      params: {'test':'param_value_override','test1':'param_value_override_1'}
+      type: direct
+      tasks:
+        - name: hello
+          action: std.echo output='Good morning!'
+          publish:
+            result: <% $.hello %>
+"""
+
 workflow_template_full = """
 heat_template_version: 2013-05-23
 resources:
@@ -141,13 +170,11 @@ resources:
 
 
 class FakeWorkflow(object):
-
     def __init__(self, name):
         self.name = name
 
 
 class TestWorkflow(common.HeatTestCase):
-
     def setUp(self):
         super(TestWorkflow, self).setUp()
         utils.setup_dummy_db()
@@ -398,3 +425,56 @@ class TestWorkflow(common.HeatTestCase):
         scheduler.TaskRunner(wf.delete)()
         self.assertEqual(1, self.mistral.executions.delete.call_count)
         self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
+
+    def test_workflow_params(self):
+        tmpl = template_format.parse(workflow_template_full)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
+        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('create_vm')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'input': {'flavor': '3'},
+                   'params': {'test': 'param_value', 'test1': 'param_value_1'}}
+        execution = mock.Mock()
+        execution.id = '12345'
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: self.verify_params(*args, **kw))
+        scheduler.TaskRunner(wf.signal, details)()
+
+    def test_workflow_params_merge(self):
+        tmpl = template_format.parse(workflow_template_with_params)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['workflow']
+        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('workflow')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'params': {'test1': 'param_value_1'}}
+        execution = mock.Mock()
+        execution.id = '12345'
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: self.verify_params(*args, **kw))
+        scheduler.TaskRunner(wf.signal, details)()
+
+    def test_workflow_params_override(self):
+        tmpl = template_format.parse(workflow_template_with_params_override)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['workflow']
+        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('workflow')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'params': {'test': 'param_value', 'test1': 'param_value_1'}}
+        execution = mock.Mock()
+        execution.id = '12345'
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: self.verify_params(*args, **kw))
+        scheduler.TaskRunner(wf.signal, details)()
+
+    def verify_params(self, workflow_name, workflow_input=None, **params):
+        self.assertEqual({'test': 'param_value', 'test1': 'param_value_1'},
+                         params)
+        execution = mock.Mock()
+        execution.id = '12345'
+        return execution
