@@ -33,7 +33,7 @@ This guide, using a devstack installation of OpenStack, assumes that:
 
     1. You have configured devstack from `Single Machine Installation Guide
        <http://devstack.org/guides/single-machine.html>`_;
-    2. You have set up heat on devstack, as defined at `heat and Devstack
+    2. You have set up heat on devstack, as defined at `heat and DevStack
        <http://docs.openstack.org/developer/heat/getting_started/
        on_devstack.html>`_;
     3. You have installed `HAProxy <http://haproxy.1wt.eu>`_ on the devstack

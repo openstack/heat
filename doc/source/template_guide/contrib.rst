@@ -27,7 +27,7 @@ Rackspace Cloud Resource Types
 The resources in this module are for using Heat with the Rackspace
 Cloud. These resources either allow using Rackspace services that don't
 have equivalent services in OpenStack or account for differences between
-a generic Openstack deployment and the Rackspace Cloud.
+a generic OpenStack deployment and the Rackspace Cloud.
 
 Rackspace resources depend on the dev branch of
 `pyrax <https://github.com/rackspace/pyrax/tree/dev>`_ to work
