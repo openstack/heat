@@ -87,3 +87,7 @@ class RawTemplate(
     @classmethod
     def update_by_id(cls, context, template_id, values):
         return db_api.raw_template_update(context, template_id, values)
+
+    @classmethod
+    def delete(cls, context, template_id):
+        return db_api.raw_template_delete(context, template_id)

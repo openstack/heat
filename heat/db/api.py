@@ -55,6 +55,10 @@ def raw_template_update(context, template_id, values):
     return IMPL.raw_template_update(context, template_id, values)
 
 
+def raw_template_delete(context, template_id):
+    return IMPL.raw_template_delete(context, template_id)
+
+
 def resource_data_get_all(resource, data=None):
     return IMPL.resource_data_get_all(resource, data)
 

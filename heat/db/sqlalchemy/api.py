@@ -116,6 +116,11 @@ def raw_template_update(context, template_id, values):
     return raw_template_ref
 
 
+def raw_template_delete(context, template_id):
+    raw_template = raw_template_get(context, template_id)
+    raw_template.delete()
+
+
 def resource_get(context, resource_id):
     result = model_query(context, models.Resource).get(resource_id)
 

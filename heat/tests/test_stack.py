@@ -32,6 +32,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
+from heat.objects import raw_template as raw_template_object
 from heat.objects import stack as stack_object
 from heat.objects import stack_tag as stack_tag_object
 from heat.objects import user_creds as ucreds_object
@@ -2035,6 +2036,62 @@ class StackTest(common.HeatTestCase):
         params = loaded_stack.t.env.params
         self.assertEqual('foo', params.get('param1'))
         self.assertEqual('bar', params.get('param2'))
+
+    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
+    def test_mark_complete_create(self, mock_delete):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl_stack.store()
+        tmpl_stack.current_traversal = 'some-traversal'
+        tmpl_stack.mark_complete('some-traversal')
+        self.assertEqual(tmpl_stack.prev_raw_template_id,
+                         tmpl_stack.t.id)
+        self.assertFalse(mock_delete.called)
+        self.assertEqual(tmpl_stack.status, tmpl_stack.COMPLETE)
+
+    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
+    @mock.patch.object(stack.Stack, 'store')
+    def test_mark_complete_update(self, mock_store, mock_delete):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl_stack.id = 2
+        tmpl_stack.t.id = 2
+        tmpl_stack.prev_raw_template_id = 1
+        tmpl_stack.current_traversal = 'some-traversal'
+        tmpl_stack.mark_complete('some-traversal')
+        self.assertEqual(tmpl_stack.prev_raw_template_id,
+                         tmpl_stack.t.id)
+        mock_delete.assert_called_once_with(self.ctx, 1)
+        self.assertEqual(tmpl_stack.status, tmpl_stack.COMPLETE)
+
+    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
+    @mock.patch.object(stack.Stack, 'store')
+    def test_mark_complete_stale_traversal(self, mock_store, mock_delete):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl_stack.current_traversal = 'new-traversal'
+        tmpl_stack.mark_complete('old-traversal')
+        self.assertFalse(mock_delete.called)
+        self.assertIsNone(tmpl_stack.prev_raw_template_id)
+        self.assertFalse(mock_store.called)
 
 
 class StackKwargsForCloningTest(common.HeatTestCase):

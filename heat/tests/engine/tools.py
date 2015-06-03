@@ -45,6 +45,45 @@ resources:
       UserData: wordpress
 '''
 
+string_template_five = '''
+heat_template_version: 2013-05-23
+description: Random String templates
+
+parameters:
+    salt:
+        type: string
+        default: "quickbrownfox"
+
+resources:
+    A:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    B:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    C:
+        type: OS::Heat::RandomString
+        depends_on: [A, B]
+        properties:
+            salt: {get_attr: [A, value]}
+
+    D:
+        type: OS::Heat::RandomString
+        depends_on: C
+        properties:
+            salt: {get_param: salt}
+
+    E:
+        type: OS::Heat::RandomString
+        depends_on: C
+        properties:
+            salt: {get_param: salt}
+'''
+
 
 def get_stack(stack_name, ctx, template=None, with_params=True,
               convergence=False):

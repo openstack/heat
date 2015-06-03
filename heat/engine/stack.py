@@ -44,12 +44,14 @@ from heat.engine import scheduler
 from heat.engine import sync_point
 from heat.engine import template as tmpl
 from heat.engine import update
+from heat.objects import raw_template as raw_template_object
 from heat.objects import resource as resource_objects
 from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
 from heat.objects import stack_tag as stack_tag_object
 from heat.objects import user_creds as ucreds_object
 from heat.rpc import api as rpc_api
+from heat.rpc import worker_client as rpc_worker_client
 
 cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
 
@@ -140,6 +142,7 @@ class Stack(collections.Mapping):
         self.prev_raw_template_id = prev_raw_template_id
         self.current_deps = current_deps
         self.cache_data = cache_data
+        self._worker_client = None
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -163,6 +166,13 @@ class Stack(collections.Mapping):
             self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
         else:
             self.outputs = {}
+
+    @property
+    def worker_client(self):
+        '''Return a client for making engine RPC calls.'''
+        if not self._worker_client:
+            self._worker_client = rpc_worker_client.WorkerClient()
+        return self._worker_client
 
     @property
     def env(self):
@@ -972,6 +982,10 @@ class Stack(collections.Mapping):
             LOG.info(_LI("Triggering resource %(rsrc_id)s "
                          "for update=%(is_update)s"),
                      {'rsrc_id': rsrc_id, 'is_update': is_update})
+            self.worker_client.check_resource(self.context, rsrc_id,
+                                              self.current_traversal,
+                                              {}, is_update)
+
         self.temp_update_requires(self.convergence_dependencies)
 
     def _update_or_store_resources(self):
@@ -1583,3 +1597,29 @@ class Stack(collections.Mapping):
     def cache_data_resource_attribute(self, resource_name, attribute_key):
         return self.cache_data.get(
             resource_name, {}).get('attributes', {}).get(attribute_key)
+
+    def mark_complete(self, traversal_id):
+        '''
+        Mark the update as complete.
+
+        This currently occurs when all resources have been updated; there may
+        still be resources being cleaned up, but the Stack should now be in
+        service.
+        '''
+        if traversal_id != self.current_traversal:
+            return
+
+        LOG.info('[%s(%s)] update traversal %s complete',
+                 self.name, self.id, traversal_id)
+
+        prev_prev_id = self.prev_raw_template_id
+        self.prev_raw_template_id = self.t.id
+        self.store()
+
+        if (prev_prev_id is not None and
+                prev_prev_id != self.t.id):
+            raw_template_object.RawTemplate.delete(self.context,
+                                                   prev_prev_id)
+
+        reason = 'Stack %s completed successfully' % self.action
+        self.state_set(self.action, self.COMPLETE, reason)

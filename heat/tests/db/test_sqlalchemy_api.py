@@ -1471,6 +1471,13 @@ class DBAPIRawTemplateTest(common.HeatTestCase):
         self.assertEqual(new_t, updated_tp.template)
         self.assertEqual(new_files, updated_tp.files)
 
+    def test_raw_template_delete(self):
+        t = template_format.parse(wp_template)
+        tp = create_raw_template(self.ctx, template=t)
+        db_api.raw_template_delete(self.ctx, tp.id)
+        self.assertRaises(exception.NotFound, db_api.raw_template_get,
+                          self.ctx, tp.id)
+
 
 class DBAPIUserCredsTest(common.HeatTestCase):
     def setUp(self):
