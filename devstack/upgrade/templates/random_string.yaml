@@ -1,0 +1,4 @@
+heat_template_version: 2014-10-16
+resources:
+  random_string:
+    type: OS::Heat::RandomString
