@@ -37,9 +37,9 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.engine.create_periodic_tasks()
         utils.setup_dummy_db()
 
-    def _create_stack(self, stack_name):
+    def _create_stack(self, stack_name, files=None):
         t = template_format.parse(tools.wp_template)
-        stk = utils.parse_stack(t, stack_name=stack_name)
+        stk = utils.parse_stack(t, stack_name=stack_name, files=files)
         stk.state_set(stk.CREATE, stk.COMPLETE, 'mock completion')
 
         return stk
@@ -75,7 +75,8 @@ class SnapshotServiceTest(common.HeatTestCase):
 
     @mock.patch.object(stack.Stack, 'load')
     def test_create_snapshot(self, mock_load):
-        stk = self._create_stack('stack_snapshot_create')
+        files = {'a_file': 'the contents'}
+        stk = self._create_stack('stack_snapshot_create', files=files)
         mock_load.return_value = stk
 
         snapshot = self.engine.stack_snapshot(
@@ -90,6 +91,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.assertEqual("COMPLETE", snapshot['status'])
         self.assertEqual("SNAPSHOT", snapshot['data']['action'])
         self.assertEqual("COMPLETE", snapshot['data']['status'])
+        self.assertEqual(files, snapshot['data']['files'])
         self.assertEqual(stk.id, snapshot['data']['id'])
         self.assertIsNotNone(stk.updated_time)
         self.assertIsNotNone(snapshot['creation_time'])

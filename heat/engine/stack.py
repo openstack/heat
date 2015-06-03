@@ -1469,9 +1469,10 @@ class Stack(collections.Mapping):
         Restore the given snapshot, invoking handle_restore on all resources.
         '''
         self.updated_time = datetime.datetime.utcnow()
-
         env = environment.Environment(snapshot.data['environment'])
-        template = tmpl.Template(snapshot.data['template'], env=env)
+        files = snapshot.data['files']
+        template = tmpl.Template(snapshot.data['template'],
+                                 env=env, files=files)
         newstack = self.__class__(self.context, self.name, template,
                                   timeout_mins=self.timeout_mins,
                                   disable_rollback=self.disable_rollback)
@@ -1559,6 +1560,7 @@ class Stack(collections.Mapping):
             'id': self.id,
             'action': self.action,
             'environment': self.env.user_env_as_dict(),
+            'files': self.t.files,
             'status': self.status,
             'template': self.t.t,
             'resources': dict((res.name, res.prepare_abandon())
