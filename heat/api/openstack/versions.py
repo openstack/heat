@@ -11,46 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Controller that returns information on the heat API versions.
+
+Now it's an subclass of module versions, because of identity with cfn module
+versions. It can be changed, if there will be another API version.
 """
-Controller that returns information on the heat API versions
-"""
+from heat.api import versions
 
-from oslo_serialization import jsonutils
-from six.moves import http_client
-import webob.dec
-
-
-class Controller(object):
-
-    """
-    A controller that produces information on the heat API versions.
-    """
-
-    def __init__(self, conf):
-        self.conf = conf
-
-    @webob.dec.wsgify
-    def __call__(self, req):
-        """Respond to a request for all OpenStack API versions."""
-        version_objs = [
-            {
-                "id": "v1.0",
-                "status": "CURRENT",
-                "links": [
-                    {
-                        "rel": "self",
-                        "href": self.get_href(req)
-                    }]
-            }]
-
-        body = jsonutils.dumps(dict(versions=version_objs))
-
-        response = webob.Response(request=req,
-                                  status=http_client.MULTIPLE_CHOICES,
-                                  content_type='application/json')
-        response.body = body
-
-        return response
-
-    def get_href(self, req):
-        return "%s/v1/" % req.host_url
+Controller = versions.Controller
