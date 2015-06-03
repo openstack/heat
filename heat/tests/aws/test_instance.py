@@ -222,7 +222,7 @@ class InstancesTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.stub_SnapshotConstraint_validate()
         self.m.StubOutWithMock(cinder.CinderClientPlugin, 'get_volume')
-        ex = exception.VolumeNotFound(volume='1234')
+        ex = exception.EntityNotFound(entity='Volume', name='1234')
         cinder.CinderClientPlugin.get_volume('1234').AndRaise(ex)
         self.m.ReplayAll()
 
