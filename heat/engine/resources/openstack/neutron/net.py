@@ -79,22 +79,28 @@ class Net(neutron.NeutronResource):
 
     attributes_schema = {
         STATUS: attributes.Schema(
-            _("The status of the network.")
+            _("The status of the network."),
+            type=attributes.Schema.STRING
         ),
         NAME_ATTR: attributes.Schema(
-            _("The name of the network.")
+            _("The name of the network."),
+            type=attributes.Schema.STRING
         ),
         SUBNETS: attributes.Schema(
-            _("Subnets of this network.")
+            _("Subnets of this network."),
+            type=attributes.Schema.LIST
         ),
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _("The administrative status of the network.")
+            _("The administrative status of the network."),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID_ATTR: attributes.Schema(
-            _("The tenant owning this network.")
+            _("The tenant owning this network."),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _("All attributes.")
+            _("All attributes."),
+            type=attributes.Schema.MAP
         ),
     }
 

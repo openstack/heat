@@ -128,22 +128,28 @@ class Router(neutron.NeutronResource):
 
     attributes_schema = {
         STATUS: attributes.Schema(
-            _("The status of the router.")
+            _("The status of the router."),
+            type=attributes.Schema.STRING
         ),
         EXTERNAL_GATEWAY_INFO_ATTR: attributes.Schema(
-            _("Gateway network for the router.")
+            _("Gateway network for the router."),
+            type=attributes.Schema.MAP
         ),
         NAME_ATTR: attributes.Schema(
-            _("Friendly name of the router.")
+            _("Friendly name of the router."),
+            type=attributes.Schema.STRING
         ),
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _("Administrative state of the router.")
+            _("Administrative state of the router."),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _("Tenant owning the router.")
+            _("Tenant owning the router."),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _("All attributes.")
+            _("All attributes."),
+            type=attributes.Schema.MAP
         ),
     }
 

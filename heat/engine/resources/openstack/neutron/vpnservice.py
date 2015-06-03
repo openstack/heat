@@ -99,30 +99,38 @@ class VPNService(neutron.NeutronResource):
 
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _('The administrative state of the vpn service.')
+            _('The administrative state of the vpn service.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('The description of the vpn service.')
+            _('The description of the vpn service.'),
+            type=attributes.Schema.STRING
         ),
         NAME_ATTR: attributes.Schema(
-            _('The name of the vpn service.')
+            _('The name of the vpn service.'),
+            type=attributes.Schema.STRING
         ),
         ROUTER_ID_ATTR: attributes.Schema(
             _('The unique identifier of the router to which the vpn service '
-              'was inserted.')
+              'was inserted.'),
+            type=attributes.Schema.STRING
         ),
         STATUS: attributes.Schema(
-            _('The status of the vpn service.')
+            _('The status of the vpn service.'),
+            type=attributes.Schema.STRING
         ),
         SUBNET_ID_ATTR: attributes.Schema(
             _('The unique identifier of the subnet in which the vpn service '
-              'was created.')
+              'was created.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('The unique identifier of the tenant owning the vpn service.')
+            _('The unique identifier of the tenant owning the vpn service.'),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _('All attributes.')
+            _('All attributes.'),
+            type=attributes.Schema.MAP
         ),
     }
 

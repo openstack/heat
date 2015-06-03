@@ -58,13 +58,16 @@ class MeteringLabel(neutron.NeutronResource):
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
-            _('Name of the metering label.')
+            _('Name of the metering label.'),
+            type=attributes.Schema.STRING
         ),
         DESCRIPTION_ATTR: attributes.Schema(
-            _('Description of the metering label.')
+            _('Description of the metering label.'),
+            type=attributes.Schema.STRING
         ),
         SHARED_ATTR: attributes.Schema(
-            _('Shared status of the metering label.')
+            _('Shared status of the metering label.'),
+            type=attributes.Schema.STRING
         ),
     }
 

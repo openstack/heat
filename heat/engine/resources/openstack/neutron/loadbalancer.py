@@ -104,39 +104,50 @@ class HealthMonitor(neutron.NeutronResource):
 
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
-            _('The administrative state of this health monitor.')
+            _('The administrative state of this health monitor.'),
+            type=attributes.Schema.STRING
         ),
         DELAY_ATTR: attributes.Schema(
             _('The minimum time in seconds between regular connections '
-              'of the member.')
+              'of the member.'),
+            type=attributes.Schema.STRING
         ),
         EXPECTED_CODES_ATTR: attributes.Schema(
             _('The list of HTTP status codes expected in response '
-              'from the member to declare it healthy.')
+              'from the member to declare it healthy.'),
+            type=attributes.Schema.LIST
         ),
         HTTP_METHOD_ATTR: attributes.Schema(
-            _('The HTTP method used for requests by the monitor of type HTTP.')
+            _('The HTTP method used for requests by the monitor of '
+              'type HTTP.'),
+            type=attributes.Schema.STRING
         ),
         MAX_RETRIES_ATTR: attributes.Schema(
             _('Number of permissible connection failures before changing '
-              'the member status to INACTIVE.')
+              'the member status to INACTIVE.'),
+            type=attributes.Schema.STRING
         ),
         TIMEOUT_ATTR: attributes.Schema(
             _('Maximum number of seconds for a monitor to wait for a '
-              'connection to be established before it times out.')
+              'connection to be established before it times out.'),
+            type=attributes.Schema.STRING
         ),
         TYPE_ATTR: attributes.Schema(
-            _('One of predefined health monitor types.')
+            _('One of predefined health monitor types.'),
+            type=attributes.Schema.STRING
         ),
         URL_PATH_ATTR: attributes.Schema(
             _('The HTTP path used in the HTTP request used by the monitor '
-              'to test a member health.')
+              'to test a member health.'),
+            type=attributes.Schema.STRING
         ),
         TENANT_ID: attributes.Schema(
-            _('Tenant owning the health monitor.')
+            _('Tenant owning the health monitor.'),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _('All attributes.')
+            _('All attributes.'),
+            type=attributes.Schema.MAP
         ),
     }
 
