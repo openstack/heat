@@ -101,7 +101,8 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         except exceptions.NotFound as ex:
             LOG.info(_LI('VolumeSnapshot (%(snapshot)s) not found: %(ex)s'),
                      {'snapshot': snapshot, 'ex': ex})
-            raise exception.VolumeSnapshotNotFound(snapshot=snapshot)
+            raise exception.EntityNotFound(entity='VolumeSnapshot',
+                                           name=snapshot)
 
     def get_volume_type(self, volume_type):
         vt_id = None
@@ -114,7 +115,8 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
                 vt_id = vt.id
                 break
         if vt_id is None:
-            raise exception.VolumeTypeNotFound(volume_type=volume_type)
+            raise exception.EntityNotFound(entity='VolumeType',
+                                           name=volume_type)
 
         return vt_id
 
@@ -220,7 +222,7 @@ class VolumeConstraint(constraints.BaseCustomConstraint):
 
 class VolumeSnapshotConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.VolumeSnapshotNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, snapshot):
         client.client_plugin('cinder').get_volume_snapshot(snapshot)
@@ -228,7 +230,7 @@ class VolumeSnapshotConstraint(constraints.BaseCustomConstraint):
 
 class VolumeTypeConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.VolumeTypeNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, volume_type):
         client.client_plugin('cinder').get_volume_type(volume_type)
