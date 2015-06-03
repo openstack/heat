@@ -64,6 +64,17 @@ wp_template = '''
 }
 '''
 
+ns_template = '''
+heat_template_version: 2015-04-30
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      user_data: {get_file: a_file}
+'''
+
 subnet_template = '''
 heat_template_version: 2013-05-23
 resources:
@@ -3215,9 +3226,9 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_restore(self):
-        t = template_format.parse(wp_template)
-        template = parser.Template(t)
-        stack = parser.Stack(utils.dummy_context(), "server_restore", template)
+        t = template_format.parse(ns_template)
+        tmpl = template.Template(t, files={'a_file': 'the content'})
+        stack = parser.Stack(utils.dummy_context(), "server_restore", tmpl)
         stack.store()
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
@@ -3228,8 +3239,8 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
-            image=744, flavor=3, key_name='test',
-            name=utils.PhysName("server_restore", "WebServer"),
+            image=744, flavor=3, key_name=None,
+            name=utils.PhysName("server_restore", "server"),
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
@@ -3254,7 +3265,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((stack.SNAPSHOT, stack.COMPLETE), stack.state)
 
         data = stack.prepare_abandon()
-        resource_data = data['resources']['WebServer']['resource_data']
+        resource_data = data['resources']['server']['resource_data']
         resource_data['snapshot_image_id'] = 'CentOS 5.2'
         fake_snapshot = collections.namedtuple(
             'Snapshot', ('data', 'stack_id'))(data, stack.id)
