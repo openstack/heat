@@ -132,10 +132,11 @@ class LaunchConfigurationTest(common.HeatTestCase):
         rsrc = stack['LaunchConfig']
 
         self.patchobject(nova.NovaClientPlugin, 'get_server',
-                         side_effect=exception.ServerNotFound(server='5678'))
+                         side_effect=exception.EntityNotFound(
+                             entity='Server', name='5678'))
         msg = ("Property error : "
                "Resources.LaunchConfig.Properties.InstanceId: "
-               "Error validating value '5678': The server (5678) "
+               "Error validating value '5678': The Server (5678) "
                "could not be found.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)

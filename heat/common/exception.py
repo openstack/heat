@@ -231,10 +231,6 @@ class EntityNotFound(HeatException):
     msg_fmt = _("The %(entity)s (%(name)s) could not be found.")
 
 
-class ServerNotFound(HeatException):
-    msg_fmt = _("The server (%(server)s) could not be found.")
-
-
 class VolumeNotFound(HeatException):
     msg_fmt = _("The Volume (%(volume)s) could not be found.")
 

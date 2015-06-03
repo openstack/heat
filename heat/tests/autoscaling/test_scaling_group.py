@@ -183,8 +183,8 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         mock_server.security_groups = [{u'name': u'hth_test'}]
         if not_found:
             self.patchobject(nova.NovaClientPlugin, 'get_server',
-                             side_effect=exception.ServerNotFound(
-                                 server='5678'))
+                             side_effect=exception.EntityNotFound(
+                                 entity='Server', name='5678'))
         else:
             self.patchobject(nova.NovaClientPlugin, 'get_server',
                              return_value=mock_server)
@@ -222,7 +222,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.m.ReplayAll()
         msg = ("Property error : "
                "Resources.WebServerGroup.Properties.InstanceId: "
-               "Error validating value '5678': The server (5678) could "
+               "Error validating value '5678': The Server (5678) could "
                "not be found.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)

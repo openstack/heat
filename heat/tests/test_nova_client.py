@@ -103,7 +103,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.nova_client.servers.get.side_effect = [
             my_server, nova_exceptions.NotFound(404)]
         self.assertEqual(my_server, self.nova_plugin.get_server('my_server'))
-        self.assertRaises(exception.ServerNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           self.nova_plugin.get_server, 'idontexist')
         calls = [mock.call('my_server'),
                  mock.call('idontexist')]
@@ -319,8 +319,8 @@ class ServerConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("foo", self.ctx))
 
     def test_validation_error(self):
-        self.mock_get_server.side_effect = exception.ServerNotFound(
-            server='bar')
+        self.mock_get_server.side_effect = exception.EntityNotFound(
+            entity='Server', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
 
 

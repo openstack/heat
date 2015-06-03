@@ -425,7 +425,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         except exceptions.NotFound as ex:
             LOG.warn(_LW('Server (%(server)s) not found: %(ex)s'),
                      {'server': server, 'ex': ex})
-            raise exception.ServerNotFound(server=server)
+            raise exception.EntityNotFound(entity='Server', name=server)
 
     def absolute_limits(self):
         """Return the absolute limits as a dictionary."""
@@ -545,7 +545,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
 class ServerConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.ServerNotFound,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, server):
         client.client_plugin('nova').get_server(server)
