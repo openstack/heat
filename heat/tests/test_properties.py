@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from oslo_serialization import jsonutils
 import six
 
@@ -1800,3 +1801,412 @@ class PropertiesValidationTest(common.HeatTestCase):
             immutable=True)}
         props = properties.Properties(schema, {})
         self.assertRaises(exception.InvalidSchemaError, props.validate)
+
+
+class TestTranslationRule(common.HeatTestCase):
+
+    def test_translation_rule(self):
+        for r in properties.TranslationRule.RULE_KEYS:
+            props = properties.Properties({}, {})
+            rule = properties.TranslationRule(
+                props,
+                r,
+                ['any'],
+                ['value'] if r == 'Add' else 'value',
+                'value_name' if r == 'Replace' else None)
+            self.assertEqual(rule.properties, props)
+            self.assertEqual(rule.rule, r)
+            if r == 'Add':
+                self.assertEqual(['value'], rule.value)
+            else:
+                self.assertEqual('value', rule.value)
+            if r == 'Replace':
+                self.assertEqual('value_name', rule.value_name)
+            else:
+                self.assertIsNone(rule.value_name)
+
+    def test_invalid_translation_rule(self):
+        props = properties.Properties({}, {})
+        exc = self.assertRaises(ValueError,
+                                properties.TranslationRule, 'proppy', mock.ANY,
+                                mock.ANY)
+        self.assertEqual('Properties must be Properties type. '
+                         'Found %s.' % str, six.text_type(exc))
+
+        exc = self.assertRaises(ValueError,
+                                properties.TranslationRule,
+                                props,
+                                'EatTheCookie',
+                                mock.ANY,
+                                mock.ANY)
+        self.assertEqual('There is no rule EatTheCookie. List of allowed '
+                         'rules is: Add, Replace, Delete.',
+                         six.text_type(exc))
+
+        exc = self.assertRaises(ValueError,
+                                properties.TranslationRule,
+                                props,
+                                properties.TranslationRule.ADD,
+                                'networks.network',
+                                'value')
+        self.assertEqual('source_path should be a list with path instead of '
+                         '%s.' % str, six.text_type(exc))
+
+        exc = self.assertRaises(ValueError,
+                                properties.TranslationRule,
+                                props,
+                                properties.TranslationRule.ADD,
+                                [],
+                                mock.ANY)
+        self.assertEqual('source_path must be non-empty list with path.',
+                         six.text_type(exc))
+
+        exc = self.assertRaises(ValueError,
+                                properties.TranslationRule,
+                                props,
+                                properties.TranslationRule.ADD,
+                                ['any'],
+                                mock.ANY,
+                                'value_name')
+        self.assertEqual('Use value_name only for replacing list elements.',
+                         six.text_type(exc))
+
+        exc = self.assertRaises(ValueError,
+                                properties.TranslationRule,
+                                props,
+                                properties.TranslationRule.ADD,
+                                ['any'],
+                                'value')
+        self.assertEqual('value must be list type when rule is ADD.',
+                         six.text_type(exc))
+
+    def test_add_rule_exist(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.STRING
+                        )
+                    }
+                )
+            ),
+            'bar': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        data = {
+            'far': [
+                {'red': 'blue'}
+            ],
+            'bar': 'dak'
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.ADD,
+                                          ['far'],
+                                          [{'red': props.get('bar')}])
+        rule.execute_rule()
+
+        self.assertIn({'red': 'dak'}, props.get('far'))
+
+    def test_add_rule_dont_exist(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.STRING
+                        )
+                    }
+                )
+            ),
+            'bar': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        data = {
+            'bar': 'dak'
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.ADD,
+                                          ['far'],
+                                          [{'red': props.get('bar')}])
+        rule.execute_rule()
+
+        self.assertEqual([{'red': 'dak'}], props.get('far'))
+
+    def test_add_rule_invalid(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    'red': properties.Schema(
+                        properties.Schema.STRING
+                    )
+                }
+            ),
+            'bar': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        data = {
+            'far': 'tran',
+            'bar': 'dak'
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.ADD,
+                                          ['far'],
+                                          [props.get('bar')])
+        exc = self.assertRaises(ValueError, rule.execute_rule)
+
+        self.assertEqual('ADD rule must be used only for lists.',
+                         six.text_type(exc))
+
+    def test_replace_rule_map_exist(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    'red': properties.Schema(
+                        properties.Schema.STRING
+                    )
+                }
+            ),
+            'bar': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        data = {
+            'far': {'red': 'tran'},
+            'bar': 'dak'
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'red'],
+                                          props.get('bar'))
+        rule.execute_rule()
+
+        self.assertEqual({'red': 'dak'}, props.get('far'))
+
+    def test_replace_rule_map_dont_exist(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    'red': properties.Schema(
+                        properties.Schema.STRING
+                    )
+                }
+            ),
+            'bar': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        data = {
+            'bar': 'dak'
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'red'],
+                                          props.get('bar'))
+        rule.execute_rule()
+
+        self.assertEqual({'red': 'dak'}, props.get('far'))
+
+    def test_replace_rule_list_different(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.STRING
+                        )
+                    }
+                )
+            ),
+            'bar': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        data = {
+            'far': [{'red': 'blue'},
+                    {'red': 'roses'}],
+            'bar': 'dak'
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'red'],
+                                          props.get('bar'))
+        rule.execute_rule()
+
+        self.assertEqual([{'red': 'dak'}, {'red': 'dak'}], props.get('far'))
+
+    def test_replace_rule_list_same(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.STRING
+                        ),
+                        'blue': properties.Schema(
+                            properties.Schema.STRING
+                        )
+                    }
+                )
+            )}
+
+        data = {
+            'far': [{'blue': 'white'},
+                    {'red': 'roses'}]
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'red'],
+                                          None,
+                                          'blue')
+        rule.execute_rule()
+
+        self.assertEqual([{'red': 'white', 'blue': None},
+                          {'blue': None, 'red': 'roses'}],
+                         props.get('far'))
+
+    def test_replace_rule_str(self):
+        schema = {
+            'far': properties.Schema(properties.Schema.STRING),
+            'bar': properties.Schema(properties.Schema.STRING)
+        }
+
+        data = {'far': 'one', 'bar': 'two'}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['bar'],
+                                          props.get('far'))
+        rule.execute_rule()
+
+        self.assertEqual('one', props.get('bar'))
+
+    def test_replace_rule_str_value_path_error(self):
+        schema = {
+            'far': properties.Schema(properties.Schema.STRING),
+            'bar': properties.Schema(properties.Schema.STRING)
+        }
+
+        data = {'far': 'one', 'bar': 'two'}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['bar'],
+                                          value_path=['far'])
+        ex = self.assertRaises(ValueError, rule.execute_rule)
+        self.assertEqual('Cannot use bar and far at the same time.',
+                         six.text_type(ex))
+
+    def test_replace_rule_str_value_path(self):
+        schema = {
+            'far': properties.Schema(properties.Schema.STRING),
+            'bar': properties.Schema(properties.Schema.STRING)
+        }
+
+        data = {'far': 'one'}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['bar'],
+                                          value_path=['far'])
+        rule.execute_rule()
+
+        self.assertEqual('one', props.get('bar'))
+
+    def test_replace_rule_str_invalid(self):
+        schema = {
+            'far': properties.Schema(properties.Schema.STRING),
+            'bar': properties.Schema(properties.Schema.INTEGER)
+        }
+
+        data = {'far': 'one', 'bar': 2}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['bar'],
+                                          props.get('far'))
+        rule.execute_rule()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                props.validate)
+        self.assertEqual("Property error: bar: Value 'one' is not an integer",
+                         six.text_type(exc))
+
+    def test_delete_rule_list(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.STRING
+                        )
+                    }
+                )
+            )}
+
+        data = {
+            'far': [{'red': 'blue'},
+                    {'red': 'roses'}],
+        }
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.DELETE,
+                                          ['far', 'red'])
+        rule.execute_rule()
+
+        self.assertEqual([{'red': None}, {'red': None}], props.get('far'))
+
+    def test_delete_rule_other(self):
+        schema = {
+            'far': properties.Schema(properties.Schema.STRING)
+        }
+
+        data = {'far': 'one'}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.DELETE,
+                                          ['far'])
+        rule.execute_rule()
+
+        self.assertIsNone(props.get('far'))
