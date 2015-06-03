@@ -1054,6 +1054,8 @@ class EngineService(service.Service):
             rpc_api.RES_SCHEMA_RES_TYPE: type_name,
             rpc_api.RES_SCHEMA_PROPERTIES: dict(properties_schema()),
             rpc_api.RES_SCHEMA_ATTRIBUTES: dict(attributes_schema()),
+            rpc_api.RES_SCHEMA_SUPPORT_STATUS:
+                resource_class.support_status.to_dict(),
         }
 
     def generate_template(self, cnxt, type_name, template_type='cfn'):

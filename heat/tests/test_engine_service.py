@@ -2328,6 +2328,11 @@ class StackServiceTest(common.HeatTestCase):
                 'foo': {'description': 'A generic attribute'},
                 'Foo': {'description': 'Another generic attribute'},
             },
+            'support_status': {
+                'status': 'SUPPORTED',
+                'version': None,
+                'message': None,
+            },
         }
 
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
@@ -2346,6 +2351,11 @@ class StackServiceTest(common.HeatTestCase):
                           'type': 'string'},
                 'attr2': {'description': 'Another generic attribute',
                           'type': 'map'},
+            },
+            'support_status': {
+                'status': 'SUPPORTED',
+                'version': None,
+                'message': None,
             },
         }
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
