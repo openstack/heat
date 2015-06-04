@@ -1425,10 +1425,10 @@ class Server(stack_user.StackUser):
         else:
             LOG.debug('resuming server %s' % self.resource_id)
             server.resume()
-            return server
+            return server.id
 
-    def check_resume_complete(self, server):
-        return self.client_plugin()._check_active(server)
+    def check_resume_complete(self, server_id):
+        return self.client_plugin()._check_active(server_id)
 
     def handle_snapshot(self):
         image_id = self.nova().servers.create_image(
