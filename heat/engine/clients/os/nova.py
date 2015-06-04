@@ -452,17 +452,17 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         """Rebuild the server and call check_rebuild to verify."""
         server.rebuild(image_id, password=password,
                        preserve_ephemeral=preserve_ephemeral)
-        yield self.check_rebuild(server, image_id)
+        yield self.check_rebuild(server.id, image_id)
 
-    def check_rebuild(self, server, image_id):
+    def check_rebuild(self, server_id, image_id):
         """
         Verify that a rebuilding server is rebuilt.
         Raise error if it ends up in an ERROR state.
         """
-        self.refresh_server(server)
-        while server.status == 'REBUILD':
+        server = self.fetch_server(server_id)
+        while (server is None or server.status == 'REBUILD'):
             yield
-            self.refresh_server(server)
+            server = self.fetch_server(server_id)
         if server.status == 'ERROR':
             raise exception.Error(
                 _("Rebuilding server failed, status '%s'") % server.status)
@@ -658,6 +658,15 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, network):
         client.client_plugin('nova').get_nova_network_id(network)
+
+
+# NOTE(pas-ha): these Server*Progress classes are simple key-value storages
+# meant to be passed between handle_* and check_*_complete,
+# being mutated during subsequent check_*_complete calls.
+class ServerCreateProgress(object):
+    def __init__(self, server_id, complete=False):
+        self.complete = complete
+        self.server_id = server_id
 
 
 class ServerDeleteProgress(object):

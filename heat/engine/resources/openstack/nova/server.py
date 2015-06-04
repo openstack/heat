@@ -25,7 +25,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
-from heat.engine.clients.os import nova as heat_nova
+from heat.engine.clients.os import nova as nova_cp
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
@@ -759,10 +759,10 @@ class Server(stack_user.StackUser):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        return server
+        return server.id
 
-    def check_create_complete(self, server):
-        return self.client_plugin()._check_active(server)
+    def check_create_complete(self, server_id):
+        return self.client_plugin()._check_active(server_id)
 
     def handle_check(self):
         server = self.client().servers.get(self.resource_id)
@@ -1389,7 +1389,7 @@ class Server(stack_user.StackUser):
             client = self.nova()
             image_id = client.servers.create_image(
                 self.resource_id, self.physical_resource_name())
-            return heat_nova.ServerDeleteProgress(
+            return nova_cp.ServerDeleteProgress(
                 self.resource_id, image_id, False)
         return self.handle_delete()
 
@@ -1408,7 +1408,7 @@ class Server(stack_user.StackUser):
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             return
-        return heat_nova.ServerDeleteProgress(self.resource_id)
+        return nova_cp.ServerDeleteProgress(self.resource_id)
 
     def check_delete_complete(self, progress):
         if not progress:
