@@ -25,6 +25,8 @@ from heat.engine import support
 
 class Order(resource.Resource):
 
+    support_status = support.SupportStatus(version='2014.2')
+
     PROPERTIES = (
         NAME, PAYLOAD_CONTENT_TYPE, MODE, EXPIRATION,
         ALGORITHM, BIT_LENGTH, TYPE, REQUEST_TYPE, SUBJECT_DN,

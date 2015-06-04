@@ -19,9 +19,12 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class Secret(resource.Resource):
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         NAME, PAYLOAD, PAYLOAD_CONTENT_TYPE, PAYLOAD_CONTENT_ENCODING,

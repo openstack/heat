@@ -16,13 +16,11 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resource
+from heat.engine.resources.openstack.barbican import secret
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import secret  # noqa
 
 stack_template = '''
 heat_template_version: 2013-05-23
@@ -55,7 +53,6 @@ class TestSecret(common.HeatTestCase):
         mock_client = self.patcher_client.start()
         self.barbican = mock_client.return_value
 
-        self._register_resources()
         self.stack = utils.parse_stack(template_format.parse(stack_template))
         self.stack.validate()
         resource_defns = self.stack.t.resource_definitions(self.stack)
@@ -65,10 +62,6 @@ class TestSecret(common.HeatTestCase):
     def tearDown(self):
         super(TestSecret, self).tearDown()
         self.patcher_client.stop()
-
-    def _register_resources(self):
-        for res_name, res_class in six.iteritems(secret.resource_mapping()):
-            resource._register_class(res_name, res_class)
 
     def _create_resource(self, name, snippet, stack):
         res = secret.Secret(name, snippet, stack)
