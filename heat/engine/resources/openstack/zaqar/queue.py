@@ -57,7 +57,8 @@ class ZaqarQueue(resource.Resource):
                 status=support.DEPRECATED,
                 message=_("Use get_resource|Ref command instead. "
                           "For example: { get_resource : <resource_name> }"),
-                version='2015.1'
+                version='2015.1',
+                previous_status=support.SupportStatus(version='2014.1')
             )
         ),
         HREF: attributes.Schema(

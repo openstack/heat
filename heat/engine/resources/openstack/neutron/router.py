@@ -94,7 +94,8 @@ class Router(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
                 version='2015.1',
-                message=_('Use property %s.') % L3_AGENT_IDS),
+                message=_('Use property %s.') % L3_AGENT_IDS,
+                previous_status=support.SupportStatus(version='2014.1')),
         ),
         L3_AGENT_IDS: properties.Schema(
             properties.Schema.LIST,
@@ -283,7 +284,9 @@ class RouterInterface(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % ROUTER,
-                version='2015.1'),
+                version='2015.1',
+                previous_status=support.SupportStatus(version='2013.1')
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.router')
             ],
@@ -312,7 +315,9 @@ class RouterInterface(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % PORT,
-                version='2015.1'),
+                version='2015.1',
+                previous_status=support.SupportStatus(version='2014.1')
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.port')
             ]
@@ -394,10 +399,14 @@ class RouterInterface(neutron.NeutronResource):
 class RouterGateway(neutron.NeutronResource):
 
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
+        status=support.HIDDEN,
         message=_('Use the `external_gateway_info` property in '
                   'the router resource to set up the gateway.'),
-        version='2014.1'
+        version='5.0.0',
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            version='2014.1'
+        )
     )
 
     PROPERTIES = (

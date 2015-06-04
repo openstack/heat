@@ -293,13 +293,19 @@ class Server(stack_user.StackUser):
         ),
         ADMIN_USER: properties.Schema(
             properties.Schema.STRING,
-            _('Name of the administrative user to use on the server. '
-              'The default cloud-init user set up for each image '
-              '(e.g. "ubuntu" for Ubuntu 12.04+, "fedora" for Fedora 19+ '
-              'and "cloud-user" for CentOS/RHEL 6.5).'),
+            _('Name of the administrative user to use on the server.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                version='2014.1')
+                status=support.HIDDEN,
+                version='5.0.0',
+                message=_('The default cloud-init user set up for each image '
+                          '(e.g. "ubuntu" for Ubuntu 12.04+, "fedora" for '
+                          'Fedora 19+ and "cloud-user" for CentOS/RHEL 6.5).'),
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.1',
+                    previous_status=support.SupportStatus(version='2013.2')
+                )
+            )
         ),
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
@@ -464,11 +470,16 @@ class Server(stack_user.StackUser):
               'this time. Result may not be predictable if the server has '
               'addresses from more than one network.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                version='2014.2',
+                status=support.HIDDEN,
+                version='5.0.0',
                 message=_('Use the networks attribute instead of '
                           'first_address. For example: "{get_attr: '
-                          '[<server name>, networks, <network name>, 0]}"')
+                          '[<server name>, networks, <network name>, 0]}"'),
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.2',
+                    previous_status=support.SupportStatus(version='2013.2')
+                )
             )
         ),
         INSTANCE_NAME: attributes.Schema(

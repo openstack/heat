@@ -82,7 +82,8 @@ class VPNService(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
                 message=_('Use property %s') % ROUTER,
-                version='2015.1'),
+                version='2015.1',
+                previous_status=support.SupportStatus(version='2013.2')),
             constraints=[
                 constraints.CustomConstraint('neutron.router')
             ]

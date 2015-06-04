@@ -2191,8 +2191,7 @@ class StackServiceTest(common.HeatTestCase):
                                             mock_is_service_available):
         mock_is_service_available.return_value = True
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
-        self.assertEqual(set(['OS::Neutron::RouterGateway',
-                              'OS::Heat::HARestarter',
+        self.assertEqual(set(['OS::Heat::HARestarter',
                               'OS::Heat::SoftwareDeployments',
                               'OS::Heat::StructuredDeployments']),
                          set(resources))
