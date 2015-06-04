@@ -321,7 +321,27 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             'username': 'fake username',
             'tenant': 'fake tenant',
             'owner_id': 'fake owner-id',
-            'balrog': 'you shall not pass!'
+            'stack_name': 'fake stack name',
+            'stack_identity': 'fake identity',
+            'creation_time': 'create timestamp',
+            'updated_time': 'update timestamp',
+            'deletion_time': 'deletion timestamp',
+            'notification_topics': 'fake topic',
+            'description': 'fake description',
+            'template_description': 'fake description',
+            'parameters': 'fake params',
+            'outputs': 'fake outputs',
+            'stack_action': 'fake action',
+            'stack_status': 'fake status',
+            'stack_status_reason': 'fake status reason',
+            'capabilities': 'fake capabilities',
+            'disable_rollback': 'fake value',
+            'timeout_mins': 'fake timeout',
+            'stack_owner': 'fake owner',
+            'parent': 'fake parent',
+            'stack_user_project_id': 'fake project id',
+            'tags': 'fake tags',
+            'barlog': 'you shall not pass!'
         }
         req = self._get('/stacks', params=params)
         mock_call.return_value = []
@@ -333,15 +353,18 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(7, len(filters))
-        self.assertIn('id', filters)
-        self.assertIn('status', filters)
-        self.assertIn('name', filters)
-        self.assertIn('action', filters)
-        self.assertIn('username', filters)
-        self.assertIn('tenant', filters)
-        self.assertIn('owner_id', filters)
-        self.assertNotIn('balrog', filters)
+        self.assertEqual(16, len(filters))
+        for key in ('id', 'status', 'name', 'action', 'username', 'tenant',
+                    'owner_id', 'stack_name', 'stack_action', 'stack_status',
+                    'stack_status_reason', 'disable_rollback', 'timeout_mins',
+                    'stack_owner', 'parent', 'stack_user_project_id'):
+            self.assertIn(key, filters)
+
+        for key in ('stack_identity', 'creation_time', 'updated_time',
+                    'deletion_time', 'notification_topics', 'description',
+                    'template_description', 'parameters', 'outputs',
+                    'capabilities', 'tags', 'barlog'):
+            self.assertNotIn(key, filters)
 
     def test_index_returns_stack_count_if_with_count_is_true(
             self, mock_enforce):

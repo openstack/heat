@@ -186,6 +186,8 @@ class StackController(object):
 
     def _index(self, req, tenant_safe=True):
         filter_whitelist = {
+            # usage of keys in this list are not encouraged, please use
+            # rpc_api.STACK_KEYS instead
             'id': 'mixed',
             'status': 'mixed',
             'name': 'mixed',
@@ -208,7 +210,25 @@ class StackController(object):
             'not_tags_any': 'single',
         }
         params = util.get_allowed_params(req.params, whitelist)
-        filter_params = util.get_allowed_params(req.params, filter_whitelist)
+        stack_keys = dict.fromkeys(rpc_api.STACK_KEYS, 'mixed')
+        unsupported = (
+            rpc_api.STACK_ID,  # not user visible
+            rpc_api.STACK_CAPABILITIES,  # not supported
+            rpc_api.STACK_CREATION_TIME,  # don't support timestamp
+            rpc_api.STACK_DELETION_TIME,  # don't support timestamp
+            rpc_api.STACK_DESCRIPTION,  # not supported
+            rpc_api.STACK_NOTIFICATION_TOPICS,  # not supported
+            rpc_api.STACK_OUTPUTS,  # not in database
+            rpc_api.STACK_PARAMETERS,  # not in this table
+            rpc_api.STACK_TAGS,  # tags query following a specific guideline
+            rpc_api.STACK_TMPL_DESCRIPTION,  # not supported
+            rpc_api.STACK_UPDATED_TIME,  # don't support timestamp
+        )
+        for key in unsupported:
+            stack_keys.pop(key)
+        # downward compatibility
+        stack_keys.update(filter_whitelist)
+        filter_params = util.get_allowed_params(req.params, stack_keys)
 
         show_deleted = False
         p_name = rpc_api.PARAM_SHOW_DELETED

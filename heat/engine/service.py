@@ -500,6 +500,9 @@ class EngineService(service.Service):
             multiple tags using the boolean OR expression
         :returns: a list of formatted stacks
         """
+        if filters is not None:
+            filters = api.translate_filters(filters)
+
         stacks = parser.Stack.load_all(cnxt, limit, marker, sort_keys,
                                        sort_dir, filters, tenant_safe,
                                        show_deleted, resolve_data=False,
