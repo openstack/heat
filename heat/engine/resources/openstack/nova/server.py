@@ -1375,34 +1375,24 @@ class Server(stack_user.StackUser):
                 raise
         else:
             LOG.debug('suspending server %s' % self.resource_id)
-            # We want the server.suspend to happen after the volume
-            # detachement has finished, so pass both tasks and the server
-            suspend_runner = scheduler.TaskRunner(server.suspend)
-            return server, suspend_runner
+            server.suspend()
+            return server.id
 
-    def check_suspend_complete(self, cookie):
-        server, suspend_runner = cookie
-
-        if not suspend_runner.started():
-            suspend_runner.start()
-
-        if suspend_runner.done():
-            if server.status == 'SUSPENDED':
-                return True
-
-            cp = self.client_plugin()
-            cp.refresh_server(server)
-            LOG.debug('%(name)s check_suspend_complete status = %(status)s'
-                      % {'name': self.name, 'status': server.status})
-            if server.status in list(cp.deferred_server_statuses +
-                                     ['ACTIVE']):
-                return server.status == 'SUSPENDED'
-            else:
-                exc = exception.Error(_('Suspend of server %(server)s failed '
-                                        'with unknown status: %(status)s') %
-                                      dict(server=server.name,
-                                           status=server.status))
-                raise exc
+    def check_suspend_complete(self, server_id):
+        cp = self.client_plugin()
+        server = cp.fetch_server(server_id)
+        if not server:
+            return False
+        status = cp.get_status(server)
+        LOG.debug('%(name)s check_suspend_complete status = %(status)s'
+                  % {'name': self.name, 'status': status})
+        if status in list(cp.deferred_server_statuses + ['ACTIVE']):
+            return status == 'SUSPENDED'
+        else:
+            exc = resource.ResourceUnknownStatus(
+                result=_('Suspend of server %s failed') % server.name,
+                resource_status=status)
+            raise exc
 
     def handle_resume(self):
         '''

@@ -999,28 +999,7 @@ class InstancesTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
 
-    def test_instance_status_suspend_immediate(self):
-        return_server = self.fc.servers.list()[1]
-        instance = self._create_test_instance(return_server,
-                                              'in_suspend')
-
-        instance.resource_id = '1234'
-        self.m.ReplayAll()
-
-        # Override the get_servers_1234 handler status to SUSPENDED
-        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d['server']['status'] = 'SUSPENDED'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d))
-        mox.Replay(get)
-
-        scheduler.TaskRunner(instance.suspend)()
-        self.assertEqual((instance.SUSPEND, instance.COMPLETE), instance.state)
-
-        self.m.VerifyAll()
-
-    def test_instance_status_suspend_wait(self):
+    def test_instance_status_suspend(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_suspend_wait')

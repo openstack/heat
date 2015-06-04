@@ -1757,28 +1757,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_server_status_suspend_immediate(self):
-        return_server = self.fc.servers.list()[1]
-        server = self._create_test_server(return_server,
-                                          'srv_suspend3')
-
-        server.resource_id = '1234'
-        self.m.ReplayAll()
-
-        # Override the get_servers_1234 handler status to SUSPENDED
-        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d['server']['status'] = 'SUSPENDED'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d))
-        mox.Replay(get)
-
-        scheduler.TaskRunner(server.suspend)()
-        self.assertEqual((server.SUSPEND, server.COMPLETE), server.state)
-
-        self.m.VerifyAll()
-
-    def test_server_status_suspend_wait(self):
+    def test_server_status_suspend(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'srv_susp_w')
@@ -1827,9 +1806,10 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
-        self.assertEqual('Error: Suspend of server sample-server failed '
-                         'with unknown status: TRANSMOGRIFIED',
-                         six.text_type(ex))
+        self.assertIsInstance(ex.exc, resource.ResourceUnknownStatus)
+        self.assertEqual('Suspend of server sample-server failed - '
+                         'Unknown status TRANSMOGRIFIED due to "Unknown"',
+                         six.text_type(ex.exc.message))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()

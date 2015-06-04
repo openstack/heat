@@ -797,29 +797,28 @@ class Instance(resource.Resource):
             if self.client_plugin().is_not_found(e):
                 raise exception.NotFound(_('Failed to find instance %s') %
                                          self.resource_id)
+            else:
+                raise
         else:
             LOG.debug("suspending instance %s" % self.resource_id)
             server.suspend()
-            return server
+            return server.id
 
-    def check_suspend_complete(self, server):
-
-        if server.status == 'SUSPENDED':
-            return True
-
+    def check_suspend_complete(self, server_id):
         cp = self.client_plugin()
-        cp.refresh_server(server)
-        LOG.debug("%(name)s check_suspend_complete "
-                  "status = %(status)s",
-                  {'name': self.name, 'status': server.status})
-        if server.status in list(cp.deferred_server_statuses + ['ACTIVE']):
-            return server.status == 'SUSPENDED'
+        server = cp.fetch_server(server_id)
+        if not server:
+            return False
+        status = cp.get_status(server)
+        LOG.debug('%(name)s check_suspend_complete status = %(status)s'
+                  % {'name': self.name, 'status': status})
+        if status in list(cp.deferred_server_statuses + ['ACTIVE']):
+            return status == 'SUSPENDED'
         else:
-            raise exception.Error(_(' nova reported unexpected '
-                                    'instance[%(instance)s] '
-                                    'status[%(status)s]') %
-                                  {'instance': self.name,
-                                  'status': server.status})
+            exc = resource.ResourceUnknownStatus(
+                result=_('Suspend of instance %s failed') % server.name,
+                resource_status=status)
+            raise exc
 
     def handle_resume(self):
         '''
