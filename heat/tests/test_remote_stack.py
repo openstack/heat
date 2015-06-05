@@ -457,6 +457,36 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         self.assertEqual((parent.RESTORE, parent.COMPLETE), parent.state)
 
+    def test_check(self):
+        stacks = [get_stack(stack_status='CHECK_IN_PROGRESS'),
+                  get_stack(stack_status='CHECK_COMPLETE')]
+
+        rsrc = self.create_remote_stack()
+
+        self.heat.stacks.get = mock.MagicMock(side_effect=stacks)
+        self.heat.actions.check = mock.MagicMock()
+        scheduler.TaskRunner(rsrc.check)()
+
+        self.assertEqual((rsrc.CHECK, rsrc.COMPLETE), rsrc.state)
+        self.heat.actions.check.assert_called_with(stack_id=rsrc.resource_id)
+
+    def test_check_failed(self):
+        returns = [get_stack(stack_status='CHECK_IN_PROGRESS'),
+                   get_stack(stack_status='CHECK_FAILED',
+                             stack_status_reason='Remote stack check failed')]
+
+        rsrc = self.create_remote_stack()
+
+        self.heat.stacks.get = mock.MagicMock(side_effect=returns)
+        self.heat.actions.resume = mock.MagicMock()
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.check))
+        error_msg = ('ResourceInError: Went to status CHECK_FAILED due to '
+                     '"Remote stack check failed"')
+        self.assertEqual(error_msg, six.text_type(error))
+        self.assertEqual((rsrc.CHECK, rsrc.FAILED), rsrc.state)
+        self.heat.actions.check.assert_called_with(stack_id=rsrc.resource_id)
+
     def test_resume(self):
         stacks = [get_stack(stack_status='RESUME_IN_PROGRESS'),
                   get_stack(stack_status='RESUME_COMPLETE')]

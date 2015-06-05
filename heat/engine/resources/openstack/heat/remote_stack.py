@@ -205,6 +205,9 @@ class RemoteStack(resource.Resource):
 
         return defn.freeze(properties=props)
 
+    def handle_check(self):
+        self.heat().actions.check(stack_id=self.resource_id)
+
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource):
         # Always issue an update to the remote stack and let the individual
@@ -279,6 +282,9 @@ class RemoteStack(resource.Resource):
 
     def check_snapshot_complete(self, *args):
         return self._check_action_complete(action=self.SNAPSHOT)
+
+    def check_check_complete(self, *args):
+        return self._check_action_complete(action=self.CHECK)
 
     def _resolve_attribute(self, name):
         try:
