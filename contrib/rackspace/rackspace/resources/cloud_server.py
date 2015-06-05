@@ -21,6 +21,7 @@ from heat.common.i18n import _LW
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.nova import server
+from heat.engine import support
 
 
 try:
@@ -38,6 +39,10 @@ class CloudServer(server.Server):
     This resource overloads existent integrated OS::Nova::Server resource and
     is used for Rackspace Cloud Servers.
     """
+
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
 
     # Managed Cloud automation statuses
     MC_STATUS_IN_PROGRESS = 'In Progress'
