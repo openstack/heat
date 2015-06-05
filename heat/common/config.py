@@ -115,7 +115,8 @@ engine_opts = [
                        ' delegated to heat when creating a stack.')),
     cfg.IntOpt('max_resources_per_stack',
                default=1000,
-               help=_('Maximum resources allowed per top-level stack.')),
+               help=_('Maximum resources allowed per top-level stack. '
+                      '-1 stands for unlimited.')),
     cfg.IntOpt('max_stacks_per_tenant',
                default=100,
                help=_('Maximum number of stacks any one tenant may have'
