@@ -20,6 +20,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 try:
     from pyrax.exceptions import Forbidden
@@ -42,6 +43,10 @@ class Group(resource.Resource):
     # pyrax differs drastically from the actual Auto Scale API. We'll prefer
     # the true API here, but since pyrax doesn't support the full flexibility
     # of the API, we'll have to restrict what users can provide.
+
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
 
     # properties are identical to the API POST /groups.
     PROPERTIES = (
@@ -385,6 +390,10 @@ class ScalingPolicy(resource.Resource):
 
     """Represents a Rackspace Auto Scale scaling policy."""
 
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
+
     PROPERTIES = (
         GROUP, NAME, CHANGE, CHANGE_PERCENT, DESIRED_CAPACITY,
         COOLDOWN, TYPE, ARGS,
@@ -508,6 +517,10 @@ class WebHook(resource.Resource):
 
     Exposes the URLs of the webhook as attributes.
     """
+
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
 
     PROPERTIES = (
         POLICY, NAME, METADATA,

@@ -45,6 +45,10 @@ except ImportError:
 
 class DockerContainer(resource.Resource):
 
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
+
     PROPERTIES = (
         DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
         PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,

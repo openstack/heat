@@ -74,6 +74,10 @@ class CloudLoadBalancer(resource.Resource):
 
     """Represents a Rackspace Cloud Loadbalancer."""
 
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
+
     PROPERTIES = (
         NAME, NODES, PROTOCOL, ACCESS_LIST, HALF_CLOSED, ALGORITHM,
         CONNECTION_LOGGING, METADATA, PORT, TIMEOUT,

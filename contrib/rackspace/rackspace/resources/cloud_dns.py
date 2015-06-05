@@ -20,6 +20,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 try:
     from pyrax.exceptions import NotFound
@@ -37,6 +38,10 @@ LOG = logging.getLogger(__name__)
 class CloudDns(resource.Resource):
 
     """Represents a DNS resource."""
+
+    support_status = support.SupportStatus(
+        status=support.UNSUPPORTED,
+        message=_('This resource is not supported, use at your own risk.'))
 
     PROPERTIES = (
         NAME, EMAIL_ADDRESS, TTL, COMMENT, RECORDS,
