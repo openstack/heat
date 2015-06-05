@@ -141,7 +141,9 @@ class OSDBInstanceTest(common.HeatTestCase):
                                  availability_zone=None,
                                  datastore="SomeDStype",
                                  datastore_version="MariaDB-5.5",
-                                 nics=[]
+                                 nics=[],
+                                 replica_of=None,
+                                 replica_count=None
                                  ).AndReturn(fake_dbinstance)
 
     def _stubout_check_create_complete(self, fake_dbinstance):
@@ -247,7 +249,9 @@ class OSDBInstanceTest(common.HeatTestCase):
                                  availability_zone=None,
                                  datastore="SomeDStype",
                                  datastore_version="MariaDB-5.5",
-                                 nics=[]
+                                 nics=[],
+                                 replica_of=None,
+                                 replica_count=None
                                  ).AndReturn(fake_dbinstance)
         self.fc.instances.get(fake_dbinstance.id).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
@@ -616,7 +620,9 @@ class OSDBInstanceTest(common.HeatTestCase):
                                  datastore=None,
                                  datastore_version=None,
                                  nics=[{'port-id': 'someportid',
-                                        'v4-fixed-ip': '1.2.3.4'}]
+                                        'v4-fixed-ip': '1.2.3.4'}],
+                                 replica_of=None,
+                                 replica_count=None
                                  ).AndReturn(fake_dbinstance)
         self._stubout_check_create_complete(fake_dbinstance)
         self.stub_PortConstraint_validate()
@@ -647,7 +653,9 @@ class OSDBInstanceTest(common.HeatTestCase):
                                  availability_zone=None,
                                  datastore=None,
                                  datastore_version=None,
-                                 nics=[{'net-id': net_id}]
+                                 nics=[{'net-id': net_id}],
+                                 replica_of=None,
+                                 replica_count=None
                                  ).AndReturn(fake_dbinstance)
         self._stubout_check_create_complete(fake_dbinstance)
         self.m.ReplayAll()
@@ -681,7 +689,48 @@ class OSDBInstanceTest(common.HeatTestCase):
                                  availability_zone=None,
                                  datastore=None,
                                  datastore_version=None,
-                                 nics=[{'net-id': 'somenetid'}]
+                                 nics=[{'net-id': 'somenetid'}],
+                                 replica_of=None,
+                                 replica_count=None
+                                 ).AndReturn(fake_dbinstance)
+        self._stubout_check_create_complete(fake_dbinstance)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
+    def test_osdatabase_create_with_replication(self):
+
+        db_template_with_replication = '''
+        heat_template_version: 2013-05-23
+        description: MySQL instance running on openstack DBaaS cloud
+        resources:
+          MySqlCloudDB:
+            type: OS::Trove::Instance
+            properties:
+              name: test
+              flavor: 1GB
+              size: 30
+              replica_of: 0e642916-dd64-43b3-933f-ff34fff69a7f
+              replica_count: 2
+        '''
+
+        fake_dbinstance = FakeDBInstance()
+        t = template_format.parse(db_template_with_replication)
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_common_create()
+        self.fc.instances.create('test', 1, volume={'size': 30},
+                                 databases=[],
+                                 users=[],
+                                 restorePoint=None,
+                                 availability_zone=None,
+                                 datastore=None,
+                                 datastore_version=None,
+                                 nics=[],
+                                 replica_of=("0e642916-dd64-43b3-933f-"
+                                             "ff34fff69a7f"),
+                                 replica_count=2
                                  ).AndReturn(fake_dbinstance)
         self._stubout_check_create_complete(fake_dbinstance)
         self.m.ReplayAll()

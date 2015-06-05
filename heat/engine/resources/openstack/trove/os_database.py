@@ -52,9 +52,11 @@ class OSDBInstance(resource.Resource):
     PROPERTIES = (
         NAME, FLAVOR, SIZE, DATABASES, USERS, AVAILABILITY_ZONE,
         RESTORE_POINT, DATASTORE_TYPE, DATASTORE_VERSION, NICS,
+        REPLICA_OF, REPLICA_COUNT,
     ) = (
         'name', 'flavor', 'size', 'databases', 'users', 'availability_zone',
         'restore_point', 'datastore_type', 'datastore_version', 'networks',
+        'replica_of', 'replica_count'
     )
 
     _DATABASE_KEYS = (
@@ -249,6 +251,16 @@ class OSDBInstance(resource.Resource):
             properties.Schema.STRING,
             _('DB instance restore point.')
         ),
+        REPLICA_OF: properties.Schema(
+            properties.Schema.STRING,
+            _('Identifier of the source instance to replicate.'),
+            support_status=support.SupportStatus(version='2015.2')
+        ),
+        REPLICA_COUNT: properties.Schema(
+            properties.Schema.INTEGER,
+            _('The number of replicas to be created.'),
+            support_status=support.SupportStatus(version='2015.2')
+        ),
     }
 
     attributes_schema = {
@@ -297,6 +309,8 @@ class OSDBInstance(resource.Resource):
         zone = self.properties[self.AVAILABILITY_ZONE]
         self.datastore_type = self.properties[self.DATASTORE_TYPE]
         self.datastore_version = self.properties[self.DATASTORE_VERSION]
+        replica_of = self.properties[self.REPLICA_OF]
+        replica_count = self.properties[self.REPLICA_COUNT]
 
         # convert user databases to format required for troveclient.
         # that is, list of database dictionaries
@@ -339,7 +353,9 @@ class OSDBInstance(resource.Resource):
             availability_zone=zone,
             datastore=self.datastore_type,
             datastore_version=self.datastore_version,
-            nics=nics)
+            nics=nics,
+            replica_of=replica_of,
+            replica_count=replica_count)
         self.resource_id_set(instance.id)
 
         return instance.id
