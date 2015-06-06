@@ -15,7 +15,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
 import six
-from stevedore import extension
+from stevedore import enabled
 
 from heat.common import exception
 from heat.common.i18n import _LE
@@ -111,8 +111,17 @@ def initialise():
     if _mgr:
         return
 
-    _mgr = extension.ExtensionManager(
+    def client_is_available(client_plugin):
+        if not hasattr(client_plugin.plugin, 'is_available'):
+            # if the client does not have a is_available() class method, then
+            # we assume it wants to be always available
+            return True
+        # let the client plugin decide if it wants to register or not
+        return client_plugin.plugin.is_available()
+
+    _mgr = enabled.EnabledExtensionManager(
         namespace='heat.clients',
+        check_func=client_is_available,
         invoke_on_load=False)
 
 
