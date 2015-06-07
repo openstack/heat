@@ -58,7 +58,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
 
     @property
     def migration_api(self):
-        temp = __import__('oslo.db.sqlalchemy.migration', globals(),
+        temp = __import__('oslo_db.sqlalchemy.migration', globals(),
                           locals(), ['versioning_api'], -1)
         return temp.versioning_api
 
