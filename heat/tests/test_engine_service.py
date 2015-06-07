@@ -553,10 +553,8 @@ class StackCreateTest(common.HeatTestCase):
         self.assertIsNotNone(stack['WebServer'])
         self.assertTrue(stack['WebServer'].resource_id > 0)
 
-        self.m.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().AndRaise(fakes_nova.fake_exception())
-        mox.Replay(get)
+        self.patchobject(fc.servers, 'delete',
+                         side_effect=fakes_nova.fake_exception())
         stack.delete()
 
         rsrc = stack['WebServer']
@@ -1489,9 +1487,8 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
         stack = tools.get_stack(stack_name, self.ctx, user_policy_template)
         self.stack = stack
         fc = tools.setup_mocks(self.m, stack)
-        self.m.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().AndRaise(fakes_nova.fake_exception())
+        self.patchobject(fc.servers, 'delete',
+                         side_effect=fakes_nova.fake_exception())
 
         self.m.ReplayAll()
         stack.store()

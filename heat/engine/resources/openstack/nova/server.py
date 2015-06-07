@@ -1341,19 +1341,16 @@ class Server(stack_user.StackUser):
             self._delete_temp_url()
 
         try:
-            server = self.nova().servers.get(self.resource_id)
+            self.client().servers.delete(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
-        else:
-            deleter = scheduler.TaskRunner(self.client_plugin().delete_server,
-                                           server)
-            deleter.start()
-            return deleter
+            return
+        return self.resource_id
 
-    def check_delete_complete(self, deleter):
-        if deleter is None or deleter.step():
+    def check_delete_complete(self, server_id):
+        if not server_id:
             return True
-        return False
+        return self.client_plugin().check_delete_server_complete(server_id)
 
     def handle_suspend(self):
         '''

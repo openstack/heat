@@ -133,11 +133,10 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def _mock_delete(self, mocks):
         fc = fakes_nova.FakeClient()
-        mocks.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().MultipleTimes().AndReturn(fc)
-        mocks.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().MultipleTimes().AndRaise(fakes_nova.fake_exception())
+        mocks.StubOutWithMock(instances.Instance, 'client')
+        instances.Instance.client().MultipleTimes().AndReturn(fc)
+        self.patchobject(fc.servers, 'delete',
+                         side_effect=fakes_nova.fake_exception())
 
     @mock.patch.object(db_api, '_paginate_query')
     def test_filter_and_page_query_paginates_query(self, mock_paginate_query):

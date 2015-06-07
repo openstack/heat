@@ -765,21 +765,16 @@ class Instance(resource.Resource):
         if self.resource_id is None:
             return
         try:
-            server = self.nova().servers.get(self.resource_id)
+            self.client().servers.delete(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             return
-        deleter = scheduler.TaskRunner(self.client_plugin().delete_server,
-                                       server)
-        deleter.start()
-        return deleter
+        return self.resource_id
 
-    def check_delete_complete(self, deleter):
-        # if the resource was already deleted, deleters will be None
-        if deleter:
-            if not deleter.step():
-                return False
-        return True
+    def check_delete_complete(self, server_id):
+        if not server_id:
+            return True
+        return self.client_plugin().check_delete_server_complete(server_id)
 
     def handle_suspend(self):
         '''

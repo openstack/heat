@@ -379,40 +379,29 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         return mime_blob.as_string()
 
-    def delete_server(self, server):
-        '''
-        Deletes a server and waits for it to disappear from Nova.
-        '''
-        if not server:
-            return
+    def check_delete_server_complete(self, server_id):
+        """Wait for server to disappear from Nova."""
         try:
-            server.delete()
+            server = self.fetch_server(server_id)
         except Exception as exc:
             self.ignore_not_found(exc)
-            return
-
-        while True:
-            yield
-
-            try:
-                self.refresh_server(server)
-            except Exception as exc:
-                self.ignore_not_found(exc)
-                break
-            else:
-                # Some clouds append extra (STATUS) strings to the status
-                short_server_status = server.status.split('(')[0]
-                if short_server_status in ("DELETED", "SOFT_DELETED"):
-                    break
-                if short_server_status == "ERROR":
-                    fault = getattr(server, 'fault', {})
-                    message = fault.get('message', 'Unknown')
-                    code = fault.get('code')
-                    errmsg = (_("Server %(name)s delete failed: (%(code)s) "
-                                "%(message)s"))
-                    raise exception.Error(errmsg % {"name": server.name,
-                                                    "code": code,
-                                                    "message": message})
+            return True
+        if not server:
+            return False
+        status = self.get_status(server)
+        if status in ("DELETED", "SOFT_DELETED"):
+            return True
+        if status == 'ERROR':
+            fault = getattr(server, 'fault', {})
+            message = fault.get('message', 'Unknown')
+            code = fault.get('code')
+            errmsg = _("Server %(name)s delete failed: (%(code)s) "
+                       "%(message)s") % dict(name=server.name,
+                                             code=code,
+                                             message=message)
+            raise resource.ResourceInError(resource_status=status,
+                                           status_reason=errmsg)
+        return False
 
     @scheduler.wrappertask
     def resize(self, server, flavor, flavor_id):
