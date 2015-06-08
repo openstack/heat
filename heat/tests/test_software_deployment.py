@@ -762,6 +762,23 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual({'foo': 'bar', 'deploy_status_code': 0}, ca[2])
         self.assertIsNotNone(ca[3])
 
+    def test_no_signal_action(self):
+        self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = 'deployment succeeded'
+        details = {
+            'foo': 'bar',
+            'deploy_status_code': 0
+        }
+        actions = [self.deployment.SUSPEND, self.deployment.DELETE]
+        ev = self.patchobject(self.deployment, 'handle_signal')
+        for action in actions:
+            for status in self.deployment.STATUSES:
+                self.deployment.state_set(action, status)
+                self.deployment.signal(details)
+                ev.assert_called_with(details)
+
     def test_handle_signal_ok_str_zero(self):
         self._create_stack(self.template)
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
