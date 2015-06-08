@@ -894,6 +894,209 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def _test_stack_update_preview(self, orig_template, new_template):
+        stack_name = 'service_update_test_stack'
+        params = {'foo': 'bar'}
+        old_stack = tools.get_stack(stack_name, self.ctx,
+                                    template=orig_template)
+        sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
+        s = stack_object.Stack.get_by_id(self.ctx, sid)
+
+        stack = tools.get_stack(stack_name, self.ctx, template=new_template)
+
+        self._stub_update_mocks(s, old_stack)
+
+        templatem.Template(new_template, files=None,
+                           env=stack.env).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(self.ctx, stack.name,
+                     stack.t,
+                     convergence=False,
+                     current_traversal=None,
+                     prev_raw_template_id=None,
+                     current_deps=None,
+                     disable_rollback=True,
+                     nested_depth=0,
+                     owner_id=None,
+                     parent_resource=None,
+                     stack_user_project_id='1234',
+                     strict_validate=True,
+                     tenant_id='test_tenant_id',
+                     timeout_mins=60,
+                     user_creds_id=u'1',
+                     username='test_username').AndReturn(stack)
+
+        self.m.StubOutWithMock(stack, 'validate')
+        stack.validate().AndReturn(None)
+        self.m.ReplayAll()
+
+        api_args = {'timeout_mins': 60}
+        result = self.man.preview_update_stack(self.ctx,
+                                               old_stack.identifier(),
+                                               new_template, params, None,
+                                               api_args)
+        self.m.VerifyAll()
+
+        return result
+
+    def test_stack_update_preview_added_unchanged(self):
+        orig_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test
+      user_data: wordpress
+'''
+
+        new_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test
+      user_data: wordpress
+  password:
+    type: OS::Heat::RandomString
+    properties:
+      length: 8
+'''
+
+        result = self._test_stack_update_preview(orig_template, new_template)
+
+        added = [x for x in result['added']][0]
+        self.assertEqual(added['resource_name'], 'password')
+        unchanged = [x for x in result['unchanged']][0]
+        self.assertEqual(unchanged['resource_name'], 'web_server')
+
+        empty_sections = ('deleted', 'replaced', 'updated')
+        for section in empty_sections:
+            section_contents = [x for x in result[section]]
+            self.assertEqual(section_contents, [])
+
+        self.m.VerifyAll()
+
+    def test_stack_update_preview_replaced(self):
+        orig_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test
+      user_data: wordpress
+'''
+
+        new_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test2
+      user_data: wordpress
+'''
+
+        result = self._test_stack_update_preview(orig_template, new_template)
+
+        replaced = [x for x in result['replaced']][0]
+        self.assertEqual(replaced['resource_name'], 'web_server')
+        empty_sections = ('added', 'deleted', 'unchanged', 'updated')
+        for section in empty_sections:
+            section_contents = [x for x in result[section]]
+            self.assertEqual(section_contents, [])
+
+        self.m.VerifyAll()
+
+    def test_stack_update_preview_updated(self):
+        orig_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test
+      user_data: wordpress
+'''
+
+        new_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.small
+      key_name: test
+      user_data: wordpress
+'''
+
+        result = self._test_stack_update_preview(orig_template, new_template)
+
+        updated = [x for x in result['updated']][0]
+        self.assertEqual(updated['resource_name'], 'web_server')
+        empty_sections = ('added', 'deleted', 'unchanged', 'replaced')
+        for section in empty_sections:
+            section_contents = [x for x in result[section]]
+            self.assertEqual(section_contents, [])
+
+        self.m.VerifyAll()
+
+    def test_stack_update_preview_deleted(self):
+        orig_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test
+      user_data: wordpress
+  password:
+    type: OS::Heat::RandomString
+    properties:
+      length: 8
+'''
+
+        new_template = '''
+heat_template_version: 2014-10-16
+resources:
+  web_server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      key_name: test
+      user_data: wordpress
+'''
+
+        result = self._test_stack_update_preview(orig_template, new_template)
+
+        deleted = [x for x in result['deleted']][0]
+        self.assertEqual(deleted['resource_name'], 'password')
+        unchanged = [x for x in result['unchanged']][0]
+        self.assertEqual(unchanged['resource_name'], 'web_server')
+        empty_sections = ('added', 'updated', 'replaced')
+        for section in empty_sections:
+            section_contents = [x for x in result[section]]
+            self.assertEqual(section_contents, [])
+
+        self.m.VerifyAll()
+
 
 class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
 

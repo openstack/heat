@@ -53,6 +53,7 @@
     "stacks:show": "rule:deny_stack_user",
     "stacks:template": "rule:deny_stack_user",
     "stacks:update": "rule:deny_stack_user",
+    "stacks:preview_update": "rule:deny_stack_user",
     "stacks:update_patch": "rule:deny_stack_user",
     "stacks:validate_template": "rule:deny_stack_user",
     "stacks:snapshot": "rule:deny_stack_user",

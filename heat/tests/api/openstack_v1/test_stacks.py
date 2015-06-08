@@ -1101,6 +1101,47 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual({'stack': 'formatted_stack'}, result)
 
+    def test_preview_update_stack(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'preview_update', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': 30}
+
+        req = self._put('/stacks/%(stack_name)s/%(stack_id)s/preview' %
+                        identity, json.dumps(body))
+        resource_changes = {'updated': [],
+                            'deleted': [],
+                            'unchanged': [],
+                            'added': [],
+                            'replaced': []}
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('preview_update_stack',
+             {'stack_identity': dict(identity),
+              'template': template,
+              'params': {'parameters': parameters,
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}}),
+            version='1.15'
+        ).AndReturn(resource_changes)
+        self.m.ReplayAll()
+
+        result = self.controller.preview_update(req, tenant_id=identity.tenant,
+                                                stack_name=identity.stack_name,
+                                                stack_id=identity.stack_id,
+                                                body=body)
+        self.assertEqual({'resource_changes': resource_changes}, result)
+        self.m.VerifyAll()
+
     def test_lookup(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'lookup', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
