@@ -44,9 +44,9 @@ class CinderVolumeType(resource.Resource):
     support_status = support.SupportStatus(version='2015.1')
 
     PROPERTIES = (
-        NAME, METADATA,
+        NAME, METADATA, IS_PUBLIC,
     ) = (
-        'name', 'metadata',
+        'name', 'metadata', 'is_public',
     )
 
     properties_schema = {
@@ -60,13 +60,23 @@ class CinderVolumeType(resource.Resource):
             _('The extra specs key and value pairs of the volume type.'),
             update_allowed=True
         ),
+        IS_PUBLIC: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Whether the volume type is accessible to the public.'),
+            default=True,
+            support_status=support.SupportStatus(version='2015.2'),
+        ),
     }
 
     def handle_create(self):
-        vtype_name = self.properties.get(self.NAME)
-        volume_type = self.cinder().volume_types.create(vtype_name)
+        args = {
+            'name': self.properties[self.NAME],
+            'is_public': self.properties[self.IS_PUBLIC]
+        }
+
+        volume_type = self.cinder().volume_types.create(**args)
         self.resource_id_set(volume_type.id)
-        vtype_metadata = self.properties.get(self.METADATA)
+        vtype_metadata = self.properties[self.METADATA]
         if vtype_metadata:
             volume_type.set_keys(vtype_metadata)
 
