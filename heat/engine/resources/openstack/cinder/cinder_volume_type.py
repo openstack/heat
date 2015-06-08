@@ -44,9 +44,9 @@ class CinderVolumeType(resource.Resource):
     support_status = support.SupportStatus(version='2015.1')
 
     PROPERTIES = (
-        NAME, METADATA, IS_PUBLIC,
+        NAME, METADATA, IS_PUBLIC, DESCRIPTION,
     ) = (
-        'name', 'metadata', 'is_public',
+        'name', 'metadata', 'is_public', 'description',
     )
 
     properties_schema = {
@@ -66,12 +66,19 @@ class CinderVolumeType(resource.Resource):
             default=True,
             support_status=support.SupportStatus(version='2015.2'),
         ),
+        DESCRIPTION: properties.Schema(
+            properties.Schema.STRING,
+            _('Description of the volume type.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='2015.2'),
+        ),
     }
 
     def handle_create(self):
         args = {
             'name': self.properties[self.NAME],
-            'is_public': self.properties[self.IS_PUBLIC]
+            'is_public': self.properties[self.IS_PUBLIC],
+            'description': self.properties[self.DESCRIPTION]
         }
 
         volume_type = self.cinder().volume_types.create(**args)
@@ -81,7 +88,13 @@ class CinderVolumeType(resource.Resource):
             volume_type.set_keys(vtype_metadata)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """Update the key-value pairs of cinder volume type."""
+        """Update the name, description and metadata for volume type."""
+
+        # Update the description of cinder volume type
+        if self.DESCRIPTION in prop_diff:
+            self.cinder().volume_types.update(
+                self.resource_id, description=prop_diff.get(self.DESCRIPTION))
+        # Update the key-value pairs of cinder volume type.
         if self.METADATA in prop_diff:
             volume_type = self.cinder().volume_types.get(self.resource_id)
             old_keys = volume_type.get_keys()
