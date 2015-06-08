@@ -50,8 +50,6 @@ class FormatTest(common.HeatTestCase):
         })
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResWithComplexPropsAndAttrs',
-                                 generic_rsrc.ResWithComplexPropsAndAttrs)
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   tmpl, stack_id=str(uuid.uuid4()))
 

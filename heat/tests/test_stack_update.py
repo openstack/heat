@@ -41,8 +41,6 @@ class StackUpdateTest(common.HeatTestCase):
                                  generic_rsrc.GenericResource)
         resource._register_class('ResourceWithPropsType',
                                  generic_rsrc.ResourceWithProps)
-        resource._register_class('ResWithComplexPropsAndAttrs',
-                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
     def test_update_add(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
