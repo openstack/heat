@@ -12,6 +12,7 @@
 #    under the License.
 
 import six
+import warnings
 
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
@@ -177,31 +178,42 @@ class ResourceDefinitionTest(common.HeatTestCase):
 
 
 class ResourceDefinitionSnippetTest(common.HeatTestCase):
-    def test_type(self):
-        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType')
-        self.assertEqual({'Type': 'SomeType'}, rd)
+    scenarios = [
+        ('type',
+            dict(
+                defn={},
+                expected={})),
+        ('metadata',
+            dict(
+                defn={'metadata': {'Foo': 'bar'}},
+                expected={'Metadata': {'Foo': 'bar'}})),
+        ('properties',
+            dict(
+                defn={'properties': {'Foo': 'bar'}},
+                expected={'Properties': {'Foo': 'bar'}})),
+        ('deletion_policy',
+            dict(
+                defn={'deletion_policy': rsrc_defn.ResourceDefinition.RETAIN},
+                expected={'DeletionPolicy': 'Retain'})),
+        ('update_policy',
+            dict(
+                defn={'update_policy': {'Foo': 'bar'}},
+                expected={'UpdatePolicy': {'Foo': 'bar'}}))
+    ]
 
-    def test_properties(self):
-        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType',
-                                          properties={'Foo': 'bar'})
-        self.assertEqual({'Type': 'SomeType',
-                          'Properties': {'Foo': 'bar'}}, rd)
+    def test_resource_snippet(self):
+        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', **self.defn)
+        with warnings.catch_warnings(record=True) as ws:
+            warnings.filterwarnings('always')
 
-    def test_metadata(self):
-        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType',
-                                          metadata={'Foo': 'bar'})
-        self.assertEqual({'Type': 'SomeType',
-                          'Metadata': {'Foo': 'bar'}}, rd)
+            # Work around http://bugs.python.org/issue4180
+            getattr(rsrc_defn, '__warningregistry__', {}).clear()
 
-    def test_deletion_policy(self):
-        rd = rsrc_defn.ResourceDefinition(
-            'rsrc', 'SomeType',
-            deletion_policy=rsrc_defn.ResourceDefinition.RETAIN)
-        self.assertEqual({'Type': 'SomeType',
-                          'DeletionPolicy': 'Retain'}, rd)
+            exp_result = {'Type': 'SomeType'}
+            exp_result.update(self.expected)
 
-    def test_update_policy(self):
-        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType',
-                                          update_policy={'Foo': 'bar'})
-        self.assertEqual({'Type': 'SomeType',
-                          'UpdatePolicy': {'Foo': 'bar'}}, rd)
+            self.assertEqual(exp_result, rd)
+
+            self.assertTrue(ws)
+            for warn in ws:
+                self.assertTrue(issubclass(warn.category, DeprecationWarning))
