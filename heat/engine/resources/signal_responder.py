@@ -68,8 +68,14 @@ class SignalResponder(stack_user.StackUser):
                          'no stored access/secret key'))
             return
 
-        waitcond_url = cfg.CONF.heat_waitcondition_server_url
-        signal_url = waitcond_url.replace('/waitcondition', signal_type)
+        config_url = cfg.CONF.heat_waitcondition_server_url
+        if config_url:
+            signal_url = config_url.replace('/waitcondition', signal_type)
+        else:
+            heat_client_plugin = self.stack.clients.client_plugin('heat')
+            endpoint = heat_client_plugin.get_heat_url()
+            signal_url = ''.join([endpoint, signal_type])
+
         host_url = urlparse.urlparse(signal_url)
 
         path = self.identifier().arn_url_path()

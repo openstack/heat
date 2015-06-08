@@ -45,7 +45,6 @@ service_opts = [
                default="",
                help=_('URL of the Heat metadata server.')),
     cfg.StrOpt('heat_waitcondition_server_url',
-               default="",
                help=_('URL of the Heat waitcondition server.')),
     cfg.StrOpt('heat_watch_server_url',
                default="",

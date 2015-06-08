@@ -14,7 +14,6 @@
 import datetime
 
 import mock
-from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
@@ -37,8 +36,6 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         super(TestAutoScalingPolicy, self).setUp()
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
@@ -130,8 +127,6 @@ class TestAutoScalingPolicy(common.HeatTestCase):
 class TestCooldownMixin(common.HeatTestCase):
     def setUp(self):
         super(TestCooldownMixin, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
@@ -207,8 +202,6 @@ class TestCooldownMixin(common.HeatTestCase):
 class ScalingPolicyAttrTest(common.HeatTestCase):
     def setUp(self):
         super(ScalingPolicyAttrTest, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
         t = template_format.parse(as_template)
         self.stack = utils.parse_stack(t, params=as_params)
         self.stack_name = self.stack.name
@@ -219,8 +212,12 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
                          self.policy.state)
 
     def test_alarm_attribute(self):
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8000/v1')
+        self.m.ReplayAll()
         alarm_url = self.policy.FnGetAtt('alarm_url')
-
         base = alarm_url.split('?')[0].split('%3A')
         self.assertEqual('http://server.test:8000/v1/signal/arn', base[0])
         self.assertEqual('openstack', base[1])
@@ -239,3 +236,4 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         self.assertEqual('AWSAccessKeyId', args[2].split('=')[0])
         self.assertEqual('SignatureVersion', args[3].split('=')[0])
         self.assertEqual('Signature', args[4].split('=')[0])
+        self.m.VerifyAll()

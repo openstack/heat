@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-from oslo_config import cfg
 import six
 
 from heat.common import exception
@@ -28,8 +27,6 @@ from heat.tests import utils
 class LaunchConfigurationTest(common.HeatTestCase):
     def setUp(self):
         super(LaunchConfigurationTest, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def validate_launch_config(self, t, stack, resource_name):
         # create the launch configuration resource

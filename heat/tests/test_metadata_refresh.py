@@ -13,7 +13,6 @@
 
 
 import mox
-from oslo_config import cfg
 
 from heat.common import identifier
 from heat.common import template_format
@@ -213,8 +212,6 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
         super(WaitCondMetadataUpdateTest, self).setUp()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def create_stack(self, stack_name='test_stack'):
         temp = template_format.parse(test_template_waitcondition)

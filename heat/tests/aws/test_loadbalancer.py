@@ -74,8 +74,6 @@ class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def test_loadbalancer(self):
         t = template_format.parse(lb_template)

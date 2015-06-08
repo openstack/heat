@@ -16,7 +16,6 @@ import datetime
 import json
 import uuid
 
-from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
@@ -79,8 +78,6 @@ class WaitConditionTest(common.HeatTestCase):
 
     def setUp(self):
         super(WaitConditionTest, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def create_stack(self, stack_id=None,
                      template=test_template_waitcondition, params=None,
@@ -351,8 +348,6 @@ class WaitConditionTest(common.HeatTestCase):
 class WaitConditionHandleTest(common.HeatTestCase):
     def setUp(self):
         super(WaitConditionHandleTest, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
@@ -378,10 +373,8 @@ class WaitConditionHandleTest(common.HeatTestCase):
                                            stack.id, '', 'WaitHandle')
         self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
         aws_wch.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
-
         self.m.ReplayAll()
         stack.create()
-
         return stack
 
     def test_handle(self):
@@ -391,6 +384,11 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack = self.create_stack(stack_id=stack_id,
                                        stack_name=stack_name)
 
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8000/v1')
+        self.m.ReplayAll()
         rsrc = self.stack['WaitHandle']
         # clear the url
         rsrc.data_set('ec2_signed_url', None, False)
@@ -521,8 +519,6 @@ class WaitConditionHandleTest(common.HeatTestCase):
 class WaitConditionUpdateTest(common.HeatTestCase):
     def setUp(self):
         super(WaitConditionUpdateTest, self).setUp()
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
 
     def create_stack(self, temp=None):
         if temp is None:
