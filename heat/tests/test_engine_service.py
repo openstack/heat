@@ -942,8 +942,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
 
     def test_stack_update_stack_id_equal(self):
         stack_name = 'test_stack_update_stack_id_equal'
-        res._register_class('ResourceWithPropsType',
-                            generic_rsrc.ResourceWithProps)
         tpl = {
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
@@ -1256,8 +1254,6 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-        res._register_class('ResourceWithPropsType',
-                            generic_rsrc.ResourceWithProps)
 
     @tools.stack_context('service_authorize_stack_user_nocreds_test_stack')
     def test_stack_authorize_stack_user_nocreds(self):
@@ -1348,8 +1344,6 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.create_periodic_tasks()
         self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-        res._register_class('ResourceWithPropsType',
-                            generic_rsrc.ResourceWithProps)
 
     @mock.patch.object(service_stack_watch.StackWatch, 'start_watch_task')
     @mock.patch.object(stack_object.Stack, 'get_all')

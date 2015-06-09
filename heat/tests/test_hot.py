@@ -898,8 +898,6 @@ class HotStackTest(common.HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResourceWithPropsType',
-                                 generic_rsrc.ResourceWithProps)
 
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))

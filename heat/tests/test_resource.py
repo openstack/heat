@@ -1559,8 +1559,6 @@ class ResourceDependenciesTest(common.HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResourceWithPropsType',
-                                 generic_rsrc.ResourceWithProps)
 
         self.deps = dependencies.Dependencies()
 
