@@ -329,12 +329,10 @@ class Workflow(signal_responder.SignalResponder,
                     result_input.update(
                         {key: details.get(
                             self.SIGNAL_DATA_INPUT).get(key) or value})
-            if details.get(self.PARAMS) is not None:
-                for key, value in six.iteritems(
-                        self.properties.get(self.PARAMS)):
-                    result_params.update(
-                        {key: details.get(
-                            self.SIGNAL_DATA_PARAMS).get(key) or value})
+            if details.get(self.SIGNAL_DATA_PARAMS) is not None:
+                if self.properties.get(self.PARAMS) is not None:
+                    result_params.update(self.properties.get(self.PARAMS))
+                result_params.update(details.get(self.SIGNAL_DATA_PARAMS))
 
         if not result_input and self.properties.get(self.INPUT):
             result_input.update(self.properties.get(self.INPUT))
