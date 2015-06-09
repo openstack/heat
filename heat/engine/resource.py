@@ -736,6 +736,8 @@ class Resource(object):
 
         before_props = before.properties(self.properties_schema,
                                          self.context)
+        # Regenerate the schema, else validation would fail
+        self.regenerate_info_schema(after)
         after_props = after.properties(self.properties_schema,
                                        self.context)
 
@@ -1039,6 +1041,16 @@ class Resource(object):
         :returns: the resource attribute named key
         """
         # By default, no attributes resolve
+        pass
+
+    def regenerate_info_schema(self, definition):
+        """
+        Default implementation; should be overridden by resources that would
+        require schema refresh during update, ex. TemplateResource
+
+        :definition: Resource Definition
+        """
+        # By default, do not regenerate
         pass
 
     def state_reset(self):
