@@ -11,13 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import importutils
-
 from heat.engine.clients import client_plugin
+from manilaclient import client as manila_client
+from manilaclient import exceptions
 
-exceptions = importutils.try_import(
-    'manilaclient.openstack.common.apiclient.exceptions')
-manila_client = importutils.try_import('manilaclient.v1.client')
+MANILACLIENT_VERSION = "1"
 
 
 class ManilaClientPlugin(client_plugin.ClientPlugin):
@@ -36,7 +34,7 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
             'input_auth_token': self.auth_token
         }
 
-        client = manila_client.Client(**args)
+        client = manila_client.Client(MANILACLIENT_VERSION, **args)
         return client
 
     def is_not_found(self, ex):
