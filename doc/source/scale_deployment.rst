@@ -51,7 +51,7 @@ Basic Architecture
 The heat architecture is as defined at `heat architecture
 <http://docs.openstack.org/developer/heat/architecture.html>`_ and shown in the
 diagram below, where we have a CLI that sends HTTP requests to the REST and CFN
-APIs, which in turn make calls using AMQP to the heat engine.
+APIs, which in turn make calls using AMQP to the heat-engine.
 ::
 
                    |- [REST API] -|

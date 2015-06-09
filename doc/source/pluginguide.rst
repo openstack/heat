@@ -552,7 +552,7 @@ the requirements for a candidate resource to be considered for inclusion:
 - Must have its dependencies listed in OpenStack's ``global-requirements.txt``
   file, or else it should be able to conditionally disable itself when there
   are missing dependencies, without crashing or otherwise affecting the normal
-  operation of the Heat engine service.
+  operation of the heat-engine service.
 - The resource's support status flag must be set to ``UNSUPPORTED``, to
   indicate that the Heat team is not responsible for supporting this resource.
 - The code must be of comparable quality to official resources. The Heat team

@@ -54,7 +54,7 @@ operator can add additional environment entries.
 
 The cloud operator can add to the global environment
 by putting environment files in a configurable directory wherever
-the heat engine runs.  The configuration variable is named
+the heat-engine runs.  The configuration variable is named
 "environment_dir" is found in the "[DEFAULT]" section
 of "/etc/heat/heat.conf".  The default for that directory is
 "/etc/heat/environment.d".  Its contents are combined in whatever

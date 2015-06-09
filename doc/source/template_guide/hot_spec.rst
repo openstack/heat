@@ -463,7 +463,7 @@ The syntax of the custom_constraint constraint is:
 
 The *name* specifies the concrete type of custom constraint. It corresponds to
 the name under which the respective validation plugin has been registered with
-the Heat engine.
+the heat-engine.
 
 For example:
 

@@ -42,7 +42,7 @@ Heat Db version
 
 ``heat-manage service list``
 
-    Shows details for all currently running heat engines.
+    Shows details for all currently running heat-engines.
 
 ``heat-manage --version``
 
