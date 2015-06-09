@@ -129,6 +129,8 @@ class HeatTestCase(testscenarios.WithScenarios,
                                  generic_rsrc.ResourceWithResourceID)
         resource._register_class('ResWithComplexPropsAndAttrs',
                                  generic_rsrc.ResWithComplexPropsAndAttrs)
+        resource._register_class('ResourceWithComplexAttributesType',
+                                 generic_rsrc.ResourceWithComplexAttributes)
 
     def stub_wallclock(self):
         """

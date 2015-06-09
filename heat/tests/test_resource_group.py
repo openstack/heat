@@ -98,7 +98,7 @@ template_attr = {
             "properties": {
                 "count": 2,
                 "resource_def": {
-                    "type": "dummyattr.resource",
+                    "type": "ResourceWithComplexAttributesType",
                     "properties": {
                     }
                 }
@@ -138,9 +138,6 @@ class ResourceGroupTest(common.HeatTestCase):
                                  ResourceWithPropsAndId)
         resource._register_class('dummy.listresource',
                                  ResourceWithListProp)
-        AttributeResource = generic_resource.ResourceWithComplexAttributes
-        resource._register_class("dummyattr.resource",
-                                 AttributeResource)
         self.m.StubOutWithMock(stackm.Stack, 'validate')
 
     def test_assemble_nested(self):
@@ -507,9 +504,6 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         super(ResourceGroupAttrTest, self).setUp()
         resource._register_class("dummy.resource",
                                  ResourceWithPropsAndId)
-        AttributeResource = generic_resource.ResourceWithComplexAttributes
-        resource._register_class("dummyattr.resource",
-                                 AttributeResource)
 
     def test_aggregate_attribs(self):
         """
