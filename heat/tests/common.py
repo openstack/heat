@@ -129,6 +129,8 @@ class HeatTestCase(testscenarios.WithScenarios,
                                  generic_rsrc.ResourceWithProps)
         resource._register_class('ResourceWithResourceIDType',
                                  generic_rsrc.ResourceWithResourceID)
+        resource._register_class('ResourceWithPropsAndAttrs',
+                                 generic_rsrc.ResourceWithPropsAndAttrs)
         resource._register_class('ResWithComplexPropsAndAttrs',
                                  generic_rsrc.ResWithComplexPropsAndAttrs)
         resource._register_class('ResourceWithComplexAttributesType',

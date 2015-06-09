@@ -26,7 +26,6 @@ from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
-from heat.tests import generic_resource
 from heat.tests import utils
 
 
@@ -324,8 +323,6 @@ class ReplaceTest(common.HeatTestCase):
 
     def setUp(self):
         super(ReplaceTest, self).setUp()
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
         t = template_format.parse(inline_templates.as_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
         lc = self.create_launch_config(t, self.stack)
