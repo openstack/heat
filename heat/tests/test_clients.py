@@ -19,6 +19,7 @@ from heatclient import client as heatclient
 from heatclient import exc as heat_exc
 from keystoneclient.auth.identity import v3
 from keystoneclient import exceptions as keystone_exc
+from manilaclient import exceptions as manila_exc
 import mock
 from neutronclient.common import exceptions as neutron_exc
 from oslo_config import cfg
@@ -27,6 +28,7 @@ import six
 from swiftclient import exceptions as swift_exc
 from testtools import testcase
 from troveclient import client as troveclient
+from zaqarclient.transport import errors as zaqar_exc
 
 from heat.common import context
 from heat.common import exception
@@ -663,6 +665,46 @@ class TestIsNotFound(common.HeatTestCase):
             plugin='sahara',
             exception=lambda: sahara_base.APIException(
                 error_message='conflict1', error_code=409),
+        )),
+        ('zaqar_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='zaqar',
+            exception=lambda: zaqar_exc.ResourceNotFound(),
+        )),
+        ('manila_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='manila',
+            exception=lambda: manila_exc.NotFound(),
+        )),
+        ('manila_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            is_conflict=False,
+            plugin='manila',
+            exception=lambda: Exception()
+        )),
+        ('manila_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='manila',
+            exception=lambda: manila_exc.RequestEntityTooLarge(),
+        )),
+        ('manila_conflict', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=True,
+            plugin='manila',
+            exception=lambda: manila_exc.Conflict(),
         )),
     ]
 
