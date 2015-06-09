@@ -78,32 +78,40 @@ class CinderVolumeTypeTest(common.HeatTestCase):
     def test_volume_type_handle_create_not_public(self):
         self._test_handle_create(is_public=False)
 
-    def test_volume_type_handle_update_description(self):
-        volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
-        self.my_volume_type.resource_id = volume_type_id
-        update_description = 'update'
-        prop_diff = {'description': update_description}
+    def _test_update(self, update_args, is_update_metadata=False):
+        if is_update_metadata:
+            value = mock.MagicMock()
+            self.volume_types.get.return_value = value
+            value.get_keys.return_value = {'volume_backend_name': 'lvmdriver'}
+        else:
+            volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
+            self.my_volume_type.resource_id = volume_type_id
+
         self.my_volume_type.handle_update(json_snippet=None,
                                           tmpl_diff=None,
-                                          prop_diff=prop_diff)
-        self.volume_types.update.assert_called_once_with(
-            volume_type_id,
-            description=update_description)
+                                          prop_diff=update_args)
+        if is_update_metadata:
+            value.unset_keys.assert_called_once_with(
+                {'volume_backend_name': 'lvmdriver'})
+            value.set_keys.assert_called_once_with(
+                update_args['metadata'])
+        else:
+            self.volume_types.update.assert_called_once_with(
+                volume_type_id, **update_args)
 
-    def test_volume_type_handle_update_matadata(self):
-        value = mock.MagicMock()
-        self.volume_types.get.return_value = value
-        value.get_keys.return_value = {'volume_backend_name': 'lvmdriver'}
+    def test_volume_type_handle_update_description(self):
+        update_args = {'description': 'update'}
+        self._test_update(update_args)
 
+    def test_volume_type_handle_update_name(self):
+        update_args = {'name': 'update'}
+        self._test_update(update_args)
+
+    def test_volume_type_handle_update_metadata(self):
         new_keys = {'volume_backend_name': 'lvmdriver',
                     'capabilities:replication': 'True'}
         prop_diff = {'metadata': new_keys}
-        self.my_volume_type.handle_update(json_snippet=None,
-                                          tmpl_diff=None,
-                                          prop_diff=prop_diff)
-        value.unset_keys.assert_called_once_with(
-            {'volume_backend_name': 'lvmdriver'})
-        value.set_keys.assert_called_once_with(new_keys)
+        self._test_update(prop_diff, is_update_metadata=True)
 
     def test_volume_type_handle_delete(self):
         self.resource_id = None

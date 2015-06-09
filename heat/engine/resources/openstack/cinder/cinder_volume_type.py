@@ -53,7 +53,8 @@ class CinderVolumeType(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('Name of the volume type.'),
-            required=True
+            required=True,
+            update_allowed=True,
         ),
         METADATA: properties.Schema(
             properties.Schema.MAP,
@@ -90,10 +91,14 @@ class CinderVolumeType(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update the name, description and metadata for volume type."""
 
-        # Update the description of cinder volume type
+        update_args = {}
+        # Update the name, description of cinder volume type
         if self.DESCRIPTION in prop_diff:
-            self.cinder().volume_types.update(
-                self.resource_id, description=prop_diff.get(self.DESCRIPTION))
+            update_args['description'] = prop_diff.get(self.DESCRIPTION)
+        if self.NAME in prop_diff:
+            update_args['name'] = prop_diff.get(self.NAME)
+        if update_args:
+            self.cinder().volume_types.update(self.resource_id, **update_args)
         # Update the key-value pairs of cinder volume type.
         if self.METADATA in prop_diff:
             volume_type = self.cinder().volume_types.get(self.resource_id)
