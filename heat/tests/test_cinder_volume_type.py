@@ -59,15 +59,24 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.assertIsInstance(self.my_volume_type,
                               cinder_volume_type.CinderVolumeType)
 
-    def test_volume_type_handle_create(self):
+    def _test_handle_create(self, is_public=True):
         value = mock.MagicMock()
         volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         value.id = volume_type_id
         self.volume_types.create.return_value = value
+        self.my_volume_type.t['Properties']['is_public'] = is_public
         self.my_volume_type.handle_create()
+        self.volume_types.create.assert_called_once_with(
+            name='volumeBackend', is_public=is_public)
         value.set_keys.assert_called_once_with(
             {'volume_backend_name': 'lvmdriver'})
         self.assertEqual(volume_type_id, self.my_volume_type.resource_id)
+
+    def test_volume_type_handle_create_public(self):
+        self._test_handle_create()
+
+    def test_volume_type_handle_create_not_public(self):
+        self._test_handle_create(is_public=False)
 
     def test_volume_type_handle_update_matadata(self):
         value = mock.MagicMock()
