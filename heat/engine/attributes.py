@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import warnings
 
 import six
 
@@ -78,12 +77,9 @@ class Schema(constr.Schema):
         """
         Return a Property Schema corresponding to a Attribute Schema.
         """
-        if isinstance(schema_dict, cls):
-            return schema_dict
-        warnings.warn('<name>: <description> schema definition is deprecated. '
-                      'Use <name>: attributes.Schema(<description>) instead.',
-                      DeprecationWarning)
-        return cls(schema_dict)
+        assert (isinstance(schema_dict, cls),
+                'Old attribute schema is not supported')
+        return schema_dict
 
 
 def schemata(schema):

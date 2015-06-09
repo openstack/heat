@@ -71,13 +71,6 @@ class AttributeSchemaTest(common.HeatTestCase):
         self.assertEqual('Do not use this ever',
                          attrs._attributes['bar_dep'].support_status().message)
 
-    def test_old_attribute_schema_format(self):
-        s = 'Test description.'
-        self.assertIsInstance(attributes.Schema.from_attribute(s),
-                              attributes.Schema)
-        self.assertEqual('Test description.',
-                         attributes.Schema.from_attribute(s).description)
-
 
 class AttributeTest(common.HeatTestCase):
     """Test the Attribute class."""
@@ -188,28 +181,31 @@ class AttributesTest(common.HeatTestCase):
         value = 'value3 changed'
         self.assertEqual("value3 changed", attribs['test3'])
 
-    def test_validate_type_invalid(self):
+
+class AttributesTypeTest(common.HeatTestCase):
+    scenarios = [
+        ('string_type',
+            dict(a_type=attributes.Schema.STRING,
+                 value='correct value',
+                 invalid_value=[])),
+        ('list_type',
+            dict(a_type=attributes.Schema.LIST,
+                 value=[],
+                 invalid_value='invalid_value')),
+        ('map_type',
+            dict(a_type=attributes.Schema.MAP,
+                 value={},
+                 invalid_value='invalid_value'))
+    ]
+
+    def test_validate_type(self):
         resolver = mock.Mock()
-        # Test invalid string type attribute
-        attr_schema = attributes.Schema("Test attribute",
-                                        type=attributes.Schema.STRING)
+        msg = 'Attribute test1 is not of type %s' % self.a_type
+        attr_schema = attributes.Schema("Test attribute", type=self.a_type)
+        attrs_schema = {'res1': attr_schema}
         attr = attributes.Attribute("test1", attr_schema)
-        attribs = attributes.Attributes('test resource', attr_schema, resolver)
-        attribs._validate_type(attr, [])
-        self.assertIn("Attribute test1 is not of type String", self.LOG.output)
-
-        # Test invalid list type attribute
-        attr_schema = attributes.Schema("Test attribute",
-                                        type=attributes.Schema.LIST)
-        attr = attributes.Attribute("test1", attr_schema)
-        attribs = attributes.Attributes('test resource', attr_schema, resolver)
-        attribs._validate_type(attr, 'invalid')
-        self.assertIn("Attribute test1 is not of type List", self.LOG.output)
-
-        # Test invalid map type attribute
-        attr_schema = attributes.Schema("Test attribute",
-                                        type=attributes.Schema.MAP)
-        attr = attributes.Attribute("test1", attr_schema)
-        attribs = attributes.Attributes('test resource', attr_schema, resolver)
-        attribs._validate_type(attr, 'invalid')
-        self.assertIn("Attribute test1 is not of type Map", self.LOG.output)
+        attribs = attributes.Attributes('test res1', attrs_schema, resolver)
+        attribs._validate_type(attr, self.value)
+        self.assertNotIn(msg, self.LOG.output)
+        attribs._validate_type(attr, self.invalid_value)
+        self.assertIn(msg, self.LOG.output)
