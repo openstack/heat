@@ -14,7 +14,6 @@
 from oslo_config import cfg
 
 from heat.engine import event
-from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
@@ -47,9 +46,6 @@ class EventTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         self.m.ReplayAll()
-
-        resource._register_class('ResourceWithRequiredProps',
-                                 generic_rsrc.ResourceWithRequiredProps)
 
         self.stack = stack.Stack(self.ctx, 'event_load_test_stack',
                                  template.Template(tmpl))

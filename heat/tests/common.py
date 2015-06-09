@@ -125,14 +125,24 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.addCleanup(utils.reset_dummy_db)
 
     def register_test_resources(self):
+        resource._register_class('SignalResourceType',
+                                 generic_rsrc.SignalResource)
         resource._register_class('ResourceWithPropsType',
                                  generic_rsrc.ResourceWithProps)
+        resource._register_class('StackUserResourceType',
+                                 generic_rsrc.StackUserResource)
         resource._register_class('ResourceWithResourceIDType',
                                  generic_rsrc.ResourceWithResourceID)
+        resource._register_class('ResourceWithAttributeType',
+                                 generic_rsrc.ResourceWithAttributeType)
+        resource._register_class('ResourceWithRequiredProps',
+                                 generic_rsrc.ResourceWithRequiredProps)
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_rsrc.ResourceWithPropsAndAttrs)
         resource._register_class('ResWithComplexPropsAndAttrs',
                                  generic_rsrc.ResWithComplexPropsAndAttrs)
+        resource._register_class('ResourceWithCustomConstraint',
+                                 generic_rsrc.ResourceWithCustomConstraint)
         resource._register_class('ResourceWithComplexAttributesType',
                                  generic_rsrc.ResourceWithComplexAttributes)
 

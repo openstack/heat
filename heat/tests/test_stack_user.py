@@ -17,13 +17,11 @@ import six
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
-from heat.engine import resource
 from heat.engine.resources import stack_user
 from heat.engine import scheduler
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import fakes
-from heat.tests import generic_resource
 from heat.tests import utils
 
 
@@ -40,8 +38,6 @@ class StackUserTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackUserTest, self).setUp()
-        resource._register_class('StackUserResourceType',
-                                 generic_resource.StackUserResource)
         self.fc = fakes.FakeKeystoneClient()
 
     def _user_create(self, stack_name, project_id, user_id,

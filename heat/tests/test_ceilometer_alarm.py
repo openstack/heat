@@ -30,7 +30,6 @@ from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
 from heat.tests import common
-from heat.tests import generic_resource
 from heat.tests import utils
 
 
@@ -114,9 +113,6 @@ class FakeCeilometerAlarm(object):
 class CeilometerAlarmTest(common.HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
-
-        resource._register_class('SignalResourceType',
-                                 generic_resource.SignalResource)
         self.fa = mock.Mock()
 
     def create_stack(self, template=None):
