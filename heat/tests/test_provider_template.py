@@ -48,8 +48,6 @@ class MyCloudResource(generic_rsrc.GenericResource):
 class ProviderTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(ProviderTemplateTest, self).setUp()
-        resource._register_class('OS::ResourceType',
-                                 generic_rsrc.GenericResource)
         resource._register_class('myCloud::ResourceType',
                                  MyCloudResource)
 
@@ -58,7 +56,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         # default class.
         env_str = {'resource_registry': {}}
         env = environment.Environment(env_str)
-        cls = env.get_class('OS::ResourceType', 'fred')
+        cls = env.get_class('GenericResourceType', 'fred')
         self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_mine_global_map(self):
@@ -89,7 +87,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env_str = {'resource_registry': {'resources': {'jerry': {
             "OS::ResourceType": "myCloud::ResourceType"}}}}
         env = environment.Environment(env_str)
-        cls = env.get_class('OS::ResourceType', 'fred')
+        cls = env.get_class('GenericResourceType', 'fred')
         self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_to_parameters(self):

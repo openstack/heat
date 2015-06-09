@@ -47,10 +47,6 @@ class SignalTest(common.HeatTestCase):
 
     def setUp(self):
         super(SignalTest, self).setUp()
-
-        resource._register_class('GenericResourceType',
-                                 generic_resource.GenericResource)
-
         self.stack_id = 'STACKABCD1234'
 
     def tearDown(self):

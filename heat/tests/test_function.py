@@ -161,9 +161,6 @@ class ValidateGetAttTest(common.HeatTestCase):
     def setUp(self):
         super(ValidateGetAttTest, self).setUp()
 
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
-
         env = environment.Environment()
         env.load({u'resource_registry':
                   {u'OS::Test::GenericResource': u'GenericResourceType'}})

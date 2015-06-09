@@ -53,9 +53,6 @@ class StackTest(common.HeatTestCase):
         self.tmpl = template.Template(copy.deepcopy(empty_template))
         self.ctx = utils.dummy_context()
 
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
-
     def test_stack_reads_tenant(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
                                  tenant_id='bar')

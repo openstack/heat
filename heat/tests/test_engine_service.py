@@ -595,8 +595,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         environment = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_stack_adopt_data_and_template(
             environment)
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
         result = self.man.create_stack(self.ctx, "test_adopt_stack",
                                        template, {}, None,
                                        {'adopt_stack_data': str(adopt_data)})
@@ -614,8 +612,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         }
         template, adopt_data = self._get_stack_adopt_data_and_template(
             environment)
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
         result = self.man.create_stack(self.ctx, "test_adopt_stack",
                                        template, input_params, None,
                                        {'adopt_stack_data': str(adopt_data)})
@@ -630,8 +626,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_stack_adopt_data_and_template(
             env)
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
         result = self.man.create_stack(self.ctx, "test_adopt_stack",
                                        template, {}, None,
                                        {'adopt_stack_data': str(adopt_data)})
@@ -646,8 +640,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         environment = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_stack_adopt_data_and_template(
             environment)
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
         ex = self.assertRaises(
             dispatcher.ExpectedException,
             self.man.create_stack,
@@ -886,8 +878,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
     def test_stack_update_equals(self, ctr):
         stack_name = 'test_stack_update_equals_resource_limit'
         params = {}
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources': {
                    'A': {'Type': 'GenericResourceType'},
@@ -998,8 +988,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
     def test_stack_update_exceeds_resource_limit(self):
         stack_name = 'test_stack_update_exceeds_resource_limit'
         params = {}
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources': {
                    'A': {'Type': 'GenericResourceType'},
@@ -1481,8 +1469,6 @@ class StackServiceTest(common.HeatTestCase):
 
     @tools.stack_context('event_list_deleted_stack')
     def test_stack_event_list_deleted_resource(self):
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
 
         thread = self.m.CreateMockAnything()
         thread.link(mox.IgnoreArg()).AndReturn(None)
@@ -2855,8 +2841,6 @@ class StackServiceTest(common.HeatTestCase):
 
     def test_lazy_load_resources(self):
         stack_name = 'lazy_load_test'
-        res._register_class('GenericResourceType',
-                            generic_rsrc.GenericResource)
 
         lazy_load_template = {
             'HeatTemplateFormatVersion': '2012-12-12',

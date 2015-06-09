@@ -24,12 +24,10 @@ from heat.common import template_format
 from heat.engine import api
 from heat.engine import event
 from heat.engine import parameters
-from heat.engine import resource
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.rpc import api as rpc_api
 from heat.tests import common
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 datetime = dt.datetime
@@ -48,8 +46,6 @@ class FormatTest(common.HeatTestCase):
                     'DependsOn': 'generic1'}
             }
         })
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   tmpl, stack_id=str(uuid.uuid4()))
 

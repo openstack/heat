@@ -54,9 +54,6 @@ class ResourceTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceTest, self).setUp()
 
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
-
         self.env = environment.Environment()
         self.env.load({u'resource_registry':
                       {u'OS::Test::GenericResource': u'GenericResourceType',
@@ -1463,10 +1460,6 @@ class ResourceTest(common.HeatTestCase):
 
 
 class ResourceAdoptTest(common.HeatTestCase):
-    def setUp(self):
-        super(ResourceAdoptTest, self).setUp()
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
 
     def test_adopt_resource_success(self):
         adopt_data = '{}'
@@ -1552,9 +1545,6 @@ class ResourceAdoptTest(common.HeatTestCase):
 class ResourceDependenciesTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceDependenciesTest, self).setUp()
-
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
 
         self.deps = dependencies.Dependencies()
 
@@ -2144,9 +2134,6 @@ class ResourceHookTest(common.HeatTestCase):
 
     def setUp(self):
         super(ResourceHookTest, self).setUp()
-
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
 
         self.env = environment.Environment()
         self.env.load({u'resource_registry':
