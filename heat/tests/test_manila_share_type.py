@@ -14,16 +14,21 @@
 import copy
 
 import mock
+from oslo_utils import importutils
+import testtools
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resource
+from heat.engine import resources
+from heat.engine.resources.openstack.manila import share_type as mshare_type
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as stack_parser
+from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources import share_type as mshare_type  # noqa
+manila_client = importutils.try_import('manilaclient.v1.client')
 
 manila_template = """
 heat_template_version: 2013-05-23
@@ -42,10 +47,9 @@ class ManilaShareTypeTest(common.HeatTestCase):
 
     def setUp(self):
         super(ManilaShareTypeTest, self).setUp()
+        resources.initialise()
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-        resource._register_class("OS::Manila::ShareType",
-                                 mshare_type.ManilaShareType)
 
     def _init_share(self, stack_name, share_type_name="test_share_type"):
         # parse stack
@@ -114,3 +118,10 @@ class ManilaShareTypeTest(common.HeatTestCase):
         fake_share_type.unset_keys.assert_called_once_with({"test": "test"})
         fake_share_type.set_keys.assert_called_with(
             updated_props[mshare_type.ManilaShareType.EXTRA_SPECS])
+
+    @testtools.skipIf(manila_client is not None,
+                      'Tests manila client not installed')
+    def test_no_client(self):
+        tmpl = template.Template((template_format.parse(manila_template)))
+        stack = stack_parser.Stack(utils.dummy_context(), 'foo', tmpl)
+        self.assertRaises(exception.ResourceTypeNotFound, stack.validate)

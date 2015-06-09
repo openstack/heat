@@ -22,6 +22,10 @@ manila_client = importutils.try_import('manilaclient.v1.client')
 
 class ManilaClientPlugin(client_plugin.ClientPlugin):
 
+    @staticmethod
+    def is_available():
+        return manila_client is not None
+
     def _create(self):
         endpoint_type = self._get_client_option('manila', 'endpoint_type')
         endpoint = self.url_for(service_type='share',
