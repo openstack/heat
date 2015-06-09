@@ -63,3 +63,10 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             heat_url = self.url_for(service_type='orchestration',
                                     endpoint_type=endpoint_type)
         return heat_url
+
+    def get_heat_cfn_url(self):
+        endpoint_type = self._get_client_option('heat',
+                                                'endpoint_type')
+        heat_cfn_url = self.url_for(service_type='cloudformation',
+                                    endpoint_type=endpoint_type)
+        return heat_cfn_url

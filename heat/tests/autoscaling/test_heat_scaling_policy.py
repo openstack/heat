@@ -213,8 +213,8 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
 
     def test_alarm_attribute(self):
         self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_url')
-        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+                               'get_heat_cfn_url')
+        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
             'http://server.test:8000/v1')
         self.m.ReplayAll()
         alarm_url = self.policy.FnGetAtt('alarm_url')

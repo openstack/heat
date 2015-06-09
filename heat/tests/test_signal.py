@@ -143,9 +143,9 @@ class SignalTest(common.HeatTestCase):
     def test_FnGetAtt_Alarm_Url(self):
         self.stack = self.create_stack()
         self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_url')
+                               'get_heat_cfn_url')
 
-        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
             'http://server.test:8000/v1')
 
         self.m.ReplayAll()
@@ -188,9 +188,9 @@ class SignalTest(common.HeatTestCase):
     def test_FnGetAtt_delete(self):
         self.stack = self.create_stack()
         self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_url')
+                               'get_heat_cfn_url')
 
-        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
             'http://server.test:8000/v1')
         self.m.ReplayAll()
         self.stack.create()
