@@ -184,10 +184,10 @@ class Pool(neutron.NeutronResource):
 
     PROPERTIES = (
         PROTOCOL, SUBNET_ID, SUBNET, LB_METHOD, NAME, DESCRIPTION,
-        ADMIN_STATE_UP, VIP, MONITORS,
+        ADMIN_STATE_UP, VIP, MONITORS, PROVIDER,
     ) = (
         'protocol', 'subnet_id', 'subnet', 'lb_method', 'name', 'description',
-        'admin_state_up', 'vip', 'monitors',
+        'admin_state_up', 'vip', 'monitors', 'provider',
     )
 
     _VIP_KEYS = (
@@ -208,10 +208,10 @@ class Pool(neutron.NeutronResource):
 
     ATTRIBUTES = (
         ADMIN_STATE_UP_ATTR, NAME_ATTR, PROTOCOL_ATTR, SUBNET_ID_ATTR,
-        LB_METHOD_ATTR, DESCRIPTION_ATTR, TENANT_ID, VIP_ATTR,
+        LB_METHOD_ATTR, DESCRIPTION_ATTR, TENANT_ID, VIP_ATTR, PROVIDER_ATTR,
     ) = (
         'admin_state_up', 'name', 'protocol', 'subnet_id',
-        'lb_method', 'description', 'tenant_id', 'vip',
+        'lb_method', 'description', 'tenant_id', 'vip', 'provider',
     )
 
     properties_schema = {
@@ -267,6 +267,11 @@ class Pool(neutron.NeutronResource):
             _('The administrative state of this pool.'),
             default=True,
             update_allowed=True
+        ),
+        PROVIDER: properties.Schema(
+            properties.Schema.STRING,
+            _('LBaaS provider to implement this load balancer instance.'),
+            support_status=support.SupportStatus(version='2015.2'),
         ),
         VIP: properties.Schema(
             properties.Schema.MAP,
@@ -375,6 +380,11 @@ class Pool(neutron.NeutronResource):
         VIP_ATTR: attributes.Schema(
             _('Vip associated with the pool.'),
             type=attributes.Schema.MAP
+        ),
+        PROVIDER_ATTR: attributes.Schema(
+            _('Provider implementing this load balancer instance.'),
+            support_status=support.SupportStatus(version='2015.2'),
+            type=attributes.Schema.STRING,
         ),
     }
 
