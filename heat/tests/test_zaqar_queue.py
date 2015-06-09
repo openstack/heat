@@ -17,14 +17,13 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
+from heat.engine.resources.openstack.zaqar import queue
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-from ..resources import queue  # noqa
 
 try:
     from zaqarclient.transport.errors import ResourceNotFound  # noqa
@@ -82,8 +81,6 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         super(ZaqarMessageQueueTest, self).setUp()
         self.fc = self.m.CreateMockAnything()
         self.ctx = utils.dummy_context()
-        resource._register_class("OS::Zaqar::Queue",
-                                 queue.ZaqarQueue)
 
     def parse_stack(self, t):
         stack_name = 'test_stack'
