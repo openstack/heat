@@ -17,7 +17,6 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resource
 from heat.engine.resources.openstack.glance import glance_image as gi
 from heat.engine import stack as parser
 from heat.engine import template
@@ -63,9 +62,6 @@ class GlanceImageTest(common.HeatTestCase):
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
-        # For unit testing purpose. Register resource provider
-        # explicitly.
-        resource._register_class("OS::Glance::Image", gi.GlanceImage)
         tpl = template_format.parse(image_template)
         self.stack = parser.Stack(
             self.ctx, 'glance_image_test_stack',
