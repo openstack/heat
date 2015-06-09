@@ -146,6 +146,16 @@ class HeatTestCase(testscenarios.WithScenarios,
                                  generic_rsrc.ResourceWithComplexAttributes)
         resource._register_class('ResourceWithDefaultClientName',
                                  generic_rsrc.ResourceWithDefaultClientName)
+        resource._register_class('OverwrittenFnGetAttType',
+                                 generic_rsrc.ResourceWithFnGetAttType)
+        resource._register_class('OverwrittenFnGetRefIdType',
+                                 generic_rsrc.ResourceWithFnGetRefIdType)
+        resource._register_class('ResourceWithListProp',
+                                 generic_rsrc.ResourceWithListProp)
+        resource._register_class('StackResourceType',
+                                 generic_rsrc.StackResourceType)
+        resource._register_class('ResourceWithRestoreType',
+                                 generic_rsrc.ResourceWithRestoreType)
 
     def patchobject(self, obj, attr, **kwargs):
         mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,

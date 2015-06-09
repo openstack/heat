@@ -17,12 +17,9 @@ import mock
 import six
 
 from heat.common import exception
-from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources.openstack.heat import resource_group
 from heat.engine import stack as stackm
 from heat.tests import common
-from heat.tests import generic_resource
 from heat.tests import utils
 
 template = {
@@ -33,7 +30,7 @@ template = {
             "properties": {
                 "count": 2,
                 "resource_def": {
-                    "type": "dummy.resource",
+                    "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "Foo": "Bar"
                     }
@@ -47,7 +44,7 @@ template2 = {
     "heat_template_version": "2013-05-23",
     "resources": {
         "dummy": {
-            "type": "dummy.resource",
+            "type": "OverwrittenFnGetRefIdType",
             "properties": {
                 "Foo": "baz"
             }
@@ -57,7 +54,7 @@ template2 = {
             "properties": {
                 "count": 2,
                 "resource_def": {
-                    "type": "dummy.resource",
+                    "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "Foo": {"get_attr": ["dummy", "Foo"]}
                     }
@@ -75,7 +72,7 @@ template_repl = {
             "properties": {
                 "count": 2,
                 "resource_def": {
-                    "type": "dummy.listresource%index%",
+                    "type": "ResourceWithListProp%index%",
                     "properties": {
                         "Foo": "Bar_%index%",
                         "listprop": [
@@ -113,31 +110,10 @@ template_attr = {
 }
 
 
-class ResourceWithPropsAndId(generic_resource.ResourceWithProps):
-
-    def FnGetRefId(self):
-        return "ID-%s" % self.name
-
-
-class ResourceWithListProp(ResourceWithPropsAndId):
-
-    def __init__(self):
-        self.properties_schema.update({
-            "listprop": properties.Schema(
-                properties.Schema.LIST
-            )
-        })
-        super(ResourceWithListProp, self).__init__(self)
-
-
 class ResourceGroupTest(common.HeatTestCase):
 
     def setUp(self):
         common.HeatTestCase.setUp(self)
-        resource._register_class("dummy.resource",
-                                 ResourceWithPropsAndId)
-        resource._register_class('dummy.listresource',
-                                 ResourceWithListProp)
         self.m.StubOutWithMock(stackm.Stack, 'validate')
 
     def test_assemble_nested(self):
@@ -152,19 +128,19 @@ class ResourceGroupTest(common.HeatTestCase):
             "heat_template_version": "2013-05-23",
             "resources": {
                 "0": {
-                    "type": "dummy.resource",
+                    "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "Foo": "Bar"
                     }
                 },
                 "1": {
-                    "type": "dummy.resource",
+                    "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "Foo": "Bar"
                     }
                 },
                 "2": {
-                    "type": "dummy.resource",
+                    "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "Foo": "Bar"
                     }
@@ -185,7 +161,7 @@ class ResourceGroupTest(common.HeatTestCase):
             "heat_template_version": "2013-05-23",
             "resources": {
                 "0": {
-                    "type": "dummy.resource",
+                    "type": "OverwrittenFnGetRefIdType",
                     "properties": {}
                 }
             }
@@ -215,7 +191,7 @@ class ResourceGroupTest(common.HeatTestCase):
             "heat_template_version": "2013-05-23",
             "resources": {
                 "0": {
-                    "type": "dummy.listresource%index%",
+                    "type": "ResourceWithListProp%index%",
                     "properties": {
                         "Foo": "Bar_0",
                         "listprop": [
@@ -224,7 +200,7 @@ class ResourceGroupTest(common.HeatTestCase):
                     }
                 },
                 "1": {
-                    "type": "dummy.listresource%index%",
+                    "type": "ResourceWithListProp%index%",
                     "properties": {
                         "Foo": "Bar_1",
                         "listprop": [
@@ -233,7 +209,7 @@ class ResourceGroupTest(common.HeatTestCase):
                     }
                 },
                 "2": {
-                    "type": "dummy.listresource%index%",
+                    "type": "ResourceWithListProp%index%",
                     "properties": {
                         "Foo": "Bar_2",
                         "listprop": [
@@ -255,7 +231,7 @@ class ResourceGroupTest(common.HeatTestCase):
             "heat_template_version": "2013-05-23",
             "resources": {
                 "0": {
-                    "type": "dummy.listresource%index%",
+                    "type": "ResourceWithListProp%index%",
                     "properties": {
                         "Foo": "Bar_%index%",
                         "listprop": [
@@ -271,13 +247,13 @@ class ResourceGroupTest(common.HeatTestCase):
         res_def['properties']['Foo'] = "Bar___foo__"
         res_def['properties']['listprop'] = ["__foo___0", "__foo___1",
                                              "__foo___2"]
-        res_def['type'] = "dummy.listresource__foo__"
+        res_def['type'] = "ResourceWithListProp__foo__"
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
             "heat_template_version": "2013-05-23",
             "resources": {
                 "0": {
-                    "type": "dummy.listresource__foo__",
+                    "type": "ResourceWithListProp__foo__",
                     "properties": {
                         "Foo": "Bar_0",
                         "listprop": [
@@ -466,11 +442,11 @@ class ResourceGroupEmptyParams(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         exp1 = {
-            "type": "dummy.resource",
+            "type": "OverwrittenFnGetRefIdType",
             "properties": self.expected,
         }
         exp2 = {
-            "type": "dummy.resource",
+            "type": "OverwrittenFnGetRefIdType",
             "properties": self.expected_include,
         }
         self.assertEqual(exp1, resg._build_resource_definition())
@@ -507,11 +483,6 @@ class ResourceGroupNameListTest(common.HeatTestCase):
 
 
 class ResourceGroupAttrTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(ResourceGroupAttrTest, self).setUp()
-        resource._register_class("dummy.resource",
-                                 ResourceWithPropsAndId)
 
     def test_aggregate_attribs(self):
         """

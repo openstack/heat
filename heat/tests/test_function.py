@@ -26,7 +26,6 @@ from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
@@ -235,11 +234,6 @@ class ValidateGetAttTest(common.HeatTestCase):
         env.load({u'resource_registry':
                   {u'OS::Test::GenericResource': u'GenericResourceType'}})
 
-        class FakeResource(generic_rsrc.GenericResource):
-            def FnGetAtt(self, name):
-                pass
-
-        resource._register_class('OverwrittenFnGetAttType', FakeResource)
         env.load({u'resource_registry':
                   {u'OS::Test::FakeResource': u'OverwrittenFnGetAttType'}})
 

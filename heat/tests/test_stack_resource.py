@@ -32,7 +32,7 @@ from heat.tests import utils
 
 
 ws_res_snippet = {"HeatTemplateFormatVersion": "2012-12-12",
-                  "Type": "some_magic_type",
+                  "Type": "StackResourceType",
                   "metadata": {
                       "key": "value",
                       "some": "more stuff"}}
@@ -128,29 +128,7 @@ resources:
 '''
 
 
-class MyStackResource(stack_resource.StackResource,
-                      generic_rsrc.GenericResource):
-    def physical_resource_name(self):
-        return "cb2f2b28-a663-4683-802c-4b40c916e1ff"
-
-    def set_template(self, nested_template, params):
-        self.nested_template = nested_template
-        self.nested_params = params
-
-    def handle_create(self):
-        return self.create_with_template(self.nested_template,
-                                         self.nested_params)
-
-    def handle_adopt(self, resource_data):
-        return self.create_with_template(self.nested_template,
-                                         self.nested_params,
-                                         adopt_data=resource_data)
-
-    def handle_delete(self):
-        self.delete_nested()
-
-
-class MyImplementedStackResource(MyStackResource):
+class MyImplementedStackResource(generic_rsrc.StackResourceType):
     def child_template(self):
         return self.nested_template
 
@@ -161,8 +139,6 @@ class MyImplementedStackResource(MyStackResource):
 class StackResourceBaseTest(common.HeatTestCase):
     def setUp(self):
         super(StackResourceBaseTest, self).setUp()
-        resource._register_class('some_magic_type',
-                                 MyStackResource)
         self.ws_resname = "provider_resource"
         self.empty_temp = templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12',
@@ -175,9 +151,8 @@ class StackResourceBaseTest(common.HeatTestCase):
                                          stack_user_project_id='aprojectid')
         resource_defns = self.empty_temp.resource_definitions(
             self.parent_stack)
-        self.parent_resource = MyStackResource('test',
-                                               resource_defns[self.ws_resname],
-                                               self.parent_stack)
+        self.parent_resource = generic_rsrc.StackResourceType(
+            'test', resource_defns[self.ws_resname], self.parent_stack)
 
 
 class StackResourceTest(StackResourceBaseTest):
