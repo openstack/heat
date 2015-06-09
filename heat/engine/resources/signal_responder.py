@@ -73,7 +73,7 @@ class SignalResponder(stack_user.StackUser):
             signal_url = config_url.replace('/waitcondition', signal_type)
         else:
             heat_client_plugin = self.stack.clients.client_plugin('heat')
-            endpoint = heat_client_plugin.get_heat_url()
+            endpoint = heat_client_plugin.get_heat_cfn_url()
             signal_url = ''.join([endpoint, signal_type])
 
         host_url = urlparse.urlparse(signal_url)

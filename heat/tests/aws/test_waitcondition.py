@@ -385,8 +385,8 @@ class WaitConditionHandleTest(common.HeatTestCase):
                                        stack_name=stack_name)
 
         self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_url')
-        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+                               'get_heat_cfn_url')
+        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
             'http://server.test:8000/v1')
         self.m.ReplayAll()
         rsrc = self.stack['WaitHandle']
