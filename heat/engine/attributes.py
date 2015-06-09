@@ -77,8 +77,8 @@ class Schema(constr.Schema):
         """
         Return a Property Schema corresponding to a Attribute Schema.
         """
-        assert (isinstance(schema_dict, cls),
-                'Old attribute schema is not supported')
+        msg = 'Old attribute schema is not supported'
+        assert isinstance(schema_dict, cls), msg
         return schema_dict
 
 
