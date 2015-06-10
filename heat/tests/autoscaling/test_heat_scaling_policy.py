@@ -237,3 +237,16 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         self.assertEqual('SignatureVersion', args[3].split('=')[0])
         self.assertEqual('Signature', args[4].split('=')[0])
         self.m.VerifyAll()
+
+    def test_signal_attribute(self):
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8000/v1')
+        self.m.ReplayAll()
+        self.assertEqual(
+            'http://server.test:8000/v1/test_tenant_id/stacks/'
+            '%s/%s/resources/my-policy/signal' % (
+                self.stack.name, self.stack.id),
+            self.policy.FnGetAtt('signal_url'))
+        self.m.VerifyAll()
