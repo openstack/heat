@@ -257,7 +257,7 @@ class RackspaceDnsTest(common.HeatTestCase):
         ut = rsrc_defn.ResourceDefinition(instance.name,
                                           instance.type(),
                                           uprops)
-
+        instance.state_set(instance.CREATE, instance.COMPLETE)
         scheduler.TaskRunner(instance.update, ut)()
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
@@ -316,6 +316,7 @@ class RackspaceDnsTest(common.HeatTestCase):
         ut = rsrc_defn.ResourceDefinition(instance.name,
                                           instance.type(),
                                           uprops)
+        instance.state_set(instance.CREATE, instance.COMPLETE)
 
         scheduler.TaskRunner(instance.update, ut)()
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)

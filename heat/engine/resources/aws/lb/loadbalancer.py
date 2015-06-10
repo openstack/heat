@@ -571,6 +571,7 @@ backend servers
         save it to the db.
         rely on the cfn-hup to reconfigure HAProxy
         '''
+
         new_props = json_snippet.properties(self.properties_schema,
                                             self.context)
 

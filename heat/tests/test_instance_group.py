@@ -307,6 +307,7 @@ class LoadbalancerReloadTest(common.HeatTestCase):
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         lb = stack['ElasticLoadBalancer']
+        lb.state_set(lb.CREATE, lb.COMPLETE)
         lb.handle_update = mock.Mock(return_value=None)
         group = stack['WebServerGroup']
         group._lb_reload()
