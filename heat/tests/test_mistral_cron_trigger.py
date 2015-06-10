@@ -12,13 +12,20 @@
 #    under the License.
 
 import mock
+from oslo_utils import importutils
+import testtools
 
+from heat.common import exception
 from heat.common import template_format
+from heat.engine import resources
+from heat.engine.resources.openstack.mistral import cron_trigger
 from heat.engine import scheduler
+from heat.engine import stack as stack_parser
+from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources import cron_trigger  # noqa
+mistral_client = importutils.try_import('mistralclient.api.base')
 
 stack_template = '''
 heat_template_version: 2013-05-23
@@ -43,10 +50,11 @@ class FakeCronTrigger(object):
         self.remaining_executions = 3
 
 
-class CronTriggerTest(common.HeatTestCase):
+class MistralCronTriggerTest(common.HeatTestCase):
 
     def setUp(self):
-        super(CronTriggerTest, self).setUp()
+        super(MistralCronTriggerTest, self).setUp()
+        resources.initialise()
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
@@ -107,3 +115,10 @@ class CronTriggerTest(common.HeatTestCase):
         self.assertEqual((ct.DELETE, ct.COMPLETE), ct.state)
         self.client.cron_triggers.delete.assert_called_once_with(
             ct.resource_id)
+
+    @testtools.skipIf(mistral_client is not None,
+                      'Tests mistral client not installed')
+    def test_no_client(self):
+        tmpl = template.Template((template_format.parse(stack_template)))
+        stack = stack_parser.Stack(utils.dummy_context(), 'foo', tmpl)
+        self.assertRaises(exception.ResourceTypeNotFound, stack.validate)
