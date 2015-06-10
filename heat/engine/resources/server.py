@@ -904,11 +904,11 @@ class Server(stack_user.StackUser):
 
             volume_id = mapping.get(self.BLOCK_DEVICE_MAPPING_VOLUME_ID)
             snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
-            if volume_id and snapshot_id:
+            if volume_id is not None and snapshot_id is not None:
                 raise exception.ResourcePropertyConflict(
                     self.BLOCK_DEVICE_MAPPING_VOLUME_ID,
                     self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
-            if not volume_id and not snapshot_id:
+            if volume_id is None and snapshot_id is None:
                 msg = _('Either volume_id or snapshot_id must be specified for'
                         ' device mapping %s') % device_name
                 raise exception.StackValidationFailed(message=msg)

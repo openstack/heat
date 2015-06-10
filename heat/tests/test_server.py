@@ -1859,6 +1859,24 @@ class ServersTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_validate_block_device_mapping_with_empty_ref(self):
+        stack_name = 'val_blkdev2'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        bdm = [{'device_name': 'vda', 'volume_id': '',
+                'volume_size': '10'}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
     def test_validate_without_image_or_bootable_volume(self):
         stack_name = 'val_imgvol'
         (tmpl, stack) = self._setup_test_stack(stack_name)
