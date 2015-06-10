@@ -701,7 +701,8 @@ class Resource(object):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource):
-        if self.status == self.FAILED:
+        if self.status == self.FAILED or \
+                (self.action == self.INIT and self.status == self.COMPLETE):
             raise UpdateReplace(self)
 
         if prev_resource is not None:

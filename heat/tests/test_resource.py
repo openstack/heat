@@ -285,6 +285,7 @@ class ResourceTest(common.HeatTestCase):
         stored_time = res.updated_time
 
         utmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res.state_set(res.CREATE, res.COMPLETE)
         scheduler.TaskRunner(res.update, utmpl)()
         self.assertIsNotNone(res.updated_time)
         self.assertNotEqual(res.updated_time, stored_time)
@@ -812,6 +813,18 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual('The Resource Unknown requires replacement.',
                          six.text_type(ex))
         self.m.VerifyAll()
+
+    def test_need_update_in_init_complete_state_for_resource(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        self.assertEqual((res.INIT, res.COMPLETE), res.state)
+
+        prop = {'Foo': 'abc'}
+        self.assertRaises(resource.UpdateReplace,
+                          res._needs_update, tmpl, tmpl, prop, prop, res)
 
     def test_update_fail_missing_req_prop(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
