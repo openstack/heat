@@ -451,6 +451,8 @@ class Properties(collections.Mapping):
             return prop.get_value(None, validate)
         elif prop.required():
             raise ValueError(_('Property %s not assigned') % key)
+        else:
+            return None
 
     def __getitem__(self, key):
         return self._get_property_value(key)
