@@ -317,6 +317,12 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 self.ignore_not_found(exc)
                 break
             else:
+                task_state_in_nova = getattr(server, 'OS-EXT-STS:task_state',
+                                             None)
+                # the status of server won't change until the delete task
+                # has done
+                if task_state_in_nova == 'deleting':
+                    continue
                 # Some clouds append extra (STATUS) strings to the status
                 short_server_status = server.status.split('(')[0]
                 if short_server_status in ("DELETED", "SOFT_DELETED"):
