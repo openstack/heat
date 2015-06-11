@@ -116,6 +116,17 @@ class ServiceEngineTest(common.HeatTestCase):
             'mock_id',
             dict(deleted_at=None))
 
+    @mock.patch.object(service_objects.Service, 'update_by_id')
+    @mock.patch.object(context, 'get_admin_context')
+    def test_service_manage_report_update_fail(self, mock_admin_context,
+                                               mock_service_update):
+        self.eng.service_id = 'mock_id'
+        mock_admin_context.return_value = self.ctx
+        mock_service_update.side_effect = Exception()
+        self.eng.service_manage_report()
+        msg = 'Service %s update failed' % self.eng.service_id
+        self.assertIn(msg, self.LOG.output)
+
     def test_stop_rpc_server(self):
         with mock.patch.object(self.eng,
                                '_rpc_server') as mock_rpc_server:
