@@ -13,7 +13,6 @@
 
 from oslo_serialization import jsonutils
 from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import mutable
 from sqlalchemy import types
 
 
@@ -42,42 +41,6 @@ class Json(LongText):
         return loads(value)
 
 
-class MutableList(mutable.Mutable, list):
-    @classmethod
-    def coerce(cls, key, value):
-        if not isinstance(value, cls):
-            if isinstance(value, list):
-                return cls(value)
-            return mutable.Mutable.coerce(key, value)
-        else:
-            return value
-
-    def __delitem__(self, key):
-        list.__delitem__(self, key)
-        self.changed()
-
-    def __setitem__(self, key, value):
-        list.__setitem__(self, key, value)
-        self.changed()
-
-    def __getstate__(self):
-        return list(self)
-
-    def __setstate__(self, state):
-        len = list.__len__(self)
-        list.__delslice__(self, 0, len)
-        list.__add__(self, state)
-        self.changed()
-
-    def append(self, value):
-        list.append(self, value)
-        self.changed()
-
-    def remove(self, value):
-        list.remove(self, value)
-        self.changed()
-
-
 class List(types.TypeDecorator):
     impl = types.Text
 
@@ -94,8 +57,3 @@ class List(types.TypeDecorator):
         if value is None:
             return None
         return loads(value)
-
-
-MutableList.associate_with(List)
-mutable.MutableDict.associate_with(LongText)
-mutable.MutableDict.associate_with(Json)
