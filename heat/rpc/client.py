@@ -40,6 +40,7 @@ class EngineClient(object):
         1.19 - Add show_output and list_outputs for returning stack outputs
         1.20 - Add resolve_outputs to stack show
         1.21 - Add deployment_id to create_software_deployment
+        1.22 - Add support for stack export
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -705,3 +706,14 @@ class EngineClient(object):
                                              stack_identity=stack_identity,
                                              output_key=output_key),
                          version='1.19')
+
+    def export_stack(self, ctxt, stack_identity):
+        """Exports the stack data in JSON format.
+
+        :param ctxt: RPC context.
+        :param stack_identity: Name of the stack you want to export.
+        """
+        return self.call(ctxt,
+                         self.make_msg('export_stack',
+                                       stack_identity=stack_identity),
+                         version='1.22')
