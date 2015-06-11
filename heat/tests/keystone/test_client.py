@@ -140,8 +140,6 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
     def setUp(self):
         super(KeystoneClientPluginServiceTest, self).setUp()
         self._client = mock.MagicMock()
-        self._client.client = mock.MagicMock()
-        self._client.client.services = mock.MagicMock()
 
     @mock.patch.object(client.KeystoneClientPlugin, 'client')
     def test_get_service_id(self, client_keystone):
@@ -156,6 +154,8 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
 
         self.assertEqual(self.sample_uuid,
                          client_plugin.get_service_id(self.sample_uuid))
+        self._client.client.services.get.assert_called_once_with(
+            self.sample_uuid)
 
     @mock.patch.object(client.KeystoneClientPlugin, 'client')
     def test_get_service_id_with_name(self, client_keystone):
@@ -172,6 +172,11 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
 
         self.assertEqual(self.sample_uuid,
                          client_plugin.get_service_id(self.sample_name))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.services.get,
+                          self.sample_name)
+        self._client.client.services.list.assert_called_once_with(
+            name=self.sample_name)
 
     @mock.patch.object(client.KeystoneClientPlugin, 'client')
     def test_get_service_id_with_name_conflict(self, client_keystone):
@@ -194,6 +199,11 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
                "%s. Please use service id instead of name" %
                self.sample_name)
         self.assertEqual(msg, six.text_type(ex))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.services.get,
+                          self.sample_name)
+        self._client.client.services.list.assert_called_once_with(
+            name=self.sample_name)
 
     @mock.patch.object(client.KeystoneClientPlugin, 'client')
     def test_get_service_id_not_found(self, client_keystone):
@@ -213,6 +223,11 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         msg = ("The KeystoneService (%(name)s) could not be found." %
                {'name': self.sample_name})
         self.assertEqual(msg, six.text_type(ex))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.services.get,
+                          self.sample_name)
+        self._client.client.services.list.assert_called_once_with(
+            name=self.sample_name)
 
 
 class KeystoneClientPluginRoleTest(common.HeatTestCase):
