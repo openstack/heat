@@ -1521,14 +1521,7 @@ class EngineService(service.Service):
     def service_manage_report(self):
         cnxt = context.get_admin_context()
 
-        if self.service_id is not None:
-            # Service is already running
-            service_objects.Service.update_by_id(
-                cnxt,
-                self.service_id,
-                dict(deleted_at=None))
-            LOG.info(_LI('Service %s is updated'), self.service_id)
-        else:
+        if self.service_id is None:
             service_ref = service_objects.Service.create(
                 cnxt,
                 dict(host=self.host,
@@ -1539,11 +1532,18 @@ class EngineService(service.Service):
                      report_interval=cfg.CONF.periodic_interval)
             )
             self.service_id = service_ref['id']
+            LOG.info(_LI('Service %s is started'), self.service_id)
+
+        try:
             service_objects.Service.update_by_id(
                 cnxt,
                 self.service_id,
                 dict(deleted_at=None))
-            LOG.info(_LI('Service %s is started'), self.service_id)
+            LOG.info(_LI('Service %s is updated'), self.service_id)
+        except Exception as ex:
+            LOG.error(_LE('Service %(service_id)s update '
+                          'failed: %(error)s'),
+                      {'service_id': self.service_id, 'error': ex})
 
     def service_manage_cleanup(self):
         cnxt = context.get_admin_context()
