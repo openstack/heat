@@ -40,7 +40,6 @@ class RawTemplate(
         'files': heat_fields.JsonField(nullable=True),
         'template': heat_fields.JsonField(),
         'environment': heat_fields.JsonField(),
-        'predecessor': fields.IntegerField(),
     }
 
     @staticmethod

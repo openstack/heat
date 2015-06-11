@@ -99,8 +99,6 @@ class RawTemplate(BASE, HeatBase):
     template = sqlalchemy.Column(types.Json)
     files = sqlalchemy.Column(types.Json)
     environment = sqlalchemy.Column('environment', types.Json)
-    predecessor = sqlalchemy.Column('predecessor', sqlalchemy.Integer,
-                                    sqlalchemy.ForeignKey('raw_template.id'))
 
 
 class StackTag(BASE, HeatBase):
