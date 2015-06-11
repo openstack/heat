@@ -213,3 +213,79 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         msg = ("The KeystoneService (%(name)s) could not be found." %
                {'name': self.sample_name})
         self.assertEqual(msg, six.text_type(ex))
+
+
+class KeystoneClientPluginRoleTest(common.HeatTestCase):
+
+    sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd152'
+    sample_name = 'sample_role'
+
+    def _get_mock_role(self):
+        role = mock.MagicMock()
+        role.id = self.sample_uuid
+        role.name = self.sample_name
+        return role
+
+    def setUp(self):
+        super(KeystoneClientPluginRoleTest, self).setUp()
+        self._client = mock.MagicMock()
+
+    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    def test_get_role_id(self, client_keystone):
+        self._client.client.roles.get.return_value = (self
+                                                      ._get_mock_role())
+
+        client_keystone.return_value = self._client
+        client_plugin = client.KeystoneClientPlugin(
+            context=mock.MagicMock()
+        )
+
+        self.assertEqual(self.sample_uuid,
+                         client_plugin.get_role_id(self.sample_uuid))
+        self._client.client.roles.get.assert_called_once_with(
+            self.sample_uuid)
+
+    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    def test_get_role_id_with_name(self, client_keystone):
+        self._client.client.roles.get.side_effect = (keystone_exceptions
+                                                     .NotFound)
+        self._client.client.roles.list.return_value = [
+            self._get_mock_role()
+        ]
+
+        client_keystone.return_value = self._client
+        client_plugin = client.KeystoneClientPlugin(
+            context=mock.MagicMock()
+        )
+
+        self.assertEqual(self.sample_uuid,
+                         client_plugin.get_role_id(self.sample_name))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.roles.get,
+                          self.sample_name)
+        self._client.client.roles.list.assert_called_once_with(
+            name=self.sample_name)
+
+    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    def test_get_role_id_not_found(self, client_keystone):
+        self._client.client.roles.get.side_effect = (keystone_exceptions
+                                                     .NotFound)
+        self._client.client.roles.list.return_value = [
+        ]
+
+        client_keystone.return_value = self._client
+        client_plugin = client.KeystoneClientPlugin(
+            context=mock.MagicMock()
+        )
+
+        ex = self.assertRaises(exception.EntityNotFound,
+                               client_plugin.get_role_id,
+                               self.sample_name)
+        msg = ("The KeystoneRole (%(name)s) could not be found." %
+               {'name': self.sample_name})
+        self.assertEqual(msg, six.text_type(ex))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.roles.get,
+                          self.sample_name)
+        self._client.client.roles.list.assert_called_once_with(
+            name=self.sample_name)
