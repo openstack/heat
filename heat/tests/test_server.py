@@ -1291,6 +1291,34 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_server_delete_error_task_in_progress(self):
+        # test server in 'ERROR', but task state in nova is 'deleting'
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'create_delete')
+        server.resource_id = '1234'
+        server_get = self.fc.client.get_servers_1234()
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+
+        def make_error():
+            server_get[1]["server"]['status'] = "ERROR"
+            server_get[1]["server"]['OS-EXT-STS:task_state'] = 'deleting'
+
+        def make_error_done():
+            server_get[1]["server"]['status'] = "ERROR"
+            server_get[1]["server"]['OS-EXT-STS:task_state'] = None
+
+        get = self.fc.client.get_servers_1234
+        get().WithSideEffects(make_error).AndReturn(server_get)
+        get().WithSideEffects(make_error_done).AndReturn(server_get)
+        mox.Replay(get)
+
+        resf = self.assertRaises(exception.ResourceFailure,
+                                 scheduler.TaskRunner(server.delete))
+        self.assertIn("Server sample-server delete failed",
+                      six.text_type(resf))
+        self.m.VerifyAll()
+
     def test_server_soft_delete(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
