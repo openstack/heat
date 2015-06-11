@@ -82,7 +82,10 @@
       "cc1.4xlarge" : { "Arch" : "64" }
     },
     "DistroArch2AMI": {
-      "F18"      : { "32" : "F18-i386-cfntools", "64" : "F18-x86_64-cfntools" },
+      "F18"      : {
+         "32" : "F18-i386-cfntools",
+         "64" : "F18-x86_64-cfntools"
+      },
       "F17"      : { "32" : "F17-i386-cfntools", "64" : "F17-x86_64-cfntools" },
       "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" },
       "RHEL-6.1" : { "32" : "rhel61-i386-cfntools", "64" : "rhel61-x86_64-cfntools" },
