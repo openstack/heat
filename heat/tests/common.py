@@ -33,9 +33,11 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
 from heat.engine import environment
+from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
 from heat.tests import fakes
+from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
@@ -119,7 +121,12 @@ class HeatTestCase(testscenarios.WithScenarios,
         if mock_keystone:
             self.stub_keystoneclient()
         utils.setup_dummy_db()
+        self.register_test_resources()
         self.addCleanup(utils.reset_dummy_db)
+
+    def register_test_resources(self):
+        resource._register_class('ResourceWithResourceIDType',
+                                 generic_rsrc.ResourceWithResourceID)
 
     def stub_wallclock(self):
         """

@@ -459,8 +459,6 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_once_with()
 
     def test_update_modify_replace_failed_create_and_delete_1(self):
-        resource._register_class('ResourceWithResourceIDType',
-                                 generic_rsrc.ResourceWithResourceID)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type':
                                             'ResourceWithResourceIDType',
@@ -514,8 +512,6 @@ class StackUpdateTest(common.HeatTestCase):
             [mock.call(None), mock.call('b_res'), mock.call('a_res')])
 
     def test_update_modify_replace_failed_create_and_delete_2(self):
-        resource._register_class('ResourceWithResourceIDType',
-                                 generic_rsrc.ResourceWithResourceID)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type':
                                             'ResourceWithResourceIDType',
@@ -571,8 +567,6 @@ class StackUpdateTest(common.HeatTestCase):
              mock.call('a_res')])
 
     def test_update_modify_replace_create_in_progress_and_delete_1(self):
-        resource._register_class('ResourceWithResourceIDType',
-                                 generic_rsrc.ResourceWithResourceID)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type':
                                             'ResourceWithResourceIDType',
@@ -627,8 +621,6 @@ class StackUpdateTest(common.HeatTestCase):
             [mock.call(None), mock.call('b_res'), mock.call('a_res')])
 
     def test_update_modify_replace_create_in_progress_and_delete_2(self):
-        resource._register_class('ResourceWithResourceIDType',
-                                 generic_rsrc.ResourceWithResourceID)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type':
                                             'ResourceWithResourceIDType',
