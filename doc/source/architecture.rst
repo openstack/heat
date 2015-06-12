@@ -62,6 +62,6 @@ The heat-api-cfn component provides an AWS Query API that is compatible with AWS
 heat-engine
 -----------
 
-The heat engine's main responsibility is to orchestrate the launching of templates and provide events back to the API consumer.
+The heat-engine's main responsibility is to orchestrate the launching of templates and provide events back to the API consumer.
 
 The templates integrate well with .. _Puppet: https://s3.amazonaws.com/cloudformation-examples/IntegratingAWSCloudFormationWithPuppet.pdf and .. _Chef: http://www.full360.com/2011/02/27/integrating-aws-cloudformation-and-chef.html
