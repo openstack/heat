@@ -50,7 +50,8 @@ class RawTemplate(
 
         tpl.environment = copy.deepcopy(tpl.environment)
         # If any of the parameters were encrypted, then decrypt them
-        if env_fmt.ENCRYPTED_PARAM_NAMES in tpl.environment:
+        if (tpl.environment is not None and
+                env_fmt.ENCRYPTED_PARAM_NAMES in tpl.environment):
             parameters = tpl.environment[env_fmt.PARAMETERS]
             encrypted_param_names = tpl.environment[
                 env_fmt.ENCRYPTED_PARAM_NAMES]
