@@ -1023,7 +1023,7 @@ class EngineService(service.Service):
 
         :param cnxt: RPC context.
         """
-        return resources.global_env().get_types(support_status)
+        return resources.global_env().get_types(cnxt, support_status)
 
     def list_template_versions(self, cnxt):
         mgr = templatem._get_template_extension_manager()

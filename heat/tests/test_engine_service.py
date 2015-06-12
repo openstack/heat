@@ -2171,13 +2171,18 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIn('WordPress', s['description'])
         self.assertIn('parameters', s)
 
-    def test_list_resource_types(self):
+    @mock.patch.object(res.Resource, 'is_service_available')
+    def test_list_resource_types(self, mock_is_service_available):
+        mock_is_service_available.return_value = True
         resources = self.eng.list_resource_types(self.ctx)
         self.assertIsInstance(resources, list)
         self.assertIn('AWS::EC2::Instance', resources)
         self.assertIn('AWS::RDS::DBInstance', resources)
 
-    def test_list_resource_types_deprecated(self):
+    @mock.patch.object(res.Resource, 'is_service_available')
+    def test_list_resource_types_deprecated(self,
+                                            mock_is_service_available):
+        mock_is_service_available.return_value = True
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
         self.assertEqual(set(['OS::Neutron::RouterGateway',
                               'OS::Heat::HARestarter',
@@ -2185,7 +2190,10 @@ class StackServiceTest(common.HeatTestCase):
                               'OS::Heat::StructuredDeployments']),
                          set(resources))
 
-    def test_list_resource_types_supported(self):
+    @mock.patch.object(res.Resource, 'is_service_available')
+    def test_list_resource_types_supported(self,
+                                           mock_is_service_available):
+        mock_is_service_available.return_value = True
         resources = self.eng.list_resource_types(self.ctx, "SUPPORTED")
         self.assertNotIn(['OS::Neutron::RouterGateway'], resources)
         self.assertIn('AWS::EC2::Instance', resources)
@@ -2211,6 +2219,15 @@ class StackServiceTest(common.HeatTestCase):
         expected = [{'version': 'a.b', 'type': 'cfn'},
                     {'version': 'c.d', 'type': 'hot'}]
         self.assertEqual(expected, templates)
+
+    @mock.patch.object(res.Resource, 'is_service_available')
+    def test_list_resource_types_unavailable(
+            self,
+            mock_is_service_available):
+        mock_is_service_available.return_value = False
+        resources = self.eng.list_resource_types(self.ctx)
+        # Check for an known resource, not listed
+        self.assertNotIn('OS::Nova::Server', resources)
 
     def test_resource_schema(self):
         type_name = 'ResourceWithPropsType'
