@@ -1615,7 +1615,7 @@ class Stack(collections.Mapping):
                  self.name, self.id, traversal_id)
 
         prev_prev_id = self.prev_raw_template_id
-        self.prev_raw_template_id = self.t.id
+        self.prev_raw_template_id = None
         self.store()
 
         if (prev_prev_id is not None and
@@ -1625,3 +1625,8 @@ class Stack(collections.Mapping):
 
         reason = 'Stack %s completed successfully' % self.action
         self.state_set(self.action, self.COMPLETE, reason)
+        if self.action == self.DELETE:
+            try:
+                stack_object.Stack.delete(self.context, self.id)
+            except exception.NotFound:
+                pass
