@@ -524,3 +524,14 @@ class KeystoneServiceNameConflict(HeatException):
 
 class SIGHUPInterrupt(HeatException):
     msg_fmt = _("System SIGHUP signal received.")
+
+
+class StackResourceUnavailable(StackValidationFailed):
+    message = _("Service %(service_name)s does not have required endpoint in "
+                "service catalog for the resource %(resource_name)s")
+
+    def __init__(self, service_name, resource_name):
+        super(StackResourceUnavailable, self).__init__(
+            message=self.message % dict(
+                service_name=service_name,
+                resource_name=resource_name))

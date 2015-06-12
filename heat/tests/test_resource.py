@@ -28,6 +28,7 @@ from heat.common import timeutils
 from heat.db import api as db_api
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import dependencies
 from heat.engine import environment
@@ -2263,3 +2264,127 @@ class ResourceHookTest(common.HeatTestCase):
         res.has_hook = mock.Mock(return_value=False)
         self.assertRaises(exception.ResourceActionNotSupported,
                           res.signal, {'unset_hook': 'pre-create'})
+
+
+class ResourceAvailabilityTest(common.HeatTestCase):
+    def _mock_client_plugin(self, service_types=[], is_available=True):
+        mock_client_plugin = mock.Mock()
+        mock_service_types = mock.PropertyMock(return_value=service_types)
+        type(mock_client_plugin).service_types = mock_service_types
+        mock_client_plugin.does_endpoint_exist = mock.Mock(
+            return_value=is_available)
+        return mock_service_types, mock_client_plugin
+
+    def test_default_true_with_default_client_name_none(self):
+        '''
+        When default_client_name is None, resource is considered as available.
+        '''
+        with mock.patch(('heat.tests.generic_resource'
+                        '.ResourceWithDefaultClientName.default_client_name'),
+                        new_callable=mock.PropertyMock) as mock_client_name:
+            mock_client_name.return_value = None
+            self.assertTrue((generic_rsrc.ResourceWithDefaultClientName.
+                            is_service_available(context=mock.Mock())))
+
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_default_true_empty_service_types(
+            self,
+            mock_client_plugin_method):
+        '''
+        When service_types is empty list, resource is considered as available.
+        '''
+
+        mock_service_types, mock_client_plugin = self._mock_client_plugin()
+        mock_client_plugin_method.return_value = mock_client_plugin
+
+        self.assertTrue(
+            generic_rsrc.ResourceWithDefaultClientName.is_service_available(
+                context=mock.Mock()))
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+        mock_service_types.assert_called_once_with()
+
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_service_deployed(
+            self,
+            mock_client_plugin_method):
+        '''
+        When the service is deployed, resource is considered as available.
+        '''
+
+        mock_service_types, mock_client_plugin = self._mock_client_plugin(
+            ['test_type']
+        )
+        mock_client_plugin_method.return_value = mock_client_plugin
+
+        self.assertTrue(
+            generic_rsrc.ResourceWithDefaultClientName.is_service_available(
+                context=mock.Mock()))
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+        mock_service_types.assert_called_once_with()
+        mock_client_plugin.does_endpoint_exist.assert_called_once_with(
+            service_type='test_type',
+            service_name=(generic_rsrc.ResourceWithDefaultClientName
+                          .default_client_name)
+        )
+
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_service_not_deployed(
+            self,
+            mock_client_plugin_method):
+        '''
+        When the service is not deployed, resource is considered as
+        unavailable.
+        '''
+
+        mock_service_types, mock_client_plugin = self._mock_client_plugin(
+            ['test_type_un_deployed'],
+            False
+        )
+        mock_client_plugin_method.return_value = mock_client_plugin
+
+        self.assertFalse(
+            generic_rsrc.ResourceWithDefaultClientName.is_service_available(
+                context=mock.Mock()))
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+        mock_service_types.assert_called_once_with()
+        mock_client_plugin.does_endpoint_exist.assert_called_once_with(
+            service_type='test_type_un_deployed',
+            service_name=(generic_rsrc.ResourceWithDefaultClientName
+                          .default_client_name)
+        )
+
+    def test_service_not_deployed_throws_exception(self):
+        '''
+        When the service is not deployed, make sure resource is throwing
+        StackResourceUnavailable exception.
+        '''
+        with mock.patch.object(
+                generic_rsrc.ResourceWithDefaultClientName,
+                'is_service_available') as mock_method:
+            mock_method.return_value = False
+
+            definition = rsrc_defn.ResourceDefinition(
+                name='Test Resource',
+                resource_type=mock.Mock())
+
+            mock_stack = mock.MagicMock()
+
+            ex = self.assertRaises(
+                exception.StackResourceUnavailable,
+                generic_rsrc.ResourceWithDefaultClientName.__new__,
+                cls=generic_rsrc.ResourceWithDefaultClientName,
+                name='test_stack',
+                definition=definition,
+                stack=mock_stack)
+
+            msg = ('Service sample does not have required endpoint in service'
+                   ' catalog for the resource test_stack')
+            self.assertEqual(msg,
+                             six.text_type(ex),
+                             'invalid exception message')
+
+            # Make sure is_service_available is called on the right class
+            mock_method.assert_called_once_with(mock_stack.context)

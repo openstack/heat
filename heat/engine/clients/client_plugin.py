@@ -205,3 +205,15 @@ class ClientPlugin(object):
         return args
         # FIXME(kanagaraj-manickam) Update other client plugins to leverage
         # this method (bug 1461041)
+
+    def does_endpoint_exist(self,
+                            service_type,
+                            service_name):
+        endpoint_type = self._get_client_option(service_name,
+                                                'endpoint_type')
+        try:
+            self.url_for(service_type=service_type,
+                         endpoint_type=endpoint_type)
+            return True
+        except exceptions.EndpointNotFound:
+            return False

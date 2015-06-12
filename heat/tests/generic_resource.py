@@ -33,6 +33,10 @@ class GenericResource(resource.Resource):
     attributes_schema = {'foo': attributes.Schema('A generic attribute'),
                          'Foo': attributes.Schema('Another generic attribute')}
 
+    @classmethod
+    def is_service_available(cls, context):
+        return True
+
     def handle_create(self):
         LOG.warn(_LW('Creating generic resource (Type "%s")'),
                  self.type())
@@ -177,3 +181,7 @@ class ResourceWithAttributeType(GenericResource):
             return "valid_sting"
         elif name == 'attr2':
             return "invalid_type"
+
+
+class ResourceWithDefaultClientName(resource.Resource):
+    default_client_name = 'sample'
