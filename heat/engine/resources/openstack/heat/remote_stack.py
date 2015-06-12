@@ -35,6 +35,7 @@ class RemoteStack(resource.Resource):
     A Resource representing a stack which can be created using specified
     context.
     """
+    default_client_name = 'heat'
 
     PROPERTIES = (
         CONTEXT, TEMPLATE, TIMEOUT, PARAMETERS,
@@ -120,11 +121,11 @@ class RemoteStack(resource.Resource):
 
     def heat(self):
         # A convenience method overriding Resource.heat()
-        return self._context().clients.client("heat")
+        return self._context().clients.client(self.default_client_name)
 
     def client_plugin(self):
         # A convenience method overriding Resource.client_plugin()
-        return self._context().clients.client_plugin('heat')
+        return self._context().clients.client_plugin(self.default_client_name)
 
     def validate(self):
         super(RemoteStack, self).validate()

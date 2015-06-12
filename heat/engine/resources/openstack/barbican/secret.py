@@ -25,6 +25,8 @@ class Secret(resource.Resource):
 
     support_status = support.SupportStatus(version='2014.2')
 
+    default_client_name = 'barbican'
+
     PROPERTIES = (
         NAME, PAYLOAD, PAYLOAD_CONTENT_TYPE, PAYLOAD_CONTENT_ENCODING,
         MODE, EXPIRATION, ALGORITHM, BIT_LENGTH,
@@ -104,7 +106,7 @@ class Secret(resource.Resource):
     }
 
     def barbican(self):
-        return self.client('barbican')
+        return self.client()
 
     def handle_create(self):
         info = dict(self.properties)

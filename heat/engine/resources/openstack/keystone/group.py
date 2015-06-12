@@ -60,8 +60,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
                       group_name,
                       description,
                       domain):
-        domain = (self.client_plugin('keystone').
-                  get_domain_id(domain))
+        domain = self.client_plugin().get_domain_id(domain)
 
         return self.keystone().client.groups.create(
             name=group_name,
@@ -84,8 +83,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
             values['description'] = new_description
 
         values['group'] = group_id
-        domain = (self.client_plugin('keystone').
-                  get_domain_id(domain))
+        domain = self.client_plugin().get_domain_id(domain)
         values['domain_id'] = domain
         return self.keystone().client.groups.update(**values)
 
@@ -132,7 +130,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
 
                 self._delete_group(group_id=self.resource_id)
             except Exception as ex:
-                self.client_plugin('keystone').ignore_not_found(ex)
+                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

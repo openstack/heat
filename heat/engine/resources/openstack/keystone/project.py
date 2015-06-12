@@ -25,6 +25,8 @@ class KeystoneProject(resource.Resource):
         version='2015.1',
         message=_('Supported versions: keystone v3'))
 
+    default_client_name = 'keystone'
+
     PROPERTIES = (
         NAME, DOMAIN, DESCRIPTION, ENABLED
     ) = (
@@ -63,8 +65,7 @@ class KeystoneProject(resource.Resource):
                         description,
                         domain,
                         enabled):
-        domain = (self.client_plugin('keystone').
-                  get_domain_id(domain))
+        domain = self.client_plugin().get_domain_id(domain)
 
         return self.keystone().client.projects.create(
             name=project_name,
@@ -91,8 +92,7 @@ class KeystoneProject(resource.Resource):
             values['enabled'] = enabled
 
         values['project'] = project_id
-        domain = (self.client_plugin('keystone').
-                  get_domain_id(domain))
+        domain = self.client_plugin().get_domain_id(domain)
 
         values['domain'] = domain
 
@@ -137,7 +137,7 @@ class KeystoneProject(resource.Resource):
             try:
                 self._delete_project(project_id=self.resource_id)
             except Exception as ex:
-                self.client_plugin('keystone').ignore_not_found(ex)
+                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

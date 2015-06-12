@@ -28,7 +28,10 @@ from heat.engine import support
 
 class Workflow(signal_responder.SignalResponder,
                resource.Resource):
+
     support_status = support.SupportStatus(version='2015.1')
+
+    default_client_name = 'mistral'
 
     PROPERTIES = (
         NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS
@@ -183,7 +186,7 @@ class Workflow(signal_responder.SignalResponder,
     }
 
     def mistral(self):
-        return self.client('mistral')
+        return self.client()
 
     def FnGetRefId(self):
         return self._workflow_name()
@@ -415,7 +418,7 @@ def resource_mapping():
 
 
 def available_resource_mapping():
-    if not clients.has_client('mistral'):
+    if not clients.has_client(Workflow.default_client_name):
         return {}
 
     return resource_mapping()

@@ -24,6 +24,8 @@ class KeystoneService(resource.Resource):
         version='2015.2',
         message=_('Supported versions: keystone v3'))
 
+    default_client_name = 'keystone'
+
     PROPERTIES = (
         NAME, DESCRIPTION, TYPE
     ) = (
@@ -109,7 +111,7 @@ class KeystoneService(resource.Resource):
             try:
                 self._delete_service(service_id=self.resource_id)
             except Exception as ex:
-                self.client_plugin('keystone').ignore_not_found(ex)
+                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():
