@@ -889,7 +889,7 @@ class Server(stack_user.StackUser):
         if name == self.NETWORKS_ATTR:
             return self._extend_networks(server.networks)
         if name == self.INSTANCE_NAME:
-            return server._info.get('OS-EXT-SRV-ATTR:instance_name')
+            return getattr(server, 'OS-EXT-SRV-ATTR:instance_name', None)
         if name == self.ACCESSIPV4:
             return server.accessIPv4
         if name == self.ACCESSIPV6:
