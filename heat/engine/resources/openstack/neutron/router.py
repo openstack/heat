@@ -334,7 +334,7 @@ class RouterInterface(neutron.NeutronResource):
         if value and deprecated_value:
             raise exception.ResourcePropertyConflict(key,
                                                      deprecated_key)
-        if not value and not deprecated_value:
+        if value is None and deprecated_value is None:
             return False
         return True
 
