@@ -255,6 +255,27 @@ class EnvironmentDuplicateTest(common.HeatTestCase):
                                 env.get_resource_info('OS::Test::Dummy',
                                                       'my_fip'))
 
+    def test_env_register_while_get_resource_info(self):
+        env_test = {u'resource_registry': {
+            u'OS::Test::Dummy': self.resource_type}}
+        env = environment.Environment()
+        env.load(env_test)
+        env.get_resource_info('OS::Test::Dummy')
+        self.assertEqual({'OS::Test::Dummy': self.resource_type,
+                          'resources': {}},
+                         env.user_env_as_dict().get(
+                             environment_format.RESOURCE_REGISTRY))
+
+        env_test = {u'resource_registry': {
+            u'resources': {u'test': {u'OS::Test::Dummy': self.resource_type}}}}
+        env.load(env_test)
+        env.get_resource_info('OS::Test::Dummy')
+        self.assertEqual({u'OS::Test::Dummy': self.resource_type,
+                          'resources': {u'test': {u'OS::Test::Dummy':
+                                                  self.resource_type}}},
+                         env.user_env_as_dict().get(
+                             environment_format.RESOURCE_REGISTRY))
+
 
 class GlobalEnvLoadingTest(common.HeatTestCase):
 
