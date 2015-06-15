@@ -94,11 +94,6 @@ resources:
             salt: {get_param: salt}
 '''
 
-empty_template = '''
-heat_template_version: 2013-05-23
-description: Empty Template
-'''
-
 wp_template_no_default = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -400,9 +395,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.converge_stack(template=stack.t, action=stack.CREATE)
 
         # update stack with new template
-        t2 = template_format.parse(empty_template)
-        template2 = templatem.Template(
-            t2, env=environment.Environment({'KeyName2': 'test2'}))
+        template2 = templatem.Template.create_empty_template(
+            version=stack.t.version)
 
         curr_stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
         curr_stack = parser.Stack.load(curr_stack_db._context,

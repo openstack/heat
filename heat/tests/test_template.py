@@ -872,6 +872,56 @@ Mappings:
 
         self.assertEqual(cfn_tpl['Resources'], empty.t['Resources'])
 
+    def test_create_empty_template_default_version(self):
+        empty_template = template.Template.create_empty_template()
+        self.assertEqual(hot_t.HOTemplate20150430, empty_template.__class__)
+        self.assertEqual({}, empty_template['parameter_groups'])
+        self.assertEqual({}, empty_template['resources'])
+        self.assertEqual({}, empty_template['outputs'])
+
+    def test_create_empty_template_returns_correct_version(self):
+        t = template_format.parse('''
+            AWSTemplateFormatVersion: 2010-09-09
+            Parameters:
+            Resources:
+            Outputs:
+            ''')
+        aws_tmpl = template.Template(t)
+        empty_template = template.Template.create_empty_template(
+            version=aws_tmpl.version)
+        self.assertEqual(aws_tmpl.__class__, empty_template.__class__)
+        self.assertEqual({}, empty_template['Mappings'])
+        self.assertEqual({}, empty_template['Resources'])
+        self.assertEqual({}, empty_template['Outputs'])
+
+        t = template_format.parse('''
+            HeatTemplateFormatVersion: 2012-12-12
+            Parameters:
+            Resources:
+            Outputs:
+            ''')
+        heat_tmpl = template.Template(t)
+        empty_template = template.Template.create_empty_template(
+            version=heat_tmpl.version)
+        self.assertEqual(heat_tmpl.__class__, empty_template.__class__)
+        self.assertEqual({}, empty_template['Mappings'])
+        self.assertEqual({}, empty_template['Resources'])
+        self.assertEqual({}, empty_template['Outputs'])
+
+        t = template_format.parse('''
+            heat_template_version: 2015-04-30
+            parameter_groups:
+            resources:
+            outputs:
+            ''')
+        hot_tmpl = template.Template(t)
+        empty_template = template.Template.create_empty_template(
+            version=hot_tmpl.version)
+        self.assertEqual(hot_tmpl.__class__, empty_template.__class__)
+        self.assertEqual({}, empty_template['parameter_groups'])
+        self.assertEqual({}, empty_template['resources'])
+        self.assertEqual({}, empty_template['outputs'])
+
 
 class TemplateFnErrorTest(common.HeatTestCase):
     scenarios = [

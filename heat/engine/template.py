@@ -244,6 +244,23 @@ class Template(collections.Mapping):
                             'Found a [%s] instead') % type(res)
                 raise exception.StackValidationFailed(message=message)
 
+    @classmethod
+    def create_empty_template(cls,
+                              version=('heat_template_version', '2015-04-30')):
+        '''Creates an empty template.
+
+        Creates a new empty template with given version. If version is
+        not provided, a new empty HOT template of version "2015-04-30"
+        is returned.
+
+        :param version: A tuple containing version header of the
+        template: version key and value. E.g. ("heat_template_version",
+        "2015-04-30")
+        :returns: A new empty template.
+        '''
+        tmpl = {version[0]: version[1]}
+        return cls(tmpl)
+
 
 def parse(functions, stack, snippet):
     recurse = functools.partial(parse, functions, stack)

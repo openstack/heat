@@ -36,7 +36,6 @@ from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
 from heat.common import service_utils
-from heat.common import template_format
 from heat.engine import api
 from heat.engine import attributes
 from heat.engine import clients
@@ -950,12 +949,7 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=st)
 
         if stack.convergence:
-            empty_template = '''
-            heat_template_version: 2013-05-23
-            description: Empty Template
-            '''
-            tmpl = template_format.parse(empty_template)
-            template = templatem.Template(tmpl)
+            template = templatem.Template.create_empty_template()
             stack.converge_stack(template=template, action=stack.DELETE)
             return
 
