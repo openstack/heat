@@ -1522,7 +1522,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertTrue(result['stack_id'])
         events = self.eng.list_events(self.ctx, self.stack.identifier())
 
-        self.assertEqual(9, len(events))
+        self.assertEqual(10, len(events))
 
         for ev in events:
             self.assertIn('event_identity', ev)
