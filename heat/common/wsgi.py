@@ -22,6 +22,7 @@ Utility methods for working with WSGI servers
 
 import abc
 import errno
+import logging as std_logging
 import os
 import signal
 import sys
@@ -35,7 +36,6 @@ import eventlet.wsgi
 from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
-from oslo_log import loggers
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 from paste import deploy
@@ -251,6 +251,17 @@ def get_socket(conf, default_port):
     return sock
 
 
+class WritableLogger(object):
+    """A thin wrapper that responds to `write` and logs."""
+
+    def __init__(self, LOG, level=std_logging.DEBUG):
+        self.LOG = LOG
+        self.level = level
+
+    def write(self, msg):
+        self.LOG.log(self.level, msg.rstrip("\n"))
+
+
 class Server(object):
     """Server class to manage multiple WSGI sockets and applications."""
 
@@ -289,7 +300,7 @@ class Server(object):
 
         os.umask(0o27)  # ensure files are created with the correct privileges
         self._logger = logging.getLogger("eventlet.wsgi.server")
-        self._wsgi_logger = loggers.WritableLogger(self._logger)
+        self._wsgi_logger = WritableLogger(self._logger)
 
         if conf.workers == 0:
             # Useful for profiling, test, debug etc.
