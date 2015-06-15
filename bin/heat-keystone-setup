@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Warning: This script is deprecated! Please use other tool to setup keystone for heat." >&2
+
 set +e
 
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
@@ -19,12 +21,12 @@ if [[ -z "$SERVICE_TOKEN" ]]; then
 fi
 
 set_admin_token() {
-    alias keystone="keystone --token $SERVICE_TOKEN \
-                             --endpoint $SERVICE_ENDPOINT"
+    alias openstack="openstack --os-token $SERVICE_TOKEN \
+                             --os-endpoint $SERVICE_ENDPOINT"
 }
 
 unset_admin_token() {
-    unalias keystone
+    unalias openstack
 }
 
 #### utilities functions merged from devstack to check required parameter is not empty
@@ -113,31 +115,19 @@ get_id () {
     get_data 1 id 2 "$@"
 }
 
-get_column_num() {
-    local name=$1
-    shift
-    $@ | awk -F'|' "NR == 2 && /^|/ { for (i=2; i<NF; i++) if (\$i ~ \"^ *${name} *\$\") print (i - 1) }"
-}
-
 get_user() {
     local username=$1
 
-    # Output format of keystone user-list changed between essex and
-    # folsom - the columns have been re-ordered (!?), so detect what
-    # column to pass to get_data via get_column_num
-    namecol=$(get_column_num name keystone user-list)
-    die_if_not_set $LINENO namecol "Fail to get namecol for name by 'keystone user-list' "
-
-    local user_id=$(get_data $namecol $username 1 keystone user-list)
+    local user_id=$(get_data 2 $username 1 openstack user list)
 
     if [ -n "$user_id" ]; then
         echo "Found existing $username user" >&2
         echo $user_id
     else
         echo "Creating $username user..." >&2
-        get_id keystone user-create --name=$username \
-                                    --pass="$SERVICE_PASSWORD" \
-                                    --tenant_id $SERVICE_TENANT \
+        get_id openstack user create $username \
+                                    --password="$SERVICE_PASSWORD" \
+                                    --project $SERVICE_TENANT \
                                     --email=$username@example.com
     fi
 }
@@ -148,14 +138,8 @@ add_role() {
     local role_id=$3
     local username=$4
 
-    # The keystone argument format changed between essex and folsom
-    # so we use the fact that the folsom keystone version has a new
-    # option "user-role-list" to detect we're on that newer version
-    # This also allows us to detect when the user already has the
-    # requested role_id, preventing an error on folsom
-    user_roles=$(keystone user-role-list \
-                          --user_id $user_id\
-                          --tenant_id $tenant 2>/dev/null)
+    user_roles=$(openstack user role list $user_id\
+                          --project $tenant 2>/dev/null)
     if [ $? == 0 ]; then
         # Folsom
         existing_role=$(get_data 1 $role_id 1 echo "$user_roles")
@@ -164,26 +148,21 @@ add_role() {
             echo "User $username already has role $role_id" >&2
             return
         fi
-        keystone user-role-add --tenant_id $tenant \
-                           --user_id $user_id \
-                           --role_id $role_id
-    else
-        # Essex
-        keystone user-role-add --tenant_id $tenant \
-                               --user $user_id \
-                               --role $role_id
+        openstack role add --project $tenant \
+                           --user $user_id \
+                           $role_id
     fi
 }
 
 create_role() {
     local role_name=$1
 
-    role_id=$(get_data 2 $role_name 1 keystone role-list)
+    role_id=$(get_data 2 $role_name 1 openstack role list)
     if [ -n "$role_id" ]
     then
         echo "Role $role_name already exists : $role_id" >&2
     else
-        keystone role-create --name $role_name
+        openstack role create $role_name
     fi
 }
 
@@ -191,36 +170,22 @@ get_endpoint() {
     local service_type=$1
 
     unset_admin_token
-    keystone endpoint-get --service $service_type
+    openstack endpoint show $service_type
     set_admin_token
 }
 
 delete_endpoint() {
     local service_type=$1
 
-    case $service_type in
-        volume) urlsuffix='\\\\$\\\\(tenant_id)s';;
-        orchestration) urlsuffix='%[(]tenant_id[)]s';;
-        # cloudformation has no hash suffix
-        *) urlsuffix=''
-    esac
+    local endpoints=$(get_data 4 $service_type 1 openstack endpoint list)
 
-    local url=$(get_data 1 "${service_type}[.]publicURL" 2 \
-                get_endpoint $service_type 2>/dev/null | \
-                sed -r "s/[a-f0-9]{32}/$urlsuffix/")
+    for endpoint in $endpoints; do
+        echo "Removing $service_type endpoint ${endpoint}..." >&2
+        openstack endpoint delete "$endpoint" >&2
+    done
 
-    if [ -n "$url" ]; then
-        local endpoints=$(get_data 3 $url 1 keystone endpoint-list)
+    if [ -z "$endpoints" ]; then false; fi
 
-        for endpoint in $endpoints; do
-            echo "Removing $service_type endpoint ${endpoint}..." >&2
-            keystone endpoint-delete "$endpoint" >&2
-        done
-
-        if [ -z "$endpoints" ]; then false; fi
-    else
-        false
-    fi
 }
 
 delete_all_endpoints() {
@@ -234,12 +199,12 @@ delete_service() {
 
     delete_all_endpoints $service_type
 
-    local service_ids=$(get_data 3 $service_type 1 keystone service-list)
+    local service_ids=$(get_data 3 $service_type 1 openstack service list)
 
     for service in $service_ids; do
-        local service_name=$(get_data 1 $service 2 keystone service-list)
+        local service_name=$(get_data 1 $service 2 openstack service list)
         echo "Removing $service_name:$service_type service..." >&2
-        keystone service-delete $service >&2
+        openstack service delete $service >&2
     done
 }
 
@@ -250,35 +215,32 @@ get_service() {
 
     delete_service $service_type
 
-    get_id keystone service-create --name=$service_name \
-                                   --type=$service_type \
-                                   --description="$description"
+    get_id openstack service create --name=$service_name \
+                                   --description="$description" \
+                                   $service_type
 }
 
 add_endpoint() {
     local service_id=$1
     local url="$2"
 
-    keystone endpoint-create --region RegionOne --service_id $service_id \
-        --publicurl "$url" --adminurl "$url" --internalurl "$url" >&2
+    openstack endpoint create --region RegionOne --publicurl "$url" \
+        --adminurl "$url" --internalurl "$url" $service_id >&2
 }
 
 keystone_setup() {
-    # Make sure we can use keystone command without OS_SERVICE_TOKEN and OS_SERVICE_ENDPOINT
-    # credential, because we need to use keystone endpoint-get command below, and the
-    # keystone endpoint-get command can not run correctly
-    # using OS_SERVICE_TOKEN and OS_SERVICE_ENDPOINT credential.
+
     unset OS_SERVICE_TOKEN
     unset OS_SERVICE_ENDPOINT
-    TENANT_ID=$(get_data 1 tenant_id 2 keystone token-get)
-    die_if_not_set $LINENO TENANT_ID "Fail to get TENANT_ID by 'token-get' "
+    TENANT_ID=$(get_data 1 project_id 2 openstack token issue)
+    die_if_not_set $LINENO TENANT_ID "Fail to get TENANT_ID by 'openstack token issue' "
 
     set_admin_token
 
-    ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
-    die_if_not_set $LINENO ADMIN_ROLE "Fail to get ADMIN_ROLE by 'keystone role-list' "
-    SERVICE_TENANT=$(get_data 2 service 1 keystone tenant-list)
-    die_if_not_set $LINENO SERVICE_TENANT "Fail to get service tenant 'keystone tenant-list' "
+    ADMIN_ROLE=$(get_data 2 admin 1 openstack role list)
+    die_if_not_set $LINENO ADMIN_ROLE "Fail to get ADMIN_ROLE by 'openstack role list' "
+    SERVICE_TENANT=$(get_data 2 service 1 openstack project list)
+    die_if_not_set $LINENO SERVICE_TENANT "Fail to get service tenant 'openstack project list' "
     SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
     SERVICE_HOST=${SERVICE_HOST:-localhost}
 
