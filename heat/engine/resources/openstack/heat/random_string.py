@@ -79,9 +79,13 @@ class RandomString(resource.Resource):
                                            'octdigits']),
             ],
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                message=_('Use property %s.') % CHARACTER_CLASSES,
-                version='2014.2'
+                status=support.HIDDEN,
+                version='5.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    message=_('Use property %s.') % CHARACTER_CLASSES,
+                    version='2014.2'
+                )
             )
         ),
         CHARACTER_CLASSES: properties.Schema(
@@ -168,6 +172,23 @@ class RandomString(resource.Resource):
         'hexdigits': string.digits + 'ABCDEF',
         'octdigits': string.octdigits
     }
+
+    def translation_rules(self):
+        if self.properties.get(self.SEQUENCE):
+            return [
+                properties.TranslationRule(
+                    self.properties,
+                    properties.TranslationRule.ADD,
+                    [self.CHARACTER_CLASSES],
+                    [{self.CHARACTER_CLASSES_CLASS: self.properties.get(
+                        self.SEQUENCE),
+                        self.CHARACTER_CLASSES_MIN: 1}]),
+                properties.TranslationRule(
+                    self.properties,
+                    properties.TranslationRule.DELETE,
+                    [self.SEQUENCE]
+                )
+            ]
 
     @staticmethod
     def _deprecated_random_string(sequence, length):
