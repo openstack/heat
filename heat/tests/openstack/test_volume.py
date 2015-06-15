@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
+from heat.engine.resources.openstack.cinder import volume as c_vol
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.objects import resource_data as resource_data_object
@@ -1044,3 +1045,16 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
 
         self.m.VerifyAll()
+
+    def test_handle_delete_snapshot_no_backup(self):
+        stack_name = 'test_handle_delete_snapshot_no_backup'
+        mock_vs = {
+            'resource_data': {}
+        }
+        t = template_format.parse(single_cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+        rsrc = c_vol.CinderVolume(
+            'volume',
+            stack.t.resource_definitions(stack)['volume'],
+            stack)
+        self.assertIsNone(rsrc.handle_delete_snapshot(mock_vs))

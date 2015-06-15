@@ -394,7 +394,9 @@ class CinderVolume(vb.BaseVolume):
         raise exception.Error(backup.fail_reason)
 
     def handle_delete_snapshot(self, snapshot):
-        backup_id = snapshot['resource_data']['backup_id']
+        backup_id = snapshot['resource_data'].get('backup_id')
+        if not backup_id:
+            return
         try:
             self.client().backups.delete(backup_id)
         except Exception as ex:
