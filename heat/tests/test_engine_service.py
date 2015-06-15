@@ -2580,63 +2580,6 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIsNone(md)
         self.m.VerifyAll()
 
-    @tools.stack_context('service_metadata_test_stack')
-    def test_metadata(self):
-        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        pre_update_meta = self.stack['WebServer'].metadata_get()
-
-        self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
-        service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
-        self.m.StubOutWithMock(instances.Instance, 'metadata_update')
-        instances.Instance.metadata_update(new_metadata=test_metadata)
-        self.m.ReplayAll()
-
-        result = self.eng.metadata_update(self.ctx,
-                                          dict(self.stack.identifier()),
-                                          'WebServer', test_metadata)
-        # metadata_update is a no-op for all resources except
-        # WaitConditionHandle so we don't expect this to have changed
-        self.assertEqual(pre_update_meta, result)
-
-        self.m.VerifyAll()
-
-    def test_metadata_err_stack(self):
-        non_exist_identifier = identifier.HeatIdentifier(
-            self.ctx.tenant_id, 'wibble',
-            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
-
-        stack_not_found_exc = exception.StackNotFound(stack_name='test')
-        self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
-        self.m.ReplayAll()
-
-        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.eng.metadata_update,
-                               self.ctx, non_exist_identifier,
-                               'WebServer', test_metadata)
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
-        self.m.VerifyAll()
-
-    @tools.stack_context('service_metadata_err_resource_test_stack', False)
-    def test_metadata_err_resource(self):
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx,
-                          stack=mox.IgnoreArg()).AndReturn(self.stack)
-        self.m.ReplayAll()
-
-        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.eng.metadata_update,
-                               self.ctx, dict(self.stack.identifier()),
-                               'NooServer', test_metadata)
-        self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
-
-        self.m.VerifyAll()
-
     @tools.stack_context('service_show_watch_test_stack', False)
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB

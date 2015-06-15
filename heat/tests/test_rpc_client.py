@@ -244,12 +244,6 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api('stack_cancel_update', 'call',
                               stack_identity=self.identity)
 
-    def test_metadata_update(self):
-        self._test_engine_api('metadata_update', 'call',
-                              stack_identity=self.identity,
-                              resource_name='LogicalResourceId',
-                              metadata={u'wordpress': []})
-
     def test_resource_signal(self):
         self._test_engine_api('resource_signal', 'call',
                               stack_identity=self.identity,

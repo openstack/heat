@@ -437,15 +437,6 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('stack_cancel_update',
                                              stack_identity=stack_identity))
 
-    def metadata_update(self, ctxt, stack_identity, resource_name, metadata):
-        """
-        Update the metadata for the given resource.
-        """
-        return self.call(ctxt, self.make_msg('metadata_update',
-                                             stack_identity=stack_identity,
-                                             resource_name=resource_name,
-                                             metadata=metadata))
-
     def resource_signal(self, ctxt, stack_identity, resource_name, details,
                         sync_call=False):
         """
