@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import oslo_messaging as messaging
 
 from heat.common import exception
 from heat.engine import stack_lock
@@ -216,29 +215,3 @@ class StackLockTest(common.HeatTestCase):
                 raise self.TestThreadLockException
         self.assertRaises(self.TestThreadLockException, check_thread_lock)
         assert not stack_lock_object.StackLock.release.called
-
-    def test_engine_alive_ok(self):
-        slock = stack_lock.StackLock(self.context, self.stack_id,
-                                     self.engine_id)
-        mget_client = self.patchobject(stack_lock.rpc_messaging,
-                                       'get_rpc_client')
-        mclient = mget_client.return_value
-        mclient_ctx = mclient.prepare.return_value
-        mclient_ctx.call.return_value = True
-        ret = slock.engine_alive(self.context, self.engine_id)
-        self.assertTrue(ret)
-        mclient.prepare.assert_called_once_with(timeout=2)
-        mclient_ctx.call.assert_called_once_with(self.context, 'listening')
-
-    def test_engine_alive_timeout(self):
-        slock = stack_lock.StackLock(self.context, self.stack_id,
-                                     self.engine_id)
-        mget_client = self.patchobject(stack_lock.rpc_messaging,
-                                       'get_rpc_client')
-        mclient = mget_client.return_value
-        mclient_ctx = mclient.prepare.return_value
-        mclient_ctx.call.side_effect = messaging.MessagingTimeout('too slow')
-        ret = slock.engine_alive(self.context, self.engine_id)
-        self.assertIs(False, ret)
-        mclient.prepare.assert_called_once_with(timeout=2)
-        mclient_ctx.call.assert_called_once_with(self.context, 'listening')
