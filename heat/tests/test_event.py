@@ -11,8 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
+import mock
 from oslo_config import cfg
 
+from heat.common import exception
 from heat.engine import event
 from heat.engine import rsrc_defn
 from heat.engine import stack
@@ -75,6 +78,29 @@ class EventTest(common.HeatTestCase):
         self.assertEqual('Testing', loaded_e.reason)
         self.assertIsNotNone(loaded_e.timestamp)
         self.assertEqual({'Foo': 'goo'}, loaded_e.resource_properties)
+
+    def test_load_with_timestamp(self):
+        self.resource.resource_id_set('resource_physical_id')
+        timestamp = datetime.datetime.utcnow()
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource.properties,
+                        self.resource.name, self.resource.type(),
+                        timestamp=timestamp)
+
+        e.store()
+        self.assertIsNotNone(e.id)
+
+        loaded_e = event.Event.load(self.ctx, e.id)
+
+        self.assertEqual(timestamp, loaded_e.timestamp)
+
+    def test_load_no_event(self):
+        with mock.patch("heat.objects.event.Event") as event_mock:
+            event_mock.get_by_id.return_value = None
+            self.assertRaisesRegex(exception.NotFound,
+                                   "^No event exists with id",
+                                   event.Event.load, self.ctx, 1)
 
     def test_load_given_stack_event(self):
         self.resource.resource_id_set('resource_physical_id')
