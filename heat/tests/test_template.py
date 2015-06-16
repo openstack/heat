@@ -28,12 +28,10 @@ from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import template as hot_t
 from heat.engine import parameters
-from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
 
@@ -380,9 +378,6 @@ class TemplateTest(common.HeatTestCase):
     def setUp(self):
         super(TemplateTest, self).setUp()
         self.ctx = utils.dummy_context()
-
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
 
     @staticmethod
     def resolve(snippet, template, stack=None):

@@ -20,7 +20,6 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import properties
-from heat.engine import resource as res
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import service
 from heat.engine import stack
@@ -29,7 +28,6 @@ from heat.objects import stack as stack_object
 from heat.openstack.common import threadgroup
 from heat.tests import common
 from heat.tests.engine import tools
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
 
@@ -212,13 +210,12 @@ class StackCreateTest(common.HeatTestCase):
     def test_stack_create_total_resources_equals_max(self, ctr):
         stack_name = 'stack_create_total_resources_equals_max'
         params = {}
-        res._register_class('FakeResourceType', generic_rsrc.GenericResource)
         tpl = {
             'heat_template_version': '2014-10-16',
             'resources': {
-                'A': {'type': 'FakeResourceType'},
-                'B': {'type': 'FakeResourceType'},
-                'C': {'type': 'FakeResourceType'}
+                'A': {'type': 'GenericResourceType'},
+                'B': {'type': 'GenericResourceType'},
+                'C': {'type': 'GenericResourceType'}
             }
         }
 
@@ -254,13 +251,12 @@ class StackCreateTest(common.HeatTestCase):
     def test_stack_create_total_resources_exceeds_max(self):
         stack_name = 'stack_create_total_resources_exceeds_max'
         params = {}
-        res._register_class('FakeResourceType', generic_rsrc.GenericResource)
         tpl = {
             'heat_template_version': '2014-10-16',
             'resources': {
-                'A': {'type': 'FakeResourceType'},
-                'B': {'type': 'FakeResourceType'},
-                'C': {'type': 'FakeResourceType'}
+                'A': {'type': 'GenericResourceType'},
+                'B': {'type': 'GenericResourceType'},
+                'C': {'type': 'GenericResourceType'}
             }
         }
 

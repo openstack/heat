@@ -37,9 +37,6 @@ class StackUpdateTest(common.HeatTestCase):
         self.tmpl = template.Template(copy.deepcopy(empty_template))
         self.ctx = utils.dummy_context()
 
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
-
     def test_update_add(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}

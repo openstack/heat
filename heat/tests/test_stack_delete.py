@@ -23,7 +23,6 @@ from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
 from heat.engine.clients.os import keystone
-from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
@@ -46,8 +45,6 @@ class StackTest(common.HeatTestCase):
 
         self.tmpl = template.Template(copy.deepcopy(empty_template))
         self.ctx = utils.dummy_context()
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
 
     def test_delete(self):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)

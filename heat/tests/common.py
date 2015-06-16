@@ -125,6 +125,8 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.addCleanup(utils.reset_dummy_db)
 
     def register_test_resources(self):
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
         resource._register_class('SignalResourceType',
                                  generic_rsrc.SignalResource)
         resource._register_class('ResourceWithPropsType',

@@ -896,9 +896,6 @@ class HotStackTest(common.HeatTestCase):
         self.tmpl = template.Template(copy.deepcopy(empty_template))
         self.ctx = utils.dummy_context()
 
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
-
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
 
@@ -1133,9 +1130,6 @@ class StackAttributesTest(common.HeatTestCase):
 
         self.ctx = utils.dummy_context()
 
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
-
         self.m.ReplayAll()
 
     scenarios = [
@@ -1222,9 +1216,6 @@ class StackGetAttrValidationTest(common.HeatTestCase):
     def setUp(self):
         super(StackGetAttrValidationTest, self).setUp()
         self.ctx = utils.dummy_context()
-
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
 
     def test_validate_props_from_attrs(self):
         stack = parser.Stack(self.ctx, 'test_props_from_attrs',
