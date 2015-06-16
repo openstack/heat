@@ -150,7 +150,8 @@ class SoftwareConfig(resource.Resource):
 
     attributes_schema = {
         CONFIG_ATTR: attributes.Schema(
-            _("The config value of the software config.")
+            _("The config value of the software config."),
+            type=attributes.Schema.STRING
         ),
     }
 

@@ -166,13 +166,16 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     attributes_schema = {
         STDOUT: attributes.Schema(
-            _("Captured stdout from the configuration execution.")
+            _("Captured stdout from the configuration execution."),
+            type=attributes.Schema.STRING
         ),
         STDERR: attributes.Schema(
-            _("Captured stderr from the configuration execution.")
+            _("Captured stderr from the configuration execution."),
+            type=attributes.Schema.STRING
         ),
         STATUS_CODE: attributes.Schema(
-            _("Returned status code from the configuration execution")
+            _("Returned status code from the configuration execution"),
+            type=attributes.Schema.STRING
         ),
     }
 
@@ -623,15 +626,18 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     attributes_schema = {
         STDOUTS: attributes.Schema(
             _("A map of Nova names and captured stdouts from the "
-              "configuration execution to each server.")
+              "configuration execution to each server."),
+            type=attributes.Schema.MAP
         ),
         STDERRS: attributes.Schema(
             _("A map of Nova names and captured stderrs from the "
-              "configuration execution to each server.")
+              "configuration execution to each server."),
+            type=attributes.Schema.MAP
         ),
         STATUS_CODES: attributes.Schema(
             _("A map of Nova names and returned status code from the "
-              "configuration execution")
+              "configuration execution"),
+            type=attributes.Schema.MAP
         ),
     }
 

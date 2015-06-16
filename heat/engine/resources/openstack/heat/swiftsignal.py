@@ -71,11 +71,13 @@ class SwiftSignalHandle(resource.Resource):
             _('Tokens are not needed for Swift TempURLs.  This attribute is '
               'being kept for compatibility with the '
               'OS::Heat::WaitConditionHandle resource'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
         ENDPOINT: attributes.Schema(
             _('Endpoint/url which can be used for signalling handle'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
         CURL_CLI: attributes.Schema(
             _('Convenience attribute, provides curl CLI command '
@@ -84,7 +86,8 @@ class SwiftSignalHandle(resource.Resource):
               '--data-binary \'{"status": "SUCCESS"}\' '
               ', or signal failure by adding '
               '--data-binary \'{"status": "FAILURE"}\''),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
     }
 
@@ -177,7 +180,8 @@ class SwiftSignal(resource.Resource):
 
     attributes_schema = {
         DATA: attributes.Schema(
-            _('JSON data that was uploaded via the SwiftSignalHandle.')
+            _('JSON data that was uploaded via the SwiftSignalHandle.'),
+            type=attributes.Schema.STRING
         )
     }
 

@@ -195,6 +195,10 @@ class AttributesTypeTest(common.HeatTestCase):
         ('map_type',
             dict(a_type=attributes.Schema.MAP,
                  value={},
+                 invalid_value='invalid_value')),
+        ('integer_type',
+            dict(a_type=attributes.Schema.INTEGER,
+                 value=1,
                  invalid_value='invalid_value'))
     ]
 

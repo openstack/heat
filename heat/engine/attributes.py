@@ -47,9 +47,9 @@ class Schema(constr.Schema):
     )
 
     TYPES = (
-        STRING, MAP, LIST,
+        STRING, MAP, LIST, INTEGER
     ) = (
-        'String', 'Map', 'List',
+        'String', 'Map', 'List', 'Integer'
     )
 
     def __init__(self, description=None,
@@ -185,6 +185,11 @@ class Attributes(collections.Mapping):
                 LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
                          {'name': attrib.name,
                           'att_type': attrib.schema.MAP})
+        elif attrib.schema.type == attrib.schema.INTEGER:
+            if not isinstance(value, int):
+                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                         {'name': attrib.name,
+                          'att_type': attrib.schema.INTEGER})
 
     def __getitem__(self, key):
         if key not in self:

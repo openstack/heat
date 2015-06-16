@@ -44,11 +44,13 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
     attributes_schema = {
         TOKEN: attributes.Schema(
             _('Token for stack-user which can be used for signalling handle'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
         ENDPOINT: attributes.Schema(
             _('Endpoint/url which can be used for signalling handle'),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
         CURL_CLI: attributes.Schema(
             _('Convenience attribute, provides curl CLI command '
@@ -57,7 +59,8 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
               '--data-binary \'{"status": "SUCCESS"}\' '
               ', or signal failure by adding '
               '--data-binary \'{"status": "FAILURE"}\''),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
         ),
     }
 

@@ -103,7 +103,8 @@ class InstanceGroup(stack_resource.StackResource):
     attributes_schema = {
         INSTANCE_LIST: attributes.Schema(
             _("A comma-delimited list of server ip addresses. "
-              "(Heat extension).")
+              "(Heat extension)."),
+            type=attributes.Schema.STRING
         ),
     }
     rolling_update_schema = {

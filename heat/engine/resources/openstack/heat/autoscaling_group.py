@@ -116,16 +116,19 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             _("A map of resource names to the specified attribute of each "
               "individual resource. "
               "Requires heat_template_version: 2014-10-16 or higher."),
-            support_status=support.SupportStatus(version='2014.2')
+            support_status=support.SupportStatus(version='2014.2'),
+            type=attributes.Schema.MAP
         ),
         OUTPUTS_LIST: attributes.Schema(
             _("A list of the specified attribute of each individual resource. "
               "Requires heat_template_version: 2014-10-16 or higher."),
-            support_status=support.SupportStatus(version='2014.2')
+            support_status=support.SupportStatus(version='2014.2'),
+            type=attributes.Schema.LIST
         ),
         CURRENT_SIZE: attributes.Schema(
             _("The current size of AutoscalingResourceGroup."),
-            support_status=support.SupportStatus(version='2015.1')
+            support_status=support.SupportStatus(version='2015.1'),
+            type=attributes.Schema.INTEGER
         ),
     }
     update_policy_schema = {}
