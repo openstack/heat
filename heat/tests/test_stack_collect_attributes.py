@@ -14,11 +14,9 @@
 import six
 
 from heat.common import template_format
-from heat.engine import resource
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
@@ -167,8 +165,6 @@ class DepAttrsTest(common.HeatTestCase):
     def setUp(self):
         super(DepAttrsTest, self).setUp()
         self.ctx = utils.dummy_context()
-        resource._register_class('ResourceWithPropsType',
-                                 generic_rsrc.ResourceWithProps)
 
     def test_dep_attrs(self):
 
