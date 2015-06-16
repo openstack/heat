@@ -19,19 +19,15 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
 from heat.engine import function
-from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
-from heat.tests import generic_resource
 from heat.tests import utils
 
 
 class TestAutoScalingGroupValidation(common.HeatTestCase):
     def setUp(self):
         super(TestAutoScalingGroupValidation, self).setUp()
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
         self.parsed = template_format.parse(inline_templates.as_heat_template)
 
     def test_invalid_min_size(self):
@@ -107,8 +103,6 @@ class TestInitialGroupSize(common.HeatTestCase):
 class TestGroupAdjust(common.HeatTestCase):
     def setUp(self):
         super(TestGroupAdjust, self).setUp()
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
 
         t = template_format.parse(inline_templates.as_heat_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
@@ -276,8 +270,6 @@ class TestGroupAdjust(common.HeatTestCase):
 class TestGroupCrud(common.HeatTestCase):
     def setUp(self):
         super(TestGroupCrud, self).setUp()
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -355,8 +347,6 @@ class TestGroupCrud(common.HeatTestCase):
 class HeatScalingGroupAttrTest(common.HeatTestCase):
     def setUp(self):
         super(HeatScalingGroupAttrTest, self).setUp()
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
 
         t = template_format.parse(inline_templates.as_heat_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
@@ -454,8 +444,6 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
     def setUp(self):
         super(RollingUpdatePolicyTest, self).setUp()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
 
     def test_parse_without_update_policy(self):
         tmpl = template_format.parse(inline_templates.as_heat_template)
@@ -516,8 +504,6 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
     def setUp(self):
         super(RollingUpdatePolicyDiffTest, self).setUp()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
 
     def validate_update_policy_diff(self, current, updated):
         # load current stack
@@ -585,8 +571,6 @@ class IncorrectUpdatePolicyTest(common.HeatTestCase):
     def setUp(self):
         super(IncorrectUpdatePolicyTest, self).setUp()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
 
     def test_with_update_policy_aws(self):
         t = template_format.parse(inline_templates.as_heat_template)

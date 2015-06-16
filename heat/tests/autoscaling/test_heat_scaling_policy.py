@@ -23,7 +23,6 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
-from heat.tests import generic_resource
 from heat.tests import utils
 
 
@@ -32,10 +31,6 @@ as_params = inline_templates.as_params
 
 
 class TestAutoScalingPolicy(common.HeatTestCase):
-    def setUp(self):
-        super(TestAutoScalingPolicy, self).setUp()
-        resource._register_class('ResourceWithPropsAndAttrs',
-                                 generic_resource.ResourceWithPropsAndAttrs)
 
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
