@@ -645,6 +645,22 @@ class StackResourceAttrTest(StackResourceBaseTest):
         self.assertFalse(nested.strict_validate)
         self.m.VerifyAll()
 
+    def test_validate_assertion_exception_rethrow(self):
+        expected_message = 'Expected Assertion Error'
+        self.parent_resource.child_template = mock.Mock(return_value='foo')
+        self.parent_resource.child_params = mock.Mock(return_value={})
+        self.m.StubOutWithMock(stack_resource.StackResource,
+                               '_parse_nested_stack')
+        name = '%s-%s' % (self.parent_stack.name, self.parent_resource.name)
+        stack_resource.StackResource._parse_nested_stack(
+            name, 'foo', {}).AndRaise(AssertionError(expected_message))
+
+        self.m.ReplayAll()
+        exc = self.assertRaises(AssertionError,
+                                self.parent_resource.validate_nested_stack)
+        self.assertEqual(expected_message, six.text_type(exc))
+        self.m.VerifyAll()
+
 
 class StackResourceCheckCompleteTest(StackResourceBaseTest):
     scenarios = [

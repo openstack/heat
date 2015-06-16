@@ -2122,6 +2122,39 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(tmpl_stack.prev_raw_template_id)
         self.assertFalse(mock_store.called)
 
+    def test_validate_assertion_exception_rethrow(self):
+        expected_msg = 'Expected Assertion Error'
+        with mock.patch('heat.engine.stack.dependencies',
+                        new_callable=mock.PropertyMock) as mock_dependencies:
+            mock_dependency = mock.MagicMock()
+            mock_dependency.validate.side_effect = AssertionError(expected_msg)
+            mock_dependencies.Dependencies.return_value = [mock_dependency]
+            stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)
+            expected_exception = self.assertRaises(AssertionError,
+                                                   stc.validate)
+            self.assertEqual(expected_msg, six.text_type(expected_exception))
+            mock_dependency.validate.assert_called_once_with()
+
+        stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)
+        output_value = mock.MagicMock()
+        output_value.get.side_effect = AssertionError(expected_msg)
+        stc.outputs = {'foo': output_value}
+        expected_exception = self.assertRaises(AssertionError, stc.validate)
+        self.assertEqual(expected_msg, six.text_type(expected_exception))
+        output_value.get.assert_called_once_with('Value')
+
+    def test_resolve_static_data_assertion_exception_rethrow(self):
+        tmpl = mock.MagicMock()
+        expected_message = 'Expected Assertion Error'
+        tmpl.parse.side_effect = AssertionError(expected_message)
+
+        stc = stack.Stack(self.ctx, utils.random_name(),
+                          tmpl, resolve_data=False)
+        expected_exception = self.assertRaises(AssertionError,
+                                               stc.resolve_static_data,
+                                               None)
+        self.assertEqual(expected_message, six.text_type(expected_exception))
+
 
 class StackKwargsForCloningTest(common.HeatTestCase):
     scenarios = [
