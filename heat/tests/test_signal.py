@@ -48,8 +48,6 @@ class SignalTest(common.HeatTestCase):
     def setUp(self):
         super(SignalTest, self).setUp()
 
-        resource._register_class('SignalResourceType',
-                                 generic_resource.SignalResource)
         resource._register_class('GenericResourceType',
                                  generic_resource.GenericResource)
 

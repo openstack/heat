@@ -56,8 +56,6 @@ class ResourceTest(common.HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResourceWithCustomConstraint',
-                                 generic_rsrc.ResourceWithCustomConstraint)
 
         self.env = environment.Environment()
         self.env.load({u'resource_registry':
@@ -1300,8 +1298,6 @@ class ResourceTest(common.HeatTestCase):
                         res_class.__name__)
 
     def test_getatt_invalid_type(self):
-        resource._register_class('ResourceWithAttributeType',
-                                 generic_rsrc.ResourceWithAttributeType)
 
         tmpl = template.Template({
             'heat_template_version': '2013-05-23',
@@ -2151,8 +2147,6 @@ class ResourceHookTest(common.HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResourceWithCustomConstraint',
-                                 generic_rsrc.ResourceWithCustomConstraint)
 
         self.env = environment.Environment()
         self.env.load({u'resource_registry':

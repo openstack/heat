@@ -2131,8 +2131,6 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(expected, schema)
 
     def test_resource_schema_with_attr_type(self):
-        res._register_class('ResourceWithAttributeType',
-                            generic_rsrc.ResourceWithAttributeType)
 
         type_name = 'ResourceWithAttributeType'
         expected = {
