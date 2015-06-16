@@ -21,7 +21,7 @@ class KeystoneService(resource.Resource):
     """Heat Template Resource for Keystone Service."""
 
     support_status = support.SupportStatus(
-        version='2015.2',
+        version='5.0.0',
         message=_('Supported versions: keystone v3'))
 
     default_client_name = 'keystone'

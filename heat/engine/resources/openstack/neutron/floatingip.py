@@ -91,7 +91,7 @@ class FloatingIP(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('ip_addr')
             ],
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
     }
 

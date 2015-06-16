@@ -254,12 +254,12 @@ class OSDBInstance(resource.Resource):
         REPLICA_OF: properties.Schema(
             properties.Schema.STRING,
             _('Identifier of the source instance to replicate.'),
-            support_status=support.SupportStatus(version='2015.2')
+            support_status=support.SupportStatus(version='5.0.0')
         ),
         REPLICA_COUNT: properties.Schema(
             properties.Schema.INTEGER,
             _('The number of replicas to be created.'),
-            support_status=support.SupportStatus(version='2015.2')
+            support_status=support.SupportStatus(version='5.0.0')
         ),
     }
 

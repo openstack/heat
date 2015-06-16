@@ -271,7 +271,7 @@ class Pool(neutron.NeutronResource):
         PROVIDER: properties.Schema(
             properties.Schema.STRING,
             _('LBaaS provider to implement this load balancer instance.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         VIP: properties.Schema(
             properties.Schema.MAP,
@@ -383,7 +383,7 @@ class Pool(neutron.NeutronResource):
         ),
         PROVIDER_ATTR: attributes.Schema(
             _('Provider implementing this load balancer instance.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
             type=attributes.Schema.STRING,
         ),
     }

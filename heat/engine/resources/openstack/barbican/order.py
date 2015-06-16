@@ -85,42 +85,42 @@ class Order(resource.Resource):
                     'key', 'asymmetric', 'certificate'
                 ]),
             ],
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         REQUEST_TYPE: properties.Schema(
             properties.Schema.STRING,
             _('The type of the certificate request.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         SUBJECT_DN: properties.Schema(
             properties.Schema.STRING,
             _('The subject of the certificate request.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         SOURCE_CONTAINER_REF: properties.Schema(
             properties.Schema.STRING,
             _('The source of certificate request.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         CA_ID: properties.Schema(
             properties.Schema.STRING,
             _('The identifier of the CA to use.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         PROFILE: properties.Schema(
             properties.Schema.STRING,
             _('The profile of certificate to use.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         REQUEST_DATA: properties.Schema(
             properties.Schema.STRING,
             _('The content of the CSR.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         PASS_PHRASE: properties.Schema(
             properties.Schema.STRING,
             _('The passphrase the created key.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
     }
 
@@ -130,19 +130,19 @@ class Order(resource.Resource):
         SECRET_REF: attributes.Schema(_('The URI to the created secret.')),
         CONTAINER_REF: attributes.Schema(
             _('The URI to the created container.'),
-            support_status=support.SupportStatus(version='2015.2')),
+            support_status=support.SupportStatus(version='5.0.0')),
         PUBLIC_KEY: attributes.Schema(
             _('The payload of the created public key, if available.'),
-            support_status=support.SupportStatus(version='2015.2')),
+            support_status=support.SupportStatus(version='5.0.0')),
         PRIVATE_KEY: attributes.Schema(
             _('The payload of the created private key, if available.'),
-            support_status=support.SupportStatus(version='2015.2')),
+            support_status=support.SupportStatus(version='5.0.0')),
         CERTIFICATE: attributes.Schema(
             _('The payload of the created certificate, if available.'),
-            support_status=support.SupportStatus(version='2015.2')),
+            support_status=support.SupportStatus(version='5.0.0')),
         INTERMEDIATES: attributes.Schema(
             _('The payload of the created intermediates, if available.'),
-            support_status=support.SupportStatus(version='2015.2')),
+            support_status=support.SupportStatus(version='5.0.0')),
     }
 
     def barbican(self):

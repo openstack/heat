@@ -67,13 +67,13 @@ class CinderVolumeType(resource.Resource):
             properties.Schema.BOOLEAN,
             _('Whether the volume type is accessible to the public.'),
             default=True,
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
             _('Description of the volume type.'),
             update_allowed=True,
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
     }
 

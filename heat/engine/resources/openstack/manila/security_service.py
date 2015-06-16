@@ -25,7 +25,7 @@ class SecurityService(resource.Resource):
     Active Directory domain or a Kerberos domain.
     """
 
-    support_status = support.SupportStatus(version='2015.2')
+    support_status = support.SupportStatus(version='5.0.0')
 
     PROPERTIES = (
         NAME, TYPE, DNS_IP, SERVER, DOMAIN, USER,

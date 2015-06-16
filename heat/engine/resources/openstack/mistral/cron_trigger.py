@@ -20,7 +20,7 @@ from heat.engine import support
 
 
 class CronTrigger(resource.Resource):
-    support_status = support.SupportStatus(version='2015.2')
+    support_status = support.SupportStatus(version='5.0.0')
 
     PROPERTIES = (
         NAME, PATTERN, WORKFLOW, FIRST_TIME, COUNT
