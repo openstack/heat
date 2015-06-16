@@ -234,7 +234,8 @@ class CloudLoadBalancer(resource.Resource):
                         default='ENABLED',
                         constraints=[
                             constraints.AllowedValues(['ENABLED',
-                                                       'DISABLED']),
+                                                       'DISABLED',
+                                                       'DRAINING']),
                         ]
                     ),
                     NODE_TYPE: properties.Schema(
