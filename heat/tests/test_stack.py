@@ -57,8 +57,6 @@ class StackTest(common.HeatTestCase):
                                  generic_rsrc.GenericResource)
         resource._register_class('ResourceWithPropsType',
                                  generic_rsrc.ResourceWithProps)
-        resource._register_class('ResWithComplexPropsAndAttrs',
-                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
     def test_stack_reads_tenant(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,

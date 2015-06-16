@@ -74,9 +74,9 @@ hot_tpl_mapped_props = template_format.parse('''
 heat_template_version: 2013-05-23
 resources:
   resource1:
-    type: ResWithComplexPropsAndAttrsType
+    type: ResWithComplexPropsAndAttrs
   resource2:
-    type: ResWithComplexPropsAndAttrsType
+    type: ResWithComplexPropsAndAttrs
     properties:
       a_list: { get_attr: [ resource1, list] }
       a_string: { get_attr: [ resource1, string ] }
@@ -902,8 +902,6 @@ class HotStackTest(common.HeatTestCase):
                                  generic_rsrc.ResourceWithProps)
         resource._register_class('ResourceWithComplexAttributesType',
                                  generic_rsrc.ResourceWithComplexAttributes)
-        resource._register_class('ResWithComplexPropsAndAttrs',
-                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
@@ -1143,8 +1141,6 @@ class StackAttributesTest(common.HeatTestCase):
                                  generic_rsrc.GenericResource)
         resource._register_class('ResourceWithComplexAttributesType',
                                  generic_rsrc.ResourceWithComplexAttributes)
-        resource._register_class('ResWithComplexPropsAndAttrsType',
-                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
         self.m.ReplayAll()
 
@@ -1235,8 +1231,6 @@ class StackGetAttrValidationTest(common.HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResWithComplexPropsAndAttrsType',
-                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
     def test_validate_props_from_attrs(self):
         stack = parser.Stack(self.ctx, 'test_props_from_attrs',
