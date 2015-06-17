@@ -16,6 +16,7 @@ import uuid
 
 import mock
 from oslo_config import cfg
+from oslo_messaging import exceptions as msg_exceptions
 import six
 
 from heat.common import exception
@@ -799,3 +800,22 @@ class WithTemplateTest(StackResourceBaseTest):
         rpcc.return_value.update_stack.assert_called_once_with(
             self.ctx, 'stack_identifier', self.empty_temp.t,
             child_env, {}, {'timeout_mins': self.timeout_mins})
+
+
+class RaiseLocalException(StackResourceBaseTest):
+
+    def test_heat_exception(self):
+        local = exception.InvalidResourceType(message='test')
+        self.assertRaises(exception.InvalidResourceType,
+                          self.parent_resource.raise_local_exception, local)
+
+    def test_messaging_timeout(self):
+        local = msg_exceptions.MessagingTimeout('took too long')
+        self.assertRaises(exception.ResourceFailure,
+                          self.parent_resource.raise_local_exception, local)
+
+    def test_remote_heat_ex(self):
+        InvalidResourceType_Remote = exception.InvalidResourceType
+        local = InvalidResourceType_Remote(message='test')
+        self.assertRaises(exception.InvalidResourceType,
+                          self.parent_resource.raise_local_exception, local)
