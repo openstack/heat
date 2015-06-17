@@ -1601,3 +1601,35 @@ class LoadBalancerTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                mock_lb.validate)
         self.assertIn("HTTPS redirect is only available", six.text_type(ex))
+
+    def test_update_nodes_condition_draining(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        fake_loadbalancer.nodes = self.expected_body['nodes']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        expected_ip = '172.168.1.4'
+        update_template['Properties']['nodes'] = [
+            {"addresses": ["166.78.103.141"],
+             "port": 80,
+             "condition": "DRAINING"},
+            {"addresses": [expected_ip],
+             "port": 80,
+             "condition": "DRAINING"}]
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
+        fake_loadbalancer.add_nodes([
+            fake_loadbalancer.Node(address=expected_ip,
+                                   port=80,
+                                   condition='DRAINING')])
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
