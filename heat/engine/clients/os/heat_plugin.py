@@ -20,6 +20,8 @@ from heat.engine.clients import client_plugin
 class HeatClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exc
+    service_types = ['orchestration',
+                     'cloudformation']
 
     def _create(self):
         args = {
@@ -60,13 +62,13 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             heat_url = heat_url % {'tenant_id': tenant_id}
         else:
             endpoint_type = self._get_client_option('heat', 'endpoint_type')
-            heat_url = self.url_for(service_type='orchestration',
+            heat_url = self.url_for(service_type=self.service_types[0],
                                     endpoint_type=endpoint_type)
         return heat_url
 
     def get_heat_cfn_url(self):
         endpoint_type = self._get_client_option('heat',
                                                 'endpoint_type')
-        heat_cfn_url = self.url_for(service_type='cloudformation',
+        heat_cfn_url = self.url_for(service_type=self.service_types[1],
                                     endpoint_type=endpoint_type)
         return heat_cfn_url

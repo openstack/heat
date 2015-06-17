@@ -28,18 +28,19 @@ from heat.engine import constraints
 class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
+    service_types = ['network']
 
     def _create(self):
 
         con = self.context
 
         endpoint_type = self._get_client_option('neutron', 'endpoint_type')
-        endpoint = self.url_for(service_type='network',
+        endpoint = self.url_for(service_type=self.service_types[0],
                                 endpoint_type=endpoint_type)
 
         args = {
             'auth_url': con.auth_url,
-            'service_type': 'network',
+            'service_type': self.service_types[0],
             'token': self.auth_token,
             'endpoint_url': endpoint,
             'endpoint_type': endpoint_type,

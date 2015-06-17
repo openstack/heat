@@ -58,10 +58,11 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                                 'VERIFY_RESIZE']
 
     exceptions_module = exceptions
+    service_types = ['compute']
 
     def _create(self):
         endpoint_type = self._get_client_option('nova', 'endpoint_type')
-        management_url = self.url_for(service_type='compute',
+        management_url = self.url_for(service_type=self.service_types[0],
                                       endpoint_type=endpoint_type)
 
         computeshell = novashell.OpenStackComputeShell()
@@ -70,7 +71,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         args = {
             'project_id': self.context.tenant,
             'auth_url': self.context.auth_url,
-            'service_type': 'compute',
+            'service_type': self.service_types[0],
             'username': None,
             'api_key': None,
             'extensions': extensions,

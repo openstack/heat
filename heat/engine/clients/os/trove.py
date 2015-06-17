@@ -23,13 +23,14 @@ from heat.engine import constraints
 class TroveClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
+    service_types = ['database']
 
     def _create(self):
 
         con = self.context
         endpoint_type = self._get_client_option('trove', 'endpoint_type')
         args = {
-            'service_type': 'database',
+            'service_type': self.service_types[0],
             'auth_url': con.auth_url or '',
             'proxy_token': con.auth_token,
             'username': None,
@@ -40,7 +41,7 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         }
 
         client = tc.Client('1.0', **args)
-        management_url = self.url_for(service_type='database',
+        management_url = self.url_for(service_type=self.service_types[0],
                                       endpoint_type=endpoint_type)
         client.client.auth_token = con.auth_token
         client.client.management_url = management_url

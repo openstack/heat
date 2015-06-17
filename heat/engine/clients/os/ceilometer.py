@@ -21,16 +21,17 @@ from heat.engine.clients import client_plugin
 class CeilometerClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = [exc, api_exc]
+    service_types = ['metering']
 
     def _create(self):
 
         con = self.context
         endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
-        endpoint = self.url_for(service_type='metering',
+        endpoint = self.url_for(service_type=self.service_types[0],
                                 endpoint_type=endpoint_type)
         args = {
             'auth_url': con.auth_url,
-            'service_type': 'metering',
+            'service_type': self.service_types[0],
             'project_id': con.tenant,
             'token': lambda: self.auth_token,
             'endpoint_type': endpoint_type,

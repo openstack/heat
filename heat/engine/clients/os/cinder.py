@@ -31,17 +31,19 @@ LOG = logging.getLogger(__name__)
 class CinderClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
+    service_types = ['volume', 'volumev2']
 
     def get_volume_api_version(self):
         '''Returns the most recent API version.'''
 
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         try:
-            self.url_for(service_type='volumev2', endpoint_type=endpoint_type)
+            self.url_for(service_type=self.service_types[1],
+                         endpoint_type=endpoint_type)
             return 2
         except ks_exceptions.EndpointNotFound:
             try:
-                self.url_for(service_type='volume',
+                self.url_for(service_type=self.service_types[0],
                              endpoint_type=endpoint_type)
                 return 1
             except ks_exceptions.EndpointNotFound:
@@ -53,10 +55,10 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
 
         volume_api_version = self.get_volume_api_version()
         if volume_api_version == 1:
-            service_type = 'volume'
+            service_type = self.service_types[0]
             client_version = '1'
         elif volume_api_version == 2:
-            service_type = 'volumev2'
+            service_type = self.service_types[1]
             client_version = '2'
         else:
             raise exception.Error(_('No volume service available.'))
