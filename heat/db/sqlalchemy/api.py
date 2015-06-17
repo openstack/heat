@@ -1082,6 +1082,7 @@ def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
 
 
 def sync_point_create(context, values):
+    values['entity_id'] = str(values['entity_id'])
     sync_point_ref = models.SyncPoint()
     sync_point_ref.update(values)
     sync_point_ref.save(_session(context))
@@ -1089,6 +1090,7 @@ def sync_point_create(context, values):
 
 
 def sync_point_get(context, entity_id, traversal_id, is_update):
+    entity_id = str(entity_id)
     return model_query(context, models.SyncPoint).get(
         (entity_id, traversal_id, is_update)
     )
@@ -1097,6 +1099,7 @@ def sync_point_get(context, entity_id, traversal_id, is_update):
 def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
                                  input_data):
+    entity_id = str(entity_id)
     rows_updated = model_query(context, models.SyncPoint).filter_by(
         entity_id=entity_id,
         traversal_id=traversal_id,
