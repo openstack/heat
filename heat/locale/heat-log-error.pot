@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.2.0.dev423\n"
+"Project-Id-Version: heat 2015.2.0.dev518\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"POT-Creation-Date: 2015-06-17 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,30 +85,30 @@ msgstr ""
 msgid "Failed to import module %s"
 msgstr ""
 
-#: heat/common/wsgi.py:256
+#: heat/common/wsgi.py:272
 msgid "SIGTERM received"
 msgstr ""
 
-#: heat/common/wsgi.py:265
+#: heat/common/wsgi.py:281
 msgid "SIGHUP received"
 msgstr ""
 
-#: heat/common/wsgi.py:295
+#: heat/common/wsgi.py:311
 #, python-format
 msgid "Removing dead child %s"
 msgstr ""
 
-#: heat/common/wsgi.py:652
+#: heat/common/wsgi.py:672
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr ""
 
-#: heat/common/wsgi.py:674
+#: heat/common/wsgi.py:694
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr ""
 
-#: heat/common/wsgi.py:748
+#: heat/common/wsgi.py:768
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -117,7 +117,7 @@ msgstr ""
 msgid "Timeout conversion failed"
 msgstr ""
 
-#: heat/engine/api.py:322
+#: heat/engine/api.py:325
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
@@ -146,16 +146,16 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:520
+#: heat/engine/resource.py:550
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:1001 heat/engine/resource.py:1042
+#: heat/engine/resource.py:1106 heat/engine/resource.py:1151
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1206
+#: heat/engine/resource.py:1315
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
@@ -165,8 +165,13 @@ msgstr ""
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1476
+#: heat/engine/service.py:1448
 msgid "Filtering by namespace/metric not yet supported"
+msgstr ""
+
+#: heat/engine/service.py:1588
+#, python-format
+msgid "Service %(service_id)s update failed: %(error)s"
 msgstr ""
 
 #: heat/engine/service_stack_watch.py:75
@@ -174,32 +179,32 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/stack.py:654
+#: heat/engine/stack.py:643
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:1097
+#: heat/engine/stack.py:1090
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:1336
+#: heat/engine/stack.py:1327
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1526
+#: heat/engine/stack.py:1518
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1535
+#: heat/engine/stack.py:1527
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/worker.py:76
+#: heat/engine/worker.py:82
 #, python-format
 msgid "WorkerService is failed to stop, %s"
 msgstr ""
@@ -207,6 +212,10 @@ msgstr ""
 #: heat/engine/clients/__init__.py:93
 #, python-format
 msgid "Invalid cloud_backend setting in heat.conf detected  - %s"
+msgstr ""
+
+#: heat/engine/clients/os/zaqar.py:36
+msgid "Zaqar connection failed, no auth_token!"
 msgstr ""
 
 #: heat/engine/resources/wait_condition.py:73
@@ -229,7 +238,7 @@ msgstr ""
 msgid "Port not specified."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:148
+#: heat/engine/resources/openstack/heat/remote_stack.py:152
 #, python-format
 msgid "exception: %s"
 msgstr ""
@@ -250,5 +259,17 @@ msgstr ""
 
 #: heat/openstack/common/service.py:266
 msgid "Unhandled exception"
+msgstr ""
+
+#: heat/openstack/common/threadgroup.py:103
+msgid "Error stopping thread."
+msgstr ""
+
+#: heat/openstack/common/threadgroup.py:110
+msgid "Error stopping timer."
+msgstr ""
+
+#: heat/openstack/common/threadgroup.py:137
+msgid "Error waiting on ThreadGroup."
 msgstr ""
 

@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.2.0.dev423\n"
+"Project-Id-Version: heat 2015.2.0.dev518\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
+"POT-Creation-Date: 2015-06-17 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,7 +60,7 @@ msgid ""
 "enabled=false"
 msgstr ""
 
-#: heat/common/wsgi.py:713
+#: heat/common/wsgi.py:733
 msgid "Unable to serialize exception response"
 msgstr ""
 
@@ -74,32 +74,32 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:975
+#: heat/engine/resource.py:1075
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1047
+#: heat/engine/resource.py:1156
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1220
+#: heat/engine/resource.py:1329
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:1159
+#: heat/engine/service.py:1169
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1453
+#: heat/engine/service.py:1425
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1482
+#: heat/engine/service.py:1454
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -109,7 +109,7 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:326
+#: heat/engine/stack.py:315
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
@@ -138,28 +138,42 @@ msgstr ""
 msgid "Requested client \"%s\" not found"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:116
+#: heat/engine/clients/os/nova.py:117
+#, python-format
+msgid "Server (%(server)s) not found: %(ex)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:133
+#, python-format
+msgid ""
+"Received an OverLimit response when fetching server (%(id)s) : "
+"%(exception)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:140
+#, python-format
+msgid ""
+"Received the following exception when fetching server (%(id)s) : "
+"%(exception)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:156
 #, python-format
 msgid ""
 "Server %(name)s (%(id)s) received an OverLimit response during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:124
+#: heat/engine/clients/os/nova.py:164
 #, python-format
 msgid ""
 "Server \"%(name)s\" (%(id)s) received the following exception during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:416
+#: heat/engine/clients/os/nova.py:486
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
-msgstr ""
-
-#: heat/engine/clients/os/nova.py:429
-#, python-format
-msgid "Server (%(server)s) not found: %(ex)s"
 msgstr ""
 
 #: heat/engine/resources/signal_responder.py:67
@@ -184,7 +198,7 @@ msgstr ""
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:358
+#: heat/engine/resources/openstack/neutron/port.py:371
 #, python-format
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
@@ -194,7 +208,7 @@ msgstr ""
 msgid "Head container failed: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:353
+#: heat/engine/resources/openstack/trove/os_database.py:369
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "

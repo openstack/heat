@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
-"PO-Revision-Date: 2015-05-29 10:46+0000\n"
+"POT-Creation-Date: 2015-06-17 06:06+0000\n"
+"PO-Revision-Date: 2015-06-10 21:55+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -113,6 +113,9 @@ msgstr "Iniciando %d trabajadores"
 
 msgid "Starting single process server"
 msgstr "Iniciando servidor de proceso individual"
+
+msgid "Wait called after thread killed. Cleaning up."
+msgstr "Esperar llamado después de cortar la línea. Limpiando."
 
 #, python-format
 msgid "Waiting on %d children to exit"
