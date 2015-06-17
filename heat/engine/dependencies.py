@@ -256,6 +256,13 @@ class Dependencies(object):
         return (requirer for requirer, required in self._graph.items()
                 if not required)
 
+    def roots(self):
+        '''
+        Return an iterator over all of the root nodes in the graph.
+        '''
+        return (requirer for requirer, required in self.graph(
+            reverse=True).items() if not required)
+
     def translate(self, transform):
         '''
         Translate all of the nodes using a transform function.

@@ -269,6 +269,25 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     is_update))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
+    def _mock_conv_update_requires(self, stack, conv_deps):
+        """Updates requires column of resources.
+        Required for testing the generation of convergence dependency graph
+        on an update.
+        """
+        requires = dict()
+        for rsrc_id, is_update in conv_deps:
+            reqs = conv_deps.requires((rsrc_id, is_update))
+            requires[rsrc_id] = list({id for id, is_update in reqs})
+
+        rsrcs_db = resource_objects.Resource.get_all_by_stack(
+            stack.context, stack.id)
+
+        for res_name, rsrc in rsrcs_db.items():
+            if rsrc.id in requires:
+                rsrcs_db[res_name].requires = requires[rsrc.id]
+
+        return rsrcs_db
+
     def test_conv_string_five_instance_stack_update(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
@@ -283,7 +302,13 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         t2 = template_format.parse(string_template_five_update)
         template2 = templatem.Template(
             t2, env=environment.Environment({'KeyName2': 'test2'}))
-        curr_stack.converge_stack(template=template2, action=stack.UPDATE)
+
+        # on our previous create_complete, worker would have updated the
+        # rsrc.requires. Mock the same behavior here.
+        with mock.patch.object(resource_objects.Resource, 'get_all_by_stack',
+                               return_value=self._mock_conv_update_requires(
+                                   stack, stack.convergence_dependencies)):
+            curr_stack.converge_stack(template=template2, action=stack.UPDATE)
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
@@ -337,8 +362,6 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         # check if needed_by are stored properly
         # For A & B:
         # needed_by=C, F
-        # TODO(later): when worker is implemented test for current_template_id
-        # Also test for requires
 
         expected_needed_by = {'A': [3, 8], 'B': [3, 8],
                               'C': [1, 2],
@@ -401,7 +424,12 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         curr_stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
         curr_stack = parser.Stack.load(curr_stack_db._context,
                                        stack=curr_stack_db)
-        curr_stack.converge_stack(template=template2, action=stack.DELETE)
+        # on our previous create_complete, worker would have updated the
+        # rsrc.requires. Mock the same behavior here.
+        with mock.patch.object(resource_objects.Resource, 'get_all_by_stack',
+                               return_value=self._mock_conv_update_requires(
+                                   stack, stack.convergence_dependencies)):
+            curr_stack.converge_stack(template=template2, action=stack.DELETE)
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
@@ -421,8 +449,6 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                                  [[4, False], [3, False]]]),
                          sorted(stack_db.current_deps['edges']))
 
-        # TODO(later): when worker is implemented test for current_template_id
-        # Also test for requires
         expected_needed_by = {'A': [3], 'B': [3],
                               'C': [1, 2],
                               'D': [], 'E': []}
@@ -437,10 +463,13 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         # check if sync_points are created for cleanup traversal
         # [A, B, C, D, E, Stack]
         for entity_id in [5, 4, 3, 2, 1, stack_db.id]:
+            is_update = False
+            if entity_id == stack_db.id:
+                is_update = True
             sync_point = sync_point_object.SyncPoint.get_by_key(
-                stack_db._context, entity_id, stack_db.current_traversal, False
-            )
-            self.assertIsNotNone(sync_point)
+                stack_db._context, entity_id, stack_db.current_traversal,
+                is_update)
+            self.assertIsNotNone(sync_point, 'entity %s' % entity_id)
             self.assertEqual(stack_db.id, sync_point.stack_id)
 
         leaves = stack.convergence_dependencies.leaves()

@@ -243,7 +243,8 @@ class Resource(object):
         # FIXME(sirushtim): Import this in global space.
         from heat.engine import stack as stack_mod
         db_res = resource_objects.Resource.get_obj(context, resource_id)
-        stack = stack_mod.Stack.load(context, db_res.stack_id, cache_data=data)
+        # TODO(sirushtim): Load stack from cache
+        stack = stack_mod.Stack.load(context, db_res.stack_id)
         # NOTE(sirushtim): Because on delete/cleanup operations, we simply
         # update with another template, the stack object won't have the
         # template of the previous stack-run.

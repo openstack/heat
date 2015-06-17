@@ -1909,7 +1909,7 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        cache_data = {'foo': {'id': 'physical-resource-id'}}
+        cache_data = {'foo': {'physical_resource_id': 'physical-resource-id'}}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
         lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,

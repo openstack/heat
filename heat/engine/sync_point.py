@@ -105,7 +105,7 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
     else:
         LOG.debug('[%s] Ready %s: Got %s',
                   key, entity_id, _dump_list(input_data))
-        propagate(entity_id, input_data)
+        propagate(entity_id, serialize_input_data(input_data))
 
 
 class SyncPointNotFound(Exception):

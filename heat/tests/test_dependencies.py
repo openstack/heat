@@ -234,3 +234,11 @@ class dependenciesTest(common.HeatTestCase):
         leaves = sorted(list(d.leaves()))
 
         self.assertEqual(['first1', 'first2'], leaves)
+
+    def test_roots(self):
+        d = dependencies.Dependencies([('last1', 'mid'), ('last2', 'mid'),
+                                       ('mid', 'first1'), ('mid', 'first2')])
+
+        leaves = sorted(list(d.roots()))
+
+        self.assertEqual(['last1', 'last2'], leaves)

@@ -92,9 +92,13 @@ class WorkerService(service.Service):
         The node may be associated with either an update or a cleanup of its
         associated resource.
         '''
+        data = dict(sync_point.deserialize_input_data(data))
         try:
-            rsrc, stack = resource.Resource.load(cnxt, resource_id, data)
-        except exception.NotFound:
+            cache_data = {in_data.get(
+                'name'): in_data for in_data in data.values()
+                if in_data is not None}
+            rsrc, stack = resource.Resource.load(cnxt, resource_id, cache_data)
+        except (exception.ResourceNotFound, exception.NotFound):
             return
         tmpl = stack.t
 
@@ -144,10 +148,10 @@ class WorkerService(service.Service):
                 propagate_check_resource(
                     cnxt, self._rpc_client, req, current_traversal,
                     set(graph[(req, fwd)]), graph_key,
-                    input_data if fwd else rsrc.id, fwd)
+                    input_data if fwd else None, fwd)
 
             check_stack_complete(cnxt, rsrc.stack, current_traversal,
-                                 rsrc.id, graph, is_update)
+                                 rsrc.id, deps, is_update)
         except sync_point.SyncPointNotFound:
             # NOTE(sirushtim): Implemented by spec
             # convergence-concurrent-workflow
@@ -167,7 +171,7 @@ def construct_input_data(rsrc):
     return input_data
 
 
-def check_stack_complete(cnxt, stack, current_traversal, sender, graph,
+def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
                          is_update):
     '''
     Mark the stack complete if the update is complete.
@@ -175,21 +179,21 @@ def check_stack_complete(cnxt, stack, current_traversal, sender, graph,
     Complete is currently in the sense that all desired resources are in
     service, not that superfluous ones have been cleaned up.
     '''
-    roots = set(key for (key, fwd), node in graph.items()
-                if not any(f for k, f in node.required_by()))
+    roots = set(deps.roots())
 
-    if sender not in roots:
+    if (sender_id, is_update) not in roots:
         return
 
     def mark_complete(stack_id, data):
         stack.mark_complete(current_traversal)
 
-    sync_point.sync(cnxt, stack.id, current_traversal, is_update,
-                    mark_complete, roots, {sender: None})
+    sender_key = (sender_id, is_update)
+    sync_point.sync(cnxt, stack.id, current_traversal, True,
+                    mark_complete, roots, {sender_key: None})
 
 
 def propagate_check_resource(cnxt, rpc_client, next_res_id,
-                             current_traversal, predecessors, sender,
+                             current_traversal, predecessors, sender_key,
                              sender_data, is_update):
     '''
     Trigger processing of a node if all of its dependencies are satisfied.
@@ -200,19 +204,17 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
 
     sync_point.sync(cnxt, next_res_id, current_traversal,
                     is_update, do_check, predecessors,
-                    {sender: sender_data})
+                    {sender_key: sender_data})
 
 
 def check_resource_update(rsrc, template_id, data):
     '''
     Create or update the Resource if appropriate.
     '''
-    input_data = {in_data.name: in_data for in_data in data.values()}
-
     if rsrc.resource_id is None:
-        rsrc.create_convergence(template_id, input_data)
+        rsrc.create_convergence(template_id, data)
     else:
-        rsrc.update_convergence(template_id, input_data)
+        rsrc.update_convergence(template_id, data)
 
 
 def check_resource_cleanup(rsrc, template_id, data):
