@@ -15,6 +15,7 @@ import uuid
 
 import mock
 from oslo_config import cfg
+from oslo_messaging import exceptions as msg_exceptions
 import six
 
 from heat.common import exception
@@ -761,3 +762,53 @@ class StackResourceCheckCompleteTest(common.HeatTestCase):
         self.assertFalse(complete(None))
         self.parent_resource.nested.assert_called_once_with(
             show_deleted=self.show_deleted, force_reload=True)
+
+
+class RaiseLocalException(common.HeatTestCase):
+
+    def setUp(self):
+        super(RaiseLocalException, self).setUp()
+        resource._register_class('some_magic_type',
+                                 MyStackResource)
+        self.ws_resname = "provider_resource"
+        t = templatem.Template(
+            {'HeatTemplateFormatVersion': '2012-12-12',
+             'Resources': {self.ws_resname: ws_res_snippet}})
+        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                         t, stack_id=str(uuid.uuid4()),
+                                         user_creds_id='uc123',
+                                         stack_user_project_id='aprojectid')
+        resource_defns = t.resource_definitions(self.parent_stack)
+        self.parent_resource = MyStackResource('test',
+                                               resource_defns[self.ws_resname],
+                                               self.parent_stack)
+
+    def test_heat_exception(self):
+        local = exception.ResourceTypeNotFound(type_name='foo')
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          self.parent_resource.raise_local_exception, local)
+
+    def test_messaging_timeout(self):
+        local = msg_exceptions.MessagingTimeout('took too long')
+        self.assertRaises(exception.ResourceFailure,
+                          self.parent_resource.raise_local_exception, local)
+
+    def test_remote_heat_ex(self):
+        remote_exc = exception.PhysicalResourceNameAmbiguity(name='foo')
+        expected_msg = six.text_type(remote_exc)
+        message = (expected_msg + '\n' +
+                   'Traceback (most recent call last):\n'
+                   '  File whatever.py, line 42, in whatever\n'
+                   '    whatever()')
+        str_override = lambda self: message
+        RemoteExcClass = type(type(remote_exc).__name__ + '_Remote',
+                              (type(remote_exc),),
+                              {'__str__': str_override,
+                               '__unicode__': str_override})
+        RemoteExcClass.__module__ = 'heat.common.exception_Remote'
+        remote_exc.__class__ = RemoteExcClass
+
+        exc = self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+                                self.parent_resource.raise_local_exception,
+                                remote_exc)
+        self.assertIn(expected_msg, six.text_type(exc))
