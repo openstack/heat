@@ -14,7 +14,6 @@
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -131,9 +130,3 @@ def resource_mapping():
     return {
         'OS::Zaqar::Queue': ZaqarQueue,
     }
-
-
-def available_resource_mapping():
-    if not clients.has_client('zaqar'):
-        return {}
-    return resource_mapping()
