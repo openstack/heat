@@ -181,6 +181,8 @@ class TemplateResource(stack_resource.StackResource):
                 t_data = self.get_template_file(self.template_name,
                                                 self.allowed_schemes)
             except exception.NotFound as err:
+                if self.action == self.UPDATE:
+                    raise
                 reported_excp = err
 
         if t_data is None:
