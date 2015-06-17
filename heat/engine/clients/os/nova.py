@@ -388,6 +388,11 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return True
         if not server:
             return False
+        task_state_in_nova = getattr(server, 'OS-EXT-STS:task_state', None)
+        # the status of server won't change until the delete task has done
+        if task_state_in_nova == 'deleting':
+            return False
+
         status = self.get_status(server)
         if status in ("DELETED", "SOFT_DELETED"):
             return True
