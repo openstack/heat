@@ -26,7 +26,9 @@ from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import support
 
-_CODE_NAMES = {'2014.1': 'Icehouse',
+_CODE_NAMES = {'2013.1': 'Grizzly',
+               '2013.2': 'Havana',
+               '2014.1': 'Icehouse',
                '2014.2': 'Juno',
                '2015.1': 'Kilo',
                '2015.2': 'Liberty'}
@@ -99,21 +101,24 @@ class ResourcePages(compat.Directive):
             return version
 
     def _status_str(self, support_status, section):
-        sstatus = support_status.to_dict()
-        if sstatus['status'] is support.SUPPORTED:
-            msg = _('Available')
-        else:
-            msg = sstatus['status']
-        if sstatus['version'] is not None:
-            msg = _('%s since %s') % (msg,
-                                      self._version_str(sstatus['version']))
-        if sstatus['message'] is not None:
-            msg = _('%s - %s') % (msg, sstatus['message'])
-        if not (sstatus['status'] is support.SUPPORTED and
-                sstatus['version'] is None):
-            para = nodes.paragraph(_(''), msg)
-            note = nodes.note(_(''), para)
-            section.append(note)
+        while support_status is not None:
+            sstatus = support_status.to_dict()
+            if sstatus['status'] is support.SUPPORTED:
+                msg = _('Available')
+            else:
+                msg = sstatus['status']
+            if sstatus['version'] is not None:
+                msg = _('%s since %s') % (msg,
+                                          self._version_str(
+                                              sstatus['version']))
+            if sstatus['message'] is not None:
+                msg = _('%s - %s') % (msg, sstatus['message'])
+            if not (sstatus['status'] == support.SUPPORTED and
+                    sstatus['version'] is None):
+                para = nodes.paragraph(_(''), msg)
+                note = nodes.note(_(''), para)
+                section.append(note)
+            support_status = support_status.previous_status
 
     def _section(self, parent, title, id_pattern):
         id = id_pattern % self.resource_type
