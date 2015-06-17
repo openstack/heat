@@ -1152,12 +1152,8 @@ class Stack(collections.Mapping):
             finally:
                 self.reset_dependencies()
 
-            if action == self.UPDATE:
-                reason = 'Stack successfully updated'
-            elif action == self.RESTORE:
-                reason = 'Stack successfully restored'
-            else:
-                reason = 'Stack rollback completed'
+            if action in (self.UPDATE, self.RESTORE, self.ROLLBACK):
+                reason = 'Stack %s completed successfully' % action
             stack_status = self.COMPLETE
 
         except scheduler.Timeout:
@@ -1198,7 +1194,9 @@ class Stack(collections.Mapping):
         self.status_reason = reason
 
         notification.send(self)
+        self._add_event(self.action, self.status, self.status_reason)
         self.store()
+
         lifecycle_plugin_utils.do_post_ops(self.context, self,
                                            newstack, action,
                                            (self.status == self.FAILED))
