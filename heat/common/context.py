@@ -217,8 +217,8 @@ class ContextMiddleware(wsgi.Middleware):
 
             user_id = headers.get('X-User-Id')
             token = headers.get('X-Auth-Token')
-            tenant = headers.get('X-Tenant-Name')
-            tenant_id = headers.get('X-Tenant-Id')
+            tenant = headers.get('X-Project-Name')
+            tenant_id = headers.get('X-Project-Id')
             region_name = headers.get('X-Region-Name')
             auth_url = headers.get('X-Auth-Url')
             roles = headers.get('X-Roles')
