@@ -518,6 +518,16 @@ class StackController(object):
             self.rpc_client.list_resource_types(req.context, support_status)}
 
     @util.policy_enforce
+    def list_template_versions(self, req):
+        """
+        Returns a list of available template versions
+        """
+        return {
+            'template_versions':
+            self.rpc_client.list_template_versions(req.context)
+        }
+
+    @util.policy_enforce
     def resource_schema(self, req, type_name):
         """
         Returns the schema of the given resource type.

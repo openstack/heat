@@ -27,8 +27,10 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import messaging
 from heat.common import template_format
+from heat.engine.cfn import template as cfntemplate
 from heat.engine import dependencies
 from heat.engine import environment
+from heat.engine.hot import template as hottemplate
 from heat.engine import resource as res
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import service
@@ -2153,6 +2155,28 @@ class StackServiceTest(common.HeatTestCase):
         resources = self.eng.list_resource_types(self.ctx, "SUPPORTED")
         self.assertNotIn(['OS::Neutron::RouterGateway'], resources)
         self.assertIn('AWS::EC2::Instance', resources)
+
+    @mock.patch('heat.engine.template._get_template_extension_manager')
+    def test_list_template_versions(self, templ_mock):
+
+        class DummyMgr(object):
+            def names(self):
+                return ['a.b', 'c.d']
+
+            def __getitem__(self, item):
+                m = mock.MagicMock()
+                if item == 'a.b':
+                    m.plugin = cfntemplate.CfnTemplate
+                    return m
+                else:
+                    m.plugin = hottemplate.HOTemplate20130523
+                    return m
+
+        templ_mock.return_value = DummyMgr()
+        templates = self.eng.list_template_versions(self.ctx)
+        expected = [{'version': 'a.b', 'type': 'cfn'},
+                    {'version': 'c.d', 'type': 'hot'}]
+        self.assertEqual(expected, templates)
 
     def test_resource_schema(self):
         type_name = 'ResourceWithPropsType'
