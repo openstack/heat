@@ -811,6 +811,54 @@ class ProviderTemplateTest(common.HeatTestCase):
         self.m.VerifyAll()
 
 
+class TemplateDataTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(TemplateDataTest, self).setUp()
+        files = {}
+        self.ctx = utils.dummy_context()
+
+        class DummyResource(object):
+            support_status = support.SupportStatus()
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.STRING,
+                                                   required=True)}
+            attributes_schema = {}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+
+        self.stack = parser.Stack(self.ctx, 'test_stack',
+                                  template.Template(empty_template,
+                                                    files=files,
+                                                    env=env),
+                                  stack_id=str(uuid.uuid4()))
+
+        self.defn = rsrc_defn.ResourceDefinition('test_t_res',
+                                                 "DummyResource",
+                                                 {"Foo": "bar"})
+        self.res = template_resource.TemplateResource('test_t_res',
+                                                      self.defn, self.stack)
+
+    def test_template_data_in_update_without_template_file(self):
+        self.res.action = self.res.UPDATE
+        self.res.nested = mock.MagicMock()
+        self.res.get_template_file = mock.Mock(
+            side_effect=exception.TemplateNotFound(
+                message='test_resource.template'))
+        self.assertRaises(exception.TemplateNotFound, self.res.template_data)
+
+    def test_template_data_in_create_without_template_file(self):
+        self.res.action = self.res.CREATE
+        self.res.nested = mock.MagicMock()
+        self.res.get_template_file = mock.Mock(
+            side_effect=exception.TemplateNotFound(
+                message='test_resource.template'))
+        self.assertEqual(self.res.template_data(), '{}')
+
+
 class TemplateResourceCrudTest(common.HeatTestCase):
     provider = {
         'HeatTemplateFormatVersion': '2012-12-12',
