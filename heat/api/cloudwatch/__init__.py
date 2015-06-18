@@ -14,9 +14,9 @@
 import routes
 import webob
 
-from heat.api.cloudwatch import versions
 from heat.api.cloudwatch import watch
 from heat.api.middleware import version_negotiation as vn
+from heat.api import versions
 from heat.common import wsgi
 
 
