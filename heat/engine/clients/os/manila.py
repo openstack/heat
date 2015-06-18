@@ -23,10 +23,6 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
     exceptions_module = exceptions
     service_types = ['share']
 
-    @staticmethod
-    def is_available():
-        return manila_client is not None
-
     def _create(self):
         endpoint_type = self._get_client_option('manila', 'endpoint_type')
         endpoint = self.url_for(service_type=self.service_types[0],
