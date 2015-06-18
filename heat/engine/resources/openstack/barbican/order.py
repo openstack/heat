@@ -16,7 +16,6 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -199,10 +198,3 @@ def resource_mapping():
     return {
         'OS::Barbican::Order': Order,
     }
-
-
-def available_resource_mapping():
-    if not clients.has_client('barbican'):
-        return {}
-
-    return resource_mapping()

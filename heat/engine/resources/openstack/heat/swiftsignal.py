@@ -339,7 +339,3 @@ class SwiftSignal(resource.Resource):
 def resource_mapping():
     return {'OS::Heat::SwiftSignal': SwiftSignal,
             'OS::Heat::SwiftSignalHandle': SwiftSignalHandle}
-
-
-def available_resource_mapping():
-    return resource_mapping()
