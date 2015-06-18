@@ -2927,6 +2927,14 @@ class StackServiceTest(common.HeatTestCase):
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', parsed_template)
 
+    def test_validate_new_stack_handle_assertion_error(self):
+        tmpl = mock.MagicMock()
+        expected_message = 'Expected assertion error'
+        tmpl.validate.side_effect = AssertionError(expected_message)
+        exc = self.assertRaises(AssertionError, self.eng._validate_new_stack,
+                                self.ctx, 'stack_name', tmpl)
+        self.assertEqual(expected_message, six.text_type(exc))
+
     @mock.patch('heat.engine.service.ThreadGroupManager',
                 return_value=mock.Mock())
     @mock.patch.object(stack_object.Stack, 'get_all')
