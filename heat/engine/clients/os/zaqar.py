@@ -26,6 +26,7 @@ from heat.engine.clients import client_plugin
 class ZaqarClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = zaqar_errors
+    service_types = ['messaging']
 
     def _create(self):
         return self.create_for_tenant(self.context.tenant_id)
@@ -40,12 +41,12 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
             'os_auth_token': con.auth_token,
             'os_auth_url': con.auth_url,
             'os_project_id': tenant_id,
-            'os_service_type': 'messaging',
+            'os_service_type': self.service_types[0],
         }
         auth_opts = {'backend': 'keystone',
                      'options': opts}
         conf = {'auth_opts': auth_opts}
-        endpoint = self.url_for(service_type='messaging')
+        endpoint = self.url_for(service_type=self.service_types[0])
 
         client = zaqarclient.Client(url=endpoint, conf=conf, version=1.1)
 

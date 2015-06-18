@@ -32,6 +32,10 @@ class ClientPlugin(object):
     # may emit
     exceptions_module = None
 
+    # supported service types, service like cinder support multiple service
+    # types, so its used in list format
+    service_types = []
+
     def __init__(self, context):
         self.context = context
         self.clients = context.clients

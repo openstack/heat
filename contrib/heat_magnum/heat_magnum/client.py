@@ -22,9 +22,11 @@ magnum_client = importutils.try_import('magnumclient.v1.client')
 
 class MagnumClientPlugin(client_plugin.ClientPlugin):
 
+    service_types = ['container']
+
     def _create(self):
         endpoint_type = self._get_client_option('magnum', 'endpoint_type')
-        endpoint = self.url_for(service_type='container',
+        endpoint = self.url_for(service_type=self.service_types[0],
                                 endpoint_type=endpoint_type)
 
         args = {
