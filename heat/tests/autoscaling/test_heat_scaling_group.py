@@ -115,7 +115,7 @@ class TestGroupAdjust(common.HeatTestCase):
     def test_scaling_policy_cooldown_toosoon(self):
         """If _cooldown_inprogress() returns True don't progress."""
 
-        dont_call = self.patchobject(grouputils, 'get_members')
+        dont_call = self.patchobject(grouputils, 'get_size')
         with mock.patch.object(self.group, '_cooldown_inprogress',
                                return_value=True):
             self.group.adjust(1)
@@ -212,7 +212,7 @@ class TestGroupAdjust(common.HeatTestCase):
         cd_stamp.assert_called_once_with('PercentChangeInCapacity : -33')
 
     def test_scaling_policy_cooldown_ok(self):
-        self.patchobject(grouputils, 'get_members', return_value=[])
+        self.patchobject(grouputils, 'get_size', return_value=0)
         resize = self.patchobject(self.group, 'resize')
         cd_stamp = self.patchobject(self.group, '_cooldown_timestamp')
         notify = self.patch('heat.engine.notification.autoscaling.send')
@@ -238,9 +238,10 @@ class TestGroupAdjust(common.HeatTestCase):
         self.assertEqual(expected_notifies, notify.call_args_list)
         resize.assert_called_once_with(1)
         cd_stamp.assert_called_once_with('ChangeInCapacity : 1')
+        grouputils.get_size.assert_called_once_with(self.group)
 
     def test_scaling_policy_resize_fail(self):
-        self.patchobject(grouputils, 'get_members', return_value=[])
+        self.patchobject(grouputils, 'get_size', return_value=0)
         self.patchobject(self.group, 'resize',
                          side_effect=ValueError('test error'))
         notify = self.patch('heat.engine.notification.autoscaling.send')
@@ -265,6 +266,7 @@ class TestGroupAdjust(common.HeatTestCase):
                 stack=self.group.stack)]
 
         self.assertEqual(expected_notifies, notify.call_args_list)
+        grouputils.get_size.assert_called_once_with(self.group)
 
 
 class TestGroupCrud(common.HeatTestCase):
