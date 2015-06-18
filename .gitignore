@@ -19,3 +19,4 @@ cover
 .testrepository
 .project
 .pydevproject
+doc/source/api/

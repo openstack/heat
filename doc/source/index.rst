@@ -72,9 +72,9 @@ Operations Documentation
 Code Documentation
 ==================
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
-   sourcecode/autoindex
+   api/autoindex
 
 Indices and tables
 ==================
