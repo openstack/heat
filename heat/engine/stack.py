@@ -33,6 +33,7 @@ from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
 from heat.engine import dependencies
+from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
 from heat.engine.notification import stack as notification
@@ -1261,9 +1262,14 @@ class Stack(collections.Mapping):
             return
         self.updated_time = datetime.datetime.utcnow()
 
-        template = tmpl.Template(snapshot.data['template'], env=self.env)
+        env = environment.Environment(snapshot.data['environment'])
+        template = tmpl.Template(snapshot.data['template'], env=env)
+        newstack = self.__class__(self.context, self.name, template,
+                                  timeout_mins=self.timeout_mins,
+                                  disable_rollback=self.disable_rollback)
 
-        for name, defn in six.iteritems(template.resource_definitions(self)):
+        for name, defn in six.iteritems(
+                template.resource_definitions(newstack)):
             rsrc = resource.Resource(name, defn, self)
             data = snapshot.data['resources'].get(name)
             handle_restore = getattr(rsrc, 'handle_restore', None)
@@ -1271,9 +1277,6 @@ class Stack(collections.Mapping):
                 defn = handle_restore(defn, data)
             template.add_resource(defn, name)
 
-        newstack = self.__class__(self.context, self.name, template,
-                                  timeout_mins=self.timeout_mins,
-                                  disable_rollback=self.disable_rollback)
         newstack.parameters.set_stack_id(self.identifier())
 
         updater = scheduler.TaskRunner(self.update_task, newstack,

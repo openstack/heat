@@ -1742,6 +1742,48 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual(2, len(self.stack.resources))
 
+    def test_restore_with_original_env(self):
+        tmpl = {
+            'heat_template_version': '2013-05-23',
+            'parameters': {
+                'foo': {'type': 'string'}
+            },
+            'resources': {
+                'A': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {'Foo': {'get_param': 'foo'}}
+                }
+            }
+        }
+        self.stack = stack.Stack(self.ctx, 'stack_restore_test',
+                                 template.Template(
+                                     tmpl,
+                                     env=environment.Environment(
+                                         {'foo': 'abc'})))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual('abc',
+                         self.stack.resources['A'].properties['Foo'])
+
+        data = copy.deepcopy(self.stack.prepare_abandon())
+        fake_snapshot = collections.namedtuple(
+            'Snapshot', ('data', 'stack_id'))(data, self.stack.id)
+
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(
+                                        tmpl,
+                                        env=environment.Environment(
+                                            {'foo': 'xyz'})))
+        self.stack.update(updated_stack)
+        self.assertEqual('xyz',
+                         self.stack.resources['A'].properties['Foo'])
+
+        self.stack.restore(fake_snapshot)
+        self.assertEqual((stack.Stack.RESTORE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('abc',
+                         self.stack.resources['A'].properties['Foo'])
+
     def test_hot_restore(self):
 
         class ResourceWithRestore(generic_rsrc.ResWithComplexPropsAndAttrs):
