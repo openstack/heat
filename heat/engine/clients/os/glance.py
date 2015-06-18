@@ -28,17 +28,18 @@ LOG = logging.getLogger(__name__)
 class GlanceClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exc
-    service_types = ['image']
+
+    service_types = [IMAGE] = ['image']
 
     def _create(self):
 
         con = self.context
         endpoint_type = self._get_client_option('glance', 'endpoint_type')
-        endpoint = self.url_for(service_type=self.service_types[0],
+        endpoint = self.url_for(service_type=self.IMAGE,
                                 endpoint_type=endpoint_type)
         args = {
             'auth_url': con.auth_url,
-            'service_type': self.service_types[0],
+            'service_type': self.IMAGE,
             'project_id': con.tenant,
             'token': self.auth_token,
             'endpoint_type': endpoint_type,

@@ -19,11 +19,11 @@ from barbicanclient import client as barbican_client
 
 class BarbicanClientPlugin(client_plugin.ClientPlugin):
 
-    service_types = ['key-manager']
+    service_types = [KEY_MANAGER] = ['key-manager']
 
     def _create(self):
         endpoint_type = self._get_client_option('barbican', 'endpoint_type')
-        endpoint = self.url_for(service_type=self.service_types[0],
+        endpoint = self.url_for(service_type=self.KEY_MANAGER,
                                 endpoint_type=endpoint_type)
         self._keystone_session.auth = self.context.auth_plugin
         client = barbican_client.Client(

@@ -32,15 +32,16 @@ LOG = logging.getLogger(__name__)
 class SaharaClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = sahara_base
-    service_types = ['data-processing']
+
+    service_types = [DATA_PROCESSING] = ['data-processing']
 
     def _create(self):
         con = self.context
         endpoint_type = self._get_client_option('sahara', 'endpoint_type')
-        endpoint = self.url_for(service_type=self.service_types[0],
+        endpoint = self.url_for(service_type=self.DATA_PROCESSING,
                                 endpoint_type=endpoint_type)
         args = {
-            'service_type': self.service_types[0],
+            'service_type': self.DATA_PROCESSING,
             'input_auth_token': self.auth_token,
             'auth_url': con.auth_url,
             'project_name': con.tenant,
