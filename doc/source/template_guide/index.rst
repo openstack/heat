@@ -18,7 +18,10 @@ Template Guide
    :maxdepth: 2
 
    hot_guide
+   hello_world
    hot_spec
+   basic_resources
+   software_deployment
    environment
    composition
    openstack
@@ -26,3 +29,6 @@ Template Guide
    unsupported
    contrib
    functions
+
+.. existing_templates
+.. advanced_topics
