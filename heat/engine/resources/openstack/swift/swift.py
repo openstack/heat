@@ -87,22 +87,28 @@ class SwiftContainer(resource.Resource):
 
     attributes_schema = {
         DOMAIN_NAME: attributes.Schema(
-            _('The host from the container URL.')
+            _('The host from the container URL.'),
+            type=attributes.Schema.STRING
         ),
         WEBSITE_URL: attributes.Schema(
-            _('The URL of the container.')
+            _('The URL of the container.'),
+            type=attributes.Schema.STRING
         ),
         ROOT_URL: attributes.Schema(
-            _('The parent URL of the container.')
+            _('The parent URL of the container.'),
+            type=attributes.Schema.STRING
         ),
         OBJECT_COUNT: attributes.Schema(
-            _('The number of objects stored in the container.')
+            _('The number of objects stored in the container.'),
+            type=attributes.Schema.INTEGER
         ),
         BYTES_USED: attributes.Schema(
-            _('The number of bytes stored in the container.')
+            _('The number of bytes stored in the container.'),
+            type=attributes.Schema.INTEGER
         ),
         HEAD_CONTAINER: attributes.Schema(
-            _('A map containing all headers for the container.')
+            _('A map containing all headers for the container.'),
+            type=attributes.Schema.MAP
         ),
     }
 

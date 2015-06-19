@@ -47,10 +47,12 @@ class NovaFloatingIp(resource.Resource):
 
     attributes_schema = {
         POOL_ATTR: attributes.Schema(
-            _('Pool from which floating IP is allocated.')
+            _('Pool from which floating IP is allocated.'),
+            type=attributes.Schema.STRING
         ),
         IP: attributes.Schema(
-            _('Allocated floating IP address.')
+            _('Allocated floating IP address.'),
+            type=attributes.Schema.STRING
         ),
     }
 

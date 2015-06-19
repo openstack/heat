@@ -141,46 +141,60 @@ class CinderVolume(vb.BaseVolume):
 
     attributes_schema = {
         AVAILABILITY_ZONE_ATTR: attributes.Schema(
-            _('The availability zone in which the volume is located.')
+            _('The availability zone in which the volume is located.'),
+            type=attributes.Schema.STRING
         ),
         SIZE_ATTR: attributes.Schema(
-            _('The size of the volume in GB.')
+            _('The size of the volume in GB.'),
+            type=attributes.Schema.STRING
         ),
         SNAPSHOT_ID_ATTR: attributes.Schema(
-            _('The snapshot the volume was created from, if any.')
+            _('The snapshot the volume was created from, if any.'),
+            type=attributes.Schema.STRING
         ),
         DISPLAY_NAME_ATTR: attributes.Schema(
-            _('Name of the volume.')
+            _('Name of the volume.'),
+            type=attributes.Schema.STRING
         ),
         DISPLAY_DESCRIPTION_ATTR: attributes.Schema(
-            _('Description of the volume.')
+            _('Description of the volume.'),
+            type=attributes.Schema.STRING
         ),
         VOLUME_TYPE_ATTR: attributes.Schema(
-            _('The type of the volume mapping to a backend, if any.')
+            _('The type of the volume mapping to a backend, if any.'),
+            type=attributes.Schema.STRING
         ),
         METADATA_ATTR: attributes.Schema(
-            _('Key/value pairs associated with the volume.')
+            _('Key/value pairs associated with the volume.'),
+            type=attributes.Schema.STRING
         ),
         SOURCE_VOLID_ATTR: attributes.Schema(
-            _('The volume used as source, if any.')
+            _('The volume used as source, if any.'),
+            type=attributes.Schema.STRING
         ),
         STATUS: attributes.Schema(
-            _('The current status of the volume.')
+            _('The current status of the volume.'),
+            type=attributes.Schema.STRING
         ),
         CREATED_AT: attributes.Schema(
-            _('The timestamp indicating volume creation.')
+            _('The timestamp indicating volume creation.'),
+            type=attributes.Schema.STRING
         ),
         BOOTABLE: attributes.Schema(
-            _('Boolean indicating if the volume can be booted or not.')
+            _('Boolean indicating if the volume can be booted or not.'),
+            type=attributes.Schema.STRING
         ),
         METADATA_VALUES_ATTR: attributes.Schema(
-            _('Key/value pairs associated with the volume in raw dict form.')
+            _('Key/value pairs associated with the volume in raw dict form.'),
+            type=attributes.Schema.MAP
         ),
         ENCRYPTED_ATTR: attributes.Schema(
-            _('Boolean indicating if the volume is encrypted or not.')
+            _('Boolean indicating if the volume is encrypted or not.'),
+            type=attributes.Schema.STRING
         ),
         ATTACHMENTS: attributes.Schema(
-            _('The list of attachments of the volume.')
+            _('The list of attachments of the volume.'),
+            type=attributes.Schema.STRING
         ),
     }
 

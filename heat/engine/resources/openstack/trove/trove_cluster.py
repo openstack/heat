@@ -120,10 +120,12 @@ class TroveCluster(resource.Resource):
 
     attributes_schema = {
         INSTANCES: attributes.Schema(
-            _("A list of instances ids.")
+            _("A list of instances ids."),
+            type=attributes.Schema.LIST
         ),
         IP: attributes.Schema(
-            _("IP of the cluster.")
+            _("IP of the cluster."),
+            type=attributes.Schema.LIST
         )
     }
 
