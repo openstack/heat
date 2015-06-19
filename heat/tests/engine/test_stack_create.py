@@ -344,5 +344,4 @@ class StackCreateTest(common.HeatTestCase):
         validate_mock.return_value = None
         cfg.CONF.set_override('max_resources_per_stack', -1)
         stack_name = 'service_create_test_max_unlimited'
-        stack = tools.get_stack(stack_name, self.ctx)
-        self.man.create_stack(self.ctx, stack_name, stack.t.t, {}, None, {})
+        self._test_stack_create(stack_name)
