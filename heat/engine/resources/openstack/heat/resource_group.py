@@ -98,7 +98,7 @@ class ResourceGroup(stack_resource.StackResource):
     properties_schema = {
         COUNT: properties.Schema(
             properties.Schema.INTEGER,
-            _('The number of instances to create.'),
+            _('The number of resources to create.'),
             default=1,
             constraints=[
                 constraints.Range(min=0),
