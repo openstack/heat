@@ -59,6 +59,8 @@
     "stacks:list_snapshots": "rule:deny_stack_user",
     "stacks:restore_snapshot": "rule:deny_stack_user",
 
+    "software_configs:global_index": "rule:deny_everybody",
+    "software_configs:index": "rule:deny_stack_user",
     "software_configs:create": "rule:deny_stack_user",
     "software_configs:show": "rule:deny_stack_user",
     "software_configs:delete": "rule:deny_stack_user",

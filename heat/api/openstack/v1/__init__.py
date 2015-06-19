@@ -335,6 +335,12 @@ class API(wsgi.Router):
                 path_prefix='/{tenant_id}/software_configs',
                 routes=[
                     {
+                        'name': 'software_config_index',
+                        'url': '',
+                        'action': 'index',
+                        'method': 'GET'
+                    },
+                    {
                         'name': 'software_config_create',
                         'url': '',
                         'action': 'create',

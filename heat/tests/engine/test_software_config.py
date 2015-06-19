@@ -48,6 +48,16 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         return self.engine.create_software_config(
             self.ctx, group, name, config, inputs, outputs, options)
 
+    def test_list_software_configs(self):
+        config = self._create_software_config()
+        config_id = config['id']
+        self.assertIsNotNone(config)
+
+        configs = self.engine.list_software_configs(self.ctx)
+        self.assertIsNotNone(configs)
+        config_ids = [x['id'] for x in configs]
+        self.assertIn(config_id, config_ids)
+
     def test_show_software_config(self):
         config_id = str(uuid.uuid4())
 

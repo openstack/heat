@@ -30,6 +30,7 @@ class EngineClient(object):
         1.1 - Add support_status argument to list_resource_types()
         1.4 - Add support for service list
         1.9 - Add template_type option to generate_template()
+        1.10 - Add support for software config list
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -510,6 +511,15 @@ class EngineClient(object):
     def show_software_config(self, cnxt, config_id):
         return self.call(cnxt, self.make_msg('show_software_config',
                                              config_id=config_id))
+
+    def list_software_configs(self, cnxt, limit=None, marker=None,
+                              tenant_safe=True):
+        return self.call(cnxt,
+                         self.make_msg('list_software_configs',
+                                       limit=limit,
+                                       marker=marker,
+                                       tenant_safe=tenant_safe),
+                         version='1.10')
 
     def create_software_config(self, cnxt, group, name, config,
                                inputs=None, outputs=None, options=None):
