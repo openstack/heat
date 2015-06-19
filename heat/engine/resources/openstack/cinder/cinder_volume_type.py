@@ -11,7 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -32,9 +34,9 @@ class CinderVolumeType(resource.Resource):
     entity = 'volume_types'
 
     PROPERTIES = (
-        NAME, METADATA, IS_PUBLIC, DESCRIPTION,
+        NAME, METADATA, IS_PUBLIC, DESCRIPTION, PROJECTS,
     ) = (
-        'name', 'metadata', 'is_public', 'description',
+        'name', 'metadata', 'is_public', 'description', 'projects',
     )
 
     properties_schema = {
@@ -61,7 +63,27 @@ class CinderVolumeType(resource.Resource):
             update_allowed=True,
             support_status=support.SupportStatus(version='5.0.0'),
         ),
+        PROJECTS: properties.Schema(
+            properties.Schema.LIST,
+            _('Projects to add volume type access for. NOTE: This'
+              'property only supported since Cinder API V2.'),
+            support_status=support.SupportStatus(version='5.0.0'),
+            update_allowed=True,
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                constraints=[
+                    constraints.CustomConstraint('keystone.project')
+                ],
+            ),
+            default=[],
+        ),
     }
+
+    def _add_projects_access(self, projects):
+        for project in projects:
+            project_id = self.keystone().get_project_id(project)
+            self.cinder().volume_type_access.add_project_access(
+                self.resource_id, project_id)
 
     def handle_create(self):
         args = {
@@ -75,6 +97,7 @@ class CinderVolumeType(resource.Resource):
         vtype_metadata = self.properties[self.METADATA]
         if vtype_metadata:
             volume_type.set_keys(vtype_metadata)
+        self._add_projects_access(self.properties[self.PROJECTS])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update the name, description and metadata for volume type."""
@@ -95,11 +118,35 @@ class CinderVolumeType(resource.Resource):
             new_keys = prop_diff.get(self.METADATA)
             if new_keys is not None:
                 volume_type.set_keys(new_keys)
+        # Update the projects access for volume type
+        if self.PROJECTS in prop_diff:
+            old_access_list = self.cinder().volume_type_access.list(
+                self.resource_id)['volume_type_access']
+            old_projects = [ac['project_id'] for ac in old_access_list]
+            new_projects = prop_diff.get(self.PROJECTS)
+            # first remove the old projects access
+            for project_id in (set(old_projects) - set(new_projects)):
+                self.cinder().volume_type_access.remove_project_access(
+                    self.resource_id, project_id)
+            # add the new projects access
+            self._add_projects_access(set(new_projects) - set(old_projects))
 
     # TODO(huangtianhua): remove this method when bug #1479641 is fixed.
     def _show_resource(self):
         vtype = self.client().volume_types.get(self.resource_id)
         return vtype._info
+
+    def validate(self):
+        super(CinderVolumeType, self).validate()
+
+        if self.properties[self.PROJECTS]:
+            if self.cinder().volume_api_version == 1:
+                raise exception.NotSupported(
+                    feature=_('Using Cinder API V1, volume type access'))
+            if self.properties[self.IS_PUBLIC]:
+                msg = (_('Can not specify property "%s" '
+                         'if the volume type is public.') % self.PROJECTS)
+                raise exception.StackValidationFailed(message=msg)
 
 
 def resource_mapping():

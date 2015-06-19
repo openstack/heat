@@ -12,7 +12,9 @@
 #    under the License.
 
 import mock
+import six
 
+from heat.common import exception
 from heat.engine.resources.openstack.cinder import cinder_volume_type
 from heat.engine import stack
 from heat.engine import template
@@ -38,18 +40,20 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         super(CinderVolumeTypeTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-
         self.stack = stack.Stack(
             self.ctx, 'cinder_volume_type_test_stack',
             template.Template(volume_type_template)
         )
-
         self.my_volume_type = self.stack['my_volume_type']
         cinder = mock.MagicMock()
         self.cinderclient = mock.MagicMock()
         self.my_volume_type.client = cinder
         cinder.return_value = self.cinderclient
         self.volume_types = self.cinderclient.volume_types
+        self.volume_type_access = self.cinderclient.volume_type_access
+        self.keystoneclient = mock.MagicMock()
+        self.my_volume_type.keystone = mock.MagicMock()
+        self.my_volume_type.keystone.return_value = self.keystoneclient
 
     def test_resource_mapping(self):
         mapping = cinder_volume_type.resource_mapping()
@@ -59,24 +63,37 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.assertIsInstance(self.my_volume_type,
                               cinder_volume_type.CinderVolumeType)
 
-    def _test_handle_create(self, is_public=True):
+    def _test_handle_create(self, is_public=True, projects=None):
         value = mock.MagicMock()
         volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         value.id = volume_type_id
         self.volume_types.create.return_value = value
         self.my_volume_type.t['Properties']['is_public'] = is_public
+        if projects:
+            self.my_volume_type.t['Properties']['projects'] = projects
+            self.keystoneclient.get_project_id.side_effect = [
+                p for p in projects]
         self.my_volume_type.handle_create()
         self.volume_types.create.assert_called_once_with(
             name='volumeBackend', is_public=is_public, description=None)
         value.set_keys.assert_called_once_with(
             {'volume_backend_name': 'lvmdriver'})
         self.assertEqual(volume_type_id, self.my_volume_type.resource_id)
+        if projects:
+            calls = []
+            for p in projects:
+                calls.append(mock.call(volume_type_id, p))
+            self.volume_type_access.add_project_access.assert_has_calls(calls)
 
     def test_volume_type_handle_create_public(self):
         self._test_handle_create()
 
     def test_volume_type_handle_create_not_public(self):
         self._test_handle_create(is_public=False)
+
+    def test_volume_type_with_projects(self):
+        self.cinderclient.volume_api_version = 2
+        self._test_handle_create(projects=['id1', 'id2'])
 
     def _test_update(self, update_args, is_update_metadata=False):
         if is_update_metadata:
@@ -112,6 +129,59 @@ class CinderVolumeTypeTest(common.HeatTestCase):
                     'capabilities:replication': 'True'}
         prop_diff = {'metadata': new_keys}
         self._test_update(prop_diff, is_update_metadata=True)
+
+    def test_volume_type_update_projects(self):
+        self.my_volume_type.resource_id = '8aeaa446459a4d3196bc573fc252800b'
+        prop_diff = {'projects': ['id2', 'id3']}
+        old_access = {
+            'volume_type_access': [
+                {'volume_type_id': self.my_volume_type.resource_id,
+                 'project_id': 'id1'},
+                {'volume_type_id': self.my_volume_type.resource_id,
+                 'project_id': 'id2'}
+            ]}
+
+        self.patchobject(self.volume_type_access, 'list',
+                         return_value=old_access)
+        self.patchobject(self.volume_type_access, 'remove_project_access')
+        self.keystoneclient.get_project_id.return_value = 'id3'
+        self.my_volume_type.handle_update(json_snippet=None,
+                                          tmpl_diff=None,
+                                          prop_diff=prop_diff)
+
+        self.volume_type_access.remove_project_access.assert_called_once_with(
+            self.my_volume_type.resource_id, 'id1')
+        self.keystoneclient.get_project_id.assert_called_once_with('id3')
+        self.volume_type_access.add_project_access.assert_called_once_with(
+            self.my_volume_type.resource_id, 'id3')
+
+    def test_validate_projects_in_v1(self):
+        self.my_volume_type.t['Properties']['is_public'] = False
+        self.my_volume_type.t['Properties']['projects'] = ['id1']
+        self.cinderclient.volume_api_version = 1
+        self.stub_KeystoneProjectConstraint()
+        ex = self.assertRaises(exception.NotSupported,
+                               self.my_volume_type.validate)
+        expected = 'Using Cinder API V1, volume type access is not supported.'
+        self.assertEqual(expected, six.text_type(ex))
+
+    def test_validate_projects_when_public(self):
+        self.my_volume_type.t['Properties']['projects'] = ['id1']
+        self.my_volume_type.t['Properties']['is_public'] = True
+        self.cinderclient.volume_api_version = 2
+        self.stub_KeystoneProjectConstraint()
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.my_volume_type.validate)
+        expected = ('Can not specify property "projects" '
+                    'if the volume type is public.')
+        self.assertEqual(expected, six.text_type(ex))
+
+    def test_validate_projects_when_private(self):
+        self.my_volume_type.t['Properties']['projects'] = ['id1']
+        self.my_volume_type.t['Properties']['is_public'] = False
+        self.cinderclient.volume_api_version = 2
+        self.stub_KeystoneProjectConstraint()
+        self.assertIsNone(self.my_volume_type.validate())
 
     def test_volume_type_handle_delete(self):
         self.resource_id = None
