@@ -43,6 +43,8 @@ class CinderVolumeType(resource.Resource):
 
     support_status = support.SupportStatus(version='2015.1')
 
+    default_client_name = 'cinder'
+
     PROPERTIES = (
         NAME, METADATA, IS_PUBLIC, DESCRIPTION,
     ) = (
@@ -115,7 +117,7 @@ class CinderVolumeType(resource.Resource):
         try:
             self.cinder().volume_types.delete(self.resource_id)
         except Exception as e:
-            self.client_plugin('cinder').ignore_not_found(e)
+            self.client_plugin().ignore_not_found(e)
 
 
 def resource_mapping():

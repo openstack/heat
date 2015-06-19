@@ -54,6 +54,8 @@ class KeystoneRoleAssignment(resource.Resource):
         version='2015.1',
         message=_('Supported versions: keystone v3'))
 
+    default_client_name = 'keystone'
+
     PROPERTIES = (
         ROLES
     ) = (
@@ -170,11 +172,10 @@ class KeystoneRoleAssignment(resource.Resource):
             domain = role_assignment.get(self.DOMAIN)
 
             role_assignments.append({
-                self.ROLE: (self.client_plugin('keystone').
-                            get_role_id(role)),
-                self.PROJECT: (self.client_plugin('keystone').
+                self.ROLE: self.client_plugin().get_role_id(role),
+                self.PROJECT: (self.client_plugin().
                                get_project_id(project)) if project else None,
-                self.DOMAIN: (self.client_plugin('keystone').
+                self.DOMAIN: (self.client_plugin().
                               get_domain_id(domain)) if domain else None
             })
         return role_assignments

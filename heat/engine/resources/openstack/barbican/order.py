@@ -26,6 +26,8 @@ class Order(resource.Resource):
 
     support_status = support.SupportStatus(version='2014.2')
 
+    default_client_name = 'barbican'
+
     PROPERTIES = (
         NAME, PAYLOAD_CONTENT_TYPE, MODE, EXPIRATION,
         ALGORITHM, BIT_LENGTH, TYPE, REQUEST_TYPE, SUBJECT_DN,
@@ -144,7 +146,7 @@ class Order(resource.Resource):
     }
 
     def barbican(self):
-        return self.client('barbican')
+        return self.client()
 
     def handle_create(self):
         info = dict((k, v) for k, v in self.properties.items()

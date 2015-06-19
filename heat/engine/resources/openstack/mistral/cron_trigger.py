@@ -130,7 +130,7 @@ def resource_mapping():
 
 
 def available_resource_mapping():
-    if not clients.has_client('mistral'):
+    if not clients.has_client(CronTrigger.default_client_name):
         return {}
 
     return resource_mapping()

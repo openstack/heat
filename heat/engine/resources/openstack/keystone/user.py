@@ -98,10 +98,9 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
                      enabled=None,
                      email=None,
                      password=None):
-        domain = (self.client_plugin('keystone').
-                  get_domain_id(domain))
+        domain = (self.client_plugin().get_domain_id(domain))
         if default_project:
-            default_project = (self.client_plugin('keystone').
+            default_project = (self.client_plugin().
                                get_project_id(default_project))
 
         return self.keystone().client.users.create(
@@ -141,8 +140,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
             values['enabled'] = enabled
 
         values['user'] = user_id
-        domain = (self.client_plugin('keystone').
-                  get_domain_id(domain))
+        domain = (self.client_plugin().get_domain_id(domain))
 
         values['domain'] = domain
 
@@ -150,8 +148,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
 
     def _add_user_to_groups(self, user_id, groups):
         if groups is not None:
-            group_ids = [(self.client_plugin('keystone').
-                          get_group_id(group))
+            group_ids = [self.client_plugin().get_group_id(group)
                          for group in groups]
 
             for group_id in group_ids:
@@ -160,8 +157,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
 
     def _remove_user_from_groups(self, user_id, groups):
         if groups is not None:
-            group_ids = [(self.client_plugin('keystone').
-                          get_group_id(group))
+            group_ids = [self.client_plugin().get_group_id(group)
                          for group in groups]
 
             for group_id in group_ids:
@@ -169,14 +165,12 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
                                                                group_id)
 
     def _find_diff(self, updated_prps, stored_prps):
-        new_group_ids = [(self.client_plugin('keystone').
-                          get_group_id(group))
+        new_group_ids = [self.client_plugin().get_group_id(group)
                          for group in
                          (set(updated_prps or []) -
                           set(stored_prps or []))]
 
-        removed_group_ids = [(self.client_plugin('keystone').
-                              get_group_id(group))
+        removed_group_ids = [self.client_plugin().get_group_id(group)
                              for group in
                              (set(stored_prps or [])
                               - set(updated_prps or []))]
@@ -257,14 +251,13 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
                 if self._stored_properties_data[self.GROUPS] is not None:
                     self._remove_user_from_groups(
                         self.resource_id,
-                        [(self.client_plugin('keystone').
-                          get_group_id(group))
+                        [self.client_plugin().get_group_id(group)
                          for group in
                          self._stored_properties_data[self.GROUPS]])
 
                 self._delete_user(user_id=self.resource_id)
             except Exception as ex:
-                self.client_plugin('keystone').ignore_not_found(ex)
+                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():
