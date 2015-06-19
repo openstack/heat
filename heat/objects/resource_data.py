@@ -80,4 +80,4 @@ class ResourceData(
 
     @classmethod
     def delete(cls, resource, key):
-        return db_api.resource_data_delete(resource, key)
+        db_api.resource_data_delete(resource, key)

@@ -69,8 +69,7 @@ class RawTemplate(
     @classmethod
     def get_by_id(cls, context, template_id):
         raw_template_db = db_api.raw_template_get(context, template_id)
-        raw_template = cls._from_db_object(context, cls(), raw_template_db)
-        return raw_template
+        return cls._from_db_object(context, cls(), raw_template_db)
 
     @classmethod
     def encrypt_hidden_parameters(cls, tmpl):
@@ -85,12 +84,15 @@ class RawTemplate(
 
     @classmethod
     def create(cls, context, values):
-        return db_api.raw_template_create(context, values)
+        return cls._from_db_object(context, cls(),
+                                   db_api.raw_template_create(context, values))
 
     @classmethod
     def update_by_id(cls, context, template_id, values):
-        return db_api.raw_template_update(context, template_id, values)
+        return cls._from_db_object(
+            context, cls(),
+            db_api.raw_template_update(context, template_id, values))
 
     @classmethod
     def delete(cls, context, template_id):
-        return db_api.raw_template_delete(context, template_id)
+        db_api.raw_template_delete(context, template_id)

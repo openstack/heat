@@ -79,6 +79,10 @@ class SoftwareDeployment(base.VersionedObject,
 
     @classmethod
     def update_by_id(cls, context, deployment_id, values):
+        """Note this is a bit unusual as it returns the object.
+
+        Other update_by_id methods return a bool (was it updated).
+        """
         return cls._from_db_object(
             context, cls(),
             db_api.software_deployment_update(context, deployment_id, values))

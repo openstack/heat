@@ -20,7 +20,8 @@ Stack object
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
-
+from heat.common import exception
+from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.objects import fields as heat_fields
 from heat.objects import raw_template
@@ -88,7 +89,7 @@ class Stack(
     def get_by_id(cls, context, stack_id, **kwargs):
         db_stack = db_api.stack_get(context, stack_id, **kwargs)
         if not db_stack:
-            return db_stack
+            return None
         stack = cls._from_db_object(context, cls(context), db_stack)
         return stack
 
@@ -100,7 +101,7 @@ class Stack(
             owner_id
         )
         if not db_stack:
-            return db_stack
+            return None
         stack = cls._from_db_object(context, cls(context), db_stack)
         return stack
 
@@ -108,7 +109,7 @@ class Stack(
     def get_by_name(cls, context, stack_name):
         db_stack = db_api.stack_get_by_name(context, stack_name)
         if not db_stack:
-            return db_stack
+            return None
         stack = cls._from_db_object(context, cls(context), db_stack)
         return stack
 
@@ -144,20 +145,33 @@ class Stack(
 
     @classmethod
     def create(cls, context, values):
-        return db_api.stack_create(context, values)
+        return cls._from_db_object(context, cls(context),
+                                   db_api.stack_create(context, values))
 
     @classmethod
     def update_by_id(cls, context, stack_id, values):
+        """Update and return (boolean) if it was updated.
+
+        Note: the underlying stack_update filters by current_traversal
+        and stack_id.
+        """
         return db_api.stack_update(context, stack_id, values)
 
     @classmethod
     def delete(cls, context, stack_id):
-        return db_api.stack_delete(context, stack_id)
+        db_api.stack_delete(context, stack_id)
 
     def update_and_save(self, values):
-        db_stack = self.__class__.update_by_id(self._context, self.id, values)
-        self.refresh()
-        return db_stack
+        has_updated = self.__class__.update_by_id(self._context,
+                                                  self.id, values)
+        if not has_updated:
+            raise exception.NotFound(_('Attempt to update a stack with id: '
+                                       '%(id)s %(traversal) %(msg)s') % {
+                                           'id': self.id,
+                                           'traversal': self.current_traversal,
+                                           'msg': 'that does not exist'})
+
+        return self.refresh()
 
     def __eq__(self, another):
         self.refresh()  # to make test object comparison work well
