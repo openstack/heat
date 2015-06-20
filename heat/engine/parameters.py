@@ -80,6 +80,9 @@ class Schema(constr.Schema):
                     raise exception.InvalidSchemaError(
                         message=_('Default must be a comma-delimited list '
                                   'string: %s') % err)
+            elif self.type == self.LIST and isinstance(self.default, list):
+                default_value = [encodeutils.safe_encode(six.text_type(x))
+                                 for x in self.default]
             try:
                 self.validate_constraints(default_value, context,
                                           [constr.CustomConstraint])
@@ -353,7 +356,8 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
     def parse(self, value):
         # only parse when value is not already a list
         if isinstance(value, list):
-            return value
+            return [encodeutils.safe_encode(six.text_type(x))
+                    for x in value]
         try:
             if value is not None:
                 if value == '':
