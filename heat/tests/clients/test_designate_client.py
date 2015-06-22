@@ -154,3 +154,52 @@ class DesignateClientPluginDomainTest(common.HeatTestCase):
         self._client.domains.get.assert_called_once_with(
             self.sample_name)
         self._client.domains.list.assert_called_once_with()
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    @mock.patch('designateclient.v1.domains.Domain')
+    def test_domain_create(self, mock_domain, client_designate):
+        self._client.domains.create.return_value = None
+        client_designate.return_value = self._client
+
+        domain = dict(
+            name='test-domain.com',
+            description='updated description',
+            ttl=4200,
+            email='xyz@test-domain.com'
+        )
+
+        mock_sample_domain = mock.Mock()
+        mock_domain.return_value = mock_sample_domain
+
+        self.client_plugin.domain_create(**domain)
+
+        # Make sure domain entity is created with right arguments
+        mock_domain.assert_called_once_with(**domain)
+        self._client.domains.create.assert_called_once_with(
+            mock_sample_domain)
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    def test_domain_update(self, client_designate):
+        self._client.domains.update.return_value = None
+        mock_domain = self._get_mock_domain()
+        self._client.domains.get.return_value = mock_domain
+
+        client_designate.return_value = self._client
+
+        domain = dict(
+            id='sample-id',
+            description='updated description',
+            ttl=4200,
+            email='xyz@test-domain.com'
+        )
+
+        self.client_plugin.domain_update(**domain)
+
+        self._client.domains.get.assert_called_once_with(
+            mock_domain.id)
+
+        for key in domain.keys():
+            setattr(mock_domain, key, domain[key])
+
+        self._client.domains.update.assert_called_once_with(
+            mock_domain)

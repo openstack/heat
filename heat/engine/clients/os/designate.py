@@ -13,6 +13,7 @@
 
 from designateclient import exceptions
 from designateclient import v1 as client
+from designateclient.v1 import domains
 
 from heat.common import exception as heat_exception
 from heat.engine.clients import client_plugin
@@ -50,6 +51,18 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
 
         raise heat_exception.EntityNotFound(entity='Designate Domain',
                                             name=domain_id_or_name)
+
+    def domain_create(self, **kwargs):
+        domain = domains.Domain(**kwargs)
+        return self.client().domains.create(domain)
+
+    def domain_update(self, **kwargs):
+        # Designate mandates to pass the Domain object with updated properties
+        domain = self.client().domains.get(kwargs['id'])
+        for key in kwargs.keys():
+            setattr(domain, key, kwargs[key])
+
+        return self.client().domains.update(domain)
 
 
 class DesignateDomainConstraint(constraints.BaseCustomConstraint):
