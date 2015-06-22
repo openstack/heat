@@ -944,6 +944,7 @@ class Stack(collections.Mapping):
         self.t = template
         previous_traversal = self.current_traversal
         self.current_traversal = uuidutils.generate_uuid()
+        self.updated_time = datetime.datetime.utcnow()
         self.store()
 
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
@@ -968,9 +969,7 @@ class Stack(collections.Mapping):
                               self.id)
         # create sync_point entry for stack
         sync_point.create(
-            self.context, self.id, self.current_traversal,
-            False if self.action in (self.DELETE, self.SUSPEND) else True,
-            self.id)
+            self.context, self.id, self.current_traversal, True, self.id)
 
         # Store list of edges
         self.current_deps = {
@@ -980,13 +979,11 @@ class Stack(collections.Mapping):
 
         for rsrc_id, is_update in self.convergence_dependencies.leaves():
             LOG.info(_LI("Triggering resource %(rsrc_id)s "
-                         "for update=%(is_update)s"),
+                         "for %(is_update)s update"),
                      {'rsrc_id': rsrc_id, 'is_update': is_update})
             self.worker_client.check_resource(self.context, rsrc_id,
                                               self.current_traversal,
                                               {}, is_update)
-
-        self.temp_update_requires(self.convergence_dependencies)
 
     def _update_or_store_resources(self):
         try:
@@ -1058,31 +1055,6 @@ class Stack(collections.Mapping):
                 if (rsrc.id, True) in dep:
                     dep += (rsrc_id, False), (rsrc_id, True)
         return dep
-
-    def temp_update_requires(self, conv_deps):
-        '''updates requires column of resources'''
-        # This functions should be removed once the dependent patches
-        # are implemented.
-        if self.action in (self.CREATE, self.UPDATE):
-            requires = dict()
-            for rsrc_id, is_update in conv_deps:
-                reqs = conv_deps.requires((rsrc_id, is_update))
-                requires[rsrc_id] = list({id for id, is_update in reqs})
-
-            try:
-                rsrcs_db = resource_objects.Resource.get_all_by_stack(
-                    self.context, self.id)
-            except exception.NotFound:
-                rsrcs_db = None
-            else:
-                rsrcs_db = {res.id: res for res_name, res in rsrcs_db.items()}
-
-            if rsrcs_db:
-                for id, db_rsrc in rsrcs_db.items():
-                    if id in requires:
-                        resource.Resource.set_requires(
-                            db_rsrc, requires[id]
-                        )
 
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE, event=None):
@@ -1592,7 +1564,8 @@ class Stack(collections.Mapping):
         return False
 
     def cache_data_resource_id(self, resource_name):
-        return self.cache_data.get(resource_name, {}).get('id')
+        return self.cache_data.get(
+            resource_name, {}).get('physical_resource_id')
 
     def cache_data_resource_attribute(self, resource_name, attribute_key):
         return self.cache_data.get(

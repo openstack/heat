@@ -255,17 +255,17 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_check_stack_complete_root(self, mock_sync):
         worker.check_stack_complete(
             self.ctx, self.stack, self.stack.current_traversal,
-            self.stack['E'].id, self.stack.convergence_dependencies.graph(),
+            self.stack['E'].id, self.stack.convergence_dependencies,
             True)
         mock_sync.assert_called_once_with(
             self.ctx, self.stack.id, self.stack.current_traversal, True,
-            mock.ANY, mock.ANY, {self.stack['E'].id: None})
+            mock.ANY, mock.ANY, {(self.stack['E'].id, True): None})
 
     @mock.patch.object(sync_point, 'sync')
     def test_check_stack_complete_child(self, mock_sync):
         worker.check_stack_complete(
             self.ctx, self.stack, self.stack.current_traversal,
-            self.resource.id, self.stack.convergence_dependencies.graph(),
+            self.resource.id, self.stack.convergence_dependencies,
             True)
         self.assertFalse(mock_sync.called)
 
