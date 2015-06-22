@@ -134,7 +134,7 @@ class CinderVolume(vb.BaseVolume):
         READ_ONLY: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Enables or disables read-only access mode of volume.'),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
             update_allowed=True,
         ),
     }

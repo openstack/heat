@@ -247,7 +247,7 @@ class DockerContainer(resource.Resource):
               'processing power(only supported for API version >= %s).') %
             MIN_API_VERSION_MAP['cpu_shares'],
             default=0,
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         DEVICES: properties.Schema(
             properties.Schema.LIST,
@@ -288,14 +288,14 @@ class DockerContainer(resource.Resource):
                 }
             ),
             default=[],
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         CPU_SET: properties.Schema(
             properties.Schema.STRING,
             _('The CPUs in which to allow execution '
               '(only supported for API version >= %s).') %
             MIN_API_VERSION_MAP['cpu_set'],
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
         )
     }
 

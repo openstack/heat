@@ -583,7 +583,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
 class SoftwareDeploymentGroup(resource_group.ResourceGroup):
 
-    support_status = support.SupportStatus(version='2015.2')
+    support_status = support.SupportStatus(version='5.0.0')
 
     PROPERTIES = (
         SERVERS,

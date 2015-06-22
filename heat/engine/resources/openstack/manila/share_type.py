@@ -31,7 +31,7 @@ class ManilaShareType(resource.Resource):
     without administration grants.
     """
 
-    support_status = support.SupportStatus(version='2015.2')
+    support_status = support.SupportStatus(version='5.0.0')
 
     PROPERTIES = (
         NAME, IS_PUBLIC, DRIVER_HANDLES_SHARE_SERVERS, EXTRA_SPECS

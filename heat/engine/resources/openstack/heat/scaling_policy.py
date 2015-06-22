@@ -105,7 +105,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         ),
         SIGNAL_URL: attributes.Schema(
             _("A url to handle the alarm using native API."),
-            support_status=support.SupportStatus(version='2015.2'),
+            support_status=support.SupportStatus(version='5.0.0'),
             type=attributes.Schema.STRING
         ),
     }
