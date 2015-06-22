@@ -99,8 +99,7 @@ class Resource(
     @classmethod
     def get_obj(cls, context, resource_id):
         resource_db = db_api.resource_get(context, resource_id)
-        resource = cls._from_db_object(cls(context), context, resource_db)
-        return resource
+        return cls._from_db_object(cls(context), context, resource_db)
 
     @classmethod
     def get_all(cls, context):
@@ -116,7 +115,8 @@ class Resource(
 
     @classmethod
     def create(cls, context, values):
-        return db_api.resource_create(context, values)
+        return cls._from_db_object(cls(context), context,
+                                   db_api.resource_create(context, values))
 
     @classmethod
     def delete(cls, context, resource_id):
@@ -148,22 +148,19 @@ class Resource(
             context,
             resource_name,
             stack_id)
-        resource = cls._from_db_object(cls(context), context, resource_db)
-        return resource
+        return cls._from_db_object(cls(context), context, resource_db)
 
     @classmethod
     def get_by_physical_resource_id(cls, context, physical_resource_id):
         resource_db = db_api.resource_get_by_physical_resource_id(
             context,
             physical_resource_id)
-        resource = cls._from_db_object(cls(context), context, resource_db)
-        return resource
+        return cls._from_db_object(cls(context), context, resource_db)
 
     def update_and_save(self, values):
         resource_db = db_api.resource_get(self._context, self.id)
         resource_db.update_and_save(values)
-        self._refresh()
-        return resource_db
+        return self._refresh()
 
     def _refresh(self):
         return self.__class__._from_db_object(

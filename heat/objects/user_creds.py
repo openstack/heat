@@ -64,7 +64,7 @@ class UserCreds(base.VersionedObject,
 
     @classmethod
     def delete(cls, context, user_creds_id):
-        return db_api.user_creds_delete(context, user_creds_id)
+        db_api.user_creds_delete(context, user_creds_id)
 
     @classmethod
     def get_by_id(cls, context_id):

@@ -75,7 +75,7 @@ class Service(base.VersionedObject,
 
     @classmethod
     def delete(cls, context, service_id, soft_delete=True):
-        return db_api.service_delete(context, service_id, soft_delete)
+        db_api.service_delete(context, service_id, soft_delete)
 
     @classmethod
     def get_all(cls, context):
