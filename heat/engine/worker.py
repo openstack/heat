@@ -119,9 +119,11 @@ class WorkerService(service.Service):
             try:
                 check_resource_update(rsrc, tmpl.id, data)
             except resource.UpdateReplace:
-                # NOTE(sirushtim): Implemented by spec
-                # convergence-resource-replacement.
-                rsrc.make_replacement()
+                new_res_id = rsrc.make_replacement()
+                self._rpc_client.check_resource(cnxt,
+                                                new_res_id,
+                                                current_traversal,
+                                                data, is_update)
                 return
             except resource.UpdateInProgress:
                 return

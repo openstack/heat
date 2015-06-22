@@ -377,6 +377,18 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res.COMPLETE, db_res.status)
         self.assertEqual('test_update', db_res.status_reason)
 
+    def test_make_replacement(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
+        res._store()
+        self.assertIsNotNone(res.id)
+        new_id = res.make_replacement()
+        new_res = resource_objects.Resource.get_obj(res.context, new_id)
+
+        self.assertEqual(new_id, res.replaced_by)
+        self.assertEqual(res.id, new_res.replaces)
+        self.assertIsNone(new_res.nova_instance)
+
     def test_parsed_template(self):
         join_func = cfn_funcs.Join(None,
                                    'Fn::Join', [' ', ['bar', 'baz', 'quux']])
