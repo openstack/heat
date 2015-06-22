@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.2.0.dev518\n"
+"Project-Id-Version: heat 2015.2.0.dev7\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-17 06:05+0000\n"
+"POT-Creation-Date: 2015-06-22 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1193,7 +1193,7 @@ msgstr ""
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:1112
+#: heat/db/sqlalchemy/api.py:1115
 msgid "Cannot migrate to lower schema version."
 msgstr ""
 
@@ -1551,9 +1551,9 @@ msgid "Went to status %(resource_status)s due to \"%(status_reason)s\""
 msgstr ""
 
 #: heat/engine/resource.py:75 heat/engine/resource.py:85
-#: heat/engine/clients/os/nova.py:222 heat/engine/clients/os/nova.py:223
-#: heat/engine/resources/openstack/trove/os_database.py:390
-#: heat/engine/resources/openstack/trove/trove_cluster.py:185
+#: heat/engine/clients/os/nova.py:223 heat/engine/clients/os/nova.py:224
+#: heat/engine/resources/openstack/trove/os_database.py:392
+#: heat/engine/resources/openstack/trove/trove_cluster.py:187
 msgid "Unknown"
 msgstr ""
 
@@ -1573,69 +1573,69 @@ msgstr ""
 msgid "The resource %s is already being updated."
 msgstr ""
 
-#: heat/engine/resource.py:318
+#: heat/engine/resource.py:333
 #, python-format
 msgid "%(a)s paused until Hook %(h)s is cleared"
 msgstr ""
 
-#: heat/engine/resource.py:432
+#: heat/engine/resource.py:447
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr ""
 
-#: heat/engine/resource.py:645
+#: heat/engine/resource.py:660
 #, python-format
 msgid "State %s invalid for create"
 msgstr ""
 
-#: heat/engine/resource.py:732
+#: heat/engine/resource.py:747
 msgid "Resource ID was not provided."
 msgstr ""
 
-#: heat/engine/resource.py:833
+#: heat/engine/resource.py:849
 msgid "Resource update already requested"
 msgstr ""
 
-#: heat/engine/resource.py:876
+#: heat/engine/resource.py:892
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
 msgstr ""
 
-#: heat/engine/resource.py:894
+#: heat/engine/resource.py:910
 #, python-format
 msgid "State %s invalid for suspend"
 msgstr ""
 
-#: heat/engine/resource.py:910
+#: heat/engine/resource.py:926
 #, python-format
 msgid "State %s invalid for resume"
 msgstr ""
 
-#: heat/engine/resource.py:959
+#: heat/engine/resource.py:975
 msgid "limit cannot be less than 4"
 msgstr ""
 
-#: heat/engine/resource.py:985
+#: heat/engine/resource.py:1001
 #, python-format
 msgid "Invalid deletion policy \"%s\""
 msgstr ""
 
-#: heat/engine/resource.py:990
+#: heat/engine/resource.py:1006
 #, python-format
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:1189 heat/engine/stack.py:697
+#: heat/engine/resource.py:1205 heat/engine/stack.py:697
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:1192 heat/engine/stack.py:700
+#: heat/engine/resource.py:1208 heat/engine/stack.py:700
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
 
-#: heat/engine/resource.py:1268
+#: heat/engine/resource.py:1284
 #, python-format
 msgid "Cannot signal resource during %s"
 msgstr ""
@@ -1645,35 +1645,35 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/service.py:573
+#: heat/engine/service.py:572
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:642 heat/engine/service.py:717
+#: heat/engine/service.py:641 heat/engine/service.py:716
 msgid "Convergence engine"
 msgstr ""
 
-#: heat/engine/service.py:748
+#: heat/engine/service.py:747
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:752
+#: heat/engine/service.py:751
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:813
+#: heat/engine/service.py:812
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:852
+#: heat/engine/service.py:851
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1346
+#: heat/engine/service.py:1340
 msgid "Deleting in-progress snapshot"
 msgstr ""
 
@@ -1782,7 +1782,7 @@ msgstr ""
 msgid "Resources must contain Resource. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/volume_tasks.py:77 heat/engine/clients/os/cinder.py:171
+#: heat/engine/volume_tasks.py:77 heat/engine/clients/os/cinder.py:173
 msgid "Volume attachment failed"
 msgstr ""
 
@@ -1932,75 +1932,75 @@ msgstr ""
 msgid "Resource %(name)s is missing \"%(type_key)s\""
 msgstr ""
 
-#: heat/engine/clients/client_plugin.py:111
+#: heat/engine/clients/client_plugin.py:115
 msgid "Unknown Keystone version"
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:62
+#: heat/engine/clients/os/cinder.py:64
 msgid "No volume service available."
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:153
+#: heat/engine/clients/os/cinder.py:155
 msgid "Volume detachment failed"
 msgstr ""
 
-#: heat/engine/clients/os/glance.py:93
+#: heat/engine/clients/os/glance.py:94
 #, python-format
 msgid "Error retrieving image list from glance: %s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:221
+#: heat/engine/clients/os/nova.py:222
 #, python-format
 msgid "Message: %(message)s, Code: %(code)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:228
+#: heat/engine/clients/os/nova.py:229
 #, python-format
 msgid "%s is not active"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:398
+#: heat/engine/clients/os/nova.py:404
 #, python-format
 msgid "Server %(name)s delete failed: (%(code)s) %(message)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:429
+#: heat/engine/clients/os/nova.py:435
 #, python-format
 msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:451
+#: heat/engine/clients/os/nova.py:457
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:459
+#: heat/engine/clients/os/nova.py:465
 msgid "nova server metadata needs to be a Map."
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:567
+#: heat/engine/clients/os/nova.py:573
 #, python-format
 msgid "Failed to attach volume %(vol)s to server %(srv)s - %(err)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:584
+#: heat/engine/clients/os/nova.py:590
 #, python-format
 msgid "Could not detach attachment %(att)s from server %(srv)s."
 msgstr ""
 
-#: heat/engine/clients/os/sahara.py:103
+#: heat/engine/clients/os/sahara.py:104
 #, python-format
 msgid "Error retrieving image list from sahara: %s"
 msgstr ""
 
-#: heat/engine/clients/os/trove.py:59
+#: heat/engine/clients/os/trove.py:60
 #, python-format
 msgid ""
 "Datastore version %(dsversion)s for datastore type %(dstype)s is not "
 "valid. Allowed versions are %(allowed)s."
 msgstr ""
 
-#: heat/engine/clients/os/trove.py:68
+#: heat/engine/clients/os/trove.py:69
 #, python-format
 msgid ""
 "Multiple active datastore versions exist for datastore type %(dstype)s. "
@@ -2008,7 +2008,7 @@ msgid ""
 "%(allowed)s."
 msgstr ""
 
-#: heat/engine/clients/os/trove.py:77
+#: heat/engine/clients/os/trove.py:78
 #, python-format
 msgid "Not allowed - %(dsver)s without %(dstype)s."
 msgstr ""
@@ -2141,30 +2141,30 @@ msgstr ""
 msgid "Failed to validate"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:123
+#: heat/engine/resources/stack_resource.py:132
 msgid "Nested stack not found in DB"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:210
+#: heat/engine/resources/stack_resource.py:219
 #, python-format
 msgid "Recursion depth exceeds %d."
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:367
+#: heat/engine/resources/stack_resource.py:379
 msgid "Stack unknown status"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:455
+#: heat/engine/resources/stack_resource.py:467
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:469
+#: heat/engine/resources/stack_resource.py:481
 #, python-format
 msgid "Cannot resume %s, stack not created"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:483
+#: heat/engine/resources/stack_resource.py:495
 #, python-format
 msgid "Cannot check %s, stack not created"
 msgstr ""
@@ -2191,34 +2191,34 @@ msgstr ""
 msgid "Could not fetch remote template \"%(name)s\": %(exc)s"
 msgstr ""
 
-#: heat/engine/resources/template_resource.py:196
+#: heat/engine/resources/template_resource.py:198
 #, python-format
 msgid "Unknown error retrieving %s"
 msgstr ""
 
-#: heat/engine/resources/template_resource.py:205
+#: heat/engine/resources/template_resource.py:207
 #, python-format
 msgid "Required property %(n)s for facade %(type)s missing in provider"
 msgstr ""
 
-#: heat/engine/resources/template_resource.py:213
+#: heat/engine/resources/template_resource.py:215
 #, python-format
 msgid ""
 "Property %(n)s type mismatch between facade %(type)s (%(fs_type)s) and "
 "provider (%(ps_type)s)"
 msgstr ""
 
-#: heat/engine/resources/template_resource.py:222
+#: heat/engine/resources/template_resource.py:224
 #, python-format
 msgid "Provider requires property %(n)s unknown in facade %(type)s"
 msgstr ""
 
-#: heat/engine/resources/template_resource.py:229
+#: heat/engine/resources/template_resource.py:231
 #, python-format
 msgid "Attribute %(attr)s for facade %(type)s missing in provider"
 msgstr ""
 
-#: heat/engine/resources/template_resource.py:242
+#: heat/engine/resources/template_resource.py:244
 #, python-format
 msgid "Failed to retrieve template data: %s"
 msgstr ""
@@ -2644,7 +2644,7 @@ msgstr ""
 
 #: heat/engine/resources/aws/ec2/instance.py:243
 #: heat/engine/resources/aws/ec2/volume.py:111
-#: heat/engine/resources/openstack/cinder/volume.py:512
+#: heat/engine/resources/openstack/cinder/volume.py:526
 msgid "The ID of the volume to be attached."
 msgstr ""
 
@@ -2803,7 +2803,7 @@ msgid "The availability zone in which the volume will be created."
 msgstr ""
 
 #: heat/engine/resources/aws/ec2/volume.py:43
-#: heat/engine/resources/openstack/cinder/volume.py:147
+#: heat/engine/resources/openstack/cinder/volume.py:148
 msgid "The size of the volume in GB."
 msgstr ""
 
@@ -2944,7 +2944,7 @@ msgstr ""
 msgid "Owner of the source security group."
 msgstr ""
 
-#: heat/engine/resources/aws/lb/loadbalancer.py:616
+#: heat/engine/resources/aws/lb/loadbalancer.py:617
 msgid "Custom LoadBalancer template can not be found"
 msgstr ""
 
@@ -2991,118 +2991,118 @@ msgstr ""
 msgid "The bucket you tried to delete is not empty (%s)."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:53
-#: heat/engine/resources/openstack/barbican/secret.py:46
+#: heat/engine/resources/openstack/barbican/order.py:54
+#: heat/engine/resources/openstack/barbican/secret.py:47
 msgid "Human readable name for the secret."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:57
-#: heat/engine/resources/openstack/barbican/secret.py:54
+#: heat/engine/resources/openstack/barbican/order.py:58
+#: heat/engine/resources/openstack/barbican/secret.py:55
 msgid "The type/format the secret data is provided in."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:61
-#: heat/engine/resources/openstack/barbican/secret.py:73
+#: heat/engine/resources/openstack/barbican/order.py:62
+#: heat/engine/resources/openstack/barbican/secret.py:74
 msgid "The expiration date for the secret in ISO-8601 format."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:68
-#: heat/engine/resources/openstack/barbican/secret.py:80
+#: heat/engine/resources/openstack/barbican/order.py:69
+#: heat/engine/resources/openstack/barbican/secret.py:81
 msgid "The algorithm type used to generate the secret."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:72
-#: heat/engine/resources/openstack/barbican/secret.py:84
+#: heat/engine/resources/openstack/barbican/order.py:73
+#: heat/engine/resources/openstack/barbican/secret.py:85
 msgid "The bit-length of the secret."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:76
-#: heat/engine/resources/openstack/barbican/secret.py:93
+#: heat/engine/resources/openstack/barbican/order.py:77
+#: heat/engine/resources/openstack/barbican/secret.py:94
 msgid "The type/mode of the algorithm associated with the secret information."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:81
+#: heat/engine/resources/openstack/barbican/order.py:82
 msgid "The type of the order."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:91
+#: heat/engine/resources/openstack/barbican/order.py:92
 msgid "The type of the certificate request."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:96
+#: heat/engine/resources/openstack/barbican/order.py:97
 msgid "The subject of the certificate request."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:101
+#: heat/engine/resources/openstack/barbican/order.py:102
 msgid "The source of certificate request."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:106
+#: heat/engine/resources/openstack/barbican/order.py:107
 msgid "The identifier of the CA to use."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:111
+#: heat/engine/resources/openstack/barbican/order.py:112
 msgid "The profile of certificate to use."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:116
+#: heat/engine/resources/openstack/barbican/order.py:117
 msgid "The content of the CSR."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:121
+#: heat/engine/resources/openstack/barbican/order.py:122
 msgid "The passphrase the created key."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:127
+#: heat/engine/resources/openstack/barbican/order.py:128
 msgid "The status of the order."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:128
+#: heat/engine/resources/openstack/barbican/order.py:129
 msgid "The URI to the order."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:129
+#: heat/engine/resources/openstack/barbican/order.py:130
 msgid "The URI to the created secret."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:131
+#: heat/engine/resources/openstack/barbican/order.py:132
 msgid "The URI to the created container."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:134
+#: heat/engine/resources/openstack/barbican/order.py:135
 msgid "The payload of the created public key, if available."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:137
+#: heat/engine/resources/openstack/barbican/order.py:138
 msgid "The payload of the created private key, if available."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:140
+#: heat/engine/resources/openstack/barbican/order.py:141
 msgid "The payload of the created certificate, if available."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:143
+#: heat/engine/resources/openstack/barbican/order.py:144
 msgid "The payload of the created intermediates, if available."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/order.py:166
+#: heat/engine/resources/openstack/barbican/order.py:167
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/secret.py:50
+#: heat/engine/resources/openstack/barbican/secret.py:51
 msgid "The unencrypted plain text of the secret."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/secret.py:64
+#: heat/engine/resources/openstack/barbican/secret.py:65
 msgid "The encoding format used to provide the payload data."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/secret.py:100
+#: heat/engine/resources/openstack/barbican/secret.py:101
 msgid "The status of the secret."
 msgstr ""
 
-#: heat/engine/resources/openstack/barbican/secret.py:103
+#: heat/engine/resources/openstack/barbican/secret.py:104
 msgid "The decrypted secret payload."
 msgstr ""
 
@@ -3137,10 +3137,12 @@ msgid ""
 msgstr ""
 
 #: heat/engine/resources/openstack/ceilometer/alarm.py:137
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:34
 msgid "Operator used to compare specified statistic with threshold."
 msgstr ""
 
 #: heat/engine/resources/openstack/ceilometer/alarm.py:146
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:43
 #: heat/engine/resources/openstack/heat/cloud_watch.py:59
 msgid "Number of periods to evaluate over."
 msgstr ""
@@ -3159,6 +3161,7 @@ msgid "Meter statistic to evaluate."
 msgstr ""
 
 #: heat/engine/resources/openstack/ceilometer/alarm.py:170
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:62
 #: heat/engine/resources/openstack/heat/cloud_watch.py:112
 msgid "Threshold to evaluate against."
 msgstr ""
@@ -3200,19 +3203,50 @@ msgstr ""
 msgid "Operator used to combine the alarms."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:55
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:48
+msgid "The aggregation method to compare to the threshold"
+msgstr ""
+
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:57
+msgid "The time range in seconds."
+msgstr ""
+
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:83
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:143
+#: heat/engine/resources/openstack/heat/cloud_watch.py:65
+msgid "Metric name watched by the alarm."
+msgstr ""
+
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:89
+msgid "Id of a resource"
+msgstr ""
+
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:95
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:155
+msgid "Resource type"
+msgstr ""
+
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:117
+msgid "A list of metric ids."
+msgstr ""
+
+#: heat/engine/resources/openstack/ceilometer/gnocchi_alarm.py:149
+msgid "The query to filter the metrics"
+msgstr ""
+
+#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:57
 msgid "Name of the volume type."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:61
+#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:63
 msgid "The extra specs key and value pairs of the volume type."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:66
+#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:68
 msgid "Whether the volume type is accessible to the public."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:72
+#: heat/engine/resources/openstack/cinder/cinder_volume_type.py:74
 msgid "Description of the volume type."
 msgstr ""
 
@@ -3292,72 +3326,72 @@ msgstr ""
 msgid "The availability zone in which the volume is located."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:150
+#: heat/engine/resources/openstack/cinder/volume.py:152
 msgid "The snapshot the volume was created from, if any."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:153
+#: heat/engine/resources/openstack/cinder/volume.py:156
 msgid "Name of the volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:156
+#: heat/engine/resources/openstack/cinder/volume.py:160
 msgid "Description of the volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:159
+#: heat/engine/resources/openstack/cinder/volume.py:164
 msgid "The type of the volume mapping to a backend, if any."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:162
+#: heat/engine/resources/openstack/cinder/volume.py:168
 msgid "Key/value pairs associated with the volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:165
+#: heat/engine/resources/openstack/cinder/volume.py:172
 msgid "The volume used as source, if any."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:168
+#: heat/engine/resources/openstack/cinder/volume.py:176
 msgid "The current status of the volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:171
+#: heat/engine/resources/openstack/cinder/volume.py:180
 msgid "The timestamp indicating volume creation."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:174
+#: heat/engine/resources/openstack/cinder/volume.py:184
 msgid "Boolean indicating if the volume can be booted or not."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:177
+#: heat/engine/resources/openstack/cinder/volume.py:188
 msgid "Key/value pairs associated with the volume in raw dict form."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:180
+#: heat/engine/resources/openstack/cinder/volume.py:192
 msgid "Boolean indicating if the volume is encrypted or not."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:183
+#: heat/engine/resources/openstack/cinder/volume.py:196
 msgid "The list of attachments of the volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:244
+#: heat/engine/resources/openstack/cinder/volume.py:258
 #, python-format
 msgid "Failed to extend volume %(vol)s - %(err)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:263
+#: heat/engine/resources/openstack/cinder/volume.py:277
 msgid "Volume resize failed"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:296
+#: heat/engine/resources/openstack/cinder/volume.py:310
 msgid "Using Cinder API V1, volume_type update"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:313
+#: heat/engine/resources/openstack/cinder/volume.py:327
 msgid "Shrinking volume"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:435
+#: heat/engine/resources/openstack/cinder/volume.py:449
 #, python-format
 msgid ""
 "If neither \"%(backup_id)s\" nor \"%(size)s\" is provided, one and only "
@@ -3366,7 +3400,7 @@ msgid ""
 "%(exclusive_options)s."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:449
+#: heat/engine/resources/openstack/cinder/volume.py:463
 #, python-format
 msgid ""
 "If \"%(size)s\" is provided, only one of \"%(image)s\", "
@@ -3374,15 +3408,15 @@ msgid ""
 "specified, but currently specified options: %(exclusive_options)s."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:471
+#: heat/engine/resources/openstack/cinder/volume.py:485
 msgid "Scheduler hints are not supported by the current volume API."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:506
+#: heat/engine/resources/openstack/cinder/volume.py:520
 msgid "The ID of the server to which the volume attaches."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:521
+#: heat/engine/resources/openstack/cinder/volume.py:535
 msgid ""
 "The location where the volume is exposed on the instance. This assignment"
 " may not be honored and it is advised that the path /dev/disk/by-"
@@ -3510,10 +3544,6 @@ msgstr ""
 
 #: heat/engine/resources/openstack/heat/cloud_watch.py:41
 msgid "Operator used to compare the specified Statistic with Threshold."
-msgstr ""
-
-#: heat/engine/resources/openstack/heat/cloud_watch.py:65
-msgid "Metric name watched by the alarm."
 msgstr ""
 
 #: heat/engine/resources/openstack/heat/cloud_watch.py:70
@@ -3688,60 +3718,60 @@ msgid ""
 "character sequence minimums"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:60
+#: heat/engine/resources/openstack/heat/remote_stack.py:61
 msgid "Context for this stack."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:64
+#: heat/engine/resources/openstack/heat/remote_stack.py:65
 msgid "Region name in which this stack will be created."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:71
+#: heat/engine/resources/openstack/heat/remote_stack.py:72
 msgid "Template that specifies the stack to be created as a resource."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:78
+#: heat/engine/resources/openstack/heat/remote_stack.py:79
 msgid "Number of minutes to wait for this stack creation."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:83
+#: heat/engine/resources/openstack/heat/remote_stack.py:84
 msgid "Set of parameters passed to this stack."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:91
+#: heat/engine/resources/openstack/heat/remote_stack.py:92
 msgid "Name of the stack."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:95
+#: heat/engine/resources/openstack/heat/remote_stack.py:96
 msgid "A dict of key-value pairs output from the stack."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:136
+#: heat/engine/resources/openstack/heat/remote_stack.py:137
 #, python-format
 msgid ""
 "Cannot establish connection to Heat endpoint at region \"%(region)s\" due"
 " to \"%(exc)s\""
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:153
+#: heat/engine/resources/openstack/heat/remote_stack.py:154
 #, python-format
 msgid ""
 "Failed validating stack template using Heat endpoint at region "
 "\"%(region)s\" due to \"%(exc)s\""
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:182
+#: heat/engine/resources/openstack/heat/remote_stack.py:183
 #, python-format
 msgid "Cannot resume %s, resource not found"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:188
+#: heat/engine/resources/openstack/heat/remote_stack.py:189
 #, python-format
 msgid "Cannot suspend %s, resource not found"
 msgstr ""
 
 #: heat/engine/resources/openstack/heat/resource_group.py:101
-msgid "The number of instances to create."
+msgid "The number of resources to create."
 msgstr ""
 
 #: heat/engine/resources/openstack/heat/resource_group.py:110
@@ -4153,23 +4183,23 @@ msgstr ""
 msgid "Supported versions: keystone v3"
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/endpoint.py:37
+#: heat/engine/resources/openstack/keystone/endpoint.py:39
 msgid "Name of keystone endpoint."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/endpoint.py:42
+#: heat/engine/resources/openstack/keystone/endpoint.py:44
 msgid "Name or Id of keystone region."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/endpoint.py:47
+#: heat/engine/resources/openstack/keystone/endpoint.py:49
 msgid "Name or Id of keystone service."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/endpoint.py:54
+#: heat/engine/resources/openstack/keystone/endpoint.py:56
 msgid "Interface type of keystone service endpoint."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/endpoint.py:63
+#: heat/engine/resources/openstack/keystone/endpoint.py:65
 msgid "URL of keystone service endpoint."
 msgstr ""
 
@@ -4178,7 +4208,7 @@ msgid "Name of keystone group."
 msgstr ""
 
 #: heat/engine/resources/openstack/keystone/group.py:43
-#: heat/engine/resources/openstack/keystone/project.py:42
+#: heat/engine/resources/openstack/keystone/project.py:44
 msgid "Name or id of keystone domain."
 msgstr ""
 
@@ -4186,56 +4216,56 @@ msgstr ""
 msgid "Description of keystone group."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/project.py:37
+#: heat/engine/resources/openstack/keystone/project.py:39
 msgid "Name of keystone project."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/project.py:49
+#: heat/engine/resources/openstack/keystone/project.py:51
 msgid "Description of keystone project."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/project.py:55
+#: heat/engine/resources/openstack/keystone/project.py:57
 msgid "This project is enabled or disabled."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role.py:36
+#: heat/engine/resources/openstack/keystone/role.py:38
 msgid "Name of keystone role."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role_assignments.py:72
+#: heat/engine/resources/openstack/keystone/role_assignments.py:74
 msgid "List of role assignments."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role_assignments.py:75
+#: heat/engine/resources/openstack/keystone/role_assignments.py:77
 msgid "Map between role with either project or domain."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role_assignments.py:79
+#: heat/engine/resources/openstack/keystone/role_assignments.py:81
 msgid "Keystone role"
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role_assignments.py:86
+#: heat/engine/resources/openstack/keystone/role_assignments.py:88
 msgid "Keystone project"
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role_assignments.py:92
+#: heat/engine/resources/openstack/keystone/role_assignments.py:94
 msgid "Keystone domain"
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/role_assignments.py:316
+#: heat/engine/resources/openstack/keystone/role_assignments.py:317
 #, python-format
 msgid "Either project or domain must be specified for role %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/service.py:36
+#: heat/engine/resources/openstack/keystone/service.py:38
 msgid "Name of keystone service."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/service.py:41
+#: heat/engine/resources/openstack/keystone/service.py:43
 msgid "Description of keystone service."
 msgstr ""
 
-#: heat/engine/resources/openstack/keystone/service.py:46
+#: heat/engine/resources/openstack/keystone/service.py:48
 msgid "Type of keystone Service."
 msgstr ""
 
@@ -4275,53 +4305,53 @@ msgstr ""
 msgid "keystone user group."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:42
+#: heat/engine/resources/openstack/manila/security_service.py:41
 msgid "Security service name."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:47
+#: heat/engine/resources/openstack/manila/security_service.py:46
 msgid "Security service type."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:56
+#: heat/engine/resources/openstack/manila/security_service.py:55
 msgid "DNS IP address used inside tenant's network."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:61
+#: heat/engine/resources/openstack/manila/security_service.py:60
 msgid "Security service IP address or hostname."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:66
+#: heat/engine/resources/openstack/manila/security_service.py:65
 msgid "Security service domain."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:71
+#: heat/engine/resources/openstack/manila/security_service.py:70
 msgid "Security service user or group used by tenant."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:76
+#: heat/engine/resources/openstack/manila/security_service.py:75
 msgid "Password used by user."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/security_service.py:81
+#: heat/engine/resources/openstack/manila/security_service.py:80
 msgid "Security service description."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/share_type.py:46
+#: heat/engine/resources/openstack/manila/share_type.py:45
 msgid "Name of the share type."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/share_type.py:51
+#: heat/engine/resources/openstack/manila/share_type.py:50
 msgid "Defines if share type is accessible to the public."
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/share_type.py:56
+#: heat/engine/resources/openstack/manila/share_type.py:55
 msgid ""
 "Required extra specification. Defines if share drivers handles share "
 "servers. "
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/share_type.py:62
+#: heat/engine/resources/openstack/manila/share_type.py:61
 msgid "Extra specs key-value pairs defined for share type."
 msgstr ""
 
@@ -4361,57 +4391,57 @@ msgstr ""
 msgid "Number of remaining executions."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:62
+#: heat/engine/resources/openstack/mistral/workflow.py:65
 msgid "Workflow name."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:66
+#: heat/engine/resources/openstack/mistral/workflow.py:69
 msgid "Workflow type."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:75
+#: heat/engine/resources/openstack/mistral/workflow.py:78
 msgid "Workflow description."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:80
+#: heat/engine/resources/openstack/mistral/workflow.py:83
 msgid "Dictionary which contains input for workflow."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:85
+#: heat/engine/resources/openstack/mistral/workflow.py:88
 msgid ""
 "Any data structure arbitrarily containing YAQL expressions that defines "
 "workflow output. May be nested."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:92
+#: heat/engine/resources/openstack/mistral/workflow.py:95
 msgid ""
 "Workflow additional parameters. If Workflow is reverse typed, params "
 "requires 'task_name', which defines initial task."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:98
+#: heat/engine/resources/openstack/mistral/workflow.py:101
 msgid "Dictionary containing workflow tasks."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:104
+#: heat/engine/resources/openstack/mistral/workflow.py:107
 msgid "Task name."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:109
+#: heat/engine/resources/openstack/mistral/workflow.py:112
 msgid "Task description."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:113
+#: heat/engine/resources/openstack/mistral/workflow.py:116
 msgid "Actual input parameter values of the task."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:117
+#: heat/engine/resources/openstack/mistral/workflow.py:120
 msgid ""
 "Name of the action associated with the task. Either action or workflow "
 "may be defined in the task."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:123
+#: heat/engine/resources/openstack/mistral/workflow.py:126
 msgid ""
 "Name of the workflow associated with the task. Can be defined by "
 "intrinsic function get_resource or by name of the referenced workflow, "
@@ -4419,47 +4449,47 @@ msgid ""
 "Either action or workflow may be defined in the task."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:132
+#: heat/engine/resources/openstack/mistral/workflow.py:135
 msgid "Dictionary of variables to publish to the workflow context."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:137
+#: heat/engine/resources/openstack/mistral/workflow.py:140
 msgid "List of tasks which will run after the task has completed successfully."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:142
+#: heat/engine/resources/openstack/mistral/workflow.py:145
 msgid "List of tasks which will run after the task has completed with an error."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:147
+#: heat/engine/resources/openstack/mistral/workflow.py:150
 msgid ""
 "List of tasks which will run after the task has completed regardless of "
 "whether it is successful or not."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:153
+#: heat/engine/resources/openstack/mistral/workflow.py:156
 msgid ""
 "Dictionary-like section defining task policies that influence how Mistral"
 " Engine runs tasks. Must satisfy Mistral DSL v2."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:159
+#: heat/engine/resources/openstack/mistral/workflow.py:162
 msgid ""
 "List of tasks which should be executed before this task. Used only in "
 "reverse workflows."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:171
+#: heat/engine/resources/openstack/mistral/workflow.py:174
 msgid "A dictionary which contains name and input of the workflow."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:174
+#: heat/engine/resources/openstack/mistral/workflow.py:177
 msgid ""
 "A signed url to create executions for workflows specified in Workflow "
 "resource."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:178
+#: heat/engine/resources/openstack/mistral/workflow.py:181
 msgid ""
 "List of workflows' executions, each of them is a dictionary with "
 "information about execution. Each dictionary returns values for next "
@@ -4467,44 +4497,44 @@ msgid ""
 "execution state, input, output."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:197
+#: heat/engine/resources/openstack/mistral/workflow.py:200
 #, python-format
 msgid "Input in signal data must be a map, find a %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:200
-#: heat/engine/resources/openstack/mistral/workflow.py:207
-#: heat/engine/resources/openstack/mistral/workflow.py:213
+#: heat/engine/resources/openstack/mistral/workflow.py:203
+#: heat/engine/resources/openstack/mistral/workflow.py:210
+#: heat/engine/resources/openstack/mistral/workflow.py:216
 msgid "Signal data error"
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:205
+#: heat/engine/resources/openstack/mistral/workflow.py:208
 #, python-format
 msgid "Unknown input %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:210
+#: heat/engine/resources/openstack/mistral/workflow.py:213
 #, python-format
 msgid "Params must be a map, find a %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:222
-#: heat/engine/resources/openstack/mistral/workflow.py:249
+#: heat/engine/resources/openstack/mistral/workflow.py:225
+#: heat/engine/resources/openstack/mistral/workflow.py:252
 msgid "Mistral resource validation error"
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:228
+#: heat/engine/resources/openstack/mistral/workflow.py:231
 msgid "'task_name' is not assigned in 'params' in case of reverse type workflow."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:242
+#: heat/engine/resources/openstack/mistral/workflow.py:245
 #, python-format
 msgid ""
 "task %(task)s contains property 'requires' in case of direct workflow. "
 "Only reverse workflows can contain property 'requires'."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/workflow.py:271
+#: heat/engine/resources/openstack/mistral/workflow.py:274
 #, python-format
 msgid "No such workflow %s"
 msgstr ""
@@ -5956,33 +5986,33 @@ msgstr ""
 msgid "The transform protocol of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:61
+#: heat/engine/resources/openstack/nova/nova_flavor.py:63
 msgid "Memory in MB for the flavor."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:66
+#: heat/engine/resources/openstack/nova/nova_flavor.py:68
 msgid "Number of VCPUs for the flavor."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:71
+#: heat/engine/resources/openstack/nova/nova_flavor.py:73
 msgid ""
 "Size of local disk in GB. The \"0\" size is a special case that uses the "
 "native base image size as the size of the ephemeral root volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:78
+#: heat/engine/resources/openstack/nova/nova_flavor.py:80
 msgid "Swap space in MB."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:83
+#: heat/engine/resources/openstack/nova/nova_flavor.py:85
 msgid "Size of a secondary ephemeral data disk in GB."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:88
+#: heat/engine/resources/openstack/nova/nova_flavor.py:90
 msgid "RX/TX factor."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_flavor.py:93
+#: heat/engine/resources/openstack/nova/nova_flavor.py:95
 msgid "Key/Value pairs to extend the capabilities of the flavor."
 msgstr ""
 
@@ -5994,15 +6024,15 @@ msgstr ""
 msgid "Pool from which floating IP is allocated."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_floatingip.py:53
+#: heat/engine/resources/openstack/nova/nova_floatingip.py:54
 msgid "Allocated floating IP address."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_floatingip.py:112
+#: heat/engine/resources/openstack/nova/nova_floatingip.py:114
 msgid "Server to assign floating IP to."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_floatingip.py:121
+#: heat/engine/resources/openstack/nova/nova_floatingip.py:123
 msgid "ID of the floating IP to assign to the server."
 msgstr ""
 
@@ -6027,15 +6057,15 @@ msgstr ""
 msgid "The public key."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_keypair.py:79
+#: heat/engine/resources/openstack/nova/nova_keypair.py:80
 msgid "The private key if it has been saved."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_servergroup.py:36
+#: heat/engine/resources/openstack/nova/nova_servergroup.py:38
 msgid "Server Group name."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_servergroup.py:40
+#: heat/engine/resources/openstack/nova/nova_servergroup.py:42
 msgid "A list of string policies to apply. Defaults to anti-affinity."
 msgstr ""
 
@@ -6389,18 +6419,18 @@ msgstr ""
 msgid "Cluster status."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:112
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:113
 msgid "Cluster information."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:144
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:146
 #, python-format
 msgid ""
 "%(img)s must be provided: Referenced cluster template %(tmpl)s has no "
 "default_image_id defined."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:224
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:226
 #: heat/engine/resources/openstack/sahara/sahara_templates.py:406
 #, python-format
 msgid "%s must be provided"
@@ -6538,27 +6568,27 @@ msgstr ""
 msgid "The host from the container URL."
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:93
+#: heat/engine/resources/openstack/swift/swift.py:94
 msgid "The URL of the container."
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:96
+#: heat/engine/resources/openstack/swift/swift.py:98
 msgid "The parent URL of the container."
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:99
+#: heat/engine/resources/openstack/swift/swift.py:102
 msgid "The number of objects stored in the container."
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:102
+#: heat/engine/resources/openstack/swift/swift.py:106
 msgid "The number of bytes stored in the container."
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:105
+#: heat/engine/resources/openstack/swift/swift.py:110
 msgid "A map containing all headers for the container."
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:189
+#: heat/engine/resources/openstack/swift/swift.py:195
 #, python-format
 msgid "Deleting non-empty container (%(id)s) when %(prop)s is False"
 msgstr ""
@@ -6680,30 +6710,30 @@ msgstr ""
 msgid "Hostname of the instance."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:271
+#: heat/engine/resources/openstack/trove/os_database.py:272
 msgid "Api endpoint reference of the instance."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:464
+#: heat/engine/resources/openstack/trove/os_database.py:466
 #, python-format
 msgid ""
 "Databases property is required if users property is provided for resource"
 " %s."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:474
+#: heat/engine/resources/openstack/trove/os_database.py:476
 #, python-format
 msgid ""
 "Database %(dbs)s specified for user does not exist in databases for "
 "resource %(name)s."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:484
+#: heat/engine/resources/openstack/trove/os_database.py:486
 #, python-format
 msgid "Can not use %s property on Nova-network."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:488
+#: heat/engine/resources/openstack/trove/os_database.py:490
 #, python-format
 msgid "Either %(net)s or %(port)s must be provided."
 msgstr ""
@@ -6728,42 +6758,47 @@ msgstr ""
 msgid "A list of instances ids."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/trove_cluster.py:126
+#: heat/engine/resources/openstack/trove/trove_cluster.py:127
 msgid "IP of the cluster."
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:44
+#: heat/engine/resources/openstack/zaqar/queue.py:43
 msgid "Name of the queue instance to create."
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:48
+#: heat/engine/resources/openstack/zaqar/queue.py:47
 msgid ""
 "Arbitrary key/value metadata to store contextual information about this "
 "queue."
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:55
+#: heat/engine/resources/openstack/zaqar/queue.py:54
 msgid "ID of the queue."
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:59
+#: heat/engine/resources/openstack/zaqar/queue.py:58
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
 "<resource_name> }"
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:65
+#: heat/engine/resources/openstack/zaqar/queue.py:64
 msgid "The resource href of the queue."
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:79
+#: heat/engine/resources/openstack/zaqar/queue.py:78
 #, python-format
 msgid "Message queue %s already exists."
 msgstr ""
 
-#: heat/engine/resources/openstack/zaqar/queue.py:94
+#: heat/engine/resources/openstack/zaqar/queue.py:93
 #, python-format
 msgid "Message queue %s creation failed."
+msgstr ""
+
+#: heat/objects/stack.py:168
+#, python-format
+msgid "Attempt to update a stack with id: %(id)s %(traversal) %(msg)s"
 msgstr ""
 
 #: heat/openstack/common/crypto/utils.py:43

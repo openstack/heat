@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.2.0.dev518\n"
+"Project-Id-Version: heat 2015.2.0.dev7\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-17 06:06+0000\n"
+"POT-Creation-Date: 2015-06-22 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,7 +46,7 @@ msgstr ""
 msgid "AWS authentication failure."
 msgstr ""
 
-#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:850
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:849
 msgid "validate_template"
 msgstr ""
 
@@ -93,52 +93,52 @@ msgstr ""
 msgid "Loading %s"
 msgstr ""
 
-#: heat/engine/resource.py:321
+#: heat/engine/resource.py:336
 #, python-format
 msgid "Reached hook on %s"
 msgstr ""
 
-#: heat/engine/resource.py:656
+#: heat/engine/resource.py:671
 #, python-format
 msgid "creating %s"
 msgstr ""
 
-#: heat/engine/resource.py:836
+#: heat/engine/resource.py:852
 #, python-format
 msgid "updating %s"
 msgstr ""
 
-#: heat/engine/resource.py:861
+#: heat/engine/resource.py:877
 #, python-format
 msgid "Checking %s"
 msgstr ""
 
-#: heat/engine/resource.py:898
+#: heat/engine/resource.py:914
 #, python-format
 msgid "suspending %s"
 msgstr ""
 
-#: heat/engine/resource.py:914
+#: heat/engine/resource.py:930
 #, python-format
 msgid "resuming %s"
 msgstr ""
 
-#: heat/engine/resource.py:919
+#: heat/engine/resource.py:935
 #, python-format
 msgid "snapshotting %s"
 msgstr ""
 
-#: heat/engine/resource.py:965
+#: heat/engine/resource.py:981
 #, python-format
 msgid "Validating %s"
 msgstr ""
 
-#: heat/engine/resource.py:1034
+#: heat/engine/resource.py:1050
 #, python-format
 msgid "deleting %s"
 msgstr ""
 
-#: heat/engine/resource.py:1295
+#: heat/engine/resource.py:1311
 #, python-format
 msgid "Clearing %(hook)s hook on %(resource)s"
 msgstr ""
@@ -148,95 +148,95 @@ msgstr ""
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:367
+#: heat/engine/service.py:366
 msgid "Engine service is stopped successfully"
 msgstr ""
 
-#: heat/engine/service.py:377
+#: heat/engine/service.py:376
 #, python-format
 msgid "WorkerService is stopped in engine %s"
 msgstr ""
 
-#: heat/engine/service.py:385
+#: heat/engine/service.py:384
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:389
+#: heat/engine/service.py:388
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:394
+#: heat/engine/service.py:393
 #, python-format
 msgid "Service %s is deleted"
 msgstr ""
 
-#: heat/engine/service.py:397
+#: heat/engine/service.py:396
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:638
+#: heat/engine/service.py:637
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:679
+#: heat/engine/service.py:678
 #, python-format
 msgid "Creating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:703
+#: heat/engine/service.py:702
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr ""
 
-#: heat/engine/service.py:743
+#: heat/engine/service.py:742
 #, python-format
 msgid "Updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:816
+#: heat/engine/service.py:815
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:949
+#: heat/engine/service.py:948
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1012
+#: heat/engine/service.py:1006
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1309
+#: heat/engine/service.py:1303
 #, python-format
 msgid "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1359
+#: heat/engine/service.py:1353
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1579
+#: heat/engine/service.py:1573
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/service.py:1586
+#: heat/engine/service.py:1580
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1607
+#: heat/engine/service.py:1601
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:1629
+#: heat/engine/service.py:1623
 #, python-format
 msgid ""
 "Engine %(engine)s went down when stack %(stack_id)s was in action "
@@ -254,63 +254,63 @@ msgstr ""
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:961
+#: heat/engine/stack.py:962
 #, python-format
 msgid "convergence_dependencies: %s"
 msgstr ""
 
-#: heat/engine/stack.py:982
+#: heat/engine/stack.py:981
 #, python-format
-msgid "Triggering resource %(rsrc_id)s for update=%(is_update)s"
+msgid "Triggering resource %(rsrc_id)s for %(is_update)s update"
 msgstr ""
 
-#: heat/engine/stack.py:1289
+#: heat/engine/stack.py:1261
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s "
 "user_creds_id=%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:1297
+#: heat/engine/stack.py:1269
 #, python-format
 msgid "Tried to store a stack that does not exist %s"
 msgstr ""
 
-#: heat/engine/stack.py:1388 heat/engine/stack.py:1400
+#: heat/engine/stack.py:1360 heat/engine/stack.py:1372
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1416
+#: heat/engine/stack.py:1388
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:1437
+#: heat/engine/stack.py:1409
 #, python-format
 msgid "%s is already resumed"
 msgstr ""
 
-#: heat/engine/stack_lock.py:94
+#: heat/engine/stack_lock.py:82
 #, python-format
 msgid ""
 "Stale lock detected on stack %(stack)s.  Engine %(engine)s will attempt "
 "to steal the lock"
 msgstr ""
 
-#: heat/engine/stack_lock.py:103
+#: heat/engine/stack_lock.py:91
 #, python-format
 msgid "Engine %(engine)s successfully stole the lock on stack %(stack)s"
 msgstr ""
 
-#: heat/engine/stack_lock.py:110
+#: heat/engine/stack_lock.py:98
 #, python-format
 msgid ""
 "The lock on stack %(stack)s was released while engine %(engine)s was "
 "stealing it. Trying again"
 msgstr ""
 
-#: heat/engine/stack_lock.py:117
+#: heat/engine/stack_lock.py:105
 #, python-format
 msgid ""
 "Failed to steal lock on stack %(stack)s. Engine %(engine)s stole the lock"
@@ -350,47 +350,47 @@ msgstr ""
 msgid "Stopping WorkerService ..."
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:63
+#: heat/engine/clients/os/cinder.py:65
 #, python-format
 msgid "Creating Cinder client with volume API version %d."
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:94
+#: heat/engine/clients/os/cinder.py:96
 #, python-format
 msgid "Volume (%(volume)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:102
+#: heat/engine/clients/os/cinder.py:104
 #, python-format
 msgid "VolumeSnapshot (%(snapshot)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:173
+#: heat/engine/clients/os/cinder.py:175
 #, python-format
 msgid "Attaching volume %(id)s complete"
 msgstr ""
 
-#: heat/engine/clients/os/glance.py:96
+#: heat/engine/clients/os/glance.py:97
 #, python-format
 msgid "Image %s was not found in glance"
 msgstr ""
 
-#: heat/engine/clients/os/glance.py:101
+#: heat/engine/clients/os/glance.py:102
 #, python-format
 msgid "Multiple images %s were found in glance with name"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:600
+#: heat/engine/clients/os/nova.py:606
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
 
-#: heat/engine/clients/os/sahara.py:107
+#: heat/engine/clients/os/sahara.py:108
 #, python-format
 msgid "Image %s was not found in sahara images"
 msgstr ""
 
-#: heat/engine/clients/os/sahara.py:112
+#: heat/engine/clients/os/sahara.py:113
 #, python-format
 msgid "Multiple images %s were found in sahara with name"
 msgstr ""
@@ -422,17 +422,17 @@ msgstr ""
 msgid "Using custom loadbalancer template %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:258
+#: heat/engine/resources/openstack/cinder/volume.py:272
 #, python-format
 msgid "Resize failed: Volume %(vol)s is in %(status)s state."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:265
+#: heat/engine/resources/openstack/cinder/volume.py:279
 #, python-format
 msgid "Volume %(id)s resize complete"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:293
+#: heat/engine/resources/openstack/cinder/volume.py:307
 msgid "Volume type update not supported by Cinder API V1."
 msgstr ""
 
@@ -493,18 +493,18 @@ msgid ""
 "property instead."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:166
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:168
 #, python-format
 msgid "Cluster \"%s\" is being started."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:178
-#: heat/engine/resources/openstack/trove/trove_cluster.py:190
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:180
+#: heat/engine/resources/openstack/trove/trove_cluster.py:192
 #, python-format
 msgid "Cluster '%s' has been created"
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:201
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:203
 #, python-format
 msgid "Cluster '%s' has been deleted"
 msgstr ""
@@ -529,12 +529,27 @@ msgstr ""
 msgid "Cluster Template '%s' has been deleted."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:394
+#: heat/engine/resources/openstack/trove/os_database.py:396
 #, python-format
 msgid ""
 "Database instance %(database)s created "
 "(flavor:%(flavor)s,volume:%(volume)s, datastore:%(datastore_type)s, "
 "datastore_version:%(datastore_version)s)"
+msgstr ""
+
+#: heat/httpd/heat-api-cfn.py:46
+#, python-format
+msgid "Starting Heat API on %(host)s:%(port)s"
+msgstr ""
+
+#: heat/httpd/heat-api-cloudwatch.py:46
+#, python-format
+msgid "Starting Heat CloudWatch API on %(host)s:%(port)s"
+msgstr ""
+
+#: heat/httpd/heat-api.py:44
+#, python-format
+msgid "Starting Heat ReST API on %(host)s:%(port)s"
 msgstr ""
 
 #: heat/openstack/common/eventlet_backdoor.py:146
