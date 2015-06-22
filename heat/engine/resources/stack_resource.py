@@ -306,6 +306,8 @@ class StackResource(resource.Resource):
         full_message = six.text_type(ex)
         if full_message.find('\n') > -1 and is_remote:
             message, msg_trace = full_message.split('\n', 1)
+        elif isinstance(ex, exception.HeatException):
+            message = ex.message
         else:
             message = full_message
 
@@ -316,11 +318,12 @@ class StackResource(resource.Resource):
             # finish
             return
 
-        if isinstance(ex, exception.HeatException):
-            message = ex.message
-        local_ex = copy.copy(getattr(exception, ex_type))
-        local_ex.msg_fmt = "%(message)s"
-        raise local_ex(message=message)
+        if hasattr(exception, ex_type):
+            local_ex = copy.copy(getattr(exception, ex_type))
+            local_ex.msg_fmt = "%(message)s"
+            raise local_ex(message=message)
+        else:
+            raise exception.ResourceFailure(ex, self, 'remote')
 
     def check_create_complete(self, cookie=None):
         return self._check_status_complete(resource.Resource.CREATE)
