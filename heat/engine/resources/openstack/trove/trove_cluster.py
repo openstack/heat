@@ -124,7 +124,7 @@ class TroveCluster(resource.Resource):
             type=attributes.Schema.LIST
         ),
         IP: attributes.Schema(
-            _("IP of the cluster."),
+            _("A list of cluster instance IPs."),
             type=attributes.Schema.LIST
         )
     }
