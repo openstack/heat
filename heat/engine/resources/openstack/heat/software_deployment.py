@@ -601,6 +601,11 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         ),
     }
 
+    update_policy_schema = {}
+
+    def get_size(self):
+        return len(self.properties.get(self.SERVERS, {}))
+
     def _resource_names(self):
         return six.iterkeys(self.properties.get(self.SERVERS, {}))
 
