@@ -193,8 +193,6 @@ class Schema(constr.Schema):
         else:
             return super(Schema, self).__getitem__(key)
 
-        raise KeyError(key)
-
 
 def schemata(schema_dicts):
     """

@@ -170,8 +170,6 @@ class Schema(constr.Schema):
         else:
             return super(Schema, self).__getitem__(key)
 
-        raise KeyError(key)
-
 
 class Parameter(object):
     '''A template parameter.'''
