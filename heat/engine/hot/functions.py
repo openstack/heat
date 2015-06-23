@@ -231,7 +231,7 @@ class Join(cfn_funcs.Join):
 
     Takes the form::
 
-        { "list_join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] }
+        { "list_join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] ] }
 
     And resolves to::
 
