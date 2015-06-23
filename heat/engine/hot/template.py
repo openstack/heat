@@ -325,3 +325,30 @@ class HOTemplate20150430(HOTemplate20141016):
         'Fn::ResourceFacade': hot_funcs.Removed,
         'Ref': hot_funcs.Removed,
     }
+
+
+class HOTemplate20151015(HOTemplate20150430):
+    functions = {
+        'digest': hot_funcs.Digest,
+        'get_attr': hot_funcs.GetAtt,
+        'get_file': hot_funcs.GetFile,
+        'get_param': hot_funcs.GetParam,
+        'get_resource': cfn_funcs.ResourceRef,
+        'list_join': hot_funcs.Join,
+        'repeat': hot_funcs.Repeat,
+        'resource_facade': hot_funcs.ResourceFacade,
+        'str_replace': hot_funcs.Replace,
+
+        # functions removed from 20150430
+        'Fn::Select': hot_funcs.Removed,
+
+        # functions removed from 20130523
+        'Fn::GetAZs': hot_funcs.Removed,
+        'Fn::Join': hot_funcs.Removed,
+        'Fn::Split': hot_funcs.Removed,
+        'Fn::Replace': hot_funcs.Removed,
+        'Fn::Base64': hot_funcs.Removed,
+        'Fn::MemberListToMap': hot_funcs.Removed,
+        'Fn::ResourceFacade': hot_funcs.Removed,
+        'Ref': hot_funcs.Removed,
+    }
