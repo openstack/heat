@@ -236,7 +236,49 @@ class Join(cfn_funcs.Join):
     And resolves to::
 
         "<string_1><delim><string_2><delim>..."
+
     '''
+
+
+class JoinMultiple(cfn_funcs.Join):
+    '''
+    A function for joining strings.
+
+    Takes the form::
+
+        { "list_join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] ] }
+
+    And resolves to::
+
+        "<string_1><delim><string_2><delim>..."
+
+    Optionally multiple lists may be specified, which will also be joined.
+    '''
+
+    def __init__(self, stack, fn_name, args):
+        example = '"%s" : [ " ", [ "str1", "str2"] ...]' % fn_name
+        fmt_data = {'fn_name': fn_name,
+                    'example': example}
+
+        if isinstance(args, (six.string_types, collections.Mapping)):
+            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                              'should be: %(example)s') % fmt_data)
+
+        try:
+            delim = args.pop(0)
+            joinlist = args.pop(0)
+        except IndexError:
+            raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
+                               'should be: %(example)s') % fmt_data)
+        # Optionally allow additional lists, which are appended
+        for l in args:
+            try:
+                joinlist += l
+            except (AttributeError, TypeError):
+                raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                                'should be: %(example)s') % fmt_data)
+        super(JoinMultiple, self).__init__(stack, fn_name,
+                                           args=[delim, joinlist])
 
 
 class ResourceFacade(cfn_funcs.ResourceFacade):

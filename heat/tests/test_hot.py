@@ -49,6 +49,10 @@ hot_kilo_tpl_empty = template_format.parse('''
 heat_template_version: 2015-04-30
 ''')
 
+hot_liberty_tpl_empty = template_format.parse('''
+heat_template_version: 2015-10-15
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -590,6 +594,37 @@ class HOTemplateTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'param_id_test', tmpl)
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
+
+    def test_list_join(self):
+        snippet = {'list_join': [',', ['bar', 'baz']]}
+        snippet_resolved = 'bar,baz'
+        tmpl = template.Template(hot_kilo_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_join_multiple(self):
+        snippet = {'list_join': [',', ['bar', 'baz'], ['bar2', 'baz2']]}
+        snippet_resolved = 'bar,baz,bar2,baz2'
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_join_invalid(self):
+        snippet = {'list_join': 'bad'}
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc))
+
+    def test_join_invalid_value(self):
+        snippet = {'list_join': [',']}
+        tmpl = template.Template(hot_liberty_tpl_empty)
+
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc))
+
+    def test_join_invalid_multiple(self):
+        snippet = {'list_join': [',', 'bad', ['foo']]}
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc))
 
     def test_repeat(self):
         """Test repeat function."""
