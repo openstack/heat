@@ -220,7 +220,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         rsrc = stack['WebServerGroup']
         self._stub_nova_server_get(not_found=True)
         self.m.ReplayAll()
-        msg = ("Property error : "
+        msg = ("Property error: "
                "Resources.WebServerGroup.Properties.InstanceId: "
                "Error validating value '5678': The server (5678) could "
                "not be found.")

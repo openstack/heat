@@ -319,7 +319,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc = self.parent['remote_stack']
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
-        error_msg = ('ResourceInError: Went to status CREATE_FAILED due to '
+        error_msg = ('ResourceInError: resources.remote_stack: '
+                     'Went to status CREATE_FAILED due to '
                      '"Remote stack creation failed"')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
@@ -373,7 +374,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         remote_stack_id = rsrc.resource_id
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
-        error_msg = ('ResourceInError: Went to status DELETE_FAILED due to '
+        error_msg = ('ResourceInError: resources.remote_stack: '
+                     'Went to status DELETE_FAILED due to '
                      '"Remote stack deletion failed"')
         self.assertIn(error_msg, six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
@@ -438,7 +440,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.heat.actions.resume = mock.MagicMock()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.resume))
-        error_msg = ('ResourceInError: Went to status RESUME_FAILED due to '
+        error_msg = ('ResourceInError: resources.remote_stack: '
+                     'Went to status RESUME_FAILED due to '
                      '"Remote stack resume failed"')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.RESUME, rsrc.FAILED), rsrc.state)
@@ -450,7 +453,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc.action = rsrc.SUSPEND
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.resume))
-        error_msg = 'Error: Cannot resume remote_stack, resource not found'
+        error_msg = ('Error: resources.remote_stack: '
+                     'Cannot resume remote_stack, resource not found')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.RESUME, rsrc.FAILED), rsrc.state)
 
@@ -484,7 +488,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.heat.actions.suspend = mock.MagicMock()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.suspend))
-        error_msg = ('ResourceInError: Went to status SUSPEND_FAILED due to '
+        error_msg = ('ResourceInError: resources.remote_stack: '
+                     'Went to status SUSPEND_FAILED due to '
                      '"Remote stack suspend failed"')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.SUSPEND, rsrc.FAILED), rsrc.state)
@@ -498,7 +503,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.heat.actions.suspend = mock.MagicMock()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.suspend))
-        error_msg = 'Error: Cannot suspend remote_stack, resource not found'
+        error_msg = ('Error: resources.remote_stack: '
+                     'Cannot suspend remote_stack, resource not found')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.SUSPEND, rsrc.FAILED), rsrc.state)
         # assert suspend was not called
@@ -569,7 +575,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.update,
                                                        update_snippet))
-        error_msg = _('ResourceInError: Went to status UPDATE_FAILED due to '
+        error_msg = _('ResourceInError: resources.remote_stack: '
+                      'Went to status UPDATE_FAILED due to '
                       '"Remote stack update failed"')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
@@ -609,7 +616,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         reason = ('Resource action mismatch detected: expected=DELETE '
                   'actual=UPDATE')
-        error_msg = ('ResourceUnknownStatus: Resource failed - Unknown '
+        error_msg = ('ResourceUnknownStatus: resources.remote_stack: '
+                     'Resource failed - Unknown '
                      'status UPDATE_COMPLETE due to "%s"') % reason
         self.assertEqual(error_msg, six.text_type(error))
         self.heat.stacks.delete.assert_called_with(stack_id=remote_stack_id)

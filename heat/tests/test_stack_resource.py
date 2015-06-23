@@ -365,9 +365,10 @@ class StackResourceTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name,
                              templatem.Template(tmpl, files=files))
         rsrc = stack['volume_server']
-        raise_exc_msg = ('The specified reference "instance" ('
-                         'in volume_attachment.Properties.instance_uuid) '
-                         'is incorrect')
+        raise_exc_msg = ('Failed to validate: '
+                         'The specified reference "instance" '
+                         '(in volume_attachment.Properties.instance_uuid) '
+                         'is incorrect.')
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn(raise_exc_msg, six.text_type(exc))
@@ -693,6 +694,7 @@ class StackResourceCheckCompleteTest(common.HeatTestCase):
                                                self.parent_stack)
 
         self.nested = mock.MagicMock()
+        self.nested.name = 'nested-stack'
         self.parent_resource.nested = mock.MagicMock(return_value=self.nested)
         self.parent_resource._nested = self.nested
         setattr(self.nested, self.action.upper(), self.action.upper())
@@ -717,10 +719,17 @@ class StackResourceCheckCompleteTest(common.HeatTestCase):
         done but the nested stack is not in (<action>,COMPLETE) state
         """
         self.nested.status = 'FAILED'
-        self.nested.status_reason = 'broken on purpose'
+        reason = ('Resource %s failed: ValueError: '
+                  'resources.%s: broken on purpose' % (
+                      self.action.upper(),
+                      'child_res'))
+        exp_path = 'resources.test.resources.child_res'
+        exp = 'ValueError: %s: broken on purpose' % exp_path
+        self.nested.status_reason = reason
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
-        self.assertRaises(resource.ResourceUnknownStatus, complete, None)
+        exc = self.assertRaises(exception.ResourceFailure, complete, None)
+        self.assertEqual(exp, six.text_type(exc))
         self.parent_resource.nested.assert_called_once_with(
             show_deleted=self.show_deleted, force_reload=True)
 

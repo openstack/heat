@@ -268,7 +268,7 @@ class StackExists(HeatException):
     msg_fmt = _("The Stack (%(stack_name)s) already exists.")
 
 
-class StackValidationFailed(HeatException):
+class HeatExceptionWithPath(HeatException):
     msg_fmt = _("%(error)s%(path)s%(message)s")
 
     def __init__(self, error=None, path=None, message=None):
@@ -290,8 +290,8 @@ class StackValidationFailed(HeatException):
                 result_path = path_item
 
         self.error_message = message or ''
-        super(StackValidationFailed, self).__init__(
-            error=('%s : ' % self.error if self.error != '' else ''),
+        super(HeatExceptionWithPath, self).__init__(
+            error=('%s: ' % self.error if self.error != '' else ''),
             path=('%s: ' % result_path if len(result_path) > 0 else ''),
             message=self.error_message
         )
@@ -304,6 +304,10 @@ class StackValidationFailed(HeatException):
 
     def error_message(self):
         return self.error_message
+
+
+class StackValidationFailed(HeatExceptionWithPath):
+    pass
 
 
 class InvalidSchemaError(HeatException):
@@ -331,18 +335,63 @@ class WatchRuleNotFound(HeatException):
     msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
 
 
-class ResourceFailure(HeatException):
-    msg_fmt = _("%(exc_type)s: %(message)s")
-
-    def __init__(self, exception, resource, action=None):
-        if isinstance(exception, ResourceFailure):
-            exception = getattr(exception, 'exc', exception)
-        self.exc = exception
+class ResourceFailure(HeatExceptionWithPath):
+    def __init__(self, exception_or_error, resource, action=None):
         self.resource = resource
         self.action = action
-        exc_type = type(exception).__name__
-        super(ResourceFailure, self).__init__(exc_type=exc_type,
-                                              message=six.text_type(exception))
+        if action is None and resource is not None:
+            self.action = resource.action
+        path = []
+        res_path = []
+        if resource is not None:
+            res_path = [resource.stack.t.get_section_name('resources'),
+                        resource.name]
+
+        if isinstance(exception_or_error, Exception):
+            if isinstance(exception_or_error, ResourceFailure):
+                self.exc = exception_or_error.exc
+                error = exception_or_error.error
+                message = exception_or_error.error_message
+                path = exception_or_error.path
+            else:
+                self.exc = exception_or_error
+                error = six.text_type(type(self.exc).__name__)
+                message = six.text_type(self.exc)
+                path = res_path
+        else:
+            self.exc = None
+            res_failed = 'Resource %s failed: ' % action.upper()
+            if res_failed in exception_or_error:
+                (error, message, new_path) = self._from_status_reason(
+                    exception_or_error)
+                path = res_path + new_path
+            else:
+                path = res_path
+                error = None
+                message = exception_or_error
+
+        super(ResourceFailure, self).__init__(error=error, path=path,
+                                              message=message)
+
+    def _from_status_reason(self, status_reason):
+        """Split the status_reason up into parts.
+
+        Given the following status_reason:
+        "Resource DELETE failed: Exception : resources.AResource: foo"
+
+        we are going to return:
+        ("Exception", "resources.AResource", "foo")
+        """
+        parsed = [sp.strip() for sp in status_reason.split(':')]
+        if len(parsed) >= 4:
+            error = parsed[1]
+            message = ': '.join(parsed[3:])
+            path = parsed[2].split('.')
+        else:
+            error = ''
+            message = status_reason
+            path = []
+        return (error, message, path)
 
 
 class NotSupported(HeatException):

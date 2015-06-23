@@ -616,7 +616,8 @@ class StackTest(common.HeatTestCase):
 
         self.assertEqual((self.stack.SUSPEND, self.stack.FAILED),
                          self.stack.state)
-        self.assertEqual('Resource SUSPEND failed: Exception: foo',
+        self.assertEqual('Resource SUSPEND failed: Exception: '
+                         'resources.AResource: foo',
                          self.stack.status_reason)
         self.m.VerifyAll()
 
@@ -644,7 +645,8 @@ class StackTest(common.HeatTestCase):
 
         self.assertEqual((self.stack.RESUME, self.stack.FAILED),
                          self.stack.state)
-        self.assertEqual('Resource RESUME failed: Exception: foo',
+        self.assertEqual('Resource RESUME failed: Exception: '
+                         'resources.AResource: foo',
                          self.stack.status_reason)
         self.m.VerifyAll()
 
@@ -813,8 +815,8 @@ class StackTest(common.HeatTestCase):
         self.stack.adopt()
         self.assertEqual((self.stack.ADOPT, self.stack.FAILED),
                          self.stack.state)
-        expected = ('Resource ADOPT failed: Exception: Resource ID was not'
-                    ' provided.')
+        expected = ('Resource ADOPT failed: Exception: resources.foo: '
+                    'Resource ID was not provided.')
         self.assertEqual(expected, self.stack.status_reason)
 
     def test_adopt_stack_rollback(self):
@@ -1551,7 +1553,8 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertEqual('Output validation error: The Referenced Attribute '
+        self.assertEqual('Output validation error: '
+                         'The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
 
@@ -1711,7 +1714,8 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertEqual('Output validation error: The Referenced Attribute '
+        self.assertEqual('Output validation error: '
+                         'The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
 

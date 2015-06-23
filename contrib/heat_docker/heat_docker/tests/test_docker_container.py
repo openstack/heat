@@ -328,8 +328,8 @@ class DockerContainerTest(common.HeatTestCase):
         self.assertIsNone(my_resource.validate())
         msg = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(my_resource.create))
-        expected = ('InvalidArgForVersion: "read_only" is not supported '
-                    'for API version < "1.17"')
+        expected = ('InvalidArgForVersion: resources.Blog: "read_only" is '
+                    'not supported for API version < "1.17"')
         self.assertEqual(expected, six.text_type(msg))
 
     def test_compare_version(self):

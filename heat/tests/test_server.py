@@ -425,7 +425,7 @@ class ServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            "StackValidationFailed: Property error : "
+            "StackValidationFailed: resources.WebServer: Property error: "
             "WebServer.Properties.image: Error validating value 'Slackware': "
             "The Image (Slackware) could not be found.",
             six.text_type(error))
@@ -450,7 +450,7 @@ class ServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : '
+            'StackValidationFailed: resources.WebServer: Property error: '
             'WebServer.Properties.image: Multiple physical '
             'resources were found with name (CentOS 5.2).',
             six.text_type(error))
@@ -474,7 +474,7 @@ class ServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            "StackValidationFailed: Property error : "
+            "StackValidationFailed: resources.WebServer: Property error: "
             "WebServer.Properties.image: Error validating value '1': "
             "The Image (1) could not be found.",
             six.text_type(error))
@@ -1049,7 +1049,7 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   server.validate)
         self.assertEqual(
-            "Property error : Resources.WebServer.Properties.key_name: "
+            "Property error: Resources.WebServer.Properties.key_name: "
             "Error validating value 'test2': The Key (test2) could not "
             "be found.", six.text_type(error))
         self.m.VerifyAll()
@@ -1436,8 +1436,8 @@ class ServersTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(server.update, update_template)
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
-            "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
-            six.text_type(error))
+            "Error: resources.srv_update2: Resizing to 'm1.small' failed, "
+            "status 'ACTIVE'", six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
 
@@ -1603,7 +1603,8 @@ class ServersTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(server.update, update_template)
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
-            "Error: Rebuilding server failed, status 'ERROR'",
+            "Error: resources.srv_updrbldfail: "
+            "Rebuilding server failed, status 'ERROR'",
             six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
@@ -1647,7 +1648,8 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
-        self.assertEqual('Error: Cannot suspend srv_sus1, '
+        self.assertEqual('Error: resources.srv_sus1: '
+                         'Cannot suspend srv_sus1, '
                          'resource_id not set',
                          six.text_type(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
@@ -1668,7 +1670,8 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
-        self.assertEqual('NotFound: Failed to find server 1234',
+        self.assertEqual('NotFound: resources.srv_sus2: '
+                         'Failed to find server 1234',
                          six.text_type(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
@@ -1766,8 +1769,9 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
-        self.assertEqual('Error: Suspend of server sample-server failed '
-                         'with unknown status: TRANSMOGRIFIED',
+        self.assertEqual('Error: resources.srv_susp_uk: Suspend of server '
+                         'sample-server failed with unknown status: '
+                         'TRANSMOGRIFIED',
                          six.text_type(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
@@ -1812,7 +1816,8 @@ class ServersTest(common.HeatTestCase):
         server.state_set(server.SUSPEND, server.COMPLETE)
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.resume))
-        self.assertEqual('Error: Cannot resume srv_susp_norid, '
+        self.assertEqual('Error: resources.srv_susp_norid: '
+                         'Cannot resume srv_susp_norid, '
                          'resource_id not set',
                          six.text_type(ex))
         self.assertEqual((server.RESUME, server.FAILED), server.state)
@@ -1838,7 +1843,8 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.resume))
-        self.assertEqual('NotFound: Failed to find server 1234',
+        self.assertEqual('NotFound: resources.srv_res_nf: '
+                         'Failed to find server 1234',
                          six.text_type(ex))
         self.assertEqual((server.RESUME, server.FAILED), server.state)
 
@@ -3071,7 +3077,8 @@ class ServersTest(common.HeatTestCase):
         # update
         updater = scheduler.TaskRunner(server.update, update_template)
         err = self.assertRaises(exception.ResourceFailure, updater)
-        self.assertEqual('StackValidationFailed: Property error : '
+        self.assertEqual('StackValidationFailed: resources.my_server: '
+                         'Property error: '
                          'WebServer.Properties.image: The Image '
                          '(Update Image) could not be found.',
                          six.text_type(err))

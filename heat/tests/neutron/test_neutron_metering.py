@@ -103,7 +103,8 @@ class MeteringLabelTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.label: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -141,7 +142,8 @@ class MeteringLabelTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.label: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -217,7 +219,8 @@ class MeteringRuleTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.rule: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -255,7 +258,8 @@ class MeteringRuleTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.rule: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

@@ -418,7 +418,8 @@ class StackTest(common.HeatTestCase):
         mock_rd.assert_called_once_with()
         self.assertEqual((self.stack.DELETE, self.stack.FAILED),
                          self.stack.state)
-        self.assertEqual('Resource DELETE failed: Exception: foo',
+        self.assertEqual('Resource DELETE failed: Exception: '
+                         'resources.AResource: foo',
                          self.stack.status_reason)
 
     def test_stack_user_project_id_delete_fail(self):

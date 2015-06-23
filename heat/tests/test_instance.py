@@ -324,7 +324,7 @@ class InstancesTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 instance.validate)
         excepted_error = (
-            'Property error : '
+            'Property error: '
             'Resources.WebServer.Properties.BlockDeviceMappings[0]: '
             'Property DeviceName not assigned')
         self.assertIn(excepted_error, six.text_type(exc))
@@ -384,7 +384,8 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            "StackValidationFailed: Property error : "
+            "StackValidationFailed: resources.instance_create_image_err: "
+            "Property error: "
             "WebServer.Properties.ImageId: Error validating value "
             "'Slackware': The Image (Slackware) could not be found.",
             six.text_type(error))
@@ -411,7 +412,8 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : '
+            'StackValidationFailed: resources.instance_create_image_err: '
+            'Property error: '
             'WebServer.Properties.ImageId: Multiple physical '
             'resources were found with name (CentOS 5.2).',
             six.text_type(error))
@@ -435,8 +437,8 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : '
-            'WebServer.Properties.ImageId: 404 (HTTP 404)',
+            'StackValidationFailed: resources.instance_create_image_err: '
+            'Property error: WebServer.Properties.ImageId: 404 (HTTP 404)',
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -697,7 +699,8 @@ class InstancesTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(instance.update, update_template)
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
-            "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
+            "Error: resources.ud_type_f: "
+            "Resizing to 'm1.small' failed, status 'ACTIVE'",
             six.text_type(error))
         self.assertEqual((instance.UPDATE, instance.FAILED), instance.state)
         self.m.VerifyAll()

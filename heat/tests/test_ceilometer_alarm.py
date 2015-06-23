@@ -376,7 +376,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
             error = self.assertRaises(exception.StackValidationFailed,
                                       rsrc.validate)
             self.assertEqual(
-                "Property error : Resources.MEMAlarmHigh.Properties.%s: "
+                "Property error: Resources.MEMAlarmHigh.Properties.%s: "
                 "Value '60a' is not an integer" % p, six.text_type(error))
 
     def test_mem_alarm_high_not_integer_parameters(self):
@@ -391,7 +391,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
             error = self.assertRaises(exception.StackValidationFailed,
                                       rsrc.validate)
             self.assertEqual(
-                "Property error : Resources.MEMAlarmHigh.Properties.%s: "
+                "Property error: Resources.MEMAlarmHigh.Properties.%s: "
                 "int() argument must be a string or a number, not "
                 "'list'" % p, six.text_type(error))
 
@@ -406,7 +406,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   rsrc.validate)
         self.assertEqual(
-            "Property error : Resources.MEMAlarmHigh.Properties: "
+            "Property error: Resources.MEMAlarmHigh.Properties: "
             "Property meter_name not assigned",
             six.text_type(error))
 
@@ -522,7 +522,7 @@ class CombinationAlarmTest(common.HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   rsrc.validate)
         self.assertEqual(
-            "Property error : Resources.CombinAlarm.Properties.alarm_ids: "
+            "Property error: Resources.CombinAlarm.Properties.alarm_ids: "
             "length (0) is out of range (min: 1, max: None)",
             six.text_type(error))
 

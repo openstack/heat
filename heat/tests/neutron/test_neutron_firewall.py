@@ -131,7 +131,8 @@ class FirewallTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.firewall: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -169,7 +170,8 @@ class FirewallTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.firewall: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -259,7 +261,8 @@ class FirewallPolicyTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.firewall_policy: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -297,7 +300,8 @@ class FirewallPolicyTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.firewall_policy: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -411,7 +415,8 @@ class FirewallRuleTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.firewall_rule: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -449,7 +454,8 @@ class FirewallRuleTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.firewall_rule: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

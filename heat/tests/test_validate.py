@@ -1034,7 +1034,7 @@ class validateTest(common.HeatTestCase):
         t = template_format.parse(test_template_invalid_property)
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
-        self.assertEqual({'Error': 'Property error : WikiDatabase.Properties: '
+        self.assertEqual({'Error': 'Property error: WikiDatabase.Properties: '
                                    'Unknown Property UnknownProperty'}, res)
 
     def test_invalid_resources(self):
@@ -1084,7 +1084,7 @@ class validateTest(common.HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
-            {'Error': 'Property error : WikiDatabase.Properties: '
+            {'Error': 'Property error: WikiDatabase.Properties: '
                       'Property SourceDestCheck not implemented yet'},
             res)
 
@@ -1368,7 +1368,8 @@ class validateTest(common.HeatTestCase):
                                 stack.validate)
 
         self.assertEqual(_('The InstanceType parameter must be assigned to '
-                         'one Parameter Group only.'), six.text_type(exc))
+                           'one Parameter Group only.'),
+                         six.text_type(exc))
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
@@ -1383,7 +1384,7 @@ class validateTest(common.HeatTestCase):
                                 stack.validate)
 
         self.assertEqual(_('The Parameter name (SomethingNotHere) does not '
-                         'reference an existing parameter.'),
+                           'reference an existing parameter.'),
                          six.text_type(exc))
 
     def test_validate_no_parameters_in_group(self):
@@ -1393,8 +1394,8 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameters must be provided for each Parameter '
-                         'Group.'), six.text_type(exc))
+        self.assertEqual(_('Parameters must be provided for each '
+                           'Parameter Group.'), six.text_type(exc))
 
     def test_validate_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)

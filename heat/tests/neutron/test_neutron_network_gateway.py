@@ -518,7 +518,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.network_gateway: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())

@@ -326,12 +326,12 @@ class StackResource(resource.Resource):
         elif nested.status == resource.Resource.COMPLETE:
             return True
         elif nested.status == resource.Resource.FAILED:
-            raise resource.ResourceUnknownStatus(
-                resource_status=nested.status,
-                status_reason=nested.status_reason)
+            raise exception.ResourceFailure(nested.status_reason, self,
+                                            action=action)
         else:
             raise resource.ResourceUnknownStatus(
                 resource_status=nested.status,
+                status_reason=nested.status_reason,
                 result=_('Stack unknown status'))
 
     def check_adopt_complete(self, cookie=None):

@@ -266,7 +266,8 @@ class HealthMonitorTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.monitor: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -304,7 +305,8 @@ class HealthMonitorTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.monitor: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -508,7 +510,8 @@ class PoolTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'ResourceInError: Went to status ERROR due to "error in pool"',
+            'ResourceInError: resources.pool: '
+            'Went to status ERROR due to "error in pool"',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -545,7 +548,8 @@ class PoolTest(common.HeatTestCase):
         self.m.ReplayAll()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
-        self.assertEqual('ResourceUnknownStatus: Pool creation failed due to '
+        self.assertEqual('ResourceUnknownStatus: resources.pool: '
+                         'Pool creation failed due to '
                          'vip - Unknown status SOMETHING due to "Unknown"',
                          six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
@@ -574,7 +578,8 @@ class PoolTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.pool: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -732,7 +737,8 @@ class PoolTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.pool: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -749,7 +755,8 @@ class PoolTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
+            'NeutronClientException: resources.pool: '
+            'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

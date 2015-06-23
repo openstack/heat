@@ -103,7 +103,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
                                   self.create_volume,
                                   self.t, stack, 'volume')
         self.assertEqual(
-            "Property error : resources.volume.properties.size: "
+            "Property error: resources.volume.properties.size: "
             "0 is out of range (min: 1, max: None)", six.text_type(error))
 
     def test_cinder_create(self):
@@ -300,7 +300,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
-        self.assertEqual('NotSupported: Shrinking volume is not supported.',
+        self.assertEqual('NotSupported: resources.volume: '
+                         'Shrinking volume is not supported.',
                          six.text_type(ex))
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
@@ -537,7 +538,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         # if the volume api is v1, not support to retype
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
-        self.assertEqual('NotSupported: Using Cinder API V1, '
+        self.assertEqual('NotSupported: resources.volume2: '
+                         'Using Cinder API V1, '
                          'volume_type update is not supported.',
                          six.text_type(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
@@ -645,7 +647,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
                           scheduler.TaskRunner(rsrc.snapshot))
 
         self.assertEqual((rsrc.SNAPSHOT, rsrc.FAILED), rsrc.state)
-        self.assertEqual("Error: error", rsrc.status_reason)
+        self.assertEqual("Error: resources.volume: error", rsrc.status_reason)
 
         self.assertEqual({}, resource_data_object.ResourceData.get_all(rsrc))
 

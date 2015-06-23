@@ -179,7 +179,8 @@ class CloudServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual('Error: RackConnect automation FAILED',
+        self.assertEqual('Error: resources.test_rackconnect_failed: '
+                         'RackConnect automation FAILED',
                          six.text_type(exc))
 
     def test_rackconnect_unprocessable(self):
@@ -210,7 +211,8 @@ class CloudServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual('Error: Unknown RackConnect automation status: FOO',
+        self.assertEqual('Error: resources.test_rackconnect_unknown: '
+                         'Unknown RackConnect automation status: FOO',
                          six.text_type(exc))
 
     def test_rackconnect_deploying(self):
@@ -309,7 +311,8 @@ class CloudServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual('Error: Managed Cloud automation failed',
+        self.assertEqual('Error: resources.test_managed_cloud_build_error: '
+                         'Managed Cloud automation failed',
                          six.text_type(exc))
 
     def test_managed_cloud_unknown(self):
@@ -323,7 +326,8 @@ class CloudServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual('Error: Unknown Managed Cloud automation status: FOO',
+        self.assertEqual('Error: resources.test_managed_cloud_unknown: '
+                         'Unknown Managed Cloud automation status: FOO',
                          six.text_type(exc))
 
     def _test_server_config_drive(self, user_data, config_drive, result):
