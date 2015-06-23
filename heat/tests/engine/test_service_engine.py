@@ -15,13 +15,13 @@ import datetime
 
 import mock
 from oslo_config import cfg
+from oslo_service import threadgroup
 
 from heat.common import context
 from heat.common import service_utils
 from heat.engine import service
 from heat.engine import worker
 from heat.objects import service as service_objects
-from heat.openstack.common import threadgroup
 from heat.rpc import worker_api
 from heat.tests import common
 from heat.tests.engine import tools
@@ -227,7 +227,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.engine.service.EngineListener',
                 return_value=mock.Mock())
-    @mock.patch('heat.openstack.common.threadgroup.ThreadGroup',
+    @mock.patch('oslo_service.threadgroup.ThreadGroup',
                 return_value=mock.Mock())
     def test_engine_service_start_in_non_convergence_mode(
             self,
@@ -264,7 +264,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.engine.worker.WorkerService',
                 return_value=mock.Mock())
-    @mock.patch('heat.openstack.common.threadgroup.ThreadGroup',
+    @mock.patch('oslo_service.threadgroup.ThreadGroup',
                 return_value=mock.Mock())
     def test_engine_service_start_in_convergence_mode(
             self,

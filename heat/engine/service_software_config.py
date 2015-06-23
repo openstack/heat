@@ -13,6 +13,7 @@
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_service import service
 from oslo_utils import timeutils
 import requests
 import six
@@ -24,7 +25,6 @@ from heat.engine import api
 from heat.objects import resource as resource_object
 from heat.objects import software_config as software_config_object
 from heat.objects import software_deployment as software_deployment_object
-from heat.openstack.common import service
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)

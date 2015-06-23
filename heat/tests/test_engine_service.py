@@ -19,6 +19,7 @@ import mox
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils as json
+from oslo_service import threadgroup
 import six
 
 from heat.common import context
@@ -42,7 +43,6 @@ from heat.objects import stack as stack_object
 from heat.objects import sync_point as sync_point_object
 from heat.objects import watch_data as watch_data_object
 from heat.objects import watch_rule as watch_rule_object
-from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_client
 from heat.tests import common

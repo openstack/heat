@@ -22,6 +22,8 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_serialization import jsonutils
+from oslo_service import service
+from oslo_service import threadgroup
 from oslo_utils import uuidutils
 from osprofiler import profiler
 import six
@@ -58,8 +60,6 @@ from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
 from heat.objects import watch_data
 from heat.objects import watch_rule
-from heat.openstack.common import service
-from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_api as rpc_worker_api
 

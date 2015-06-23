@@ -13,6 +13,7 @@
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
+from oslo_service import threadgroup
 import six
 
 from heat.common import exception
@@ -25,7 +26,6 @@ from heat.engine import service
 from heat.engine import stack
 from heat.engine import template as templatem
 from heat.objects import stack as stack_object
-from heat.openstack.common import threadgroup
 from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests.nova import fakes as fakes_nova

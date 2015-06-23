@@ -15,6 +15,7 @@
 
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_service import service
 from osprofiler import profiler
 import six
 
@@ -26,7 +27,6 @@ from heat.common import messaging as rpc_messaging
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import sync_point
-from heat.openstack.common import service
 from heat.rpc import worker_client as rpc_client
 
 LOG = logging.getLogger(__name__)

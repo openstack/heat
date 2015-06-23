@@ -35,6 +35,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
+from oslo_service import systemd
 import six
 
 from heat.common import config
@@ -42,7 +43,6 @@ from heat.common.i18n import _LI
 from heat.common import messaging
 from heat.common import profiler
 from heat.common import wsgi
-from heat.openstack.common import systemd
 from heat import version
 
 i18n.enable_lazy()
