@@ -117,7 +117,8 @@ class SaharaClusterTest(common.HeatTestCase):
         self.cl_mgr.get.return_value = FakeCluster(status='Error')
         create_task = scheduler.TaskRunner(cluster.create)
         ex = self.assertRaises(exception.ResourceFailure, create_task)
-        expected = 'ResourceInError: Went to status Error due to "Unknown"'
+        expected = ('ResourceInError: resources.super-cluster: '
+                    'Went to status Error due to "Unknown"')
         self.assertEqual(expected, six.text_type(ex))
 
     def test_cluster_delete_fails(self):
@@ -125,7 +126,7 @@ class SaharaClusterTest(common.HeatTestCase):
         self.cl_mgr.delete.side_effect = sahara.sahara_base.APIException()
         delete_task = scheduler.TaskRunner(cluster.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: None"
+        expected = "APIException: resources.super-cluster: None"
         self.assertEqual(expected, six.text_type(ex))
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
 
@@ -144,7 +145,7 @@ class SaharaClusterTest(common.HeatTestCase):
         self.cl_mgr.get.reset_mock()
         delete_task = scheduler.TaskRunner(cluster.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: None"
+        expected = "APIException: resources.super-cluster: None"
         self.assertEqual(expected, six.text_type(ex))
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
         self.assertEqual(2, self.cl_mgr.get.call_count)
@@ -157,7 +158,8 @@ class SaharaClusterTest(common.HeatTestCase):
         self.cl_mgr.get.reset_mock()
         delete_task = scheduler.TaskRunner(cluster.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = 'ResourceInError: Went to status Error due to "Unknown"'
+        expected = ('ResourceInError: resources.super-cluster: '
+                    'Went to status Error due to "Unknown"')
         self.assertEqual(expected, six.text_type(ex))
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
         self.assertEqual(2, self.cl_mgr.get.call_count)

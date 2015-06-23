@@ -100,7 +100,7 @@ class TestResource(resource.Resource):
 
         # emulate failure
         if fail_prop:
-            raise Exception("Test Resource failed %s", self.name)
+            raise ValueError("Test Resource failed %s" % self.name)
 
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         value = prop_diff.get(self.VALUE)

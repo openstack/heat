@@ -146,7 +146,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.ngt_mgr.delete.side_effect = sahara.sahara_base.APIException()
         delete_task = scheduler.TaskRunner(ngt.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: None"
+        expected = "APIException: resources.node-group: None"
         self.assertEqual(expected, six.text_type(ex))
         self.ngt_mgr.delete.assert_called_once_with(self.fake_ngt.id)
 
@@ -188,7 +188,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.patchobject(ngt, 'is_using_neutron').return_value = False
 
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
-        self.assertEqual(u"Property error : "
+        self.assertEqual(u"Property error: "
                          u"resources.node-group.properties.flavor: "
                          u"Error validating value u'm1.large'",
                          six.text_type(ex))
@@ -262,7 +262,7 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         self.ct_mgr.delete.side_effect = sahara.sahara_base.APIException()
         delete_task = scheduler.TaskRunner(ct.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: None"
+        expected = "APIException: resources.cluster-template: None"
         self.assertEqual(expected, six.text_type(ex))
         self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
 

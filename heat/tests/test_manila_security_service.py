@@ -114,7 +114,8 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
                                 scheduler.TaskRunner(ss.create))
         expected_state = (ss.CREATE, ss.FAILED)
         self.assertEqual(expected_state, ss.state)
-        self.assertIn('Exception: error', six.text_type(exc))
+        self.assertIn('Exception: resources.security_service: error',
+                      six.text_type(exc))
 
     def test_resource_mapping(self):
         mapping = security_service.resource_mapping()

@@ -148,7 +148,8 @@ class ResourceTest(common.HeatTestCase):
                 ev = self.patchobject(res, '_add_event')
                 ex = self.assertRaises(exception.ResourceFailure,
                                        res.signal)
-                self.assertEqual('Exception: Cannot signal resource during '
+                self.assertEqual('Exception: resources.res: '
+                                 'Cannot signal resource during '
                                  '%s' % action, six.text_type(ex))
                 ev.assert_called_with(
                     action, status,
@@ -569,7 +570,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition(rname, 'Foo', {})
         res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
 
-        estr = ('Property error : test_resource.Properties: '
+        estr = ('Property error: test_resource.Properties: '
                 'Property Foo not assigned')
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
@@ -582,8 +583,9 @@ class ResourceTest(common.HeatTestCase):
                                             {'Food': 'abc'})
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
 
-        estr = ('StackValidationFailed: Property error : '
-                'test_resource.Properties: Unknown Property Food')
+        estr = ('StackValidationFailed: resources.test_resource: '
+                'Property error: test_resource.Properties: '
+                'Unknown Property Food')
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
         self.assertIn(estr, six.text_type(err))
@@ -661,7 +663,8 @@ class ResourceTest(common.HeatTestCase):
                                      status_reason='just because'))
         self.m.ReplayAll()
 
-        estr = ('ResourceInError: Went to status ERROR due to "just because"')
+        estr = ('ResourceInError: resources.test_resource: '
+                'Went to status ERROR due to "just because"')
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(estr, six.text_type(err))
@@ -1563,7 +1566,7 @@ class ResourceAdoptTest(common.HeatTestCase):
         res = self.stack['foo']
         adopt = scheduler.TaskRunner(res.adopt, None)
         self.assertRaises(exception.ResourceFailure, adopt)
-        expected = 'Exception: Resource ID was not provided.'
+        expected = 'Exception: resources.foo: Resource ID was not provided.'
         self.assertEqual(expected, res.status_reason)
 
 
@@ -1775,7 +1778,7 @@ class ResourceDependenciesTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.StackValidationFailed,
                                stack.validate)
-        self.assertIn("Property error : resources.bar.properties.FooInt: "
+        self.assertIn("Property error: resources.bar.properties.FooInt: "
                       "Value 'notanint' is not an integer",
                       six.text_type(ex))
 

@@ -137,7 +137,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
 
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(queue.create))
-        self.assertEqual("Error: Message queue myqueue already exists.",
+        self.assertEqual("Error: resources.MyQueue2: "
+                         "Message queue myqueue already exists.",
                          six.text_type(err))
         self.m.VerifyAll()
 
@@ -164,7 +165,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
 
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(queue.create))
-        self.assertEqual("Error: Message queue myqueue creation failed.",
+        self.assertEqual("Error: resources.MyQueue2: "
+                         "Message queue myqueue creation failed.",
                          six.text_type(err))
         self.m.VerifyAll()
 

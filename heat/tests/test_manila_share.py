@@ -155,8 +155,8 @@ class ManilaShareTest(common.HeatTestCase):
         share.client().shares.get.return_value = self.failed_share
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(share.check))
-        self.assertIn("Error: 'status': expected '['available']'",
-                      six.text_type(exc))
+        self.assertIn("Error: resources.test_share: 'status': expected "
+                      "'['available']'", six.text_type(exc))
 
     def test_share_update(self):
         share = self._create_share("stack_share_update")
