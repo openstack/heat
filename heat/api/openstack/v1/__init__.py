@@ -119,6 +119,14 @@ class API(wsgi.Router):
                         'method': 'GET'
                     },
 
+                    {
+                        'name': 'template_functions',
+                        'url': '/template_versions/{template_version}'
+                               '/functions',
+                        'action': 'list_template_functions',
+                        'method': 'GET'
+                    },
+
                     # Stack collection
                     {
                         'name': 'stack_index',

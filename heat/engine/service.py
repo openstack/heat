@@ -44,6 +44,7 @@ from heat.engine.cfn import template as cfntemplate
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import event as evt
+from heat.engine.hot import functions as hot_functions
 from heat.engine import parameter_groups
 from heat.engine import properties
 from heat.engine import resources
@@ -267,7 +268,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.12'
+    RPC_API_VERSION = '1.13'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1036,6 +1037,22 @@ class EngineService(service.Service):
             else:
                 versions.append({'version': t[0], 'type': 'hot'})
         return versions
+
+    def list_template_functions(self, cnxt, template_version):
+        mgr = templatem._get_template_extension_manager()
+        tmpl_class = mgr[template_version]
+        functions = []
+        for func_name, func in six.iteritems(tmpl_class.plugin.functions):
+            if func is not hot_functions.Removed:
+                if func.__doc__.split('\n')[0]:
+                    desc = func.__doc__.split('\n')[0].strip()
+                else:
+                    desc = func.__doc__.split('\n')[1].strip()
+                functions.append(
+                    {'functions': func_name,
+                     'description': desc}
+                )
+        return functions
 
     def resource_schema(self, cnxt, type_name):
         """

@@ -30,6 +30,7 @@ from heat.common import template_format
 from heat.engine.cfn import template as cfntemplate
 from heat.engine import dependencies
 from heat.engine import environment
+from heat.engine.hot import functions as hot_functions
 from heat.engine.hot import template as hottemplate
 from heat.engine import resource as res
 from heat.engine.resources.aws.ec2 import instance as instances
@@ -2226,6 +2227,40 @@ class StackServiceTest(common.HeatTestCase):
         expected = [{'version': 'a.b', 'type': 'cfn'},
                     {'version': 'c.d', 'type': 'hot'}]
         self.assertEqual(expected, templates)
+
+    @mock.patch('heat.engine.template._get_template_extension_manager')
+    def test_list_template_functions(self, templ_mock):
+
+        class DummyFunc1(object):
+            """
+            Dummy Func1
+
+            Dummy Func1 Long Description
+            """
+
+        class DummyFunc2(object):
+            """Dummy Func2
+
+            Dummy Func2 Long Description
+            """
+
+        plugin_mock = mock.Mock(
+            functions={'dummy1': DummyFunc1,
+                       'dummy2': DummyFunc2,
+                       'removed': hot_functions.Removed})
+        dummy_tmpl = mock.Mock(plugin=plugin_mock)
+
+        class DummyMgr(object):
+            def __getitem__(self, item):
+                return dummy_tmpl
+
+        templ_mock.return_value = DummyMgr()
+        functions = self.eng.list_template_functions(self.ctx, 'dummytemplate')
+        expected = [{'functions': 'dummy1',
+                     'description': 'Dummy Func1'},
+                    {'functions': 'dummy2',
+                     'description': 'Dummy Func2'}]
+        self.assertEqual(sorted(expected), sorted(functions))
 
     @mock.patch.object(res.Resource, 'is_service_available')
     def test_list_resource_types_unavailable(

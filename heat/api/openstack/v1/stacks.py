@@ -528,6 +528,17 @@ class StackController(object):
         }
 
     @util.policy_enforce
+    def list_template_functions(self, req, template_version):
+        """
+        Returns a list of available functions in a given template
+        """
+        return {
+            'template_functions':
+            self.rpc_client.list_template_functions(req.context,
+                                                    template_version)
+        }
+
+    @util.policy_enforce
     def resource_schema(self, req, type_name):
         """
         Returns the schema of the given resource type.
