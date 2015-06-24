@@ -1,19 +1,23 @@
-kombu>=2.5.0
-oslo.log>=1.0.0,<1.1.0  # Apache-2.0
-oslo.messaging>=1.8.0,<1.9.0  # Apache-2.0
-oslo.config>=1.9.3,<1.10.0  # Apache-2.0
-oslo.utils>=1.4.0,<1.5.0  # Apache-2.0
+# The order of packages is significant, because pip processes them in the order
+# of appearance. Changing the order has an impact on the overall integration
+# process, which may cause wedges in the gate later.
+pbr<2.0,>=0.11
+kombu>=3.0.7
+oslo.log>=1.2.0 # Apache-2.0
+oslo.messaging!=1.12.0,>=1.8.0 # Apache-2.0
+oslo.config>=1.11.0 # Apache-2.0
+oslo.utils>=1.6.0 # Apache-2.0
 paramiko>=1.13.0
 python-ceilometerclient>=1.0.13
-python-cinderclient>=1.1.0
-python-keystoneclient>=1.1.0
+python-cinderclient>=1.2.2
+python-keystoneclient>=1.6.0
 python-heatclient>=0.3.0
-python-neutronclient>=2.3.11,<3
+python-neutronclient<3,>=2.3.11
 python-novaclient>=2.22.0
 python-swiftclient>=2.2.0
 PyYAML>=3.1.0
-requests>=2.2.0,!=2.4.0
+requests>=2.5.2
 six>=1.9.0
 testrepository>=0.0.18
 testscenarios>=0.4
-testtools>=0.9.36,!=1.2.0
+testtools>=1.4.0
