@@ -160,7 +160,7 @@ class TroveClusterTest(common.HeatTestCase):
         self.rsrc_defn['Properties']['instances'][0]['flavor'] = 'm1.small'
         tc = trove_cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
-        error_msg = ("Property error : "
+        error_msg = ("Property error: "
                      "resources.cluster.properties.instances[0].flavor: "
                      "Error validating value 'm1.small': "
                      "The Flavor ID (m1.small) could not be found.")

@@ -203,7 +203,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.create_volume, self.t, stack, 'DataVolume')
-        self.assertEqual("Property error : "
+        self.assertEqual("Property error: "
                          "Resources.DataVolume.Properties.Tags[0]: "
                          "Unknown Property Foo", six.text_type(ex))
 
@@ -478,7 +478,8 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         updater = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, updater)
-        self.assertIn("NotSupported: Update to properties "
+        self.assertIn("NotSupported: resources.DataVolume: "
+                      "Update to properties "
                       "AvailabilityZone, Size, Tags of DataVolume "
                       "(AWS::EC2::Volume) is not supported",
                       six.text_type(ex))
@@ -668,7 +669,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
                                   self.create_volume,
                                   self.t, stack, 'DataVolume')
         self.assertEqual(
-            "Property error : Resources.DataVolume.Properties.Size: "
+            "Property error: Resources.DataVolume.Properties.Size: "
             "0 is out of range (min: 1, max: None)", six.text_type(error))
 
     def test_volume_attachment_updates_not_supported(self):
@@ -698,7 +699,8 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
-        self.assertIn('NotSupported: Update to properties Device, InstanceId, '
+        self.assertIn('NotSupported: resources.MountPoint: '
+                      'Update to properties Device, InstanceId, '
                       'VolumeId of MountPoint (AWS::EC2::VolumeAttachment)',
                       six.text_type(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)

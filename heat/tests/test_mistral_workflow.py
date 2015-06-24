@@ -250,7 +250,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual([], wf.FnGetAtt('executions'))
 
     def test_direct_workflow_validation_error(self):
-        error_msg = ("Mistral resource validation error : "
+        error_msg = ("Mistral resource validation error: "
                      "workflow.properties.tasks.second_task.requires: "
                      "task second_task contains property 'requires' "
                      "in case of direct workflow. Only reverse workflows "
@@ -258,7 +258,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self._test_validation_failed(workflow_template_bad, error_msg)
 
     def test_wrong_params_using(self):
-        error_msg = ("Mistral resource validation error : "
+        error_msg = ("Mistral resource validation error: "
                      "workflow.properties.params: 'task_name' is not assigned "
                      "in 'params' in case of reverse type workflow.")
         self._test_validation_failed(workflow_template_bad_reverse, error_msg)
@@ -289,7 +289,8 @@ class TestMistralWorkflow(common.HeatTestCase):
                                 scheduler.TaskRunner(wf.create))
         expected_state = (wf.CREATE, wf.FAILED)
         self.assertEqual(expected_state, wf.state)
-        self.assertIn('Exception: boom!', six.text_type(exc))
+        self.assertIn('Exception: resources.workflow: boom!',
+                      six.text_type(exc))
 
     def test_update_replace(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
@@ -386,7 +387,8 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.mistral.executions.create.side_effect = Exception('boom!')
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
-        self.assertEqual('Exception: boom!', six.text_type(err))
+        self.assertEqual('Exception: resources.create_vm: boom!',
+                         six.text_type(err))
 
     def test_signal_wrong_input_and_params_type(self):
         tmpl = template_format.parse(workflow_template_full)
@@ -399,13 +401,15 @@ class TestMistralWorkflow(common.HeatTestCase):
         details = {'input': '3'}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
-        error_message = ("StackValidationFailed: Signal data error : Input in"
+        error_message = ("StackValidationFailed: resources.create_vm: "
+                         "Signal data error: Input in"
                          " signal data must be a map, find a <type 'str'>")
         self.assertEqual(error_message, six.text_type(err))
         details = {'params': '3'}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
-        error_message = ("StackValidationFailed: Signal data error : Params "
+        error_message = ("StackValidationFailed: resources.create_vm: "
+                         "Signal data error: Params "
                          "must be a map, find a <type 'str'>")
         self.assertEqual(error_message, six.text_type(err))
 
@@ -420,8 +424,8 @@ class TestMistralWorkflow(common.HeatTestCase):
         details = {'input': {'1': '3'}}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
-        error_message = ("StackValidationFailed: Signal data error :"
-                         " Unknown input 1")
+        error_message = ("StackValidationFailed: resources.create_vm: "
+                         "Signal data error: Unknown input 1")
         self.assertEqual(error_message, six.text_type(err))
 
     @testtools.skipIf(executions is None,

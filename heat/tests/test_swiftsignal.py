@@ -202,7 +202,9 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         rsrc = st.resources['test_wait_condition_handle']
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(rsrc.delete))
-        self.assertEqual('ClientException: Overlimit: 413', six.text_type(exc))
+        self.assertEqual('ClientException: '
+                         'resources.test_wait_condition_handle: '
+                         'Overlimit: 413', six.text_type(exc))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -231,7 +233,9 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         rsrc = st.resources['test_wait_condition_handle']
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(rsrc.delete))
-        self.assertEqual('ClientException: Overlimit: 413', six.text_type(exc))
+        self.assertEqual('ClientException: '
+                         'resources.test_wait_condition_handle: '
+                         'Overlimit: 413', six.text_type(exc))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -386,11 +390,13 @@ class SwiftSignalTest(common.HeatTestCase):
         self.addCleanup(timeutils.clear_time_override)
 
         st.create()
-        self.assertIn("Resource CREATE failed: SwiftSignalTimeout",
+        self.assertIn("SwiftSignalTimeout: resources.test_wait_condition: "
+                      "1 of 2 received - Signal 1 received",
                       st.status_reason)
         wc = st['test_wait_condition']
-        self.assertEqual("SwiftSignalTimeout: 1 of 2 received - Signal 1 "
-                         "received", wc.status_reason)
+        self.assertEqual("SwiftSignalTimeout: resources.test_wait_condition: "
+                         "1 of 2 received - Signal 1 received",
+                         wc.status_reason)
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -448,7 +454,8 @@ class SwiftSignalTest(common.HeatTestCase):
         st.create()
         self.assertEqual(('CREATE', 'FAILED'), st.state)
         wc = st['test_wait_condition']
-        self.assertEqual("SwiftSignalFailure: foo;bar", wc.status_reason)
+        self.assertEqual("SwiftSignalFailure: resources.test_wait_condition: "
+                         "foo;bar", wc.status_reason)
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -766,7 +773,8 @@ class SwiftSignalTest(common.HeatTestCase):
         st.create()
         self.assertEqual(('CREATE', 'FAILED'), st.state)
         wc = st['test_wait_condition']
-        self.assertEqual('Error: Failed to parse JSON data: {"status": '
+        self.assertEqual('Error: resources.test_wait_condition: '
+                         'Failed to parse JSON data: {"status": '
                          '"SUCCESS"', wc.status_reason)
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
@@ -791,7 +799,8 @@ class SwiftSignalTest(common.HeatTestCase):
         st.create()
         self.assertEqual(('CREATE', 'FAILED'), st.state)
         wc = st['test_wait_condition']
-        self.assertEqual('Error: Unknown status: BOO', wc.status_reason)
+        self.assertEqual('Error: resources.test_wait_condition: '
+                         'Unknown status: BOO', wc.status_reason)
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')

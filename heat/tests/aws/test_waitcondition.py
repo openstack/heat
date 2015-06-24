@@ -651,7 +651,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         ex = self.assertRaises(exception.ResourceFailure,
                                updater)
-        self.assertEqual("WaitConditionTimeout: 0 of 5 received",
-                         six.text_type(ex))
+        self.assertEqual("WaitConditionTimeout: resources.WaitForTheHandle: "
+                         "0 of 5 received", six.text_type(ex))
         self.assertEqual(5, rsrc.properties['Count'])
         self.m.VerifyAll()

@@ -373,7 +373,7 @@ class StackResourceTest(StackResourceBaseTest):
         stack = parser.Stack(utils.dummy_context(), stack_name,
                              templatem.Template(tmpl, files=files))
         rsrc = stack['volume_server']
-        raise_exc_msg = ('Failed to validate : resources.volume_server: '
+        raise_exc_msg = ('Failed to validate: resources.volume_server: '
                          'The specified reference "instance" '
                          '(in volume_attachment.Properties.instance_uuid) '
                          'is incorrect.')
@@ -708,6 +708,7 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
     def setUp(self):
         super(StackResourceCheckCompleteTest, self).setUp()
         self.nested = mock.MagicMock()
+        self.nested.name = 'nested-stack'
         self.parent_resource.nested = mock.MagicMock(return_value=self.nested)
         self.parent_resource._nested = self.nested
         setattr(self.nested, self.action.upper(), self.action.upper())
@@ -732,10 +733,17 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         done but the nested stack is not in (<action>,COMPLETE) state
         """
         self.nested.status = 'FAILED'
-        self.nested.status_reason = 'broken on purpose'
+        reason = ('Resource %s failed: ValueError: '
+                  'resources.%s: broken on purpose' % (
+                      self.action.upper(),
+                      'child_res'))
+        exp_path = 'resources.test.resources.child_res'
+        exp = 'ValueError: %s: broken on purpose' % exp_path
+        self.nested.status_reason = reason
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
-        self.assertRaises(resource.ResourceUnknownStatus, complete, None)
+        exc = self.assertRaises(exception.ResourceFailure, complete, None)
+        self.assertEqual(exp, six.text_type(exc))
         self.parent_resource.nested.assert_called_once_with(
             show_deleted=self.show_deleted, force_reload=True)
 

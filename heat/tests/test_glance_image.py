@@ -95,7 +95,7 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['min_disk'] = -1
-        error_msg = ('Property error : resources.image.properties.min_disk: '
+        error_msg = ('Property error: resources.image.properties.min_disk: '
                      '-1 is out of range (min: 0, max: None)')
         self._test_validate(image, error_msg)
 
@@ -108,7 +108,7 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['min_ram'] = -1
-        error_msg = ('Property error : resources.image.properties.min_ram: '
+        error_msg = ('Property error: resources.image.properties.min_ram: '
                      '-1 is out of range (min: 0, max: None)')
         self._test_validate(image, error_msg)
 
@@ -133,7 +133,7 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['disk_format'] = 'incorrect_format'
-        error_msg = ('Property error : '
+        error_msg = ('Property error: '
                      'resources.image.properties.disk_format: '
                      '"incorrect_format" is not an allowed value '
                      '[ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, iso]')
@@ -160,7 +160,7 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['container_format'] = 'incorrect_format'
-        error_msg = ('Property error : '
+        error_msg = ('Property error: '
                      'resources.image.properties.container_format: '
                      '"incorrect_format" is not an allowed value '
                      '[ami, ari, aki, bare, ova, ovf]')

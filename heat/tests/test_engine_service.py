@@ -553,8 +553,8 @@ class StackCreateTest(common.HeatTestCase):
         stack.store()
         stack.adopt()
         self.assertIsNotNone(stack['WebServer'])
-        expected = ('Resource ADOPT failed: Exception: Resource ID was not'
-                    ' provided.')
+        expected = ('Resource ADOPT failed: Exception: resources.WebServer: '
+                    'Resource ID was not provided.')
         self.assertEqual(expected, stack.status_reason)
         self.assertEqual((stack.ADOPT, stack.FAILED), stack.state)
 

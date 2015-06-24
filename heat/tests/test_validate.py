@@ -1073,7 +1073,7 @@ class validateTest(common.HeatTestCase):
         t = template_format.parse(test_template_invalid_property)
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
-        self.assertEqual({'Error': 'Property error : WikiDatabase.Properties: '
+        self.assertEqual({'Error': 'Property error: WikiDatabase.Properties: '
                                    'Unknown Property UnknownProperty'}, res)
 
     def test_invalid_resources(self):
@@ -1123,7 +1123,7 @@ class validateTest(common.HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
-            {'Error': 'Property error : WikiDatabase.Properties: '
+            {'Error': 'Property error: WikiDatabase.Properties: '
                       'Property SourceDestCheck not implemented yet'},
             res)
 
@@ -1407,7 +1407,7 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameter Groups error : '
+        self.assertEqual(_('Parameter Groups error: '
                            'parameter_groups.Database '
                            'Group: The InstanceType parameter must be '
                            'assigned to one parameter group only.'),
@@ -1425,7 +1425,7 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameter Groups error : '
+        self.assertEqual(_('Parameter Groups error: '
                            'parameter_groups.Database Group: The grouped '
                            'parameter SomethingNotHere does not '
                            'reference a valid parameter.'),
@@ -1438,7 +1438,7 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameter Groups error : parameter_groups.Server '
+        self.assertEqual(_('Parameter Groups error: parameter_groups.Server '
                            'Group: The parameters must be provided for each '
                            'parameter group.'), six.text_type(exc))
 
@@ -1449,7 +1449,7 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameter Groups error : parameter_groups: '
+        self.assertEqual(_('Parameter Groups error: parameter_groups: '
                            'The parameter_groups should be '
                            'a list.'), six.text_type(exc))
 
@@ -1460,7 +1460,7 @@ class validateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
-        self.assertEqual(_('Parameter Groups error : '
+        self.assertEqual(_('Parameter Groups error: '
                            'parameter_groups.Server Group: '
                            'The parameters of parameter group should be '
                            'a list.'), six.text_type(exc))

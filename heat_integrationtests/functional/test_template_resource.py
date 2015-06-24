@@ -648,3 +648,39 @@ Outputs:
 
         self.client.actions.check(stack_id=stack_identifier)
         self._wait_for_stack_status(stack_identifier, 'CHECK_COMPLETE')
+
+
+class TemplateResourceErrorMessageTest(test.HeatIntegrationTest):
+    """Prove that nested stack errors don't suck."""
+    template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  victim:
+    Type: fail.yaml
+'''
+    nested_templ = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  oops:
+    Type: OS::Heat::TestResource
+    Properties:
+      fail: true
+      wait_secs: 2
+'''
+
+    def setUp(self):
+        super(TemplateResourceErrorMessageTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_fail(self):
+        stack_identifier = self.stack_create(
+            template=self.template,
+            files={'fail.yaml': self.nested_templ},
+            expected_status='CREATE_FAILED')
+        stack = self.client.stacks.get(stack_identifier)
+
+        exp_path = 'resources.victim.resources.oops'
+        exp_msg = 'Test Resource failed oops'
+        exp = 'Resource CREATE failed: ValueError: %s: %s' % (exp_path,
+                                                              exp_msg)
+        self.assertEqual(exp, stack.stack_status_reason)

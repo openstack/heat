@@ -283,7 +283,7 @@ class swiftTest(common.HeatTestCase):
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         deleter = scheduler.TaskRunner(rsrc.delete)
         ex = self.assertRaises(exception.ResourceFailure, deleter)
-        self.assertIn('ResourceActionNotSupported: '
+        self.assertIn('ResourceActionNotSupported: resources.test_resource: '
                       'Deleting non-empty container',
                       six.text_type(ex))
 

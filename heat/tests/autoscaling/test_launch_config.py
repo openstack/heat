@@ -131,7 +131,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
         self.patchobject(nova.NovaClientPlugin, 'get_server',
                          side_effect=exception.EntityNotFound(
                              entity='Server', name='5678'))
-        msg = ("Property error : "
+        msg = ("Property error: "
                "Resources.LaunchConfig.Properties.InstanceId: "
                "Error validating value '5678': The Server (5678) "
                "could not be found.")
@@ -194,7 +194,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                               stack, 'LaunchConfig')
 
         excepted_error = (
-            'Property error : '
+            'Property error: '
             'Resources.LaunchConfig.Properties.BlockDeviceMappings[0]: '
             'Property DeviceName not assigned')
         self.assertIn(excepted_error, six.text_type(e))
