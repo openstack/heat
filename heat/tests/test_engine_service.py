@@ -190,6 +190,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def test_conv_wordpress_single_instance_stack_create(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 convergence=True)
+        stack.store()  # usually, stack is stored before converge is called
 
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
@@ -217,7 +218,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
                                 convergence=True)
-
+        stack.store()
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
@@ -292,6 +293,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
                                 convergence=True)
+        stack.store()
         # create stack
         stack.converge_stack(template=stack.t, action=stack.CREATE)
 
@@ -414,6 +416,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
                                 convergence=True)
+        stack.store()
         # create stack
         stack.converge_stack(template=stack.t, action=stack.CREATE)
 

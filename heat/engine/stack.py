@@ -940,7 +940,10 @@ class Stack(collections.Mapping):
         """
         Updates the stack and triggers convergence for resources
         """
-        self.prev_raw_template_id = getattr(self.t, 'id', None)
+        if action is not self.CREATE:
+            # no back-up template for create action
+            self.prev_raw_template_id = getattr(self.t, 'id', None)
+
         self.t = template
         previous_traversal = self.current_traversal
         self.current_traversal = uuidutils.generate_uuid()
