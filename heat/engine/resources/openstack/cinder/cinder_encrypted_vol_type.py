@@ -1,0 +1,121 @@
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from heat.common.i18n import _
+from heat.engine import constraints
+from heat.engine import properties
+from heat.engine import resource
+from heat.engine import support
+
+
+class CinderEncryptedVolumeType(resource.Resource):
+    """
+    A resource for encrypting a cinder volume type.
+
+    Note that default cinder security policy usage of this resource
+    is limited to being used by administrators only.
+    """
+
+    support_status = support.SupportStatus(version='5.0.0')
+
+    default_client_name = 'cinder'
+
+    PROPERTIES = (
+        PROVIDER, CONTROL_LOCATION, CIPHER, KEY_SIZE, VOLUME_TYPE
+    ) = (
+        'provider', 'control_location', 'cipher', 'key_size', 'volume_type'
+    )
+
+    properties_schema = {
+        PROVIDER: properties.Schema(
+            properties.Schema.STRING,
+            _('The class that provides encryption support. '
+              'For example, nova.volume.encryptors.luks.LuksEncryptor.'),
+            required=True,
+            update_allowed=True
+        ),
+        CONTROL_LOCATION: properties.Schema(
+            properties.Schema.STRING,
+            _('Notional service where encryption is performed '
+              'For example, front-end. For Nova.'),
+            constraints=[
+                constraints.AllowedValues(['front-end', 'back-end'])
+            ],
+            default='front-end',
+            update_allowed=True
+        ),
+        CIPHER: properties.Schema(
+            properties.Schema.STRING,
+            _('The encryption algorithm or mode. '
+              'For example, aes-xts-plain64.'),
+            constraints=[
+                constraints.AllowedValues(
+                    ['aes-xts-plain64', 'aes-cbc-essiv']
+                )
+            ],
+            default=None,
+            update_allowed=True
+        ),
+        KEY_SIZE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Size of encryption key, in bits. '
+              'For example, 128 or 256.'),
+            default=None,
+            update_allowed=True
+        ),
+        VOLUME_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Name or id of volume type (OS::Cinder::VolumeType).'),
+            required=True,
+            constraints=[constraints.CustomConstraint('cinder.vtype')]
+        ),
+    }
+
+    def _get_vol_type_id(self, volume_type):
+        id = self.client_plugin().get_volume_type(volume_type)
+        return id
+
+    def handle_create(self):
+        body = {
+            'provider': self.properties[self.PROVIDER],
+            'cipher': self.properties[self.CIPHER],
+            'key_size': self.properties[self.KEY_SIZE],
+            'control_location': self.properties[self.CONTROL_LOCATION]
+        }
+
+        vol_type_id = self._get_vol_type_id(self.properties[self.VOLUME_TYPE])
+
+        encrypted_vol_type = self.cinder().volume_encryption_types.create(
+            volume_type=vol_type_id, specs=body
+        )
+        self.resource_id_set(encrypted_vol_type.volume_type_id)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.cinder().volume_encryption_types.update(
+                volume_type=self.resource_id, specs=prop_diff
+            )
+
+    def handle_delete(self):
+        if self.resource_id is None:
+            return
+        try:
+            self.cinder().volume_encryption_types.delete(self.resource_id)
+        except Exception as e:
+            self.client_plugin().ignore_not_found(e)
+
+
+def resource_mapping():
+    return {
+        'OS::Cinder::EncryptedVolumeType': CinderEncryptedVolumeType
+    }
