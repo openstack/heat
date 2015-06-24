@@ -746,6 +746,51 @@ class HOTemplateTest(common.HeatTestCase):
         exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
         self.assertIn('Algorithm must be one of', six.text_type(exc))
 
+    def test_str_split(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [',', 'bar,baz']}
+        snippet_resolved = ['bar', 'baz']
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_str_split_index(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [',', 'bar,baz', 1]}
+        snippet_resolved = 'baz'
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_str_split_index_str(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [',', 'bar,baz', '1']}
+        snippet_resolved = 'baz'
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_str_split_index_bad(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [',', 'bar,baz', 'bad']}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect index to \"str_split\"', six.text_type(exc))
+
+    def test_str_split_index_out_of_range(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [',', 'bar,baz', '2']}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        expected = 'Incorrect index to \"str_split\" should be between 0 and 1'
+        self.assertEqual(expected, six.text_type(exc))
+
+    def test_str_split_bad_novalue(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [',']}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments to \"str_split\"',
+                      six.text_type(exc))
+
+    def test_str_split_bad_empty(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': []}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments to \"str_split\"',
+                      six.text_type(exc))
+
     def test_prevent_parameters_access(self):
         """
         Test that the parameters section can't be accessed using the template
