@@ -2093,6 +2093,9 @@ class StackServiceTest(common.HeatTestCase):
             'attributes': {
                 'foo': {'description': 'A generic attribute'},
                 'Foo': {'description': 'Another generic attribute'},
+                'show': {
+                    'description': 'Dictionary with resource attributes.',
+                    'type': 'map'},
             },
             'support_status': {
                 'status': 'SUPPORTED',

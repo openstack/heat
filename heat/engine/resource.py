@@ -106,6 +106,8 @@ class Resource(object):
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
 
+    BASE_ATTRIBUTES = (SHOW, ) = ('show', )
+
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
 
@@ -119,6 +121,15 @@ class Resource(object):
 
     # Resource implementations set this to update policies
     update_policy_schema = {}
+
+    # Description dictionary, that describes the common attributes for all
+    # resources
+    base_attributes_schema = {
+        SHOW: attributes.Schema(
+            _("Dictionary with resource attributes."),
+            type=attributes.Schema.MAP
+        )
+    }
 
     # If True, this resource may perform authenticated API requests
     # throughout its lifecycle
@@ -180,6 +191,7 @@ class Resource(object):
         self.name = name
         self.t = definition
         self.reparse()
+        self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
                                                 self._resolve_attribute)

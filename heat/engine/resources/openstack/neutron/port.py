@@ -58,12 +58,12 @@ class Port(neutron.NeutronResource):
     ATTRIBUTES = (
         ADMIN_STATE_UP_ATTR, DEVICE_ID_ATTR, DEVICE_OWNER_ATTR, FIXED_IPS_ATTR,
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
-        STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SHOW, SUBNETS_ATTR,
+        STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SUBNETS_ATTR,
         PORT_SECURITY_ENABLED_ATTR,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
-        'status', 'tenant_id', 'allowed_address_pairs', 'show', 'subnets',
+        'status', 'tenant_id', 'allowed_address_pairs', 'subnets',
         'port_security_enabled',
     )
 
@@ -276,10 +276,6 @@ class Port(neutron.NeutronResource):
             _("Additional MAC/IP address pairs allowed to pass through "
               "a port."),
             type=attributes.Schema.LIST
-        ),
-        SHOW: attributes.Schema(
-            _("All attributes."),
-            type=attributes.Schema.MAP
         ),
         SUBNETS_ATTR: attributes.Schema(
             _("A list of all subnet attributes for the port."),

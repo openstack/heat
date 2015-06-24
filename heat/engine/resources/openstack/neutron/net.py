@@ -28,10 +28,10 @@ class Net(neutron.NeutronResource):
     )
 
     ATTRIBUTES = (
-        STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR, SHOW,
+        STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR,
         PORT_SECURITY_ENABLED_ATTR, MTU_ATTR,
     ) = (
-        "status", "name", "subnets", "admin_state_up", "tenant_id", "show",
+        "status", "name", "subnets", "admin_state_up", "tenant_id",
         "port_security_enabled", "mtu",
     )
 
@@ -108,10 +108,6 @@ class Net(neutron.NeutronResource):
         TENANT_ID_ATTR: attributes.Schema(
             _("The tenant owning this network."),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _("All attributes."),
-            type=attributes.Schema.MAP
         ),
         PORT_SECURITY_ENABLED_ATTR: attributes.Schema(
             _("Port security enabled of the network."),

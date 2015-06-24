@@ -209,8 +209,8 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.child_template = mock.Mock(
             return_value=self.simple_template)
         sig1, sig2 = self.parent_resource.implementation_signature()
-        self.assertEqual('3ce48c5d860e8e76087897376bc686d23591d4a00'
-                         'e8df8ec25e84e6bd83e70a6', sig1)
+        self.assertEqual('7b0eaabb5b82b9e90804d42e0bb739035588cb797'
+                         '82427770646686ca2235028', sig1)
         self.assertEqual('5a58b34cc3dd7f4e11fa35b63daad7b6b3aaa1744'
                          '19eb1c42b75d102bdda5fc9', sig2)
         self.parent_stack.t.files["foo"] = "bar"

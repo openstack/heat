@@ -115,10 +115,10 @@ class Server(stack_user.StackUser):
     )
 
     ATTRIBUTES = (
-        NAME_ATTR, SHOW, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS,
+        NAME_ATTR, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS,
         INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6, CONSOLE_URLS,
     ) = (
-        'name', 'show', 'addresses', 'networks', 'first_address',
+        'name', 'addresses', 'networks', 'first_address',
         'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls',
     )
     properties_schema = {
@@ -442,10 +442,6 @@ class Server(stack_user.StackUser):
         NAME_ATTR: attributes.Schema(
             _('Name of the server.'),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _('A dict of all server details as returned by the API.'),
-            type=attributes.Schema.MAP
         ),
         ADDRESSES: attributes.Schema(
             _('A dict of all network addresses with corresponding port_id. '

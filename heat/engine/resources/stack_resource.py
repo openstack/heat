@@ -516,7 +516,10 @@ class StackResource(resource.Resource):
         return stack.output(op)
 
     def _resolve_attribute(self, name):
-        return self.get_output(name)
+        # NOTE(skraynev): should be removed in patch with methods,
+        # which resolve base attributes
+        if name != 'show':
+            return self.get_output(name)
 
     def implementation_signature(self):
         schema_names = ([prop for prop in self.properties_schema] +
