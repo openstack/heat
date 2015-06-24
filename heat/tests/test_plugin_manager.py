@@ -40,6 +40,18 @@ def error_test_mapping():
     raise MappingTestError
 
 
+def error_test_exception_mapping():
+    raise Exception("exception")
+
+
+def invalid_type_test_mapping():
+    return 'foo'
+
+
+def none_return_test_mapping():
+    return
+
+
 class MappingTestError(Exception):
     pass
 
@@ -81,6 +93,20 @@ class TestPluginManager(common.HeatTestCase):
     def test_load_mapping_error(self):
         pm = plugin_manager.PluginMapping('error_test')
         self.assertRaises(MappingTestError, pm.load_from_module, self.module())
+
+    def test_load_mapping_exception(self):
+        pm = plugin_manager.PluginMapping('error_test_exception')
+        self.assertRaisesRegex(Exception,
+                               "exception",
+                               pm.load_from_module, self.module())
+
+    def test_load_mapping_invalidtype(self):
+        pm = plugin_manager.PluginMapping('invalid_type_test')
+        self.assertEqual({}, pm.load_from_module(self.module()))
+
+    def test_load_mapping_nonereturn(self):
+        pm = plugin_manager.PluginMapping('none_return_test')
+        self.assertEqual({}, pm.load_from_module(self.module()))
 
     def test_modules(self):
         mgr = plugin_manager.PluginManager('heat.tests')
