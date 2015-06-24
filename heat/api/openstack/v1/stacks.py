@@ -292,7 +292,7 @@ class StackController(object):
                                                      not_tags=not_tags,
                                                      not_tags_any=not_tags_any)
             except AttributeError as ex:
-                LOG.warn(_LW("Old Engine Version: %s") % ex)
+                LOG.warn(_LW("Old Engine Version: %s"), ex)
 
         return stacks_view.collection(req, stacks=stacks, count=count,
                                       tenant_safe=tenant_safe)

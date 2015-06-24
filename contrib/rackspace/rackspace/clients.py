@@ -57,7 +57,7 @@ class RackspaceClientPlugin(client_plugin.ClientPlugin):
         """Create an authenticated client context."""
         self.pyrax = pyrax.create_context("rackspace")
         self.pyrax.auth_endpoint = self.context.auth_url
-        LOG.info(_LI("Authenticating username: %s") %
+        LOG.info(_LI("Authenticating username: %s"),
                  self.context.username)
         tenant = self.context.tenant_id
         tenant_name = self.context.tenant

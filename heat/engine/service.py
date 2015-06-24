@@ -812,7 +812,7 @@ class EngineService(service.Service):
             msg = _("Cancelling update when stack is %s"
                     ) % str(current_stack.state)
             raise exception.NotSupported(feature=msg)
-        LOG.info(_LI('Starting cancel of updating stack %s') % db_stack.name)
+        LOG.info(_LI('Starting cancel of updating stack %s'), db_stack.name)
         # stop the running update and take the lock
         # as we cancel only running update, the acquire_result is
         # always some engine_id, not None

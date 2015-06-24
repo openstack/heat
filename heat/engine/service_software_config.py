@@ -111,7 +111,7 @@ class SoftwareConfigService(service.Service):
         except Exception as ex:
             # ignore not-found, in case swift is not consistent yet
             if swift_plugin.is_not_found(ex):
-                LOG.info(_LI('Signal object not found: %(c)s %(o)s') % {
+                LOG.info(_LI('Signal object not found: %(c)s %(o)s'), {
                     'c': container, 'o': object_name})
                 return sd
             raise ex
@@ -134,7 +134,7 @@ class SoftwareConfigService(service.Service):
             # ignore not-found, in case swift is not consistent yet
             if swift_plugin.is_not_found(ex):
                 LOG.info(_LI(
-                    'Signal object not found: %(c)s %(o)s') % {
+                    'Signal object not found: %(c)s %(o)s'), {
                         'c': container, 'o': object_name})
                 return sd
             raise ex

@@ -141,7 +141,7 @@ class CloudNetwork(resource.Resource):
             try:
                 network.delete()
             except NetworkInUse:
-                LOG.warn("Network '%s' still in use." % network.id)
+                LOG.warn(_LW("Network '%s' still in use."), network.id)
             else:
                 network_info['delete_issued'] = True
             return False
