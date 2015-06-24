@@ -1588,18 +1588,27 @@ class Stack(collections.Mapping):
         LOG.info('[%s(%s)] update traversal %s complete',
                  self.name, self.id, traversal_id)
 
-        prev_prev_id = self.prev_raw_template_id
-        self.prev_raw_template_id = None
-        self.store()
-
-        if (prev_prev_id is not None and
-                prev_prev_id != self.t.id):
-            raw_template_object.RawTemplate.delete(self.context,
-                                                   prev_prev_id)
-
         reason = 'Stack %s completed successfully' % self.action
         self.state_set(self.action, self.COMPLETE, reason)
-        if self.action == self.DELETE:
+        self.purge_db()
+
+    def purge_db(self):
+        '''Cleanup database after stack has completed/failed.
+
+        1. Delete previous raw template if stack completes successfully.
+        2. Deletes all sync points. They are no longer needed after stack
+           has completed/failed.
+        3. Delete the stack is the action is DELETE.
+       '''
+        if self.prev_raw_template_id is not None:
+            prev_tmpl_id = self.prev_raw_template_id
+            self.prev_raw_template_id = None
+            self.store()
+            raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
+
+        sync_point.delete_all(self.context, self.id, self.current_traversal)
+
+        if (self.action, self.status) == (self.DELETE, self.COMPLETE):
             try:
                 stack_object.Stack.delete(self.context, self.id)
             except exception.NotFound:

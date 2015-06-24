@@ -15,6 +15,7 @@
 
 import mock
 
+from heat.common import exception
 from heat.engine import resource
 from heat.engine import stack
 from heat.engine import sync_point
@@ -112,6 +113,12 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.resource = self.stack['A']
         self.is_update = True
         self.graph_key = (self.resource.id, self.is_update)
+        self.orig_load_method = stack.Stack.load
+        stack.Stack.load = mock.Mock(return_value=self.stack)
+
+    def tearDown(self):
+        super(CheckWorkflowUpdateTest, self).tearDown()
+        stack.Stack.load = self.orig_load_method
 
     def test_resource_not_available(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
@@ -180,6 +187,135 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
+
+    def test_resource_update_failure_sets_stack_state_as_failed(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
+        self.worker._trigger_rollback = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_cru.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.resource.UPDATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        s = self.stack.load(self.ctx, stack_id=self.stack.id)
+        self.assertEqual((s.UPDATE, s.FAILED), (s.action, s.status))
+        self.assertEqual(u'ResourceNotAvailable: resources.A: The Resource (A)'
+                         ' is not available.', s.status_reason)
+
+    def test_resource_cleanup_failure_sets_stack_state_as_failed(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.is_update = False  # invokes check_resource_cleanup
+        self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
+        self.worker._trigger_rollback = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_crc.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.resource.UPDATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        s = self.stack.load(self.ctx, stack_id=self.stack.id)
+        self.assertEqual((s.UPDATE, s.FAILED), (s.action, s.status))
+        self.assertEqual(u'ResourceNotAvailable: resources.A: The Resource (A)'
+                         ' is not available.', s.status_reason)
+
+    def test_resource_update_failure_triggers_rollback_if_enabled(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.stack.disable_rollback = False
+        self.stack.store()
+        self.worker._trigger_rollback = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_cru.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.resource.UPDATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        self.assertTrue(self.worker._trigger_rollback.called)
+        # make sure the rollback is called on given stack
+        call_args, call_kwargs = self.worker._trigger_rollback.call_args
+        called_stack = call_args[1]
+        self.assertEqual(self.stack.id, called_stack.id)
+
+    def test_resource_cleanup_failure_triggers_rollback_if_enabled(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.is_update = False  # invokes check_resource_cleanup
+        self.stack.disable_rollback = False
+        self.stack.store()
+        self.worker._trigger_rollback = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_crc.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.resource.UPDATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        self.assertTrue(self.worker._trigger_rollback.called)
+        # make sure the rollback is called on given stack
+        call_args, call_kwargs = self.worker._trigger_rollback.call_args
+        called_stack = call_args[1]
+        self.assertEqual(self.stack.id, called_stack.id)
+
+    def test_rollback_is_not_triggered_on_rollback_disabled_stack(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.stack.disable_rollback = True
+        self.stack.store()
+        self.worker._trigger_rollback = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_cru.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.stack.CREATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        self.assertFalse(self.worker._trigger_rollback.called)
+
+    def test_rollback_not_re_triggered_for_a_rolling_back_stack(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.stack.disable_rollback = False
+        self.stack.action = self.stack.ROLLBACK
+        self.stack.status = self.stack.IN_PROGRESS
+        self.stack.store()
+        self.worker._trigger_rollback = mock.MagicMock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_cru.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.stack.CREATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        self.assertFalse(self.worker._trigger_rollback.called)
+
+    def test_resource_update_failure_purges_db_for_stack_failure(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.stack.disable_rollback = True
+        self.stack.store()
+        self.stack.purge_db = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_cru.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.resource.UPDATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        self.assertTrue(self.stack.purge_db.called)
+
+    def test_resource_cleanup_failure_purges_db_for_stack_failure(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        self.is_update = False
+        self.stack.disable_rollback = True
+        self.stack.store()
+        self.stack.purge_db = mock.Mock()
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_crc.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action=self.resource.UPDATE)
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal, {},
+                                   self.is_update)
+        self.assertTrue(self.stack.purge_db.called)
 
 
 @mock.patch.object(worker, 'construct_input_data')
