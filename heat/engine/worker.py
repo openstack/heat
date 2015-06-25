@@ -163,7 +163,9 @@ class WorkerService(service.Service):
             try:
                 check_resource_update(rsrc, tmpl.id, data, self.engine_id)
             except resource.UpdateReplace:
-                new_res_id = rsrc.make_replacement()
+                new_res_id = rsrc.make_replacement(tmpl.id)
+                LOG.info("Replacing resource with new id %s", new_res_id)
+                data = sync_point.serialize_input_data(data)
                 self._rpc_client.check_resource(cnxt,
                                                 new_res_id,
                                                 current_traversal,
