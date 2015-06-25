@@ -119,16 +119,12 @@ class NeutronResource(resource.Resource):
                 result=_('Resource is not built'))
 
     def _resolve_attribute(self, name):
-        if self.resource_id:
-            try:
-                attributes = self._show_resource()
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                return None
-            if name == 'show':
-                return attributes
-
-            return attributes[name]
+        try:
+            attributes = self._show_resource()
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return None
+        return attributes[name]
 
     def FnGetRefId(self):
         return six.text_type(self.resource_id)

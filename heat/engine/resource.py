@@ -122,6 +122,10 @@ class Resource(object):
     # Resource implementations set this to update policies
     update_policy_schema = {}
 
+    # Default entity of resource, which is used for during resolving
+    # show attribute
+    entity = None
+
     # Description dictionary, that describes the common attributes for all
     # resources
     base_attributes_schema = {
@@ -194,7 +198,7 @@ class Resource(object):
         self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
-                                                self._resolve_attribute)
+                                                self._resolve_all_attributes)
 
         self.abandon_in_progress = False
 
@@ -1307,6 +1311,44 @@ class Resource(object):
 
         if not updated_ok:
             LOG.warn(_LW('Failed to unlock resource %s'), rsrc.name)
+
+    def _resolve_all_attributes(self, attr):
+        """Method for resolving all attributes.
+
+        This method uses basic _resolve_attribute method for resolving
+        specific attributes. Base attributes will be resolved with
+        corresponding method, which should be defined in each resource
+        class.
+
+        :param attr: attribute name, which will be resolved
+        :returns: method of resource class, which resolve base attribute
+        """
+        if attr in self.base_attributes_schema:
+            # check resource_id, because usually it is required for getting
+            # information about resource
+            if not self.resource_id:
+                return None
+            try:
+                return getattr(self, '_{0}_resource'.format(attr))()
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
+                return None
+        else:
+            return self._resolve_attribute(attr)
+
+    def _show_resource(self):
+        """Default implementation; should be overridden by resources
+
+        :returns: the map of resource information or None
+        """
+        if self.entity:
+            try:
+                obj = getattr(self.client(), self.entity)
+                resource = obj.get(self.resource_id)
+                return resource.to_dict()
+            except AttributeError as ex:
+                LOG.warn(_LW("Resolving 'show' attribute has failed : %s"), ex)
+                return None
 
     def _resolve_attribute(self, name):
         """

@@ -1645,6 +1645,80 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(mock_get_obj.called)
         self.assertFalse(db_res.select_and_update.called)
 
+    def create_resource_for_attributes_tests(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'GenericResourceType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+        return stack
+
+    def test_resolve_attributes_stuff_base_attribute(self):
+        # check path with resolving base attributes (via 'show' attribute)
+        stack = self.create_resource_for_attributes_tests()
+        res = stack['res']
+
+        with mock.patch.object(res, '_show_resource') as show_attr:
+            # return None, if resource_id is None
+            self.assertIsNone(res.FnGetAtt('show'))
+
+            # set resource_id and recheck with re-written _show_resource
+            res.resource_id = mock.Mock()
+
+            show_attr.return_value = 'my attr'
+            self.assertEqual('my attr', res.FnGetAtt('show'))
+            self.assertEqual(1, show_attr.call_count)
+
+            # clean resolved_values
+            with mock.patch.object(res.attributes, '_resolved_values') as r_v:
+                with mock.patch.object(res, 'client_plugin') as client_plug:
+                    r_v.return_value = {}
+                    # generate error during calling _show_resource
+                    show_attr.side_effect = [Exception]
+                    self.assertIsNone(res.FnGetAtt('show'))
+                    self.assertEqual(2, show_attr.call_count)
+                    self.assertEqual(1, client_plug.call_count)
+
+    def test_resolve_attributes_stuff_custom_attribute(self):
+        # check path with resolve_attribute
+        stack = self.create_resource_for_attributes_tests()
+        res = stack['res']
+
+        with mock.patch.object(res, '_resolve_attribute') as res_attr:
+            res.FnGetAtt('Foo')
+            res_attr.assert_called_once_with('Foo')
+
+    def test_show_resource(self):
+        # check default function _show_resource
+        stack = self.create_resource_for_attributes_tests()
+        res = stack['res']
+
+        # check default value of entity
+        self.assertIsNone(res.entity)
+        self.assertIsNone(res.FnGetAtt('show'))
+
+        # set entity and recheck
+        res.resource_id = 'test_resource_id'
+        res.entity = 'test'
+
+        # mock gettring resource info
+        res.client = mock.Mock()
+        test_obj = mock.Mock()
+        test_resource = mock.Mock()
+        test_resource.to_dict.return_value = {'test': 'info'}
+        test_obj.get.return_value = test_resource
+        res.client().test = test_obj
+
+        self.assertEqual({'test': 'info'}, res._show_resource())
+
+        # check handling AttributeError exception
+        test_obj.get.side_effect = AttributeError
+        self.assertIsNone(res._show_resource())
+
 
 class ResourceAdoptTest(common.HeatTestCase):
 

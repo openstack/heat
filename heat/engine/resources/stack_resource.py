@@ -79,9 +79,11 @@ class StackResource(resource.Resource):
         if not self.attributes and outputs:
             self.attributes_schema = (
                 attributes.Attributes.schema_from_outputs(outputs))
-            self.attributes = attributes.Attributes(self.name,
-                                                    self.attributes_schema,
-                                                    self._resolve_attribute)
+            # Note: it can be updated too and for show return dictionary
+            #       with all available outputs
+            self.attributes = attributes.Attributes(
+                self.name, self.attributes_schema,
+                self._resolve_all_attributes)
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource):
@@ -525,10 +527,7 @@ class StackResource(resource.Resource):
         return result
 
     def _resolve_attribute(self, name):
-        # NOTE(skraynev): should be removed in patch with methods,
-        # which resolve base attributes
-        if name != 'show':
-            return self.get_output(name)
+        return self.get_output(name)
 
     def implementation_signature(self):
         schema_names = ([prop for prop in self.properties_schema] +

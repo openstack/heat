@@ -117,7 +117,7 @@ class TemplateResource(stack_resource.StackResource):
         self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
-                                                self._resolve_attribute)
+                                                self._resolve_all_attributes)
 
     def child_params(self):
         '''

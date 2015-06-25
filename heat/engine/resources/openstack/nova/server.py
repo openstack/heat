@@ -516,6 +516,8 @@ class Server(stack_user.StackUser):
 
     default_client_name = 'nova'
 
+    entity = 'servers'
+
     def translation_rules(self):
         return [properties.TranslationRule(
             self.properties,
@@ -934,8 +936,6 @@ class Server(stack_user.StackUser):
             return server.accessIPv4
         if name == self.ACCESSIPV6:
             return server.accessIPv6
-        if name == self.SHOW:
-            return server._info
         if name == self.CONSOLE_URLS:
             return self.client_plugin('nova').get_console_urls(server)
 
