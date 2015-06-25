@@ -26,6 +26,7 @@ from heat.common.i18n import _LI
 from heat.common import messaging as rpc_messaging
 from heat.engine import dependencies
 from heat.engine import resource
+from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.rpc import worker_client as rpc_client
 
@@ -83,6 +84,24 @@ class WorkerService(service.Service):
 
         super(WorkerService, self).stop()
 
+    def _trigger_rollback(self, cnxt, stack):
+        # TODO(ananta) convergence-rollback implementation
+        pass
+
+    def _handle_resource_failure(self, cnxt, stack_id, traversal_id,
+                                 failure_reason):
+        stack = parser.Stack.load(cnxt, stack_id=stack_id)
+        # make sure no new stack operation was triggered
+        if stack.current_traversal != traversal_id:
+            return
+
+        stack.state_set(stack.action, stack.FAILED, failure_reason)
+        if (not stack.disable_rollback and
+                stack.action in (stack.CREATE, stack.UPDATE)):
+            self._trigger_rollback(cnxt, stack)
+        else:
+            stack.purge_db()
+
     @context.request_context
     def check_resource(self, cnxt, resource_id, current_traversal, data,
                        is_update):
@@ -127,12 +146,22 @@ class WorkerService(service.Service):
                 return
             except resource.UpdateInProgress:
                 return
+            except exception.ResourceFailure as e:
+                reason = six.text_type(e)
+                self._handle_resource_failure(
+                    cnxt, stack.id, current_traversal, reason)
+                return
 
             input_data = construct_input_data(rsrc)
         else:
             try:
                 check_resource_cleanup(rsrc, tmpl.id, data)
             except resource.UpdateInProgress:
+                return
+            except exception.ResourceFailure as e:
+                reason = six.text_type(e)
+                self._handle_resource_failure(
+                    cnxt, stack.id, current_traversal, reason)
                 return
 
         graph_key = (rsrc.id, is_update)

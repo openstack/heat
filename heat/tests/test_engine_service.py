@@ -491,6 +491,50 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     {}, is_update))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
+    def test_mark_complete_purges_db(self, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.store()
+        stack.purge_db = mock.Mock()
+        stack.mark_complete(stack.current_traversal)
+        self.assertTrue(stack.purge_db.called)
+
+    def test_purge_db_deletes_previous_template(self, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        prev_tmpl = templatem.Template.create_empty_template()
+        prev_tmpl.store()
+        stack.prev_raw_template_id = prev_tmpl.id
+        stack.store()
+        stack.purge_db()
+        self.assertRaises(exception.NotFound,
+                          templatem.Template.load,
+                          stack.context, prev_tmpl.id)
+
+    def test_purge_db_deletes_sync_points(self, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.store()
+        stack.purge_db()
+        rows = sync_point_object.SyncPoint.delete_all_by_stack_and_traversal(
+            stack.context, stack.id, stack.current_traversal)
+        self.assertEqual(0, rows)
+
+    def test_purge_db_deletes_stack_for_deleted_stack(self, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.store()
+        stack.state_set(stack.DELETE, stack.COMPLETE, 'test reason')
+        stack.purge_db()
+        self.assertRaises(exception.NotFound,
+                          parser.Stack.load,
+                          stack.context, stack_id=stack.id,
+                          show_deleted=False)
+
 
 class StackCreateTest(common.HeatTestCase):
     def setUp(self):
