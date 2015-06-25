@@ -1008,20 +1008,12 @@ class Resource(object):
 
     def delete_convergence(self, template_id, resource_data, engine_id):
         '''
-        Deletes the resource by invoking the scheduler TaskRunner
-        and it persists the resource's current_template_id to template_id and
-        resource's requires to list of the required resource id from the
-        given resource_data and existing resource's requires.
+        Destroys the resource. The destroy task is run in a scheduler
+        TaskRunner after acquiring the lock on resource.
         '''
         with self.lock(engine_id):
-            runner = scheduler.TaskRunner(self.delete)
+            runner = scheduler.TaskRunner(self.destroy)
             runner()
-
-            # update the resource db record
-            self.current_template_id = template_id
-            current_requires = {graph_key[0]
-                                for graph_key, data in resource_data.items()}
-            self.requires = (list(set(self.requires) - current_requires))
 
     @scheduler.wrappertask
     def delete(self):
@@ -1194,14 +1186,16 @@ class Resource(object):
     def unlock(self, rsrc, engine_id, atomic_key):
         if atomic_key is None:
             atomic_key = 0
-        res = rsrc.select_and_update(
+
+        updated_ok = rsrc.select_and_update(
             {'engine_id': None,
              'current_template_id': self.current_template_id,
              'updated_at': self.updated_time,
              'requires': self.requires},
             expected_engine_id=engine_id,
             atomic_key=atomic_key + 1)
-        if res != 1:
+
+        if not updated_ok:
             LOG.warn(_LW('Failed to unlock resource %s'), rsrc.name)
 
     def _resolve_attribute(self, name):

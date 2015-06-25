@@ -1478,21 +1478,17 @@ class ResourceTest(common.HeatTestCase):
                res.name)
         self.assertEqual(msg, six.text_type(ex))
 
-    @mock.patch.object(resource.Resource, 'delete')
-    def test_delete_convergence(self, mock_delete):
+    def test_delete_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.requires = [1, 2]
         res._store()
+        res.destroy = mock.Mock()
         self._assert_resource_lock(res.id, None, None)
         res.delete_convergence('template_key', {(1, True): {},
                                                 (1, True): {}},
                                'engine-007')
-
-        mock_delete.assert_called_once_with()
-        self.assertEqual('template_key', res.current_template_id)
-        self.assertEqual([2], res.requires)
-        self._assert_resource_lock(res.id, None, 2)
+        self.assertTrue(res.destroy.called)
 
     def test_delete_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')

@@ -1609,9 +1609,10 @@ class Stack(collections.Mapping):
         1. Delete previous raw template if stack completes successfully.
         2. Deletes all sync points. They are no longer needed after stack
            has completed/failed.
-        3. Delete the stack is the action is DELETE.
+        3. Delete the stack if the action is DELETE.
        '''
-        if self.prev_raw_template_id is not None:
+        if (self.prev_raw_template_id is not None and
+                self.status != self.FAILED):
             prev_tmpl_id = self.prev_raw_template_id
             self.prev_raw_template_id = None
             self.store()
