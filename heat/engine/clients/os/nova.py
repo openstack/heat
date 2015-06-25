@@ -638,3 +638,12 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, flavor):
         client.client_plugin('nova').get_flavor_id(flavor)
+
+
+class NetworkConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.NovaNetworkNotFound,
+                           exception.PhysicalResourceNameAmbiguity)
+
+    def validate_with_client(self, client, network):
+        client.client_plugin('nova').get_nova_network_id(network)
