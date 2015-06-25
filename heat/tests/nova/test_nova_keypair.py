@@ -84,12 +84,14 @@ class NovaKeyPairTest(common.HeatTestCase):
         """Test basic create."""
         key_name = "generate_no_save"
         tp_test, created_key = self._get_mock_kp_for_create(key_name)
-        self.fake_keypairs.get(key_name).AndReturn(created_key)
+        self.fake_keypairs.get(key_name).MultipleTimes().AndReturn(created_key)
+        created_key.to_dict().AndReturn({'key_pair': 'info'})
         self.m.ReplayAll()
         scheduler.TaskRunner(tp_test.create)()
         self.assertEqual("", tp_test.FnGetAtt('private_key'))
         self.assertEqual("generated test public key",
                          tp_test.FnGetAtt('public_key'))
+        self.assertEqual({'key_pair': 'info'}, tp_test.FnGetAtt('show'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.m.VerifyAll()
