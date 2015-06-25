@@ -1635,6 +1635,28 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.stack_update, self.ctx,
                           UUID2, values)
 
+    def test_stack_update_matches_traversal_id(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        values = {
+            'current_traversal': 'another-dummy-uuid',
+        }
+        updated = db_api.stack_update(self.ctx, stack.id, values,
+                                      exp_trvsl='dummy-uuid')
+        self.assertTrue(updated)
+        stack = db_api.stack_get(self.ctx, stack.id)
+        self.assertEqual('another-dummy-uuid', stack.current_traversal)
+
+        # test update fails when expected traversal is not matched
+        matching_uuid = 'another-dummy-uuid'
+        updated = db_api.stack_update(self.ctx, stack.id, values,
+                                      exp_trvsl=matching_uuid)
+        self.assertTrue(updated)
+
+        diff_uuid = 'some-other-dummy-uuid'
+        updated = db_api.stack_update(self.ctx, stack.id, values,
+                                      exp_trvsl=diff_uuid)
+        self.assertFalse(updated)
+
     def test_stack_get_returns_a_stack(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         ret_stack = db_api.stack_get(self.ctx, stack.id, show_deleted=False)

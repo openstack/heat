@@ -497,7 +497,7 @@ def stack_create(context, values):
     return stack_ref
 
 
-def stack_update(context, stack_id, values):
+def stack_update(context, stack_id, values, exp_trvsl=None):
     stack = stack_get(context, stack_id)
 
     if stack is None:
@@ -505,6 +505,11 @@ def stack_update(context, stack_id, values):
                                  '%(id)s %(msg)s') % {
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
+
+    if (exp_trvsl is not None
+            and stack.current_traversal != exp_trvsl):
+        # stack updated by another update
+        return False
 
     session = _session(context)
     rows_updated = (session.query(models.Stack)

@@ -158,6 +158,18 @@ class Stack(
         return db_api.stack_update(context, stack_id, values)
 
     @classmethod
+    def select_and_update(cls, context, stack_id, values, exp_trvsl=None):
+        """Update the stack by selecting on traversal ID.
+
+        If the stack is found with given traversal, it is updated.
+
+        If there occurs a race while updating, only one will succeed and
+        other will get return value of False.
+        """
+        return db_api.stack_update(context, stack_id, values,
+                                   exp_trvsl=exp_trvsl)
+
+    @classmethod
     def delete(cls, context, stack_id):
         db_api.stack_delete(context, stack_id)
 
