@@ -469,6 +469,22 @@ class MiscMethodsTest(common.HeatTestCase):
                                      {}, 'engine-id')
         self.assertTrue(mock_update.called)
 
+    @mock.patch.object(resource.Resource, 'update_convergence')
+    def test_check_resource_update_complete(self, mock_update):
+        self.resource.action = 'CREATE'
+        self.resource.status = 'COMPLETE'
+        worker.check_resource_update(self.resource, self.resource.stack.t.id,
+                                     {}, 'engine-id')
+        self.assertTrue(mock_update.called)
+
+    @mock.patch.object(resource.Resource, 'update_convergence')
+    def test_check_resource_update_failed(self, mock_update):
+        self.resource.action = 'CREATE'
+        self.resource.status = 'FAILED'
+        worker.check_resource_update(self.resource, self.resource.stack.t.id,
+                                     {}, 'engine-id')
+        self.assertTrue(mock_update.called)
+
     @mock.patch.object(resource.Resource, 'delete_convergence')
     def test_check_resource_cleanup_delete(self, mock_delete):
         self.resource.current_template_id = 'new-template-id'
