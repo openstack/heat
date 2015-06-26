@@ -142,7 +142,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {})
+                                         {}, self.worker.engine_id)
         self.assertFalse(mock_crc.called)
 
         expected_calls = []
@@ -167,7 +167,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {})
+                                         {}, self.worker.engine_id)
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -182,7 +182,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {})
+                                         {}, self.worker.engine_id)
         self.assertFalse(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -353,7 +353,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         self.assertFalse(mock_cru.called)
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
-            {})
+            {}, self.worker.engine_id)
 
     def test_is_cleanup_traversal_raise_update_inprogress(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
@@ -363,7 +363,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
             self.is_update)
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {})
+                                         {}, self.worker.engine_id)
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -416,25 +416,25 @@ class MiscMethodsTest(common.HeatTestCase):
     @mock.patch.object(resource.Resource, 'create_convergence')
     def test_check_resource_update_create(self, mock_create):
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
-                                     {})
+                                     {}, 'engine-id')
         self.assertTrue(mock_create.called)
 
     @mock.patch.object(resource.Resource, 'update_convergence')
     def test_check_resource_update_update(self, mock_update):
         self.resource.resource_id = 'physical-res-id'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
-                                     {})
+                                     {}, 'engine-id')
         self.assertTrue(mock_update.called)
 
     @mock.patch.object(resource.Resource, 'delete_convergence')
     def test_check_resource_cleanup_delete(self, mock_delete):
         self.resource.current_template_id = 'new-template-id'
         worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
-                                      {})
+                                      {}, 'engine-id')
         self.assertTrue(mock_delete.called)
 
     @mock.patch.object(resource.Resource, 'delete_convergence')
     def test_check_resource_cleanup_nodelete(self, mock_delete):
         worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
-                                      {})
+                                      {}, 'engine-id')
         self.assertFalse(mock_delete.called)
