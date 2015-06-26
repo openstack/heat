@@ -225,9 +225,6 @@ class InstanceGroup(stack_resource.StackResource):
         return tags + [{self.TAG_KEY: 'metering.groupname',
                         self.TAG_VALUE: self.FnGetRefId()}]
 
-    def handle_delete(self):
-        return self.delete_nested()
-
     def _get_conf_properties(self):
         conf_refid = self.properties[self.LAUNCH_CONFIGURATION_NAME]
         conf = self.stack.resource_by_refid(conf_refid)

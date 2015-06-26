@@ -272,9 +272,6 @@ class ResourceGroup(stack_resource.StackResource):
                                          {},
                                          self.stack.timeout_mins)
 
-    def handle_delete(self):
-        return self.delete_nested()
-
     def FnGetAtt(self, key, *path):
         if key.startswith("resource."):
             return grouputils.get_nested_attrs(self, key, False, *path)

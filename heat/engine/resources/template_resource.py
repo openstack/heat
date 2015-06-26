@@ -276,9 +276,6 @@ class TemplateResource(stack_resource.StackResource):
         return self.update_with_template(self.child_template(),
                                          self.child_params())
 
-    def handle_delete(self):
-        return self.delete_nested()
-
     def FnGetRefId(self):
         if self.nested() is None:
             return six.text_type(self.name)
