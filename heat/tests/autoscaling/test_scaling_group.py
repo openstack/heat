@@ -453,7 +453,40 @@ class TestGroupAdjust(common.HeatTestCase):
                 stack=self.group.stack)]
 
         self.assertEqual(expected_notifies, notify.call_args_list)
-        grouputils.get_size.assert_called_once_with(self.group)
+        grouputils.get_size.assert_called_with(self.group)
+
+    def test_notification_send_if_resize_failed(self):
+        """If resize failed, the capacity of group might have been changed"""
+        self.patchobject(grouputils, 'get_size', side_effect=[3, 4])
+        self.patchobject(self.group, 'resize',
+                         side_effect=ValueError('test error'))
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.patchobject(self.group, '_cooldown_inprogress',
+                         return_value=False)
+
+        self.assertRaises(ValueError, self.group.adjust,
+                          5, adjustment_type='ExactCapacity')
+
+        expected_notifies = [
+            mock.call(
+                capacity=3, suffix='start',
+                adjustment_type='ExactCapacity',
+                groupname=u'WebServerGroup',
+                message=u'Start resizing the group WebServerGroup',
+                adjustment=5,
+                stack=self.group.stack),
+            mock.call(
+                capacity=4, suffix='error',
+                adjustment_type='ExactCapacity',
+                groupname=u'WebServerGroup',
+                message=u'test error',
+                adjustment=5,
+                stack=self.group.stack)]
+
+        self.assertEqual(expected_notifies, notify.call_args_list)
+        self.group.resize.assert_called_once_with(5)
+        grouputils.get_size.assert_has_calls([mock.call(self.group),
+                                              mock.call(self.group)])
 
 
 class TestGroupCrud(common.HeatTestCase):

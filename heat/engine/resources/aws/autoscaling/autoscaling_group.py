@@ -341,6 +341,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                 try:
                     notif.update({'suffix': 'error',
                                   'message': six.text_type(resize_ex),
+                                  'capacity': grouputils.get_size(self),
                                   })
                     notification.send(**notif)
                 except Exception:
