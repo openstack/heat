@@ -485,3 +485,26 @@ class NeutronSubnetTest(common.HeatTestCase):
                                rsrc.validate)
         self.assertEqual("ipv6_ra_mode and ipv6_address_mode are not "
                          "supported for ipv4.", six.text_type(ex))
+
+    def test_deprecated_network_id(self):
+        template = """
+        heat_template_version: 2015-04-30
+        resources:
+          net:
+            type: OS::Neutron::Net
+            properties:
+              name: test
+          subnet:
+            type: OS::Neutron::Subnet
+            properties:
+              network_id: { get_resource: net }
+              cidr: 10.0.0.0/24
+        """
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['subnet']
+        stack.create()
+
+        self.assertEqual(cfn_funcs.ResourceRef(stack, 'get_resource', 'net'),
+                         rsrc.properties.get('network'))
+        self.assertIsNone(rsrc.properties.get('network_id'))

@@ -66,9 +66,14 @@ class Subnet(neutron.NeutronResource):
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
+                status=support.HIDDEN,
+                version='5.0.0',
                 message=_('Use property %s.') % NETWORK,
-                version='2014.2'),
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.2'
+                )
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -239,6 +244,14 @@ class Subnet(neutron.NeutronResource):
             type=attributes.Schema.STRING
         ),
     }
+
+    def translation_rules(self):
+        return [
+            properties.TranslationRule(self.properties,
+                                       properties.TranslationRule.REPLACE,
+                                       [self.NETWORK],
+                                       value_path=[self.NETWORK_ID])
+        ]
 
     @classmethod
     def _null_gateway_ip(cls, props):
