@@ -44,9 +44,14 @@ class FloatingIP(neutron.NeutronResource):
         FLOATING_NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
+                status=support.HIDDEN,
+                version='5.0.0',
                 message=_('Use property %s.') % FLOATING_NETWORK,
-                version='2014.2'),
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.2'
+                )
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -122,6 +127,16 @@ class FloatingIP(neutron.NeutronResource):
             type=attributes.Schema.STRING
         ),
     }
+
+    def translation_rules(self):
+        return [
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.FLOATING_NETWORK],
+                value_path=[self.FLOATING_NETWORK_ID]
+            )
+        ]
 
     def add_dependencies(self, deps):
         super(FloatingIP, self).add_dependencies(deps)
