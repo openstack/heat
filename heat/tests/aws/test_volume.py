@@ -27,8 +27,8 @@ from heat.engine.resources.aws.ec2 import instance
 from heat.engine.resources.aws.ec2 import volume as aws_vol
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.tests.cinder import test_volume_utils as vt_base
 from heat.tests.nova import fakes as fakes_nova
-from heat.tests import test_volume_utils as vt_base
 from heat.tests import utils
 
 

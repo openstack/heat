@@ -26,8 +26,8 @@ from heat.engine.resources.openstack.cinder import volume as c_vol
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.objects import resource_data as resource_data_object
+from heat.tests.cinder import test_volume_utils as vt_base
 from heat.tests.nova import fakes as fakes_nova
-from heat.tests import test_volume_utils as vt_base
 from heat.tests import utils
 
 cinder_volume_template = '''
