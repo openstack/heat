@@ -856,7 +856,7 @@ class TemplateDataTest(common.HeatTestCase):
         self.res.get_template_file = mock.Mock(
             side_effect=exception.TemplateNotFound(
                 message='test_resource.template'))
-        self.assertEqual(self.res.template_data(), '{}')
+        self.assertEqual('{}', self.res.template_data())
 
 
 class TemplateResourceCrudTest(common.HeatTestCase):
