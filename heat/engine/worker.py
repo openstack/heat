@@ -28,6 +28,8 @@ from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import stack as parser
 from heat.engine import sync_point
+from heat.objects import resource as resource_objects
+from heat.rpc import listener_client
 from heat.rpc import worker_client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -84,6 +86,18 @@ class WorkerService(service.Service):
 
         super(WorkerService, self).stop()
 
+    def _try_steal_engine_lock(self, cnxt, resource_id):
+        rs_obj = resource_objects.Resource.get_obj(cnxt,
+                                                   resource_id)
+        if (rs_obj.engine_id != self.engine_id and
+                rs_obj.engine_id is not None):
+            if not listener_client.EngineListnerClient(
+                    rs_obj.engine_id).is_alive(cnxt):
+                # steal the lock.
+                rs_obj.update_and_save({'engine_id': None})
+                return True
+        return False
+
     def _trigger_rollback(self, cnxt, stack):
         # TODO(ananta) convergence-rollback implementation
         pass
@@ -136,7 +150,7 @@ class WorkerService(service.Service):
                 return
 
             try:
-                check_resource_update(rsrc, tmpl.id, data)
+                check_resource_update(rsrc, tmpl.id, data, self.engine_id)
             except resource.UpdateReplace:
                 new_res_id = rsrc.make_replacement()
                 self._rpc_client.check_resource(cnxt,
@@ -145,6 +159,11 @@ class WorkerService(service.Service):
                                                 data, is_update)
                 return
             except resource.UpdateInProgress:
+                if self._try_steal_engine_lock(cnxt, resource_id):
+                    self._rpc_client.check_resource(cnxt,
+                                                    resource_id,
+                                                    current_traversal,
+                                                    data, is_update)
                 return
             except exception.ResourceFailure as e:
                 reason = six.text_type(e)
@@ -155,8 +174,13 @@ class WorkerService(service.Service):
             input_data = construct_input_data(rsrc)
         else:
             try:
-                check_resource_cleanup(rsrc, tmpl.id, data)
+                check_resource_cleanup(rsrc, tmpl.id, data, self.engine_id)
             except resource.UpdateInProgress:
+                if self._try_steal_engine_lock(cnxt, resource_id):
+                    self._rpc_client.check_resource(cnxt,
+                                                    resource_id,
+                                                    current_traversal,
+                                                    data, is_update)
                 return
             except exception.ResourceFailure as e:
                 reason = six.text_type(e)
@@ -184,9 +208,33 @@ class WorkerService(service.Service):
             check_stack_complete(cnxt, rsrc.stack, current_traversal,
                                  rsrc.id, deps, is_update)
         except sync_point.SyncPointNotFound:
-            # NOTE(sirushtim): Implemented by spec
-            # convergence-concurrent-workflow
-            pass
+            # Reload the stack to determine the current traversal, and check
+            # the SyncPoint for the current node to determine if it is ready.
+            # If it is, then retrigger the current node with the appropriate
+            # data for the latest traversal.
+            stack = parser.Stack.load(cnxt, stack_id=rsrc.stack.id)
+            if current_traversal == rsrc.stack.current_traversal:
+                LOG.debug('[%s] Traversal sync point missing.',
+                          current_traversal)
+                return
+
+            current_traversal = stack.current_traversal
+            current_deps = ([tuple(i), (tuple(j) if j is not None else None)]
+                            for i, j in stack.current_deps['edges'])
+            deps = dependencies.Dependencies(edges=current_deps)
+            key = sync_point.make_key(resource_id, current_traversal,
+                                      is_update)
+            predecessors = deps.graph()[key]
+
+            def do_check(target_key, data):
+                self.check_resource(resource_id, current_traversal,
+                                    data)
+
+            try:
+                sync_point.sync(cnxt, resource_id, current_traversal,
+                                is_update, do_check, predecessors, {key: None})
+            except sync_point.sync_points.NotFound:
+                pass
 
 
 def construct_input_data(rsrc):
@@ -238,20 +286,20 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
                     {sender_key: sender_data})
 
 
-def check_resource_update(rsrc, template_id, data):
+def check_resource_update(rsrc, template_id, data, engine_id):
     '''
     Create or update the Resource if appropriate.
     '''
     if rsrc.resource_id is None:
-        rsrc.create_convergence(template_id, data)
+        rsrc.create_convergence(template_id, data, engine_id)
     else:
-        rsrc.update_convergence(template_id, data)
+        rsrc.update_convergence(template_id, data, engine_id)
 
 
-def check_resource_cleanup(rsrc, template_id, data):
+def check_resource_cleanup(rsrc, template_id, data, engine_id):
     '''
     Delete the Resource if appropriate.
     '''
 
     if rsrc.current_template_id != template_id:
-        rsrc.delete_convergence(template_id, data)
+        rsrc.delete_convergence(template_id, data, engine_id)

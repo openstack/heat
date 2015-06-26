@@ -630,24 +630,21 @@ class Resource(object):
         '''
         return self
 
-    def create_convergence(self, template_id, resource_data):
+    def create_convergence(self, template_id, resource_data, engine_id):
         '''
         Creates the resource by invoking the scheduler TaskRunner
         and it persists the resource's current_template_id to template_id and
         resource's requires to list of the required resource id from the
         given resource_data.
         '''
+        with self.lock(engine_id):
+            runner = scheduler.TaskRunner(self.create)
+            runner()
 
-        runner = scheduler.TaskRunner(self.create)
-        runner()
-
-        # update the resource db record
-        self.current_template_id = template_id
-        self.requires = (list({graph_key[0]
-                         for graph_key, data in resource_data.items()}))
-        self._store_or_update(self.action,
-                              self.status,
-                              self.status_reason)
+            # update the resource db record (stored in unlock())
+            self.current_template_id = template_id
+            self.requires = list(
+                {graph_key[0] for graph_key, data in resource_data.items()})
 
     @scheduler.wrappertask
     def create(self):
@@ -790,31 +787,22 @@ class Resource(object):
         except ValueError:
             return True
 
-    def update_convergence(self, template_id, resource_data):
+    def update_convergence(self, template_id, resource_data, engine_id):
         '''
         Updates the resource by invoking the scheduler TaskRunner
         and it persists the resource's current_template_id to template_id and
         resource's requires to list of the required resource id from the
         given resource_data and existing resource's requires.
         '''
+        with self.lock(engine_id):
+            runner = scheduler.TaskRunner(self.update, self.t)
+            runner()
 
-        if self.status == self.IN_PROGRESS:
-            ex = UpdateInProgress(self.name)
-            LOG.exception(ex)
-            raise ex
-
-        # update the resource
-        runner = scheduler.TaskRunner(self.update, self.t)
-        runner()
-
-        # update the resource db record
-        self.current_template_id = template_id
-        current_requires = {graph_key[0]
-                            for graph_key, data in resource_data.items()}
-        self.requires = (list(set(self.requires) | current_requires))
-        self._store_or_update(self.action,
-                              self.status,
-                              self.status_reason)
+            # update the resource db record (stored in unlock)
+            self.current_template_id = template_id
+            current_requires = set(
+                graph_key[0] for graph_key, data in resource_data.items())
+            self.requires = list(set(self.requires) | current_requires)
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
@@ -1006,30 +994,22 @@ class Resource(object):
                 msg = _('"%s" deletion policy not supported') % policy
                 raise exception.StackValidationFailed(message=msg)
 
-    def delete_convergence(self, template_id, resource_data):
+    def delete_convergence(self, template_id, resource_data, engine_id):
         '''
         Deletes the resource by invoking the scheduler TaskRunner
         and it persists the resource's current_template_id to template_id and
         resource's requires to list of the required resource id from the
         given resource_data and existing resource's requires.
         '''
-        if self.status == self.IN_PROGRESS:
-            ex = UpdateInProgress(self.name)
-            LOG.exception(ex)
-            raise ex
+        with self.lock(engine_id):
+            runner = scheduler.TaskRunner(self.delete)
+            runner()
 
-        # delete the resource
-        runner = scheduler.TaskRunner(self.delete)
-        runner()
-
-        # update the resource db record
-        self.current_template_id = template_id
-        current_requires = {graph_key[0]
-                            for graph_key, data in resource_data.items()}
-        self.requires = (list(set(self.requires) - current_requires))
-        self._store_or_update(self.action,
-                              self.status,
-                              self.status_reason)
+            # update the resource db record
+            self.current_template_id = template_id
+            current_requires = {graph_key[0]
+                                for graph_key, data in resource_data.items()}
+            self.requires = (list(set(self.requires) - current_requires))
 
     @scheduler.wrappertask
     def delete(self):
@@ -1171,6 +1151,46 @@ class Resource(object):
             # This should only happen in unit tests
             LOG.warning(_LW('Resource "%s" not pre-stored in DB'), self)
             self._store(metadata)
+
+    @contextlib.contextmanager
+    def lock(self, engine_id):
+        updated_ok = False
+        try:
+            rs = resource_objects.Resource.get_obj(self.context, self.id)
+            updated_ok = rs.select_and_update(
+                {'engine_id': engine_id},
+                atomic_key=rs.atomic_key,
+                expected_engine_id=None)
+        except Exception as ex:
+            LOG.error(_LE('DB error %s'), ex)
+            raise
+
+        if not updated_ok:
+            ex = UpdateInProgress(self.name)
+            LOG.exception('atomic:%s engine_id:%s/%s' % (
+                rs.atomic_key, rs.engine_id, engine_id))
+            raise ex
+
+        try:
+            yield
+        except:  # noqa
+            with excutils.save_and_reraise_exception():
+                self.unlock(rs, engine_id, rs.atomic_key)
+        else:
+            self.unlock(rs, engine_id, rs.atomic_key)
+
+    def unlock(self, rsrc, engine_id, atomic_key):
+        if atomic_key is None:
+            atomic_key = 0
+        res = rsrc.select_and_update(
+            {'engine_id': None,
+             'current_template_id': self.current_template_id,
+             'updated_at': self.updated_time,
+             'requires': self.requires},
+            expected_engine_id=engine_id,
+            atomic_key=atomic_key + 1)
+        if res != 1:
+            LOG.warn(_LW('Failed to unlock resource %s'), rsrc.name)
 
     def _resolve_attribute(self, name):
         """

@@ -162,6 +162,12 @@ class Resource(
         resource_db.update_and_save(values)
         return self._refresh()
 
+    def select_and_update(self, values, expected_engine_id=None,
+                          atomic_key=0):
+        return db_api.resource_update(self._context, self.id, values,
+                                      atomic_key=atomic_key,
+                                      expected_engine_id=expected_engine_id)
+
     def _refresh(self):
         return self.__class__._from_db_object(
             self,
