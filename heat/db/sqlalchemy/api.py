@@ -1169,7 +1169,13 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key):
             decrypt_function = getattr(crypt, decrypt_function_name)
             decrypted_val = decrypt_function(parameters[param_name][1],
                                              encryption_key)
-            parameters[param_name] = encodeutils.safe_decode(decrypted_val)
+            try:
+                parameters[param_name] = encodeutils.safe_decode(decrypted_val)
+            except UnicodeDecodeError:
+                # if the incorrect encryption_key was used then we can
+                # get total gibberish here and safe_decode() will freak out.
+                parameters[param_name] = decrypted_val
+
         raw_template.environment['encrypted_param_names'] = []
 
     session.commit()
