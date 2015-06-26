@@ -795,7 +795,9 @@ class Resource(object):
         given resource_data and existing resource's requires.
         '''
         with self.lock(engine_id):
-            runner = scheduler.TaskRunner(self.update, self.t)
+            new_temp = template.Template.load(self.context, template_id)
+            new_res_def = new_temp.resource_definitions(self.stack)[self.name]
+            runner = scheduler.TaskRunner(self.update, new_res_def)
             runner()
 
             # update the resource db record (stored in unlock)

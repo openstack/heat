@@ -1436,16 +1436,27 @@ class ResourceTest(common.HeatTestCase):
 
     @mock.patch.object(resource.Resource, 'update')
     def test_update_convergence(self, mock_update):
-        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        tmpl = rsrc_defn.ResourceDefinition('test_res',
+                                            'ResourceWithPropsType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.requires = [2]
         res._store()
         self._assert_resource_lock(res.id, None, None)
-        res.update_convergence('template_key', {(1, True): {},
-                                                (1, True): {}}, 'engine-007')
 
-        mock_update.assert_called_once_with(res.t)
-        self.assertEqual('template_key', res.current_template_id)
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_temp.store()
+
+        res.update_convergence(new_temp.id, {(1, True): {},
+                                             (1, True): {}}, 'engine-007')
+
+        mock_update.assert_called_once_with(
+            new_temp.resource_definitions(self.stack)[res.name])
+        self.assertEqual(new_temp.id, res.current_template_id)
         self.assertEqual([1, 2], res.requires)
         self._assert_resource_lock(res.id, None, 2)
 
