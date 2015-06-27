@@ -286,7 +286,7 @@ class Join(function.Function):
 
     Takes the form::
 
-        { "Fn::Join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] }
+        { "Fn::Join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] ] }
 
     And resolves to::
 
