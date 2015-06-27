@@ -34,11 +34,13 @@ class Port(neutron.NeutronResource):
         ADMIN_STATE_UP, FIXED_IPS, MAC_ADDRESS,
         DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
         DEVICE_OWNER, REPLACEMENT_POLICY, VNIC_TYPE,
+        PORT_SECURITY_ENABLED,
     ) = (
         'network_id', 'network', 'name', 'value_specs',
         'admin_state_up', 'fixed_ips', 'mac_address',
         'device_id', 'security_groups', 'allowed_address_pairs',
         'device_owner', 'replacement_policy', 'binding:vnic_type',
+        'port_security_enabled',
     )
 
     _FIXED_IP_KEYS = (
@@ -57,10 +59,12 @@ class Port(neutron.NeutronResource):
         ADMIN_STATE_UP_ATTR, DEVICE_ID_ATTR, DEVICE_OWNER_ATTR, FIXED_IPS_ATTR,
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
         STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SHOW, SUBNETS_ATTR,
+        PORT_SECURITY_ENABLED_ATTR,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
         'status', 'tenant_id', 'allowed_address_pairs', 'show', 'subnets',
+        'port_security_enabled',
     )
 
     properties_schema = {
@@ -217,6 +221,15 @@ class Port(neutron.NeutronResource):
             support_status=support.SupportStatus(version='2015.1'),
             update_allowed=True
         ),
+        PORT_SECURITY_ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Flag to enable/disable port security on the port. '
+              'When disable this feature(set it to False), there will be no '
+              'packages filtering, like security-group and address-pairs.'),
+            default=True,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='5.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -272,6 +285,11 @@ class Port(neutron.NeutronResource):
         SUBNETS_ATTR: attributes.Schema(
             _("A list of all subnet attributes for the port."),
             type=attributes.Schema.LIST
+        ),
+        PORT_SECURITY_ENABLED_ATTR: attributes.Schema(
+            _("Port security enabled of the port."),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.BOOLEAN
         ),
     }
 

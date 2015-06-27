@@ -84,6 +84,7 @@ class NeutronTest(common.HeatTestCase):
         self.assertEqual({'name': 'resource_name',
                           'router:external': True,
                           'admin_state_up': False,
+                          'port_security_enabled': True,
                           'shared': False}, props)
 
     def test_is_built(self):

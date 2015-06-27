@@ -15,21 +15,24 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
+from heat.engine import support
 
 
 class Net(neutron.NeutronResource):
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
-        DHCP_AGENT_IDS,
+        DHCP_AGENT_IDS, PORT_SECURITY_ENABLED,
     ) = (
         'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
-        'dhcp_agent_ids',
+        'dhcp_agent_ids', 'port_security_enabled',
     )
 
     ATTRIBUTES = (
         STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR, SHOW,
+        PORT_SECURITY_ENABLED_ATTR,
     ) = (
         "status", "name", "subnets", "admin_state_up", "tenant_id", "show",
+        "port_security_enabled",
     )
 
     properties_schema = {
@@ -75,6 +78,15 @@ class Net(neutron.NeutronResource):
               'property to administrative users only.'),
             update_allowed=True
         ),
+        PORT_SECURITY_ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Flag to enable/disable port security on the network. It '
+              'provides the default value for the attribute of the ports '
+              'created on this network'),
+            default=True,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='5.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -101,6 +113,11 @@ class Net(neutron.NeutronResource):
         SHOW: attributes.Schema(
             _("All attributes."),
             type=attributes.Schema.MAP
+        ),
+        PORT_SECURITY_ENABLED_ATTR: attributes.Schema(
+            _("Port security enabled of the network."),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.BOOLEAN
         ),
     }
 
