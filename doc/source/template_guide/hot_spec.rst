@@ -155,6 +155,24 @@ For example, Heat currently supports the following values for the
       str_replace
       Fn::Select
 
+2015-10-15
+    The key with value *2015-10-15* indicates that the YAML document is a HOT
+    template and it may contain features added and/or removed up until the
+    Liberty release. This version removes the *Fn::Select* function, path based
+    get_attr/get_param references should be used instead.
+
+::
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  repeat
+  digest
+  resource_facade
+  str_replace
+
+
 
 .. _hot_spec_parameter_groups:
 
@@ -1028,8 +1046,3 @@ In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the ``str_replace`` function.
-
-Fn::Select
-----------
-``Fn::Select`` is a function borrowed from CFN template.  Please check the CFN
-template guide for a description.

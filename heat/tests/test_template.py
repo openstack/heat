@@ -408,7 +408,8 @@ class TemplateTest(common.HeatTestCase):
             }''')
         init_ex = self.assertRaises(exception.InvalidTemplateVersion,
                                     template.Template, invalid_hot_version_tmp)
-        valid_versions = ['2014-10-16', '2013-05-23', '2015-04-30']
+        valid_versions = ['2015-10-15', '2013-05-23', '2014-10-16',
+                          '2015-04-30']
         ex_error_msg = ('The template version is invalid: '
                         '"heat_template_version: 2012-12-12". '
                         '"heat_template_version" should be one of: %s'
