@@ -403,19 +403,20 @@ def format_validate_parameter(param):
     return res
 
 
-def format_software_config(sc):
+def format_software_config(sc, detail=True):
     if sc is None:
         return
     result = {
         rpc_api.SOFTWARE_CONFIG_ID: sc.id,
         rpc_api.SOFTWARE_CONFIG_NAME: sc.name,
         rpc_api.SOFTWARE_CONFIG_GROUP: sc.group,
-        rpc_api.SOFTWARE_CONFIG_CONFIG: sc.config['config'],
-        rpc_api.SOFTWARE_CONFIG_INPUTS: sc.config['inputs'],
-        rpc_api.SOFTWARE_CONFIG_OUTPUTS: sc.config['outputs'],
-        rpc_api.SOFTWARE_CONFIG_OPTIONS: sc.config['options'],
-        rpc_api.SOFTWARE_CONFIG_CREATION_TIME: sc.created_at.isoformat(),
+        rpc_api.SOFTWARE_CONFIG_CREATION_TIME: sc.created_at.isoformat()
     }
+    if detail:
+        result[rpc_api.SOFTWARE_CONFIG_CONFIG] = sc.config['config']
+        result[rpc_api.SOFTWARE_CONFIG_INPUTS] = sc.config['inputs']
+        result[rpc_api.SOFTWARE_CONFIG_OUTPUTS] = sc.config['outputs']
+        result[rpc_api.SOFTWARE_CONFIG_OPTIONS] = sc.config['options']
     return result
 
 

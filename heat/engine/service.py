@@ -266,7 +266,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.9'
+    RPC_API_VERSION = '1.10'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1476,6 +1476,15 @@ class EngineService(service.Service):
     @context.request_context
     def show_software_config(self, cnxt, config_id):
         return self.software_config.show_software_config(cnxt, config_id)
+
+    @context.request_context
+    def list_software_configs(self, cnxt, limit=None, marker=None,
+                              tenant_safe=True):
+        return self.software_config.list_software_configs(
+            cnxt,
+            limit=limit,
+            marker=marker,
+            tenant_safe=tenant_safe)
 
     @context.request_context
     def create_software_config(self, cnxt, group, name, config,

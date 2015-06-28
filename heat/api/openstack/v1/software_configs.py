@@ -11,11 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
+from heat.common import param_utils
 from heat.common import serializers
 from heat.common import wsgi
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 
 
@@ -33,6 +36,44 @@ class SoftwareConfigController(object):
 
     def default(self, req, **args):
         raise exc.HTTPNotFound()
+
+    def _extract_bool_param(self, name, value):
+        try:
+            return param_utils.extract_bool(name, value)
+        except ValueError as e:
+            raise exc.HTTPBadRequest(six.text_type(e))
+
+    def _index(self, req, tenant_safe=True):
+        whitelist = {
+            'limit': 'single',
+            'marker': 'single'
+        }
+        params = util.get_allowed_params(req.params, whitelist)
+        scs = self.rpc_client.list_software_configs(req.context,
+                                                    tenant_safe=tenant_safe,
+                                                    **params)
+        return {'software_configs': scs}
+
+    @util.policy_enforce
+    def global_index(self, req):
+        return self._index(req, tenant_safe=False)
+
+    @util.policy_enforce
+    def index(self, req):
+        """
+        Lists summary information for all software configs
+        """
+        global_tenant = False
+        name = rpc_api.PARAM_GLOBAL_TENANT
+        if name in req.params:
+            global_tenant = self._extract_bool_param(
+                name,
+                req.params.get(name))
+
+        if global_tenant:
+            return self.global_index(req, req.context.tenant_id)
+
+        return self._index(req)
 
     @util.policy_enforce
     def show(self, req, config_id):

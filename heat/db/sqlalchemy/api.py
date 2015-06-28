@@ -873,6 +873,15 @@ def software_config_get(context, config_id):
     return result
 
 
+def software_config_get_all(context, limit=None, marker=None,
+                            tenant_safe=True):
+    query = model_query(context, models.SoftwareConfig)
+    if tenant_safe:
+        query = query.filter_by(tenant=context.tenant_id)
+    return _paginate_query(context, query, models.SoftwareConfig,
+                           limit=limit, marker=marker).all()
+
+
 def software_config_delete(context, config_id):
     config = software_config_get(context, config_id)
     session = orm_session.Session.object_session(config)

@@ -3740,6 +3740,15 @@ class RoutesTest(common.HeatTestCase):
         self.assertRoute(
             self.m,
             '/aaaa/software_configs',
+            'GET',
+            'index',
+            'SoftwareConfigController',
+            {
+                'tenant_id': 'aaaa'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_configs',
             'POST',
             'create',
             'SoftwareConfigController',
@@ -4145,6 +4154,18 @@ class SoftwareConfigControllerTest(ControllerTest, common.HeatTestCase):
     def test_default(self):
         self.assertRaises(
             webob.exc.HTTPNotFound, self.controller.default, None)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_index(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index')
+        req = self._get('/software_configs')
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'list_software_configs',
+                return_value=[]):
+            resp = self.controller.index(req, tenant_id=self.tenant)
+            self.assertEqual(
+                {'software_configs': []}, resp)
 
     @mock.patch.object(policy.Enforcer, 'enforce')
     def test_show(self, mock_enforce):

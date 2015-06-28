@@ -57,5 +57,10 @@ class SoftwareConfig(base.VersionedObject,
             context, cls(), db_api.software_config_get(context, config_id))
 
     @classmethod
+    def get_all(cls, context, **kwargs):
+        scs = db_api.software_config_get_all(context, **kwargs)
+        return [cls._from_db_object(context, cls(), sc) for sc in scs]
+
+    @classmethod
     def delete(cls, context, config_id):
         db_api.software_config_delete(context, config_id)

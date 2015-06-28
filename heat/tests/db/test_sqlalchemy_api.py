@@ -1030,6 +1030,17 @@ class SqlAlchemyTest(common.HeatTestCase):
             self.ctx,
             config_id)
 
+    def test_software_config_get_all(self):
+        self.assertEqual([], db_api.software_config_get_all(self.ctx))
+        tenant_id = self.ctx.tenant_id
+        software_config = db_api.software_config_create(
+            self.ctx, {'name': 'config_mysql',
+                       'tenant': tenant_id})
+        self.assertIsNotNone(software_config)
+        software_configs = db_api.software_config_get_all(self.ctx)
+        self.assertEqual(1, len(software_configs))
+        self.assertEqual(software_config, software_configs[0])
+
     def test_software_config_delete(self):
         tenant_id = self.ctx.tenant_id
         config = db_api.software_config_create(
@@ -1109,16 +1120,16 @@ class SqlAlchemyTest(common.HeatTestCase):
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         self.assertIsNotNone(deployment)
-        all = db_api.software_deployment_get_all(self.ctx)
-        self.assertEqual(1, len(all))
-        self.assertEqual(deployment, all[0])
-        all = db_api.software_deployment_get_all(
+        deployments = db_api.software_deployment_get_all(self.ctx)
+        self.assertEqual(1, len(deployments))
+        self.assertEqual(deployment, deployments[0])
+        deployments = db_api.software_deployment_get_all(
             self.ctx, server_id=values['server_id'])
-        self.assertEqual(1, len(all))
-        self.assertEqual(deployment, all[0])
-        all = db_api.software_deployment_get_all(
+        self.assertEqual(1, len(deployments))
+        self.assertEqual(deployment, deployments[0])
+        deployments = db_api.software_deployment_get_all(
             self.ctx, server_id=str(uuid.uuid4()))
-        self.assertEqual([], all)
+        self.assertEqual([], deployments)
 
     def test_software_deployment_update(self):
         deployment_id = str(uuid.uuid4())

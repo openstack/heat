@@ -268,6 +268,11 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api('set_watch_state', 'call',
                               watch_name='watch1', state="xyz")
 
+    def test_list_software_configs(self):
+        self._test_engine_api('list_software_configs', 'call',
+                              limit=mock.ANY, marker=mock.ANY,
+                              tenant_safe=mock.ANY)
+
     def test_show_software_config(self):
         self._test_engine_api('show_software_config', 'call',
                               config_id='cda89008-6ea6-4057-b83d-ccde8f0b48c9')

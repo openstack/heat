@@ -306,6 +306,14 @@ def software_config_get(context, config_id):
     return IMPL.software_config_get(context, config_id)
 
 
+def software_config_get_all(context, limit=None, marker=None,
+                            tenant_safe=True):
+    return IMPL.software_config_get_all(context,
+                                        limit=limit,
+                                        marker=marker,
+                                        tenant_safe=tenant_safe)
+
+
 def software_config_delete(context, config_id):
     return IMPL.software_config_delete(context, config_id)
 
