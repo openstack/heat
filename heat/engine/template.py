@@ -229,7 +229,8 @@ class Template(collections.Mapping):
         sections (e.g. parameters are check by parameters schema class).
 
         '''
-        t_digest = hashlib.sha256(six.text_type(self.t)).hexdigest()
+        t_digest = hashlib.sha256(
+            six.text_type(self.t).encode('utf-8')).hexdigest()
 
         # TODO(kanagaraj-manickam) currently t_digest is stored in self. which
         # is used to check whether already template is validated or not.

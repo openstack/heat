@@ -37,7 +37,8 @@ def encrypt(value, encryption_key=None):
     if value is None:
         return None, None
     encryption_key = get_valid_encryption_key(encryption_key, fix_length=True)
-    sym = fernet.Fernet(encryption_key.encode('base64'))
+    encoded_key = base64.b64encode(encryption_key.encode('utf-8'))
+    sym = fernet.Fernet(encoded_key)
     res = sym.encrypt(encodeutils.safe_encode(value))
     return 'cryptography_decrypt_v1', res
 
@@ -60,7 +61,8 @@ def oslo_decrypt_v1(value, encryption_key=None):
 
 def cryptography_decrypt_v1(value, encryption_key=None):
     encryption_key = get_valid_encryption_key(encryption_key, fix_length=True)
-    sym = fernet.Fernet(encryption_key.encode('base64'))
+    encoded_key = base64.b64encode(encryption_key.encode('utf-8'))
+    sym = fernet.Fernet(encoded_key)
     return sym.decrypt(encodeutils.safe_encode(value))
 
 
