@@ -64,5 +64,5 @@ class SyncPointTestCase(common.HeatTestCase):
         self.assertTrue(mock_callback.called)
 
     def test_serialize_input_data(self):
-        res = sync_point.serialize_input_data({(3L, 8): None})
-        self.assertEqual({'input_data': [[[3L, 8], None]]}, res)
+        res = sync_point.serialize_input_data({(3, 8): None})
+        self.assertEqual({'input_data': [[[3, 8], None]]}, res)
