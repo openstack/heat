@@ -300,7 +300,7 @@ class Repeat(function.Function):
                             self.fn_name)
 
         try:
-            for_each = self.args['for_each']
+            for_each = function.resolve(self.args['for_each'])
             template = self.args['template']
         except (KeyError, TypeError):
             example = ('''repeat:
@@ -334,9 +334,8 @@ class Repeat(function.Function):
                         for (k, v) in template.items())
 
     def result(self):
-        for_each = function.resolve(self._for_each)
-        keys = for_each.keys()
-        lists = [for_each[key] for key in keys]
+        keys = list(six.iterkeys(self._for_each))
+        lists = [self._for_each[key] for key in keys]
         template = function.resolve(self._template)
         return [self._do_replacement(keys, items, template)
                 for items in itertools.product(*lists)]

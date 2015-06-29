@@ -593,13 +593,21 @@ class HOTemplateTest(common.HeatTestCase):
 
     def test_repeat(self):
         """Test repeat function."""
-        snippet = {'repeat': {'template': 'this is %var%',
-                              'for_each': {'%var%': ['a', 'b', 'c']}}}
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2015-04-30
+        parameters:
+          param:
+            type: comma_delimited_list
+            default: 'a,b,c'
+        ''')
+        snippet = {'repeat': {'template': 'this is var%',
+                   'for_each': {'var%': {'get_param': 'param'}}}}
         snippet_resolved = ['this is a', 'this is b', 'this is c']
 
-        tmpl = parser.Template(hot_kilo_tpl_empty)
+        tmpl = parser.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
 
-        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
 
     def test_repeat_dict_template(self):
         """Test repeat function with a dictionary as a template."""
