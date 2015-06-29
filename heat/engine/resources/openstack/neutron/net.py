@@ -83,7 +83,6 @@ class Net(neutron.NeutronResource):
             _('Flag to enable/disable port security on the network. It '
               'provides the default value for the attribute of the ports '
               'created on this network'),
-            default=True,
             update_allowed=True,
             support_status=support.SupportStatus(version='5.0.0')
         ),

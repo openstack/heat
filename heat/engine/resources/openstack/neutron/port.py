@@ -226,7 +226,6 @@ class Port(neutron.NeutronResource):
             _('Flag to enable/disable port security on the port. '
               'When disable this feature(set it to False), there will be no '
               'packages filtering, like security-group and address-pairs.'),
-            default=True,
             update_allowed=True,
             support_status=support.SupportStatus(version='5.0.0')
         ),
