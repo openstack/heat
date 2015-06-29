@@ -334,12 +334,12 @@ class PoolTest(common.HeatTestCase):
         stvippsn['vip']['subnet_id'] = 'sub123'
         self.stub_SubnetConstraint_validate()
 
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub123'
+        ).AndReturn('sub123')
         if resolve_neutron and with_vip_subnet:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'subnet',
-                'sub123'
-            ).AndReturn('sub123')
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
@@ -350,11 +350,6 @@ class PoolTest(common.HeatTestCase):
                                             ).AndReturn({'vip': {'id': 'xyz'}})
 
         elif resolve_neutron and not with_vip_subnet:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'subnet',
-                'sub123'
-            ).AndReturn('sub123')
             snippet = template_format.parse(pool_template)
             neutronclient.Client.create_vip(stvippsn
                                             ).AndReturn({'vip': {'id': 'xyz'}})
@@ -1040,6 +1035,7 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
+        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
 
     def _create_pool_with_health_monitors(self):
         neutronclient.Client.create_health_monitor({
@@ -1054,6 +1050,11 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
                 'timeout': 10, 'admin_state_up': True}}
         ).AndReturn({'health_monitor': {'id': '6666'}})
         self.stub_SubnetConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub123'
+        ).AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
