@@ -27,6 +27,7 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
+from heat.engine.clients.os import zaqar
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
@@ -829,6 +830,75 @@ class ServersTest(common.HeatTestCase):
         sc.delete_object.assert_called_once_with(container_name, object_name)
         sc.head_container.assert_called_once_with(container_name)
         sc.delete_container.assert_called_once_with(container_name)
+
+        self.m.VerifyAll()
+
+    def test_server_create_software_config_zaqar(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'software_config_s'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        props = tmpl.t['Resources']['WebServer']['Properties']
+        props['user_data_format'] = 'SOFTWARE_CONFIG'
+        props['software_config_transport'] = 'ZAQAR_MESSAGE'
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('WebServer',
+                                resource_defns['WebServer'], stack)
+
+        ncp = self.patchobject(nova.NovaClientPlugin, '_create')
+        zcc = self.patchobject(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+        zc = mock.Mock()
+
+        ncp.return_value = self.fc
+        zcc.return_value = zc
+        queue = mock.Mock()
+        zc.queue.return_value = queue
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+
+        metadata_queue_id = server.data().get('metadata_queue_id')
+        md = server.metadata_get()
+        queue_id = md['os-collect-config']['zaqar']['queue_id']
+        self.assertEqual(queue_id, metadata_queue_id)
+
+        self.assertEqual({
+            'os-collect-config': {
+                'zaqar': {
+                    'user_id': '1234',
+                    'password': server.password,
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'project_id': '8888',
+                    'queue_id': queue_id
+                }
+            },
+            'deployments': []
+        }, server.metadata_get())
+
+        zc.queue.assert_called_once_with(queue_id)
+        queue.post.assert_called_once_with(
+            {'body': server.metadata_get(), 'ttl': 3600})
+
+        zc.queue.reset_mock()
+
+        server._delete_queue()
+
+        zc.queue.assert_called_once_with(queue_id)
+        zc.queue.delete.assert_called_once()
 
         self.m.VerifyAll()
 

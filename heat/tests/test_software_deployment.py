@@ -22,6 +22,7 @@ from heat.common import exception as exc
 from heat.common.i18n import _
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
+from heat.engine.clients.os import zaqar
 from heat.engine.resources.openstack.heat import software_deployment as sd
 from heat.engine import rsrc_defn
 from heat.engine import stack as parser
@@ -94,6 +95,22 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                     'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
                     'input_values': {'foo': 'bar', 'bink': 'bonk'},
                     'signal_transport': 'TEMP_URL_SIGNAL',
+                    'name': '00_run_me_first'
+                }
+            }
+        }
+    }
+
+    template_zaqar_signal = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Resources': {
+            'deployment_mysql': {
+                'Type': 'OS::Heat::SoftwareDeployment',
+                'Properties': {
+                    'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+                    'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
+                    'input_values': {'foo': 'bar', 'bink': 'bonk'},
+                    'signal_transport': 'ZAQAR_SIGNAL',
                     'name': '00_run_me_first'
                 }
             }
@@ -1041,6 +1058,69 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             self.assertIsNone(self.deployment._handle_action(action))
         for action in ('CREATE', 'UPDATE'):
             self.assertIsNotNone(self.deployment._handle_action(action))
+
+    def test_get_zaqar_queue(self):
+        dep_data = {}
+
+        zc = mock.MagicMock()
+        zcc = self.patch(
+            'heat.engine.clients.os.zaqar.ZaqarClientPlugin._create')
+        zcc.return_value = zc
+
+        self._create_stack(self.template_zaqar_signal)
+
+        def data_set(key, value, redact=False):
+            dep_data[key] = value
+
+        self.deployment.data_set = data_set
+        self.deployment.data = mock.Mock(return_value=dep_data)
+
+        self.deployment.id = 23
+        self.deployment.uuid = str(uuid.uuid4())
+        self.deployment.action = self.deployment.CREATE
+
+        queue_id = self.deployment._get_queue_id()
+        self.assertEqual(2, len(zc.queue.mock_calls))
+        self.assertEqual(queue_id, zc.queue.mock_calls[0][1][0])
+        self.assertEqual(queue_id, dep_data['signal_queue_id'])
+
+        self.assertEqual(queue_id, self.deployment._get_queue_id())
+
+    def test_delete_zaqar_queue(self):
+        queue_id = str(uuid.uuid4())
+        dep_data = {
+            'signal_queue_id': queue_id
+        }
+        self._create_stack(self.template_zaqar_signal)
+
+        self.deployment.data_delete = mock.MagicMock()
+        self.deployment.data = mock.Mock(return_value=dep_data)
+
+        zc = mock.MagicMock()
+        zcc = self.patch(
+            'heat.engine.clients.os.zaqar.ZaqarClientPlugin._create')
+        zcc.return_value = zc
+
+        self.deployment.id = 23
+        self.deployment.uuid = str(uuid.uuid4())
+        self.deployment._delete_queue()
+        zc.queue.assert_called_once_with(queue_id)
+        zc.queue.delete.assert_called_once()
+        self.assertEqual(
+            [mock.call('signal_queue_id')],
+            self.deployment.data_delete.mock_calls)
+
+        zaqar_exc = zaqar.ZaqarClientPlugin.exceptions_module
+        zc.queue.delete.side_effect = zaqar_exc.ResourceNotFound()
+        self.deployment._delete_queue()
+        self.assertEqual(
+            [mock.call('signal_queue_id'), mock.call('signal_queue_id')],
+            self.deployment.data_delete.mock_calls)
+
+        dep_data.pop('signal_queue_id')
+        self.deployment.physical_resource_name = mock.Mock()
+        self.deployment._delete_queue()
+        self.assertEqual(2, len(self.deployment.data_delete.mock_calls))
 
 
 class SoftwareDeploymentGroupTest(common.HeatTestCase):

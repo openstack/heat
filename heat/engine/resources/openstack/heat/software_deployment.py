@@ -97,20 +97,24 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         DEPLOY_RESOURCE_NAME, DEPLOY_AUTH_URL,
         DEPLOY_USERNAME, DEPLOY_PASSWORD,
         DEPLOY_PROJECT_ID, DEPLOY_USER_ID,
-        DEPLOY_SIGNAL_VERB, DEPLOY_SIGNAL_TRANSPORT
+        DEPLOY_SIGNAL_VERB, DEPLOY_SIGNAL_TRANSPORT,
+        DEPLOY_QUEUE_ID
     ) = (
         'deploy_server_id', 'deploy_action',
         'deploy_signal_id', 'deploy_stack_id',
         'deploy_resource_name', 'deploy_auth_url',
         'deploy_username', 'deploy_password',
         'deploy_project_id', 'deploy_user_id',
-        'deploy_signal_verb', 'deploy_signal_transport'
+        'deploy_signal_verb', 'deploy_signal_transport',
+        'deploy_queue_id'
     )
 
     SIGNAL_TRANSPORTS = (
-        CFN_SIGNAL, TEMP_URL_SIGNAL, HEAT_SIGNAL, NO_SIGNAL
+        CFN_SIGNAL, TEMP_URL_SIGNAL, HEAT_SIGNAL, NO_SIGNAL,
+        ZAQAR_SIGNAL
     ) = (
-        'CFN_SIGNAL', 'TEMP_URL_SIGNAL', 'HEAT_SIGNAL', 'NO_SIGNAL'
+        'CFN_SIGNAL', 'TEMP_URL_SIGNAL', 'HEAT_SIGNAL', 'NO_SIGNAL',
+        'ZAQAR_SIGNAL'
     )
 
     properties_schema = {
@@ -198,6 +202,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _signal_transport_temp_url(self):
         return self.properties[
             self.SIGNAL_TRANSPORT] == self.TEMP_URL_SIGNAL
+
+    def _signal_transport_zaqar(self):
+        return self.properties.get(
+            self.SIGNAL_TRANSPORT) == self.ZAQAR_SIGNAL
 
     def _build_properties(self, properties, config_id, action):
         props = {
@@ -326,6 +334,17 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             container, object_name, '')
         return put_url
 
+    def _get_queue_id(self):
+        queue_id = self.data().get('signal_queue_id')
+        if queue_id:
+            return queue_id
+
+        queue_id = self.physical_resource_name()
+        zaqar = self.client('zaqar')
+        zaqar.queue(queue_id).ensure_exists()
+        self.data_set('signal_queue_id', queue_id)
+        return queue_id
+
     def _delete_temp_url(self):
         object_name = self.data().get('signal_object_name')
         if not object_name:
@@ -341,6 +360,17 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.client_plugin('swift').ignore_not_found(ex)
         self.data_delete('signal_object_name')
         self.data_delete('signal_temp_url')
+
+    def _delete_queue(self):
+        queue_id = self.data().get('signal_queue_id')
+        if not queue_id:
+            return
+        zaqar = self.client('zaqar')
+        try:
+            zaqar.queue(queue_id).delete()
+        except Exception as ex:
+            self.client_plugin('zaqar').ignore_not_found(ex)
+        self.data_delete('signal_queue_id')
 
     def _build_derived_inputs(self, action, source):
         scl = sc.SoftwareConfig
@@ -419,7 +449,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 scl.TYPE: 'String',
                 'value': 'PUT'
             })
-        elif self._signal_transport_heat():
+        elif self._signal_transport_heat() or self._signal_transport_zaqar():
             inputs.extend([{
                 scl.NAME: self.DEPLOY_AUTH_URL,
                 scl.DESCRIPTION: _('URL for API authentication'),
@@ -446,6 +476,14 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 scl.TYPE: 'String',
                 'value': self.stack.stack_user_project_id
             }])
+        if self._signal_transport_zaqar():
+            inputs.append({
+                scl.NAME: self.DEPLOY_QUEUE_ID,
+                scl.DESCRIPTION: _('ID of queue to use for signaling '
+                                   'output values'),
+                scl.TYPE: 'String',
+                'value': self._get_queue_id()
+            })
 
         return inputs
 
@@ -453,7 +491,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         if self._signal_transport_cfn():
             self._create_user()
             self._create_keypair()
-        if self._signal_transport_heat():
+        if self._signal_transport_heat() or self._signal_transport_zaqar():
             self.password = uuid.uuid4().hex
             self._create_user()
         return self._handle_action(self.CREATE)
@@ -505,6 +543,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self._delete_user()
         elif self._signal_transport_temp_url():
             self._delete_temp_url()
+        elif self._signal_transport_zaqar():
+            self._delete_queue()
 
         derived_config_id = None
         if self.resource_id is not None:
