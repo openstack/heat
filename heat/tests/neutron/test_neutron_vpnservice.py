@@ -131,12 +131,12 @@ class VPNServiceTest(common.HeatTestCase):
     def create_vpnservice(self, resolve_neutron=True, resolve_router=True):
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub123'
+        ).AndReturn('sub123')
         if resolve_neutron:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'subnet',
-                'sub123'
-            ).AndReturn('sub123')
             snippet = template_format.parse(vpnservice_template)
         else:
             snippet = template_format.parse(vpnservice_template_deprecated)
