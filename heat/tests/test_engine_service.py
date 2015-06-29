@@ -535,6 +535,39 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                           stack.context, stack_id=stack.id,
                           show_deleted=False)
 
+    def test_get_best_existing_db_resource(self, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.store()
+        stack.prev_raw_template_id = 2
+        stack.t.id = 1
+        dummy_res = stack.resources['A']
+        a_res_2 = res.Resource('A', dummy_res.t, stack)
+        a_res_2.current_template_id = 2
+        a_res_2.id = 2
+        a_res_3 = res.Resource('A', dummy_res.t, stack)
+        a_res_3.current_template_id = 3
+        a_res_3.id = 3
+        a_res_1 = res.Resource('A', dummy_res.t, stack)
+        a_res_1.current_template_id = 1
+        a_res_1.id = 1
+        existing_res = {2: a_res_2,
+                        3: a_res_3,
+                        1: a_res_1}
+        stack.ext_rsrcs_db = existing_res
+        best_res = stack._get_best_existing_rsrc_db('A')
+        # should return resource with template id 1 which is current template
+        self.assertEqual(a_res_1.id, best_res.id)
+
+        # no resource with current template id as 1
+        existing_res = {2: a_res_2,
+                        3: a_res_3}
+        stack.ext_rsrcs_db = existing_res
+        best_res = stack._get_best_existing_rsrc_db('A')
+        # should return resource with template id 2 which is prev template
+        self.assertEqual(a_res_2.id, best_res.id)
+
 
 class StackCreateTest(common.HeatTestCase):
     def setUp(self):

@@ -988,6 +988,22 @@ class Stack(collections.Mapping):
                                               self.current_traversal,
                                               {}, is_update)
 
+    def _get_best_existing_rsrc_db(self, rsrc_name):
+        candidate = None
+        if self.ext_rsrcs_db:
+            for id, ext_rsrc in self.ext_rsrcs_db.items():
+                if ext_rsrc.name != rsrc_name:
+                    continue
+                if ext_rsrc.current_template_id == self.t.id:
+                    # Rollback where the previous resource still exists
+                    candidate = ext_rsrc
+                    break
+                elif (ext_rsrc.current_template_id ==
+                        self.prev_raw_template_id):
+                    # Current resource is otherwise a good candidate
+                    candidate = ext_rsrc
+        return candidate
+
     def _update_or_store_resources(self):
         try:
             ext_rsrcs_db = resource_objects.Resource.get_all_by_stack(
@@ -997,23 +1013,6 @@ class Stack(collections.Mapping):
         else:
             self.ext_rsrcs_db = {res.id: res
                                  for res_name, res in ext_rsrcs_db.items()}
-
-        def get_existing_rsrc_db(rsrc_name):
-            candidate = None
-            if self.ext_rsrcs_db:
-                for id, ext_rsrc in self.ext_rsrcs_db.items():
-                    if ext_rsrc.name != rsrc_name:
-                        continue
-                    if ext_rsrc.current_template_id == self.t.id:
-                        # Rollback where the previous resource still exists
-                        candidate = ext_rsrc
-                        break
-                    elif (ext_rsrc.current_template_id ==
-                            self.prev_raw_template_id):
-                        # Current resource is otherwise a good candidate
-                        candidate = ext_rsrc
-                        break
-            return candidate
 
         curr_name_translated_dep = self.dependencies.translate(lambda res:
                                                                res.name)
@@ -1029,7 +1028,7 @@ class Stack(collections.Mapping):
             res.needed_by = list(needed_by)
 
         for rsrc in reversed(self.dependencies):
-            existing_rsrc_db = get_existing_rsrc_db(rsrc.name)
+            existing_rsrc_db = self._get_best_existing_rsrc_db(rsrc.name)
             if existing_rsrc_db is None:
                 update_needed_by(rsrc)
                 rsrc.current_template_id = self.t.id
