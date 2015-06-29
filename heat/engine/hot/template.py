@@ -334,7 +334,7 @@ class HOTemplate20151015(HOTemplate20150430):
         'get_file': hot_funcs.GetFile,
         'get_param': hot_funcs.GetParam,
         'get_resource': cfn_funcs.ResourceRef,
-        'list_join': hot_funcs.Join,
+        'list_join': hot_funcs.JoinMultiple,
         'repeat': hot_funcs.Repeat,
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.Replace,
