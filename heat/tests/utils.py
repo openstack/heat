@@ -126,6 +126,9 @@ class PhysName(object):
         # ignore the stack portion of the name, as it may have been truncated
         return res == self.res
 
+    def __hash__(self):
+        return id(self)
+
     def __ne__(self, physical_name):
         return not self.__eq__(physical_name)
 

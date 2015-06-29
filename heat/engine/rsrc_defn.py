@@ -395,6 +395,13 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
 
         raise KeyError(key)
 
+    def __hash__(self):
+        """
+        Return a hash of the ResourceDefinition object.
+        """
+        warnings.warn(self._deprecation_msg, DeprecationWarning)
+        return super(ResourceDefinition, self).__hash__()
+
     def __len__(self):
         """
         Return the number of available CFN template keys.
