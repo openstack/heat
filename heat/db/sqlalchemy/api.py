@@ -1137,57 +1137,60 @@ def db_version(engine):
 def db_encrypt_parameters_and_properties(ctxt, encryption_key):
     from heat.engine import template
     session = get_session()
-    session.begin()
+    with session.begin():
 
-    raw_templates = session.query(models.RawTemplate).all()
+        raw_templates = session.query(models.RawTemplate).all()
 
-    for raw_template in raw_templates:
-        tmpl = template.Template.load(ctxt, raw_template.id, raw_template)
+        for raw_template in raw_templates:
+            tmpl = template.Template.load(ctxt, raw_template.id, raw_template)
 
-        encrypted_params = []
-        for param_name, param in tmpl.param_schemata().items():
-            if (param_name in encrypted_params) or (not param.hidden):
-                continue
+            encrypted_params = []
+            for param_name, param in tmpl.param_schemata().items():
+                if (param_name in encrypted_params) or (not param.hidden):
+                    continue
 
-            try:
-                param_val = raw_template.environment['parameters'][
-                    param_name]
-            except KeyError:
-                param_val = param.default
+                try:
+                    param_val = raw_template.environment['parameters'][
+                        param_name]
+                except KeyError:
+                    param_val = param.default
 
-            encoded_val = encodeutils.safe_encode(param_val)
-            encrypted_val = crypt.encrypt(encoded_val, encryption_key)
-            raw_template.environment['parameters'][param_name] = \
-                encrypted_val
-            encrypted_params.append(param_name)
+                encoded_val = encodeutils.safe_encode(param_val)
+                encrypted_val = crypt.encrypt(encoded_val, encryption_key)
+                raw_template.environment['parameters'][param_name] = \
+                    encrypted_val
+                encrypted_params.append(param_name)
 
-        raw_template.environment['encrypted_param_names'] = \
-            encrypted_params
-
-    session.commit()
+            if encrypted_params:
+                environment = raw_template.environment.copy()
+                environment['encrypted_param_names'] = encrypted_params
+                raw_template_update(ctxt, raw_template.id,
+                                    {'environment': environment})
 
 
 def db_decrypt_parameters_and_properties(ctxt, encryption_key):
     session = get_session()
-    session.begin()
-    raw_templates = session.query(models.RawTemplate).all()
 
-    for raw_template in raw_templates:
-        parameters = raw_template.environment['parameters']
-        encrypted_params = raw_template.environment[
-            'encrypted_param_names']
-        for param_name in encrypted_params:
-            decrypt_function_name = parameters[param_name][0]
-            decrypt_function = getattr(crypt, decrypt_function_name)
-            decrypted_val = decrypt_function(parameters[param_name][1],
-                                             encryption_key)
-            try:
-                parameters[param_name] = encodeutils.safe_decode(decrypted_val)
-            except UnicodeDecodeError:
-                # if the incorrect encryption_key was used then we can
-                # get total gibberish here and safe_decode() will freak out.
-                parameters[param_name] = decrypted_val
+    with session.begin():
+        raw_templates = session.query(models.RawTemplate).all()
 
-        raw_template.environment['encrypted_param_names'] = []
-
-    session.commit()
+        for raw_template in raw_templates:
+            parameters = raw_template.environment['parameters']
+            encrypted_params = raw_template.environment[
+                'encrypted_param_names']
+            for param_name in encrypted_params:
+                decrypt_function_name = parameters[param_name][0]
+                decrypt_function = getattr(crypt, decrypt_function_name)
+                decrypted_val = decrypt_function(parameters[param_name][1],
+                                                 encryption_key)
+                try:
+                    parameters[param_name] = encodeutils.safe_decode(
+                        decrypted_val)
+                except UnicodeDecodeError:
+                    # if the incorrect encryption_key was used then we can get
+                    # total gibberish here and safe_decode() will freak out.
+                    parameters[param_name] = decrypted_val
+            environment = raw_template.environment.copy()
+            environment['encrypted_param_names'] = []
+            raw_template_update(ctxt, raw_template.id,
+                                {'environment': environment})
