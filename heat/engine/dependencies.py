@@ -71,6 +71,10 @@ class Node(object):
         '''Return True if this node is not a leaf (it requires other nodes).'''
         return bool(self.require)
 
+    def __bool__(self):
+        '''Return True if this node is not a leaf (it requires other nodes).'''
+        return self.__nonzero__()
+
     def stem(self):
         '''Return True if this node is a stem (required by nothing).'''
         return not bool(self.satisfy)

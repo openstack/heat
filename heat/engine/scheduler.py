@@ -283,6 +283,10 @@ class TaskRunner(object):
         """Return True if there are steps remaining."""
         return not self.done()
 
+    def __bool__(self):
+        """Return True if there are steps remaining."""
+        return self.__nonzero__()
+
 
 def wrappertask(task):
     """
