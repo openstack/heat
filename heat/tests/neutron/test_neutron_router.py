@@ -443,14 +443,7 @@ class NeutronRouterTest(common.HeatTestCase):
     def test_router_interface_depr_router(self):
         self._test_router_interface(resolve_router=False)
 
-    def test_router_interface_depr_subnet(self):
-        self._test_router_interface(resolve_subnet=False)
-
-    def test_router_interface_depr_router_and_subnet(self):
-        self._test_router_interface(resolve_router=False, resolve_subnet=False)
-
-    def _test_router_interface(self, resolve_subnet=True,
-                               resolve_router=True):
+    def _test_router_interface(self, resolve_router=True):
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
@@ -465,7 +458,6 @@ class NeutronRouterTest(common.HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
-        subnet_key = 'subnet_id'
         router_key = 'router_id'
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
@@ -476,13 +468,12 @@ class NeutronRouterTest(common.HeatTestCase):
                 '3e46229d-8fce-4733-819a-b5fe630550f8'
             ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
             router_key = 'router'
-        if resolve_subnet:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'subnet',
-                '91e47a57-7508-46fe-afc9-fc454e8580e1'
-            ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
-            subnet_key = 'subnet'
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
+        subnet_key = 'subnet'
 
         self.m.ReplayAll()
         rsrc = self.create_router_interface(
@@ -498,6 +489,11 @@ class NeutronRouterTest(common.HeatTestCase):
     def test_router_interface_with_old_data(self):
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
