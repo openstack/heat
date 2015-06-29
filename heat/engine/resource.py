@@ -254,7 +254,7 @@ class Resource(object):
         resource._load_data(db_res)
         return resource, stack
 
-    def make_replacement(self):
+    def make_replacement(self, new_tmpl_id):
         # 1. create the replacement with "replaces" = self.id
         #  Don't set physical_resource_id so that a create is triggered.
         rs = {'stack_id': self.stack.id,
@@ -263,14 +263,17 @@ class Resource(object):
               'needed_by': self.needed_by,
               'requires': self.requires,
               'replaces': self.id,
-              'current_template_id': self.current_template_id,
+              'action': self.INIT,
+              'status': self.COMPLETE,
+              'current_template_id': new_tmpl_id,
               'stack_name': self.stack.name}
         new_rs = resource_objects.Resource.create(self.context, rs)
 
         # 2. update the current resource to be replaced_by the one above.
         rs = resource_objects.Resource.get_obj(self.context, self.id)
         self.replaced_by = new_rs.id
-        rs.update_and_save({'replaced_by': self.replaced_by})
+        rs.update_and_save({'status': self.COMPLETE,
+                            'replaced_by': self.replaced_by})
         return new_rs.id
 
     def reparse(self):

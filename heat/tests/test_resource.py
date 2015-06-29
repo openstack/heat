@@ -382,13 +382,15 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
         res._store()
+        new_tmpl_id = 2
         self.assertIsNotNone(res.id)
-        new_id = res.make_replacement()
+        new_id = res.make_replacement(new_tmpl_id)
         new_res = resource_objects.Resource.get_obj(res.context, new_id)
 
         self.assertEqual(new_id, res.replaced_by)
         self.assertEqual(res.id, new_res.replaces)
         self.assertIsNone(new_res.nova_instance)
+        self.assertEqual(new_tmpl_id, new_res.current_template_id)
 
     def test_parsed_template(self):
         join_func = cfn_funcs.Join(None,
