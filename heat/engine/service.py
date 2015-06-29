@@ -783,7 +783,8 @@ class EngineService(service.Service):
         # Once all the validations are done
         # if convergence is enabled, take the convergence path
         if current_kwargs['convergence']:
-            current_stack.converge_stack(template=tmpl)
+            current_stack.converge_stack(template=tmpl,
+                                         new_stack=updated_stack)
         else:
             event = eventlet.event.Event()
             th = self.thread_group_mgr.start_with_lock(cnxt, current_stack,

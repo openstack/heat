@@ -1292,6 +1292,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         old_stack = tools.get_stack(stack_name, self.ctx,
                                     template=tools.string_template_five,
                                     convergence=True)
+        old_stack.timeout_mins = 1
         sid = old_stack.store()
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
@@ -1311,7 +1312,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
                      user_creds_id=old_stack.user_creds_id,
                      stack_user_project_id=old_stack.stack_user_project_id,
                      timeout_mins=60,
-                     disable_rollback=True,
+                     disable_rollback=False,
                      parent_resource=None,
                      strict_validate=True,
                      tenant_id=old_stack.tenant_id,
@@ -1326,7 +1327,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, 'disable_rollback': False}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, api_args)
         self.assertEqual(old_stack.convergence, True)
