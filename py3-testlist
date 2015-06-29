@@ -1,1 +1,2 @@
 heat.tests.test_version
+heat.tests.test_short_id
