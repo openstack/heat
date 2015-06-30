@@ -175,20 +175,53 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
 
-    @mock.patch.object(resource.Resource, 'make_replacement')
+    @mock.patch.object(worker.WorkerService, '_try_steal_engine_lock')
     def test_is_update_traversal_raise_update_inprogress(
-            self, mock_mr, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, mock_tsl, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
         mock_cru.side_effect = resource.UpdateInProgress
+        self.worker.engine_id = 'some-thing-else'
+        mock_tsl.return_value = True
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id)
-        self.assertFalse(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
+
+    def test_try_steal_lock_alive(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        res = self.worker._try_steal_engine_lock(self.ctx,
+                                                 self.resource.id)
+        self.assertFalse(res)
+
+    @mock.patch.object(worker.listener_client, 'EngineListenerClient')
+    @mock.patch.object(worker.resource_objects.Resource, 'get_obj')
+    def test_try_steal_lock_dead(
+            self, mock_get, mock_elc, mock_cru, mock_crc, mock_pcr,
+            mock_csc, mock_cid):
+        fake_res = mock.Mock()
+        fake_res.engine_id = 'some-thing-else'
+        mock_get.return_value = fake_res
+        mock_elc.return_value.is_alive.return_value = False
+        res = self.worker._try_steal_engine_lock(self.ctx,
+                                                 self.resource.id)
+        self.assertTrue(res)
+
+    @mock.patch.object(worker.listener_client, 'EngineListenerClient')
+    @mock.patch.object(worker.resource_objects.Resource, 'get_obj')
+    def test_try_steal_lock_not_dead(
+            self, mock_get, mock_elc, mock_cru, mock_crc, mock_pcr,
+            mock_csc, mock_cid):
+        fake_res = mock.Mock()
+        fake_res.engine_id = self.worker.engine_id
+        mock_get.return_value = fake_res
+        mock_elc.return_value.is_alive.return_value = True
+        res = self.worker._try_steal_engine_lock(self.ctx,
+                                                 self.resource.id)
+        self.assertFalse(res)
 
     def test_resource_update_failure_sets_stack_state_as_failed(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
