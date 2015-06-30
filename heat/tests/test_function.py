@@ -42,6 +42,21 @@ class TestFunction(function.Function):
         return 'wibble'
 
 
+class TestFunctionKeyError(function.Function):
+    def result(self):
+        raise TypeError
+
+
+class TestFunctionValueError(function.Function):
+    def result(self):
+        raise ValueError
+
+
+class TestFunctionResult(function.Function):
+    def result(self):
+        return super(TestFunctionResult, self).result()
+
+
 class FunctionTest(common.HeatTestCase):
     def test_equal(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
@@ -57,6 +72,61 @@ class FunctionTest(common.HeatTestCase):
         func1 = TestFunction(None, 'foo', ['bar', 'baz'])
         func2 = TestFunction(None, 'blarg', ['wibble', 'quux'])
         self.assertTrue(func1 == func2)
+
+    def test_function_str_value(self):
+        func1 = TestFunction(None, 'foo', ['bar', 'baz'])
+        expected = '%s %s' % ("<heat.tests.test_function.TestFunction",
+                              "{foo: ['bar', 'baz']} -> 'wibble'>")
+        self.assertEqual(expected, six.text_type(func1))
+
+    def test_function_stack_reference_none(self):
+        func1 = TestFunction(None, 'foo', ['bar', 'baz'])
+        self.assertIsNone(func1.stack)
+
+    def test_function_exception_key_error(self):
+        func1 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
+        expected = '%s %s' % ("<heat.tests.test_function.TestFunctionKeyError",
+                              "{foo: ['bar', 'baz']} -> ???>")
+        self.assertEqual(expected, six.text_type(func1))
+
+    def test_function_eq_exception_key_error(self):
+        func1 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
+        func2 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
+        result = func1.__eq__(func2)
+        self.assertEqual(result, NotImplemented)
+
+    def test_function_ne_exception_key_error(self):
+        func1 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
+        func2 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
+        result = func1.__ne__(func2)
+        self.assertEqual(result, NotImplemented)
+
+    def test_function_exception_value_error(self):
+        func1 = TestFunctionValueError(None, 'foo', ['bar', 'baz'])
+        expected = '%s %s' % (
+            "<heat.tests.test_function.TestFunctionValueError",
+            "{foo: ['bar', 'baz']} -> ???>")
+        self.assertEqual(expected, six.text_type(func1))
+
+    def test_function_eq_exception_value_error(self):
+        func1 = TestFunctionValueError(None, 'foo', ['bar', 'baz'])
+        func2 = TestFunctionValueError(None, 'foo', ['bar', 'baz'])
+        result = func1.__eq__(func2)
+        self.assertEqual(result, NotImplemented)
+
+    def test_function_ne_exception_value_error(self):
+        func1 = TestFunctionValueError(None, 'foo', ['bar', 'baz'])
+        func2 = TestFunctionValueError(None, 'foo', ['bar', 'baz'])
+        result = func1.__ne__(func2)
+        self.assertEqual(result, NotImplemented)
+
+    def test_function_abstract_result(self):
+        func1 = TestFunctionResult(None, 'foo', ['bar', 'baz'])
+        expected = '%s %s -> %s' % (
+            "<heat.tests.test_function.TestFunctionResult",
+            "{foo: ['bar', 'baz']}",
+            "{'foo': ['bar', 'baz']}>")
+        self.assertEqual(expected, six.text_type(func1))
 
     def test_copy(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
