@@ -14,15 +14,30 @@
 import collections
 import hashlib
 import itertools
-import six
 
+from oslo_config import cfg
 from oslo_serialization import jsonutils
+import six
+import yaql
+from yaql.language import exceptions
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
+
+opts = [
+    cfg.IntOpt('limit_iterators',
+               default=200,
+               help=_('The maximum number of elements in collection '
+                      'expression can take for its evaluation.')),
+    cfg.IntOpt('memory_quota',
+               default=10000,
+               help=_('The maximum size of memory in bytes that '
+                      'expression can take for its evaluation.'))
+]
+cfg.CONF.register_opts(opts, group='yaql')
 
 
 class GetParam(function.Function):
@@ -697,3 +712,85 @@ class StrSplit(function.Function):
         else:
             res = split_list
         return res
+
+
+class Yaql(function.Function):
+    """A function for executing a yaql expression.
+
+    Takes the form::
+
+        yaql:
+            expression:
+                <body>
+            data:
+                <var>: <list>
+
+    Evaluates expression <body> on the given data.
+    """
+
+    _parser = None
+
+    @classmethod
+    def get_yaql_parser(cls):
+        if cls._parser is None:
+            global_options = {
+                'yaql.limitIterators': cfg.CONF.yaql.limit_iterators,
+                'yaql.memoryQuota': cfg.CONF.yaql.memory_quota
+            }
+            cls._parser = yaql.YaqlFactory().create(global_options)
+        return cls._parser
+
+    def __init__(self, stack, fn_name, args):
+        super(Yaql, self).__init__(stack, fn_name, args)
+        self.parser = self.get_yaql_parser()
+        self.context = yaql.create_context()
+
+        if not isinstance(self.args, collections.Mapping):
+            raise TypeError(_('Arguments to "%s" must be a map.') %
+                            self.fn_name)
+
+        try:
+            self._expression = self.args['expression']
+            self._data = self.args.get('data', {})
+            for arg in six.iterkeys(self.args):
+                if arg not in ['expression', 'data']:
+                    raise KeyError
+        except (KeyError, TypeError):
+            example = ('''%s:
+              expression: $.data.var1.sum()
+              data:
+                var1: [3, 2, 1]''') % self.fn_name
+            raise KeyError(_('"%(name)s" syntax should be %(example)s') % {
+                'name': self.fn_name, 'example': example})
+
+    def validate_expression(self, expression):
+        try:
+            self.parser(expression)
+        except exceptions.YaqlException as yex:
+            raise ValueError(_('Bad expression %s.') % yex)
+
+    def validate(self):
+        super(Yaql, self).validate()
+        if not isinstance(self._data,
+                          (collections.Mapping, function.Function)):
+            raise TypeError(_('The "data" argument to "%s" must contain '
+                              'a map.') % self.fn_name)
+        if not isinstance(self._expression,
+                          (six.string_types, function.Function)):
+            raise TypeError(_('The "expression" argument to %s must '
+                              'contain a string or a '
+                              'function.') % self.fn_name)
+        if isinstance(self._expression, six.string_types):
+            self.validate_expression(self._expression)
+
+    def result(self):
+        data = function.resolve(self._data)
+        if not isinstance(data, collections.Mapping):
+            raise TypeError(_('The "data" argument to "%s" must contain '
+                              'a map.') % self.fn_name)
+        ctxt = {'data': data}
+        self.context['$'] = ctxt
+        if not isinstance(self._expression, six.string_types):
+            self._expression = function.resolve(self._expression)
+            self.validate_expression(self._expression)
+        return self.parser(self._expression).evaluate(context=self.context)

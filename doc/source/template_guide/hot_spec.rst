@@ -203,6 +203,27 @@ For example, Heat currently supports the following values for the
       str_replace
       str_split
 
+2016-10-14
+----------
+    The key with value ``2016-10-14`` indicates that the YAML document is a HOT
+    template and it may contain features added and/or removed up until the
+    Newton release.  This version also adds the yaql function which
+    can be used for evaluation of complex expressions. The complete list of
+    supported functions is::
+
+      digest
+      get_attr
+      get_file
+      get_param
+      get_resource
+      list_join
+      map_merge
+      repeat
+      resource_facade
+      str_replace
+      str_split
+      yaql
+
 .. _hot_spec_parameter_groups:
 
 Parameter groups section
@@ -1264,3 +1285,33 @@ For example
 This resolves to a map containing ``{'k1': 'v2', 'k2': 'v2'}``.
 
 Maps containing no items resolve to {}.
+
+yaql
+----
+The ``yaql`` evaluates yaql expression on a given data.
+
+The syntax of the ``yaql`` function is
+
+.. code-block:: yaml
+
+    yaql:
+      expression: <expression>
+      data: <data>
+
+For example
+
+.. code-block:: yaml
+
+    parameters:
+      list_param:
+        type: comma_delimited_list
+        default: [1, 2, 3]
+
+    outputs:
+      max_elem:
+        yaql:
+          expression: $.data.list_param.select(int($)).max()
+          data:
+            list_param: {get_param: list_param}
+
+max_elem output will be evaluated to 3
