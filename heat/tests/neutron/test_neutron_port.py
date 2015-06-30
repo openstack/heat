@@ -89,7 +89,6 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -132,7 +131,6 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -165,7 +163,6 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -205,7 +202,6 @@ class NeutronPortTest(common.HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'port_security_enabled': True,
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -272,7 +268,6 @@ class NeutronPortTest(common.HeatTestCase):
                 'ip_address': u'10.0.3.21',
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'port_security_enabled': True,
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -331,7 +326,6 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}
 
         self._mock_create_with_security_groups(port_prop)
@@ -356,7 +350,6 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}
 
         self._mock_create_with_security_groups(port_prop)
@@ -374,7 +367,6 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
-                 'port_security_enabled': True,
                  'device_owner': u'network:dhcp'}
         new_props = props.copy()
         new_props['name'] = "new_name"
@@ -459,7 +451,6 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
-                 'port_security_enabled': True,
                  'device_owner': u'network:dhcp'}
 
         neutronV20.find_resourceid_by_name_or_id(
@@ -533,7 +524,6 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             'status': 'BUILD',
@@ -596,7 +586,6 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             'status': 'BUILD',
@@ -643,7 +632,6 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'port_security_enabled': True,
             'device_owner': 'network:dhcp',
             'binding:vnic_type': 'direct'
         }

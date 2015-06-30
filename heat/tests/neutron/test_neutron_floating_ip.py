@@ -246,7 +246,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'port_security_enabled': True,
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -284,7 +283,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                     'name': 'test_port',
                     'device_id': 'd6b4d3a5-c700-476f-b609-1493dd9dadc2',
                     'device_owner': 'network:floatingip',
-                    'port_security_enabled': True,
                     'security_groups': [
                         '8a2f582a-e1cd-480f-b85d-b02631c10656']
                 }
@@ -358,7 +356,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'port_security_enabled': True,
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -605,7 +602,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'port_security_enabled': True,
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
