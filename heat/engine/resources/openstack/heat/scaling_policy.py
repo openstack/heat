@@ -190,9 +190,9 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
     def _resolve_attribute(self, name):
         if name == self.ALARM_URL:
-            return six.text_type(self._get_signed_url())
+            return six.text_type(self._get_ec2_signed_url())
         elif name == self.SIGNAL_URL:
-            return six.text_type(self._get_signal_url())
+            return six.text_type(self._get_heat_signal_url())
 
     def FnGetRefId(self):
         return resource.Resource.FnGetRefId(self)

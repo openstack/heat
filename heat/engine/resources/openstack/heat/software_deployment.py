@@ -425,7 +425,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 scl.DESCRIPTION: _('ID of signal to use for signaling '
                                    'output values'),
                 scl.TYPE: 'String',
-                'value': self._get_signed_url()
+                'value': self._get_ec2_signed_url()
             })
             inputs.append({
                 scl.NAME: self.DEPLOY_SIGNAL_VERB,
@@ -537,7 +537,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     def _delete_resource(self):
         if self._signal_transport_cfn():
-            self._delete_signed_url()
+            self._delete_ec2_signed_url()
             self._delete_user()
         elif self._signal_transport_heat():
             self._delete_user()

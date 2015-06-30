@@ -97,7 +97,7 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
 
     def FnGetRefId(self):
         if self.resource_id is not None:
-            return six.text_type(self._get_signed_url())
+            return six.text_type(self._get_ec2_signed_url())
         else:
             return six.text_type(self.name)
 

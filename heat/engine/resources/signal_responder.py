@@ -42,12 +42,13 @@ class SignalResponder(stack_user.StackUser):
 
     def handle_delete(self):
         super(SignalResponder, self).handle_delete()
-        self._delete_signed_url()
+        self._delete_ec2_signed_url()
+        self._delete_heat_signal_url()
 
-    def _delete_signed_url(self):
+    def _delete_ec2_signed_url(self):
         self.data_delete('ec2_signed_url')
 
-    def _get_signed_url(self, signal_type=SIGNAL):
+    def _get_ec2_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
 
         This uses the created user for the credentials.
@@ -105,8 +106,11 @@ class SignalResponder(stack_user.StackUser):
         self.data_set('ec2_signed_url', url)
         return url
 
-    def _get_signal_url(self):
-        stored = self.data().get('signal_url')
+    def _delete_heat_signal_url(self):
+        self.data_delete('heat_signal_url')
+
+    def _get_heat_signal_url(self):
+        stored = self.data().get('heat_signal_url')
         if stored is not None:
             return stored
 
@@ -117,5 +121,5 @@ class SignalResponder(stack_user.StackUser):
         url = urlparse.urlunsplit(
             (host_url.scheme, host_url.netloc, 'v1/%s/signal' % path, '', ''))
 
-        self.data_set('signal_url', url)
+        self.data_set('heat_signal_url', url)
         return url

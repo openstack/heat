@@ -145,7 +145,7 @@ class SignalResource(signal_responder.SignalResponder):
 
     def _resolve_attribute(self, name):
         if name == 'AlarmUrl' and self.resource_id is not None:
-            return six.text_type(self._get_signed_url())
+            return six.text_type(self._get_ec2_signed_url())
 
 
 class StackUserResource(stack_user.StackUser):
