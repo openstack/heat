@@ -137,7 +137,8 @@ def main():
                                       description="Heat domain admin")
     except kc_exception.Conflict:
         logger.warning("User %s already exists" % HEAT_DOMAIN_ADMIN)
-        domain_admin = c.users.list(name=HEAT_DOMAIN_ADMIN)[0]
+        domain_admin = c.users.list(name=HEAT_DOMAIN_ADMIN,
+                                    domain=heat_domain)[0]
 
     # Make the user a domain admin
     roles_list = c.roles.list()
