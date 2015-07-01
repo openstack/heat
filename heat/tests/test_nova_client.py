@@ -448,6 +448,39 @@ class FlavorConstraintTest(common.HeatTestCase):
                          client.flavors.list.call_args_list)
 
 
+class NetworkConstraintTest(common.HeatTestCase):
+
+    def test_validate(self):
+        client = fakes_nova.FakeClient()
+        self.stub_keystoneclient()
+        self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
+        client.networks = mock.Mock()
+
+        network = collections.namedtuple("Network", ['id', 'label'])
+        network.id = '7f47ff06-0353-4013-b814-123b70b1b27d'
+        network.label = 'foo'
+        client.networks.get.return_value = network
+
+        constraint = nova.NetworkConstraint()
+        ctx = utils.dummy_context()
+
+        self.assertTrue(constraint.validate(network.id, ctx))
+        client.networks.get.side_effect = nova_exceptions.NotFound('')
+        client.networks.find.return_value = network
+        self.assertTrue(constraint.validate(network.id, ctx))
+
+        client.networks.find.side_effect = nova_exceptions.NotFound('')
+        self.assertFalse(constraint.validate(network.id, ctx))
+
+        client.networks.find.side_effect = nova_exceptions.NoUniqueMatch()
+        self.assertFalse(constraint.validate(network.id, ctx))
+
+        network.id = 'nonuuid'
+        client.networks.find.return_value = network
+        client.networks.find.side_effect = None
+        self.assertTrue(constraint.validate(network.id, ctx))
+
+
 class KeypairConstraintTest(common.HeatTestCase):
 
     def test_validation(self):
