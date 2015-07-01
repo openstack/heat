@@ -18,7 +18,7 @@ import six
 from stevedore import enabled
 
 from heat.common import exception
-from heat.common.i18n import _LE
+from heat.common.i18n import _
 from heat.common.i18n import _LW
 
 LOG = logging.getLogger(__name__)
@@ -90,8 +90,8 @@ class ClientBackend(object):
                 return importutils.import_object(cfg.CONF.cloud_backend,
                                                  context)
             except (ImportError, RuntimeError) as err:
-                msg = _LE('Invalid cloud_backend setting in heat.conf '
-                          'detected  - %s') % six.text_type(err)
+                msg = _('Invalid cloud_backend setting in heat.conf '
+                        'detected  - %s'), six.text_type(err)
                 LOG.error(msg)
                 raise exception.Invalid(reason=msg)
 

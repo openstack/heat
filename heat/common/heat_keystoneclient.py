@@ -442,7 +442,7 @@ class KeystoneClientV3(object):
             return
         except kc_exception.Forbidden:
             LOG.warning(_LW('Unable to get details for project %s, '
-                            'not deleting') % project_id)
+                            'not deleting'), project_id)
             return
 
         if project.domain_id != self.stack_domain_id:

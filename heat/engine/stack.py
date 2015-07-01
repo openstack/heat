@@ -1500,7 +1500,7 @@ class Stack(collections.Mapping):
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
                     LOG.exception(_LE('Resource %(name)s create failed: '
-                                      '%(ex)s') % {'name': res.name, 'ex': ex})
+                                      '%(ex)s'), {'name': res.name, 'ex': ex})
                     failed = True
             else:
                 res.state_set(res.CREATE, res.FAILED,
@@ -1585,8 +1585,8 @@ class Stack(collections.Mapping):
         if traversal_id != self.current_traversal:
             return
 
-        LOG.info('[%s(%s)] update traversal %s complete',
-                 self.name, self.id, traversal_id)
+        LOG.info(_LI('[%(name)s(%(id)s)] update traversal %(tid)s complete'),
+                 {'name': self.name, 'id': self.id, 'tid': traversal_id})
 
         reason = 'Stack %s completed successfully' % self.action
         self.state_set(self.action, self.COMPLETE, reason)

@@ -16,6 +16,7 @@ import collections
 import six
 
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import constraints as constr
 from heat.engine import support
 
@@ -171,23 +172,23 @@ class Attributes(collections.Mapping):
     def _validate_type(self, attrib, value):
         if attrib.schema.type == attrib.schema.STRING:
             if not isinstance(value, six.string_types):
-                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                LOG.warn(_LW("Attribute %(name)s is not of type %(att_type)s"),
                          {'name': attrib.name,
                           'att_type': attrib.schema.STRING})
         elif attrib.schema.type == attrib.schema.LIST:
             if (not isinstance(value, collections.Sequence)
                     or isinstance(value, six.string_types)):
-                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                LOG.warn(_LW("Attribute %(name)s is not of type %(att_type)s"),
                          {'name': attrib.name,
                           'att_type': attrib.schema.LIST})
         elif attrib.schema.type == attrib.schema.MAP:
             if not isinstance(value, collections.Mapping):
-                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                LOG.warn(_LW("Attribute %(name)s is not of type %(att_type)s"),
                          {'name': attrib.name,
                           'att_type': attrib.schema.MAP})
         elif attrib.schema.type == attrib.schema.INTEGER:
             if not isinstance(value, int):
-                LOG.warn(_("Attribute %(name)s is not of type %(att_type)s"),
+                LOG.warn(_LW("Attribute %(name)s is not of type %(att_type)s"),
                          {'name': attrib.name,
                           'att_type': attrib.schema.INTEGER})
 

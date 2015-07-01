@@ -14,17 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient import session
 from oslo_config import cfg
 from webob import exc
 
 from heat.common import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 class KeystonePasswordAuthProtocol(object):

@@ -114,7 +114,8 @@ class HeatException(Exception):
             # log the issue and the kwargs
             LOG.exception(_LE('Exception in string format operation'))
             for name, value in six.iteritems(kwargs):
-                LOG.error("%s: %s" % (name, value))  # noqa
+                LOG.error(_LE("%(name)s: %(value)s"),
+                          {'name': name, 'value': value})  # noqa
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:
                 raise_(exc_info[0], exc_info[1], exc_info[2])

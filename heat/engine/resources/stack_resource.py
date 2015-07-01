@@ -23,6 +23,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import template_format
@@ -435,7 +436,7 @@ class StackResource(resource.Resource):
                 parsed_template.files,
                 args)
         except Exception as ex:
-            LOG.exception('update_stack')
+            LOG.exception(_LE('update_stack'))
             self.raise_local_exception(ex)
         return cookie
 

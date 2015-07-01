@@ -308,7 +308,7 @@ class Server(object):
             self.pool.spawn_n(self._single_run, application, self.sock)
             return
 
-        LOG.info(_LI("Starting %d workers") % conf.workers)
+        LOG.info(_LI("Starting %d workers"), conf.workers)
         signal.signal(signal.SIGTERM, kill_children)
         signal.signal(signal.SIGHUP, hup)
         while len(self.children) < conf.workers:
@@ -319,7 +319,7 @@ class Server(object):
             try:
                 pid, status = os.wait()
                 if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-                    LOG.error(_LE('Removing dead child %s') % pid)
+                    LOG.error(_LE('Removing dead child %s'), pid)
                     self.children.remove(pid)
                     self.run_child()
             except OSError as err:
@@ -349,10 +349,10 @@ class Server(object):
             signal.signal(signal.SIGHUP, signal.SIG_DFL)
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             self.run_server()
-            LOG.info(_LI('Child %d exiting normally') % os.getpid())
+            LOG.info(_LI('Child %d exiting normally'), os.getpid())
             return
         else:
-            LOG.info(_LI('Started child %s') % pid)
+            LOG.info(_LI('Started child %s'), pid)
             self.children.append(pid)
 
     def run_server(self):
@@ -680,7 +680,7 @@ class Resource(object):
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            LOG.error(_LE('Exception handling resource: %s') % err)
+            LOG.error(_LE('Exception handling resource: %s'), err)
             msg = _('The server could not comply with the request since '
                     'it is either malformed or otherwise incorrect.')
             err = webob.exc.HTTPBadRequest(msg)
@@ -776,7 +776,7 @@ class Resource(object):
 
 def log_exception(err, exc_info):
     args = {'exc_info': exc_info} if cfg.CONF.verbose or cfg.CONF.debug else {}
-    LOG.error(_LE("Unexpected error occurred serving API: %s") % err,
+    LOG.error(_LE("Unexpected error occurred serving API: %s"), err,
               **args)
 
 
