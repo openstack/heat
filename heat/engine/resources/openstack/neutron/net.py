@@ -29,10 +29,10 @@ class Net(neutron.NeutronResource):
 
     ATTRIBUTES = (
         STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR, SHOW,
-        PORT_SECURITY_ENABLED_ATTR,
+        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR,
     ) = (
         "status", "name", "subnets", "admin_state_up", "tenant_id", "show",
-        "port_security_enabled",
+        "port_security_enabled", "mtu",
     )
 
     properties_schema = {
@@ -117,6 +117,11 @@ class Net(neutron.NeutronResource):
             _("Port security enabled of the network."),
             support_status=support.SupportStatus(version='5.0.0'),
             type=attributes.Schema.BOOLEAN
+        ),
+        MTU_ATTR: attributes.Schema(
+            _("The maximum transmission unit size(in bytes) for the network."),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.INTEGER
         ),
     }
 
