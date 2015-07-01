@@ -14,6 +14,7 @@
 import os
 
 import mock
+import re
 import six
 import yaml
 
@@ -74,6 +75,17 @@ class JsonToYamlTest(common.HeatTestCase):
 
             yml_str = template_format.convert_json_to_yaml(json_str)
             yield (json_str, yml_str, f.name)
+
+    def test_integer_only_keys_get_translated_correctly(self):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'templates/WordPress_Single_Instance.template')
+        with open(path, 'r') as f:
+            json_str = f.read()
+            yml_str = template_format.convert_json_to_yaml(json_str)
+            match = re.search('[\s,{]\d+\s*:', yml_str)
+            # Check that there are no matches of integer-only keys
+            # lacking explicit quotes
+            self.assertEqual(match, None)
 
 
 class YamlMinimalTest(common.HeatTestCase):

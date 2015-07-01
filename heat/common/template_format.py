@@ -108,7 +108,7 @@ def convert_json_to_yaml(json_str):
             next(key_order),
             matchobj.group(2))
         return key
-    key_re = re.compile('^(\s*)"([^"]+)"\s*:', re.M)
+    key_re = re.compile('(\s*)"([^"]+)"\s*:')
     json_str = key_re.sub(order_key, json_str)
 
     # parse the string as json to a python structure
@@ -120,4 +120,7 @@ def convert_json_to_yaml(json_str):
 
     # remove ordering from key names
     yml = re.sub('__\d*__order__', '', yml)
+
+    # convert integer keys back to string
+    yml = re.sub('([\s,{])(\d+)(\s*):', r"\1'\2'\3:", yml)
     return yml
