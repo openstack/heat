@@ -936,7 +936,7 @@ class Stack(collections.Mapping):
         updater()
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
-    def converge_stack(self, template, action=UPDATE):
+    def converge_stack(self, template, action=UPDATE, new_stack=None):
         """
         Updates the stack and triggers convergence for resources
         """
@@ -948,6 +948,18 @@ class Stack(collections.Mapping):
         previous_traversal = self.current_traversal
         self.current_traversal = uuidutils.generate_uuid()
         self.updated_time = datetime.datetime.utcnow()
+        if new_stack is not None:
+            self.disable_rollback = new_stack.disable_rollback
+            self.timeout_mins = new_stack.timeout_mins
+            self._set_param_stackid()
+
+            self.tags = new_stack.tags
+            if new_stack.tags:
+                stack_tag_object.StackTagList.set(self.context, self.id,
+                                                  new_stack.tags)
+            else:
+                stack_tag_object.StackTagList.delete(self.context, self.id)
+
         self.store()
 
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
