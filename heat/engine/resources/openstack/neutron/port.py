@@ -222,10 +222,12 @@ class Port(neutron.NeutronResource):
         ),
         MAC_ADDRESS: properties.Schema(
             properties.Schema.STRING,
-            _('MAC address to give to this port.'),
+            _('MAC address to give to this port. The default update policy '
+              'of this property in neutron is that allow admin role only.'),
             constraints=[
                 constraints.CustomConstraint('mac_addr')
-            ]
+            ],
+            update_allowed=True,
         ),
         ALLOWED_ADDRESS_PAIRS: properties.Schema(
             properties.Schema.LIST,
