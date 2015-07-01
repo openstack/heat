@@ -457,6 +457,9 @@ class StackResource(resource.Resource):
         except Exception as ex:
             self.rpc_client().ignore_error_named(ex, 'NotFound')
 
+    def handle_delete(self):
+        return self.delete_nested()
+
     def check_delete_complete(self, cookie=None):
         return self._check_status_complete(resource.Resource.DELETE,
                                            show_deleted=True)
