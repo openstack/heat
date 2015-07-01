@@ -16,6 +16,7 @@ import collections
 import uuid
 
 import mock
+from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 import six
@@ -43,6 +44,13 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
     Basic tests for the helper methods in
     :module:'heat.engine.clients.os.nova'.
     """
+
+    def test_create(self):
+        self.nova_plugin._get_client_option = mock.MagicMock()
+        self.nova_plugin.url_for = mock.MagicMock()
+        nc.discover_extensions = mock.MagicMock()
+        self.nova_plugin._create()
+        nc.discover_extensions.assert_called_once_with('2')
 
     def test_get_ip(self):
         my_image = mock.MagicMock()
