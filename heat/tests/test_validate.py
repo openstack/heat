@@ -773,6 +773,58 @@ resources:
     type: OS::Nova::Server
 '''
 
+test_template_parameters_error_no_label = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+- parameters:
+    key_name: heat_key
+resources:
+  server:
+    type: OS::Nova::Server
+'''
+
+test_template_parameters_duplicate_no_label = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameters:
+  key_name:
+    type: string
+    description: Name of an existing key pair to use for the instance
+    default: heat_key
+parameter_groups:
+- parameters:
+  - key_name
+- parameters:
+  - key_name
+resources:
+  server:
+    type: OS::Nova::Server
+'''
+
+test_template_invalid_parameter_no_label = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+- parameters:
+  - key_name
+resources:
+  server:
+    type: OS::Nova::Server
+'''
+
 test_template_allowed_integers = '''
 heat_template_version: 2013-05-23
 
@@ -851,9 +903,9 @@ outputs:
 '''
 
 
-class validateTest(common.HeatTestCase):
+class ValidateTest(common.HeatTestCase):
     def setUp(self):
-        super(validateTest, self).setUp()
+        super(ValidateTest, self).setUp()
         resources.initialise()
         self.fc = fakes_nova.FakeClient()
         self.gc = fakes_nova.FakeClient()
@@ -1413,6 +1465,19 @@ class validateTest(common.HeatTestCase):
                            'assigned to one parameter group only.'),
                          six.text_type(exc))
 
+    def test_validate_duplicate_parameters_no_label(self):
+        t = template_format.parse(test_template_parameters_duplicate_no_label)
+        template = hot_tmpl.HOTemplate20130523(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('Parameter Groups error: '
+                           'parameter_groups.: '
+                           'The key_name parameter must be '
+                           'assigned to one parameter group only.'),
+                         six.text_type(exc))
+
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
         template = hot_tmpl.HOTemplate20130523(t,
@@ -1428,6 +1493,20 @@ class validateTest(common.HeatTestCase):
         self.assertEqual(_('Parameter Groups error: '
                            'parameter_groups.Database Group: The grouped '
                            'parameter SomethingNotHere does not '
+                           'reference a valid parameter.'),
+                         six.text_type(exc))
+
+    def test_validate_invalid_parameter_no_label(self):
+        t = template_format.parse(test_template_invalid_parameter_no_label)
+        template = hot_tmpl.HOTemplate20130523(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('Parameter Groups error: '
+                           'parameter_groups.: The grouped '
+                           'parameter key_name does not '
                            'reference a valid parameter.'),
                          six.text_type(exc))
 
@@ -1462,6 +1541,17 @@ class validateTest(common.HeatTestCase):
 
         self.assertEqual(_('Parameter Groups error: '
                            'parameter_groups.Server Group: '
+                           'The parameters of parameter group should be '
+                           'a list.'), six.text_type(exc))
+
+    def test_validate_parameters_error_no_label(self):
+        t = template_format.parse(test_template_parameters_error_no_label)
+        template = hot_tmpl.HOTemplate20130523(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('Parameter Groups error: parameter_groups.: '
                            'The parameters of parameter group should be '
                            'a list.'), six.text_type(exc))
 

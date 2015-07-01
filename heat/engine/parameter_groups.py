@@ -57,14 +57,14 @@ class ParameterGroups(object):
                 if parameters is None:
                     raise exception.StackValidationFailed(
                         error=_('Parameter Groups error'),
-                        path=[PARAMETER_GROUPS, group.get('label')],
+                        path=[PARAMETER_GROUPS, group.get('label', '')],
                         message=_('The %s must be provided for '
                                   'each parameter group.') % PARAMETERS)
 
                 if not isinstance(parameters, list):
                     raise exception.StackValidationFailed(
                         error=_('Parameter Groups error'),
-                        path=[PARAMETER_GROUPS, group.get('label')],
+                        path=[PARAMETER_GROUPS, group.get('label', '')],
                         message=_('The %s of parameter group '
                                   'should be a list.') % PARAMETERS)
 
@@ -73,7 +73,7 @@ class ParameterGroups(object):
                     if param in grouped_parameters:
                         raise exception.StackValidationFailed(
                             error=_('Parameter Groups error'),
-                            path=[PARAMETER_GROUPS, group.get('label')],
+                            path=[PARAMETER_GROUPS, group.get('label', '')],
                             message=_(
                                 'The %s parameter must be assigned to one '
                                 'parameter group only.') % param)
@@ -84,7 +84,7 @@ class ParameterGroups(object):
                     if param not in self.parameter_names:
                         raise exception.StackValidationFailed(
                             error=_('Parameter Groups error'),
-                            path=[PARAMETER_GROUPS, group.get('label')],
+                            path=[PARAMETER_GROUPS, group.get('label', '')],
                             message=_(
                                 'The grouped parameter %s does not reference '
                                 'a valid parameter.') % param)
