@@ -251,6 +251,11 @@ class IdentifierTest(common.HeatTestCase):
         self.assertEqual('t/stacks/s/%3A%2F', hi.url_path())
         self.assertEqual('arn:openstack:heat::t:stacks/s/%3A%2F', hi.arn())
 
+    def test_id_contains(self):
+        hi = identifier.HeatIdentifier('t', 's', ':/')
+        self.assertFalse("t" in hi)
+        self.assertTrue("stack_id" in hi)
+
     def test_path_escape(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', ':/')
         self.assertEqual('/:/', hi.path)
