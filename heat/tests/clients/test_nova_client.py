@@ -16,7 +16,6 @@ import collections
 import uuid
 
 import mock
-from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 import six
@@ -48,9 +47,19 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
     def test_create(self):
         self.nova_plugin._get_client_option = mock.MagicMock()
         self.nova_plugin.url_for = mock.MagicMock()
-        nc.discover_extensions = mock.MagicMock()
-        self.nova_plugin._create()
-        nc.discover_extensions.assert_called_once_with('2')
+        if hasattr(nova.nc, 'discover_extensions'):
+            # novaclient >= 2.24.0 has this function
+            # so we should test it
+            nova.nc.discover_extensions = mock.MagicMock()
+            self.nova_plugin._create()
+            nova.nc.discover_extensions.assert_called_once_with('2')
+        else:
+            # FIXME(kairat_kushaev) need to delete this leaf when novaclient
+            # version will be greater than 2.24.0
+            with mock.patch(
+                    "nova.novashell.OpenStackComputeShell") as comp_shell:
+                self.nova_plugin._create()
+                comp_shell._discover_extensions.assert_called_once_with('2')
 
     def test_get_ip(self):
         my_image = mock.MagicMock()
