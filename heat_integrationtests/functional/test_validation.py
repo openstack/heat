@@ -38,6 +38,8 @@ parameters:
     type: string
   image:
     type: string
+  network:
+    type: string
 resources:
   config:
     type: My::Config
@@ -50,7 +52,9 @@ resources:
       image: {get_param: image}
       flavor: {get_param: flavor}
       key_name: {get_param: keyname}
+      networks: [{network: {get_param: network} }]
       user_data_format: SOFTWARE_CONFIG
+
 '''
         config_template = '''
 heat_template_version: 2014-10-16
@@ -74,7 +78,8 @@ resources:
                {'My::Config': 'provider.yaml'}}
         parameters = {'keyname': self.keypair_name,
                       'flavor': self.conf.minimal_instance_type,
-                      'image': self.conf.minimal_image_ref}
+                      'image': self.conf.minimal_image_ref,
+                      'network': self.conf.fixed_network_name}
         # Note we don't wait for CREATE_COMPLETE, because we're using a
         # minimal image without the tools to apply the config.
         # The point of the test is just to prove that validation won't
