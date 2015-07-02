@@ -91,7 +91,7 @@ class ClientBackend(object):
                                                  context)
             except (ImportError, RuntimeError) as err:
                 msg = _('Invalid cloud_backend setting in heat.conf '
-                        'detected  - %s'), six.text_type(err)
+                        'detected  - %s') % six.text_type(err)
                 LOG.error(msg)
                 raise exception.Invalid(reason=msg)
 
