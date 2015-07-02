@@ -18,8 +18,6 @@ import sys
 from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
-from oslo_log import log as logging
-from oslo_utils import encodeutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import six
@@ -31,7 +29,6 @@ from sqlalchemy.orm import session as orm_session
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
@@ -41,8 +38,6 @@ CONF = cfg.CONF
 CONF.import_opt('hidden_stack_tags', 'heat.common.config')
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_group('profiler', 'heat.common.config')
-
-LOG = logging.getLogger(__name__)
 
 _facade = None
 
@@ -197,7 +192,7 @@ def resource_data_get_all(resource, data=None):
 
     for res in data:
         if res.redact:
-            ret[res.key] = _decrypt(res.value, res.decrypt_method)
+            ret[res.key] = crypt.decrypt(res.decrypt_method, res.value)
         else:
             ret[res.key] = res.value
     return ret
@@ -211,7 +206,7 @@ def resource_data_get(resource, key):
                                       resource.id,
                                       key)
     if result.redact:
-        return _decrypt(result.value, result.decrypt_method)
+        return crypt.decrypt(result.decrypt_method, result.value)
     return result.value
 
 
@@ -245,22 +240,6 @@ def stack_tags_get(context, stack_id):
     return result or None
 
 
-def _encrypt(value):
-    if value is not None:
-        return crypt.encrypt(value.encode('utf-8'))
-    else:
-        return None, None
-
-
-def _decrypt(enc_value, method):
-    if method is None:
-        return None
-    decryptor = getattr(crypt, method)
-    value = decryptor(enc_value)
-    if value is not None:
-        return six.text_type(value, 'utf-8')
-
-
 def resource_data_get_by_key(context, resource_id, key):
     """Looks up resource_data by resource_id and key. Does not unencrypt
     resource_data.
@@ -277,7 +256,7 @@ def resource_data_get_by_key(context, resource_id, key):
 def resource_data_set(resource, key, value, redact=False):
     """Save resource's key/value pair to database."""
     if redact:
-        method, value = _encrypt(value)
+        method, value = crypt.encrypt(value)
     else:
         method = ''
     try:
@@ -623,7 +602,7 @@ def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
     if values.get('trust_id'):
-        method, trust_id = _encrypt(values.get('trust_id'))
+        method, trust_id = crypt.encrypt(values.get('trust_id'))
         user_creds_ref.trust_id = trust_id
         user_creds_ref.decrypt_method = method
         user_creds_ref.trustor_user_id = values.get('trustor_user_id')
@@ -635,7 +614,7 @@ def user_creds_create(context):
         user_creds_ref.region_name = values.get('region_name')
     else:
         user_creds_ref.update(values)
-        method, password = _encrypt(values['password'])
+        method, password = crypt.encrypt(values['password'])
         if len(six.text_type(password)) > 255:
             raise exception.Error(_("Length of OS_PASSWORD after encryption"
                                     " exceeds Heat limit (255 chars)"))
@@ -653,8 +632,10 @@ def user_creds_get(user_creds_id):
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
     del result['decrypt_method']
-    result['password'] = _decrypt(result['password'], db_result.decrypt_method)
-    result['trust_id'] = _decrypt(result['trust_id'], db_result.decrypt_method)
+    result['password'] = crypt.decrypt(
+        db_result.decrypt_method, result['password'])
+    result['trust_id'] = crypt.decrypt(
+        db_result.decrypt_method, result['trust_id'])
     return result
 
 
@@ -1159,8 +1140,7 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key):
                 except KeyError:
                     param_val = param.default
 
-                encoded_val = encodeutils.safe_encode(param_val)
-                encrypted_val = crypt.encrypt(encoded_val, encryption_key)
+                encrypted_val = crypt.encrypt(param_val, encryption_key)
                 raw_template.environment['parameters'][param_name] = \
                     encrypted_val
                 encrypted_params.append(param_name)
@@ -1183,18 +1163,10 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key):
             encrypted_params = raw_template.environment[
                 'encrypted_param_names']
             for param_name in encrypted_params:
-                decrypt_function_name = parameters[param_name][0]
-                decrypt_function = getattr(crypt, decrypt_function_name)
-                decrypted_val = decrypt_function(parameters[param_name][1],
-                                                 encryption_key)
-                try:
-                    parameters[param_name] = encodeutils.safe_decode(
-                        decrypted_val)
-                except UnicodeDecodeError as ex:
-                    # if the incorrect encryption_key was used then we can get
-                    # total gibberish here and safe_decode() will freak out.
-                    LOG.warn(_LW("Couldn't decrypt parameters %s"), ex)
-                    parameters[param_name] = ""
+                method, value = parameters[param_name]
+                decrypted_val = crypt.decrypt(method, value, encryption_key)
+                parameters[param_name] = decrypted_val
+
             environment = raw_template.environment.copy()
             environment['encrypted_param_names'] = []
             raw_template_update(ctxt, raw_template.id,
