@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
-"PO-Revision-Date: 2015-05-29 10:46+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"PO-Revision-Date: 2015-07-01 07:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -53,14 +53,6 @@ msgstr "Information de compte AWS trouvé, vérification avec keystone."
 msgid "Authenticating with %s"
 msgstr "Authentification avec %s"
 
-#, python-format
-msgid "Caught %s, exiting"
-msgstr "%s interceptée, sortie"
-
-#, python-format
-msgid "Caught %s, stopping children"
-msgstr "%s interceptée, arrêt de l'enfant"
-
 msgid "Caught keyboard interrupt. Exiting."
 msgstr "Interruption interceptée de clavier. Fermeture du programme en cours."
 
@@ -76,20 +68,8 @@ msgid "Checking stack %s"
 msgstr "Vérification de la stack %s"
 
 #, python-format
-msgid "Child %(pid)d killed by signal %(sig)d"
-msgstr "Enfant %(pid)d arrêté par le signal %(sig)d"
-
-#, python-format
-msgid "Child %(pid)s exited with status %(code)d"
-msgstr "Processus fils %(pid)s terminé avec le status %(code)d"
-
-#, python-format
 msgid "Child %d exiting normally"
 msgstr "Sortie normale de l'enfant %d"
-
-#, python-format
-msgid "Child caught %s, exiting"
-msgstr "L'enfant a reçu %s, sortie"
 
 #, python-format
 msgid "Creating stack %s"
@@ -100,15 +80,8 @@ msgid "Deleting stack %s"
 msgstr "Suppresion de la stack %s"
 
 #, python-format
-msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
-msgstr "Eventlet backdoor en écoute sur le port %(port)s for process %(pid)d"
-
-#, python-format
 msgid "Fetching data from %s"
 msgstr "Recherche de donnée depuis %s"
-
-msgid "Forking too fast, sleeping"
-msgstr "Bifurcation trop rapide, pause"
 
 #, python-format
 msgid "Loading %s"
@@ -120,16 +93,9 @@ msgstr "Signature AWS non trouvé"
 msgid "No AWSAccessKeyId/Authorization Credential"
 msgstr "Pas AWSAccessKeyId/Authorisation de compte"
 
-msgid "Parent process has died unexpectedly, exiting"
-msgstr "Processus parent arrêté de manière inattendue, sortie"
-
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr "Echec de création de la stack, status %s"
-
-#, python-format
-msgid "Started child %d"
-msgstr "Enfant démarré %d"
 
 #, python-format
 msgid "Started child %s"
@@ -149,13 +115,6 @@ msgstr "Mise à jour de la stack %s"
 #, python-format
 msgid "Validating %s"
 msgstr "Validation %s"
-
-msgid "Wait called after thread killed. Cleaning up."
-msgstr "Pause demandée après suppression de thread. Nettoyage."
-
-#, python-format
-msgid "Waiting on %d children to exit"
-msgstr "En attente %d enfants pour sortie"
 
 #, python-format
 msgid "abandoning stack %s"

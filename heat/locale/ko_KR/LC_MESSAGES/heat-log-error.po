@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
-"PO-Revision-Date: 2015-05-29 10:46+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"PO-Revision-Date: 2015-07-01 07:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -19,10 +19,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-#, python-format
-msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
-msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
 
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
@@ -133,9 +129,6 @@ msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr "watch_data.data의 키의 예기치 않은 수!"
 
-msgid "Unhandled exception"
-msgstr "처리되지 않은 예외"
-
 msgid "failed to get lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 가져 오지 못했습니다"
 
@@ -145,12 +138,6 @@ msgstr "스택 수명주기 %s 클래스의 인스턴스를 실패"
 
 msgid "failed to sort lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 실패"
-
-msgid "in dynamic looping call"
-msgstr "동적 루프 호출에서"
-
-msgid "in fixed duration looping call"
-msgstr "고정 기간 루프 호출에서"
 
 msgid "trust token re-scoping failed!"
 msgstr "신뢰할 수 있는 token 재설정 실패!"

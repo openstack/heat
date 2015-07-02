@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
-"PO-Revision-Date: 2015-05-29 10:46+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"PO-Revision-Date: 2015-07-01 07:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/heat/"
 "language/pt_BR/)\n"
@@ -56,12 +56,3 @@ msgstr "SIGHUP recebido"
 
 msgid "SIGTERM received"
 msgstr "SIGTERM recebido"
-
-msgid "Unhandled exception"
-msgstr "Exceção não tratada"
-
-msgid "in dynamic looping call"
-msgstr "em chamada de laço dinâmico"
-
-msgid "in fixed duration looping call"
-msgstr "em uma chamada de laço de duração fixa"

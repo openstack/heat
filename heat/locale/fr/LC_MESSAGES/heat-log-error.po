@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-30 06:05+0000\n"
-"PO-Revision-Date: 2015-05-29 10:46+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"PO-Revision-Date: 2015-07-01 07:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -21,8 +21,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #, python-format
-msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
-msgstr "%(opname) %(ci)s échec pour  %(a)s sur %(sid)s"
+msgid "%(name)s: %(value)s"
+msgstr "%(name)s: %(value)s"
 
 #, python-format
 msgid "DB error %s"
@@ -121,15 +121,6 @@ msgstr "Action inattendu %s à supprimer!"
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "Action inattendu %s à mettre à jour!"
-
-msgid "Unhandled exception"
-msgstr "Exception non gérée"
-
-msgid "in dynamic looping call"
-msgstr "dans l'appel en boucle dynamique"
-
-msgid "in fixed duration looping call"
-msgstr "dans l'appel en boucle de durée fixe"
 
 #, python-format
 msgid "signal %(name)s : %(msg)s"

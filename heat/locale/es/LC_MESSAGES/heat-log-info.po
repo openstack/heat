@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-17 06:06+0000\n"
-"PO-Revision-Date: 2015-06-10 21:55+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"PO-Revision-Date: 2015-07-01 07:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -33,14 +33,6 @@ msgstr "Credenciales AWS encontradas, comprobándolas contra keystone."
 msgid "Authenticating with %s"
 msgstr "Autenticándo con %s"
 
-#, python-format
-msgid "Caught %s, exiting"
-msgstr "Se ha captado %s, saliendo"
-
-#, python-format
-msgid "Caught %s, stopping children"
-msgstr "Se ha captado %s, deteniendo hijos"
-
 msgid "Caught keyboard interrupt. Exiting."
 msgstr "Se ha generado interrupción de teclado. Saliendo."
 
@@ -52,31 +44,12 @@ msgid "Checking AWS credentials.."
 msgstr "Comprobando credenciales AWS.."
 
 #, python-format
-msgid "Child %(pid)d killed by signal %(sig)d"
-msgstr "Hijo %(pid)d matado por señal %(sig)d"
-
-#, python-format
-msgid "Child %(pid)s exited with status %(code)d"
-msgstr "El hijo %(pid)s ha salido con el estado %(code)d"
-
-#, python-format
 msgid "Child %d exiting normally"
 msgstr "El hijo %d está saliendo de forma normal"
 
 #, python-format
-msgid "Child caught %s, exiting"
-msgstr "Hijo captado %s, saliendo"
-
-#, python-format
-msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
-msgstr "Eventlet oculto escuchando en %(port)s para el proceso %(pid)d"
-
-#, python-format
 msgid "Fetching data from %s"
 msgstr "Obteniendo datos desde %s"
-
-msgid "Forking too fast, sleeping"
-msgstr "Bifurcación demasiado rápida, en reposo"
 
 #, python-format
 msgid "Loading %s"
@@ -88,9 +61,6 @@ msgstr "Firma AWS Signature no encontrada."
 msgid "No AWSAccessKeyId/Authorization Credential"
 msgstr "Credencial AWSAccessKeyId/Authorization no encontrada"
 
-msgid "Parent process has died unexpectedly, exiting"
-msgstr "El proceso padre se ha detenido inesperadamente, saliendo"
-
 #, python-format
 msgid "Registering %(path)s -> %(value)s"
 msgstr "Registrando %(path)s -> %(value)s"
@@ -98,10 +68,6 @@ msgstr "Registrando %(path)s -> %(value)s"
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr "Pila %s procesando ha finalizado"
-
-#, python-format
-msgid "Started child %d"
-msgstr "Se ha iniciado el hijo %d"
 
 #, python-format
 msgid "Started child %s"
@@ -113,13 +79,6 @@ msgstr "Iniciando %d trabajadores"
 
 msgid "Starting single process server"
 msgstr "Iniciando servidor de proceso individual"
-
-msgid "Wait called after thread killed. Cleaning up."
-msgstr "Esperar llamado después de cortar la línea. Limpiando."
-
-#, python-format
-msgid "Waiting on %d children to exit"
-msgstr "En espera de %d hijos para salir"
 
 #, python-format
 msgid "creating %s"
