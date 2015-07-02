@@ -178,8 +178,9 @@ class WorkerService(service.Service):
                                                     current_traversal,
                                                     data, is_update)
                 return
-            except exception.ResourceFailure as e:
-                reason = six.text_type(e)
+            except exception.ResourceFailure as ex:
+                reason = 'Resource %s failed: %s' % (stack.action,
+                                                     six.text_type(ex))
                 self._handle_resource_failure(
                     cnxt, stack.id, current_traversal, reason)
                 return
@@ -195,8 +196,9 @@ class WorkerService(service.Service):
                                                     current_traversal,
                                                     data, is_update)
                 return
-            except exception.ResourceFailure as e:
-                reason = six.text_type(e)
+            except exception.ResourceFailure as ex:
+                reason = 'Resource %s failed: %s' % (stack.action,
+                                                     six.text_type(ex))
                 self._handle_resource_failure(
                     cnxt, stack.id, current_traversal, reason)
                 return

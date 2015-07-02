@@ -203,7 +203,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    self.is_update)
         s = self.stack.load(self.ctx, stack_id=self.stack.id)
         self.assertEqual((s.UPDATE, s.FAILED), (s.action, s.status))
-        self.assertEqual(u'ResourceNotAvailable: resources.A: The Resource (A)'
+        self.assertEqual('Resource UPDATE failed: '
+                         'ResourceNotAvailable: resources.A: The Resource (A)'
                          ' is not available.', s.status_reason)
 
     def test_resource_cleanup_failure_sets_stack_state_as_failed(
@@ -220,7 +221,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    self.is_update)
         s = self.stack.load(self.ctx, stack_id=self.stack.id)
         self.assertEqual((s.UPDATE, s.FAILED), (s.action, s.status))
-        self.assertEqual(u'ResourceNotAvailable: resources.A: The Resource (A)'
+        self.assertEqual('Resource UPDATE failed: '
+                         'ResourceNotAvailable: resources.A: The Resource (A)'
                          ' is not available.', s.status_reason)
 
     def test_resource_update_failure_triggers_rollback_if_enabled(
