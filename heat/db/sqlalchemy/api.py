@@ -18,6 +18,7 @@ import sys
 from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
+from oslo_log import log as logging
 from oslo_utils import encodeutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
@@ -30,6 +31,7 @@ from sqlalchemy.orm import session as orm_session
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
@@ -39,6 +41,8 @@ CONF = cfg.CONF
 CONF.import_opt('hidden_stack_tags', 'heat.common.config')
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_group('profiler', 'heat.common.config')
+
+LOG = logging.getLogger(__name__)
 
 _facade = None
 
@@ -1186,10 +1190,11 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key):
                 try:
                     parameters[param_name] = encodeutils.safe_decode(
                         decrypted_val)
-                except UnicodeDecodeError:
+                except UnicodeDecodeError as ex:
                     # if the incorrect encryption_key was used then we can get
                     # total gibberish here and safe_decode() will freak out.
-                    parameters[param_name] = decrypted_val
+                    LOG.warn(_LW("Couldn't decrypt parameters %s"), ex)
+                    parameters[param_name] = ""
             environment = raw_template.environment.copy()
             environment['encrypted_param_names'] = []
             raw_template_update(ctxt, raw_template.id,
