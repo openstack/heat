@@ -31,6 +31,7 @@ class EngineClient(object):
         1.4 - Add support for service list
         1.9 - Add template_type option to generate_template()
         1.10 - Add support for software config list
+        1.11 - Add support for template versions list
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -326,6 +327,15 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('list_resource_types',
                                              support_status=support_status),
                          version='1.1')
+
+    def list_template_versions(self, ctxt):
+        """
+        Get a list of available template versions
+
+        :param ctxt: RPC context.
+        """
+        return self.call(ctxt, self.make_msg('list_template_versions'),
+                         version='1.11')
 
     def resource_schema(self, ctxt, type_name):
         """

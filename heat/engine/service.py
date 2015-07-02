@@ -40,6 +40,7 @@ from heat.common import messaging as rpc_messaging
 from heat.common import service_utils
 from heat.engine import api
 from heat.engine import attributes
+from heat.engine.cfn import template as cfntemplate
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import event as evt
@@ -266,7 +267,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.10'
+    RPC_API_VERSION = '1.11'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1023,6 +1024,18 @@ class EngineService(service.Service):
         :param cnxt: RPC context.
         """
         return resources.global_env().get_types(support_status)
+
+    def list_template_versions(self, cnxt):
+        mgr = templatem._get_template_extension_manager()
+        _template_classes = [(name, mgr[name].plugin)
+                             for name in mgr.names()]
+        versions = []
+        for t in _template_classes:
+            if t[1] in [cfntemplate.CfnTemplate, cfntemplate.HeatTemplate]:
+                versions.append({'version': t[0], 'type': 'cfn'})
+            else:
+                versions.append({'version': t[0], 'type': 'hot'})
+        return versions
 
     def resource_schema(self, cnxt, type_name):
         """

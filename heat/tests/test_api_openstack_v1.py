@@ -2022,6 +2022,25 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_list_template_versions(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'list_template_versions', True)
+        req = self._get('/template_versions')
+
+        engine_response = [
+            {'version': 'heat_template_version.2013-05-23', 'type': 'hot'},
+            {'version': 'AWSTemplateFormatVersion.2010-09-09', 'type': 'cfn'}]
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context, ('list_template_versions', {}),
+            version="1.11"
+        ).AndReturn(engine_response)
+        self.m.ReplayAll()
+        response = self.controller.list_template_versions(
+            req, tenant_id=self.tenant)
+        self.assertEqual({'template_versions': engine_response}, response)
+        self.m.VerifyAll()
+
     def test_resource_schema(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'resource_schema', True)
         req = self._get('/resource_types/ResourceWithProps')
