@@ -17,7 +17,7 @@ import mock
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import properties
+from heat.engine.clients.os import nova
 from heat.engine.resources.openstack.manila import share_network
 from heat.engine import scheduler
 from heat.tests import common
@@ -65,8 +65,9 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.client_plugin = mock.Mock()
         self.patchobject(share_network.ManilaShareNetwork, 'client_plugin',
                          return_value=self.client_plugin)
-        self.patchobject(properties.Properties, 'validate',
-                         return_value=mock.Mock)
+        self.stub_NetworkConstraint_validate()
+        self.stub_NovaNetworkConstraint()
+        self.stub_SubnetConstraint_validate()
 
     def _create_network(self, name, snippet, stack):
         net = share_network.ManilaShareNetwork(name, snippet, stack)
@@ -188,6 +189,17 @@ class ManilaShareNetworkTest(common.HeatTestCase):
                'neutron_subnet, nova_network.')
         self.assertRaisesRegexp(exception.ResourcePropertyConflict, msg,
                                 net.validate)
+
+    def test_nova_constraint_fail(self):
+        validate = self.patchobject(nova.NetworkConstraint, 'validate')
+        validate.return_value = False
+        t = template_format.parse(stack_template)
+        t['resources']['share_network']['properties']['nova_network'] = 1
+        stack = utils.parse_stack(t)
+        rsrc_defn = stack.t.resource_definitions(stack)['share_network']
+        self.assertRaises(exception.ResourceFailure,
+                          self._create_network, 'share_network',
+                          rsrc_defn, stack)
 
     def test_attributes(self):
         net = self._create_network('share_network', self.rsrc_defn,

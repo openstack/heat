@@ -236,3 +236,7 @@ class HeatTestCase(testscenarios.WithScenarios,
     def stub_RouterConstraint_validate(self):
         validate = self.patchobject(neutron.RouterConstraint, 'validate')
         validate.return_value = True
+
+    def stub_NovaNetworkConstraint(self):
+        validate = self.patchobject(nova.NetworkConstraint, 'validate')
+        validate.return_value = True

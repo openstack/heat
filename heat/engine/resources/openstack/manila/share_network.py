@@ -63,7 +63,8 @@ class ManilaShareNetwork(resource.Resource):
         NOVA_NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Nova network id.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[constraints.CustomConstraint('nova.network')]
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
