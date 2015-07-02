@@ -92,8 +92,6 @@ class ResourcePages(compat.Directive):
                 self.contribute_update_policy(section)
 
                 self.contribute_hot_syntax(section)
-                self.contribute_yaml_syntax(section)
-                self.contribute_json_syntax(section)
 
         return content
 
@@ -173,61 +171,6 @@ resources:
     type: %s%s''' % (self.resource_type, props_str)
 
         block = nodes.literal_block('', template, language="hot")
-        section.append(block)
-
-    def contribute_yaml_syntax(self, parent):
-        section = self._section(parent, _('YAML Syntax'), '%s-yaml')
-        props = []
-        for prop_key in sorted(six.iterkeys(self.props_schemata)):
-            prop = self.props_schemata[prop_key]
-            if (prop.implemented
-                    and prop.support_status.status == support.SUPPORTED):
-                props.append('%s: %s' % (prop_key,
-                                         self._prop_syntax_example(prop)))
-
-        props_str = ''
-        if props:
-            props_str = '''\n    Properties:
-      %s''' % ('\n      '.join(props))
-
-        template = '''HeatTemplateFormatVersion: '2012-12-12'
-...
-Resources:
-  ...
-  TheResource:
-    Type: %s%s''' % (self.resource_type, props_str)
-
-        block = nodes.literal_block('', template, language='yaml')
-        section.append(block)
-
-    def contribute_json_syntax(self, parent):
-        section = self._section(parent, _('JSON Syntax'), '%s-json')
-
-        props = []
-        for prop_key in sorted(six.iterkeys(self.props_schemata)):
-            prop = self.props_schemata[prop_key]
-            if (prop.implemented
-                    and prop.support_status.status == support.SUPPORTED):
-                props.append('"%s": %s' % (prop_key,
-                                           self._prop_syntax_example(prop)))
-
-        props_str = ''
-        if props:
-            props_str = ''',\n      "Properties": {
-        %s
-      }''' % (',\n        '.join(props))
-
-        template = '''{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  ...
-  "Resources" : {
-    "TheResource": {
-      "Type": "%s"%s
-    }
-  }
-}''' % (self.resource_type, props_str)
-
-        block = nodes.literal_block('', template, language="json")
         section.append(block)
 
     @staticmethod
