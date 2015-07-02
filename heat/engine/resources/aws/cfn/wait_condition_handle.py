@@ -45,7 +45,7 @@ class WaitConditionHandle(wc_base.BaseWaitConditionHandle):
         '''
         if self.resource_id:
             wc = signal_responder.WAITCONDITION
-            return six.text_type(self._get_signed_url(signal_type=wc))
+            return six.text_type(self._get_ec2_signed_url(signal_type=wc))
         else:
             return six.text_type(self.name)
 

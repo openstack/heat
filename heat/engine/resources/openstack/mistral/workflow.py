@@ -408,7 +408,7 @@ class Workflow(signal_responder.SignalResponder,
                     self.INPUT: self.properties.get(self.INPUT)}
 
         elif name == self.ALARM_URL:
-            return six.text_type(self._get_signed_url())
+            return six.text_type(self._get_ec2_signed_url())
 
 
 def resource_mapping():

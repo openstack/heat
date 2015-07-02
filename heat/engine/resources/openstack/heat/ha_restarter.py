@@ -103,7 +103,7 @@ class Restarter(signal_responder.SignalResponder):
         when there is an alarm.
         '''
         if name == self.ALARM_URL and self.resource_id is not None:
-            return six.text_type(self._get_signed_url())
+            return six.text_type(self._get_ec2_signed_url())
 
 
 def resource_mapping():

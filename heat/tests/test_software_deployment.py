@@ -163,10 +163,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.patchobject(sd.SoftwareDeployment, '_create_user')
         self.patchobject(sd.SoftwareDeployment, '_create_keypair')
         self.patchobject(sd.SoftwareDeployment, '_delete_user')
-        self.patchobject(sd.SoftwareDeployment, '_delete_signed_url')
-        get_signed_url = self.patchobject(
-            sd.SoftwareDeployment, '_get_signed_url')
-        get_signed_url.return_value = 'http://192.0.2.2/signed_url'
+        self.patchobject(sd.SoftwareDeployment, '_delete_ec2_signed_url')
+        get_ec2_signed_url = self.patchobject(
+            sd.SoftwareDeployment, '_get_ec2_signed_url')
+        get_ec2_signed_url.return_value = 'http://192.0.2.2/signed_url'
 
         self.deployment = self.stack['deployment_mysql']
 
