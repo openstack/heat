@@ -979,7 +979,7 @@ class ResourceTest(common.HeatTestCase):
         scheduler.TaskRunner(res.resume)()
         self.assertEqual((res.RESUME, res.COMPLETE), res.state)
 
-    def test_suspend_fail_inprogress(self):
+    def test_suspend_fail_invalid_states(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType',
                                             {'Foo': 'abc'})
@@ -987,19 +987,19 @@ class ResourceTest(common.HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        res.state_set(res.CREATE, res.IN_PROGRESS)
-        suspend = scheduler.TaskRunner(res.suspend)
-        self.assertRaises(exception.ResourceFailure, suspend)
+        invalid_actions = (a for a in res.ACTIONS if a != res.SUSPEND)
+        invalid_status = (s for s in res.STATUSES if s != res.COMPLETE)
+        invalid_states = [s for s in
+                          itertools.product(invalid_actions, invalid_status)]
 
-        res.state_set(res.UPDATE, res.IN_PROGRESS)
-        suspend = scheduler.TaskRunner(res.suspend)
-        self.assertRaises(exception.ResourceFailure, suspend)
+        for state in invalid_states:
+            res.state_set(*state)
+            suspend = scheduler.TaskRunner(res.suspend)
+            expected = 'State %s invalid for suspend' % six.text_type(state)
+            exc = self.assertRaises(exception.ResourceFailure, suspend)
+            self.assertIn(expected, six.text_type(exc))
 
-        res.state_set(res.DELETE, res.IN_PROGRESS)
-        suspend = scheduler.TaskRunner(res.suspend)
-        self.assertRaises(exception.ResourceFailure, suspend)
-
-    def test_resume_fail_not_suspend_complete(self):
+    def test_resume_fail_invalid_states(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType',
                                             {'Foo': 'abc'})
@@ -1007,13 +1007,17 @@ class ResourceTest(common.HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        non_suspended_states = [s for s in
-                                itertools.product(res.ACTIONS, res.STATUSES)
-                                if s != (res.SUSPEND, res.COMPLETE)]
-        for state in non_suspended_states:
+        invalid_states = [s for s in
+                          itertools.product(res.ACTIONS, res.STATUSES)
+                          if s not in ((res.SUSPEND, res.COMPLETE),
+                                       (res.RESUME, res.FAILED),
+                                       (res.RESUME, res.COMPLETE))]
+        for state in invalid_states:
             res.state_set(*state)
             resume = scheduler.TaskRunner(res.resume)
-            self.assertRaises(exception.ResourceFailure, resume)
+            expected = 'State %s invalid for resume' % six.text_type(state)
+            exc = self.assertRaises(exception.ResourceFailure, resume)
+            self.assertIn(expected, six.text_type(exc))
 
     def test_suspend_fail_exception(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',

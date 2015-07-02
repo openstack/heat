@@ -906,7 +906,10 @@ class Resource(object):
         action = self.SUSPEND
 
         # Don't try to suspend the resource unless it's in a stable state
-        if (self.action == self.DELETE or self.status != self.COMPLETE):
+        # or if the previous suspend failed
+        if (self.action == self.DELETE or
+                (self.action != self.SUSPEND and
+                 self.status != self.COMPLETE)):
             exc = exception.Error(_('State %s invalid for suspend')
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
@@ -921,12 +924,15 @@ class Resource(object):
         '''
         action = self.RESUME
 
-        # Can't resume a resource unless it's SUSPEND_COMPLETE
-        if self.state != (self.SUSPEND, self.COMPLETE):
+        # Allow resume a resource if it's SUSPEND_COMPLETE
+        # or RESUME_FAILED or RESUME_COMPLETE. Recommend to check
+        # the real state of physical resource in handle_resume()
+        if self.state not in ((self.SUSPEND, self.COMPLETE),
+                              (self.RESUME, self.FAILED),
+                              (self.RESUME, self.COMPLETE)):
             exc = exception.Error(_('State %s invalid for resume')
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
-
         LOG.info(_LI('resuming %s'), six.text_type(self))
         return self._do_action(action)
 
