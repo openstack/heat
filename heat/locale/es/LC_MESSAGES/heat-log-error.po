@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-22 06:02+0000\n"
-"PO-Revision-Date: 2015-06-17 20:52+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"PO-Revision-Date: 2015-07-01 07:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -21,10 +21,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #, python-format
-msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
-msgstr "%(opname) %(ci)s fallo por %(a)s en %(sid)s"
-
-#, python-format
 msgid "DB error %s"
 msgstr "Error de base de datos %s"
 
@@ -32,15 +28,6 @@ msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 "Ec2Token autorización ha fallado, ningún auth_uri especificado en el archivo "
 "de configuración"
-
-msgid "Error stopping thread."
-msgstr "Error al detener la línea."
-
-msgid "Error stopping timer."
-msgstr "Error al detener temporizador."
-
-msgid "Error waiting on ThreadGroup."
-msgstr "Error al esperar en ThreadGroup."
 
 #, python-format
 msgid "Exception handling resource: %s"
@@ -83,9 +70,6 @@ msgstr "No ha sido posible obtener la pila %s para tareas periódicas"
 msgid "Unexpected error occurred serving API: %s"
 msgstr "Error inesperado ha ocurrido sirviendo API: %s"
 
-msgid "Unhandled exception"
-msgstr "Excepción no controlada"
-
 msgid "failed to get lifecycle plug point classes"
 msgstr "fallo a obtener clases de punto de conexión de ciclo de vida "
 
@@ -97,12 +81,6 @@ msgid "failed to sort lifecycle plug point classes"
 msgstr ""
 "ha ocurrido un error al ordenar las clases del punto de conexión de ciclo de "
 "vida"
-
-msgid "in dynamic looping call"
-msgstr "en llamada en bucle dinámica"
-
-msgid "in fixed duration looping call"
-msgstr "en llamada en bucle de duración fija"
 
 #, python-format
 msgid "signal %(name)s : %(msg)s"

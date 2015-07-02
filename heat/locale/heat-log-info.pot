@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.2.0.dev7\n"
+"Project-Id-Version: heat 5.0.0.0b2.dev77\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-22 06:02+0000\n"
+"POT-Creation-Date: 2015-07-02 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,7 +46,7 @@ msgstr ""
 msgid "AWS authentication failure."
 msgstr ""
 
-#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:849
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:851
 msgid "validate_template"
 msgstr ""
 
@@ -60,26 +60,26 @@ msgstr ""
 msgid "Fetching data from %s"
 msgstr ""
 
-#: heat/common/wsgi.py:300 heat/openstack/common/service.py:328
+#: heat/common/wsgi.py:311
 #, python-format
 msgid "Starting %d workers"
 msgstr ""
 
-#: heat/common/wsgi.py:318
+#: heat/common/wsgi.py:329
 msgid "Caught keyboard interrupt. Exiting."
 msgstr ""
 
-#: heat/common/wsgi.py:341
+#: heat/common/wsgi.py:352
 #, python-format
 msgid "Child %d exiting normally"
 msgstr ""
 
-#: heat/common/wsgi.py:344
+#: heat/common/wsgi.py:355
 #, python-format
 msgid "Started child %s"
 msgstr ""
 
-#: heat/common/wsgi.py:371
+#: heat/common/wsgi.py:382
 msgid "Starting single process server"
 msgstr ""
 
@@ -93,52 +93,57 @@ msgstr ""
 msgid "Loading %s"
 msgstr ""
 
-#: heat/engine/resource.py:336
+#: heat/engine/resource.py:339
 #, python-format
 msgid "Reached hook on %s"
 msgstr ""
 
-#: heat/engine/resource.py:671
+#: heat/engine/resource.py:557
+#, python-format
+msgid "%(action)s: %(info)s"
+msgstr ""
+
+#: heat/engine/resource.py:672
 #, python-format
 msgid "creating %s"
 msgstr ""
 
-#: heat/engine/resource.py:852
+#: heat/engine/resource.py:846
 #, python-format
 msgid "updating %s"
 msgstr ""
 
-#: heat/engine/resource.py:877
+#: heat/engine/resource.py:871
 #, python-format
 msgid "Checking %s"
 msgstr ""
 
-#: heat/engine/resource.py:914
+#: heat/engine/resource.py:908
 #, python-format
 msgid "suspending %s"
 msgstr ""
 
-#: heat/engine/resource.py:930
+#: heat/engine/resource.py:924
 #, python-format
 msgid "resuming %s"
 msgstr ""
 
-#: heat/engine/resource.py:935
+#: heat/engine/resource.py:929
 #, python-format
 msgid "snapshotting %s"
 msgstr ""
 
-#: heat/engine/resource.py:981
+#: heat/engine/resource.py:975
 #, python-format
 msgid "Validating %s"
 msgstr ""
 
-#: heat/engine/resource.py:1050
+#: heat/engine/resource.py:1036
 #, python-format
 msgid "deleting %s"
 msgstr ""
 
-#: heat/engine/resource.py:1311
+#: heat/engine/resource.py:1337
 #, python-format
 msgid "Clearing %(hook)s hook on %(resource)s"
 msgstr ""
@@ -148,103 +153,103 @@ msgstr ""
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:366
+#: heat/engine/service.py:367
 msgid "Engine service is stopped successfully"
 msgstr ""
 
-#: heat/engine/service.py:376
+#: heat/engine/service.py:377
 #, python-format
 msgid "WorkerService is stopped in engine %s"
 msgstr ""
 
-#: heat/engine/service.py:384
+#: heat/engine/service.py:385
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:388
+#: heat/engine/service.py:389
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:393
+#: heat/engine/service.py:394
 #, python-format
 msgid "Service %s is deleted"
 msgstr ""
 
-#: heat/engine/service.py:396
+#: heat/engine/service.py:397
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:637
+#: heat/engine/service.py:638
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:678
+#: heat/engine/service.py:679
 #, python-format
 msgid "Creating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:702
+#: heat/engine/service.py:703
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr ""
 
-#: heat/engine/service.py:742
+#: heat/engine/service.py:743
 #, python-format
 msgid "Updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:815
+#: heat/engine/service.py:817
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:948
+#: heat/engine/service.py:950
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1006
+#: heat/engine/service.py:1008
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1303
+#: heat/engine/service.py:1317
 #, python-format
 msgid "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1353
+#: heat/engine/service.py:1367
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1573
+#: heat/engine/service.py:1596
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/service.py:1580
+#: heat/engine/service.py:1603
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1601
+#: heat/engine/service.py:1624
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:1623
+#: heat/engine/service.py:1646
 #, python-format
 msgid ""
 "Engine %(engine)s went down when stack %(stack_id)s was in action "
 "%(action)s"
 msgstr ""
 
-#: heat/engine/service_software_config.py:104
-#: heat/engine/service_software_config.py:126
+#: heat/engine/service_software_config.py:123
+#: heat/engine/service_software_config.py:145
 #, python-format
 msgid "Signal object not found: %(c)s %(o)s"
 msgstr ""
@@ -254,41 +259,46 @@ msgstr ""
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:962
+#: heat/engine/stack.py:977
 #, python-format
 msgid "convergence_dependencies: %s"
 msgstr ""
 
-#: heat/engine/stack.py:981
+#: heat/engine/stack.py:996
 #, python-format
 msgid "Triggering resource %(rsrc_id)s for %(is_update)s update"
 msgstr ""
 
-#: heat/engine/stack.py:1261
+#: heat/engine/stack.py:1275
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s "
 "user_creds_id=%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:1269
+#: heat/engine/stack.py:1283
 #, python-format
 msgid "Tried to store a stack that does not exist %s"
 msgstr ""
 
-#: heat/engine/stack.py:1360 heat/engine/stack.py:1372
+#: heat/engine/stack.py:1374 heat/engine/stack.py:1386
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1388
+#: heat/engine/stack.py:1402
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:1409
+#: heat/engine/stack.py:1423
 #, python-format
 msgid "%s is already resumed"
+msgstr ""
+
+#: heat/engine/stack.py:1599
+#, python-format
+msgid "[%(name)s(%(id)s)] update traversal %(tid)s complete"
 msgstr ""
 
 #: heat/engine/stack_lock.py:82
@@ -342,12 +352,17 @@ msgstr ""
 msgid "no action for new state %s"
 msgstr ""
 
-#: heat/engine/worker.py:66
+#: heat/engine/worker.py:70
 msgid "Starting WorkerService ..."
 msgstr ""
 
-#: heat/engine/worker.py:77
+#: heat/engine/worker.py:81
 msgid "Stopping WorkerService ..."
+msgstr ""
+
+#: heat/engine/worker.py:103
+#, python-format
+msgid "Triggering rollback of %(stack_name)s %(action)s "
 msgstr ""
 
 #: heat/engine/clients/os/cinder.py:65
@@ -380,7 +395,7 @@ msgstr ""
 msgid "Multiple images %s were found in glance with name"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:606
+#: heat/engine/clients/os/nova.py:613
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
@@ -485,7 +500,11 @@ msgstr ""
 msgid "%(name)s Timed out (%(timeout)s)"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1271
+#: heat/engine/resources/openstack/manila/share.py:231
+msgid "Applying access rules to created Share."
+msgstr ""
+
+#: heat/engine/resources/openstack/nova/server.py:1291
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network"
@@ -550,57 +569,5 @@ msgstr ""
 #: heat/httpd/heat-api.py:44
 #, python-format
 msgid "Starting Heat ReST API on %(host)s:%(port)s"
-msgstr ""
-
-#: heat/openstack/common/eventlet_backdoor.py:146
-#, python-format
-msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
-msgstr ""
-
-#: heat/openstack/common/service.py:166
-#, python-format
-msgid "Caught %s, exiting"
-msgstr ""
-
-#: heat/openstack/common/service.py:232
-msgid "Parent process has died unexpectedly, exiting"
-msgstr ""
-
-#: heat/openstack/common/service.py:260
-#, python-format
-msgid "Child caught %s, exiting"
-msgstr ""
-
-#: heat/openstack/common/service.py:299
-msgid "Forking too fast, sleeping"
-msgstr ""
-
-#: heat/openstack/common/service.py:318
-#, python-format
-msgid "Started child %d"
-msgstr ""
-
-#: heat/openstack/common/service.py:345
-#, python-format
-msgid "Child %(pid)d killed by signal %(sig)d"
-msgstr ""
-
-#: heat/openstack/common/service.py:349
-#, python-format
-msgid "Child %(pid)s exited with status %(code)d"
-msgstr ""
-
-#: heat/openstack/common/service.py:388
-#, python-format
-msgid "Caught %s, stopping children"
-msgstr ""
-
-#: heat/openstack/common/service.py:403
-msgid "Wait called after thread killed. Cleaning up."
-msgstr ""
-
-#: heat/openstack/common/service.py:419
-#, python-format
-msgid "Waiting on %d children to exit"
 msgstr ""
 
