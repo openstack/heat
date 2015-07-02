@@ -57,6 +57,13 @@ resources:
       size: 1
       name: test_name
       scheduler_hints: {"hint1": "good_advice"}
+  volume4:
+    type: OS::Cinder::Volume
+    properties:
+      availability_zone: nova
+      size: 1
+      name: test_name
+      multiattach: True
   attachment:
     type: OS::Cinder::VolumeAttachment
     properties:
@@ -238,7 +245,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             description='desc', volume_type='lvm',
             metadata={'key': 'value'}, source_volid=None,
             bootable=False, created_at='2013-02-25T02:40:21.000000',
-            encrypted=False, attachments=[])
+            encrypted=False, attachments=[], multiattach=False)
         self.cinder_fc.volumes.get('vol-123').MultipleTimes().AndReturn(fv)
 
         self.m.ReplayAll()
@@ -264,6 +271,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual(u'False', rsrc.FnGetAtt('encrypted'))
         self.assertEqual(u'[]', rsrc.FnGetAtt('attachments'))
         self.assertEqual({'volume': 'info'}, rsrc.FnGetAtt('show'))
+        self.assertEqual('False', rsrc.FnGetAtt('multiattach'))
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'unknown')
         self.assertEqual(
@@ -928,6 +936,26 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.m.VerifyAll()
 
+    def test_cinder_create_with_multiattach(self):
+        fv = vt_base.FakeVolume('creating')
+
+        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=1, name='test_name', description=None,
+            availability_zone='nova',
+            multiattach=True).AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
+
+        self.m.ReplayAll()
+
+        stack_name = 'test_cvolume_multiattach_stack'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        self.create_volume(self.t, stack, 'volume4')
+
+        self.m.VerifyAll()
+
     def test_cinder_create_with_scheduler_hints_and_cinder_api_v1(self):
         cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
         self.cinder_fc.volume_api_version = 1
@@ -975,6 +1003,22 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         scheduler.TaskRunner(rsrc.create)()
         # this makes sure the auto increment worked on volume creation
         self.assertTrue(rsrc.id > 0)
+
+        self.m.VerifyAll()
+
+    def test_cinder_create_with_multiattach_and_cinder_api_v1(self):
+        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
+        self.cinder_fc.volume_api_version = 1
+
+        self.m.ReplayAll()
+
+        stack_name = 'test_cvolume_multiattach_api_v1_stack'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.create_volume, self.t, stack, 'volume4')
+        self.assertIn('Multiple attach is not supported by the current '
+                      'volume API. Use this property since '
+                      'Cinder API v2.', six.text_type(ex))
 
         self.m.VerifyAll()
 
