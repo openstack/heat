@@ -116,6 +116,9 @@ class Resource(object):
     # that describes the appropriate resource attributes
     attributes_schema = {}
 
+    # Resource implementations set this to update policies
+    update_policy_schema = {}
+
     # If True, this resource may perform authenticated API requests
     # throughout its lifecycle
     requires_deferred_auth = False

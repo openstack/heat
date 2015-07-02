@@ -75,6 +75,9 @@ class ResourcePages(compat.Directive):
                     self.resource_class.properties_schema)
                 self.attrs_schemata = attributes.schemata(
                     self.resource_class.attributes_schema)
+                self.update_policy_schemata = properties.schemata(
+                    self.resource_class.update_policy_schema)
+
 
                 self._status_str(resource_class.support_status, section)
 
@@ -86,6 +89,7 @@ class ResourcePages(compat.Directive):
 
                 self.contribute_properties(section)
                 self.contribute_attributes(section)
+                self.contribute_update_policy(section)
 
                 self.contribute_hot_syntax(section)
                 self.contribute_yaml_syntax(section)
@@ -342,6 +346,16 @@ Resources:
             if description:
                 def_para = nodes.paragraph('', description)
                 definition.append(def_para)
+
+    def contribute_update_policy(self, parent):
+        if not self.update_policy_schemata:
+            return
+        section = self._section(parent, _('UpdatePolicy'), '%s-updpolicy')
+        prop_list = nodes.definition_list()
+        section.append(prop_list)
+        for prop_key, prop in sorted(self.update_policy_schemata.items(),
+                                     self.cmp_prop):
+            self.contribute_property(prop_list, prop_key, prop)
 
 
 class IntegrateResourcePages(ResourcePages):
