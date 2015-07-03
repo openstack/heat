@@ -20,6 +20,7 @@ RawTemplate object
 import copy
 
 from oslo_config import cfg
+from oslo_utils import encodeutils
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
@@ -55,9 +56,10 @@ class RawTemplate(
                 env_fmt.ENCRYPTED_PARAM_NAMES]
 
             for param_name in encrypted_param_names:
-                method, value = parameters[param_name]
-                decrypted_val = crypt.decrypt(method, value)
-                parameters[param_name] = decrypted_val
+                decrypt_function_name = parameters[param_name][0]
+                decrypt_function = getattr(crypt, decrypt_function_name)
+                decrypted_val = decrypt_function(parameters[param_name][1])
+                parameters[param_name] = encodeutils.safe_decode(decrypted_val)
             tpl.environment[env_fmt.PARAMETERS] = parameters
 
         tpl._context = context
@@ -76,7 +78,8 @@ class RawTemplate(
                 if not tmpl.param_schemata()[param_name].hidden:
                     continue
                 clear_text_val = tmpl.env.params.get(param_name)
-                tmpl.env.params[param_name] = crypt.encrypt(clear_text_val)
+                encoded_val = encodeutils.safe_encode(clear_text_val)
+                tmpl.env.params[param_name] = crypt.encrypt(encoded_val)
                 tmpl.env.encrypted_param_names.append(param_name)
 
     @classmethod

@@ -12,19 +12,13 @@
 #    under the License.
 
 import base64
-import sys
 
 from Crypto.Cipher import AES
-from cryptography import fernet
 from oslo_config import cfg
-from oslo_log import log as logging
-from oslo_utils import encodeutils
 
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.openstack.common.crypto import utils
 
-LOG = logging.getLogger(__name__)
 
 auth_opts = [
     cfg.StrOpt('auth_encryption_key',
@@ -38,52 +32,36 @@ auth_opts = [
 cfg.CONF.register_opts(auth_opts)
 
 
-def encrypt(value, encryption_key=None):
-    if value is None:
+def encrypt(auth_info, encryption_key=None):
+    if auth_info is None:
         return None, None
 
     encryption_key = get_valid_encryption_key(encryption_key)
-    sym = fernet.Fernet(encryption_key.encode('base64'))
-    res = sym.encrypt(encodeutils.safe_encode(value))
-    return 'cryptography_decrypt_v1', res
+    sym = utils.SymmetricCrypto()
+    res = sym.encrypt(encryption_key,
+                      auth_info, b64encode=True)
+    return 'oslo_decrypt_v1', res
 
 
-def decrypt(method, data, encryption_key=None):
-    if method is None or data is None:
+def oslo_decrypt_v1(auth_info, encryption_key=None):
+    if auth_info is None:
         return None
-    decryptor = getattr(sys.modules[__name__], method)
-    value = decryptor(data, encryption_key)
-    if value is not None:
-        try:
-            return encodeutils.safe_decode(value, 'utf-8')
-        except UnicodeDecodeError as ex:
-            # if the incorrect encryption_key was used then we can get
-            # total gibberish here and safe_decode() will freak out.
-            LOG.warn(_LW("Couldn't decrypt parameters %s"), ex)
 
-
-def oslo_decrypt_v1(value, encryption_key=None):
     encryption_key = get_valid_encryption_key(encryption_key)
     sym = utils.SymmetricCrypto()
     return sym.decrypt(encryption_key,
-                       value, b64decode=True)
-
-
-def cryptography_decrypt_v1(value, encryption_key=None):
-    encryption_key = get_valid_encryption_key(encryption_key)
-    sym = fernet.Fernet(encryption_key.encode('base64'))
-    return sym.decrypt(encodeutils.safe_encode(value))
+                       auth_info, b64decode=True)
 
 
 def get_valid_encryption_key(encryption_key):
     if encryption_key is None:
         encryption_key = cfg.CONF.auth_encryption_key[:32]
     else:
-        encryption_key = encryption_key[:32]
+        encryption_key = encryption_key[0:32]
     return encryption_key
 
 
-def heat_decrypt(value, encryption_key=None):
+def heat_decrypt(auth_info, encryption_key=None):
     """Decrypt function for data that has been encrypted using an older
     version of Heat.
     Note: the encrypt function returns the function that is needed to
@@ -92,8 +70,11 @@ def heat_decrypt(value, encryption_key=None):
     function must still exist. So whilst it may seem that this function
     is not referenced, it will be referenced from the database.
     """
+    if auth_info is None:
+        return None
+
     encryption_key = get_valid_encryption_key(encryption_key)
-    auth = base64.b64decode(value)
+    auth = base64.b64decode(auth_info)
     iv = auth[:AES.block_size]
     cipher = AES.new(encryption_key, AES.MODE_CFB, iv)
     res = cipher.decrypt(auth[AES.block_size:])
