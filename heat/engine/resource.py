@@ -299,6 +299,9 @@ class Resource(object):
             return result
         return not result
 
+    def __hash__(self):
+        return id(self)
+
     def metadata_get(self, refresh=False):
         if refresh:
             self._rsrc_metadata = None
