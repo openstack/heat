@@ -35,6 +35,7 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
+from oslo_reports import guru_meditation_report as gmr
 from oslo_service import service
 
 from heat.common import config
@@ -51,8 +52,8 @@ LOG = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
     logging.register_options(cfg.CONF)
-    version = version.version_info.version_string()
-    cfg.CONF(project='heat', prog='heat-engine', version=version)
+    cfg.CONF(project='heat', prog='heat-engine',
+             version=version.version_info.version_string())
     logging.setup(cfg.CONF, 'heat-engine')
     logging.set_defaults()
     messaging.setup()
@@ -70,6 +71,7 @@ if __name__ == '__main__':
     from heat.engine import service as engine  # noqa
 
     profiler.setup('heat-engine', cfg.CONF.host)
+    gmr.TextGuruMeditation.setup_autorun(version)
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
                               workers=cfg.CONF.num_engine_workers)
