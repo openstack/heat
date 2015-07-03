@@ -851,9 +851,11 @@ class Stack(collections.Mapping):
     @profiler.trace('Stack.check', hide_args=False)
     def check(self):
         self.updated_time = datetime.datetime.utcnow()
-        checker = scheduler.TaskRunner(self.stack_task, self.CHECK,
-                                       post_func=self.supports_check_action,
-                                       aggregate_exceptions=True)
+        checker = scheduler.TaskRunner(
+            self.stack_task, self.CHECK,
+            post_func=self.supports_check_action,
+            error_wait_time=cfg.CONF.error_wait_time,
+            aggregate_exceptions=True)
         checker()
 
     def supports_check_action(self):
@@ -914,6 +916,7 @@ class Stack(collections.Mapping):
             self.stack_task,
             action=self.ADOPT,
             reverse=False,
+            error_wait_time=cfg.CONF.error_wait_time,
             post_func=rollback)
         creator(timeout=self.timeout_secs())
 
@@ -1403,9 +1406,11 @@ class Stack(collections.Mapping):
             return
 
         self.updated_time = datetime.datetime.utcnow()
-        sus_task = scheduler.TaskRunner(self.stack_task,
-                                        action=self.SUSPEND,
-                                        reverse=True)
+        sus_task = scheduler.TaskRunner(
+            self.stack_task,
+            action=self.SUSPEND,
+            reverse=True,
+            error_wait_time=cfg.CONF.error_wait_time)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.resume', hide_args=False)
@@ -1424,18 +1429,23 @@ class Stack(collections.Mapping):
             return
 
         self.updated_time = datetime.datetime.utcnow()
-        sus_task = scheduler.TaskRunner(self.stack_task,
-                                        action=self.RESUME,
-                                        reverse=False)
+        sus_task = scheduler.TaskRunner(
+            self.stack_task,
+            action=self.RESUME,
+            reverse=False,
+            error_wait_time=cfg.CONF.error_wait_time)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.snapshot', hide_args=False)
     def snapshot(self, save_snapshot_func):
         '''Snapshot the stack, invoking handle_snapshot on all resources.'''
         self.updated_time = datetime.datetime.utcnow()
-        sus_task = scheduler.TaskRunner(self.stack_task, action=self.SNAPSHOT,
-                                        reverse=False,
-                                        pre_completion_func=save_snapshot_func)
+        sus_task = scheduler.TaskRunner(
+            self.stack_task,
+            action=self.SNAPSHOT,
+            reverse=False,
+            error_wait_time=cfg.CONF.error_wait_time,
+            pre_completion_func=save_snapshot_func)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
