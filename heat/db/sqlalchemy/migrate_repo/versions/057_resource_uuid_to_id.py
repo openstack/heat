@@ -145,11 +145,6 @@ def upgrade_resource(migrate_engine):
         constraint_kwargs['name'] = 'uniq_resource0uuid0'
     cons = constraint.UniqueConstraint('uuid', **constraint_kwargs)
     cons.create()
-    if migrate_engine.name == 'postgresql':
-        # resource_id_seq will be dropped in the case of removing `id` column
-        # set owner to none for saving this sequence (it is needed in the
-        # earlier migration)
-        migrate_engine.execute('alter sequence resource_id_seq owned by none')
 
     res_table.c.id.drop()
 
