@@ -20,3 +20,4 @@ cover
 .project
 .pydevproject
 doc/source/api/
+etc/heat/heat.conf.sample
