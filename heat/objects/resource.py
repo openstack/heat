@@ -20,6 +20,7 @@ Resource object
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils
+from oslo_utils import encodeutils
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 import six
@@ -84,8 +85,9 @@ class Resource(
         if resource.properties_data_encrypted and resource.properties_data:
             properties_data = {}
             for prop_name, prop_value in resource.properties_data.items():
-                method, value = prop_value
-                decrypted_value = crypt.decrypt(method, value)
+                decrypt_function_name = prop_value[0]
+                decrypt_function = getattr(crypt, decrypt_function_name, None)
+                decrypted_value = decrypt_function(prop_value[1])
                 prop_string = jsonutils.loads(decrypted_value)
                 properties_data[prop_name] = prop_string
             resource.properties_data = properties_data
@@ -183,7 +185,8 @@ class Resource(
             result = {}
             for prop_name, prop_value in data.items():
                 prop_string = jsonutils.dumps(prop_value)
-                encrypted_value = crypt.encrypt(prop_string)
+                encoded_value = encodeutils.safe_encode(prop_string)
+                encrypted_value = crypt.encrypt(encoded_value)
                 result[prop_name] = encrypted_value
             return (True, result)
         return (False, data)

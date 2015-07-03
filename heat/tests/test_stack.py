@@ -1987,7 +1987,7 @@ class StackTest(common.HeatTestCase):
         db_tpl = db_api.raw_template_get(self.ctx, self.stack.t.id)
         db_params = db_tpl.environment['parameters']
         self.assertEqual('foo', db_params['param1'])
-        self.assertEqual('cryptography_decrypt_v1', db_params['param2'][0])
+        self.assertEqual('oslo_decrypt_v1', db_params['param2'][0])
         self.assertIsNotNone(db_params['param2'][1])
 
         # Verify that loaded stack has decrypted paramters
