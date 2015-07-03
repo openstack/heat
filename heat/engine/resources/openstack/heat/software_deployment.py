@@ -13,7 +13,6 @@
 
 import copy
 import six
-import uuid
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -315,63 +314,6 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _build_derived_options(self, action, source):
         return source.get(sc.SoftwareConfig.OPTIONS)
 
-    def _get_temp_url(self):
-        put_url = self.data().get('signal_temp_url')
-        if put_url:
-            return put_url
-
-        container = self.physical_resource_name()
-        object_name = str(uuid.uuid4())
-
-        self.client('swift').put_container(container)
-
-        put_url = self.client_plugin('swift').get_temp_url(
-            container, object_name)
-        self.data_set('signal_temp_url', put_url)
-        self.data_set('signal_object_name', object_name)
-
-        self.client('swift').put_object(
-            container, object_name, '')
-        return put_url
-
-    def _get_queue_id(self):
-        queue_id = self.data().get('signal_queue_id')
-        if queue_id:
-            return queue_id
-
-        queue_id = self.physical_resource_name()
-        zaqar = self.client('zaqar')
-        zaqar.queue(queue_id).ensure_exists()
-        self.data_set('signal_queue_id', queue_id)
-        return queue_id
-
-    def _delete_temp_url(self):
-        object_name = self.data().get('signal_object_name')
-        if not object_name:
-            return
-        try:
-            container = self.physical_resource_name()
-            swift = self.client('swift')
-            swift.delete_object(container, object_name)
-            headers = swift.head_container(container)
-            if int(headers['x-container-object-count']) == 0:
-                swift.delete_container(container)
-        except Exception as ex:
-            self.client_plugin('swift').ignore_not_found(ex)
-        self.data_delete('signal_object_name')
-        self.data_delete('signal_temp_url')
-
-    def _delete_queue(self):
-        queue_id = self.data().get('signal_queue_id')
-        if not queue_id:
-            return
-        zaqar = self.client('zaqar')
-        try:
-            zaqar.queue(queue_id).delete()
-        except Exception as ex:
-            self.client_plugin('zaqar').ignore_not_found(ex)
-        self.data_delete('signal_queue_id')
-
     def _build_derived_inputs(self, action, source):
         scl = sc.SoftwareConfig
         inputs = copy.deepcopy(source.get(scl.INPUTS)) or []
@@ -440,7 +382,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 scl.DESCRIPTION: _('ID of signal to use for signaling '
                                    'output values'),
                 scl.TYPE: 'String',
-                'value': self._get_temp_url()
+                'value': self._get_swift_signal_url()
             })
             inputs.append({
                 scl.NAME: self.DEPLOY_SIGNAL_VERB,
@@ -450,31 +392,32 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 'value': 'PUT'
             })
         elif self._signal_transport_heat() or self._signal_transport_zaqar():
+            creds = self._get_heat_signal_credentials()
             inputs.extend([{
                 scl.NAME: self.DEPLOY_AUTH_URL,
                 scl.DESCRIPTION: _('URL for API authentication'),
                 scl.TYPE: 'String',
-                'value': self.keystone().v3_endpoint
+                'value': creds['auth_url']
             }, {
                 scl.NAME: self.DEPLOY_USERNAME,
                 scl.DESCRIPTION: _('Username for API authentication'),
                 scl.TYPE: 'String',
-                'value': self.physical_resource_name(),
+                'value': creds['username']
             }, {
                 scl.NAME: self.DEPLOY_USER_ID,
                 scl.DESCRIPTION: _('User ID for API authentication'),
                 scl.TYPE: 'String',
-                'value': self._get_user_id(),
+                'value': creds['user_id']
             }, {
                 scl.NAME: self.DEPLOY_PASSWORD,
                 scl.DESCRIPTION: _('Password for API authentication'),
                 scl.TYPE: 'String',
-                'value': self.password
+                'value': creds['password']
             }, {
                 scl.NAME: self.DEPLOY_PROJECT_ID,
                 scl.DESCRIPTION: _('ID of project for API authentication'),
                 scl.TYPE: 'String',
-                'value': self.stack.stack_user_project_id
+                'value': creds['project_id']
             }])
         if self._signal_transport_zaqar():
             inputs.append({
@@ -482,30 +425,13 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 scl.DESCRIPTION: _('ID of queue to use for signaling '
                                    'output values'),
                 scl.TYPE: 'String',
-                'value': self._get_queue_id()
+                'value': self._get_zaqar_signal_queue_id()
             })
 
         return inputs
 
     def handle_create(self):
-        if self._signal_transport_cfn():
-            self._create_user()
-            self._create_keypair()
-        if self._signal_transport_heat() or self._signal_transport_zaqar():
-            self.password = uuid.uuid4().hex
-            self._create_user()
         return self._handle_action(self.CREATE)
-
-    @property
-    def password(self):
-        return self.data().get('password')
-
-    @password.setter
-    def password(self, password):
-        if password is None:
-            self.data_delete('password')
-        else:
-            self.data_set('password', password, True)
 
     def check_create_complete(self, sd):
         if not sd:
@@ -536,15 +462,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             return True
 
     def _delete_resource(self):
-        if self._signal_transport_cfn():
-            self._delete_ec2_signed_url()
-            self._delete_user()
-        elif self._signal_transport_heat():
-            self._delete_user()
-        elif self._signal_transport_temp_url():
-            self._delete_temp_url()
-        elif self._signal_transport_zaqar():
-            self._delete_queue()
+        self._delete_signals()
+        self._delete_user()
 
         derived_config_id = None
         if self.resource_id is not None:

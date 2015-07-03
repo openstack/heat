@@ -979,22 +979,22 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.id = 23
         self.deployment.uuid = str(uuid.uuid4())
         self.deployment.action = self.deployment.CREATE
-        container = self.deployment.physical_resource_name()
+        object_name = self.deployment.physical_resource_name()
 
-        temp_url = self.deployment._get_temp_url()
+        temp_url = self.deployment._get_swift_signal_url()
         temp_url_pattern = re.compile(
             '^http://192.0.2.1/v1/AUTH_test_tenant_id/'
-            '(software_deployment_test_stack-deployment_mysql-.*)/(.*)'
+            '(.*)/(software_deployment_test_stack-deployment_mysql-.*)'
             '\\?temp_url_sig=.*&temp_url_expires=\\d*$')
         self.assertRegex(temp_url, temp_url_pattern)
         m = temp_url_pattern.search(temp_url)
-        object_name = m.group(2)
-        self.assertEqual(container, m.group(1))
-        self.assertEqual(dep_data['signal_object_name'], object_name)
+        container = m.group(1)
+        self.assertEqual(object_name, m.group(2))
+        self.assertEqual(dep_data['swift_signal_object_name'], object_name)
 
-        self.assertEqual(dep_data['signal_temp_url'], temp_url)
+        self.assertEqual(dep_data['swift_signal_url'], temp_url)
 
-        self.assertEqual(temp_url, self.deployment._get_temp_url())
+        self.assertEqual(temp_url, self.deployment._get_swift_signal_url())
 
         sc.put_container.assert_called_once_with(container)
         sc.put_object.assert_called_once_with(container, object_name, '')
@@ -1002,7 +1002,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_delete_temp_url(self):
         object_name = str(uuid.uuid4())
         dep_data = {
-            'signal_object_name': object_name
+            'swift_signal_object_name': object_name
         }
         self._create_stack(self.template_temp_url_signal)
 
@@ -1021,31 +1021,34 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.id = 23
         self.deployment.uuid = str(uuid.uuid4())
         container = self.deployment.physical_resource_name()
-        self.deployment._delete_temp_url()
+        self.deployment._delete_swift_signal_url()
         sc.delete_object.assert_called_once_with(container, object_name)
         self.assertEqual(
-            [mock.call('signal_object_name'), mock.call('signal_temp_url')],
+            [mock.call('swift_signal_object_name'),
+             mock.call('swift_signal_url')],
             self.deployment.data_delete.mock_calls)
 
         swift_exc = swift.SwiftClientPlugin.exceptions_module
         sc.delete_object.side_effect = swift_exc.ClientException(
             'Not found', http_status=404)
-        self.deployment._delete_temp_url()
+        self.deployment._delete_swift_signal_url()
         self.assertEqual(
-            [mock.call('signal_object_name'), mock.call('signal_temp_url'),
-             mock.call('signal_object_name'), mock.call('signal_temp_url')],
+            [mock.call('swift_signal_object_name'),
+             mock.call('swift_signal_url'),
+             mock.call('swift_signal_object_name'),
+             mock.call('swift_signal_url')],
             self.deployment.data_delete.mock_calls)
 
-        del(dep_data['signal_object_name'])
+        del(dep_data['swift_signal_object_name'])
         self.deployment.physical_resource_name = mock.Mock()
-        self.deployment._delete_temp_url()
+        self.deployment._delete_swift_signal_url()
         self.assertFalse(self.deployment.physical_resource_name.called)
 
     def test_handle_action_temp_url(self):
 
         self._create_stack(self.template_temp_url_signal)
         dep_data = {
-            'signal_temp_url': (
+            'swift_signal_url': (
                 'http://192.0.2.1/v1/AUTH_a/b/c'
                 '?temp_url_sig=ctemp_url_expires=1234')
         }
@@ -1079,17 +1082,18 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.uuid = str(uuid.uuid4())
         self.deployment.action = self.deployment.CREATE
 
-        queue_id = self.deployment._get_queue_id()
+        queue_id = self.deployment._get_zaqar_signal_queue_id()
         self.assertEqual(2, len(zc.queue.mock_calls))
         self.assertEqual(queue_id, zc.queue.mock_calls[0][1][0])
-        self.assertEqual(queue_id, dep_data['signal_queue_id'])
+        self.assertEqual(queue_id, dep_data['zaqar_signal_queue_id'])
 
-        self.assertEqual(queue_id, self.deployment._get_queue_id())
+        self.assertEqual(queue_id,
+                         self.deployment._get_zaqar_signal_queue_id())
 
     def test_delete_zaqar_queue(self):
         queue_id = str(uuid.uuid4())
         dep_data = {
-            'signal_queue_id': queue_id
+            'zaqar_signal_queue_id': queue_id
         }
         self._create_stack(self.template_zaqar_signal)
 
@@ -1103,23 +1107,24 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.id = 23
         self.deployment.uuid = str(uuid.uuid4())
-        self.deployment._delete_queue()
+        self.deployment._delete_zaqar_signal_queue()
         zc.queue.assert_called_once_with(queue_id)
         zc.queue.delete.assert_called_once()
         self.assertEqual(
-            [mock.call('signal_queue_id')],
+            [mock.call('zaqar_signal_queue_id')],
             self.deployment.data_delete.mock_calls)
 
         zaqar_exc = zaqar.ZaqarClientPlugin.exceptions_module
         zc.queue.delete.side_effect = zaqar_exc.ResourceNotFound()
-        self.deployment._delete_queue()
+        self.deployment._delete_zaqar_signal_queue()
         self.assertEqual(
-            [mock.call('signal_queue_id'), mock.call('signal_queue_id')],
+            [mock.call('zaqar_signal_queue_id'),
+             mock.call('zaqar_signal_queue_id')],
             self.deployment.data_delete.mock_calls)
 
-        dep_data.pop('signal_queue_id')
+        dep_data.pop('zaqar_signal_queue_id')
         self.deployment.physical_resource_name = mock.Mock()
-        self.deployment._delete_queue()
+        self.deployment._delete_zaqar_signal_queue()
         self.assertEqual(2, len(self.deployment.data_delete.mock_calls))
 
 
