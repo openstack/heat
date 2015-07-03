@@ -343,7 +343,7 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertIsNone(schema.default)
+        self.assertEqual("m1.large", schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -368,7 +368,7 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertIsNone(schema.default)
+        self.assertEqual("m1.large", schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -394,7 +394,7 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertIsNone(schema.default)
+        self.assertEqual("m1.large", schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(2, len(schema.constraints))
 
@@ -481,7 +481,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertIsNone(schema.default)
+        self.assertEqual(default, schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -501,7 +501,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertIsNone(schema.default)
+        self.assertEqual(default, schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -522,7 +522,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertIsNone(schema.default)
+        self.assertEqual(default, schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -544,7 +544,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertIsNone(schema.default)
+        self.assertEqual(default, schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
         self.assertFalse(schema.allow_conversion)
@@ -563,7 +563,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.LIST, schema.type)
-        self.assertIsNone(schema.default)
+        self.assertEqual("foo,bar,baz", schema.default)
         self.assertFalse(schema.required)
         self.assertFalse(schema.allow_conversion)
 
@@ -576,7 +576,8 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.MAP, schema.type)
-        self.assertIsNone(schema.default)
+        self.assertEqual({"foo": "bar", "blarg": "wibble"},
+                         schema.default)
         self.assertFalse(schema.required)
         self.assertTrue(schema.allow_conversion)
 
@@ -1207,6 +1208,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBUsername": {
                 "type": "string",
                 "description": "The WordPress database admin account username",
+                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1222,6 +1224,7 @@ class PropertiesTest(common.HeatTestCase):
             "LinuxDistribution": {
                 "type": "string",
                 "description": "Distribution of choice",
+                "default": "F17",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1233,6 +1236,7 @@ class PropertiesTest(common.HeatTestCase):
             "InstanceType": {
                 "type": "string",
                 "description": "WebServer EC2 instance type",
+                "default": "m1.large",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1253,6 +1257,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBRootPassword": {
                 "type": "string",
                 "description": "Root password for MySQL",
+                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1276,6 +1281,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBPassword": {
                 "type": "string",
                 "description": "The WordPress database admin account password",
+                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1291,6 +1297,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBName": {
                 "type": "string",
                 "description": "The WordPress database name",
+                "default": "wordpress",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1404,6 +1411,7 @@ class PropertiesTest(common.HeatTestCase):
             "InstanceType": {
                 "type": "string",
                 "description": "WebServer EC2 instance type",
+                "default": "m1.large",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1416,6 +1424,7 @@ class PropertiesTest(common.HeatTestCase):
                 ]
             },
             "LinuxDistribution": {
+                "default": "F17",
                 "type": "string",
                 "description": "Distribution of choice",
                 "required": False,
@@ -1430,6 +1439,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBName": {
                 "type": "string",
                 "description": "The WordPress database name",
+                "default": "wordpress",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1444,6 +1454,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBUsername": {
                 "type": "string",
                 "description": "The WordPress database admin account username",
+                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1458,6 +1469,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBPassword": {
                 "type": "string",
                 "description": "The WordPress database admin account password",
+                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1472,6 +1484,7 @@ class PropertiesTest(common.HeatTestCase):
             "DBRootPassword": {
                 "type": "string",
                 "description": "Root password for MySQL",
+                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
