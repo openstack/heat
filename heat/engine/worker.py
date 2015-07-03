@@ -92,7 +92,7 @@ class WorkerService(service.Service):
                                                    resource_id)
         if (rs_obj.engine_id != self.engine_id and
                 rs_obj.engine_id is not None):
-            if not listener_client.EngineListnerClient(
+            if not listener_client.EngineListenerClient(
                     rs_obj.engine_id).is_alive(cnxt):
                 # steal the lock.
                 rs_obj.update_and_save({'engine_id': None})
