@@ -137,7 +137,7 @@ script in a separate file:
 
 Choosing the user_data_format
 -----------------------------
-The :hotref:`OS::Nova::Server` ``user_data_format`` property determines how the
+The :ref:`OS::Nova::Server` ``user_data_format`` property determines how the
 ``user_data`` should be formatted for the server. For the default value
 ``HEAT_CFNTOOLS``, the ``user_data`` is bundled as part of the heat-cfntools
 cloud-init boot configuration data. While ``HEAT_CFNTOOLS`` is the default
@@ -181,10 +181,10 @@ Often it is necessary to pause further creation of stack resources until the
 boot configuration script has notified that it has reached a certain state.
 This is usually either to notify that a service is now active, or to pass out
 some generated data which is needed by another resource. The resources
-:hotref:`OS::Heat::WaitCondition` and :hotref:`OS::Heat::SwiftSignal` both perform
+:ref:`OS::Heat::WaitCondition` and :ref:`OS::Heat::SwiftSignal` both perform
 this function using different techniques and tradeoffs.
 
-:hotref:`OS::Heat::WaitCondition` is implemented as a call to the
+:ref:`OS::Heat::WaitCondition` is implemented as a call to the
 `Orchestration API`_ resource signal. The token is created using credentials
 for a user account which is scoped only to the wait condition handle
 resource. This user is created when the handle is created, and is associated
@@ -289,7 +289,7 @@ which builds a curl command with a valid token:
 
 ..
 
-:hotref:`OS::Heat::SwiftSignal` is implemented by creating an Object Storage
+:ref:`OS::Heat::SwiftSignal` is implemented by creating an Object Storage
 API temporary URL which is populated with signal data with an HTTP PUT. The
 orchestration service will poll this object until the signal data is available.
 Object versioning is used to store multiple signals.
@@ -317,13 +317,13 @@ swift signal resources:
         type: OS::Heat::SwiftSignalHandle
       # ...
 
-The decision to use :hotref:`OS::Heat::WaitCondition` or
-:hotref:`OS::Heat::SwiftSignal` will depend on a few factors:
+The decision to use :ref:`OS::Heat::WaitCondition` or
+:ref:`OS::Heat::SwiftSignal` will depend on a few factors:
 
-* :hotref:`OS::Heat::SwiftSignal` depends on the availability of an Object
+* :ref:`OS::Heat::SwiftSignal` depends on the availability of an Object
   Storage API
 
-* :hotref:`OS::Heat::WaitCondition` depends on whether the orchestration
+* :ref:`OS::Heat::WaitCondition` depends on whether the orchestration
   service has been configured with a dedicated stack domain (which may depend
   on the availability of an Identity V3 API).
 
@@ -341,7 +341,7 @@ existing software-config resource, so a stack-update which changes any
 existing software-config resource will result in API calls to create a new
 config and delete the old one.
 
-The resource :hotref:`OS::Heat::SoftwareConfig` is used for storing configs
+The resource :ref:`OS::Heat::SoftwareConfig` is used for storing configs
 represented by text scripts, for example:
 
 .. code-block:: yaml
@@ -364,7 +364,7 @@ represented by text scripts, for example:
           user_data_format: RAW
           user_data: {get_resource: boot_script}
 
-The resource :hotref:`OS::Heat::CloudConfig` allows Cloud-init_ cloud-config to
+The resource :ref:`OS::Heat::CloudConfig` allows Cloud-init_ cloud-config to
 be represented as template YAML rather than a block string. This allows
 intrinsic functions to be included when building the cloud-config. This also
 ensures that the cloud-config is valid YAML, although no further checks for
@@ -394,8 +394,8 @@ valid cloud-config are done.
           user_data_format: RAW
           user_data: {get_resource: boot_config}
 
-The resource :hotref:`OS::Heat::MultipartMime` allows multiple
-:hotref:`OS::Heat::SoftwareConfig` and :hotref:`OS::Heat::CloudConfig`
+The resource :ref:`OS::Heat::MultipartMime` allows multiple
+:ref:`OS::Heat::SoftwareConfig` and :ref:`OS::Heat::CloudConfig`
 resources to be combined into a single Cloud-init_ multi-part message:
 
 .. code-block:: yaml
@@ -448,18 +448,18 @@ Software deployment resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 There are many situations where it is not desirable to replace the server
 whenever there is a configuration change. The
-:hotref:`OS::Heat::SoftwareDeployment` resource allows any number of software
+:ref:`OS::Heat::SoftwareDeployment` resource allows any number of software
 configurations to be added or removed from a server throughout its life-cycle.
 
 Building custom image for software deployments
 ----------------------------------------------
-:hotref:`OS::Heat::SoftwareConfig` resources are used to store software
-configuration, and a :hotref:`OS::Heat::SoftwareDeployment` resource is used
+:ref:`OS::Heat::SoftwareConfig` resources are used to store software
+configuration, and a :ref:`OS::Heat::SoftwareDeployment` resource is used
 to associate a config resource with one server. The ``group`` attribute on
-:hotref:`OS::Heat::SoftwareConfig` specifies what tool will consume the
+:ref:`OS::Heat::SoftwareConfig` specifies what tool will consume the
 config content.
 
-:hotref:`OS::Heat::SoftwareConfig` has the ability to define a schema of
+:ref:`OS::Heat::SoftwareConfig` has the ability to define a schema of
 ``inputs`` and which the configuration script supports. Inputs are mapped to
 whatever concept the configuration tool has for assigning
 variables/parameters.
@@ -468,7 +468,7 @@ Likewise, ``outputs`` are mapped to the tool's capability to export structured
 data after configuration execution. For tools which do not support this,
 outputs can always be written to a known file path for the hook to read.
 
-The :hotref:`OS::Heat::SoftwareDeployment` resource allows values to be
+The :ref:`OS::Heat::SoftwareDeployment` resource allows values to be
 assigned to the config inputs, and the resource remains in an ``IN_PROGRESS``
 state until the server signals to heat what (if any) output values were
 generated by the config script.
@@ -686,15 +686,15 @@ example:
 
 There are a number of things to note about this template example:
 
-* :hotref:`OS::Heat::StructuredConfig` is like
-  :hotref:`OS::Heat::SoftwareConfig` except that the ``config`` property
+* :ref:`OS::Heat::StructuredConfig` is like
+  :ref:`OS::Heat::SoftwareConfig` except that the ``config`` property
   contains structured YAML instead of text script. This is useful for a
   number of other configuration tools including ansible, salt and
   os-apply-config.
 
 * ``cfn-init`` has no concept of inputs, so ``{get_input: bar}`` acts as a
   placeholder which gets replaced with the
-  :hotref:`OS::Heat::StructuredDeployment` ``input_values`` value when the
+  :ref:`OS::Heat::StructuredDeployment` ``input_values`` value when the
   deployment resource is created.
 
 * ``cfn-init`` has no concept of outputs, so specifying
