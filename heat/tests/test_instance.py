@@ -687,9 +687,9 @@ class InstancesTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').AndReturn(return_server)
 
-        def activate_status(server):
-            server.status = 'ACTIVE'
-        return_server.get = activate_status.__get__(return_server)
+        def fail_status(server):
+            server.status = 'ERROR'
+        return_server.get = fail_status.__get__(return_server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(
@@ -700,7 +700,7 @@ class InstancesTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: resources.ud_type_f: "
-            "Resizing to 'm1.small' failed, status 'ACTIVE'",
+            "Resizing to 'm1.small' failed, status 'ERROR'",
             six.text_type(error))
         self.assertEqual((instance.UPDATE, instance.FAILED), instance.state)
         self.m.VerifyAll()

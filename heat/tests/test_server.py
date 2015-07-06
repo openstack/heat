@@ -1424,9 +1424,9 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').AndReturn(return_server)
 
-        def activate_status(server):
-            server.status = 'ACTIVE'
-        return_server.get = activate_status.__get__(return_server)
+        def fail_status(server):
+            server.status = 'ERROR'
+        return_server.get = fail_status.__get__(return_server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(
@@ -1437,8 +1437,55 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: resources.srv_update2: Resizing to 'm1.small' failed, "
-            "status 'ACTIVE'", six.text_type(error))
+            "status 'ERROR'", six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_flavor_resize_has_not_started(self):
+        """Test update of server flavour if server resize has not started.
+
+        Server resize is asynchronous operation in nova. So when heat is
+        requesting resize and polling the server then the server may still be
+        in ACTIVE state. So we need to wait some amount of time till the server
+        status becomes RESIZE.
+        """
+        # create the server for resizing
+        server = self.fc.servers.list()[1]
+        server.id = '1234'
+        server_resource = self._create_test_server(server,
+                                                   'resize_server')
+        # prepare template with resized server
+        update_template = copy.deepcopy(server_resource.t)
+        update_template['Properties']['flavor'] = 'm1.small'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get('1234').AndReturn(server)
+
+        # define status transition when server resize
+        # ACTIVE(initial) -> ACTIVE -> RESIZE -> VERIFY_RESIZE
+
+        def active_status(srv):
+            srv.status = 'ACTIVE'
+        server.get = active_status.__get__(server)
+
+        def resize_status(srv):
+            srv.status = 'RESIZE'
+        server.get = resize_status.__get__(server)
+
+        def verify_resize_status(srv):
+            srv.status = 'VERIFY_RESIZE'
+        server.get = verify_resize_status.__get__(server)
+
+        self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
+        self.fc.client.post_servers_1234_action(
+            body={'resize': {'flavorRef': 2}}).AndReturn((202, None))
+        self.fc.client.post_servers_1234_action(
+            body={'confirmResize': None}).AndReturn((202, None))
+        self.m.ReplayAll()
+        # check that server resize has finished correctly
+        scheduler.TaskRunner(server_resource.update, update_template)()
+        self.assertEqual((server_resource.UPDATE, server_resource.COMPLETE),
+                         server_resource.state)
         self.m.VerifyAll()
 
     def test_server_update_server_flavor_replace(self):
