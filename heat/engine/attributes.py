@@ -13,6 +13,7 @@
 
 import collections
 
+from oslo_utils import strutils
 import six
 
 from heat.common.i18n import _
@@ -48,9 +49,9 @@ class Schema(constr.Schema):
     )
 
     TYPES = (
-        STRING, MAP, LIST, INTEGER
+        STRING, MAP, LIST, INTEGER, BOOLEAN
     ) = (
-        'String', 'Map', 'List', 'Integer'
+        'String', 'Map', 'List', 'Integer', 'Boolean'
     )
 
     def __init__(self, description=None,
@@ -191,6 +192,13 @@ class Attributes(collections.Mapping):
                 LOG.warn(_LW("Attribute %(name)s is not of type %(att_type)s"),
                          {'name': attrib.name,
                           'att_type': attrib.schema.INTEGER})
+        elif attrib.schema.type == attrib.schema.BOOLEAN:
+            try:
+                strutils.bool_from_string(value, strict=True)
+            except ValueError:
+                LOG.warn(_LW("Attribute %(name)s is not of type %(att_type)s"),
+                         {'name': attrib.name,
+                          'att_type': attrib.schema.BOOLEAN})
 
     def __getitem__(self, key):
         if key not in self:
