@@ -125,24 +125,43 @@ class Order(resource.Resource):
     }
 
     attributes_schema = {
-        STATUS: attributes.Schema(_('The status of the order.')),
-        ORDER_REF: attributes.Schema(_('The URI to the order.')),
-        SECRET_REF: attributes.Schema(_('The URI to the created secret.')),
+        STATUS: attributes.Schema(
+            _('The status of the order.'),
+            type=attributes.Schema.STRING
+        ),
+        ORDER_REF: attributes.Schema(
+            _('The URI to the order.'),
+            type=attributes.Schema.STRING
+        ),
+        SECRET_REF: attributes.Schema(
+            _('The URI to the created secret.'),
+            type=attributes.Schema.STRING
+        ),
         CONTAINER_REF: attributes.Schema(
             _('The URI to the created container.'),
-            support_status=support.SupportStatus(version='5.0.0')),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.STRING
+        ),
         PUBLIC_KEY: attributes.Schema(
             _('The payload of the created public key, if available.'),
-            support_status=support.SupportStatus(version='5.0.0')),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.STRING
+        ),
         PRIVATE_KEY: attributes.Schema(
             _('The payload of the created private key, if available.'),
-            support_status=support.SupportStatus(version='5.0.0')),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.STRING
+        ),
         CERTIFICATE: attributes.Schema(
             _('The payload of the created certificate, if available.'),
-            support_status=support.SupportStatus(version='5.0.0')),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.STRING
+        ),
         INTERMEDIATES: attributes.Schema(
             _('The payload of the created intermediates, if available.'),
-            support_status=support.SupportStatus(version='5.0.0')),
+            support_status=support.SupportStatus(version='5.0.0'),
+            type=attributes.Schema.STRING
+        ),
     }
 
     def barbican(self):

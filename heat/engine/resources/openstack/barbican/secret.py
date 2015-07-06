@@ -98,10 +98,12 @@ class Secret(resource.Resource):
 
     attributes_schema = {
         STATUS: attributes.Schema(
-            _('The status of the secret.')
+            _('The status of the secret.'),
+            type=attributes.Schema.STRING
         ),
         DECRYPTED_PAYLOAD: attributes.Schema(
-            _('The decrypted secret payload.')
+            _('The decrypted secret payload.'),
+            type=attributes.Schema.STRING
         ),
     }
 
