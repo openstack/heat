@@ -193,9 +193,11 @@ class ResourceRegistry(object):
     def load(self, json_snippet):
         self._load_registry([], json_snippet)
 
-    def register_class(self, resource_type, resource_class):
-        ri = ResourceInfo(self, [resource_type], resource_class)
-        self._register_info([resource_type], ri)
+    def register_class(self, resource_type, resource_class, path=None):
+        if path is None:
+            path = [resource_type]
+        ri = ResourceInfo(self, path, resource_class)
+        self._register_info(path, ri)
 
     def _load_registry(self, path, registry):
         for k, v in iter(registry.items()):
@@ -516,8 +518,8 @@ class Environment(object):
                 env_fmt.PARAMETER_DEFAULTS: self.param_defaults,
                 env_fmt.ENCRYPTED_PARAM_NAMES: self.encrypted_param_names}
 
-    def register_class(self, resource_type, resource_class):
-        self.registry.register_class(resource_type, resource_class)
+    def register_class(self, resource_type, resource_class, path=None):
+        self.registry.register_class(resource_type, resource_class, path=path)
 
     def register_constraint(self, constraint_name, constraint):
         self.constraints[constraint_name] = constraint
