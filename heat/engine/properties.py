@@ -165,7 +165,8 @@ class Schema(constr.Schema):
                    constraints=param.constraints,
                    update_allowed=True,
                    immutable=False,
-                   allow_conversion=allow_conversion)
+                   allow_conversion=allow_conversion,
+                   default=param.default)
 
     def allowed_param_prop_type(self):
         """
