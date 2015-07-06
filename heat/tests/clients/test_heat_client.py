@@ -1569,19 +1569,3 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
     def test_create_stack_domain_user(self):
         p = super(KeystoneClientTestDomainName, self)
         p.test_create_stack_domain_user()
-
-
-class HeatClientTest(KeystoneClientTest):
-    """Test cases for heat.common.config"""
-
-    def setUp(self):
-        super(HeatClientTest, self).setUp()
-
-    def test_init_auth_encryption_key_length(self):
-        """Test for length of the auth_encryption_length in config file"""
-        cfg.CONF.set_override('auth_encryption_key', 'abcdefghijklma')
-        err = self.assertRaises(exception.Error,
-                                config.startup_sanity_check)
-        exp_msg = ('heat.conf misconfigured, auth_encryption_key '
-                   'length must be 16, 24 or 32')
-        self.assertIn(exp_msg, six.text_type(err))
