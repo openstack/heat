@@ -640,21 +640,17 @@ class Resource(object):
         '''
         return self
 
-    def create_convergence(self, template_id, resource_data, engine_id):
+    def create_convergence(self, resource_data, engine_id):
         '''
-        Creates the resource by invoking the scheduler TaskRunner
-        and it persists the resource's current_template_id to template_id and
-        resource's requires to list of the required resource id from the
-        given resource_data.
+        Creates the resource by invoking the scheduler TaskRunner.
         '''
         with self.lock(engine_id):
+            self.requires = list(
+                set(data[u'id'] for data in resource_data.values()
+                    if data is not None)
+            )
             runner = scheduler.TaskRunner(self.create)
             runner()
-
-            # update the resource db record (stored in unlock())
-            self.current_template_id = template_id
-            self.requires = list(
-                {graph_key[0] for graph_key, data in resource_data.items()})
 
     @scheduler.wrappertask
     def create(self):
@@ -812,9 +808,10 @@ class Resource(object):
 
             # update the resource db record (stored in unlock)
             self.current_template_id = template_id
-            current_requires = set(
-                graph_key[0] for graph_key, data in resource_data.items())
-            self.requires = list(set(self.requires) | current_requires)
+            self.requires = list(
+                set(data[u'id'] for data in resource_data.values()
+                    if data is not None)
+            )
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
@@ -1006,7 +1003,7 @@ class Resource(object):
                 msg = _('"%s" deletion policy not supported') % policy
                 raise exception.StackValidationFailed(message=msg)
 
-    def delete_convergence(self, template_id, resource_data, engine_id):
+    def delete_convergence(self, engine_id):
         '''
         Destroys the resource. The destroy task is run in a scheduler
         TaskRunner after acquiring the lock on resource.

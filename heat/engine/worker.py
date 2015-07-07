@@ -311,7 +311,7 @@ def check_resource_update(rsrc, template_id, data, engine_id):
                          resource.Resource.COMPLETE,
                          resource.Resource.FAILED
                      ])):
-        rsrc.create_convergence(template_id, data, engine_id)
+        rsrc.create_convergence(data, engine_id)
     else:
         rsrc.update_convergence(template_id, data, engine_id)
 
@@ -322,4 +322,4 @@ def check_resource_cleanup(rsrc, template_id, data, engine_id):
     '''
 
     if rsrc.current_template_id != template_id:
-        rsrc.delete_convergence(template_id, data, engine_id)
+        rsrc.delete_convergence(engine_id)
