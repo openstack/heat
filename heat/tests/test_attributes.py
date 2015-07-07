@@ -199,6 +199,18 @@ class AttributesTypeTest(common.HeatTestCase):
         ('integer_type',
             dict(a_type=attributes.Schema.INTEGER,
                  value=1,
+                 invalid_value='invalid_value')),
+        ('boolean_type',
+            dict(a_type=attributes.Schema.BOOLEAN,
+                 value=True,
+                 invalid_value='invalid_value')),
+        ('boolean_type_string_true',
+            dict(a_type=attributes.Schema.BOOLEAN,
+                 value="True",
+                 invalid_value='invalid_value')),
+        ('boolean_type_string_false',
+            dict(a_type=attributes.Schema.BOOLEAN,
+                 value="false",
                  invalid_value='invalid_value'))
     ]
 
