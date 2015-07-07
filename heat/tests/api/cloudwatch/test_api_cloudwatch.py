@@ -32,6 +32,33 @@ class WatchControllerTest(common.HeatTestCase):
     the endpoint processing API requests after they are routed
     '''
 
+    def setUp(self):
+        super(WatchControllerTest, self).setUp()
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.policy_path = self.path + "/../../policy/"
+        self.opts = [
+            cfg.StrOpt('config_dir', default=self.policy_path),
+            cfg.StrOpt('config_file', default='foo'),
+            cfg.StrOpt('project', default='heat'),
+        ]
+        cfg.CONF.register_opts(self.opts)
+        cfg.CONF.set_default('host', 'host')
+        self.topic = rpc_api.ENGINE_TOPIC
+        self.api_version = '1.0'
+
+        # Create WSGI controller instance
+        class DummyConfig(object):
+            bind_port = 8003
+        cfgopts = DummyConfig()
+        self.controller = watches.WatchController(options=cfgopts)
+        self.controller.policy.enforcer.policy_path = (self.policy_path +
+                                                       'deny_stack_user.json')
+        self.addCleanup(self.m.VerifyAll)
+
+    def tearDown(self):
+        super(WatchControllerTest, self).tearDown()
+        cfg.CONF.unregister_opts(self.opts)
+
     def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string
         params = params or {}
@@ -488,26 +515,3 @@ class WatchControllerTest(common.HeatTestCase):
         # should raise HeatInvalidParameterValueError
         result = self.controller.set_alarm_state(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
-
-    def setUp(self):
-        super(WatchControllerTest, self).setUp()
-        self.path = os.path.dirname(os.path.realpath(__file__))
-        self.policy_path = self.path + "/policy/"
-        opts = [
-            cfg.StrOpt('config_dir', default=self.policy_path),
-            cfg.StrOpt('config_file', default='foo'),
-            cfg.StrOpt('project', default='heat'),
-        ]
-        cfg.CONF.register_opts(opts)
-        cfg.CONF.set_default('host', 'host')
-        self.topic = rpc_api.ENGINE_TOPIC
-        self.api_version = '1.0'
-
-        # Create WSGI controller instance
-        class DummyConfig(object):
-            bind_port = 8003
-        cfgopts = DummyConfig()
-        self.controller = watches.WatchController(options=cfgopts)
-        self.controller.policy.enforcer.policy_path = (self.policy_path +
-                                                       'deny_stack_user.json')
-        self.addCleanup(self.m.VerifyAll)
