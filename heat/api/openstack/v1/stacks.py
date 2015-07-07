@@ -345,6 +345,16 @@ class StackController(object):
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
 
+    def prepare_args(self, data):
+        args = data.args()
+        key = rpc_api.PARAM_TIMEOUT
+        if key in args:
+            args[key] = self._extract_int_param(key, args[key])
+        key = rpc_api.PARAM_TAGS
+        if args.get(key) is not None:
+            args[key] = self._extract_tags_param(args[key])
+        return args
+
     @util.policy_enforce
     def create(self, req, body):
         """
@@ -352,11 +362,7 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
-        args = data.args()
-        key = rpc_api.PARAM_TIMEOUT
-        if key in args:
-            args[key] = self._extract_int_param(key, args[key])
-
+        args = self.prepare_args(data)
         result = self.rpc_client.create_stack(req.context,
                                               data.stack_name(),
                                               data.template(),
@@ -429,11 +435,7 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
-        args = data.args()
-        key = rpc_api.PARAM_TIMEOUT
-        if key in args:
-            args[key] = self._extract_int_param(key, args[key])
-
+        args = self.prepare_args(data)
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
@@ -451,11 +453,7 @@ class StackController(object):
         """
         data = InstantiationData(body, patch=True)
 
-        args = data.args()
-        key = rpc_api.PARAM_TIMEOUT
-        if key in args:
-            args[key] = self._extract_int_param(key, args[key])
-
+        args = self.prepare_args(data)
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
