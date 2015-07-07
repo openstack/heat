@@ -126,7 +126,7 @@ class TestPluginManager(common.HeatTestCase):
             self.assertNotIn(item, all_items)
 
     def test_load_all(self):
-        import heat.tests.test_plugin_manager
+        import heat.tests.engine.test_plugin_manager
         mgr = plugin_manager.PluginManager('heat.tests')
         pm = plugin_manager.PluginMapping('current_test')
 
@@ -134,7 +134,7 @@ class TestPluginManager(common.HeatTestCase):
         # the current_test_mapping if not we will would be
         # skipped by plugin_loader.load_modules since we are skipping
         # the loading of the package with tests in there
-        mgr.modules = [heat.tests.test_plugin_manager]
+        mgr.modules = [heat.tests.engine.test_plugin_manager]
 
         all_items = pm.load_all(mgr)
 
