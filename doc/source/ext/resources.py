@@ -361,6 +361,24 @@ def _load_all_resources():
             all_resources[name] = [cls]
 
 
+def link_resource(app, env, node, contnode):
+    reftarget = node.attributes['reftarget']
+    for resource_name in all_resources:
+        if resource_name.lower() == reftarget.lower():
+            resource = all_resources[resource_name]
+            refnode = nodes.reference('', '', internal=True)
+            refnode['reftitle'] = resource_name
+            if resource_name.startswith('AWS'):
+                source = 'template_guide/cfn'
+            else:
+                source = 'template_guide/openstack'
+            uri = app.builder.get_relative_uri(
+                node.attributes['refdoc'], source)
+            refnode['refuri'] = '%s#%s' % (uri, resource_name)
+            refnode.append(contnode)
+            return refnode
+
+
 def setup(app):
     _load_all_resources()
     app.add_node(integratedrespages)
@@ -374,3 +392,5 @@ def setup(app):
     app.add_node(contribresourcepages)
 
     app.add_directive('contribrespages', ContribResourcePages)
+
+    app.connect('missing-reference', link_resource)

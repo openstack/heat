@@ -26,7 +26,7 @@ together using template resources. This is a mechanism to define a resource
 using a template, thus composing one logical stack with multiple templates.
 
 Template resources provide a feature similar to the
-:hotref:`AWS::CloudFormation::Stack` resource, but also provide a way to:
+:ref:`AWS::CloudFormation::Stack` resource, but also provide a way to:
 
 * Define new resource types and build your own resource library.
 * Override the default behaviour of existing resource types.
