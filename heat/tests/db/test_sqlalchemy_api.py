@@ -1579,6 +1579,25 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
                                                show_deleted=True))
 
+    def test_stack_get_root_id(self):
+        root = create_stack(self.ctx, self.template, self.user_creds,
+                            name='root stack')
+        child_1 = create_stack(self.ctx, self.template, self.user_creds,
+                               name='child 1 stack', owner_id=root.id)
+        child_2 = create_stack(self.ctx, self.template, self.user_creds,
+                               name='child 2 stack', owner_id=child_1.id)
+        child_3 = create_stack(self.ctx, self.template, self.user_creds,
+                               name='child 3 stack', owner_id=child_2.id)
+
+        self.assertEqual(root.id, db_api.stack_get_root_id(
+            self.ctx, child_3.id))
+        self.assertEqual(root.id, db_api.stack_get_root_id(
+            self.ctx, child_2.id))
+        self.assertEqual(root.id, db_api.stack_get_root_id(
+            self.ctx, root.id))
+        self.assertEqual(root.id, db_api.stack_get_root_id(
+            self.ctx, child_1.id))
+
 
 class DBAPIResourceTest(common.HeatTestCase):
     def setUp(self):

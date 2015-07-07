@@ -82,6 +82,10 @@ class Stack(
         return stack
 
     @classmethod
+    def get_root_id(cls, context, stack_id):
+        return db_api.stack_get_root_id(context, stack_id)
+
+    @classmethod
     def get_by_id(cls, context, stack_id, **kwargs):
         db_stack = db_api.stack_get(context, stack_id, **kwargs)
         if not db_stack:
