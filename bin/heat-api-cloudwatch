@@ -68,8 +68,9 @@ if __name__ == '__main__':
                  {'host': host, 'port': port})
         profiler.setup('heat-api-cloudwatch', host)
         gmr.TextGuruMeditation.setup_autorun(version)
-        server = wsgi.Server()
-        server.start(app, cfg.CONF.heat_api_cloudwatch, default_port=port)
+        server = wsgi.Server('heat-api-cloudwatch',
+                             cfg.CONF.heat_api_cloudwatch)
+        server.start(app, default_port=port)
         systemd.notify_once()
         server.wait()
     except RuntimeError as e:
