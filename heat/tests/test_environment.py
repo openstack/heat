@@ -172,6 +172,30 @@ class EnvironmentTest(common.HeatTestCase):
                          env.get_resource_info('OS::Networking::FloatingIP',
                                                'my_fip').value)
 
+    def test_register_with_path(self):
+        yaml_env = '''
+        resource_registry:
+          test::one: a.yaml
+          resources:
+            res_x:
+              test::two: b.yaml
+'''
+
+        env = environment.Environment(environment_format.parse(yaml_env))
+        self.assertEqual('a.yaml', env.get_resource_info('test::one').value)
+        self.assertEqual('b.yaml',
+                         env.get_resource_info('test::two', 'res_x').value)
+
+        env2 = environment.Environment()
+        env2.register_class('test::one',
+                            'a.yaml',
+                            path=['test::one'])
+        env2.register_class('test::two',
+                            'b.yaml',
+                            path=['resources', 'res_x', 'test::two'])
+
+        self.assertEqual(env.user_env_as_dict(), env2.user_env_as_dict())
+
     def test_constraints(self):
         env = environment.Environment({})
 
