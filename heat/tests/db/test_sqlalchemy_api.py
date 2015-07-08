@@ -22,6 +22,7 @@ from oslo_utils import timeutils
 import six
 
 from heat.common import context
+from heat.common import crypt
 from heat.common import exception
 from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
@@ -1500,8 +1501,8 @@ class DBAPIUserCredsTest(common.HeatTestCase):
                                        trustor_user_id='trustor_id')
         self.assertIsNotNone(user_creds.id)
         self.assertEqual('test_trust_id',
-                         db_api._decrypt(user_creds.trust_id,
-                                         user_creds.decrypt_method))
+                         crypt.decrypt(user_creds.decrypt_method,
+                                       user_creds.trust_id))
         self.assertEqual('trustor_id', user_creds.trustor_user_id)
         self.assertIsNone(user_creds.username)
         self.assertIsNone(user_creds.password)
@@ -1512,14 +1513,14 @@ class DBAPIUserCredsTest(common.HeatTestCase):
         user_creds = create_user_creds(self.ctx)
         self.assertIsNotNone(user_creds.id)
         self.assertEqual(self.ctx.password,
-                         db_api._decrypt(user_creds.password,
-                                         user_creds.decrypt_method))
+                         crypt.decrypt(user_creds.decrypt_method,
+                                       user_creds.password))
 
     def test_user_creds_get(self):
         user_creds = create_user_creds(self.ctx)
         ret_user_creds = db_api.user_creds_get(user_creds.id)
-        self.assertEqual(db_api._decrypt(user_creds.password,
-                                         user_creds.decrypt_method),
+        self.assertEqual(crypt.decrypt(user_creds.decrypt_method,
+                                       user_creds.password),
                          ret_user_creds['password'])
 
     def test_user_creds_get_noexist(self):
@@ -2731,8 +2732,9 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key)
 
         env = session.query(models.RawTemplate).all()[0].environment
-        self.assertEqual('oslo_decrypt_v1',
+        self.assertEqual('cryptography_decrypt_v1',
                          env['parameters']['param2'][0])
+        encrypt_value = env['parameters']['param2'][1]
 
         db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key)
@@ -2742,9 +2744,13 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
         # Use a different encryption key to decrypt
         db_api.db_encrypt_parameters_and_properties(
-            self.ctx, cfg.CONF.auth_encryption_key)
+            self.ctx, '774c15be099ea74123a9b9592ff12680')
+        env = session.query(models.RawTemplate).all()[0].environment
+        self.assertNotEqual(encrypt_value,
+                            env['parameters']['param2'][1])
+
         db_api.db_decrypt_parameters_and_properties(
             self.ctx, '774c15be099ea74123a9b9592ff12680')
 
         env = session.query(models.RawTemplate).all()[0].environment
-        self.assertNotEqual('bar', env['parameters']['param2'])
+        self.assertEqual('bar', env['parameters']['param2'])
