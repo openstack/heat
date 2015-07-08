@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
-"PO-Revision-Date: 2015-07-01 07:19+0000\n"
+"POT-Creation-Date: 2015-07-08 06:01+0000\n"
+"PO-Revision-Date: 2015-07-07 07:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -48,6 +48,9 @@ msgstr "Succès de l'authentification AWS"
 
 msgid "AWS credentials found, checking against keystone."
 msgstr "Information de compte AWS trouvé, vérification avec keystone."
+
+msgid "All workers have terminated. Exiting"
+msgstr "Tous les agents ont terminé. Quittez"
 
 #, python-format
 msgid "Authenticating with %s"

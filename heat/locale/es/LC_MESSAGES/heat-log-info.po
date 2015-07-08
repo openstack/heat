@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
-"PO-Revision-Date: 2015-07-01 07:19+0000\n"
+"POT-Creation-Date: 2015-07-08 06:01+0000\n"
+"PO-Revision-Date: 2015-07-07 07:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -28,6 +28,9 @@ msgstr "Autenticación AWS correcta."
 
 msgid "AWS credentials found, checking against keystone."
 msgstr "Credenciales AWS encontradas, comprobándolas contra keystone."
+
+msgid "All workers have terminated. Exiting"
+msgstr "Todos los trabajadores han terminado. Saliendo"
 
 #, python-format
 msgid "Authenticating with %s"
@@ -64,6 +67,14 @@ msgstr "Credencial AWSAccessKeyId/Authorization no encontrada"
 #, python-format
 msgid "Registering %(path)s -> %(value)s"
 msgstr "Registrando %(path)s -> %(value)s"
+
+#, python-format
+msgid "Removed dead child %s"
+msgstr "Se ha eliminado hijo muerto %s"
+
+#, python-format
+msgid "Removed stale child %s"
+msgstr "Se ha eliminado hijo obsoleto %s"
 
 #, python-format
 msgid "Stack %s processing was finished"

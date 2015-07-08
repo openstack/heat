@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b2.dev77\n"
+"Project-Id-Version: heat 5.0.0.0b2.dev164\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"POT-Creation-Date: 2015-07-08 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,30 +90,30 @@ msgstr ""
 msgid "Failed to import module %s"
 msgstr ""
 
-#: heat/common/wsgi.py:283
+#: heat/common/wsgi.py:291
 msgid "SIGTERM received"
 msgstr ""
 
-#: heat/common/wsgi.py:292
+#: heat/common/wsgi.py:301
 msgid "SIGHUP received"
 msgstr ""
 
-#: heat/common/wsgi.py:322
+#: heat/common/wsgi.py:440
 #, python-format
-msgid "Removing dead child %s"
+msgid "Not respawning child %d, cannot recover from termination"
 msgstr ""
 
-#: heat/common/wsgi.py:683
+#: heat/common/wsgi.py:855
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr ""
 
-#: heat/common/wsgi.py:705
+#: heat/common/wsgi.py:877
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr ""
 
-#: heat/common/wsgi.py:779
+#: heat/common/wsgi.py:951
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -126,17 +126,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:600
+#: heat/engine/environment.py:610
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:612
+#: heat/engine/environment.py:622
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:616
+#: heat/engine/environment.py:626
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -151,17 +151,17 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:569
+#: heat/engine/resource.py:614
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:1108 heat/engine/resource.py:1153
-#: heat/engine/resource.py:1171
+#: heat/engine/resource.py:1142 heat/engine/resource.py:1187
+#: heat/engine/resource.py:1205
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1357
+#: heat/engine/resource.py:1393
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""

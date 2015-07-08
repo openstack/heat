@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
-"PO-Revision-Date: 2015-07-01 07:19+0000\n"
+"POT-Creation-Date: 2015-07-08 06:02+0000\n"
+"PO-Revision-Date: 2015-07-07 07:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -45,8 +45,10 @@ msgid "Failed to read %s"
 msgstr "Ha fallado leer %s"
 
 #, python-format
-msgid "Removing dead child %s"
-msgstr "Eliminando hijo muerto %s"
+msgid "Not respawning child %d, cannot recover from termination"
+msgstr ""
+"No se va a volver a generar el hijo %d, no se puede recuperar de la "
+"terminación"
 
 #, python-format
 msgid "Request does not contain %s parameter!"

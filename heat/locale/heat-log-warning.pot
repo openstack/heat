@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b2.dev77\n"
+"Project-Id-Version: heat 5.0.0.0b2.dev164\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
+"POT-Creation-Date: 2015-07-08 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,6 +31,10 @@ msgstr ""
 msgid ""
 "stack_user_domain_id or stack_user_domain_name not set in heat.conf "
 "falling back to using default"
+msgstr ""
+
+#: heat/common/config.py:331
+msgid "Please update auth_encryption_key to be 32 characters."
 msgstr ""
 
 #: heat/common/heat_keystoneclient.py:269
@@ -60,42 +64,48 @@ msgid ""
 "enabled=false"
 msgstr ""
 
-#: heat/common/wsgi.py:744
+#: heat/common/wsgi.py:434
+#, python-format
+msgid "Unrecognised child %s"
+msgstr ""
+
+#: heat/common/wsgi.py:916
 msgid "Unable to serialize exception response"
 msgstr ""
 
-#: heat/engine/attributes.py:175 heat/engine/attributes.py:181
-#: heat/engine/attributes.py:186 heat/engine/attributes.py:191
+#: heat/engine/attributes.py:176 heat/engine/attributes.py:182
+#: heat/engine/attributes.py:187 heat/engine/attributes.py:192
+#: heat/engine/attributes.py:199
 #, python-format
 msgid "Attribute %(name)s is not of type %(att_type)s"
 msgstr ""
 
-#: heat/engine/environment.py:240 heat/engine/environment.py:246
+#: heat/engine/environment.py:242 heat/engine/environment.py:248
 #, python-format
 msgid "Removing %(item)s from %(path)s"
 msgstr ""
 
-#: heat/engine/environment.py:259
+#: heat/engine/environment.py:261
 #, python-format
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:1077
+#: heat/engine/resource.py:1111
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1158
+#: heat/engine/resource.py:1192
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1199
+#: heat/engine/resource.py:1235
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1371
+#: heat/engine/resource.py:1407
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -182,12 +192,12 @@ msgid ""
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:499
+#: heat/engine/clients/os/nova.py:502
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/resources/signal_responder.py:67
+#: heat/engine/resources/signal_responder.py:68
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
@@ -233,32 +243,32 @@ msgid ""
 "clusters.get(): %(exception)s"
 msgstr ""
 
-#: heat/tests/generic_resource.py:37
+#: heat/tests/generic_resource.py:41
 #, python-format
 msgid "Creating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:41
+#: heat/tests/generic_resource.py:45
 #, python-format
 msgid "Updating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:45
+#: heat/tests/generic_resource.py:49
 #, python-format
 msgid "Deleting generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:52
+#: heat/tests/generic_resource.py:56
 #, python-format
 msgid "Suspending generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:56
+#: heat/tests/generic_resource.py:60
 #, python-format
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:143
+#: heat/tests/generic_resource.py:147
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
