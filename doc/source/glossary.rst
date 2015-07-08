@@ -76,10 +76,9 @@
 
    Nova Instance metadata
      User-provided *key:value* pairs associated with a Compute
-     Instance. See `Instance specific data (OpenStack Compute Admin
-     Guide)`_.
+     Instance. See `Instance specific data (OpenStack Operations Guide)`_.
 
-     .. _Instance specific data (OpenStack Compute Admin Guide): http://docs.openstack.org/grizzly/openstack-compute/admin/content/instance-data.html#inserting_metadata
+     .. _Instance specific data (OpenStack Operations Guide): http://docs.openstack.org/openstack-ops/content/instances.html#instance_specific_data
 
    OpenStack
      Open source software for building private and public clouds.
@@ -169,7 +168,7 @@
      configure instances at boot time. See also `User data (OpenStack
      End User Guide)`_.
 
-     .. _User data (OpenStack End User Guide): http://docs.openstack.org/user-guide/content/user-data.html#d6e2415
+     .. _User data (OpenStack End User Guide): http://docs.openstack.org/user-guide/cli_provide_user_data_to_instances.html
      .. _cloud-init: https://help.ubuntu.com/community/CloudInit
 
    Wait condition
