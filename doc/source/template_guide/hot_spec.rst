@@ -171,6 +171,7 @@ For example, Heat currently supports the following values for the
   digest
   resource_facade
   str_replace
+  str_split
 
 
 
@@ -1046,3 +1047,43 @@ In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the ``str_replace`` function.
+
+str_split
+---------
+The *str_split* function allows for splitting a string into a list by providing
+an arbitrary delimiter, the opposite of list_join.
+
+The syntax of the str_split function is as follows:
+
+::
+
+  str_split:
+    - ','
+    - string,to,split
+Or:
+
+::
+
+  str_split: [',', 'string,to,split']
+
+The result of which is:
+
+::
+
+  ['string', 'to', 'split']
+
+Optionally, an index may be provided to select a specific entry from the
+resulting list, similar to get_attr/get_param:
+
+::
+
+  str_split: [',', 'string,to,split', 0]
+
+The result of which is:
+
+::
+
+  'string'
+
+Note: The index starts at zero, and any value outside the maximum (e.g the
+length of the list minus one) will cause an error.

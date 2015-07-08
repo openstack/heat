@@ -339,6 +339,9 @@ class HOTemplate20151015(HOTemplate20150430):
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.Replace,
 
+        # functions added since 20150430
+        'str_split': hot_funcs.StrSplit,
+
         # functions removed from 20150430
         'Fn::Select': hot_funcs.Removed,
 
