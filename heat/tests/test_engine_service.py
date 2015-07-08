@@ -40,6 +40,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.objects import event as event_object
+from heat.objects import raw_template as raw_template_object
 from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
 from heat.objects import sync_point as sync_point_object
@@ -502,18 +503,25 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.mark_complete(stack.current_traversal)
         self.assertTrue(stack.purge_db.called)
 
-    def test_purge_db_deletes_previous_template(self, mock_cr):
+    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
+    def test_purge_db_deletes_previous_template(self, mock_tmpl_delete,
+                                                mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
                                 convergence=True)
-        prev_tmpl = templatem.Template.create_empty_template()
-        prev_tmpl.store()
-        stack.prev_raw_template_id = prev_tmpl.id
-        stack.store()
+        stack.prev_raw_template_id = 10
         stack.purge_db()
-        self.assertRaises(exception.NotFound,
-                          templatem.Template.load,
-                          stack.context, prev_tmpl.id)
+        self.assertTrue(mock_tmpl_delete.called)
+
+    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
+    def test_purge_db_does_not_delete_previous_template_when_stack_fails(
+            self, mock_tmpl_delete, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.status = stack.FAILED
+        stack.purge_db()
+        self.assertFalse(mock_tmpl_delete.called)
 
     def test_purge_db_deletes_sync_points(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
@@ -525,17 +533,16 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             stack.context, stack.id, stack.current_traversal)
         self.assertEqual(0, rows)
 
-    def test_purge_db_deletes_stack_for_deleted_stack(self, mock_cr):
+    @mock.patch.object(stack_object.Stack, 'delete')
+    def test_purge_db_deletes_stack_for_deleted_stack(self, mock_stack_delete,
+                                                      mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
                                 convergence=True)
         stack.store()
         stack.state_set(stack.DELETE, stack.COMPLETE, 'test reason')
         stack.purge_db()
-        self.assertRaises(exception.NotFound,
-                          parser.Stack.load,
-                          stack.context, stack_id=stack.id,
-                          show_deleted=False)
+        self.assertTrue(mock_stack_delete.called)
 
     def test_get_best_existing_db_resource(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),

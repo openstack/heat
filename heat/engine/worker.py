@@ -203,7 +203,7 @@ class WorkerService(service.Service):
                     cnxt, stack.id, current_traversal, reason)
                 return
 
-        graph_key = (rsrc.id, is_update)
+        graph_key = (resource_id, is_update)
         if graph_key not in graph and rsrc.replaces is not None:
             # If we are a replacement, impersonate the replaced resource for
             # the purposes of calculating whether subsequent resources are
@@ -221,7 +221,7 @@ class WorkerService(service.Service):
                     input_data if fwd else None, fwd)
 
             check_stack_complete(cnxt, rsrc.stack, current_traversal,
-                                 rsrc.id, deps, is_update)
+                                 resource_id, deps, is_update)
         except sync_point.SyncPointNotFound:
             # Reload the stack to determine the current traversal, and check
             # the SyncPoint for the current node to determine if it is ready.
