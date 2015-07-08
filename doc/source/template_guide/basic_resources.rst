@@ -280,6 +280,7 @@ for an instance:
         type: OS::Nova::KeyPair
         properties:
           save_private_key: true
+          name: my_key
 
       my_instance:
         type: OS::Nova::Server
