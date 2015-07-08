@@ -160,7 +160,11 @@ For example, Heat currently supports the following values for the
     The key with value ``2015-10-15`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
     Liberty release. This version removes the *Fn::Select* function, path based
-    ``get_attr``/``get_param`` references should be used instead::
+    ``get_attr``/``get_param`` references should be used instead. Moreover
+    ``get_attr`` since this version returns dict of all attributes for the
+    given resource excluding *show* attribute, if there's no <attribute name>
+    specified, e.g. :code:`{ get_attr: [<resource name>]}`. The complete list
+    of supported functions is::
 
   get_attr
   get_file
@@ -725,7 +729,7 @@ attribute name
     specified. These additional parameters are used to navigate the data
     structure to return the desired value.
 
-The following example demonstrates how to use the :code:`get_attr` function
+The following example demonstrates how to use the :code:`get_attr` function:
 
 .. code-block:: yaml
 
@@ -747,9 +751,18 @@ In this example, if the ``networks`` attribute contained the following data::
    {"public": ["2001:0db8:0000:0000:0000:ff00:0042:8329", "1.2.3.4"],
     "private": ["10.0.0.1"]}
 
-then the value of :code:`get_attr` function would resolve to ``10.0.0.1``
+then the value of ``get_attr`` function would resolve to ``10.0.0.1``
 (first item of the ``private`` entry in the ``networks`` map).
 
+From ``heat_template_version``: '2015-10-15' <attribute_name> is optional and
+if <attribute_name> is not specified, ``get_attr`` returns dict of all
+attributes for the given resource excluding *show* attribute. In this case
+syntax would be next:
+
+.. code-block:: yaml
+
+  get_attr:
+    - <resource_name>
 
 get_file
 --------
