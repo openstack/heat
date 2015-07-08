@@ -29,7 +29,7 @@ from heat.rpc import client as rpc_client
 from heat.tests import common
 from heat.tests import utils
 
-policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
+policy_path = os.path.dirname(os.path.realpath(__file__)) + "/../../policy/"
 
 
 class CfnStackControllerTest(common.HeatTestCase):
@@ -41,12 +41,12 @@ class CfnStackControllerTest(common.HeatTestCase):
     def setUp(self):
         super(CfnStackControllerTest, self).setUp()
 
-        opts = [
+        self.opts = [
             cfg.StrOpt('config_dir', default=policy_path),
             cfg.StrOpt('config_file', default='foo'),
             cfg.StrOpt('project', default='heat'),
         ]
-        cfg.CONF.register_opts(opts)
+        cfg.CONF.register_opts(self.opts)
         cfg.CONF.set_default('host', 'host')
         self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
@@ -61,6 +61,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.controller.policy.enforcer.policy_path = (policy_path +
                                                        'deny_stack_user.json')
         self.addCleanup(self.m.VerifyAll)
+
+    def tearDown(self):
+        super(CfnStackControllerTest, self).tearDown()
+        cfg.CONF.unregister_opts(self.opts)
 
     def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string
