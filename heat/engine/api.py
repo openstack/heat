@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
@@ -147,24 +145,29 @@ def format_stack(stack, preview=False):
 
 
 def format_resource_attributes(resource, with_attr=None):
-    def resolve(attr, resolver):
-        try:
-            return resolver[attr]
-        except Exception:
-            return None
-
     resolver = resource.attributes
-    if 'show' in six.iterkeys(resolver):
-        show_attr = resolver['show']
-        if isinstance(show_attr, collections.Mapping):
-            resolver = show_attr
-
     if not with_attr:
         with_attr = []
 
-    attributes = set(list(six.iterkeys(resolver)) + with_attr)
-    return dict((attr, resolve(attr, resolver))
-                for attr in attributes)
+    def resolve(attr, resolver):
+        try:
+            return resolver._resolver(attr)
+        except Exception:
+            return None
+    # if 'show' in attribute_schema, will resolve all attributes of resource
+    # including the ones are not represented in response of show API, such as
+    # 'console_urls' for nova server, user can view it by taking with_attr
+    # parameter
+    if 'show' in six.iterkeys(resolver):
+        show_attr = resolver['show']
+        for a in with_attr:
+            if a not in show_attr:
+                show_attr[a] = resolve(a, resolver)
+        return show_attr
+    else:
+        attributes = set(list(six.iterkeys(resolver)) + with_attr)
+        return dict((attr, resolve(attr, resolver))
+                    for attr in attributes)
 
 
 def format_resource_properties(resource):

@@ -44,7 +44,8 @@ class FormatTest(common.HeatTestCase):
                 'generic1': {'Type': 'GenericResourceType'},
                 'generic2': {
                     'Type': 'GenericResourceType',
-                    'DependsOn': 'generic1'}
+                    'DependsOn': 'generic1'},
+                'generic3': {'Type': 'ResWithShowAttrType'}
             }
         })
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
@@ -109,39 +110,27 @@ class FormatTest(common.HeatTestCase):
 
     def test_format_resource_attributes(self):
         res = self.stack['generic1']
+        # the _resolve_attribute method of  'generic1' return res.name
+        formatted_attributes = api.format_resource_attributes(res)
+        self.assertEqual(res.name, formatted_attributes)
+
+    def test_format_resource_attributes_show_attribute(self):
+        res = self.stack['generic3']
         formatted_attributes = api.format_resource_attributes(res)
         self.assertEqual(3, len(formatted_attributes))
         self.assertIn('foo', formatted_attributes)
         self.assertIn('Foo', formatted_attributes)
-        self.assertIn('show', formatted_attributes)
+        self.assertIn('Another', formatted_attributes)
 
-    def test_format_resource_attributes_show_attribute(self):
-        res = mock.Mock()
-        res.attributes = {'a': 'a_value', 'show': {'b': 'b_value'}}
-
-        formatted_attributes = api.format_resource_attributes(res)
-        self.assertIn('b', formatted_attributes)
-        self.assertNotIn('a', formatted_attributes)
-
-    def test_format_resource_attributes_show_attribute_fail(self):
-        res = mock.Mock()
-        res.attributes = {'a': 'a_value', 'show': ''}
-
-        formatted_attributes = api.format_resource_attributes(res)
-        self.assertIn('a', formatted_attributes)
-        self.assertIn('show', formatted_attributes)
-
-    def test_format_resource_attributes_force_attributes(self):
-        res = self.stack['generic1']
-        force_attrs = ['a1', 'a2']
-
-        formatted_attributes = api.format_resource_attributes(res, force_attrs)
-        self.assertEqual(5, len(formatted_attributes))
+    def test_format_resource_attributes_show_attribute_with_attr(self):
+        res = self.stack['generic3']
+        formatted_attributes = api.format_resource_attributes(
+            res, with_attr=['c'])
+        self.assertEqual(4, len(formatted_attributes))
         self.assertIn('foo', formatted_attributes)
         self.assertIn('Foo', formatted_attributes)
-        self.assertIn('show', formatted_attributes)
-        self.assertIn('a1', formatted_attributes)
-        self.assertIn('a2', formatted_attributes)
+        self.assertIn('Another', formatted_attributes)
+        self.assertIn('c', formatted_attributes)
 
     def _get_formatted_resource_properties(self, res_name):
         tmpl = template.Template(template_format.parse('''
