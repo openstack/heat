@@ -67,6 +67,20 @@ resources:
     type: GenericResourceType
 ''')
 
+hot_tpl_generic_resource_all_attrs = template_format.parse('''
+heat_template_version: 2015-10-15
+resources:
+  resource1:
+    type: GenericResourceType
+''')
+
+hot_tpl_complex_attrs_all_attrs = template_format.parse('''
+heat_template_version: 2015-10-15
+resources:
+  resource1:
+    type: ResourceWithComplexAttributesType
+''')
+
 hot_tpl_complex_attrs = template_format.parse('''
 heat_template_version: 2013-05-23
 resources:
@@ -76,6 +90,19 @@ resources:
 
 hot_tpl_mapped_props = template_format.parse('''
 heat_template_version: 2013-05-23
+resources:
+  resource1:
+    type: ResWithComplexPropsAndAttrs
+  resource2:
+    type: ResWithComplexPropsAndAttrs
+    properties:
+      a_list: { get_attr: [ resource1, list] }
+      a_string: { get_attr: [ resource1, string ] }
+      a_map: { get_attr: [ resource1, map] }
+''')
+
+hot_tpl_mapped_props_all_attrs = template_format.parse('''
+heat_template_version: 2015-10-15
 resources:
   resource1:
     type: ResWithComplexPropsAndAttrs
@@ -1323,6 +1350,23 @@ class StackGetAttrValidationTest(common.HeatTestCase):
         self.assertEqual('',
                          stack.resources['resource2'].properties['a_string'])
 
+    def test_validate_props_from_attrs_all_attrs(self):
+        stack = parser.Stack(self.ctx, 'test_props_from_attrs',
+                             template.Template(hot_tpl_mapped_props_all_attrs))
+        stack.resources['resource1'].list = None
+        stack.resources['resource1'].map = None
+        stack.resources['resource1'].string = None
+        try:
+            stack.validate()
+        except exception.StackValidationFailed as exc:
+            self.fail("Validation should have passed: %s" % six.text_type(exc))
+        self.assertEqual([],
+                         stack.resources['resource2'].properties['a_list'])
+        self.assertEqual({},
+                         stack.resources['resource2'].properties['a_map'])
+        self.assertEqual('',
+                         stack.resources['resource2'].properties['a_string'])
+
 
 class StackParametersTest(common.HeatTestCase):
     """
@@ -1824,3 +1868,107 @@ class HOTParamValidatorTest(common.HeatTestCase):
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "AllowedPattern must be a string", six.text_type(error))
+
+
+class TestGetAttAllAttributes(common.HeatTestCase):
+    scenarios = [
+        ('test_get_attr_all_attributes', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': ['resource1']}},
+            expected={'Value': {'Foo': 'resource1', 'foo': 'resource1'}},
+            raises=None
+        )),
+        ('test_get_attr_all_attributes_str', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': 'resource1'}},
+            expected='Argument to "get_attr" must be a list',
+            raises=TypeError
+        )),
+        ('test_get_attr_all_attributes_invalid_resource_list', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': ['resource2']}},
+            raises=exception.InvalidTemplateReference,
+            expected='The specified reference "resource2" '
+                     '(in unknown) is incorrect.'
+        )),
+        ('test_get_attr_all_attributes_invalid_type', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': {'resource1': 'attr1'}}},
+            raises=TypeError,
+            expected='Argument to "get_attr" must be a list'
+        )),
+        ('test_get_attr_all_attributes_invalid_arg_str', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': ''}},
+            raises=ValueError,
+            expected='Arguments to "get_attr" can be of the next '
+                     'forms: [resource_name] or '
+                     '[resource_name, attribute, (path), ...]'
+        )),
+        ('test_get_attr_all_attributes_invalid_arg_list', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': []}},
+            raises=ValueError,
+            expected='Arguments to "get_attr" can be of the next '
+                     'forms: [resource_name] or '
+                     '[resource_name, attribute, (path), ...]'
+        )),
+        ('test_get_attr_all_attributes_standard', dict(
+            hot_tpl=hot_tpl_generic_resource_all_attrs,
+            snippet={'Value': {'get_attr': ['resource1', 'foo']}},
+            expected={'Value': 'resource1'},
+            raises=None
+        )),
+        ('test_get_attr_all_attrs_complex_attrs', dict(
+            hot_tpl=hot_tpl_complex_attrs_all_attrs,
+            snippet={'Value': {'get_attr': ['resource1']}},
+            expected={'Value': {'flat_dict': {'key1': 'val1',
+                                              'key2': 'val2',
+                                              'key3': 'val3'},
+                                'list': ['foo', 'bar'],
+                                'nested_dict': {'dict': {'a': 1,
+                                                         'b': 2,
+                                                         'c': 3},
+                                                'list': [1, 2, 3],
+                                                'string': 'abc'},
+                                'none': None}},
+            raises=None
+        )),
+        ('test_get_attr_all_attrs_complex_attrs_standard', dict(
+            hot_tpl=hot_tpl_complex_attrs_all_attrs,
+            snippet={'Value': {'get_attr': ['resource1', 'list', 1]}},
+            expected={'Value': 'bar'},
+            raises=None
+        )),
+    ]
+
+    @staticmethod
+    def resolve(snippet, template, stack=None):
+        return function.resolve(template.parse(stack, snippet))
+
+    def test_get_attr_all_attributes(self):
+        tmpl = template.Template(self.hot_tpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_get_attr', tmpl)
+        stack.store()
+        stack.create()
+
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         stack.state)
+
+        rsrc = stack['resource1']
+        for action, status in (
+                (rsrc.CREATE, rsrc.IN_PROGRESS),
+                (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.RESUME, rsrc.IN_PROGRESS),
+                (rsrc.RESUME, rsrc.COMPLETE),
+                (rsrc.UPDATE, rsrc.IN_PROGRESS),
+                (rsrc.UPDATE, rsrc.COMPLETE)):
+            rsrc.state_set(action, status)
+
+            if self.raises is not None:
+                ex = self.assertRaises(self.raises,
+                                       self.resolve, self.snippet, tmpl, stack)
+                self.assertEqual(self.expected, six.text_type(ex))
+            else:
+                self.assertEqual(self.expected,
+                                 self.resolve(self.snippet, tmpl, stack))
