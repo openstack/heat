@@ -439,7 +439,7 @@ class ResourceRegistry(object):
 
         return _as_dict(self._registry)
 
-    def get_types(self, support_status):
+    def get_types(self, cnxt=None, support_status=None):
         '''Return a list of valid resource types.'''
 
         def is_resource(key):
@@ -451,8 +451,16 @@ class ResourceRegistry(object):
                     cls.get_class().support_status.status ==
                     support_status.encode())
 
+        def is_available(cls):
+            if cnxt is None:
+                return True
+
+            return cls.get_class().is_service_available(cnxt)
+
         return [name for name, cls in six.iteritems(self._registry)
-                if is_resource(name) and status_matches(cls)]
+                if (is_resource(name) and
+                    status_matches(cls) and
+                    is_available(cls))]
 
 
 class Environment(object):
@@ -532,8 +540,8 @@ class Environment(object):
     def get_class(self, resource_type, resource_name=None):
         return self.registry.get_class(resource_type, resource_name)
 
-    def get_types(self, support_status=None):
-        return self.registry.get_types(support_status)
+    def get_types(self, cnxt=None, support_status=None):
+        return self.registry.get_types(cnxt, support_status)
 
     def get_resource_info(self, resource_type, resource_name=None,
                           registry_type=None):
