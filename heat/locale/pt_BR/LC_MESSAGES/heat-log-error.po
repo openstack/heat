@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
-"PO-Revision-Date: 2015-07-01 07:19+0000\n"
+"POT-Creation-Date: 2015-07-08 06:02+0000\n"
+"PO-Revision-Date: 2015-07-07 07:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/heat/"
 "language/pt_BR/)\n"
@@ -37,8 +37,10 @@ msgid "Failed to import module %s"
 msgstr "Falha ao importar módulo %s"
 
 #, python-format
-msgid "Removing dead child %s"
-msgstr "Removendo filho inativo %s"
+msgid "Not respawning child %d, cannot recover from termination"
+msgstr ""
+"Não está reproduzindo o filho %d, não é possível recuperar a partir da "
+"rescisão"
 
 #, python-format
 msgid "Request does not contain %s parameter!"

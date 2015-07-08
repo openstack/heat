@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-02 06:02+0000\n"
-"PO-Revision-Date: 2015-07-01 07:19+0000\n"
+"POT-Creation-Date: 2015-07-08 06:02+0000\n"
+"PO-Revision-Date: 2015-07-07 07:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -82,12 +82,12 @@ msgstr ""
 msgid "Metadata failed validation for %s"
 msgstr "Echec de validation de metadata pour %s"
 
+#, python-format
+msgid "Not respawning child %d, cannot recover from termination"
+msgstr "Aucune relance de l'enfant %d, récupération impossible après arrêt"
+
 msgid "Port not specified."
 msgstr "Port non spécifié"
-
-#, python-format
-msgid "Removing dead child %s"
-msgstr "Retrait de l'enfant arrêté %s"
 
 #, python-format
 msgid "Request does not contain %s parameter!"
