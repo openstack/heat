@@ -179,6 +179,12 @@ class FakeWorkflow(object):
         self.name = name
 
 
+class MistralWorkFlowTestResource(workflow.Workflow):
+    @classmethod
+    def is_service_available(cls, context):
+        return True
+
+
 class TestMistralWorkflow(common.HeatTestCase):
 
     def setUp(self):
@@ -193,7 +199,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.rsrc_defn = resource_defns['workflow']
 
         self.mistral = mock.Mock()
-        self.patchobject(workflow.Workflow, 'mistral',
+        self.patchobject(MistralWorkFlowTestResource, 'mistral',
                          return_value=self.mistral)
 
         self.patches = []
@@ -216,7 +222,7 @@ class TestMistralWorkflow(common.HeatTestCase):
             patch.stop()
 
     def _create_resource(self, name, snippet, stack):
-        wf = workflow.Workflow(name, snippet, stack)
+        wf = MistralWorkFlowTestResource(name, snippet, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('test_stack-workflow-b5fiekfci3yc')]
         scheduler.TaskRunner(wf.create)()
@@ -234,7 +240,7 @@ class TestMistralWorkflow(common.HeatTestCase):
 
         rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
 
-        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('create_vm', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
@@ -269,7 +275,7 @@ class TestMistralWorkflow(common.HeatTestCase):
 
         rsrc_defns = stack.t.resource_definitions(stack)['workflow']
 
-        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('workflow', rsrc_defns, stack)
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 wf.validate)
@@ -281,7 +287,7 @@ class TestMistralWorkflow(common.HeatTestCase):
 
         rsrc_defns = stack.t.resource_definitions(stack)['workflow']
 
-        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('workflow', rsrc_defns, stack)
 
         self.mistral.workflows.create.side_effect = Exception('boom!')
 
@@ -379,7 +385,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
-        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('create_vm', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
@@ -394,7 +400,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
-        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('create_vm', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
@@ -417,7 +423,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
-        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('create_vm', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
@@ -434,7 +440,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
-        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('create_vm', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
@@ -456,7 +462,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
-        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('create_vm', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
@@ -472,7 +478,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_with_params)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['workflow']
-        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('workflow', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('workflow')]
         scheduler.TaskRunner(wf.create)()
@@ -487,7 +493,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         tmpl = template_format.parse(workflow_template_with_params_override)
         stack = utils.parse_stack(tmpl)
         rsrc_defns = stack.t.resource_definitions(stack)['workflow']
-        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        wf = MistralWorkFlowTestResource('workflow', rsrc_defns, stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('workflow')]
         scheduler.TaskRunner(wf.create)()

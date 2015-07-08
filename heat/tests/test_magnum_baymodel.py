@@ -43,18 +43,25 @@ magnum_template = '''
 RESOURCE_TYPE = 'OS::Magnum::BayModel'
 
 
+class MagnumBayModelTestResource(baymodel.BayModel):
+    @classmethod
+    def is_service_available(cls, context):
+        return True
+
+
 class TestMagnumBayModel(common.HeatTestCase):
     def setUp(self):
         super(TestMagnumBayModel, self).setUp()
         self.ctx = utils.dummy_context()
-        resource._register_class(RESOURCE_TYPE, baymodel.BayModel)
+        resource._register_class(RESOURCE_TYPE, MagnumBayModelTestResource)
         t = template_format.parse(magnum_template)
         self.stack = utils.parse_stack(t)
 
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['test_baymodel']
         self.client = mock.Mock()
-        self.patchobject(baymodel.BayModel, 'client', return_value=self.client)
+        self.patchobject(MagnumBayModelTestResource, 'client',
+                         return_value=self.client)
         self.stub_FlavorConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
@@ -65,7 +72,7 @@ class TestMagnumBayModel(common.HeatTestCase):
         self.test_bay_model = self.stack['test_baymodel']
         value = mock.MagicMock(uuid=self.resource_id)
         self.client.baymodels.create.return_value = value
-        bm = baymodel.BayModel(name, snippet, stack)
+        bm = MagnumBayModelTestResource(name, snippet, stack)
         scheduler.TaskRunner(bm.create)()
         return bm
 

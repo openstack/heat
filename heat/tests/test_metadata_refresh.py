@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import mock
 import mox
 
 from heat.common import identifier
@@ -239,7 +239,9 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         return stack
 
-    def test_wait_meta(self):
+    @mock.patch(('heat.engine.resources.aws.ec2.instance.Instance'
+                 '.is_service_available'))
+    def test_wait_meta(self, mock_is_service_available):
         '''
         1 create stack
         2 assert empty instance metadata
@@ -247,6 +249,7 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
         4 assert valid waitcond metadata
         5 assert valid instance metadata
         '''
+        mock_is_service_available.return_value = True
         self.stack = self.create_stack()
 
         watch = self.stack['WC']

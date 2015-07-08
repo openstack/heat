@@ -32,6 +32,7 @@ from heat.common import short_id
 from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine.cfn import template as cfn_tmpl
+from heat.engine import clients
 from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
@@ -152,7 +153,17 @@ class Resource(object):
                                                    resource_name=name)
             except exception.TemplateNotFound:
                 ResourceClass = template_resource.TemplateResource
+
             assert issubclass(ResourceClass, Resource)
+
+        if not ResourceClass.is_service_available(stack.context):
+            ex = exception.StackResourceUnavailable(
+                service_name=ResourceClass.default_client_name,
+                resource_name=name
+            )
+            LOG.error(six.text_type(ex))
+
+            raise ex
 
         return super(Resource, cls).__new__(ResourceClass)
 
@@ -513,6 +524,34 @@ class Resource(object):
         client_name = name or self.default_client_name
         assert client_name, "Must specify client name"
         return self.stack.clients.client_plugin(client_name)
+
+    @classmethod
+    def is_service_available(cls, context):
+        # NOTE(kanagaraj-manickam): return True to satisfy the cases like
+        # resource does not have endpoint, such as RandomString, OS::Heat
+        # resources as they are implemented within the engine.
+        if cls.default_client_name is None:
+            return True
+
+        try:
+            client_plugin = clients.Clients(context).client_plugin(
+                cls.default_client_name)
+
+            service_types = client_plugin.service_types
+            if not service_types:
+                return True
+
+            # NOTE(kanagaraj-manickam): if one of the service_type does
+            # exist in the keystone, then considered it as available.
+            for service_type in service_types:
+                if client_plugin.does_endpoint_exist(
+                        service_type=service_type,
+                        service_name=cls.default_client_name):
+                    return True
+        except Exception as ex:
+            LOG.exception(ex)
+
+        return False
 
     def keystone(self):
         return self.client('keystone')
