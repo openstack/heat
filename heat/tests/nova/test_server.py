@@ -1905,16 +1905,13 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_server_status_suspend(self):
+    def _test_server_status_suspend(self, name, state=('CREATE', 'COMPLETE')):
         return_server = self.fc.servers.list()[1]
-        server = self._create_test_server(return_server,
-                                          'srv_susp_w')
+        server = self._create_test_server(return_server, name)
 
         server.resource_id = '1234'
-        self.m.ReplayAll()
+        server.state_set(state[0], state[1])
 
-        # Override the get_servers_1234 handler status to SUSPENDED, but
-        # return the ACTIVE state first (twice, so we sleep)
         d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
         d2 = copy.deepcopy(d1)
         d1['server']['status'] = 'ACTIVE'
@@ -1930,6 +1927,19 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((server.SUSPEND, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
+
+    def test_server_suspend_in_create_complete(self):
+        self._test_server_status_suspend('test_suspend_in_create_complete')
+
+    def test_server_suspend_in_suspend_failed(self):
+        self._test_server_status_suspend(
+            name='test_suspend_in_suspend_failed',
+            state=('SUSPEND', 'FAILED'))
+
+    def test_server_suspend_in_suspend_complete(self):
+        self._test_server_status_suspend(
+            name='test_suspend_in_suspend_complete',
+            state=('SUSPEND', 'COMPLETE'))
 
     def test_server_status_suspend_unknown_status(self):
         return_server = self.fc.servers.list()[1]
@@ -1962,16 +1972,13 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_server_status_resume(self):
+    def _test_server_status_resume(self, name, state=('SUSPEND', 'COMPLETE')):
         return_server = self.fc.servers.list()[1]
-        server = self._create_test_server(return_server,
-                                          'srv_res_w')
+        server = self._create_test_server(return_server, name)
 
         server.resource_id = '1234'
-        self.m.ReplayAll()
+        server.state_set(state[0], state[1])
 
-        # Override the get_servers_1234 handler status to ACTIVE, but
-        # return the SUSPENDED state first (twice, so we sleep)
         d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
         d2 = copy.deepcopy(d1)
         d1['server']['status'] = 'SUSPENDED'
@@ -1983,12 +1990,24 @@ class ServersTest(common.HeatTestCase):
         get().AndReturn((200, d2))
         self.m.ReplayAll()
 
-        server.state_set(server.SUSPEND, server.COMPLETE)
-
         scheduler.TaskRunner(server.resume)()
         self.assertEqual((server.RESUME, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
+
+    def test_server_resume_in_suspend_complete(self):
+        self._test_server_status_resume(
+            name='test_resume_in_suspend_complete')
+
+    def test_server_resume_in_resume_failed(self):
+        self._test_server_status_resume(
+            name='test_resume_in_resume_failed',
+            state=('RESUME', 'FAILED'))
+
+    def test_server_resume_in_resume_complete(self):
+        self._test_server_status_resume(
+            name='test_resume_in_resume_complete',
+            state=('RESUME', 'COMPLETE'))
 
     def test_server_status_resume_no_resource_id(self):
         return_server = self.fc.servers.list()[1]

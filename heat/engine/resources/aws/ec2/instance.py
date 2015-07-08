@@ -795,8 +795,11 @@ class Instance(resource.Resource):
             else:
                 raise
         else:
-            LOG.debug("suspending instance %s" % self.resource_id)
-            server.suspend()
+            # if the instance has been suspended successful,
+            # no need to suspend again
+            if self.client_plugin().get_status(server) != 'SUSPENDED':
+                LOG.debug("suspending instance %s" % self.resource_id)
+                server.suspend()
             return server.id
 
     def check_suspend_complete(self, server_id):
@@ -834,8 +837,11 @@ class Instance(resource.Resource):
             else:
                 raise
         else:
-            LOG.debug("resuming instance %s" % self.resource_id)
-            server.resume()
+            # if the instance has been resumed successful,
+            # no need to resume again
+            if self.client_plugin().get_status(server) != 'ACTIVE':
+                LOG.debug("resuming instance %s" % self.resource_id)
+                server.resume()
             return server.id
 
     def check_resume_complete(self, server_id):

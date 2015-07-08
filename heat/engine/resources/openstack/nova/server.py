@@ -1405,8 +1405,11 @@ class Server(stack_user.StackUser):
             else:
                 raise
         else:
-            LOG.debug('suspending server %s' % self.resource_id)
-            server.suspend()
+            # if the server has been suspended successful,
+            # no need to suspend again
+            if self.client_plugin().get_status(server) != 'SUSPENDED':
+                LOG.debug('suspending server %s' % self.resource_id)
+                server.suspend()
             return server.id
 
     def check_suspend_complete(self, server_id):
@@ -1444,8 +1447,11 @@ class Server(stack_user.StackUser):
             else:
                 raise
         else:
-            LOG.debug('resuming server %s' % self.resource_id)
-            server.resume()
+            # if the server has been resumed successful,
+            # no need to resume again
+            if self.client_plugin().get_status(server) != 'ACTIVE':
+                LOG.debug('resuming server %s' % self.resource_id)
+                server.resume()
             return server.id
 
     def check_resume_complete(self, server_id):
