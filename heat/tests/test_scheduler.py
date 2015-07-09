@@ -187,7 +187,7 @@ class ExceptionGroupTest(common.HeatTestCase):
         ex2 = Exception("ex 2")
 
         exception_group = scheduler.ExceptionGroup([ex1, ex2])
-        self.assertEqual("['ex 1', 'ex 2']", str(exception_group))
+        self.assertEqual("[u'ex 1', u'ex 2']", str(exception_group))
 
 
 class DependencyTaskGroupTest(common.HeatTestCase):

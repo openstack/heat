@@ -120,6 +120,7 @@ class TimedCancel(Timeout):
         return False
 
 
+@six.python_2_unicode_compatible
 class ExceptionGroup(Exception):
     '''
     Container for multiple exceptions.
@@ -137,13 +138,10 @@ class ExceptionGroup(Exception):
         self.exceptions = list(exceptions)
 
     def __str__(self):
-        return six.text_type([six.text_type(ex).encode('utf-8')
-                              for ex in self.exceptions]).encode('utf-8')
-
-    def __unicode__(self):
-        return six.text_type(map(six.text_type, self.exceptions))
+        return six.text_type([six.text_type(ex) for ex in self.exceptions])
 
 
+@six.python_2_unicode_compatible
 class TaskRunner(object):
     """
     Wrapper for a resumable task (co-routine).
@@ -170,12 +168,7 @@ class TaskRunner(object):
     def __str__(self):
         """Return a human-readable string representation of the task."""
         text = 'Task %s' % self.name
-        return encodeutils.safe_encode(text)
-
-    def __unicode__(self):
-        """Return a human-readable string representation of the task."""
-        text = 'Task %s' % self.name
-        return encodeutils.safe_decode(text)
+        return six.text_type(text)
 
     def _sleep(self, wait_time):
         """Sleep for the specified number of seconds."""

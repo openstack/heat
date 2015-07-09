@@ -93,6 +93,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
     return inner
 
 
+@six.python_2_unicode_compatible
 class HeatException(Exception):
     """Base Heat Exception
 
@@ -121,9 +122,6 @@ class HeatException(Exception):
                 raise_(exc_info[0], exc_info[1], exc_info[2])
 
     def __str__(self):
-        return six.text_type(self.message).encode('UTF-8')
-
-    def __unicode__(self):
         return six.text_type(self.message)
 
     def __deepcopy__(self, memo):

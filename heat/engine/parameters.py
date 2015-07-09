@@ -171,6 +171,7 @@ class Schema(constr.Schema):
             return super(Schema, self).__getitem__(key)
 
 
+@six.python_2_unicode_compatible
 class Parameter(object):
     '''A template parameter.'''
 
@@ -283,9 +284,9 @@ class Parameter(object):
         '''Return a string representation of the parameter.'''
         value = self.value()
         if self.hidden():
-            return '******'
+            return six.text_type('******')
         else:
-            return encodeutils.safe_encode(six.text_type(value))
+            return six.text_type(value)
 
 
 class NumberParam(Parameter):
