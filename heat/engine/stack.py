@@ -65,6 +65,7 @@ class ForcedCancel(BaseException):
         return "Operation cancelled"
 
 
+@six.python_2_unicode_compatible
 class Stack(collections.Mapping):
 
     ACTIONS = (
@@ -556,12 +557,7 @@ class Stack(collections.Mapping):
     def __str__(self):
         '''Return a human-readable string representation of the stack.'''
         text = 'Stack "%s" [%s]' % (self.name, self.id)
-        return encodeutils.safe_encode(text)
-
-    def __unicode__(self):
-        '''Return a human-readable string representation of the stack.'''
-        text = 'Stack "%s" [%s]' % (self.name, self.id)
-        return encodeutils.safe_encode(text)
+        return six.text_type(text)
 
     def resource_by_refid(self, refid):
         '''

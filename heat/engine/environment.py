@@ -21,7 +21,6 @@ import warnings
 
 from oslo_config import cfg
 from oslo_log import log
-from oslo_utils import encodeutils
 import six
 
 from heat.common import environment_format as env_fmt
@@ -268,7 +267,7 @@ class ResourceRegistry(object):
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:
                 if info.value.support_status.message is not None:
-                    warnings.warn(encodeutils.safe_encode(
+                    warnings.warn(six.text_type(
                         info.value.support_status.message))
 
         info.user_resource = (self.global_registry is not None)

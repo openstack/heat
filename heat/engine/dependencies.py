@@ -25,6 +25,7 @@ class CircularDependencyException(exception.HeatException):
     msg_fmt = _("Circular Dependency Found: %(cycle)s")
 
 
+@six.python_2_unicode_compatible
 class Node(object):
     '''A node in a dependency graph.'''
 
@@ -94,18 +95,14 @@ class Node(object):
     def __str__(self):
         '''Return a human-readable string representation of the node.'''
         text = '{%s}' % ', '.join(str(n) for n in self)
-        return encodeutils.safe_encode(text)
-
-    def __unicode__(self):
-        '''Return a human-readable string representation of the node.'''
-        text = '{%s}' % ', '.join(six.text_type(n) for n in self)
-        return encodeutils.safe_decode(text)
+        return six.text_type(text)
 
     def __repr__(self):
         '''Return a string representation of the node.'''
         return repr(self.require)
 
 
+@six.python_2_unicode_compatible
 class Graph(collections.defaultdict):
     '''A mutable mapping of objects to nodes in a dependency graph.'''
 
@@ -153,14 +150,7 @@ class Graph(collections.defaultdict):
         '''Convert the graph to a human-readable string.'''
         pairs = ('%s: %s' % (str(k), str(v)) for k, v in six.iteritems(self))
         text = '{%s}' % ', '.join(pairs)
-        return encodeutils.safe_encode(text)
-
-    def __unicode__(self):
-        '''Convert the graph to a human-readable string.'''
-        pairs = ('%s: %s' % (six.text_type(k), six.text_type(v))
-                 for k, v in six.iteritems(self))
-        text = '{%s}' % ', '.join(pairs)
-        return encodeutils.safe_decode(text)
+        return six.text_type(text)
 
     @staticmethod
     def toposort(graph):
@@ -181,6 +171,7 @@ class Graph(collections.defaultdict):
                 raise CircularDependencyException(cycle=six.text_type(graph))
 
 
+@six.python_2_unicode_compatible
 class Dependencies(object):
     '''Helper class for calculating a dependency graph.'''
 
@@ -280,12 +271,6 @@ class Dependencies(object):
         return type(self)(tuple(map(transform_key, e)) for e in edges)
 
     def __str__(self):
-        '''
-        Return a human-readable string representation of the dependency graph
-        '''
-        return str(self._graph)
-
-    def __unicode__(self):
         '''
         Return a human-readable string representation of the dependency graph
         '''

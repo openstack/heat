@@ -18,7 +18,6 @@ import weakref
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import encodeutils
 from oslo_utils import excutils
 import six
 
@@ -94,6 +93,7 @@ class UpdateInProgress(Exception):
         super(Exception, self).__init__(six.text_type(msg))
 
 
+@six.python_2_unicode_compatible
 class Resource(object):
     ACTIONS = (
         INIT, CREATE, DELETE, UPDATE, ROLLBACK,
@@ -478,18 +478,6 @@ class Resource(object):
         if self.stack.id:
             if self.resource_id:
                 text = '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
-                                            self.resource_id, str(self.stack))
-            else:
-                text = '%s "%s" %s' % (self.__class__.__name__, self.name,
-                                       str(self.stack))
-        else:
-            text = '%s "%s"' % (self.__class__.__name__, self.name)
-        return encodeutils.safe_encode(text)
-
-    def __unicode__(self):
-        if self.stack.id:
-            if self.resource_id:
-                text = '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
                                             self.resource_id,
                                             six.text_type(self.stack))
             else:
@@ -497,7 +485,7 @@ class Resource(object):
                                        six.text_type(self.stack))
         else:
             text = '%s "%s"' % (self.__class__.__name__, self.name)
-        return encodeutils.safe_decode(text)
+        return six.text_type(text)
 
     def dep_attrs(self, resource_name):
         return self.t.dep_attrs(resource_name)
