@@ -233,7 +233,7 @@ class Attributes(collections.Mapping):
 
     def __repr__(self):
         return ("Attributes for %s:\n\t" % self._resource_name +
-                '\n\t'.join(six.itervalues(self._attributes)))
+                '\n\t'.join(six.itervalues(self)))
 
 
 def select_from_attribute(attribute_value, path):
