@@ -20,9 +20,10 @@
 Heat Orchestration Template (HOT) specification
 ===============================================
 
-HOT is a new template format meant to replace the Heat CloudFormation-compatible
-format (CFN) as the native format supported by the Heat over time.
-This specification explains in detail all elements of the HOT template format.
+HOT is a new template format meant to replace the Heat
+CloudFormation-compatible format (CFN) as the native format supported by the
+Heat over time. This specification explains in detail all elements of the HOT
+template format.
 An example driven guide to writing HOT templates can be found
 at :ref:`hot_guide`.
 
@@ -60,8 +61,8 @@ HOT templates are defined in YAML and follow the structure outlined below.
     # declaration of output parameters
 
 heat_template_version
-    This key with value ``2013-05-23`` (or a later date) indicates that the YAML
-    document is a HOT template of the specified version.
+    This key with value ``2013-05-23`` (or a later date) indicates that the
+    YAML document is a HOT template of the specified version.
 
 description
     This optional key allows for giving a description of the template, or the
@@ -73,9 +74,9 @@ parameter_groups
     optional and can be omitted when necessary.
 
 parameters
-    This section allows for specifying input parameters that have to be provided
-    when instantiating the template. The section is optional and can be
-    omitted when no input is required.
+    This section allows for specifying input parameters that have to be
+    provided when instantiating the template. The section is optional and can
+    be omitted when no input is required.
 
 resources
     This section contains the declaration of the single resources of the
@@ -84,9 +85,9 @@ resources
     instantiated.
 
 outputs
-    This section allows for specifying output parameters available to users once
-    the template has been instantiated. This section is optional and can be
-    omitted when no output values are required.
+    This section allows for specifying output parameters available to users
+    once the template has been instantiated. This section is optional and can
+    be omitted when no output values are required.
 
 
 .. _hot_spec_template_version:
@@ -101,9 +102,9 @@ For example, Heat currently supports the following values for the
 
 2013-05-23
     The key with value ``2013-05-23`` indicates that the YAML document is a HOT
-    template and it may contain features implemented until the Icehouse release.
-    This version supports the following functions (some are back ported
-    to this version)::
+    template and it may contain features implemented until the Icehouse
+    release. This version supports the following functions (some are back
+    ported to this version)::
 
       get_attr
       get_file
@@ -126,8 +127,8 @@ For example, Heat currently supports the following values for the
     The key with value ``2014-10-16`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the Juno
     release.  This version removes most CFN functions that were supported in
-    the Icehouse release, i.e. the ``2013-05-23`` version.  So the supported functions
-    now are::
+    the Icehouse release, i.e. the ``2013-05-23`` version.  So the supported
+    functions now are::
 
       get_attr
       get_file
@@ -156,12 +157,13 @@ For example, Heat currently supports the following values for the
       Fn::Select
 
 2015-10-15
-    The key with value *2015-10-15* indicates that the YAML document is a HOT
+    The key with value ``2015-10-15`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
     Liberty release. This version removes the *Fn::Select* function, path based
-    get_attr/get_param references should be used instead.
+    ``get_attr``/``get_param`` references should be used instead.
 
 ::
+
   get_attr
   get_file
   get_param
@@ -172,8 +174,6 @@ For example, Heat currently supports the following values for the
   resource_facade
   str_replace
   str_split
-
-
 
 .. _hot_spec_parameter_groups:
 
@@ -187,8 +187,8 @@ typically used to describe expected behavior for downstream user interfaces.
 These groups are specified in a list with each group containing a list of
 associated parameters. The lists are used to denote the expected order of the
 parameters. Each parameter should be associated to a specific group only once
-using the parameter name to bind it to a defined parameter in the ``parameters``
-section.
+using the parameter name to bind it to a defined parameter in the
+``parameters`` section.
 
 ::
 
@@ -219,10 +219,10 @@ param name
 Parameters section
 ~~~~~~~~~~~~~~~~~~
 
-The ``parameters`` section allows for specifying input parameters that have to be
-provided when instantiating the template. Such parameters are typically used to
-customize each deployment (e.g. by setting custom user names or passwords) or
-for binding to environment-specifics like certain images.
+The ``parameters`` section allows for specifying input parameters that have to
+be provided when instantiating the template. Such parameters are typically used
+to customize each deployment (e.g. by setting custom user names or passwords)
+or for binding to environment-specifics like certain images.
 
 Each parameter is specified in a separated nested block with the name of the
 parameters defined in the first line and additional attributes such as type or
@@ -399,7 +399,8 @@ It is possible to define a range constraint with only a lower limit or an
 upper limit. However, at least one of ``min`` or ``max`` must be specified.
 
 The minimum and maximum boundaries are included in the range. For example, the
-following range constraint would allow for all numeric values between 0 and 10::
+following range constraint would allow for all numeric values between 0 and
+10::
 
    range: { min: 0, max: 10 }
 
@@ -655,14 +656,15 @@ to perform specific tasks, such as getting the value of a resource attribute at
 runtime. The following section describes the role and syntax of the intrinsic
 functions.
 
+
 get_attr
 --------
 The ``get_attr`` function references an attribute of a
 resource. The attribute value is resolved at runtime using the resource
 instance created from the respective resource definition.
 
-Path based attribute refrencing using keys or indexes requires
-``heat_template_version`` '2014-10-16' or higher.
+Path based attribute referencing using keys or indexes requires
+``heat_template_version`` ``2014-10-16`` or higher.
 
 The syntax of the ``get_attr`` function is::
 
@@ -684,7 +686,7 @@ attribute name
     specified. These additional parameters are used to navigate the data
     structure to return the desired value.
 
-The following example demonstrates how to use the :code:`get_param` function::
+The following example demonstrates how to use the :code:`get_attr` function::
 
     resources:
       my_instance:
@@ -704,7 +706,7 @@ In this example, if the ``networks`` attribute contained the following data::
    {"public": ["2001:0db8:0000:0000:0000:ff00:0042:8329", "1.2.3.4"],
     "private": ["10.0.0.1"]}
 
-then the value of :code:`the get_attr` function would resolve to ``10.0.0.1``
+then the value of :code:`get_attr` function would resolve to ``10.0.0.1``
 (first item of the ``private`` entry in the ``networks`` map).
 
 
@@ -714,7 +716,7 @@ The ``get_file`` function returns the content of a file into the template.
 It is generally used as a file inclusion mechanism for files
 containing scripts or configuration files.
 
-The syntax of ``the get_file`` function is::
+The syntax of ``get_file`` function is::
 
    get_file: <content key>
 
@@ -753,6 +755,7 @@ instantiation of the stack would contain the following keys:
 
 * :file:`file:///path/to/my_instance_user_data.sh`
 * :file:`http://example.com/my_other_instance_user_data.sh`
+
 
 get_param
 ---------
@@ -802,6 +805,7 @@ then the value of the property ``flavor`` would resolve to ``m1.tiny``,
 ``metadata`` would resolve to ``{"foo": "bar"}`` and ``key_name`` would resolve
 to ``a_key``.
 
+
 get_resource
 ------------
 The ``get_resource`` function references another resource within the
@@ -813,7 +817,7 @@ of the ``get_resource`` function is::
     get_resource: <resource ID>
 
 The resource ID of the referenced resource is given as single parameter to the
-get_resource function.
+``get_resource`` function.
 
 For example::
 
@@ -832,8 +836,7 @@ For example::
 
 list_join
 ---------
-The ``list_join`` function joins a list of strings with the given
-delimiter.
+The ``list_join`` function joins a list of strings with the given delimiter.
 
 The syntax of the ``list_join`` function is::
 
@@ -849,12 +852,12 @@ This resolve to the string ``one, two, and three``.
 
 
 digest
---------
-The ``digest`` function allows for performing digest operations on a given value.
-This function has been introduced in the Kilo release and is usable with HOT versions
-later than 2015-04-30.
+------
+The ``digest`` function allows for performing digest operations on a given
+value. This function has been introduced in the Kilo release and is usable with
+HOT versions later than ``2015-04-30``.
 
-The syntax of the digest function is::
+The syntax of the ``digest`` function is::
 
   digest:
     - <algorithm>
@@ -865,8 +868,8 @@ algorithm
     provided natively by hashlib (md5, sha1, sha224, sha256, sha384,
     and sha512) or any one provided by OpenSSL.
 value
-    The value to digest. This function will resolve to the corresponding hash of
-    the value.
+    The value to digest. This function will resolve to the corresponding hash
+    of the value.
 
 
 For example::
@@ -885,7 +888,7 @@ over the contents of one or more source lists and replacing the list elements
 into a template. The result of this function is a new list, where the elements
 are set to the template, rendered for each list item.
 
-The syntax of the repeat function is::
+The syntax of the ``repeat`` function is::
 
   repeat:
     template:
@@ -1048,40 +1051,34 @@ compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the ``str_replace`` function.
 
+
 str_split
 ---------
-The *str_split* function allows for splitting a string into a list by providing
-an arbitrary delimiter, the opposite of list_join.
+The ``str_split`` function allows for splitting a string into a list by
+providing an arbitrary delimiter, the opposite of ``list_join``.
 
-The syntax of the str_split function is as follows:
+The syntax of the ``str_split`` function is as follows:
 
 ::
 
   str_split:
     - ','
     - string,to,split
-Or:
 
-::
+Or::
 
   str_split: [',', 'string,to,split']
 
-The result of which is:
-
-::
+The result of which is::
 
   ['string', 'to', 'split']
 
 Optionally, an index may be provided to select a specific entry from the
-resulting list, similar to get_attr/get_param:
-
-::
+resulting list, similar to ``get_attr``/``get_param``::
 
   str_split: [',', 'string,to,split', 0]
 
-The result of which is:
-
-::
+The result of which is::
 
   'string'
 
