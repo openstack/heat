@@ -32,6 +32,7 @@ class EngineClient(object):
         1.9 - Add template_type option to generate_template()
         1.10 - Add support for software config list
         1.11 - Add support for template versions list
+        1.12 - Add with_detail option for stack resources list
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -421,16 +422,21 @@ class EngineClient(object):
                                              stack_identity=stack_identity,
                                              resource_name=resource_name))
 
-    def list_stack_resources(self, ctxt, stack_identity, nested_depth=0):
+    def list_stack_resources(self, ctxt, stack_identity,
+                             nested_depth=0, with_detail=False):
         """
         List the resources belonging to a stack.
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param nested_depth: Levels of nested stacks of which list resources.
+        :param with_detail: show detail for resoruces in list.
         """
-        return self.call(ctxt, self.make_msg('list_stack_resources',
-                                             stack_identity=stack_identity,
-                                             nested_depth=nested_depth))
+        return self.call(ctxt,
+                         self.make_msg('list_stack_resources',
+                                       stack_identity=stack_identity,
+                                       nested_depth=nested_depth,
+                                       with_detail=with_detail),
+                         version='1.12')
 
     def stack_suspend(self, ctxt, stack_identity):
         return self.call(ctxt, self.make_msg('stack_suspend',

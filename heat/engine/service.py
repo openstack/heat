@@ -267,7 +267,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.11'
+    RPC_API_VERSION = '1.12'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1256,12 +1256,13 @@ class EngineService(service.Service):
                 if resource_name is None or name == resource_name]
 
     @context.request_context
-    def list_stack_resources(self, cnxt, stack_identity, nested_depth=0):
+    def list_stack_resources(self, cnxt, stack_identity,
+                             nested_depth=0, with_detail=False):
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
         stack = parser.Stack.load(cnxt, stack=s)
         depth = min(nested_depth, cfg.CONF.max_nested_stack_depth)
 
-        return [api.format_stack_resource(resource, detail=False)
+        return [api.format_stack_resource(resource, detail=with_detail)
                 for resource in stack.iter_resources(depth)]
 
     @context.request_context

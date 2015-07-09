@@ -1598,7 +1598,9 @@ class CfnStackControllerTest(common.HeatTestCase):
         rpc_client.EngineClient.call(
             dummy_req.context,
             ('list_stack_resources', {'stack_identity': identity,
-                                      'nested_depth': 0})
+                                      'nested_depth': 0,
+                                      'with_detail': False}),
+            version='1.12'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()

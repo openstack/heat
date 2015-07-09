@@ -79,23 +79,34 @@ class ResourceController(object):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
+    def _extract_to_param(self, req, rpc_param, extractor, default):
+        key = rpc_param
+        if key in req.params:
+            try:
+                return extractor(key, req.params[key])
+            except ValueError as e:
+                raise exc.HTTPBadRequest(six.text_type(e))
+        else:
+            return default
+
     @util.identified_stack
     def index(self, req, identity):
         """
-        Lists summary information for all resources
+        Lists information for all resources
         """
-
-        nested_depth = 0
-        key = rpc_api.PARAM_NESTED_DEPTH
-        if key in req.params:
-            try:
-                nested_depth = param_utils.extract_int(key, req.params[key])
-            except ValueError as e:
-                raise exc.HTTPBadRequest(six.text_type(e))
+        nested_depth = self._extract_to_param(req,
+                                              rpc_api.PARAM_NESTED_DEPTH,
+                                              param_utils.extract_int,
+                                              default=0)
+        with_detail = self._extract_to_param(req,
+                                             rpc_api.PARAM_WITH_DETAIL,
+                                             param_utils.extract_bool,
+                                             default=False)
 
         res_list = self.rpc_client.list_stack_resources(req.context,
                                                         identity,
-                                                        nested_depth)
+                                                        nested_depth,
+                                                        with_detail)
 
         return {'resources': [format_resource(req, res) for res in res_list]}
 
