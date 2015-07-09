@@ -688,7 +688,6 @@ class EngineService(service.Service):
                                     six.text_type(ex))
 
         def _stack_create(stack):
-            _create_stack_user(stack)
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
                 stack.adopt()
@@ -710,14 +709,15 @@ class EngineService(service.Service):
             nested_depth, user_creds_id, stack_user_project_id, convergence,
             parent_resource_name)
 
-        # once validations are done
-        # if convergence is enabled, take convergence path
+        stack.store()
+        _create_stack_user(stack)
         if convergence:
-            # TODO(later): call _create_stack_user(stack)
-            # call stack.converge_stack(template=stack.t, action=stack.CREATE)
             raise exception.NotSupported(feature=_('Convergence engine'))
+            action = stack.CREATE
+            if stack.adopt_stack_data:
+                action = stack.ADOPT
+            stack.converge_stack(template=stack.t, action=action)
         else:
-            stack.store()
             self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                                   _stack_create, stack)
 
@@ -782,8 +782,6 @@ class EngineService(service.Service):
         self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
 
-        # Once all the validations are done
-        # if convergence is enabled, take the convergence path
         if current_kwargs['convergence']:
             current_stack.converge_stack(template=tmpl,
                                          new_stack=updated_stack)
