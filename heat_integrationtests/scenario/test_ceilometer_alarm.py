@@ -36,6 +36,7 @@ class CeilometerAlarmTest(test.HeatIntegrationTest):
 
     def test_alarm(self):
         """Confirm we can create an alarm and trigger it."""
+        self.skipTest('Until bug 1472891 is fixed in ceilometer')
 
         # 1. create the stack
         stack_identifier = self.stack_create(template=self.template)
