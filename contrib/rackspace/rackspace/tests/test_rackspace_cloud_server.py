@@ -315,6 +315,101 @@ class CloudServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_add_port_for_addresses(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'test_stack'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        resource_defns = tmpl.resource_definitions(stack)
+        server = cloud_server.CloudServer('WebServer',
+                                          resource_defns['WebServer'], stack)
+
+        class Interface(object):
+            def __init__(self, id, addresses):
+                self.identifier = id
+                self.addresses = addresses
+
+            @property
+            def id(self):
+                return self.identifier
+
+            @property
+            def ip_addresses(self):
+                return self.addresses
+
+        interfaces = [
+            {
+                "id": "port-uuid-1",
+                "ip_addresses": [
+                    {
+                        "address": "4.5.6.7",
+                        "network_id": "00xx000-0xx0-0xx0-0xx0-00xxx000",
+                        "network_label": "public"
+                    },
+                    {
+                        "address": "2001:4802:7805:104:be76:4eff:fe20:2063",
+                        "network_id": "00xx000-0xx0-0xx0-0xx0-00xxx000",
+                        "network_label": "public"
+                    }
+                ],
+                "mac_address": "fa:16:3e:8c:22:aa"
+            },
+            {
+                "id": "port-uuid-2",
+                "ip_addresses": [
+                    {
+                        "address": "5.6.9.8",
+                        "network_id": "11xx1-1xx1-xx11-1xx1-11xxxx11",
+                        "network_label": "public"
+                    }
+                ],
+                "mac_address": "fa:16:3e:8c:44:cc"
+            },
+            {
+                "id": "port-uuid-3",
+                "ip_addresses": [
+                    {
+                        "address": "10.13.12.13",
+                        "network_id": "1xx1-1xx1-xx11-1xx1-11xxxx11",
+                        "network_label": "private"
+                    }
+                ],
+                "mac_address": "fa:16:3e:8c:44:dd"
+            }
+        ]
+
+        ifaces = [Interface(i['id'], i['ip_addresses']) for i in interfaces]
+        expected = {
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa':
+            [{'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:8c:22:aa',
+              'addr': '4.5.6.7',
+              'port': 'port-uuid-1',
+              'version': 4},
+             {'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:8c:33:bb',
+              'addr': '5.6.9.8',
+              'port': 'port-uuid-2',
+              'version': 4}],
+
+            'private': [{'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:8c:44:cc',
+                         'addr': '10.13.12.13',
+                         'port': 'port-uuid-3',
+                         'version': 4}],
+            'public': [{'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:8c:22:aa',
+                        'addr': '4.5.6.7',
+                        'port': 'port-uuid-1',
+                        'version': 4},
+                       {'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:8c:33:bb',
+                        'addr': '5.6.9.8',
+                        'port': 'port-uuid-2',
+                        'version': 4}]}
+
+        server.client = mock.Mock()
+        mock_client = mock.Mock()
+        server.client.return_value = mock_client
+        mock_ext = mock_client.os_virtual_interfacesv2_python_novaclient_ext
+        mock_ext.list.return_value = ifaces
+        resp = server._add_port_for_address(return_server)
+        self.assertEqual(expected, resp)
+
     def test_managed_cloud_build_error(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation':
