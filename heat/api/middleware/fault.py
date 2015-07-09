@@ -92,6 +92,7 @@ class FaultWrapper(wsgi.Middleware):
         'OrphanedObjectError': webob.exc.HTTPBadRequest,
         'UnsupportedObjectError': webob.exc.HTTPBadRequest,
         'ResourceTypeUnavailable': webob.exc.HTTPBadRequest,
+        'InvalidBreakPointHook': webob.exc.HTTPBadRequest,
     }
 
     def _map_exception_to_error(self, class_exception):

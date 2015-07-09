@@ -199,11 +199,10 @@ class ResourceTest(common.HeatTestCase):
             for status in res.STATUSES:
                 res.state_set(action, status)
                 ev = self.patchobject(res, '_add_event')
-                ex = self.assertRaises(exception.ResourceFailure,
+                ex = self.assertRaises(exception.NotSupported,
                                        res.signal)
-                self.assertEqual('Exception: resources.res: '
-                                 'Cannot signal resource during '
-                                 '%s' % action, six.text_type(ex))
+                self.assertEqual('Signal resource during %s is not '
+                                 'supported.' % action, six.text_type(ex))
                 ev.assert_called_with(
                     action, status,
                     'Cannot signal resource during %s' % action)
@@ -2643,10 +2642,10 @@ class ResourceHookTest(common.HeatTestCase):
         self.assertFalse(res.clear_hook.called)
 
         self.assertRaises(exception.ResourceActionNotSupported,
-                          res.signal, {})
+                          res.signal, {'other_hook': 'alarm'})
         self.assertFalse(res.clear_hook.called)
 
-        self.assertRaises(exception.ResourceActionNotSupported,
+        self.assertRaises(exception.InvalidBreakPointHook,
                           res.signal, {'unset_hook': 'unknown_hook'})
         self.assertFalse(res.clear_hook.called)
 
@@ -2657,7 +2656,7 @@ class ResourceHookTest(common.HeatTestCase):
         res.clear_hook.assert_called_with('pre-update')
 
         res.has_hook = mock.Mock(return_value=False)
-        self.assertRaises(exception.ResourceActionNotSupported,
+        self.assertRaises(exception.InvalidBreakPointHook,
                           res.signal, {'unset_hook': 'pre-create'})
 
 
