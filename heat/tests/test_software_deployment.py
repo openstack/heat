@@ -146,6 +146,16 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         }
     }
 
+    template_no_server = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Resources': {
+            'deployment_mysql': {
+                'Type': 'OS::Heat::SoftwareDeployment',
+                'Properties': {}
+            }
+        }
+    }
+
     def setUp(self):
         super(SoftwareDeploymentTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -183,6 +193,15 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd.validate()
         server = self.stack['server']
         self.assertTrue(server.user_data_software_config())
+
+    def test_validate_without_server(self):
+        stack = utils.parse_stack(self.template_no_server)
+        snip = stack.t.resource_definitions(stack)['deployment_mysql']
+        deployment = sd.SoftwareDeployment('deployment_mysql', snip, stack)
+        err = self.assertRaises(exc.StackValidationFailed, deployment.validate)
+        self.assertEqual("Property error: "
+                         "Resources.deployment_mysql.Properties: "
+                         "Property server not assigned", six.text_type(err))
 
     def test_validate_failed(self):
         template = dict(self.template_with_server)
