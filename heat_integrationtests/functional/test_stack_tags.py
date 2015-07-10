@@ -27,7 +27,7 @@ description:
 
     def test_stack_tag(self):
         # Stack create with stack tags
-        tags = ['foo', 'bar']
+        tags = 'foo,bar'
         stack_identifier = self.stack_create(
             template=self.template,
             tags=tags
@@ -35,10 +35,10 @@ description:
 
         # Ensure property tag is populated and matches given tags
         stack = self.client.stacks.get(stack_identifier)
-        self.assertEqual(tags, stack.tags)
+        self.assertEqual(['foo', 'bar'], stack.tags)
 
         # Update tags
-        updated_tags = ['tag1', 'tag2']
+        updated_tags = 'tag1,tag2'
         self.update_stack(
             stack_identifier,
             template=self.template,
@@ -46,7 +46,7 @@ description:
 
         # Ensure property tag is populated and matches updated tags
         updated_stack = self.client.stacks.get(stack_identifier)
-        self.assertEqual(updated_tags, updated_stack.tags)
+        self.assertEqual(['tag1', 'tag2'], updated_stack.tags)
 
         # Delete tags
         self.update_stack(
@@ -60,7 +60,7 @@ description:
 
     def test_hidden_stack(self):
         # Stack create with hidden stack tag
-        tags = ['foo', 'hidden']
+        tags = 'foo,hidden'
         self.stack_create(
             template=self.template,
             tags=tags)

@@ -773,6 +773,50 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_create_with_tags(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'stack_name': identity.stack_name,
+                'parameters': parameters,
+                'tags': 'tag1,tag2',
+                'timeout_mins': 30}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': identity.stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']},
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None}),
+            version='1.8'
+        ).AndReturn(dict(identity))
+        self.m.ReplayAll()
+
+        response = self.controller.create(req,
+                                          tenant_id=identity.tenant,
+                                          body=body)
+
+        expected = {'stack':
+                    {'id': '1',
+                     'links': [{'href': self._url(identity), 'rel': 'self'}]}}
+        self.assertEqual(expected, response)
+        self.m.VerifyAll()
+
     def test_adopt(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
@@ -1535,6 +1579,43 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                           body=body)
         self.m.VerifyAll()
 
+    def test_update_with_tags(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'tags': 'tag1,tag2',
+                'timeout_mins': 30}
+
+        req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                        json.dumps(body))
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('update_stack',
+             {'stack_identity': dict(identity),
+              'template': template,
+              'params': {'parameters': parameters,
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']}})
+        ).AndReturn(dict(identity))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPAccepted,
+                          self.controller.update,
+                          req, tenant_id=identity.tenant,
+                          stack_name=identity.stack_name,
+                          stack_id=identity.stack_id,
+                          body=body)
+        self.m.VerifyAll()
+
     def test_update_bad_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
@@ -1647,6 +1728,44 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
                        'timeout_mins': 30}})
+        ).AndReturn(dict(identity))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPAccepted,
+                          self.controller.update_patch,
+                          req, tenant_id=identity.tenant,
+                          stack_name=identity.stack_name,
+                          stack_id=identity.stack_id,
+                          body=body)
+        self.m.VerifyAll()
+
+    def test_update_with_existing_parameters_with_tags(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update_patch', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        body = {'template': template,
+                'parameters': {},
+                'files': {},
+                'tags': 'tag1,tag2',
+                'timeout_mins': 30}
+
+        req = self._patch('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                          json.dumps(body))
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('update_stack',
+             {'stack_identity': dict(identity),
+              'template': template,
+              'params': {'parameters': {},
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'resource_registry': {}},
+              'files': {},
+              'args': {rpc_api.PARAM_EXISTING: True,
+                       'timeout_mins': 30,
+                       'tags': ['tag1', 'tag2']}})
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
