@@ -542,9 +542,3 @@ class MiscMethodsTest(common.HeatTestCase):
         worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
                                       {}, 'engine-id')
         self.assertTrue(mock_delete.called)
-
-    @mock.patch.object(resource.Resource, 'delete_convergence')
-    def test_check_resource_cleanup_nodelete(self, mock_delete):
-        worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
-                                      {}, 'engine-id')
-        self.assertFalse(mock_delete.called)

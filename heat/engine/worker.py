@@ -119,9 +119,15 @@ class WorkerService(service.Service):
     def _load_resource(self, cnxt, resource_id, data, is_update):
         adopt_data = data.get('adopt_stack_data')
         data = dict(sync_point.deserialize_input_data(data))
-        cache_data = {in_data.get(
-            'name'): in_data for in_data in data.values()
-            if in_data is not None}
+
+        if is_update:
+            cache_data = {in_data.get(
+                'name'): in_data for in_data in data.values()
+                if in_data is not None}
+        else:
+            # no data to resolve in cleanup phase
+            cache_data = {}
+
         cache_data['adopt_stack_data'] = adopt_data
         rsrc, stack = None, None
         try:
@@ -190,9 +196,6 @@ class WorkerService(service.Service):
     def _initiate_propagate_resource(self, cnxt, resource_id,
                                      current_traversal, is_update, rsrc,
                                      stack):
-        input_data = None
-        if is_update:
-            input_data = construct_input_data(rsrc)
         deps = self._compute_dependencies(stack)
         graph = deps.graph()
         graph_key = (resource_id, is_update)
@@ -206,12 +209,25 @@ class WorkerService(service.Service):
             # for the next traversal.
             graph_key = (rsrc.replaces, is_update)
 
+        def _get_input_data(req, fwd):
+            if fwd:
+                return construct_input_data(rsrc)
+            else:
+                # Don't send data if initiating clean-up for self i.e.
+                # initiating delete of a replaced resource
+                if req not in graph_key:
+                    # send replaced resource as needed_by if it exists
+                    return (rsrc.replaced_by
+                            if rsrc.replaced_by is not None
+                            else resource_id)
+            return None
+
         try:
             for req, fwd in deps.required_by(graph_key):
+                input_data = _get_input_data(req, fwd)
                 propagate_check_resource(
                     cnxt, self._rpc_client, req, current_traversal,
-                    set(graph[(req, fwd)]), graph_key,
-                    input_data if fwd else None, fwd)
+                    set(graph[(req, fwd)]), graph_key, input_data, fwd)
 
             check_stack_complete(cnxt, stack, current_traversal,
                                  resource_id, deps, is_update)
@@ -338,6 +354,4 @@ def check_resource_cleanup(rsrc, template_id, data, engine_id):
     '''
     Delete the Resource if appropriate.
     '''
-
-    if rsrc.current_template_id != template_id:
-        rsrc.delete_convergence(engine_id)
+    rsrc.delete_convergence(template_id, data, engine_id)

@@ -1556,26 +1556,80 @@ class ResourceTest(common.HeatTestCase):
     def test_delete_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res.requires = [1, 2]
+        res.current_template_id = 1
         res._store()
         res.destroy = mock.Mock()
+        res._update_replacement_data = mock.Mock()
         self._assert_resource_lock(res.id, None, None)
-        res.delete_convergence('engine-007')
+        res.delete_convergence(2, {}, 'engine-007')
         self.assertTrue(res.destroy.called)
+        self.assertTrue(res._update_replacement_data.called)
+
+    def test_delete_convergence_does_not_delete_same_template_resource(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.current_template_id = 'same-template'
+        res._store()
+        res.destroy = mock.Mock()
+        res.delete_convergence('same-template', {}, 'engine-007')
+        self.assertFalse(res.destroy.called)
 
     def test_delete_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.current_template_id = 1
         res._store()
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
         rs.update_and_save({'engine_id': 'not-this'})
         self._assert_resource_lock(res.id, 'not-this', None)
         ex = self.assertRaises(resource.UpdateInProgress,
                                res.delete_convergence,
-                               'engine-007')
+                               1, {}, 'engine-007')
         msg = ("The resource %s is already being updated." %
                res.name)
         self.assertEqual(msg, six.text_type(ex))
+
+    def test_delete_convergence_updates_needed_by(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.current_template_id = 1
+        res._store()
+        res.destroy = mock.Mock()
+        input_data = {(1, False): 4, (2, False): 5}  # needed_by resource ids
+        self._assert_resource_lock(res.id, None, None)
+        res.delete_convergence(1, input_data, 'engine-007')
+        self.assertItemsEqual([4, 5], res.needed_by)
+
+    @mock.patch.object(resource_objects.Resource, 'get_obj')
+    def test_update_replacement_data(self, mock_get_obj):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        r = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        r.replaced_by = 4
+        r.needed_by = [4, 5]
+        r._store()
+        db_res = mock.MagicMock()
+        db_res.current_template_id = 'same_tmpl'
+        mock_get_obj.return_value = db_res
+        r._update_replacement_data('same_tmpl')
+        self.assertTrue(mock_get_obj.called)
+        self.assertTrue(db_res.select_and_update.called)
+        args, kwargs = db_res.select_and_update.call_args
+        self.assertEqual({'replaces': None, 'needed_by': [4, 5]}, args[0])
+        self.assertEqual(None, kwargs['expected_engine_id'])
+
+    @mock.patch.object(resource_objects.Resource, 'get_obj')
+    def test_update_replacement_data_ignores_rsrc_from_different_tmpl(
+            self, mock_get_obj):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        r = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        r.replaced_by = 4
+        db_res = mock.MagicMock()
+        db_res.current_template_id = 'tmpl'
+        mock_get_obj.return_value = db_res
+        # db_res as tmpl id as 2, and 1 is passed
+        r._update_replacement_data('diff_tmpl')
+        self.assertTrue(mock_get_obj.called)
+        self.assertFalse(db_res.select_and_update.called)
 
 
 class ResourceAdoptTest(common.HeatTestCase):

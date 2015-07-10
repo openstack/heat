@@ -359,10 +359,12 @@ class Resource(object):
         self._rsrc_metadata = metadata
 
     @classmethod
-    def set_needed_by(cls, db_rsrc, needed_by):
+    def set_needed_by(cls, db_rsrc, needed_by, expected_engine_id=None):
         if db_rsrc:
-            db_rsrc.update_and_save(
-                {'needed_by': needed_by}
+            db_rsrc.select_and_update(
+                {'needed_by': needed_by},
+                atomic_key=db_rsrc.atomic_key,
+                expected_engine_id=expected_engine_id
             )
 
     @classmethod
@@ -1077,14 +1079,52 @@ class Resource(object):
                 msg = _('"%s" deletion policy not supported') % policy
                 raise exception.StackValidationFailed(message=msg)
 
-    def delete_convergence(self, engine_id):
-        '''
-        Destroys the resource. The destroy task is run in a scheduler
-        TaskRunner after acquiring the lock on resource.
+    def _update_replacement_data(self, template_id):
+        # Udate the replacement resource's needed_by and replaces
+        # fields. Make sure that the replacement belongs to the given
+        # template and there is no engine is working on it.
+        if self.replaced_by is None:
+            return
+
+        try:
+            db_res = resource_objects.Resource.get_obj(
+                self.context, self.replaced_by)
+        except exception.NotFound:
+            LOG.info(_LI("Could not find replacement of resource %{name} "
+                         "with id %{id} while updating needed_by."),
+                     {'name': self.name, 'id': self.replaced_by})
+            return
+
+        if (db_res.current_template_id == template_id):
+                # Following update failure is ignorable; another
+                # update might have locked/updated the resource.
+                db_res.select_and_update(
+                    {'needed_by': self.needed_by,
+                     'replaces': None},
+                    atomic_key=db_res.atomic_key,
+                    expected_engine_id=None
+                )
+
+    def delete_convergence(self, template_id, input_data, engine_id):
+        '''Destroys the resource if it doesn't belong to given
+        template. The given template is suppose to be the current
+        template being provisioned.
+
+        Also, since this resource is visited as part of clean-up phase,
+        the needed_by should be updated. If this resource was
+        replaced by more recent resource, then delete this and update
+        the replacement resource's needed_by and replaces fields.
         '''
         with self.lock(engine_id):
-            runner = scheduler.TaskRunner(self.destroy)
-            runner()
+            self.needed_by = list(set(v for v in input_data.values()
+                                      if v is not None))
+
+            if self.current_template_id != template_id:
+                runner = scheduler.TaskRunner(self.destroy)
+                runner()
+
+                # update needed_by and replaces of replacement resource
+                self._update_replacement_data(template_id)
 
     @scheduler.wrappertask
     def delete(self):
@@ -1262,7 +1302,8 @@ class Resource(object):
             {'engine_id': None,
              'current_template_id': self.current_template_id,
              'updated_at': self.updated_time,
-             'requires': self.requires},
+             'requires': self.requires,
+             'needed_by': self.needed_by},
             expected_engine_id=engine_id,
             atomic_key=atomic_key + 1)
 
