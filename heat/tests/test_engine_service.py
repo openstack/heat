@@ -3452,12 +3452,12 @@ class StackServiceTest(common.HeatTestCase):
         mock_get_all.assert_called_once_with(self.ctx,
                                              filters=filters,
                                              tenant_safe=False)
-        mock_stack_load.assert_call_once_with(self.ctx,
-                                              stack=db_stack,
-                                              use_stored_context=True)
-        mock_thread.start_with_acquired_lock.assert_call_once_with(
-            fake_stack, fake_stack.state_set, fake_stack.action,
-            parser.Stack.FAILED, 'Engine went down during stack CREATE'
+        mock_stack_load.assert_called_once_with(self.ctx,
+                                                stack=db_stack,
+                                                use_stored_context=True)
+        mock_thread.start_with_acquired_lock.assert_called_once_with(
+            fake_stack, fake_lock, fake_stack.state_set, fake_stack.action,
+            fake_stack.FAILED, 'Engine went down during stack CREATE'
         )
 
     @mock.patch('heat.common.messaging.get_rpc_server',
