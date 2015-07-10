@@ -378,4 +378,4 @@ class ServiceEngineTest(common.HeatTestCase):
     @mock.patch('oslo_log.log.setup')
     def test_engine_service_reset(self, setup_logging_mock):
         self.eng.reset()
-        setup_logging_mock.assertCalledOnceWith(cfg.CONF, 'heat')
+        setup_logging_mock.assert_called_once_with(cfg.CONF, 'heat')

@@ -1105,7 +1105,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.uuid = str(uuid.uuid4())
         self.deployment._delete_queue()
         zc.queue.assert_called_once_with(queue_id)
-        zc.queue.delete.assert_called_once()
+        self.assertTrue(zc.queue(self.deployment.uuid).delete.called)
         self.assertEqual(
             [mock.call('signal_queue_id')],
             self.deployment.data_delete.mock_calls)

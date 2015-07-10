@@ -67,7 +67,7 @@ class StackCreateTest(common.HeatTestCase):
                                            stack_user_project_id=None,
                                            convergence=False,
                                            parent_resource=None)
-        mock_validate.assert_called_once()
+        mock_validate.assert_called_once_with()
 
     def test_stack_create(self):
         stack_name = 'service_create_test_stack'

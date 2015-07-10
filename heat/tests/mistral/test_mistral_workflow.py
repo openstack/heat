@@ -324,7 +324,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.mistral.workflows.update.return_value = [
             FakeWorkflow('test_stack-workflow-b5fiekfci3yc')]
         scheduler.TaskRunner(wf.update, new_wf)()
-        self.mistral.workflows.update.assert_called_once()
+        self.assertTrue(self.mistral.workflows.update.called)
         self.assertEqual((wf.UPDATE, wf.COMPLETE), wf.state)
 
     def test_update_failed(self):

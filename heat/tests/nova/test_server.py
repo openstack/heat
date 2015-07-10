@@ -898,7 +898,7 @@ class ServersTest(common.HeatTestCase):
         server._delete_queue()
 
         zc.queue.assert_called_once_with(queue_id)
-        zc.queue.delete.assert_called_once()
+        zc.queue(queue_id).delete.assert_called_once_with()
 
         self.m.VerifyAll()
 

@@ -755,5 +755,5 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.engine.show_software_deployment(self.ctx, deployment_id))
 
         zaqar_client.queue.assert_called_once_with('6789')
-        queue.pop.assert_called_once()
+        queue.pop.assert_called_once_with()
         ssd.assert_called_once_with(self.ctx, deployment_id, 'ok', None)

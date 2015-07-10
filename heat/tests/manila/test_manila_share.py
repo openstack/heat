@@ -172,10 +172,9 @@ class ManilaShareTest(common.HeatTestCase):
         kwargs = {
             "display_name": "name",
             "display_description": "desc",
-            "is_public": True
         }
-        share.client().shares.update.assertCalledOnceWith(share.resource_id,
-                                                          **kwargs)
+        share.client().shares.update.assert_called_once_with(
+            share.resource_id, **kwargs)
 
     def test_share_update_access_rules(self):
         share = self._create_share("stack_share_update_access_rules")

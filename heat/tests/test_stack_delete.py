@@ -414,7 +414,7 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        mock_rd.assert_called_once()
+        mock_rd.assert_called_once_with()
         self.assertEqual((self.stack.DELETE, self.stack.FAILED),
                          self.stack.state)
         self.assertEqual('Resource DELETE failed: Exception: '

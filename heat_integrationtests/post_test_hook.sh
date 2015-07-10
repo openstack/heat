@@ -17,8 +17,8 @@
 set -x
 
 export DEST=${DEST:-/opt/stack/new}
-source $DEST/devstack/accrc/admin/admin
+source $DEST/devstack/openrc admin admin
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_network.sh
-source $DEST/devstack/accrc/demo/demo
+source $DEST/devstack/openrc
 sudo -E tox -eintegration

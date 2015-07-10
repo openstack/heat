@@ -258,7 +258,6 @@ class ClientPluginTest(common.HeatTestCase):
         # assert token is from plugin rather than context
         # even though both are set
         self.assertEqual('5678', plugin.auth_token)
-        con.auth_plugin.get_token.assert_called()
 
     def test_url_for(self):
         con = mock.Mock()
@@ -275,7 +274,7 @@ class ClientPluginTest(common.HeatTestCase):
 
         self.assertEqual('http://192.0.2.1/foo',
                          plugin.url_for(service_type='foo'))
-        con.auth_plugin.get_endpoint.assert_called()
+        self.assertTrue(con.auth_plugin.get_endpoint.called)
 
     @mock.patch.object(context, "RequestContext")
     @mock.patch.object(v3, "Token", name="v3_token")

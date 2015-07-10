@@ -9,7 +9,7 @@ To run the tests against DevStack, do the following:
 
     # source DevStack credentials
 
-    source /opt/stack/devstack/accrc/demo/demo
+    source /opt/stack/devstack/openrc
 
     # run the heat integration tests with those credentials
 
