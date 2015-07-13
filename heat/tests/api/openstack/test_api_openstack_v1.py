@@ -2160,6 +2160,26 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual({'template_versions': engine_response}, response)
         self.m.VerifyAll()
 
+    def test_list_template_functions(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'list_template_functions', True)
+        req = self._get('/template_versions/t1/functions')
+
+        engine_response = [
+            {'functions': 'func1', 'description': 'desc1'},
+        ]
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context, (
+                'list_template_functions', {'template_version': 't1'}),
+            version="1.13"
+        ).AndReturn(engine_response)
+        self.m.ReplayAll()
+        response = self.controller.list_template_functions(
+            req, tenant_id=self.tenant, template_version='t1')
+        self.assertEqual({'template_functions': engine_response}, response)
+        self.m.VerifyAll()
+
     def test_resource_schema(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'resource_schema', True)
         req = self._get('/resource_types/ResourceWithProps')

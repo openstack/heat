@@ -33,6 +33,7 @@ class EngineClient(object):
         1.10 - Add support for software config list
         1.11 - Add support for template versions list
         1.12 - Add with_detail option for stack resources list
+        1.13 - Add support for template functions list
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -337,6 +338,18 @@ class EngineClient(object):
         """
         return self.call(ctxt, self.make_msg('list_template_versions'),
                          version='1.11')
+
+    def list_template_functions(self, ctxt, template_version):
+        """
+        Get a list of available functions in a given template
+
+        :param ctxt: RPC context
+        :param template_name : name of the template which function list you
+                               want to get
+        """
+        return self.call(ctxt, self.make_msg(
+            'list_template_functions', template_version=template_version),
+            version='1.13')
 
     def resource_schema(self, ctxt, type_name):
         """
