@@ -951,39 +951,54 @@ def purge_deleted(age, granularity='days'):
     meta = sqlalchemy.MetaData()
     meta.bind = engine
 
-    # Purge deleted stacks
     stack = sqlalchemy.Table('stack', meta, autoload=True)
+    stack_lock = sqlalchemy.Table('stack_lock', meta, autoload=True)
+    resource = sqlalchemy.Table('resource', meta, autoload=True)
+    resource_data = sqlalchemy.Table('resource_data', meta, autoload=True)
     event = sqlalchemy.Table('event', meta, autoload=True)
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
     user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-
-    stmt = sqlalchemy.select(
-        [stack.c.id,
-         stack.c.raw_template_id,
-         stack.c.user_creds_id]
-    ).where(stack.c.deleted_at < time_line)
-    deleted_stacks = engine.execute(stmt)
-
-    for s in deleted_stacks:
-        event_del = event.delete().where(event.c.stack_id == s[0])
-        engine.execute(event_del)
-        stack_del = stack.delete().where(stack.c.id == s[0])
-        engine.execute(stack_del)
-        raw_template_del = raw_template.delete().where(
-            raw_template.c.id == s[1])
-        engine.execute(raw_template_del)
-        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
-        engine.execute(user_creds_del)
-
-    # Purge deleted services
     service = sqlalchemy.Table('service', meta, autoload=True)
-    stmt = (sqlalchemy.select([service.c.id]).
-            where(service.c.deleted_at < time_line))
-    deleted_services = engine.execute(stmt)
+    syncpoint = sqlalchemy.Table('sync_point', meta, autoload=True)
 
-    for s in deleted_services:
-        stmt = service.delete().where(service.c.id == s[0])
-        engine.execute(stmt)
+    # find the soft-deleted stacks that are past their expiry
+    stack_where = sqlalchemy.select([stack.c.id]).where(
+        stack.c.deleted_at < time_line)
+    # delete stack locks (just in case some got stuck)
+    stack_lock_del = stack_lock.delete().where(
+        stack_lock.c.stack_id.in_(stack_where))
+    engine.execute(stack_lock_del)
+    # delete resource_data
+    res_where = sqlalchemy.select([resource.c.id]).where(
+        resource.c.stack_id.in_(stack_where))
+    res_data_del = resource_data.delete().where(
+        resource_data.c.resource_id.in_(res_where))
+    engine.execute(res_data_del)
+    # delete resources
+    res_del = resource.delete().where(resource.c.stack_id.in_(stack_where))
+    engine.execute(res_del)
+    # delete events
+    event_del = event.delete().where(event.c.stack_id.in_(stack_where))
+    engine.execute(event_del)
+    # clean up any sync_points that may have lingered
+    sync_del = syncpoint.delete().where(syncpoint.c.stack_id.in_(stack_where))
+    engine.execute(sync_del)
+    # delete the stacks
+    stack_del = stack.delete().where(stack.c.deleted_at < time_line)
+    engine.execute(stack_del)
+    # delete orphaned raw templates
+    stack_templ_sel = sqlalchemy.select([stack.c.raw_template_id])
+    raw_templ_sel = sqlalchemy.not_(raw_template.c.id.in_(stack_templ_sel))
+    raw_templ_del = raw_template.delete().where(raw_templ_sel)
+    engine.execute(raw_templ_del)
+    # purge any user creds that are no longer referenced
+    stack_creds_sel = sqlalchemy.select([stack.c.user_creds_id])
+    user_creds_sel = sqlalchemy.not_(user_creds.c.id.in_(stack_creds_sel))
+    usr_creds_del = user_creds.delete().where(user_creds_sel)
+    engine.execute(usr_creds_del)
+    # Purge deleted services
+    srvc_del = service.delete().where(service.c.deleted_at < time_line)
+    engine.execute(srvc_del)
 
 
 def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
