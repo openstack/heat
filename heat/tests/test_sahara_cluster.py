@@ -52,6 +52,7 @@ class FakeCluster(object):
         self.name = "super-cluster"
         self.info = {"HDFS": {"NameNode": "hdfs://hostname:port",
                               "Web UI": "http://host_ip:port"}}
+        self.to_dict = lambda: {"cluster": "info"}
 
 
 class SaharaClusterTest(common.HeatTestCase):
@@ -171,7 +172,8 @@ class SaharaClusterTest(common.HeatTestCase):
                          cluster._resolve_attribute('info'))
         self.assertEqual(self.fake_cl.status,
                          cluster._resolve_attribute('status'))
-        self.assertEqual(2, self.cl_mgr.get.call_count)
+        self.assertEqual({"cluster": "info"}, cluster.FnGetAtt('show'))
+        self.assertEqual(3, self.cl_mgr.get.call_count)
 
     def test_cluster_resource_mapping(self):
         cluster = self._init_cluster(self.t)
