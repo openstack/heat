@@ -1281,20 +1281,20 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
                      parent_resource=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
+                     timeout_mins=60,
+                     disable_rollback=False,
                      convergence=True).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
 
         self.m.ReplayAll()
-
-        # TODO(later): Remove exception once convergence is supported.
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.create_stack, self.ctx, stack_name,
-                               template, params, None, {})
-        self.assertEqual(exception.NotSupported, ex.exc_info[0])
-        self.assertEqual('Convergence engine is not supported.',
-                         six.text_type(ex.exc_info[1]))
+        api_args = {'timeout_mins': 60, 'disable_rollback': False}
+        result = self.man.create_stack(self.ctx, 'service_create_test_stack',
+                                       template, params, None, api_args)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
+        self.assertEqual(db_stack.convergence, True)
+        self.assertEqual(result['stack_id'], db_stack.id)
         self.m.VerifyAll()
 
     def test_stack_create_enabled_convergence_engine(self):
