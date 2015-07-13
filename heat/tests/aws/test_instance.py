@@ -65,6 +65,15 @@ wp_template = '''
                 "DeviceName": "vdb",
                 "Ebs": {"SnapshotId": "9ef5496e-7426-446a-bbc8-01f84d9c9972",
                         "DeleteOnTermination": "True"}
+            }],
+        "Volumes" : [
+            {
+                "Device": "/dev/vdc",
+                "VolumeId": "cccc"
+            },
+            {
+                "Device": "/dev/vdd",
+                "VolumeId": "dddd"
             }]
       }
     }
@@ -95,20 +104,24 @@ class InstancesTest(common.HeatTestCase):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
         glance.GlanceClientPlugin.get_image_id(image_id).AndRaise(exp)
 
-    def _get_test_template(self, stack_name, image_id=None):
+    def _get_test_template(self, stack_name, image_id=None, volumes=False):
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
         tmpl.t['Resources']['WebServer']['Properties'][
             'ImageId'] = image_id or 'CentOS 5.2'
         tmpl.t['Resources']['WebServer']['Properties'][
             'InstanceType'] = '256 MB Server'
+        if not volumes:
+            tmpl.t['Resources']['WebServer']['Properties']['Volumes'] = []
 
         return tmpl, stack
 
     def _setup_test_instance(self, return_server, name, image_id=None,
-                             stub_create=True, stub_complete=False):
+                             stub_create=True, stub_complete=False,
+                             volumes=False):
         stack_name = '%s_s' % name
-        tmpl, self.stack = self._get_test_template(stack_name, image_id)
+        tmpl, self.stack = self._get_test_template(stack_name, image_id,
+                                                   volumes=volumes)
         resource_defns = tmpl.resource_definitions(self.stack)
         instance = instances.Instance(name, resource_defns['WebServer'],
                                       self.stack)
@@ -262,6 +275,7 @@ class InstancesTest(common.HeatTestCase):
 
         self._mock_get_image_id_success('F17-x86_64-gold', 1)
         self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
@@ -277,6 +291,7 @@ class InstancesTest(common.HeatTestCase):
         bdm = [{'DeviceName': 'vdb'}]
         wsp = tmpl.t['Resources']['WebServer']['Properties']
         wsp['BlockDeviceMappings'] = bdm
+        wsp['Volumes'] = []
         resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('validate_without_Ebs',
                                       resource_defns['WebServer'], stack)
@@ -301,6 +316,7 @@ class InstancesTest(common.HeatTestCase):
                 'Ebs': {'VolumeSize': '1'}}]
         wsp = tmpl.t['Resources']['WebServer']['Properties']
         wsp['BlockDeviceMappings'] = bdm
+        wsp['Volumes'] = []
         resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('validate_without_SnapshotId',
                                       resource_defns['WebServer'], stack)
@@ -603,6 +619,7 @@ class InstancesTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
 
         self._mock_get_image_id_success('1', 1)
+        self.stub_VolumeConstraint_validate()
         self.stub_SnapshotConstraint_validate()
         self.m.ReplayAll()
 
@@ -1049,6 +1066,7 @@ class InstancesTest(common.HeatTestCase):
 
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
 
     def _test_instance_status_suspend(self, name,
                                       state=('CREATE', 'COMPLETE')):
@@ -1443,4 +1461,33 @@ class InstancesTest(common.HeatTestCase):
             metadata, 'wordpress', 'ec2-user')
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
+        self.m.VerifyAll()
+
+    def test_instance_create_with_volumes(self):
+        return_server = self.fc.servers.list()[1]
+        self.stub_VolumeConstraint_validate()
+        instance = self._setup_test_instance(return_server,
+                                             'with_volumes',
+                                             stub_complete=True,
+                                             volumes=True)
+        attach_mock = self.patchobject(nova.NovaClientPlugin, 'attach_volume',
+                                       side_effect=['cccc', 'dddd'])
+        check_attach_mock = self.patchobject(cinder.CinderClientPlugin,
+                                             'check_attach_volume_complete',
+                                             side_effect=[False, True,
+                                                          False, True])
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
+        self.assertEqual(2, attach_mock.call_count)
+        attach_mock.assert_has_calls([mock.call(instance.resource_id,
+                                                'cccc', '/dev/vdc'),
+                                      mock.call(instance.resource_id,
+                                                'dddd', '/dev/vdd')])
+        self.assertEqual(4, check_attach_mock.call_count)
+        check_attach_mock.assert_has_calls([mock.call('cccc'),
+                                            mock.call('cccc'),
+                                            mock.call('dddd'),
+                                            mock.call('dddd')])
         self.m.VerifyAll()
