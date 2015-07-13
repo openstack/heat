@@ -228,6 +228,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     def test_resource_update_failure_sets_stack_state_as_failed(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
+        self.resource.state_set(self.resource.UPDATE,
+                                self.resource.IN_PROGRESS)
         self.worker._trigger_rollback = mock.Mock()
         dummy_ex = exception.ResourceNotAvailable(
             resource_name=self.resource.name)
@@ -246,6 +248,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
         self.is_update = False  # invokes check_resource_cleanup
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
+        self.resource.state_set(self.resource.UPDATE,
+                                self.resource.IN_PROGRESS)
         self.worker._trigger_rollback = mock.Mock()
         dummy_ex = exception.ResourceNotAvailable(
             resource_name=self.resource.name)
