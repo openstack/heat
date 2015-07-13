@@ -1082,6 +1082,12 @@ class EngineService(service.Service):
         if resource_class.support_status.status == support.HIDDEN:
             raise exception.NotSupported(type_name)
 
+        if not resource_class.is_service_available(cnxt):
+            raise exception.ResourceTypeUnavailable(
+                service_name=resource_class.default_client_name,
+                resource_type=type_name
+            )
+
         def properties_schema():
             for name, schema_dict in resource_class.properties_schema.items():
                 schema = properties.Schema.from_legacy(schema_dict)
