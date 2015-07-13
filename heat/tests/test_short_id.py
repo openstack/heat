@@ -20,16 +20,16 @@ from heat.tests import common
 class ShortIdTest(common.HeatTestCase):
 
     def test_byte_string_8(self):
-        self.assertEqual('\xab', short_id._to_byte_string(0xab, 8))
-        self.assertEqual('\x05', short_id._to_byte_string(0x05, 8))
+        self.assertEqual(u'\xab', short_id._to_byte_string(0xab, 8))
+        self.assertEqual(u'\x05', short_id._to_byte_string(0x05, 8))
 
     def test_byte_string_16(self):
-        self.assertEqual('\xab\xcd', short_id._to_byte_string(0xabcd, 16))
-        self.assertEqual('\x0a\xbc', short_id._to_byte_string(0xabc, 16))
+        self.assertEqual(u'\xab\xcd', short_id._to_byte_string(0xabcd, 16))
+        self.assertEqual(u'\x0a\xbc', short_id._to_byte_string(0xabc, 16))
 
     def test_byte_string_12(self):
-        self.assertEqual('\xab\xc0', short_id._to_byte_string(0xabc, 12))
-        self.assertEqual('\x0a\xb0', short_id._to_byte_string(0x0ab, 12))
+        self.assertEqual(u'\xab\xc0', short_id._to_byte_string(0xabc, 12))
+        self.assertEqual(u'\x0a\xb0', short_id._to_byte_string(0x0ab, 12))
 
     def test_byte_string_60(self):
         val = 0x111111111111111
@@ -67,5 +67,5 @@ class ShortIdTest(common.HeatTestCase):
 
         for id in ids:
             self.assertEqual(12, len(id))
-            self.assertFalse(id.translate(None, allowed_chars))
+            self.assertEqual(id, id.translate(allowed_chars))
             self.assertEqual(1, ids.count(id))
