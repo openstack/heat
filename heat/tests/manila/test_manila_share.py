@@ -45,6 +45,17 @@ resources:
 """
 
 
+class DummyShare(object):
+    def __init__(self):
+        self.availability_zone = 'az'
+        self.host = 'host'
+        self.export_locations = 'el'
+        self.share_server_id = 'id'
+        self.created_at = 'ca'
+        self.status = 's'
+        self.project_id = 'p_id'
+
+
 class ManilaShareTest(common.HeatTestCase):
 
     def setUp(self):
@@ -219,3 +230,14 @@ class ManilaShareTest(common.HeatTestCase):
         share.client().shares.update_all_metadata.assert_called_once_with(
             share.resource_id,
             updated_share_props[mshare.ManilaShare.METADATA])
+
+    def test_attributes(self):
+        share = self._create_share("share")
+        share.client().shares.get.return_value = DummyShare()
+        self.assertEqual('az', share.FnGetAtt('availability_zone'))
+        self.assertEqual('host', share.FnGetAtt('host'))
+        self.assertEqual('el', share.FnGetAtt('export_locations'))
+        self.assertEqual('id', share.FnGetAtt('share_server_id'))
+        self.assertEqual('ca', share.FnGetAtt('created_at'))
+        self.assertEqual('s', share.FnGetAtt('status'))
+        self.assertEqual('p_id', share.FnGetAtt('project_id'))
