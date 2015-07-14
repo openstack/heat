@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import hashlib
 import json
 
@@ -298,20 +297,6 @@ class StackResource(resource.Resource):
         self.resource_id_set(result['stack_id'])
 
     def raise_local_exception(self, ex):
-        ex_type = ex.__class__.__name__
-
-        is_remote = ex_type.endswith('_Remote')
-        if is_remote:
-            ex_type = ex_type[:-len('_Remote')]
-
-        full_message = six.text_type(ex)
-        if full_message.find('\n') > -1 and is_remote:
-            message, msg_trace = full_message.split('\n', 1)
-        elif isinstance(ex, exception.HeatException):
-            message = ex.message
-        else:
-            message = full_message
-
         if (isinstance(ex, exception.ActionInProgress) and
                 self.stack.action == self.stack.ROLLBACK):
             # The update was interrupted and the rollback is already in
@@ -319,12 +304,16 @@ class StackResource(resource.Resource):
             # finish
             return
 
-        if hasattr(exception, ex_type):
-            local_ex = copy.copy(getattr(exception, ex_type))
-            local_ex.msg_fmt = "%(message)s"
-            raise local_ex(message=message)
+        if not ex.__class__.__name__.endswith('_Remote'):
+            raise ex
+
+        full_message = six.text_type(ex)
+        if full_message.find('\n') > -1:
+            message, msg_trace = full_message.split('\n', 1)
         else:
-            raise exception.ResourceFailure(ex, self, 'remote')
+            message = full_message
+
+        raise exception.ResourceFailure(message, self, action=self.action)
 
     def check_create_complete(self, cookie=None):
         return self._check_status_complete(resource.Resource.CREATE)

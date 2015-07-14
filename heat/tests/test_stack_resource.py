@@ -868,11 +868,13 @@ class RaiseLocalException(StackResourceBaseTest):
 
     def test_messaging_timeout(self):
         local = msg_exceptions.MessagingTimeout('took too long')
-        self.assertRaises(exception.ResourceFailure,
+        self.assertRaises(msg_exceptions.MessagingTimeout,
                           self.parent_resource.raise_local_exception, local)
 
     def test_remote_heat_ex(self):
-        InvalidResourceType_Remote = exception.InvalidResourceType
+        class InvalidResourceType_Remote(exception.InvalidResourceType):
+            pass
+
         local = InvalidResourceType_Remote(message='test')
-        self.assertRaises(exception.InvalidResourceType,
+        self.assertRaises(exception.ResourceFailure,
                           self.parent_resource.raise_local_exception, local)
