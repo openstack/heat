@@ -259,6 +259,7 @@ class Resource(object):
         db_res = resource_objects.Resource.get_obj(context, resource_id)
         # TODO(sirushtim): Load stack from cache
         stack = stack_mod.Stack.load(context, db_res.stack_id)
+        stack.adopt_stack_data = data.get('adopt_stack_data')
         # NOTE(sirushtim): Because on delete/cleanup operations, we simply
         # update with another template, the stack object won't have the
         # template of the previous stack-run.
@@ -676,7 +677,11 @@ class Resource(object):
                 set(data[u'id'] for data in resource_data.values()
                     if data is not None)
             )
-            runner = scheduler.TaskRunner(self.create)
+            adopt_data = self.stack._adopt_kwargs(self)
+            if adopt_data['resource_data'] is None:
+                runner = scheduler.TaskRunner(self.create)
+            else:
+                runner = scheduler.TaskRunner(self.adopt, **adopt_data)
             runner()
 
     @scheduler.wrappertask

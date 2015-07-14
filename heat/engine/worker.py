@@ -123,7 +123,7 @@ class WorkerService(service.Service):
         stack.state_set(stack.action, stack.FAILED, failure_reason)
 
         if (not stack.disable_rollback and
-                stack.action in (stack.CREATE, stack.UPDATE)):
+                stack.action in (stack.CREATE, stack.ADOPT, stack.UPDATE)):
             self._trigger_rollback(cnxt, stack)
         else:
             stack.purge_db()
@@ -137,11 +137,13 @@ class WorkerService(service.Service):
         The node may be associated with either an update or a cleanup of its
         associated resource.
         '''
+        adopt_data = data.get('adopt_stack_data')
         data = dict(sync_point.deserialize_input_data(data))
         try:
             cache_data = {in_data.get(
                 'name'): in_data for in_data in data.values()
                 if in_data is not None}
+            cache_data['adopt_stack_data'] = adopt_data
             rsrc, stack = resource.Resource.load(cnxt, resource_id, cache_data)
         except (exception.ResourceNotFound, exception.NotFound):
             return

@@ -939,7 +939,7 @@ class Stack(collections.Mapping):
         """
         Updates the stack and triggers convergence for resources
         """
-        if action is not self.CREATE:
+        if action not in [self.CREATE, self.ADOPT]:
             # no back-up template for create action
             self.prev_raw_template_id = getattr(self.t, 'id', None)
 
@@ -995,9 +995,11 @@ class Stack(collections.Mapping):
             LOG.info(_LI("Triggering resource %(rsrc_id)s "
                          "for %(is_update)s update"),
                      {'rsrc_id': rsrc_id, 'is_update': is_update})
+            input_data = {'input_data': {},
+                          'adopt_stack_data': self.adopt_stack_data}
             self.worker_client.check_resource(self.context, rsrc_id,
                                               self.current_traversal,
-                                              {}, is_update)
+                                              input_data, is_update)
 
     def _get_best_existing_rsrc_db(self, rsrc_name):
         candidate = None
