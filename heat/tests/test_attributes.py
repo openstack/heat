@@ -110,6 +110,15 @@ class AttributesTest(common.HeatTestCase):
                                         test_resolver)
         self.assertEqual("value1", attribs['test1'])
 
+    def test_attributes_representation(self):
+        """Test that attributes are displayed correct."""
+        test_resolver = lambda x: "value1"
+        attribs = attributes.Attributes('test resource',
+                                        self.attributes_schema,
+                                        test_resolver)
+        msg = 'Attributes for test resource:\n\tvalue1\n\tvalue1\n\tvalue1'
+        self.assertEqual(msg, str(attribs))
+
     def test_get_attribute_none(self):
         """Test that we get the attribute values we expect."""
         test_resolver = lambda x: None
