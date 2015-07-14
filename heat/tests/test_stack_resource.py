@@ -790,11 +790,11 @@ class RaiseLocalException(common.HeatTestCase):
 
     def test_messaging_timeout(self):
         local = msg_exceptions.MessagingTimeout('took too long')
-        self.assertRaises(exception.ResourceFailure,
+        self.assertRaises(msg_exceptions.MessagingTimeout,
                           self.parent_resource.raise_local_exception, local)
 
     def test_remote_heat_ex(self):
-        remote_exc = exception.PhysicalResourceNameAmbiguity(name='foo')
+        remote_exc = exception.ResourceTypeNotFound(type_name='bar')
         expected_msg = six.text_type(remote_exc)
         message = (expected_msg + '\n' +
                    'Traceback (most recent call last):\n'
@@ -808,7 +808,7 @@ class RaiseLocalException(common.HeatTestCase):
         RemoteExcClass.__module__ = 'heat.common.exception_Remote'
         remote_exc.__class__ = RemoteExcClass
 
-        exc = self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+        exc = self.assertRaises(exception.ResourceFailure,
                                 self.parent_resource.raise_local_exception,
                                 remote_exc)
         self.assertIn(expected_msg, six.text_type(exc))
