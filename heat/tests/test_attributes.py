@@ -89,53 +89,59 @@ class AttributeTest(common.HeatTestCase):
 class AttributesTest(common.HeatTestCase):
     """Test the Attributes class."""
 
-    attributes_schema = {
-        "test1": attributes.Schema("Test attrib 1"),
-        "test2": attributes.Schema("Test attrib 2"),
-        "test3": attributes.Schema(
-            "Test attrib 3",
-            cache_mode=attributes.Schema.CACHE_NONE)
-    }
-
     def setUp(self):
         super(AttributesTest, self).setUp()
-        self.addCleanup(self.m.VerifyAll)
+
+        self.resolver = mock.MagicMock()
+        self.attributes_schema = {
+            "test1": attributes.Schema("Test attrib 1"),
+            "test2": attributes.Schema("Test attrib 2"),
+            "test3": attributes.Schema(
+                "Test attrib 3",
+                cache_mode=attributes.Schema.CACHE_NONE)
+        }
 
     def test_get_attribute(self):
         """Test that we get the attribute values we expect."""
-        test_resolver = lambda x: "value1"
-        self.m.ReplayAll()
+        self.resolver.return_value = "value1"
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
-                                        test_resolver)
+                                        self.resolver)
         self.assertEqual("value1", attribs['test1'])
+        self.resolver.assert_called_once_with('test1')
 
     def test_attributes_representation(self):
         """Test that attributes are displayed correct."""
-        test_resolver = lambda x: "value1"
+        self.resolver.return_value = "value1"
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
-                                        test_resolver)
+                                        self.resolver)
         msg = 'Attributes for test resource:\n\tvalue1\n\tvalue1\n\tvalue1'
         self.assertEqual(msg, str(attribs))
+        calls = [
+            mock.call('test1'),
+            mock.call('test2'),
+            mock.call('test3')
+        ]
+        self.resolver.assert_has_calls(calls, any_order=True)
 
     def test_get_attribute_none(self):
         """Test that we get the attribute values we expect."""
-        test_resolver = lambda x: None
-        self.m.ReplayAll()
+        self.resolver.return_value = None
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
-                                        test_resolver)
+                                        self.resolver)
         self.assertIsNone(attribs['test1'])
+        self.resolver.assert_called_once_with('test1')
 
     def test_get_attribute_nonexist(self):
         """Test that we get the attribute values we expect."""
-        test_resolver = lambda x: "value1"
-        self.m.ReplayAll()
+        self.resolver.return_value = "value1"
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
-                                        test_resolver)
+                                        self.resolver)
         self.assertRaises(KeyError, attribs.__getitem__, 'not there')
+        self.assertFalse(self.resolver.called)
 
     def test_as_outputs(self):
         """Test that Output format works as expected."""
@@ -153,42 +159,45 @@ class AttributesTest(common.HeatTestCase):
                 "Description": "Test attrib 3"
             }
         }
-        MyTestResourceClass = self.m.CreateMockAnything()
+        MyTestResourceClass = mock.MagicMock()
         MyTestResourceClass.attributes_schema = {
             "test1": attributes.Schema("Test attrib 1"),
             "test2": attributes.Schema("Test attrib 2"),
             "test3": attributes.Schema("Test attrib 3"),
         }
-        self.m.ReplayAll()
         self.assertEqual(
             expected,
             attributes.Attributes.as_outputs("test_resource",
                                              MyTestResourceClass))
 
     def test_caching_local(self):
-        value = 'value1'
-        test_resolver = lambda x: value
-        self.m.ReplayAll()
+        self.resolver.side_effect = ["value1", "value1 changed"]
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
-                                        test_resolver)
+                                        self.resolver)
         self.assertEqual("value1", attribs['test1'])
-        value = 'value1 changed'
         self.assertEqual("value1", attribs['test1'])
 
         attribs.reset_resolved_values()
         self.assertEqual("value1 changed", attribs['test1'])
+        calls = [
+            mock.call('test1'),
+            mock.call('test1')
+        ]
+        self.resolver.assert_has_calls(calls)
 
     def test_caching_none(self):
-        value = 'value3'
-        test_resolver = lambda x: value
-        self.m.ReplayAll()
+        self.resolver.side_effect = ["value3", "value3 changed"]
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
-                                        test_resolver)
+                                        self.resolver)
         self.assertEqual("value3", attribs['test3'])
-        value = 'value3 changed'
         self.assertEqual("value3 changed", attribs['test3'])
+        calls = [
+            mock.call('test3'),
+            mock.call('test3')
+        ]
+        self.resolver.assert_has_calls(calls)
 
 
 class AttributesTypeTest(common.HeatTestCase):
