@@ -176,7 +176,11 @@ class ElasticIp(resource.Resource):
                         server.remove_floating_ip(self._ipaddress())
 
     def FnGetRefId(self):
-        return six.text_type(self._ipaddress())
+        eip = self._ipaddress()
+        if eip:
+            return six.text_type(eip)
+        else:
+            return six.text_type(self.name)
 
     def _resolve_attribute(self, name):
         if name == self.ALLOCATION_ID:

@@ -145,10 +145,16 @@ ipassoc_template_validate = '''
   "Description" : "EIP Test",
   "Parameters" : {},
   "Resources" : {
+    "eip" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain": "vpc"
+      }
+    },
     "IPAssoc" : {
       "Type" : "AWS::EC2::EIPAssociation",
       "Properties" : {
-        "EIP" : '11.0.0.1',
+        "EIP" : {'Ref': 'eip'},
         "InstanceId" : '1fafbe59-2332-4f5f-bfa4-517b4d6c1b65'
       }
     }
@@ -393,12 +399,13 @@ class AllocTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'remove_gateway_router')
 
-    def _setup_test_stack(self, stack_name):
+    def _setup_test_stack_validate(self, stack_name):
         t = template_format.parse(ipassoc_template_validate)
         template = tmpl.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name,
                              template, stack_id='12233',
                              stack_user_project_id='8888')
+        stack.validate()
 
         return template, stack
 
@@ -651,7 +658,7 @@ class AllocTest(common.HeatTestCase):
         self._mock_server_get(server='1fafbe59-2332-4f5f-bfa4-517b4d6c1b65',
                               multiple=True)
         self.m.ReplayAll()
-        template, stack = self._setup_test_stack(
+        template, stack = self._setup_test_stack_validate(
             stack_name='validate_EIP_AllocationId')
 
         properties = template.t['Resources']['IPAssoc']['Properties']
@@ -668,7 +675,10 @@ class AllocTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_validate_EIP_and_InstanceId(self):
-        template, stack = self._setup_test_stack(
+        self._mock_server_get(server='1fafbe59-2332-4f5f-bfa4-517b4d6c1b65',
+                              multiple=True)
+        self.m.ReplayAll()
+        template, stack = self._setup_test_stack_validate(
             stack_name='validate_EIP_InstanceId')
         properties = template.t['Resources']['IPAssoc']['Properties']
         # test with EIP and no InstanceId
@@ -676,8 +686,13 @@ class AllocTest(common.HeatTestCase):
         expected = ("Must specify 'InstanceId' if you specify 'EIP'.")
         self._validate_properties(stack, template, expected)
 
+        self.m.VerifyAll()
+
     def test_validate_without_NetworkInterfaceId_and_InstanceId(self):
-        template, stack = self._setup_test_stack(
+        self._mock_server_get(server='1fafbe59-2332-4f5f-bfa4-517b4d6c1b65',
+                              multiple=True)
+        self.m.ReplayAll()
+        template, stack = self._setup_test_stack_validate(
             stack_name='validate_EIP_InstanceId')
 
         properties = template.t['Resources']['IPAssoc']['Properties']
@@ -695,6 +710,7 @@ class AllocTest(common.HeatTestCase):
         self.assertIn('At least one of the following properties '
                       'must be specified: InstanceId, NetworkInterfaceId',
                       six.text_type(exc))
+        self.m.VerifyAll()
 
     def test_delete_association_successful_if_create_failed(self):
         server = self.fc.servers.list()[0]
