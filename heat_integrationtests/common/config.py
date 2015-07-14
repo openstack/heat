@@ -109,6 +109,10 @@ IntegrationTestGroup = [
                default=120,
                help="Timeout in seconds to wait for connectivity to "
                     "server."),
+    cfg.IntOpt('sighup_timeout',
+               default=30,
+               help="Timeout in seconds to wait for adding or removing child"
+                    "process after receiving of sighup signal")
 ]
 
 

@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
+
 import eventlet
 
 from oslo_concurrency import processutils
@@ -67,11 +69,18 @@ class ReloadOnSighupTest(test.HeatIntegrationTest):
         self._set_config_value(service, 'workers', new_workers)
         cmd = "kill -HUP %s" % pre_reload_parent
         processutils.execute(cmd, shell=True)
-        # wait till heat-api reloads
-        eventlet.sleep(2)
 
-        post_reload_parent, post_reload_children = self._get_heat_api_pids(
-            service)
+        # wait till heat-api reloads
+        start_time = time.time()
+        while time.time() - start_time < self.conf.sighup_timeout:
+            post_reload_parent, post_reload_children = self._get_heat_api_pids(
+                service)
+            intersect = set(post_reload_children) & set(pre_reload_children)
+            if (new_workers == len(post_reload_children)
+                and pre_reload_parent == post_reload_parent
+                    and intersect == set()):
+                break
+            eventlet.sleep(1)
         self.assertEqual(pre_reload_parent, post_reload_parent)
         self.assertEqual(new_workers, len(post_reload_children))
         # test if all child processes are newly created
