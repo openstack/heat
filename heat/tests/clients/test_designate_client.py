@@ -203,3 +203,102 @@ class DesignateClientPluginDomainTest(common.HeatTestCase):
 
         self._client.domains.update.assert_called_once_with(
             mock_domain)
+
+
+class DesignateClientPluginRecordTest(common.HeatTestCase):
+
+    sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd152'
+    sample_domain_id = '477e8273-60a7-4c41-b683-fdb0bc7cd153'
+
+    def _get_mock_record(self):
+        record = mock.MagicMock()
+        record.id = self.sample_uuid
+        record.domain_id = self.sample_domain_id
+        return record
+
+    def setUp(self):
+        super(DesignateClientPluginRecordTest, self).setUp()
+        self._client = mock.MagicMock()
+        self.client_plugin = client.DesignateClientPlugin(
+            context=mock.MagicMock()
+        )
+        self.client_plugin.get_domain_id = mock.Mock(
+            return_value=self.sample_domain_id)
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    @mock.patch('designateclient.v1.records.Record')
+    def test_record_create(self, mock_record, client_designate):
+        self._client.records.create.return_value = None
+        client_designate.return_value = self._client
+
+        record = dict(
+            name='test-record.com',
+            description='updated description',
+            ttl=4200,
+            type='',
+            priority=1,
+            data='1.1.1.1',
+            domain=self.sample_domain_id
+        )
+
+        mock_sample_record = mock.Mock()
+        mock_record.return_value = mock_sample_record
+
+        self.client_plugin.record_create(**record)
+
+        # Make sure record entity is created with right arguments
+        domain_id = record.pop('domain')
+        mock_record.assert_called_once_with(**record)
+        self._client.records.create.assert_called_once_with(
+            domain_id,
+            mock_sample_record)
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    @mock.patch('designateclient.v1.records.Record')
+    def test_record_update(self, mock_record, client_designate):
+        self._client.records.update.return_value = None
+        mock_record = self._get_mock_record()
+        self._client.records.get.return_value = mock_record
+
+        client_designate.return_value = self._client
+
+        record = dict(
+            id=self.sample_uuid,
+            name='test-record.com',
+            description='updated description',
+            ttl=4200,
+            type='',
+            priority=1,
+            data='1.1.1.1',
+            domain=self.sample_domain_id
+        )
+
+        self.client_plugin.record_update(**record)
+
+        self._client.records.get.assert_called_once_with(
+            self.sample_domain_id,
+            self.sample_uuid)
+
+        for key in record.keys():
+            setattr(mock_record, key, record[key])
+
+        self._client.records.update.assert_called_once_with(
+            self.sample_domain_id,
+            mock_record)
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    @mock.patch('designateclient.v1.records.Record')
+    def test_record_delete(self, mock_record, client_designate):
+        self._client.records.delete.return_value = None
+        client_designate.return_value = self._client
+
+        record = dict(
+            id=self.sample_uuid,
+            domain=self.sample_domain_id
+        )
+
+        self.client_plugin.record_delete(**record)
+
+        self._client.records.delete.assert_called_once_with(
+            self.sample_domain_id,
+            self.sample_uuid)
