@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 class StackUser(resource.Resource):
 
     # Subclasses create a user, and optionally keypair associated with a
-    # resource in a stack. Users are created  in the heat stack user domain
+    # resource in a stack. Users are created in the heat stack user domain
     # (in a project specific to the stack)
     def __init__(self, name, json_snippet, stack):
         super(StackUser, self).__init__(name, json_snippet, stack)
@@ -34,6 +34,10 @@ class StackUser(resource.Resource):
         self._create_user()
 
     def _create_user(self):
+        if self.data().get('user_id'):
+            # a user has been created already
+            return
+
         # Check for stack user project, create if not yet set
         if not self.stack.stack_user_project_id:
             project_id = self.keystone().create_stack_domain_project(
@@ -85,6 +89,10 @@ class StackUser(resource.Resource):
         user_id = self._get_user_id()
         if user_id is None:
             return
+
+        # the user is going away, so we want the keypair gone as well
+        self._delete_keypair()
+
         try:
             self.keystone().delete_stack_domain_user(
                 user_id=user_id, project_id=self.stack.stack_user_project_id)
@@ -100,8 +108,7 @@ class StackUser(resource.Resource):
                 self.keystone().delete_stack_user(user_id)
             except kc_exception.NotFound:
                 pass
-        for data_key in ('credential_id', 'access_key', 'secret_key'):
-            self.data_delete(data_key)
+        self.data_delete('user_id')
 
     def handle_suspend(self):
         user_id = self._get_user_id()
@@ -125,6 +132,9 @@ class StackUser(resource.Resource):
         # Subclasses may optionally call this in handle_create to create
         # an ec2 keypair associated with the user, the resulting keys are
         # stored in resource_data
+        if self.data().get('credential_id'):
+            return  # a keypair was created already
+
         user_id = self._get_user_id()
         kp = self.keystone().create_stack_domain_user_keypair(
             user_id=user_id, project_id=self.stack.stack_user_project_id)
@@ -146,9 +156,11 @@ class StackUser(resource.Resource):
     def _delete_keypair(self):
         # Subclasses may optionally call this to delete a keypair created
         # via _create_keypair
-        user_id = self._get_user_id()
         credential_id = self.data().get('credential_id')
         if not credential_id:
+            return
+        user_id = self._get_user_id()
+        if user_id is None:
             return
 
         try:

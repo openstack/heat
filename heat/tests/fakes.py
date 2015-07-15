@@ -109,6 +109,7 @@ class FakeKeystoneClient(object):
         self.credential_id = credential_id
         self.token = auth_token
         self.context = context
+        self.v3_endpoint = 'http://localhost:5000/v3'
 
         class FakeCred(object):
             id = self.credential_id

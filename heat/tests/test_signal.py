@@ -12,14 +12,15 @@
 #    under the License.
 
 import datetime
-import six
+import uuid
 
 from keystoneclient import exceptions as kc_exceptions
+import mox
+import six
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
-from heat.engine.resources import stack_user
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
@@ -30,13 +31,53 @@ from heat.tests import generic_resource
 from heat.tests import utils
 
 
-test_template_signal = '''
+test_cfn_template_signal = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "Just a test.",
   "Parameters" : {},
   "Resources" : {
-    "signal_handler" : {"Type" : "SignalResourceType"},
+    "signal_handler" : {"Type" : "SignalResourceType",
+                        "Properties": {"signal_transport": "CFN_SIGNAL"}},
+    "resource_X" : {"Type" : "GenericResourceType"}
+  }
+}
+'''
+
+test_heat_template_signal = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a test.",
+  "Parameters" : {},
+  "Resources" : {
+    "signal_handler" : {"Type" : "SignalResourceType",
+                        "Properties": {"signal_transport": "HEAT_SIGNAL"}},
+    "resource_X" : {"Type" : "GenericResourceType"}
+  }
+}
+'''
+
+test_swift_template_signal = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a test.",
+  "Parameters" : {},
+  "Resources" : {
+    "signal_handler" : {"Type" : "SignalResourceType",
+                        "Properties": {"signal_transport": "TEMP_URL_SIGNAL"}},
+    "resource_X" : {"Type" : "GenericResourceType"}
+  }
+}
+'''
+
+test_zaqar_template_signal = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a test.",
+  "Parameters" : {},
+  "Resources" : {
+    "signal_handler" : {"Type" : "SignalResourceType",
+                        "Properties": {"signal_transport": "ZAQAR_SIGNAL"}},
     "resource_X" : {"Type" : "GenericResourceType"}
   }
 }
@@ -52,11 +93,12 @@ class SignalTest(common.HeatTestCase):
     def tearDown(self):
         super(SignalTest, self).tearDown()
 
-    def create_stack(self, stack_name='test_stack', stub=True):
-        templ = template.Template(template_format.parse(test_template_signal))
+    def create_stack(self, templ=test_cfn_template_signal,
+                     stack_name='test_stack', stub=True):
+        tpl = template.Template(template_format.parse(templ))
         ctx = utils.dummy_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, templ,
+        stack = parser.Stack(ctx, stack_name, tpl,
                              disable_rollback=True)
 
         # Stub out the stack ID so we have a known value
@@ -66,23 +108,6 @@ class SignalTest(common.HeatTestCase):
             self.stub_keystoneclient()
 
         return stack
-
-    def test_handle_create_fail_keypair_raise(self):
-        self.stack = self.create_stack(stack_name='create_fail_keypair')
-
-        self.m.StubOutWithMock(stack_user.StackUser, '_create_keypair')
-        stack_user.StackUser._create_keypair().AndRaise(Exception('Failed'))
-        self.m.ReplayAll()
-
-        self.stack.create()
-
-        rsrc = self.stack['signal_handler']
-        rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.assertIn('Failed', rsrc.status_reason)
-        self.assertEqual('1234', rs_data.get('user_id'))
-        self.assertIsNone(rsrc.resource_id)
-        self.m.VerifyAll()
 
     def test_resource_data(self):
         self.stub_keystoneclient(
@@ -97,6 +122,7 @@ class SignalTest(common.HeatTestCase):
 
         rsrc = self.stack['signal_handler']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc._create_keypair()
 
         # Ensure the resource data has been stored correctly
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
@@ -174,8 +200,131 @@ class SignalTest(common.HeatTestCase):
         rsrc = self.stack['signal_handler']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        first_url = rsrc.FnGetAtt('AlarmUrl')
-        second_url = rsrc.FnGetAtt('AlarmUrl')
+        first_url = rsrc.FnGetAtt('signal')
+        second_url = rsrc.FnGetAtt('signal')
+        self.assertEqual(first_url, second_url)
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Heat_Signal(self):
+        self.stack = self.create_stack(test_heat_template_signal)
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
+
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8004/v1')
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        signal = rsrc.FnGetAtt('signal')
+        self.assertEqual('http://localhost:5000/v3', signal['auth_url'])
+        self.assertEqual('aprojectid', signal['project_id'])
+        self.assertEqual('1234', signal['user_id'])
+        self.assertIn('username', signal)
+        self.assertIn('password', signal)
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Heat_Signal_is_cached(self):
+        self.stack = self.create_stack(test_heat_template_signal)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        first_url = rsrc.FnGetAtt('signal')
+        second_url = rsrc.FnGetAtt('signal')
+        self.assertEqual(first_url, second_url)
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Zaqar_Signal(self):
+        self.stack = self.create_stack(test_zaqar_template_signal)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        signal = rsrc.FnGetAtt('signal')
+        self.assertEqual('http://localhost:5000/v3', signal['auth_url'])
+        self.assertEqual('aprojectid', signal['project_id'])
+        self.assertEqual('1234', signal['user_id'])
+        self.assertIn('username', signal)
+        self.assertIn('password', signal)
+        self.assertIn('queue_id', signal)
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Zaqar_Signal_is_cached(self):
+        self.stack = self.create_stack(test_zaqar_template_signal)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        first_url = rsrc.FnGetAtt('signal')
+        second_url = rsrc.FnGetAtt('signal')
+        self.assertEqual(first_url, second_url)
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Swift_Signal(self):
+        self.stack = self.create_stack(test_swift_template_signal)
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'put_container')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'put_object')
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('swift'),
+                               'get_temp_url')
+
+        self.stack.clients.client('swift').put_container(
+            mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client_plugin('swift').get_temp_url(
+            mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(
+            'http://192.0.2.1/v1/AUTH_aprojectid/foo/bar')
+        self.stack.clients.client('swift').put_object(
+            mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        self.assertEqual('http://192.0.2.1/v1/AUTH_aprojectid/foo/bar',
+                         rsrc.FnGetAtt('AlarmUrl'))
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Swift_Signal_is_cached(self):
+        self.stack = self.create_stack(test_swift_template_signal)
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'put_container')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'put_object')
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('swift'),
+                               'get_temp_url')
+
+        self.stack.clients.client('swift').put_container(
+            mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client_plugin('swift').get_temp_url(
+            mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(
+            'http://192.0.2.1/v1/AUTH_aprojectid/foo/' + uuid.uuid4().hex)
+        self.stack.clients.client('swift').put_object(
+            mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        first_url = rsrc.FnGetAtt('signal')
+        second_url = rsrc.FnGetAtt('signal')
         self.assertEqual(first_url, second_url)
         self.m.VerifyAll()
 
@@ -190,6 +339,7 @@ class SignalTest(common.HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
+        rsrc.resource_id_set('signal')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         self.assertIn('http://server.test:8000/v1/signal',
