@@ -45,7 +45,7 @@ def reload_loadbalancers(group, load_balancers, exclude=None):
             lb.name,
             lb.type(),
             properties=props,
-            metadata=lb.t.get('Metadata'),
-            deletion_policy=lb.t.get('DeletionPolicy'))
+            metadata=lb.t.metadata(),
+            deletion_policy=lb.t.deletion_policy())
 
         scheduler.TaskRunner(lb.update, lb_defn)()

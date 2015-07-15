@@ -286,7 +286,7 @@ class ResourceDefinitionCore(object):
         data = {
             'classname': type(self).__name__,
             'name': repr(self.name),
-            'type': repr(self.type),
+            'type': repr(self.resource_type),
             'args': ', '.join(arg_repr(n) for n in args)
         }
         return '%(classname)s(%(name)s, %(type)s, %(args)s)' % data
