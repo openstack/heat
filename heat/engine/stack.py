@@ -991,15 +991,19 @@ class Stack(collections.Mapping):
                       self.convergence_dependencies.graph().edges()]}
         self.store()
 
-        for rsrc_id, is_update in self.convergence_dependencies.leaves():
-            LOG.info(_LI("Triggering resource %(rsrc_id)s "
-                         "for %(is_update)s update"),
-                     {'rsrc_id': rsrc_id, 'is_update': is_update})
-            input_data = {'input_data': {},
-                          'adopt_stack_data': self.adopt_stack_data}
-            self.worker_client.check_resource(self.context, rsrc_id,
-                                              self.current_traversal,
-                                              input_data, is_update)
+        leaves = set(self.convergence_dependencies.leaves())
+        if not any(leaves):
+            self.mark_complete(self.current_traversal)
+        else:
+            for rsrc_id, is_update in self.convergence_dependencies.leaves():
+                LOG.info(_LI("Triggering resource %(rsrc_id)s "
+                             "for %(is_update)s update"),
+                         {'rsrc_id': rsrc_id, 'is_update': is_update})
+                input_data = {'input_data': {},
+                              'adopt_stack_data': self.adopt_stack_data}
+                self.worker_client.check_resource(self.context, rsrc_id,
+                                                  self.current_traversal,
+                                                  input_data, is_update)
 
     def _get_best_existing_rsrc_db(self, rsrc_name):
         candidate = None

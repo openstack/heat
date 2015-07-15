@@ -189,6 +189,16 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         super(StackConvergenceCreateUpdateDeleteTest, self).setUp()
         cfg.CONF.set_override('convergence_engine', True)
 
+    @mock.patch.object(parser.Stack, 'mark_complete')
+    def test_converge_empty_template(self, mock_mc, mock_cr):
+        empty_tmpl = templatem.Template.create_empty_template()
+        stack = parser.Stack(utils.dummy_context(), 'empty_tmpl_stack',
+                             empty_tmpl, convergence=True)
+        stack.store()
+        stack.converge_stack(template=stack.t, action=stack.CREATE)
+        self.assertFalse(mock_cr.called)
+        mock_mc.assert_called_once_with(stack.current_traversal)
+
     def test_conv_wordpress_single_instance_stack_create(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 convergence=True)
