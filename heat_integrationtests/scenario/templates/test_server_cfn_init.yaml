@@ -28,10 +28,16 @@ Resources:
     Properties:
       UserName: {Ref: CfnUser}
 
-  IPAddress:
+  ElasticIp:
     Type: AWS::EC2::EIP
     Properties:
-      InstanceId: {Ref: SmokeServer}
+      Domain: vpc
+
+  SmokeServerElasticIp:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+       EIP: {Ref: ElasticIp}
+       InstanceId: {Ref: SmokeServer}
 
   SmokeServer:
     Type: AWS::EC2::Instance
@@ -81,7 +87,11 @@ Outputs:
     Description: Contents of /tmp/smoke-status on SmokeServer
     Value:
       Fn::GetAtt: [WaitCondition, Data]
-  SmokeServerIp:
-    Description: IP address of server
+  ElasticIp_Id:
+    Description: Elastic ip allocation id
     Value:
-      Ref: IPAddress
+      Fn::GetAtt: [ElasticIp, AllocationId]
+  SmokeServerElasticIp:
+    Description: Elastic ip address of server
+    Value:
+      Ref: ElasticIp
