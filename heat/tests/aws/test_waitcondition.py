@@ -390,6 +390,7 @@ class WaitConditionHandleTest(common.HeatTestCase):
             'http://server.test:8000/v1')
         self.m.ReplayAll()
         rsrc = self.stack['WaitHandle']
+        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         # clear the url
         rsrc.data_set('ec2_signed_url', None, False)
 
@@ -415,7 +416,7 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
+        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
         rsrc.handle_signal(test_metadata)
@@ -429,7 +430,7 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
+        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         # handle_signal should raise a ValueError if the metadata
         # is missing any of the expected keys
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
@@ -472,7 +473,7 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
+        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         # UnsetStubs, don't want get_status stubbed anymore..
         self.m.VerifyAll()
         self.m.UnsetStubs()
