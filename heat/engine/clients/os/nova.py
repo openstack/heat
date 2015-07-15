@@ -57,11 +57,12 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                                 'VERIFY_RESIZE']
 
     exceptions_module = exceptions
-    service_types = ['compute']
+
+    service_types = [COMPUTE] = ['compute']
 
     def _create(self):
         endpoint_type = self._get_client_option('nova', 'endpoint_type')
-        management_url = self.url_for(service_type=self.service_types[0],
+        management_url = self.url_for(service_type=self.COMPUTE,
                                       endpoint_type=endpoint_type)
 
         if hasattr(nc, 'discover_extensions'):
@@ -78,7 +79,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         args = {
             'project_id': self.context.tenant,
             'auth_url': self.context.auth_url,
-            'service_type': self.service_types[0],
+            'service_type': self.COMPUTE,
             'username': None,
             'api_key': None,
             'extensions': extensions,

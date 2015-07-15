@@ -22,7 +22,8 @@ from heat.engine import constraints
 class KeystoneClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
-    service_types = ['identity']
+
+    service_types = [IDENTITY] = ['identity']
 
     def _create(self):
         return hkc.KeystoneClient(self.context)

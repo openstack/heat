@@ -32,7 +32,8 @@ MAX_EPOCH = 2147483647
 class SwiftClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
-    service_types = ['object-store']
+
+    service_types = [OBJECT_STORE] = ['object-store']
 
     def _create(self):
 
@@ -45,7 +46,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
             'key': None,
             'authurl': None,
             'preauthtoken': self.auth_token,
-            'preauthurl': self.url_for(service_type=self.service_types[0],
+            'preauthurl': self.url_for(service_type=self.OBJECT_STORE,
                                        endpoint_type=endpoint_type),
             'os_options': {'endpoint_type': endpoint_type},
             'cacert': self._get_client_option('swift', 'ca_file'),

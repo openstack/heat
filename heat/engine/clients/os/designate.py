@@ -25,11 +25,11 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = [exceptions]
 
-    service_types = ['dns']
+    service_types = [DNS] = ['dns']
 
     def _create(self):
         args = self._get_client_args(service_name='designate',
-                                     service_type=self.service_types[0])
+                                     service_type=self.DNS)
 
         return client.Client(auth_url=args['auth_url'],
                              project_id=args['project_id'],
