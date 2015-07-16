@@ -345,12 +345,18 @@ class ResourceGroupTest(common.HeatTestCase):
     def test_child_template(self):
         stack = utils.parse_stack(template2)
         snip = stack.t.resource_definitions(stack)['group1']
+
+        def check_res_names(names):
+            self.assertEqual(list(names), ['0', '1'])
+            return 'tmpl'
+
         resgrp = resource_group.ResourceGroup('test', snip, stack)
-        resgrp._assemble_nested = mock.Mock(return_value='tmpl')
+        resgrp._assemble_nested = mock.Mock()
+        resgrp._assemble_nested.side_effect = check_res_names
         resgrp.properties.data[resgrp.COUNT] = 2
 
         self.assertEqual('tmpl', resgrp.child_template())
-        resgrp._assemble_nested.assert_called_once_with(['0', '1'])
+        self.assertEqual(1, resgrp._assemble_nested.call_count)
 
     def test_child_params(self):
         stack = utils.parse_stack(template2)
@@ -370,10 +376,10 @@ class ResourceGroupBlackList(common.HeatTestCase):
     # 6) resource_list (refid) in nested() -> saved
     scenarios = [
         ('1', dict(data_in=None, rm_list=[],
-                   nested_rsrcs={}, expected=[],
+                   nested_rsrcs=[], expected=[],
                    saved=False)),
         ('2', dict(data_in='0,1,2', rm_list=[],
-                   nested_rsrcs={}, expected=['0', '1', '2'],
+                   nested_rsrcs=[], expected=['0', '1', '2'],
                    saved=False)),
         ('3', dict(data_in='1,3', rm_list=['6'],
                    nested_rsrcs=['0', '1', '3'],
@@ -421,13 +427,15 @@ class ResourceGroupBlackList(common.HeatTestCase):
 
         nested = mock.MagicMock()
         nested.__contains__.side_effect = stack_contains
+        nested.__iter__.side_effect = iter(self.nested_rsrcs)
         nested.resource_by_refid.side_effect = by_refid
         resg.nested = mock.Mock(return_value=nested)
 
-        self.assertEqual(self.expected, resg._name_blacklist())
+        blacklist = resg._name_blacklist()
+        self.assertEqual(set(self.expected), blacklist)
         if self.saved:
             resg.data_set.assert_called_once_with('name_blacklist',
-                                                  ','.join(self.expected))
+                                                  ','.join(blacklist))
 
 
 class ResourceGroupEmptyParams(common.HeatTestCase):
@@ -495,7 +503,7 @@ class ResourceGroupNameListTest(common.HeatTestCase):
         resg.properties = mock.MagicMock()
         resg.properties.get.return_value = self.count
         resg._name_blacklist = mock.MagicMock(return_value=self.blacklist)
-        self.assertEqual(self.expected, resg._resource_names())
+        self.assertEqual(self.expected, list(resg._resource_names()))
 
 
 class ResourceGroupAttrTest(common.HeatTestCase):
