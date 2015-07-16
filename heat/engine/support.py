@@ -13,8 +13,9 @@
 
 from heat.common.i18n import _
 
-SUPPORT_STATUSES = (UNKNOWN, SUPPORTED, DEPRECATED, UNSUPPORTED) = (
-    'UNKNOWN', 'SUPPORTED', 'DEPRECATED', 'UNSUPPORTED')
+SUPPORT_STATUSES = (UNKNOWN, SUPPORTED, DEPRECATED, UNSUPPORTED, HIDDEN
+                    ) = ('UNKNOWN', 'SUPPORTED', 'DEPRECATED', 'UNSUPPORTED',
+                         'HIDDEN')
 
 
 class SupportStatus(object):

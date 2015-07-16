@@ -255,8 +255,9 @@ resources:
             definition.append(sub_prop_list)
             for sub_prop_key, sub_prop in sorted(sub_schema.items(),
                                                  self.cmp_prop):
-                self.contribute_property(
-                    sub_prop_list, sub_prop_key, sub_prop)
+                if sub_prop.support_status.status != support.HIDDEN:
+                    self.contribute_property(
+                        sub_prop_list, sub_prop_key, sub_prop)
 
     def contribute_properties(self, parent):
         if not self.props_schemata:
@@ -267,7 +268,8 @@ resources:
 
         for prop_key, prop in sorted(self.props_schemata.items(),
                                      self.cmp_prop):
-            self.contribute_property(prop_list, prop_key, prop)
+            if prop.support_status.status != support.HIDDEN:
+                self.contribute_property(prop_list, prop_key, prop)
 
     def contribute_attributes(self, parent):
         if not self.attrs_schemata:
@@ -276,19 +278,20 @@ resources:
         prop_list = nodes.definition_list()
         section.append(prop_list)
         for prop_key, prop in sorted(self.attrs_schemata.items()):
-            description = prop.description
-            prop_item = nodes.definition_list_item(
-                '', nodes.term('', prop_key))
-            prop_list.append(prop_item)
+            if prop.support_status.status != support.HIDDEN:
+                description = prop.description
+                prop_item = nodes.definition_list_item(
+                    '', nodes.term('', prop_key))
+                prop_list.append(prop_item)
 
-            definition = nodes.definition()
-            prop_item.append(definition)
+                definition = nodes.definition()
+                prop_item.append(definition)
 
-            self._status_str(prop.support_status, definition)
+                self._status_str(prop.support_status, definition)
 
-            if description:
-                def_para = nodes.paragraph('', description)
-                definition.append(def_para)
+                if description:
+                    def_para = nodes.paragraph('', description)
+                    definition.append(def_para)
 
     def contribute_update_policy(self, parent):
         if not self.update_policy_schemata:
@@ -326,6 +329,10 @@ class ContribResourcePages(ResourcePages):
 
 
 def _filter_resources(prefix=None, path=None, statuses=[]):
+
+    def not_hidden_match(cls):
+        return cls.support_status.status != support.HIDDEN
+
     def prefix_match(name):
         return prefix is None or name.startswith(prefix)
 
@@ -339,7 +346,8 @@ def _filter_resources(prefix=None, path=None, statuses=[]):
     for name in sorted(six.iterkeys(all_resources)):
         if prefix_match(name):
             for cls in all_resources.get(name):
-                if path_match(cls) and status_match(cls):
+                if (path_match(cls) and status_match(cls) and
+                        not_hidden_match(cls)):
                     if filtered_resources.get(name) is not None:
                         filtered_resources[name].append(cls)
                     else:
