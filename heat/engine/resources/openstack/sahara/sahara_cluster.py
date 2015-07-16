@@ -82,7 +82,8 @@ class SaharaCluster(resource.Resource):
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % IMAGE_ID,
-                version='2015.1'),
+                version='2015.1',
+                previous_status=support.SupportStatus(version='2014.2')),
             constraints=[
                 constraints.CustomConstraint('glance.image')
             ],
