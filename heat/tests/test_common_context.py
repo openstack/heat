@@ -17,6 +17,7 @@ import mock
 from oslo_config import cfg
 from oslo_middleware import request_id
 from oslo_policy import opts as policy_opts
+from oslo_utils import importutils
 import webob
 
 from heat.common import context
@@ -111,6 +112,66 @@ class TestRequestContext(common.HeatTestCase):
             pc.return_value = False
             ctx = context.RequestContext(roles=['notadmin'])
             self.assertFalse(ctx.is_admin)
+
+    def test_keystone_v3_endpoint_in_context(self):
+        """Ensure that the context is the preferred source for the
+        auth_uri.
+        """
+        cfg.CONF.set_override('auth_uri', 'http://xyz',
+                              group='clients_keystone')
+        policy_check = 'heat.common.policy.Enforcer.check_is_admin'
+        with mock.patch(policy_check) as pc:
+            pc.return_value = False
+            ctx = context.RequestContext(
+                auth_url='http://example.com:5000/v2.0')
+            self.assertEqual(ctx.keystone_v3_endpoint,
+                             'http://example.com:5000/v3')
+
+    def test_keystone_v3_endpoint_in_clients_keystone_config(self):
+        """Ensure that the [clients_keystone] section of the configuration is
+        the preferred source when the context does not have the auth_uri.
+        """
+        cfg.CONF.set_override('auth_uri', 'http://xyz',
+                              group='clients_keystone')
+        importutils.import_module('keystonemiddleware.auth_token')
+        cfg.CONF.set_override('auth_uri', 'http://abc/v2.0',
+                              group='keystone_authtoken')
+        policy_check = 'heat.common.policy.Enforcer.check_is_admin'
+        with mock.patch(policy_check) as pc:
+            pc.return_value = False
+            with mock.patch('keystoneclient.discover.Discover') as discover:
+                class MockDiscover(object):
+                    def url_for(self, endpoint):
+                        return 'http://xyz/v3'
+                discover.return_value = MockDiscover()
+
+                ctx = context.RequestContext(auth_url=None)
+                self.assertEqual(ctx.keystone_v3_endpoint, 'http://xyz/v3')
+
+    def test_keystone_v3_endpoint_in_keystone_authtoken_config(self):
+        """Ensure that the [keystone_authtoken] section of the configuration
+        is used when the auth_uri is not defined in the context or the
+        [clients_keystone] section.
+        """
+        importutils.import_module('keystonemiddleware.auth_token')
+        cfg.CONF.set_override('auth_uri', 'http://abc/v2.0',
+                              group='keystone_authtoken')
+        policy_check = 'heat.common.policy.Enforcer.check_is_admin'
+        with mock.patch(policy_check) as pc:
+            pc.return_value = False
+            ctx = context.RequestContext(auth_url=None)
+            self.assertEqual(ctx.keystone_v3_endpoint, 'http://abc/v3')
+
+    def test_keystone_v3_endpoint_not_set_in_config(self):
+        """Ensure an exception is raised when the auth_uri cannot be obtained
+        from any source.
+        """
+        policy_check = 'heat.common.policy.Enforcer.check_is_admin'
+        with mock.patch(policy_check) as pc:
+            pc.return_value = False
+            ctx = context.RequestContext(auth_url=None)
+            self.assertRaises(exception.AuthorizationFailure, getattr, ctx,
+                              'keystone_v3_endpoint')
 
 
 class RequestContextMiddlewareTest(common.HeatTestCase):
