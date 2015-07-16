@@ -57,6 +57,32 @@ resources:
       neutron_management_network: some_network
 """
 
+cluster_template_without_name = """
+heat_template_version: 2013-05-23
+resources:
+  cluster_template!:
+    type: OS::Sahara::ClusterTemplate
+    properties:
+      plugin_name: vanilla
+      hadoop_version: 2.3.0
+      neutron_management_network: some_network
+"""
+
+node_group_template_without_name = """
+heat_template_version: 2013-05-23
+resources:
+  node_group!:
+    type: OS::Sahara::NodeGroupTemplate
+    properties:
+        plugin_name: vanilla
+        hadoop_version: 2.3.0
+        flavor: m1.large
+        floating_ip_pool: some_pool_name
+        node_processes:
+          - namenode
+          - jobtracker
+"""
+
 
 class FakeNodeGroupTemplate(object):
     def __init__(self):
@@ -193,6 +219,17 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
                          u"Error validating value u'm1.large'",
                          six.text_type(ex))
 
+    def test_template_invalid_name(self):
+        tmpl = template_format.parse(node_group_template_without_name)
+        stack = utils.parse_stack(tmpl)
+        ngt = stack['node_group!']
+        self.ngt_mgr.create.return_value = self.fake_ngt
+        scheduler.TaskRunner(ngt.create)()
+        self.assertEqual((ngt.CREATE, ngt.COMPLETE), ngt.state)
+        self.assertEqual(self.fake_ngt.id, ngt.resource_id)
+        name = self.ngt_mgr.create.call_args[0][0]
+        self.assertIn('-nodegroup-', name)
+
 
 class SaharaClusterTemplateTest(common.HeatTestCase):
     def setUp(self):
@@ -275,3 +312,14 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
                                ct.validate)
         self.assertEqual("neutron_management_network must be provided",
                          six.text_type(ex))
+
+    def test_template_invalid_name(self):
+        tmpl = template_format.parse(cluster_template_without_name)
+        stack = utils.parse_stack(tmpl)
+        ct = stack['cluster_template!']
+        self.ct_mgr.create.return_value = self.fake_ct
+        scheduler.TaskRunner(ct.create)()
+        self.assertEqual((ct.CREATE, ct.COMPLETE), ct.state)
+        self.assertEqual(self.fake_ct.id, ct.resource_id)
+        name = self.ct_mgr.create.call_args[0][0]
+        self.assertIn('-clustertemplate-', name)

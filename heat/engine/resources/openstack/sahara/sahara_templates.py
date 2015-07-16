@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from oslo_log import log as logging
 
 from heat.common import exception
@@ -163,7 +165,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
         name = self.properties[self.NAME]
         if name:
             return name
-        return self.physical_resource_name()
+        return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
     def handle_create(self):
         plugin_name = self.properties[self.PLUGIN_NAME]
@@ -352,7 +354,7 @@ class SaharaClusterTemplate(resource.Resource):
         name = self.properties[self.NAME]
         if name:
             return name
-        return self.physical_resource_name()
+        return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
     def handle_create(self):
         plugin_name = self.properties[self.PLUGIN_NAME]
