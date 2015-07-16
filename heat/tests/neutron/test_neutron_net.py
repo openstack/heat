@@ -112,7 +112,8 @@ class NeutronNetTest(common.HeatTestCase):
             "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "mtu": 0
         }})
 
         neutronclient.Client.list_dhcp_agent_hosting_networks(
@@ -133,7 +134,8 @@ class NeutronNetTest(common.HeatTestCase):
             "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "mtu": 0
         }})
 
         neutronclient.Client.show_network(
@@ -145,7 +147,8 @@ class NeutronNetTest(common.HeatTestCase):
             "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "mtu": 0
         }})
 
         neutronclient.Client.show_network(
@@ -161,7 +164,8 @@ class NeutronNetTest(common.HeatTestCase):
             "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "mtu": 0
         }})
 
         neutronclient.Client.show_network(
@@ -173,7 +177,8 @@ class NeutronNetTest(common.HeatTestCase):
             "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "mtu": 0
         }})
 
         # Update script
@@ -254,6 +259,7 @@ class NeutronNetTest(common.HeatTestCase):
 
         self.assertIsNone(rsrc.FnGetAtt('status'))
         self.assertEqual('ACTIVE', rsrc.FnGetAtt('status'))
+        self.assertEqual(0, rsrc.FnGetAtt('mtu'))
         self.assertRaises(
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
         prop_diff = {
