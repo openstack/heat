@@ -168,9 +168,9 @@ class Resource(object):
             assert issubclass(ResourceClass, Resource)
 
         if not ResourceClass.is_service_available(stack.context):
-            ex = exception.StackResourceUnavailable(
+            ex = exception.ResourceTypeUnavailable(
                 service_name=ResourceClass.default_client_name,
-                resource_name=name
+                resource_type=definition.resource_type
             )
             LOG.error(six.text_type(ex))
 
