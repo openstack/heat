@@ -216,7 +216,10 @@ class LoadbalancerReloadTest(common.HeatTestCase):
              'Listeners': [{'InstancePort': u'80',
                             'LoadBalancerPort': u'80',
                             'Protocol': 'HTTP'}],
-             'AvailabilityZones': ['nova']})
+             'AvailabilityZones': ['nova']},
+            metadata={},
+            deletion_policy='Delete'
+        )
 
         group._lb_reload()
         mock_members.assert_called_once_with(group, exclude=[])
@@ -249,7 +252,9 @@ class LoadbalancerReloadTest(common.HeatTestCase):
             'ElasticLoadBalancer',
             'OS::Neutron::LoadBalancer',
             {'protocol_port': 8080,
-             'members': ['aaaa', 'bbb']})
+             'members': ['aaaa', 'bbb']},
+            metadata={},
+            deletion_policy='Delete')
 
         group._lb_reload()
         mock_members.assert_called_once_with(group, exclude=[])
@@ -302,7 +307,9 @@ class LoadbalancerReloadTest(common.HeatTestCase):
                                     u'Listeners': [{u'InstancePort': u'80',
                                                     u'LoadBalancerPort': u'80',
                                                     u'Protocol': u'HTTP'}],
-                                    u'AvailabilityZones': ['abc', 'xyz']}}
+                                    u'AvailabilityZones': ['abc', 'xyz']},
+                    u'DeletionPolicy': 'Delete',
+                    u'Metadata': {}}
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         lb = stack['ElasticLoadBalancer']
