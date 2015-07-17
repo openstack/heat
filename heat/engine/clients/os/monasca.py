@@ -54,6 +54,9 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
     def is_not_found(self, ex):
         return isinstance(ex, monasca_exc.NotFound)
 
+    def is_un_processable(self, ex):
+        return isinstance(ex, monasca_exc.HTTPUnProcessable)
+
     def get_notification(self, notification):
         try:
             return self.client().notifications.get(
