@@ -285,7 +285,7 @@ class OSDBInstance(resource.Resource):
     def dbinstance(self):
         """Get the trove dbinstance."""
         if not self._dbinstance and self.resource_id:
-            self._dbinstance = self.trove().instances.get(self.resource_id)
+            self._dbinstance = self.client().instances.get(self.resource_id)
 
         return self._dbinstance
 
@@ -345,7 +345,7 @@ class OSDBInstance(resource.Resource):
             nics.append(nic_dict)
 
         # create db instance
-        instance = self.trove().instances.create(
+        instance = self.client().instances.create(
             self._dbinstance_name(),
             self.flavor,
             volume=self.volume,
@@ -364,7 +364,7 @@ class OSDBInstance(resource.Resource):
 
     def _refresh_instance(self, instance_id):
         try:
-            instance = self.trove().instances.get(instance_id)
+            instance = self.client().instances.get(instance_id)
             return instance
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
@@ -405,7 +405,7 @@ class OSDBInstance(resource.Resource):
         return True
 
     def handle_check(self):
-        instance = self.trove().instances.get(self.resource_id)
+        instance = self.client().instances.get(self.resource_id)
         status = instance.status
         checks = [
             {'attr': 'status', 'expected': self.ACTIVE, 'current': status},
@@ -420,7 +420,7 @@ class OSDBInstance(resource.Resource):
             return
 
         try:
-            instance = self.trove().instances.get(self.resource_id)
+            instance = self.client().instances.get(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
