@@ -71,6 +71,8 @@ class ElasticIp(resource.Resource):
         ),
     }
 
+    default_client_name = 'nova'
+
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
@@ -86,7 +88,7 @@ class ElasticIp(resource.Resource):
                     self.ipaddress = ips['floatingip']['floating_ip_address']
             else:
                 try:
-                    ips = self.nova().floating_ips.get(self.resource_id)
+                    ips = self.client().floating_ips.get(self.resource_id)
                 except Exception as e:
                     self.client_plugin('nova').ignore_not_found(e)
                 else:
@@ -107,7 +109,7 @@ class ElasticIp(resource.Resource):
             LOG.info(_LI('ElasticIp create %s'), str(ips))
         else:
             try:
-                ips = self.nova().floating_ips.create()
+                ips = self.client().floating_ips.create()
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     if self.client_plugin('nova').is_not_found(e):
@@ -122,7 +124,7 @@ class ElasticIp(resource.Resource):
 
         instance_id = self.properties[self.INSTANCE_ID]
         if instance_id:
-            server = self.nova().servers.get(instance_id)
+            server = self.client().servers.get(instance_id)
             server.add_floating_ip(self._ipaddress())
 
     def handle_delete(self):
@@ -135,7 +137,7 @@ class ElasticIp(resource.Resource):
         instance_id = self.properties[self.INSTANCE_ID]
         if instance_id:
             try:
-                server = self.nova().servers.get(instance_id)
+                server = self.client().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self._ipaddress())
             except Exception as e:
@@ -154,7 +156,7 @@ class ElasticIp(resource.Resource):
                 self.client_plugin('neutron').ignore_not_found(ex)
         else:
             try:
-                self.nova().floating_ips.delete(self.resource_id)
+                self.client().floating_ips.delete(self.resource_id)
             except Exception as e:
                 self.client_plugin('nova').ignore_not_found(e)
 
@@ -166,13 +168,13 @@ class ElasticIp(resource.Resource):
                     # no need to remove the floating ip from the old instance,
                     # nova does this automatically when calling
                     # add_floating_ip().
-                    server = self.nova().servers.get(instance_id)
+                    server = self.client().servers.get(instance_id)
                     server.add_floating_ip(self._ipaddress())
                 else:
                     # to remove the floating_ip from the old instance
                     instance_id_old = self.properties[self.INSTANCE_ID]
                     if instance_id_old:
-                        server = self.nova().servers.get(instance_id_old)
+                        server = self.client().servers.get(instance_id_old)
                         server.remove_floating_ip(self._ipaddress())
 
     def FnGetRefId(self):
@@ -218,6 +220,8 @@ class ElasticIpAssociation(resource.Resource):
             update_allowed=True
         ),
     }
+
+    default_client_name = 'nova'
 
     def FnGetRefId(self):
         return self.physical_resource_name_or_FnGetRefId()
@@ -282,7 +286,7 @@ class ElasticIpAssociation(resource.Resource):
                                  ignore_not_found=False):
         server = None
         try:
-            server = self.nova().servers.get(instance_id)
+            server = self.client().servers.get(instance_id)
             server.remove_floating_ip(eip)
         except Exception as e:
             is_not_found = self.client_plugin('nova').is_not_found(e)
@@ -345,7 +349,7 @@ class ElasticIpAssociation(resource.Resource):
         # if update portInfo, no need to detach the port from
         # old instance/floatingip.
         if eip:
-            server = self.nova().servers.get(instance_id_update)
+            server = self.client().servers.get(instance_id_update)
             server.add_floating_ip(eip)
         else:
             port_id, port_rsrc = self._get_port_info(ni_id_update,
@@ -383,7 +387,8 @@ class ElasticIpAssociation(resource.Resource):
     def handle_create(self):
         """Add a floating IP address to a server."""
         if self.properties[self.EIP]:
-            server = self.nova().servers.get(self.properties[self.INSTANCE_ID])
+            server = self.client().servers.get(
+                self.properties[self.INSTANCE_ID])
             server.add_floating_ip(self.properties[self.EIP])
             self.resource_id_set(self.properties[self.EIP])
             LOG.debug('ElasticIpAssociation '

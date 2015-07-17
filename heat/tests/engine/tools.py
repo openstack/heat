@@ -118,8 +118,8 @@ def setup_mock_for_image_constraint(mocks, imageId_input,
 def setup_mocks(mocks, stack, mock_image_constraint=True,
                 mock_keystone=True):
     fc = fakes_nova.FakeClient()
-    mocks.StubOutWithMock(instances.Instance, 'nova')
-    instances.Instance.nova().MultipleTimes().AndReturn(fc)
+    mocks.StubOutWithMock(instances.Instance, 'client')
+    instances.Instance.client().MultipleTimes().AndReturn(fc)
     mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
     nova.NovaClientPlugin._create().AndReturn(fc)
     instance = stack['WebServer']

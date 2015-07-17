@@ -108,20 +108,20 @@ class NovaFlavor(resource.Resource):
         args['is_public'] = False
         flavor_keys = args.pop(self.EXTRA_SPECS)
 
-        flavor = self.nova().flavors.create(**args)
+        flavor = self.client().flavors.create(**args)
         self.resource_id_set(flavor.id)
         if flavor_keys:
             flavor.set_keys(flavor_keys)
 
         tenant = self.stack.context.tenant_id
         # grant access to the active project and the admin project
-        self.nova().flavor_access.add_tenant_access(flavor, tenant)
-        self.nova().flavor_access.add_tenant_access(flavor, 'admin')
+        self.client().flavor_access.add_tenant_access(flavor, tenant)
+        self.client().flavor_access.add_tenant_access(flavor, 'admin')
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update nova flavor."""
         if self.EXTRA_SPECS in prop_diff:
-            flavor = self.nova().flavors.get(self.resource_id)
+            flavor = self.client().flavors.get(self.resource_id)
             old_keys = flavor.get_keys()
             flavor.unset_keys(old_keys)
             new_keys = prop_diff.get(self.EXTRA_SPECS)
@@ -133,7 +133,7 @@ class NovaFlavor(resource.Resource):
             return
 
         try:
-            self.nova().flavors.delete(self.resource_id)
+            self.client().flavors.delete(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
 
