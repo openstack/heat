@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import itertools
 
 import six
 
@@ -216,6 +217,8 @@ class ResourceGroup(stack_resource.StackResource):
     def _name_blacklist(self):
         """Resolve the remove_policies to names for removal."""
 
+        nested = self.nested()
+
         # To avoid reusing names after removal, we store a comma-separated
         # blacklist in the resource data
         db_rsrc_names = self.data().get('name_blacklist')
@@ -226,21 +229,21 @@ class ResourceGroup(stack_resource.StackResource):
 
         # Now we iterate over the removal policies, and update the blacklist
         # with any additional names
-        rsrc_names = list(current_blacklist)
+        rsrc_names = set(current_blacklist)
         for r in self.properties[self.REMOVAL_POLICIES]:
             if self.REMOVAL_RSRC_LIST in r:
                 # Tolerate string or int list values
                 for n in r[self.REMOVAL_RSRC_LIST]:
                     str_n = six.text_type(n)
-                    if str_n in self.nested() and str_n not in rsrc_names:
-                        rsrc_names.append(str_n)
+                    if str_n in nested:
+                        rsrc_names.add(str_n)
                         continue
-                    rsrc = self.nested().resource_by_refid(str_n)
-                    if rsrc and str_n not in rsrc_names:
-                        rsrc_names.append(rsrc.name)
+                    rsrc = nested.resource_by_refid(str_n)
+                    if rsrc:
+                        rsrc_names.add(rsrc.name)
 
         # If the blacklist has changed, update the resource data
-        if rsrc_names != current_blacklist:
+        if rsrc_names != set(current_blacklist):
             self.data_set('name_blacklist', ','.join(rsrc_names))
         return rsrc_names
 
@@ -248,16 +251,14 @@ class ResourceGroup(stack_resource.StackResource):
         name_blacklist = self._name_blacklist()
         req_count = self.properties.get(self.COUNT)
 
-        def gen_names():
-            count = 0
-            index = 0
-            while count < req_count:
-                if str(index) not in name_blacklist:
-                    yield str(index)
-                    count += 1
-                index += 1
+        def is_blacklisted(name):
+            return name in name_blacklist
 
-        return list(gen_names())
+        candidates = itertools.imap(six.text_type, itertools.count())
+
+        return itertools.islice(itertools.ifilterfalse(is_blacklisted,
+                                                       candidates),
+                                req_count)
 
     def handle_create(self):
         names = self._resource_names()
