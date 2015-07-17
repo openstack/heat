@@ -186,7 +186,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         osdb_res = os_database.OSDBInstance("test", res_def, mock_stack)
 
         trove_mock = mock.Mock()
-        self.patchobject(osdb_res, 'trove', return_value=trove_mock)
+        self.patchobject(osdb_res, 'client', return_value=trove_mock)
 
         # test for bad statuses
         mock_input = mock.Mock()
@@ -296,8 +296,8 @@ class OSDBInstanceTest(common.HeatTestCase):
         fake_dbinstance = FakeDBInstance()
         t = template_format.parse(db_template)
         res = self._setup_test_clouddbinstance('trove_check', t)
-        res.trove = mock.Mock()
-        res.trove().instances.get.return_value = fake_dbinstance
+        res.client = mock.Mock()
+        res.client().instances.get.return_value = fake_dbinstance
         res.flavor = 'Foo Flavor'
         res.volume = 'Foo Volume'
         res.datastore_type = 'Foo Type'
