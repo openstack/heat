@@ -122,7 +122,9 @@ def add_command_parsers(subparsers):
     parser.add_argument('crypt_operation',
                         nargs='?',
                         choices=['encrypt', 'decrypt'],
-                        help=_('Valid values are encrypt or decrypt.'))
+                        help=_('Valid values are encrypt or decrypt. The '
+                               'heat-engine processes must be stopped to use '
+                               'this.'))
     parser.add_argument('previous_encryption_key',
                         nargs='?',
                         default=None,
