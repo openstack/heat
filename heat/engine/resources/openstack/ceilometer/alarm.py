@@ -261,7 +261,7 @@ class CeilometerAlarm(resource.Resource):
         props = self.cfn_to_ceilometer(self.stack,
                                        self.properties)
         props['name'] = self.physical_resource_name()
-        alarm = self.ceilometer().alarms.create(**props)
+        alarm = self.client().alarms.create(**props)
         self.resource_id_set(alarm.alarm_id)
 
         # the watchrule below is for backwards compatibility.
@@ -280,18 +280,18 @@ class CeilometerAlarm(resource.Resource):
             kwargs = {'alarm_id': self.resource_id}
             kwargs.update(self.properties)
             kwargs.update(prop_diff)
-            alarms_client = self.ceilometer().alarms
+            alarms_client = self.client().alarms
             alarms_client.update(**self.cfn_to_ceilometer(self.stack, kwargs))
 
     def handle_suspend(self):
         if self.resource_id is not None:
-            self.ceilometer().alarms.update(alarm_id=self.resource_id,
-                                            enabled=False)
+            self.client().alarms.update(alarm_id=self.resource_id,
+                                        enabled=False)
 
     def handle_resume(self):
         if self.resource_id is not None:
-            self.ceilometer().alarms.update(alarm_id=self.resource_id,
-                                            enabled=True)
+            self.client().alarms.update(alarm_id=self.resource_id,
+                                        enabled=True)
 
     def handle_delete(self):
         try:
@@ -303,14 +303,14 @@ class CeilometerAlarm(resource.Resource):
 
         if self.resource_id is not None:
             try:
-                self.ceilometer().alarms.delete(self.resource_id)
+                self.client().alarms.delete(self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 
     def handle_check(self):
         watch_name = self.physical_resource_name()
         watchrule.WatchRule.load(self.context, watch_name=watch_name)
-        self.ceilometer().alarms.get(self.resource_id)
+        self.client().alarms.get(self.resource_id)
 
 
 class BaseCeilometerAlarm(resource.Resource):
@@ -321,7 +321,7 @@ class BaseCeilometerAlarm(resource.Resource):
                                      self.properties)
         properties['name'] = self.physical_resource_name()
         properties['type'] = self.ceilometer_alarm_type
-        alarm = self.ceilometer().alarms.create(
+        alarm = self.client().alarms.create(
             **self._reformat_properties(properties))
         self.resource_id_set(alarm.alarm_id)
 
@@ -339,26 +339,26 @@ class BaseCeilometerAlarm(resource.Resource):
         if prop_diff:
             kwargs = {'alarm_id': self.resource_id}
             kwargs.update(prop_diff)
-            alarms_client = self.ceilometer().alarms
+            alarms_client = self.client().alarms
             alarms_client.update(**self._reformat_properties(
                 actions_to_urls(self.stack, kwargs)))
 
     def handle_suspend(self):
-        self.ceilometer().alarms.update(
+        self.client().alarms.update(
             alarm_id=self.resource_id, enabled=False)
 
     def handle_resume(self):
-        self.ceilometer().alarms.update(
+        self.client().alarms.update(
             alarm_id=self.resource_id, enabled=True)
 
     def handle_delete(self):
         try:
-            self.ceilometer().alarms.delete(self.resource_id)
+            self.client().alarms.delete(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
     def handle_check(self):
-        self.ceilometer().alarms.get(self.resource_id)
+        self.client().alarms.get(self.resource_id)
 
 
 class CombinationAlarm(BaseCeilometerAlarm):

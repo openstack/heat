@@ -126,9 +126,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
                              disable_rollback=True)
         stack.store()
 
-        self.m.StubOutWithMock(alarm.CeilometerAlarm, 'ceilometer')
-        alarm.CeilometerAlarm.ceilometer().MultipleTimes().AndReturn(
-            self.fa)
+        self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
+        ceilometer.CeilometerClientPlugin._create().AndReturn(self.fa)
 
         al = copy.deepcopy(temp['Resources']['MEMAlarmHigh']['Properties'])
         al['description'] = mox.IgnoreArg()
@@ -434,9 +433,9 @@ class CeilometerAlarmTest(common.HeatTestCase):
         snippet = template_format.parse(not_string_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['MEMAlarmHigh']
-        res.ceilometer = mock.Mock()
+        res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.ceilometer().alarms.get.return_value = mock_alarm
+        res.client().alarms.get.return_value = mock_alarm
         return res
 
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
@@ -459,7 +458,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
     def test_check_alarm_failure(self, mock_load):
         res = self._prepare_check_resource()
-        res.ceilometer().alarms.get.side_effect = Exception('Boom')
+        res.client().alarms.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(res.check))
@@ -589,9 +588,9 @@ class CombinationAlarmTest(common.HeatTestCase):
         snippet = template_format.parse(combination_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['CombinAlarm']
-        res.ceilometer = mock.Mock()
+        res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.ceilometer().alarms.get.return_value = mock_alarm
+        res.client().alarms.get.return_value = mock_alarm
         return res
 
     def test_check(self):
@@ -601,7 +600,7 @@ class CombinationAlarmTest(common.HeatTestCase):
 
     def test_check_failure(self):
         res = self._prepare_check_resource()
-        res.ceilometer().alarms.get.side_effect = Exception('Boom')
+        res.client().alarms.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(res.check))
