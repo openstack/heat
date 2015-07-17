@@ -19,16 +19,19 @@ localconf=$BASE/new/devstack/local.conf
 
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localrc_path
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path
+
 echo -e '[[post-config|$HEAT_CONF]]\n[DEFAULT]\n' >> $localconf
-echo -e 'notification_driver=messagingv2\n' >> $localconf
-echo -e 'num_engine_workers=2\n' >> $localconf
-echo -e 'plugin_dirs=$HEAT_DIR/heat_integrationtests/common/test_resources\n' >> $localconf
-echo -e 'hidden_stack_tags=hidden\n' >> $localconf
-echo -e '[heat_api]\nworkers=1\n' >> $localconf
-echo -e '[heat_api_cfn]\nworkers=1\n' >> $localconf
-echo -e '[heat_api_cloudwatch]\nworkers=1' >> $localconf
 
 if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
     echo -e 'convergence_engine=true\n' >> $localconf
 fi
+
+echo -e 'notification_driver=messagingv2\n' >> $localconf
+echo -e 'num_engine_workers=2\n' >> $localconf
+echo -e 'plugin_dirs=$HEAT_DIR/heat_integrationtests/common/test_resources\n' >> $localconf
+echo -e 'hidden_stack_tags=hidden\n' >> $localconf
+
+echo -e '[heat_api]\nworkers=1\n' >> $localconf
+echo -e '[heat_api_cfn]\nworkers=1\n' >> $localconf
+echo -e '[heat_api_cloudwatch]\nworkers=1' >> $localconf
 

@@ -21,7 +21,7 @@ PUB_SUBNET_ID=`neutron subnet-list | grep ' public-subnet ' | awk '{split($0,a,"
 ROUTER_GW_IP=`neutron port-list -c fixed_ips -c device_owner | grep router_gateway | awk -F '"' -v subnet_id="${PUB_SUBNET_ID//[[:space:]]/}" '$4 == subnet_id { print $8; }'`
 
 # create a heat specific private network (default 'private' network has ipv6 subnet)
-source $DEST/devstack/openrc
+source $DEST/devstack/openrc demo demo
 HEAT_PRIVATE_SUBNET_CIDR=10.0.5.0/24
 neutron net-create heat-net
 neutron subnet-create --name heat-subnet heat-net $HEAT_PRIVATE_SUBNET_CIDR
