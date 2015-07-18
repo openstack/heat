@@ -24,6 +24,7 @@ import six
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
+from heat.common import timeutils
 from heat.db import api as db_api
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
@@ -954,7 +955,7 @@ class StackTest(common.HeatTestCase):
 
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
-        self.m.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(timeutils, 'wallclock')
 
         stk = stack.Stack(self.ctx, 's', self.tmpl)
 
@@ -963,10 +964,10 @@ class StackTest(common.HeatTestCase):
                 yield
 
         start_time = time.time()
-        scheduler.wallclock().AndReturn(start_time)
-        scheduler.wallclock().AndReturn(start_time + 1)
+        timeutils.wallclock().AndReturn(start_time)
+        timeutils.wallclock().AndReturn(start_time + 1)
         scheduler.DependencyTaskGroup.__call__().AndReturn(dummy_task())
-        scheduler.wallclock().AndReturn(start_time + stk.timeout_secs() + 1)
+        timeutils.wallclock().AndReturn(start_time + stk.timeout_secs() + 1)
 
         self.m.ReplayAll()
 

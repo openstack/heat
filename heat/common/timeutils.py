@@ -17,11 +17,31 @@ Utilities for handling ISO 8601 duration format.
 
 import random
 import re
+import time
 
 from heat.common.i18n import _
 
 
 iso_duration_re = re.compile('PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$')
+wallclock = time.time
+
+
+class Duration(object):
+    '''
+    Note that we don't attempt to handle leap seconds or large clock
+    jumps here. The latter are assumed to be rare and the former
+    negligible in the context of the timeout. Time zone adjustments,
+    Daylight Savings and the like *are* handled. PEP 418 adds a proper
+    monotonic clock, but only in Python 3.3.
+    '''
+    def __init__(self, timeout=0):
+        self._endtime = wallclock() + timeout
+
+    def expired(self):
+        return wallclock() > self._endtime
+
+    def endtime(self):
+        return self._endtime
 
 
 def parse_isoduration(duration):
