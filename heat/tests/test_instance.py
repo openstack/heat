@@ -30,6 +30,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.aws.ec2 import instance as instances
+from heat.engine.resources import scheduler_hints as sh
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
@@ -527,7 +528,7 @@ class InstancesTest(common.HeatTestCase):
 
     def test_instance_create_with_stack_scheduler_hints(self):
         return_server = self.fc.servers.list()[1]
-        instances.cfg.CONF.set_override('stack_scheduler_hints', True)
+        sh.cfg.CONF.set_override('stack_scheduler_hints', True)
         # Unroll _create_test_instance, to enable check
         # for addition of heat ids (stack id, resource name)
         stack_name = 'test_instance_create_with_stack_scheduler_hints'
@@ -538,11 +539,16 @@ class InstancesTest(common.HeatTestCase):
         bdm = {"vdb": "9ef5496e-7426-446a-bbc8-01f84d9c9972:snap::True"}
         self._mock_get_image_id_success('CentOS 5.2', 1)
 
+        # instance.uuid is only available once the resource has been added.
+        stack.add_resource(instance)
+        self.assertIsNotNone(instance.uuid)
+
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.stub_SnapshotConstraint_validate()
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
+        shm = sh.SchedulerHintsMixin
         self.fc.servers.create(
             image=1, flavor=1, key_name='test',
             name=utils.PhysName(
@@ -551,11 +557,12 @@ class InstancesTest(common.HeatTestCase):
                 limit=instance.physical_resource_name_limit),
             security_groups=None,
             userdata=mox.IgnoreArg(),
-            scheduler_hints={'heat_root_stack_id': stack.root_stack_id(),
-                             'heat_stack_id': stack.id,
-                             'heat_stack_name': stack.name,
-                             'heat_path_in_stack': [(None, stack.name)],
-                             'heat_resource_name': instance.name,
+            scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
+                             shm.HEAT_STACK_ID: stack.id,
+                             shm.HEAT_STACK_NAME: stack.name,
+                             shm.HEAT_PATH_IN_STACK: [(None, stack.name)],
+                             shm.HEAT_RESOURCE_NAME: instance.name,
+                             shm.HEAT_RESOURCE_UUID: instance.uuid,
                              'foo': ['spam', 'ham', 'baz'], 'bar': 'eggs'},
             meta=None, nics=None, availability_zone=None,
             block_device_mapping=bdm).AndReturn(
