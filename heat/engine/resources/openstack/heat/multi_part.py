@@ -15,6 +15,7 @@ import email
 from email.mime import multipart
 from email.mime import text
 import os
+from oslo_utils import uuidutils
 
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -112,13 +113,14 @@ class MultipartMime(software_config.SoftwareConfig):
             part_type = item.get(self.TYPE, self.TEXT)
             part = config
 
-            try:
-                sc = self.rpc_client().show_software_config(
-                    self.context, config)
-            except Exception as ex:
-                self.rpc_client().ignore_error_named(ex, 'NotFound')
-            else:
-                part = sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
+            if uuidutils.is_uuid_like(config):
+                try:
+                    sc = self.rpc_client().show_software_config(
+                        self.context, config)
+                except Exception as ex:
+                    self.rpc_client().ignore_error_named(ex, 'NotFound')
+                else:
+                    part = sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
 
             if part_type == self.MULTIPART:
                 self._append_multiparts(subparts, part)
