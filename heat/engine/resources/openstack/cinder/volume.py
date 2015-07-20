@@ -23,13 +23,14 @@ from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources import scheduler_hints as sh
 from heat.engine.resources import volume_base as vb
 from heat.engine import support
 
 LOG = logging.getLogger(__name__)
 
 
-class CinderVolume(vb.BaseVolume):
+class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, SNAPSHOT_ID, BACKUP_ID, NAME,
@@ -233,8 +234,14 @@ class CinderVolume(vb.BaseVolume):
     def _create_arguments(self):
         arguments = {
             'size': self.properties[self.SIZE],
-            'availability_zone': self.properties[self.AVAILABILITY_ZONE]
+            'availability_zone': self.properties[self.AVAILABILITY_ZONE],
         }
+
+        scheduler_hints = self._scheduler_hints(
+            self.properties[self.CINDER_SCHEDULER_HINTS])
+        if scheduler_hints:
+            arguments[self.CINDER_SCHEDULER_HINTS] = scheduler_hints
+
         if self.properties[self.IMAGE]:
             arguments['imageRef'] = self.client_plugin('glance').get_image_id(
                 self.properties[self.IMAGE])
@@ -242,7 +249,7 @@ class CinderVolume(vb.BaseVolume):
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 
         optionals = (self.SNAPSHOT_ID, self.VOLUME_TYPE, self.SOURCE_VOLID,
-                     self.METADATA, self.CINDER_SCHEDULER_HINTS)
+                     self.METADATA)
         arguments.update((prop, self.properties[prop]) for prop in optionals
                          if self.properties[prop])
 
