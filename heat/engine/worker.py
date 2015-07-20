@@ -28,7 +28,6 @@ from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import stack as parser
 from heat.engine import sync_point
-from heat.engine import template as templatem
 from heat.objects import resource as resource_objects
 from heat.rpc import listener_client
 from heat.rpc import worker_client as rpc_client
@@ -99,19 +98,10 @@ class WorkerService(service.Service):
                 return True
         return False
 
-    def _trigger_rollback(self, cnxt, stack):
+    def _trigger_rollback(self, stack):
         LOG.info(_LI("Triggering rollback of %(stack_name)s %(action)s "),
                  {'action': stack.action, 'stack_name': stack.name})
-        old_tmpl_id = stack.prev_raw_template_id
-        if old_tmpl_id is None:
-            rollback_tmpl = templatem.Template.create_empty_template(
-                version=stack.t.version)
-        else:
-            rollback_tmpl = templatem.Template.load(cnxt, old_tmpl_id)
-            stack.prev_raw_template_id = None
-            stack.store()
-
-        stack.converge_stack(rollback_tmpl, action=stack.ROLLBACK)
+        stack.rollback()
 
     def _handle_resource_failure(self, cnxt, stack_id, traversal_id,
                                  failure_reason):
@@ -124,7 +114,7 @@ class WorkerService(service.Service):
 
         if (not stack.disable_rollback and
                 stack.action in (stack.CREATE, stack.ADOPT, stack.UPDATE)):
-            self._trigger_rollback(cnxt, stack)
+            self._trigger_rollback(stack)
         else:
             stack.purge_db()
 
