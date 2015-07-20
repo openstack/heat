@@ -107,12 +107,9 @@ class Secret(resource.Resource):
         ),
     }
 
-    def barbican(self):
-        return self.client()
-
     def handle_create(self):
         info = dict(self.properties)
-        secret = self.barbican().secrets.create(**info)
+        secret = self.client().secrets.create(**info)
         secret_ref = secret.store()
         self.resource_id_set(secret_ref)
         return secret_ref
@@ -121,7 +118,7 @@ class Secret(resource.Resource):
         if not self.resource_id:
             return
 
-        client = self.barbican()
+        client = self.client()
         try:
             client.secrets.delete(self.resource_id)
         except Exception as exc:
@@ -131,7 +128,7 @@ class Secret(resource.Resource):
                 raise
 
     def _resolve_attribute(self, name):
-        secret = self.barbican().secrets.get(self.resource_id)
+        secret = self.client().secrets.get(self.resource_id)
 
         if name == self.DECRYPTED_PAYLOAD:
             return secret.payload

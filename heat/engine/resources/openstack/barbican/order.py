@@ -164,13 +164,10 @@ class Order(resource.Resource):
         ),
     }
 
-    def barbican(self):
-        return self.client()
-
     def handle_create(self):
         info = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
-        order = self.barbican().orders.create(**info)
+        order = self.client().orders.create(**info)
         order_ref = order.submit()
         self.resource_id_set(order_ref)
         # NOTE(pshchelo): order_ref is HATEOAS reference, i.e a string
@@ -178,7 +175,7 @@ class Order(resource.Resource):
         return order_ref
 
     def check_create_complete(self, order_href):
-        order = self.barbican().orders.get(order_href)
+        order = self.client().orders.get(order_href)
 
         if order.status == 'ERROR':
             reason = order.error_reason
@@ -193,7 +190,7 @@ class Order(resource.Resource):
         if not self.resource_id:
             return
 
-        client = self.barbican()
+        client = self.client()
         try:
             client.orders.delete(self.resource_id)
         except Exception as exc:
@@ -203,7 +200,7 @@ class Order(resource.Resource):
                 raise
 
     def _resolve_attribute(self, name):
-        client = self.barbican()
+        client = self.client()
         order = client.orders.get(self.resource_id)
         if name in (
                 self.PUBLIC_KEY, self.PRIVATE_KEY, self.CERTIFICATE,
