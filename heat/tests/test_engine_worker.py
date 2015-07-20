@@ -29,11 +29,6 @@ from heat.tests import utils
 class WorkerServiceTest(common.HeatTestCase):
     def setUp(self):
         super(WorkerServiceTest, self).setUp()
-        thread_group_mgr = mock.Mock()
-        self.worker = worker.WorkerService('host-1',
-                                           'topic-1',
-                                           'engine_id',
-                                           thread_group_mgr)
 
     def test_make_sure_rpc_version(self):
         self.assertEqual(
@@ -54,6 +49,11 @@ class WorkerServiceTest(common.HeatTestCase):
                            target_class,
                            rpc_server_method
                            ):
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           mock.Mock())
+
         self.worker.start()
 
         # Make sure target is called with proper parameters
@@ -83,6 +83,10 @@ class WorkerServiceTest(common.HeatTestCase):
                          "Failed to create RPC client")
 
     def test_service_stop(self):
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           mock.Mock())
         with mock.patch.object(self.worker, '_rpc_server') as mock_rpc_server:
             self.worker.stop()
             mock_rpc_server.stop.assert_called_once_with()
