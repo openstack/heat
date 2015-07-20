@@ -154,16 +154,16 @@ class SwiftContainer(resource.Resource):
                      'account_headers': account_headers,
                      'container_headers': container_headers})
 
-        self.swift().put_container(container, container_headers)
+        self.client().put_container(container, container_headers)
 
         if account_headers:
-            self.swift().post_account(account_headers)
+            self.client().post_account(account_headers)
 
         self.resource_id_set(container)
 
     def _get_objects(self):
         try:
-            container, objects = self.swift().get_container(self.resource_id)
+            container, objects = self.client().get_container(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
             return None
@@ -173,10 +173,10 @@ class SwiftContainer(resource.Resource):
         """Delete the underlying container or an object inside it."""
         args = [self.resource_id]
         if obj:
-            deleter = self.swift().delete_object
+            deleter = self.client().delete_object
             args.append(obj['name'])
         else:
-            deleter = self.swift().delete_container
+            deleter = self.client().delete_container
         try:
             deleter(*args)
         except Exception as ex:
@@ -218,13 +218,13 @@ class SwiftContainer(resource.Resource):
         return True
 
     def handle_check(self):
-        self.swift().get_container(self.resource_id)
+        self.client().get_container(self.resource_id)
 
     def FnGetRefId(self):
         return six.text_type(self.resource_id)
 
     def _resolve_attribute(self, key):
-        parsed = list(urlparse.urlparse(self.swift().url))
+        parsed = list(urlparse.urlparse(self.client().url))
         if key == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
         elif key == self.WEBSITE_URL:
@@ -235,7 +235,7 @@ class SwiftContainer(resource.Resource):
         elif self.resource_id and key in (
                 self.OBJECT_COUNT, self.BYTES_USED, self.HEAD_CONTAINER):
             try:
-                headers = self.swift().head_container(self.resource_id)
+                headers = self.client().head_container(self.resource_id)
             except Exception as ex:
                 if self.client_plugin().is_client_exception(ex):
                     LOG.warn(_LW("Head container failed: %s"), ex)
