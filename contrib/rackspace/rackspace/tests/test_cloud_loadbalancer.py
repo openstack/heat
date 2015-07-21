@@ -913,12 +913,15 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_lb_redirect(self):
-        templ = copy.deepcopy(self.lb_template)
-        rsrs = templ['Resources'].values()[0]
-        rsrs['Properties']['protocol'] = "HTTPS"
-        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+        template = self._set_template(
+            self.lb_template, protocol="HTTPS")
+
+        expected = self._set_expected(
+            self.expected_body, protocol="HTTPS")
+
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
-                                                          self.expected_body)
+                                                          expected)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
@@ -934,6 +937,44 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_lb_redirect_https(self):
+        template = self._set_template(
+            self.lb_template, protocol="HTTPS", httpsRedirect=True)
+
+        expected = self._set_expected(
+            self.expected_body, protocol="HTTPS", httpsRedirect=True)
+
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_lb_redirect_HTTP_with_SSL_term(self):
+        ssl_termination = {
+            'privatekey': private_key,
+            'intermediateCertificate': 'fwaefawe',
+            'secureTrafficOnly': True,
+            'securePort': 443,
+            'certificate': cert
+        }
+        template = self._set_template(
+            self.lb_template, sslTermination=ssl_termination, protocol="HTTP",
+            httpsRedirect=True)
+
+        expected = self._set_expected(
+            self.expected_body, protocol="HTTP", httpsRedirect=False)
+
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
     def test_update_lb_half_closed(self):
