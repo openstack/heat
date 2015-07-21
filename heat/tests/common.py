@@ -15,7 +15,6 @@
 import logging
 import os
 import sys
-import time
 
 import fixtures
 import mox
@@ -71,8 +70,6 @@ class FakeLogMixin(object):
 
 class HeatTestCase(testscenarios.WithScenarios,
                    testtools.TestCase, FakeLogMixin):
-
-    TIME_STEP = 0.1
 
     def setUp(self, mock_keystone=True):
         super(HeatTestCase, self).setUp()
@@ -149,19 +146,6 @@ class HeatTestCase(testscenarios.WithScenarios,
                                  generic_rsrc.ResourceWithComplexAttributes)
         resource._register_class('ResourceWithDefaultClientName',
                                  generic_rsrc.ResourceWithDefaultClientName)
-
-    def stub_wallclock(self):
-        """
-        Overrides scheduler wallclock to speed up tests expecting timeouts.
-        """
-        self._wallclock = time.time()
-
-        def fake_wallclock():
-            self._wallclock += self.TIME_STEP
-            return self._wallclock
-
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-        scheduler.wallclock = fake_wallclock
 
     def patchobject(self, obj, attr, **kwargs):
         mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,
