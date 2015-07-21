@@ -2692,7 +2692,7 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_default_instance_user(self):
-        """The default value for instance_user in heat.conf is ec2-user."""
+        """Test instance_user is disabled by default."""
         return_server = self.fc.servers.list()[1]
         server = self._setup_test_server(return_server, 'default_user')
         metadata = server.metadata_get()
@@ -2700,7 +2700,7 @@ class ServersTest(common.HeatTestCase):
         nova.NovaClientPlugin.build_userdata(
             metadata,
             'wordpress',
-            instance_user='ec2-user',
+            instance_user=None,
             user_data_format='HEAT_CFNTOOLS')
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()

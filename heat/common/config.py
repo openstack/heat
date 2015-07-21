@@ -89,7 +89,7 @@ service_opts = [
 
 engine_opts = [
     cfg.StrOpt('instance_user',
-               default='ec2-user',
+               default='',
                help=_("The default user for new instances. This option "
                       "is deprecated and will be removed in the Juno release. "
                       "If it's empty, Heat will use the default user set up "
