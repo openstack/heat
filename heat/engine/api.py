@@ -17,6 +17,7 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common import param_utils
@@ -200,9 +201,13 @@ def format_stack_resource(resource, detail=True, with_props=False,
         rpc_api.RES_REQUIRED_BY: resource.required_by(),
     }
 
-    if (hasattr(resource, 'nested') and callable(resource.nested) and
-            resource.nested() is not None):
-        res[rpc_api.RES_NESTED_STACK_ID] = dict(resource.nested().identifier())
+    try:
+        if (hasattr(resource, 'nested') and callable(resource.nested) and
+                resource.nested() is not None):
+            res[rpc_api.RES_NESTED_STACK_ID] = dict(
+                resource.nested().identifier())
+    except exception.NotFound:
+        pass
 
     if resource.stack.parent_resource_name:
         res[rpc_api.RES_PARENT_RESOURCE] = resource.stack.parent_resource_name
