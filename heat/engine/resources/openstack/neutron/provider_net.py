@@ -35,9 +35,9 @@ class ProviderNet(net.Net):
     )
 
     ATTRIBUTES = (
-        STATUS, SUBNETS, SHOW,
+        STATUS, SUBNETS,
     ) = (
-        'status', 'subnets', 'show',
+        'status', 'subnets',
     )
 
     properties_schema = {
@@ -82,10 +82,6 @@ class ProviderNet(net.Net):
         SUBNETS: attributes.Schema(
             _("Subnets of this network."),
             type=attributes.Schema.LIST
-        ),
-        SHOW: attributes.Schema(
-            _("All attributes."),
-            type=attributes.Schema.MAP
         ),
     }
 

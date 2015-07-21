@@ -34,10 +34,10 @@ class FloatingIP(neutron.NeutronResource):
 
     ATTRIBUTES = (
         ROUTER_ID, TENANT_ID, FLOATING_NETWORK_ID_ATTR, FIXED_IP_ADDRESS_ATTR,
-        FLOATING_IP_ADDRESS_ATTR, PORT_ID_ATTR, SHOW,
+        FLOATING_IP_ADDRESS_ATTR, PORT_ID_ATTR,
     ) = (
         'router_id', 'tenant_id', 'floating_network_id', 'fixed_ip_address',
-        'floating_ip_address', 'port_id', 'show',
+        'floating_ip_address', 'port_id',
     )
 
     properties_schema = {
@@ -120,10 +120,6 @@ class FloatingIP(neutron.NeutronResource):
         PORT_ID_ATTR: attributes.Schema(
             _('ID of the port associated with this IP.'),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _('All attributes.'),
-            type=attributes.Schema.MAP
         ),
     }
 

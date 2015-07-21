@@ -34,10 +34,10 @@ class VPNService(neutron.NeutronResource):
 
     ATTRIBUTES = (
         ADMIN_STATE_UP_ATTR, DESCRIPTION_ATTR, NAME_ATTR, ROUTER_ID_ATTR,
-        STATUS, SUBNET_ID_ATTR, TENANT_ID, SHOW,
+        STATUS, SUBNET_ID_ATTR, TENANT_ID,
     ) = (
         'admin_state_up', 'description', 'name', 'router_id',
-        'status', 'subnet_id', 'tenant_id', 'show',
+        'status', 'subnet_id', 'tenant_id',
     )
 
     properties_schema = {
@@ -128,10 +128,6 @@ class VPNService(neutron.NeutronResource):
         TENANT_ID: attributes.Schema(
             _('The unique identifier of the tenant owning the vpn service.'),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _('All attributes.'),
-            type=attributes.Schema.MAP
         ),
     }
 

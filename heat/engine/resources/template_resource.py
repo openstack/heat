@@ -113,6 +113,7 @@ class TemplateResource(stack_resource.StackResource):
 
         self.properties = definition.properties(self.properties_schema,
                                                 self.context)
+        self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
                                                 self._resolve_attribute)

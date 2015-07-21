@@ -55,11 +55,11 @@ class Subnet(neutron.NeutronResource):
     ATTRIBUTES = (
         NAME_ATTR, NETWORK_ID_ATTR, TENANT_ID_ATTR, ALLOCATION_POOLS_ATTR,
         GATEWAY_IP_ATTR, HOST_ROUTES_ATTR, IP_VERSION_ATTR, CIDR_ATTR,
-        DNS_NAMESERVERS_ATTR, ENABLE_DHCP_ATTR, SHOW,
+        DNS_NAMESERVERS_ATTR, ENABLE_DHCP_ATTR,
     ) = (
         'name', 'network_id', 'tenant_id', 'allocation_pools',
         'gateway_ip', 'host_routes', 'ip_version', 'cidr',
-        'dns_nameservers', 'enable_dhcp', 'show',
+        'dns_nameservers', 'enable_dhcp',
     )
 
     properties_schema = {
@@ -237,10 +237,6 @@ class Subnet(neutron.NeutronResource):
         ENABLE_DHCP_ATTR: attributes.Schema(
             _("'true' if DHCP is enabled for this subnet; 'false' otherwise."),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _("All attributes."),
-            type=attributes.Schema.MAP
         ),
     }
 

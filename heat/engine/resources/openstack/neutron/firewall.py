@@ -34,10 +34,10 @@ class Firewall(neutron.NeutronResource):
 
     ATTRIBUTES = (
         NAME_ATTR, DESCRIPTION_ATTR, ADMIN_STATE_UP_ATTR,
-        FIREWALL_POLICY_ID_ATTR, SHARED_ATTR, STATUS, TENANT_ID, SHOW,
+        FIREWALL_POLICY_ID_ATTR, SHARED_ATTR, STATUS, TENANT_ID,
     ) = (
         'name', 'description', 'admin_state_up',
-        'firewall_policy_id', 'shared', 'status', 'tenant_id', 'show',
+        'firewall_policy_id', 'shared', 'status', 'tenant_id',
     )
 
     properties_schema = {
@@ -106,10 +106,6 @@ class Firewall(neutron.NeutronResource):
         TENANT_ID: attributes.Schema(
             _('Id of the tenant owning the firewall.'),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _('All attributes.'),
-            type=attributes.Schema.MAP
         ),
     }
 

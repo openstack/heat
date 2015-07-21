@@ -39,11 +39,9 @@ class HealthMonitor(neutron.NeutronResource):
     ATTRIBUTES = (
         ADMIN_STATE_UP_ATTR, DELAY_ATTR, EXPECTED_CODES_ATTR, HTTP_METHOD_ATTR,
         MAX_RETRIES_ATTR, TIMEOUT_ATTR, TYPE_ATTR, URL_PATH_ATTR, TENANT_ID,
-        SHOW,
     ) = (
         'admin_state_up', 'delay', 'expected_codes', 'http_method',
         'max_retries', 'timeout', 'type', 'url_path', 'tenant_id',
-        'show',
     )
 
     properties_schema = {
@@ -144,10 +142,6 @@ class HealthMonitor(neutron.NeutronResource):
         TENANT_ID: attributes.Schema(
             _('Tenant owning the health monitor.'),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _('All attributes.'),
-            type=attributes.Schema.MAP
         ),
     }
 
@@ -563,10 +557,10 @@ class PoolMember(neutron.NeutronResource):
 
     ATTRIBUTES = (
         ADMIN_STATE_UP_ATTR, TENANT_ID, WEIGHT_ATTR, ADDRESS_ATTR,
-        POOL_ID_ATTR, PROTOCOL_PORT_ATTR, SHOW,
+        POOL_ID_ATTR, PROTOCOL_PORT_ATTR,
     ) = (
         'admin_state_up', 'tenant_id', 'weight', 'address',
-        'pool_id', 'protocol_port', 'show',
+        'pool_id', 'protocol_port',
     )
 
     properties_schema = {
@@ -633,10 +627,6 @@ class PoolMember(neutron.NeutronResource):
             _('TCP port on which the pool member listens for requests or '
               'connections.'),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _('All attributes.'),
-            type=attributes.Schema.MAP
         ),
     }
 

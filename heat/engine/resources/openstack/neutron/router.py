@@ -41,10 +41,10 @@ class Router(neutron.NeutronResource):
 
     ATTRIBUTES = (
         STATUS, EXTERNAL_GATEWAY_INFO_ATTR, NAME_ATTR, ADMIN_STATE_UP_ATTR,
-        TENANT_ID, SHOW,
+        TENANT_ID,
     ) = (
         'status', 'external_gateway_info', 'name', 'admin_state_up',
-        'tenant_id', 'show',
+        'tenant_id',
     )
 
     properties_schema = {
@@ -147,10 +147,6 @@ class Router(neutron.NeutronResource):
         TENANT_ID: attributes.Schema(
             _("Tenant owning the router."),
             type=attributes.Schema.STRING
-        ),
-        SHOW: attributes.Schema(
-            _("All attributes."),
-            type=attributes.Schema.MAP
         ),
     }
 

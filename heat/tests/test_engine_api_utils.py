@@ -109,9 +109,10 @@ class FormatTest(common.HeatTestCase):
     def test_format_resource_attributes(self):
         res = self.stack['generic1']
         formatted_attributes = api.format_resource_attributes(res)
-        self.assertEqual(2, len(formatted_attributes))
+        self.assertEqual(3, len(formatted_attributes))
         self.assertIn('foo', formatted_attributes)
         self.assertIn('Foo', formatted_attributes)
+        self.assertIn('show', formatted_attributes)
 
     def test_format_resource_attributes_show_attribute(self):
         res = mock.Mock()
@@ -134,9 +135,10 @@ class FormatTest(common.HeatTestCase):
         force_attrs = ['a1', 'a2']
 
         formatted_attributes = api.format_resource_attributes(res, force_attrs)
-        self.assertEqual(4, len(formatted_attributes))
+        self.assertEqual(5, len(formatted_attributes))
         self.assertIn('foo', formatted_attributes)
         self.assertIn('Foo', formatted_attributes)
+        self.assertIn('show', formatted_attributes)
         self.assertIn('a1', formatted_attributes)
         self.assertIn('a2', formatted_attributes)
 
