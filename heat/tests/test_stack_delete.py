@@ -22,6 +22,7 @@ import mock
 from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
+from heat.common import timeutils
 from heat.engine.clients.os import keystone
 from heat.engine import scheduler
 from heat.engine import stack
@@ -379,7 +380,7 @@ class StackTest(common.HeatTestCase):
         start_time = time.time()
         mock_tg = self.patchobject(scheduler.DependencyTaskGroup, '__call__',
                                    return_value=dummy_task())
-        mock_wallclock = self.patchobject(scheduler, 'wallclock')
+        mock_wallclock = self.patchobject(timeutils, 'wallclock')
         mock_wallclock.side_effect = [
             start_time,
             start_time + 1,

@@ -14,7 +14,6 @@
 import functools
 import itertools
 import sys
-import time
 import types
 
 import eventlet
@@ -26,13 +25,13 @@ from six import reraise as raise_
 
 from heat.common.i18n import _
 from heat.common.i18n import _LI
+from heat.common import timeutils
 
 LOG = logging.getLogger(__name__)
 
 
 # Whether TaskRunner._sleep actually does an eventlet sleep when called.
 ENABLE_SLEEP = True
-wallclock = time.time
 
 
 def task_description(task):
@@ -68,15 +67,10 @@ class Timeout(BaseException):
         message = _('%s Timed out') % six.text_type(task_runner)
         super(Timeout, self).__init__(message)
 
-        # Note that we don't attempt to handle leap seconds or large clock
-        # jumps here. The latter are assumed to be rare and the former
-        # negligible in the context of the timeout. Time zone adjustments,
-        # Daylight Savings and the like *are* handled. PEP 418 adds a proper
-        # monotonic clock, but only in Python 3.3.
-        self._endtime = wallclock() + timeout
+        self._duration = timeutils.Duration(timeout)
 
     def expired(self):
-        return wallclock() > self._endtime
+        return self._duration.expired()
 
     def trigger(self, generator):
         """Trigger the timeout on a given generator."""
@@ -107,7 +101,7 @@ class Timeout(BaseException):
     def __lt__(self, other):
         if not isinstance(other, Timeout):
             return NotImplemented
-        return self._endtime < other._endtime
+        return self._duration.endtime() < other._duration.endtime()
 
     def __cmp__(self, other):
         return self < other

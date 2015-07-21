@@ -15,6 +15,7 @@ import contextlib
 
 import eventlet
 
+from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import scheduler
 from heat.tests import common
@@ -647,16 +648,16 @@ class TaskTest(common.HeatTestCase):
         self.assertTrue(runner.step())
 
     def test_timeout(self):
-        st = scheduler.wallclock()
+        st = timeutils.wallclock()
 
         def task():
             while True:
                 yield
 
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.5)
-        scheduler.wallclock().AndReturn(st + 1.5)
+        self.m.StubOutWithMock(timeutils, 'wallclock')
+        timeutils.wallclock().AndReturn(st)
+        timeutils.wallclock().AndReturn(st + 0.5)
+        timeutils.wallclock().AndReturn(st + 1.5)
 
         self.m.ReplayAll()
 
@@ -667,7 +668,7 @@ class TaskTest(common.HeatTestCase):
         self.assertRaises(scheduler.Timeout, runner.step)
 
     def test_timeout_return(self):
-        st = scheduler.wallclock()
+        st = timeutils.wallclock()
 
         def task():
             while True:
@@ -676,10 +677,10 @@ class TaskTest(common.HeatTestCase):
                 except scheduler.Timeout:
                     return
 
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.5)
-        scheduler.wallclock().AndReturn(st + 1.5)
+        self.m.StubOutWithMock(timeutils, 'wallclock')
+        timeutils.wallclock().AndReturn(st)
+        timeutils.wallclock().AndReturn(st + 0.5)
+        timeutils.wallclock().AndReturn(st + 1.5)
 
         self.m.ReplayAll()
 
@@ -691,7 +692,7 @@ class TaskTest(common.HeatTestCase):
         self.assertFalse(runner)
 
     def test_timeout_swallowed(self):
-        st = scheduler.wallclock()
+        st = timeutils.wallclock()
 
         def task():
             while True:
@@ -701,10 +702,10 @@ class TaskTest(common.HeatTestCase):
                     yield
                     self.fail('Task still running')
 
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.5)
-        scheduler.wallclock().AndReturn(st + 1.5)
+        self.m.StubOutWithMock(timeutils, 'wallclock')
+        timeutils.wallclock().AndReturn(st)
+        timeutils.wallclock().AndReturn(st + 0.5)
+        timeutils.wallclock().AndReturn(st + 1.5)
 
         self.m.ReplayAll()
 
@@ -777,21 +778,21 @@ class TaskTest(common.HeatTestCase):
         self.assertTrue(runner.step())
 
     def test_cancel_grace_period(self):
-        st = scheduler.wallclock()
+        st = timeutils.wallclock()
         task = DummyTask(5)
 
         self.m.StubOutWithMock(task, 'do_step')
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        self.m.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(timeutils, 'wallclock')
 
         task.do_step(1).AndReturn(None)
         task.do_step(2).AndReturn(None)
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.5)
+        timeutils.wallclock().AndReturn(st)
+        timeutils.wallclock().AndReturn(st + 0.5)
         task.do_step(3).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 1.0)
+        timeutils.wallclock().AndReturn(st + 1.0)
         task.do_step(4).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 1.5)
+        timeutils.wallclock().AndReturn(st + 1.5)
 
         self.m.ReplayAll()
 
@@ -808,24 +809,24 @@ class TaskTest(common.HeatTestCase):
         self.assertTrue(runner.step())
 
     def test_cancel_grace_period_before_timeout(self):
-        st = scheduler.wallclock()
+        st = timeutils.wallclock()
         task = DummyTask(5)
 
         self.m.StubOutWithMock(task, 'do_step')
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        self.m.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(timeutils, 'wallclock')
 
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.1)
+        timeutils.wallclock().AndReturn(st)
+        timeutils.wallclock().AndReturn(st + 0.1)
         task.do_step(1).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 0.2)
+        timeutils.wallclock().AndReturn(st + 0.2)
         task.do_step(2).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 0.2)
-        scheduler.wallclock().AndReturn(st + 0.5)
+        timeutils.wallclock().AndReturn(st + 0.2)
+        timeutils.wallclock().AndReturn(st + 0.5)
         task.do_step(3).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 1.0)
+        timeutils.wallclock().AndReturn(st + 1.0)
         task.do_step(4).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 1.5)
+        timeutils.wallclock().AndReturn(st + 1.5)
 
         self.m.ReplayAll()
 
@@ -842,24 +843,24 @@ class TaskTest(common.HeatTestCase):
         self.assertTrue(runner.step())
 
     def test_cancel_grace_period_after_timeout(self):
-        st = scheduler.wallclock()
+        st = timeutils.wallclock()
         task = DummyTask(5)
 
         self.m.StubOutWithMock(task, 'do_step')
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        self.m.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(timeutils, 'wallclock')
 
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.1)
+        timeutils.wallclock().AndReturn(st)
+        timeutils.wallclock().AndReturn(st + 0.1)
         task.do_step(1).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 0.2)
+        timeutils.wallclock().AndReturn(st + 0.2)
         task.do_step(2).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 0.2)
-        scheduler.wallclock().AndReturn(st + 0.5)
+        timeutils.wallclock().AndReturn(st + 0.2)
+        timeutils.wallclock().AndReturn(st + 0.5)
         task.do_step(3).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 1.0)
+        timeutils.wallclock().AndReturn(st + 1.0)
         task.do_step(4).AndReturn(None)
-        scheduler.wallclock().AndReturn(st + 1.5)
+        timeutils.wallclock().AndReturn(st + 1.5)
 
         self.m.ReplayAll()
 
