@@ -25,6 +25,8 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
         version='2015.1',
         message=_('Supported versions: keystone v3'))
 
+    default_client_name = 'keystone'
+
     PROPERTIES = (
         NAME, DOMAIN, DESCRIPTION
     ) = (
@@ -61,13 +63,13 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
                       domain):
         domain = self.client_plugin().get_domain_id(domain)
 
-        return self.keystone().client.groups.create(
+        return self.client().client.groups.create(
             name=group_name,
             domain=domain,
             description=description)
 
     def _delete_group(self, group_id):
-        return self.keystone().client.groups.delete(group_id)
+        return self.client().client.groups.delete(group_id)
 
     def _update_group(self,
                       group_id,
@@ -84,7 +86,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
         values['group'] = group_id
         domain = self.client_plugin().get_domain_id(domain)
         values['domain_id'] = domain
-        return self.keystone().client.groups.update(**values)
+        return self.client().client.groups.update(**values)
 
     def handle_create(self):
         group_name = (self.properties.get(self.NAME) or

@@ -48,8 +48,8 @@ class KeystoneRoleTest(common.HeatTestCase):
         self.test_role = self.stack['test_role']
 
         self.keystoneclient = mock.MagicMock()
-        self.test_role.keystone = mock.MagicMock()
-        self.test_role.keystone.return_value = self.keystoneclient
+        self.test_role.client = mock.MagicMock()
+        self.test_role.client.return_value = self.keystoneclient
         self.roles = self.keystoneclient.client.roles
 
     def _get_mock_role(self):

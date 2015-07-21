@@ -55,8 +55,8 @@ class KeystoneEndpointTest(common.HeatTestCase):
 
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_endpoint.keystone = mock.MagicMock()
-        self.test_endpoint.keystone.return_value = self.keystoneclient
+        self.test_endpoint.client = mock.MagicMock()
+        self.test_endpoint.client.return_value = self.keystoneclient
         self.endpoints = self.keystoneclient.client.endpoints
 
         # Mock client plugin

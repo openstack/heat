@@ -54,8 +54,8 @@ class KeystoneProjectTest(common.HeatTestCase):
 
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_project.keystone = mock.MagicMock()
-        self.test_project.keystone.return_value = self.keystoneclient
+        self.test_project.client = mock.MagicMock()
+        self.test_project.client.return_value = self.keystoneclient
         self.projects = self.keystoneclient.client.projects
 
         # Mock client plugin
