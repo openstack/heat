@@ -49,7 +49,7 @@ class TestSecret(common.HeatTestCase):
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
-        self.patcher_client = mock.patch.object(secret.Secret, 'barbican')
+        self.patcher_client = mock.patch.object(secret.Secret, 'client')
         mock_client = self.patcher_client.start()
         self.barbican = mock_client.return_value
 

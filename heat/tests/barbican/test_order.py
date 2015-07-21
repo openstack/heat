@@ -58,7 +58,7 @@ class TestOrder(common.HeatTestCase):
         self.res_template = resource_defns['order']
         self.props = tmpl['resources']['order']['properties']
 
-        self.patcher_client = mock.patch.object(order.Order, 'barbican')
+        self.patcher_client = mock.patch.object(order.Order, 'client')
         mock_client = self.patcher_client.start()
         self.barbican = mock_client.return_value
 
