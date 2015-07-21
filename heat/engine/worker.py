@@ -58,7 +58,7 @@ class WorkerService(service.Service):
         self.engine_id = engine_id
         self.thread_group_mgr = thread_group_mgr
 
-        self._rpc_client = None
+        self._rpc_client = rpc_client.WorkerClient()
         self._rpc_server = None
 
     def start(self):
@@ -70,8 +70,6 @@ class WorkerService(service.Service):
 
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
-
-        self._rpc_client = rpc_client.WorkerClient()
 
         super(WorkerService, self).start()
 
