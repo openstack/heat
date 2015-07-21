@@ -1005,6 +1005,18 @@ class Stack(collections.Mapping):
                                                   self.current_traversal,
                                                   input_data, is_update)
 
+    def rollback(self):
+        old_tmpl_id = self.prev_raw_template_id
+        if old_tmpl_id is None:
+            rollback_tmpl = tmpl.Template.create_empty_template(
+                version=self.t.version)
+        else:
+            rollback_tmpl = tmpl.Template.load(self.context, old_tmpl_id)
+            self.prev_raw_template_id = None
+            self.store()
+
+        self.converge_stack(rollback_tmpl, action=self.ROLLBACK)
+
     def _get_best_existing_rsrc_db(self, rsrc_name):
         candidate = None
         if self.ext_rsrcs_db:

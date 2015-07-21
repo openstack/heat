@@ -16,11 +16,9 @@
 import mock
 
 from heat.common import exception
-from heat.common import template_format
 from heat.engine import resource
 from heat.engine import stack
 from heat.engine import sync_point
-from heat.engine import template as templatem
 from heat.engine import worker
 from heat.rpc import worker_client
 from heat.tests import common
@@ -273,7 +271,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertTrue(self.worker._trigger_rollback.called)
         # make sure the rollback is called on given stack
         call_args, call_kwargs = self.worker._trigger_rollback.call_args
-        called_stack = call_args[1]
+        called_stack = call_args[0]
         self.assertEqual(self.stack.id, called_stack.id)
 
     def test_resource_cleanup_failure_triggers_rollback_if_enabled(
@@ -292,7 +290,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertTrue(self.worker._trigger_rollback.called)
         # make sure the rollback is called on given stack
         call_args, call_kwargs = self.worker._trigger_rollback.call_args
-        called_stack = call_args[1]
+        called_stack = call_args[0]
         self.assertEqual(self.stack.id, called_stack.id)
 
     def test_rollback_is_not_triggered_on_rollback_disabled_stack(
@@ -324,47 +322,6 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    self.stack.current_traversal, {},
                                    self.is_update)
         self.assertFalse(self.worker._trigger_rollback.called)
-
-    def test_trigger_rollback_uses_old_template_if_available(
-            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
-        # create a template and assign to stack as previous template
-        t = template_format.parse(tools.wp_template)
-        prev_tmpl = templatem.Template(t)
-        prev_tmpl.store(context=self.ctx)
-        self.stack.prev_raw_template_id = prev_tmpl.id
-        # mock failure
-        self.stack.action = self.stack.UPDATE
-        self.stack.status = self.stack.FAILED
-        self.stack.store()
-        # mock converge_stack()
-        self.stack.converge_stack = mock.Mock()
-        # call trigger_rollbac
-        self.worker._trigger_rollback(self.ctx, self.stack)
-
-        # Make sure stack converge is called with previous template
-        self.assertTrue(self.stack.converge_stack.called)
-        self.assertIsNone(self.stack.prev_raw_template_id)
-        call_args, call_kwargs = self.stack.converge_stack.call_args
-        template_used_for_rollback = call_args[0]
-        self.assertEqual(prev_tmpl.id, template_used_for_rollback.id)
-
-    def test_trigger_rollback_uses_empty_template_if_prev_tmpl_not_available(
-            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
-        # mock create failure with no previous template
-        self.stack.prev_raw_template_id = None
-        self.stack.action = self.stack.CREATE
-        self.stack.status = self.stack.FAILED
-        self.stack.store()
-        # mock converge_stack()
-        self.stack.converge_stack = mock.Mock()
-        # call trigger_rollback
-        self.worker._trigger_rollback(self.ctx, self.stack)
-
-        # Make sure stack converge is called with empty template
-        self.assertTrue(self.stack.converge_stack.called)
-        call_args, call_kwargs = self.stack.converge_stack.call_args
-        template_used_for_rollback = call_args[0]
-        self.assertEqual({}, template_used_for_rollback['resources'])
 
     def test_resource_update_failure_purges_db_for_stack_failure(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):

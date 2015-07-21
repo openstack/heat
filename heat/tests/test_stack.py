@@ -37,6 +37,7 @@ from heat.objects import stack as stack_object
 from heat.objects import stack_tag as stack_tag_object
 from heat.objects import user_creds as ucreds_object
 from heat.tests import common
+from heat.tests.engine import tools
 from heat.tests import fakes
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -2208,3 +2209,53 @@ class StackKwargsForCloningTest(common.HeatTestCase):
             # just make sure that the kwargs are valid
             # (no exception should be raised)
             stack.Stack(ctx, utils.random_name(), tmpl, **res)
+
+
+class TestStackRollback(common.HeatTestCase):
+
+    def setUp(self):
+        super(TestStackRollback, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.stack = tools.get_stack('test_stack_rollback', self.ctx,
+                                     template=tools.string_template_five,
+                                     convergence=True)
+
+    def test_trigger_rollback_uses_old_template_if_available(self):
+        # create a template and assign to stack as previous template
+        t = template_format.parse(tools.wp_template)
+        prev_tmpl = template.Template(t)
+        prev_tmpl.store(context=self.ctx)
+        self.stack.prev_raw_template_id = prev_tmpl.id
+        # mock failure
+        self.stack.action = self.stack.UPDATE
+        self.stack.status = self.stack.FAILED
+        self.stack.store()
+        # mock converge_stack()
+        self.stack.converge_stack = mock.Mock()
+        # call trigger_rollbac
+        self.stack.rollback()
+
+        # Make sure stack converge is called with previous template
+        self.assertTrue(self.stack.converge_stack.called)
+        self.assertIsNone(self.stack.prev_raw_template_id)
+        call_args, call_kwargs = self.stack.converge_stack.call_args
+        template_used_for_rollback = call_args[0]
+        self.assertEqual(prev_tmpl.id, template_used_for_rollback.id)
+
+    def test_trigger_rollback_uses_empty_template_if_prev_tmpl_not_available(
+            self):
+        # mock create failure with no previous template
+        self.stack.prev_raw_template_id = None
+        self.stack.action = self.stack.CREATE
+        self.stack.status = self.stack.FAILED
+        self.stack.store()
+        # mock converge_stack()
+        self.stack.converge_stack = mock.Mock()
+        # call trigger_rollback
+        self.stack.rollback()
+
+        # Make sure stack converge is called with empty template
+        self.assertTrue(self.stack.converge_stack.called)
+        call_args, call_kwargs = self.stack.converge_stack.call_args
+        template_used_for_rollback = call_args[0]
+        self.assertEqual({}, template_used_for_rollback['resources'])
