@@ -365,7 +365,7 @@ class swiftTest(common.HeatTestCase):
         t = template_format.parse(swift_template)
         self.stack = utils.parse_stack(t)
         res = self.create_resource(t, self.stack, 'SwiftContainer')
-        res.swift = mock.Mock()
+        res.client = mock.Mock()
         return res
 
     def test_check(self):
@@ -375,7 +375,7 @@ class swiftTest(common.HeatTestCase):
 
     def test_check_fail(self):
         res = self._get_check_resource()
-        res.swift().get_container.side_effect = Exception('boom')
+        res.client().get_container.side_effect = Exception('boom')
 
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.check))
