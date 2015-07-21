@@ -22,11 +22,10 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine.clients.os import cinder as cinder_cp
-from heat.engine.clients.os import nova as nova_cp
+from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine import scheduler
 
 cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
 
@@ -568,7 +567,7 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        creator = nova_cp.ServerCreateProgress(server.id)
+        creator = progress.ServerCreateProgress(server.id)
         attachers = []
         for vol_id, device in self.volumes():
             attachers.append(cinder_cp.VolumeAttachProgress(self.resource_id,
@@ -633,10 +632,103 @@ class Instance(resource.Resource):
             raise exception.Error(_("Instance is not ACTIVE (was: %s)") %
                                   server.status.strip())
 
+    def _update_instance_type(self, prop_diff):
+        flavor = prop_diff[self.INSTANCE_TYPE]
+        flavor_id = self.client_plugin().get_flavor_id(flavor)
+        handler_args = {'args': (flavor_id,)}
+        checker_args = {'args': (flavor_id, flavor)}
+
+        prg_resize = progress.ServerUpdateProgress(self.resource_id,
+                                                   'resize',
+                                                   handler_extra=handler_args,
+                                                   checker_extra=checker_args)
+        prg_verify = progress.ServerUpdateProgress(self.resource_id,
+                                                   'verify_resize')
+        return prg_resize, prg_verify
+
+    def _update_network_interfaces(self, server, prop_diff):
+        updaters = []
+        new_network_ifaces = prop_diff.get(self.NETWORK_INTERFACES)
+        old_network_ifaces = self.properties.get(self.NETWORK_INTERFACES)
+        subnet_id = (
+            prop_diff.get(self.SUBNET_ID) or
+            self.properties.get(self.SUBNET_ID))
+        security_groups = self._get_security_groups()
+        # if there is entrys in old_network_ifaces and new_network_ifaces,
+        # remove the same entrys from old and new ifaces
+        if old_network_ifaces and new_network_ifaces:
+            # there are four situations:
+            # 1.old includes new, such as: old = 2,3, new = 2
+            # 2.new includes old, such as: old = 2,3, new = 1,2,3
+            # 3.has overlaps, such as: old = 2,3, new = 1,2
+            # 4.different, such as: old = 2,3, new = 1,4
+            # detach unmatched ones in old, attach unmatched ones in new
+            self._remove_matched_ifaces(old_network_ifaces,
+                                        new_network_ifaces)
+            if old_network_ifaces:
+                old_nics = self._build_nics(old_network_ifaces)
+                for nic in old_nics:
+                    updaters.append(
+                        progress.ServerUpdateProgress(
+                            self.resource_id, 'interface_detach',
+                            complete=True,
+                            handler_extra={'args': (nic['port-id'],)})
+                    )
+            if new_network_ifaces:
+                new_nics = self._build_nics(new_network_ifaces)
+                for nic in new_nics:
+                    handler_kwargs = {'port_id': nic['port-id']}
+                    updaters.append(
+                        progress.ServerUpdateProgress(
+                            self.resource_id, 'interface_attach',
+                            complete=True,
+                            handler_extra={'kwargs': handler_kwargs})
+                    )
+        # if the interfaces not come from property 'NetworkInterfaces',
+        # the situation is somewhat complex, so to detach the old ifaces,
+        # and then attach the new ones.
+        else:
+            if not server:
+                server = self.client().servers.get(self.resource_id)
+            interfaces = server.interface_list()
+            for iface in interfaces:
+                updaters.append(
+                    progress.ServerUpdateProgress(
+                        self.resource_id, 'interface_detach',
+                        complete=True,
+                        handler_extra={'args': (iface.port_id,)})
+                )
+            # first to delete the port which implicit-created by heat
+            self._port_data_delete()
+            nics = self._build_nics(new_network_ifaces,
+                                    security_groups=security_groups,
+                                    subnet_id=subnet_id)
+            # 'SubnetId' property is empty(or None) and
+            # 'NetworkInterfaces' property is empty(or None),
+            # _build_nics() will return nics = None,we should attach
+            # first free port, according to similar behavior during
+            # instance creation
+
+            if not nics:
+                updaters.append(
+                    progress.ServerUpdateProgress(
+                        self.resource_id, 'interface_attach', complete=True)
+                )
+            else:
+                for nic in nics:
+                    updaters.append(
+                        progress.ServerUpdateProgress(
+                            self.resource_id, 'interface_attach',
+                            complete=True,
+                            handler_extra={'kwargs':
+                                           {'port_id': nic['port-id']}})
+                    )
+        return updaters
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata_set(tmpl_diff['Metadata'])
-        checkers = []
+        updaters = []
         server = None
         if self.TAGS in prop_diff:
             server = self.client().servers.get(self.resource_id)
@@ -644,90 +736,30 @@ class Instance(resource.Resource):
                 server, self._get_nova_metadata(prop_diff))
 
         if self.INSTANCE_TYPE in prop_diff:
-            flavor = prop_diff[self.INSTANCE_TYPE]
-            flavor_id = self.client_plugin().get_flavor_id(flavor)
-            if not server:
-                server = self.client().servers.get(self.resource_id)
-            checker = scheduler.TaskRunner(self.client_plugin().resize,
-                                           server, flavor, flavor_id)
-            checkers.append(checker)
+            updaters.extend(self._update_instance_type(prop_diff))
+
         if self.NETWORK_INTERFACES in prop_diff:
-            new_network_ifaces = prop_diff.get(self.NETWORK_INTERFACES)
-            old_network_ifaces = self.properties.get(self.NETWORK_INTERFACES)
-            subnet_id = (
-                prop_diff.get(self.SUBNET_ID) or
-                self.properties.get(self.SUBNET_ID))
-            security_groups = self._get_security_groups()
-            if not server:
-                server = self.client().servers.get(self.resource_id)
-            # if there is entrys in old_network_ifaces and new_network_ifaces,
-            # remove the same entrys from old and new ifaces
-            if old_network_ifaces and new_network_ifaces:
-                # there are four situations:
-                # 1.old includes new, such as: old = 2,3, new = 2
-                # 2.new includes old, such as: old = 2,3, new = 1,2,3
-                # 3.has overlaps, such as: old = 2,3, new = 1,2
-                # 4.different, such as: old = 2,3, new = 1,4
-                # detach unmatched ones in old, attach unmatched ones in new
-                self._remove_matched_ifaces(old_network_ifaces,
-                                            new_network_ifaces)
-                if old_network_ifaces:
-                    old_nics = self._build_nics(old_network_ifaces)
-                    for nic in old_nics:
-                        checker = scheduler.TaskRunner(
-                            server.interface_detach,
-                            nic['port-id'])
-                        checkers.append(checker)
-                if new_network_ifaces:
-                    new_nics = self._build_nics(new_network_ifaces)
-                    for nic in new_nics:
-                        checker = scheduler.TaskRunner(
-                            server.interface_attach,
-                            nic['port-id'],
-                            None, None)
-                        checkers.append(checker)
-            # if the interfaces not come from property 'NetworkInterfaces',
-            # the situation is somewhat complex, so to detach the old ifaces,
-            # and then attach the new ones.
-            else:
-                interfaces = server.interface_list()
-                for iface in interfaces:
-                    checker = scheduler.TaskRunner(server.interface_detach,
-                                                   iface.port_id)
-                    checkers.append(checker)
-                # first to delete the port which implicit-created by heat
-                self._port_data_delete()
-                nics = self._build_nics(new_network_ifaces,
-                                        security_groups=security_groups,
-                                        subnet_id=subnet_id)
-                # 'SubnetId' property is empty(or None) and
-                # 'NetworkInterfaces' property is empty(or None),
-                # _build_nics() will return nics = None,we should attach
-                # first free port, according to similar behavior during
-                # instance creation
-                if not nics:
-                    checker = scheduler.TaskRunner(server.interface_attach,
-                                                   None, None, None)
-                    checkers.append(checker)
-                else:
-                    for nic in nics:
-                        checker = scheduler.TaskRunner(
-                            server.interface_attach,
-                            nic['port-id'], None, None)
-                        checkers.append(checker)
+            updaters.extend(self._update_network_interfaces(server, prop_diff))
 
-        if checkers:
-            checkers[0].start()
-        return checkers
+        # NOTE(pas-ha) optimization is possible (starting first task
+        # right away), but we'd rather not, as this method already might
+        # have called several APIs
+        return updaters
 
-    def check_update_complete(self, checkers):
-        '''Push all checkers to completion in list order.'''
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
+    def check_update_complete(self, updaters):
+        '''Push all updaters to completion in list order.'''
+        for prg in updaters:
+            if not prg.called:
+                handler = getattr(self.client_plugin(), prg.handler)
+                prg.called = handler(*prg.handler_args,
+                                     **prg.handler_kwargs)
                 return False
-        return True
+            if not prg.complete:
+                check_complete = getattr(self.client_plugin(), prg.checker)
+                prg.complete = check_complete(*prg.checker_args,
+                                              **prg.checker_kwargs)
+                break
+        return all(prg.complete for prg in updaters)
 
     def metadata_update(self, new_metadata=None):
         '''

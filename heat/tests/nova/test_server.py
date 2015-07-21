@@ -1588,11 +1588,26 @@ class ServersTest(common.HeatTestCase):
 
         self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
 
-        def activate_status(server):
-            server.status = 'VERIFY_RESIZE'
-        return_server.get = activate_status.__get__(return_server)
+        def status_resize(*args):
+            return_server.status = 'RESIZE'
+
+        def status_verify_resize(*args):
+            return_server.status = 'VERIFY_RESIZE'
+
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_verify_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_verify_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(return_server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(
@@ -1620,11 +1635,18 @@ class ServersTest(common.HeatTestCase):
         update_template['Properties']['flavor'] = 'm1.small'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
 
-        def fail_status(server):
-            server.status = 'ERROR'
-        return_server.get = fail_status.__get__(return_server)
+        def status_resize(*args):
+            return_server.status = 'RESIZE'
+
+        def status_error(*args):
+            return_server.status = 'ERROR'
+
+        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_error).AndReturn(return_server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(
@@ -1658,22 +1680,31 @@ class ServersTest(common.HeatTestCase):
 
         self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(server)
 
         # define status transition when server resize
         # ACTIVE(initial) -> ACTIVE -> RESIZE -> VERIFY_RESIZE
 
-        def active_status(srv):
-            srv.status = 'ACTIVE'
-        server.get = active_status.__get__(server)
+        def status_resize(*args):
+            server.status = 'RESIZE'
 
-        def resize_status(srv):
-            srv.status = 'RESIZE'
-        server.get = resize_status.__get__(server)
+        def status_verify_resize(*args):
+            server.status = 'VERIFY_RESIZE'
 
-        def verify_resize_status(srv):
-            srv.status = 'VERIFY_RESIZE'
-        server.get = verify_resize_status.__get__(server)
+        def status_active(*args):
+            server.status = 'ACTIVE'
+
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_resize).AndReturn(server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_verify_resize).AndReturn(server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_verify_resize).AndReturn(server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(

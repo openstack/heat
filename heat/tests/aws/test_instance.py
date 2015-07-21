@@ -26,6 +26,7 @@ from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
+from heat.engine.clients import progress
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine.resources.aws.ec2 import instance as instances
@@ -518,7 +519,7 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'test_instance_create')
 
-        creator = nova.ServerCreateProgress(instance.resource_id)
+        creator = progress.ServerCreateProgress(instance.resource_id)
         self.m.StubOutWithMock(self.fc.servers, 'get')
         return_server.status = 'BOGUS'
         self.fc.servers.get(instance.resource_id).AndReturn(return_server)
@@ -536,7 +537,7 @@ class InstancesTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'test_instance_create')
-        creator = nova.ServerCreateProgress(instance.resource_id)
+        creator = progress.ServerCreateProgress(instance.resource_id)
         return_server.status = 'ERROR'
         return_server.fault = {
             'message': 'NoValidHost',
@@ -562,7 +563,7 @@ class InstancesTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_create')
-        creator = nova.ServerCreateProgress(instance.resource_id)
+        creator = progress.ServerCreateProgress(instance.resource_id)
         return_server.status = 'ERROR'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
@@ -721,11 +722,26 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['InstanceType'] = 'm1.small'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
 
-        def activate_status(server):
-            server.status = 'VERIFY_RESIZE'
-        return_server.get = activate_status.__get__(return_server)
+        def status_resize(*args):
+            return_server.status = 'RESIZE'
+
+        def status_verify_resize(*args):
+            return_server.status = 'VERIFY_RESIZE'
+
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_verify_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_verify_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_active).AndReturn(return_server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(
@@ -753,11 +769,18 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['InstanceType'] = 'm1.small'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
 
-        def fail_status(server):
-            server.status = 'ERROR'
-        return_server.get = fail_status.__get__(return_server)
+        def status_resize(*args):
+            return_server.status = 'RESIZE'
+
+        def status_error(*args):
+            return_server.status = 'ERROR'
+
+        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_resize).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_error).AndReturn(return_server)
 
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         self.fc.client.post_servers_1234_action(
@@ -810,7 +833,7 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['NetworkInterfaces'] = new_interfaces
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_detach')
         return_server.interface_detach(
             'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
@@ -918,15 +941,15 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['NetworkInterfaces'] = new_interfaces
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_detach')
         return_server.interface_detach(
             'ea29f957-cd35-4364-98fb-57ce9732c10d').AndReturn(None)
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
-                                       None, None).AndReturn(None)
+                                       None, None).InAnyOrder().AndReturn(None)
         return_server.interface_attach('34b752ec-14de-416a-8722-9531015e04a5',
-                                       None, None).AndReturn(None)
+                                       None, None).InAnyOrder().AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -956,7 +979,7 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['NetworkInterfaces'] = new_interfaces
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_list')
         return_server.interface_list().AndReturn([iface])
         self.m.StubOutWithMock(return_server, 'interface_detach')
@@ -992,7 +1015,7 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['NetworkInterfaces'] = []
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_list')
         return_server.interface_list().AndReturn([iface])
         self.m.StubOutWithMock(return_server, 'interface_detach')
@@ -1026,7 +1049,7 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['SubnetId'] = subnet_id
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_list')
         return_server.interface_list().AndReturn([iface])
         self.m.StubOutWithMock(return_server, 'interface_detach')

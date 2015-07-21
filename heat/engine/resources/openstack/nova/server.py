@@ -25,14 +25,13 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
-from heat.engine.clients.os import nova as nova_cp
+from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine.resources import stack_user
-from heat.engine import scheduler
 from heat.engine import support
 from heat.rpc import api as rpc_api
 
@@ -1025,7 +1024,7 @@ class Server(stack_user.StackUser):
             if net is not None:
                 net['port'] = props['port']
 
-    def _update_flavor(self, server, prop_diff):
+    def _update_flavor(self, prop_diff):
         flavor_update_policy = (
             prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
             self.properties[self.FLAVOR_UPDATE_POLICY])
@@ -1035,12 +1034,18 @@ class Server(stack_user.StackUser):
             raise resource.UpdateReplace(self.name)
 
         flavor_id = self.client_plugin().get_flavor_id(flavor)
-        if not server:
-            server = self.client().servers.get(self.resource_id)
-        return scheduler.TaskRunner(self.client_plugin().resize,
-                                    server, flavor, flavor_id)
+        handler_args = {'args': (flavor_id,)}
+        checker_args = {'args': (flavor_id, flavor)}
 
-    def _update_image(self, server, prop_diff):
+        prg_resize = progress.ServerUpdateProgress(self.resource_id,
+                                                   'resize',
+                                                   handler_extra=handler_args,
+                                                   checker_extra=checker_args)
+        prg_verify = progress.ServerUpdateProgress(self.resource_id,
+                                                   'verify_resize')
+        return prg_resize, prg_verify
+
+    def _update_image(self, prop_diff):
         image_update_policy = (
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
             self.properties[self.IMAGE_UPDATE_POLICY])
@@ -1048,19 +1053,20 @@ class Server(stack_user.StackUser):
             raise resource.UpdateReplace(self.name)
         image = prop_diff[self.IMAGE]
         image_id = self.client_plugin('glance').get_image_id(image)
-        if not server:
-            server = self.client().servers.get(self.resource_id)
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
         password = (prop_diff.get(self.ADMIN_PASS) or
                     self.properties[self.ADMIN_PASS])
-        return scheduler.TaskRunner(
-            self.client_plugin().rebuild, server, image_id,
-            password=password,
-            preserve_ephemeral=preserve_ephemeral)
+        kwargs = {'password': password,
+                  'preserve_ephemeral': preserve_ephemeral}
+        prg = progress.ServerUpdateProgress(self.resource_id,
+                                            'rebuild',
+                                            handler_extra={'args': (image_id,),
+                                                           'kwargs': kwargs})
+        return prg
 
     def _update_networks(self, server, prop_diff):
-        checkers = []
+        updaters = []
         new_networks = prop_diff.get(self.NETWORKS)
         attach_first_free_port = False
         if not new_networks:
@@ -1076,9 +1082,12 @@ class Server(stack_user.StackUser):
         # free port. so we should detach this interface.
         if old_networks is None:
             for iface in interfaces:
-                checker = scheduler.TaskRunner(server.interface_detach,
-                                               iface.port_id)
-                checkers.append(checker)
+                updaters.append(
+                    progress.ServerUpdateProgress(
+                        self.resource_id, 'interface_detach',
+                        complete=True,
+                        handler_extra={'args': (iface.port_id,)})
+                )
 
         # if we have any information in networks field, we should:
         # 1. find similar networks, if they exist
@@ -1099,44 +1108,50 @@ class Server(stack_user.StackUser):
             # will be deleted
             for net in old_networks:
                 if net.get(self.NETWORK_PORT):
-                    checker = scheduler.TaskRunner(server.interface_detach,
-                                                   net.get(self.NETWORK_PORT))
-                    checkers.append(checker)
+                    updaters.append(
+                        progress.ServerUpdateProgress(
+                            self.resource_id, 'interface_detach',
+                            complete=True,
+                            handler_extra={'args':
+                                           (net.get(self.NETWORK_PORT),)})
+                    )
 
+        handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
         # attach section similar for both variants that
         # were mentioned above
-
         for net in new_networks:
             if net.get(self.NETWORK_PORT):
-                checker = scheduler.TaskRunner(server.interface_attach,
-                                               net.get(self.NETWORK_PORT),
-                                               None, None)
-                checkers.append(checker)
+                handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
             elif net.get(self.NETWORK_ID):
-                checker = scheduler.TaskRunner(server.interface_attach,
-                                               None, self._get_network_id(net),
-                                               net.get('fixed_ip'))
-                checkers.append(checker)
+                handler_kwargs['net_id'] = self._get_network_id(net)
+                handler_kwargs['fip'] = net.get('fixed_ip')
             elif net.get('uuid'):
-                checker = scheduler.TaskRunner(server.interface_attach,
-                                               None, net['uuid'],
-                                               net.get('fixed_ip'))
-                checkers.append(checker)
+                handler_kwargs['net_id'] = net['uuid']
+                handler_kwargs['fip'] = net.get('fixed_ip')
+
+            updaters.append(
+                progress.ServerUpdateProgress(
+                    self.resource_id, 'interface_attach',
+                    complete=True,
+                    handler_extra={'kwargs': handler_kwargs})
+            )
 
         # if new_networks is None, we should attach first free port,
         # according to similar behavior during instance creation
         if attach_first_free_port:
-            checker = scheduler.TaskRunner(server.interface_attach,
-                                           None, None, None)
-            checkers.append(checker)
+            updaters.append(
+                progress.ServerUpdateProgress(
+                    self.resource_id, 'interface_attach',
+                    complete=True)
+            )
 
-        return checkers
+        return updaters
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata_set(tmpl_diff['Metadata'])
 
-        checkers = []
+        updaters = []
         server = None
 
         if self.METADATA in prop_diff:
@@ -1145,10 +1160,10 @@ class Server(stack_user.StackUser):
                                              prop_diff[self.METADATA])
 
         if self.FLAVOR in prop_diff:
-            checkers.append(self._update_flavor(server, prop_diff))
+            updaters.extend(self._update_flavor(prop_diff))
 
         if self.IMAGE in prop_diff:
-            checkers.append(self._update_image(server, prop_diff))
+            updaters.append(self._update_image(prop_diff))
         elif self.ADMIN_PASS in prop_diff:
             if not server:
                 server = self.client().servers.get(self.resource_id)
@@ -1160,23 +1175,27 @@ class Server(stack_user.StackUser):
             self.client_plugin().rename(server, prop_diff[self.NAME])
 
         if self.NETWORKS in prop_diff:
-            checkers.extend(self._update_networks(server, prop_diff))
+            updaters.extend(self._update_networks(server, prop_diff))
 
-        # Optimization: make sure the first task is started before
-        # check_update_complete.
-        if checkers:
-            checkers[0].start()
+        # NOTE(pas-ha) optimization is possible (starting first task
+        # right away), but we'd rather not, as this method already might
+        # have called several APIs
+        return updaters
 
-        return checkers
-
-    def check_update_complete(self, checkers):
-        '''Push all checkers to completion in list order.'''
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
+    def check_update_complete(self, updaters):
+        '''Push all updaters to completion in list order.'''
+        for prg in updaters:
+            if not prg.called:
+                handler = getattr(self.client_plugin(), prg.handler)
+                prg.called = handler(*prg.handler_args,
+                                     **prg.handler_kwargs)
                 return False
-        return True
+            if not prg.complete:
+                check_complete = getattr(self.client_plugin(), prg.checker)
+                prg.complete = check_complete(*prg.checker_args,
+                                              **prg.checker_kwargs)
+                break
+        return all(prg.complete for prg in updaters)
 
     def metadata_update(self, new_metadata=None):
         '''
@@ -1380,7 +1399,7 @@ class Server(stack_user.StackUser):
         if state[0] != self.FAILED:
             image_id = self.client().servers.create_image(
                 self.resource_id, self.physical_resource_name())
-            return nova_cp.ServerDeleteProgress(
+            return progress.ServerDeleteProgress(
                 self.resource_id, image_id, False)
         return self.handle_delete()
 
@@ -1399,24 +1418,24 @@ class Server(stack_user.StackUser):
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             return
-        return nova_cp.ServerDeleteProgress(self.resource_id)
+        return progress.ServerDeleteProgress(self.resource_id)
 
-    def check_delete_complete(self, progress):
-        if not progress:
+    def check_delete_complete(self, prg):
+        if not prg:
             return True
 
-        if not progress.image_complete:
-            image = self.client().images.get(progress.image_id)
+        if not prg.image_complete:
+            image = self.client().images.get(prg.image_id)
             if image.status in ('DELETED', 'ERROR'):
                 raise exception.Error(image.status)
             elif image.status == 'ACTIVE':
-                progress.image_complete = True
+                prg.image_complete = True
                 if not self.handle_delete():
                     return True
             return False
 
         return self.client_plugin().check_delete_server_complete(
-            progress.server_id)
+            prg.server_id)
 
     def handle_suspend(self):
         '''
