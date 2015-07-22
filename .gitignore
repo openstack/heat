@@ -3,7 +3,7 @@
 *~
 build
 dist
-*.egg-info
+*.egg*
 tags
 *.log
 heat-test.db
