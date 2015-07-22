@@ -40,6 +40,11 @@ lb_template = '''
       "Description" : "Flavor to use for LoadBalancer instance",
       "Type": "String",
       "Default": "m1.heat"
+    },
+    "LbImageId" : {
+      "Description" : "Image to use",
+      "Type" : "String",
+      "Default" : "image123"
     }
    },
   "Resources": {
@@ -157,6 +162,7 @@ class LoadBalancerTest(common.HeatTestCase):
         if not include_magic:
             del template['Parameters']['KeyName']
             del template['Parameters']['LbFlavor']
+            del template['Parameters']['LbImageId']
         self.stack = utils.parse_stack(template)
 
         resource_name = 'LoadBalancer'
@@ -225,6 +231,16 @@ class LoadBalancerTest(common.HeatTestCase):
         params = rsrc.child_params()
         self.assertNotIn('LbFlavor', params)
 
+    def test_child_params_with_image_id(self):
+        rsrc = self.setup_loadbalancer()
+        params = rsrc.child_params()
+        self.assertEqual('image123', params['LbImageId'])
+
+    def test_child_params_without_image_id(self):
+        rsrc = self.setup_loadbalancer(False)
+        params = rsrc.child_params()
+        self.assertNotIn('LbImageId', params)
+
     def test_child_params_with_sec_gr(self):
         rsrc = self.setup_loadbalancer(False)
         params = rsrc.child_params()
@@ -237,6 +253,7 @@ class LoadBalancerTest(common.HeatTestCase):
         del template['Parameters']['LbFlavor']
         del template['Resources']['LoadBalancer']['Properties'][
             'SecurityGroups']
+        del template['Parameters']['LbImageId']
         stack = utils.parse_stack(template)
 
         resource_name = 'LoadBalancer'
