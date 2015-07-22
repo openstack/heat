@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import copy
 import fnmatch
 import glob
 import itertools
@@ -508,19 +507,6 @@ class Environment(object):
         self.params.update(env_snippet.get(env_fmt.PARAMETERS, {}))
         self.param_defaults.update(
             env_snippet.get(env_fmt.PARAMETER_DEFAULTS, {}))
-
-    def patch_previous_parameters(self, previous_env, clear_parameters=[]):
-        """This instance of Environment is the new environment where
-        we are reusing as default the previous parameter values.
-        """
-        previous_parameters = copy.deepcopy(previous_env.params)
-        # clear the parameters from the previous set as requested
-        for p in clear_parameters:
-            previous_parameters.pop(p, None)
-
-        # patch the new set of parameters
-        previous_parameters.update(self.params)
-        self.params = previous_parameters
 
     def user_env_as_dict(self):
         """Get the environment as a dict, ready for storing in the db."""

@@ -30,6 +30,7 @@ import six
 import webob
 
 from heat.common import context
+from heat.common import environment_format as env_fmt
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
@@ -755,13 +756,18 @@ class EngineService(service.Service):
             raise exception.NotSupported(feature=msg)
 
         # Now parse the template and any parameters for the updated
-        # stack definition.
-        env = environment.Environment(params)
+        # stack definition.  If PARAM_EXISTING is specified, we merge
+        # any environment provided into the existing one.
         if args.get(rpc_api.PARAM_EXISTING, None):
-            env.patch_previous_parameters(
-                current_stack.env,
-                args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
-        tmpl = templatem.Template(template, files=files, env=env)
+            existing_params = current_stack.env.params
+            clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
+            retained = dict((k, v) for k, v in existing_params.items()
+                            if k not in clear_params)
+            new_env = environment.Environment({env_fmt.PARAMETERS: retained})
+            new_env.load(params)
+        else:
+            new_env = environment.Environment(params)
+        tmpl = templatem.Template(template, files=files, env=new_env)
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
             raise exception.RequestLimitExceeded(
