@@ -19,6 +19,7 @@ import mock
 from oslo_utils import timeutils
 import six
 
+from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import api
@@ -189,6 +190,28 @@ class FormatTest(common.HeatTestCase):
         res = self.stack['generic1']
         res.nested = mock.Mock()
         res.nested.return_value = None
+
+        resource_keys = set((
+            rpc_api.RES_CREATION_TIME,
+            rpc_api.RES_UPDATED_TIME,
+            rpc_api.RES_NAME,
+            rpc_api.RES_PHYSICAL_ID,
+            rpc_api.RES_ACTION,
+            rpc_api.RES_STATUS,
+            rpc_api.RES_STATUS_DATA,
+            rpc_api.RES_TYPE,
+            rpc_api.RES_ID,
+            rpc_api.RES_STACK_ID,
+            rpc_api.RES_STACK_NAME,
+            rpc_api.RES_REQUIRED_BY))
+
+        formatted = api.format_stack_resource(res, False)
+        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
+
+    def test_format_stack_resource_with_nested_stack_not_found(self):
+        res = self.stack['generic1']
+        res.nested = mock.Mock()
+        res.nested.side_effect = exception.NotFound()
 
         resource_keys = set((
             rpc_api.RES_CREATION_TIME,

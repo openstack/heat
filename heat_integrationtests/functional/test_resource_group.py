@@ -472,3 +472,43 @@ outputs:
         stack = self.client.stacks.get(stack_identifier)
         self.assertEqual('goopie', self._stack_output(stack, 'test0'))
         self.assertEqual('different', self._stack_output(stack, 'test1'))
+
+
+class ResourceGroupErrorResourceTest(test.HeatIntegrationTest):
+    template = '''
+heat_template_version: "2013-05-23"
+resources:
+  group1:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: 2
+      resource_def:
+        type: fail.yaml
+'''
+    nested_templ = '''
+heat_template_version: "2013-05-23"
+resources:
+  oops:
+    type: OS::Heat::TestResource
+    properties:
+      fail: true
+      wait_secs: 2
+'''
+
+    def setUp(self):
+        super(ResourceGroupErrorResourceTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_fail(self):
+        stack_identifier = self.stack_create(
+            template=self.template,
+            files={'fail.yaml': self.nested_templ},
+            expected_status='CREATE_FAILED',
+            enable_cleanup=False)
+        stack = self.client.stacks.get(stack_identifier)
+
+        self.assertEqual('CREATE_FAILED', stack.stack_status)
+        self.client.stacks.delete(stack_identifier)
+        self._wait_for_stack_status(
+            stack_identifier, 'DELETE_COMPLETE',
+            success_on_not_found=True)
