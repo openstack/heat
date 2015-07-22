@@ -20,6 +20,7 @@ import mock
 import mox
 from oslo_config import cfg
 import six
+import testtools
 
 from heat.common import context
 from heat.common import exception
@@ -954,6 +955,7 @@ class StackTest(common.HeatTestCase):
                          '(a foo) is incorrect.', self.stack.status_reason)
         self.m.VerifyAll()
 
+    @testtools.skipIf(six.PY3, "skipped until review 193726 is merged")
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(timeutils, 'wallclock')
@@ -1697,8 +1699,9 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertEqual("Parameter 'foo' is invalid: could not convert "
-                         "string to float: abc", six.text_type(ex))
+        self.assertIn("Parameter 'foo' is invalid: could not convert "
+                      "string to float:", six.text_type(ex))
+        self.assertIn("abc", six.text_type(ex))
 
         self.stack.strict_validate = False
         self.assertIsNone(self.stack.validate())
@@ -1961,6 +1964,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('foo', params['param1'])
         self.assertEqual('bar', params['param2'])
 
+    @testtools.skipIf(six.PY3, "needs a separate change")
     def test_parameters_stored_encrypted_decrypted_on_load(self):
         '''
         Test stack loading with disabled parameter value validation.

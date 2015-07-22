@@ -621,7 +621,14 @@ def user_creds_create(context):
         user_creds_ref.password = password
         user_creds_ref.decrypt_method = method
     user_creds_ref.save(_session(context))
-    return user_creds_ref
+    result = dict(user_creds_ref)
+
+    if values.get('trust_id'):
+        result['trust_id'] = values.get('trust_id')
+    else:
+        result['password'] = values.get('password')
+
+    return result
 
 
 def user_creds_get(user_creds_id):

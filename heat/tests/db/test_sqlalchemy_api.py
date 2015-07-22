@@ -22,7 +22,6 @@ from oslo_utils import timeutils
 import six
 
 from heat.common import context
-from heat.common import crypt
 from heat.common import exception
 from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
@@ -928,7 +927,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.trust_id = None
         self.ctx.region_name = 'RegionOne'
         db_creds = db_api.user_creds_create(self.ctx)
-        load_creds = db_api.user_creds_get(db_creds.id)
+        load_creds = db_api.user_creds_get(db_creds['id'])
 
         self.assertEqual('test_username', load_creds.get('username'))
         self.assertEqual('password', load_creds.get('password'))
@@ -961,7 +960,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.auth_url = 'anauthurl'
         self.ctx.region_name = 'aregion'
         db_creds = db_api.user_creds_create(self.ctx)
-        load_creds = db_api.user_creds_get(db_creds.id)
+        load_creds = db_api.user_creds_get(db_creds['id'])
 
         self.assertIsNone(load_creds.get('username'))
         self.assertIsNone(load_creds.get('password'))
@@ -980,7 +979,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.trust_id = None
         self.ctx.region_name = None
         db_creds = db_api.user_creds_create(self.ctx)
-        load_creds = db_api.user_creds_get(db_creds.id)
+        load_creds = db_api.user_creds_get(db_creds['id'])
 
         self.assertIsNone(load_creds.get('username'))
         self.assertIsNone(load_creds.get('password'))
@@ -1328,7 +1327,7 @@ def create_stack(ctx, template, user_creds, **kwargs):
         'status': 'complete',
         'status_reason': 'create_complete',
         'parameters': {},
-        'user_creds_id': user_creds.id,
+        'user_creds_id': user_creds['id'],
         'owner_id': None,
         'timeout': '60',
         'disable_rollback': 0,
@@ -1499,28 +1498,23 @@ class DBAPIUserCredsTest(common.HeatTestCase):
     def test_user_creds_create_trust(self):
         user_creds = create_user_creds(self.ctx, trust_id='test_trust_id',
                                        trustor_user_id='trustor_id')
-        self.assertIsNotNone(user_creds.id)
-        self.assertEqual('test_trust_id',
-                         crypt.decrypt(user_creds.decrypt_method,
-                                       user_creds.trust_id))
-        self.assertEqual('trustor_id', user_creds.trustor_user_id)
-        self.assertIsNone(user_creds.username)
-        self.assertIsNone(user_creds.password)
-        self.assertEqual(self.ctx.tenant, user_creds.tenant)
-        self.assertEqual(self.ctx.tenant_id, user_creds.tenant_id)
+        self.assertIsNotNone(user_creds['id'])
+        self.assertEqual('test_trust_id', user_creds['trust_id'])
+        self.assertEqual('trustor_id', user_creds['trustor_user_id'])
+        self.assertIsNone(user_creds['username'])
+        self.assertIsNone(user_creds['password'])
+        self.assertEqual(self.ctx.tenant, user_creds['tenant'])
+        self.assertEqual(self.ctx.tenant_id, user_creds['tenant_id'])
 
     def test_user_creds_create_password(self):
         user_creds = create_user_creds(self.ctx)
-        self.assertIsNotNone(user_creds.id)
-        self.assertEqual(self.ctx.password,
-                         crypt.decrypt(user_creds.decrypt_method,
-                                       user_creds.password))
+        self.assertIsNotNone(user_creds['id'])
+        self.assertEqual(self.ctx.password, user_creds['password'])
 
     def test_user_creds_get(self):
         user_creds = create_user_creds(self.ctx)
-        ret_user_creds = db_api.user_creds_get(user_creds.id)
-        self.assertEqual(crypt.decrypt(user_creds.decrypt_method,
-                                       user_creds.password),
+        ret_user_creds = db_api.user_creds_get(user_creds['id'])
+        self.assertEqual(user_creds['password'],
                          ret_user_creds['password'])
 
     def test_user_creds_get_noexist(self):
@@ -1528,15 +1522,15 @@ class DBAPIUserCredsTest(common.HeatTestCase):
 
     def test_user_creds_delete(self):
         user_creds = create_user_creds(self.ctx)
-        self.assertIsNotNone(user_creds.id)
-        db_api.user_creds_delete(self.ctx, user_creds.id)
-        creds = db_api.user_creds_get(user_creds.id)
+        self.assertIsNotNone(user_creds['id'])
+        db_api.user_creds_delete(self.ctx, user_creds['id'])
+        creds = db_api.user_creds_get(user_creds['id'])
         self.assertIsNone(creds)
         err = self.assertRaises(
             exception.NotFound, db_api.user_creds_delete,
-            self.ctx, user_creds.id)
+            self.ctx, user_creds['id'])
         exp_msg = ('Attempt to delete user creds with id '
-                   '%s that does not exist' % user_creds.id)
+                   '%s that does not exist' % user_creds['id'])
         self.assertIn(exp_msg, six.text_type(err))
 
 
@@ -1590,7 +1584,7 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertEqual('complete', stack.status)
         self.assertEqual('create_complete', stack.status_reason)
         self.assertEqual({}, stack.parameters)
-        self.assertEqual(self.user_creds.id, stack.user_creds_id)
+        self.assertEqual(self.user_creds['id'], stack.user_creds_id)
         self.assertIsNone(stack.owner_id)
         self.assertEqual('60', stack.timeout)
         self.assertFalse(stack.disable_rollback)

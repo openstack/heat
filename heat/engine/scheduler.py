@@ -376,7 +376,7 @@ class DependencyTaskGroup(object):
     def __repr__(self):
         """Return a string representation of the task."""
         text = '%s(%s)' % (type(self).__name__, self.name)
-        return encodeutils.safe_encode(text)
+        return six.text_type(text)
 
     def __call__(self):
         """Return a co-routine which runs the task group."""
