@@ -1435,9 +1435,10 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res.create_convergence(res_data, 'engine-007')
+        res.create_convergence(self.stack.t.id, res_data, 'engine-007')
 
         mock_create.assert_called_once_with()
+        self.assertEqual(self.stack.t.id, res.current_template_id)
         self.assertItemsEqual([1, 3], res.requires)
         self._assert_resource_lock(res.id, None, 2)
 
@@ -1455,7 +1456,7 @@ class ResourceTest(common.HeatTestCase):
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
         self.assertRaises(exception.ResourceNotAvailable,
-                          res.create_convergence, res_data,
+                          res.create_convergence, self.stack.t.id, res_data,
                           'engine-007')
         self.assertItemsEqual([5, 3], res.requires)
         self._assert_resource_lock(res.id, None, 2)
@@ -1471,7 +1472,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res.create_convergence(res_data, 'engine-007')
+        res.create_convergence(self.stack.t.id, res_data, 'engine-007')
 
         mock_adopt.assert_called_once_with(
             resource_data={'resource_id': 'fluffy'})
