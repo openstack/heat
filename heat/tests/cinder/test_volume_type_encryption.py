@@ -50,7 +50,7 @@ class CinderEncryptedVolumeTypeTest(common.HeatTestCase):
         self.my_encrypted_vol_type = self.stack['my_encrypted_vol_type']
         cinder = mock.MagicMock()
         self.cinderclient = mock.MagicMock()
-        self.my_encrypted_vol_type.cinder = cinder
+        self.my_encrypted_vol_type.client = cinder
         cinder.return_value = self.cinderclient
         self.volume_encryption_types = \
             self.cinderclient.volume_encryption_types

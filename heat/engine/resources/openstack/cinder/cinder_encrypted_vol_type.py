@@ -95,14 +95,14 @@ class CinderEncryptedVolumeType(resource.Resource):
 
         vol_type_id = self._get_vol_type_id(self.properties[self.VOLUME_TYPE])
 
-        encrypted_vol_type = self.cinder().volume_encryption_types.create(
+        encrypted_vol_type = self.client().volume_encryption_types.create(
             volume_type=vol_type_id, specs=body
         )
         self.resource_id_set(encrypted_vol_type.volume_type_id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.cinder().volume_encryption_types.update(
+            self.client().volume_encryption_types.update(
                 volume_type=self.resource_id, specs=prop_diff
             )
 
@@ -110,7 +110,7 @@ class CinderEncryptedVolumeType(resource.Resource):
         if self.resource_id is None:
             return
         try:
-            self.cinder().volume_encryption_types.delete(self.resource_id)
+            self.client().volume_encryption_types.delete(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
 

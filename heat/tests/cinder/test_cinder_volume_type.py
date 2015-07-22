@@ -47,7 +47,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.my_volume_type = self.stack['my_volume_type']
         cinder = mock.MagicMock()
         self.cinderclient = mock.MagicMock()
-        self.my_volume_type.cinder = cinder
+        self.my_volume_type.client = cinder
         cinder.return_value = self.cinderclient
         self.volume_types = self.cinderclient.volume_types
 
