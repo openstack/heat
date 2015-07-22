@@ -102,6 +102,15 @@ def parse_stack(t, params=None, files=None, stack_name=None,
     return stk
 
 
+def update_stack(stk, new_t, params=None, files=None):
+    ctx = dummy_context()
+    templ = template.Template(new_t, files=files,
+                              env=environment.Environment(params))
+    updated_stack = stack.Stack(ctx, 'updated_stack', templ)
+
+    stk.update(updated_stack)
+
+
 class PhysName(object):
 
     mock_short_id = 'x' * 12
