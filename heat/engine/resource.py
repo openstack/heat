@@ -265,20 +265,32 @@ class Resource(object):
         self._stackref = weakref.ref(stack)
 
     @classmethod
-    def load(cls, context, resource_id, data):
-        # FIXME(sirushtim): Import this in global space.
+    def load(cls, context, resource_id, is_update, data):
         from heat.engine import stack as stack_mod
         db_res = resource_objects.Resource.get_obj(context, resource_id)
-        # TODO(sirushtim): Load stack from cache
-        stack = stack_mod.Stack.load(context, db_res.stack_id)
-        stack.adopt_stack_data = data.get('adopt_stack_data')
-        # NOTE(sirushtim): Because on delete/cleanup operations, we simply
-        # update with another template, the stack object won't have the
-        # template of the previous stack-run.
+
+        @contextlib.contextmanager
+        def special_stack(tmpl, swap_template):
+            # TODO(sirushtim): Load stack from cache
+            stk = stack_mod.Stack.load(context, db_res.stack_id)
+            stk.adopt_stack_data = data.get('adopt_stack_data')
+
+            # NOTE(sirushtim): Because on delete/cleanup operations, we simply
+            # update with another template, the stack object won't have the
+            # template of the previous stack-run.
+            if swap_template:
+                prev_tmpl = stk.t
+                stk.t = tmpl
+            yield stk
+            if swap_template:
+                stk.t = prev_tmpl
+
         tmpl = template.Template.load(context, db_res.current_template_id)
-        stack_res = tmpl.resource_definitions(stack)[db_res.name]
-        resource = cls(db_res.name, stack_res, stack)
-        resource._load_data(db_res)
+        with special_stack(tmpl, not is_update) as stack:
+            stack_res = tmpl.resource_definitions(stack)[db_res.name]
+            resource = cls(db_res.name, stack_res, stack)
+            resource._load_data(db_res)
+
         return resource, stack
 
     def make_replacement(self, new_tmpl_id):

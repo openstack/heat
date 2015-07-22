@@ -94,8 +94,34 @@ class ResourceTest(common.HeatTestCase):
         res.state_set('CREATE', 'IN_PROGRESS')
         self.stack.add_resource(res)
         loaded_res, stack = resource.Resource.load(self.stack.context,
-                                                   res.id, {})
+                                                   res.id, True, {})
         self.assertEqual(loaded_res.id, res.id)
+        self.assertEqual(self.stack.t, stack.t)
+
+    def test_resource_load_with_state_cleanup(self):
+        self.old_stack = parser.Stack(
+            utils.dummy_context(), 'test_old_stack',
+            template.Template({
+                'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                    'test_res': {'Type': 'ResourceWithPropsType',
+                                 'Properties': {'Foo': 'abc'}}}}))
+        self.old_stack.store()
+        self.new_stack = parser.Stack(utils.dummy_context(), 'test_new_stack',
+                                      template.Template(empty_template))
+        self.new_stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
+        # Store Resource
+        res = resource.Resource('aresource', snippet, self.old_stack)
+        res.current_template_id = self.old_stack.t.id
+        res.state_set('CREATE', 'IN_PROGRESS')
+        self.old_stack.add_resource(res)
+        loaded_res, stack = resource.Resource.load(self.old_stack.context,
+                                                   res.id, False, {})
+        self.assertEqual(loaded_res.id, res.id)
+        self.assertEqual(self.old_stack.t, stack.t)
+        self.assertNotEqual(self.new_stack.t, stack.t)
 
     def test_resource_invalid_name(self):
         snippet = rsrc_defn.ResourceDefinition('wrong/name',

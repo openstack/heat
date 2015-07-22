@@ -132,7 +132,8 @@ class WorkerService(service.Service):
                 'name'): in_data for in_data in data.values()
                 if in_data is not None}
             cache_data['adopt_stack_data'] = adopt_data
-            rsrc, stack = resource.Resource.load(cnxt, resource_id, cache_data)
+            rsrc, stack = resource.Resource.load(cnxt, resource_id, is_update,
+                                                 cache_data)
         except (exception.ResourceNotFound, exception.NotFound):
             return
         tmpl = stack.t
