@@ -837,7 +837,7 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
 
     def test_stack_update_existing_parameters(self):
         '''Use a template with existing parameters, then update with a
-        template containing additional paramters and ensure all are preserved.
+        template containing additional parameters and ensure all are preserved.
         '''
         stack_name = 'service_update_test_stack_existing_parameters'
         update_params = {'encrypted_param_names': [],
@@ -867,7 +867,7 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
 
     def test_stack_update_existing_parameters_remove(self):
         '''Use a template with existing parameters, then update with a
-        template containing additional paramters and a list of
+        template containing additional parameters and a list of
         parameters to be removed.
         '''
         stack_name = 'service_update_test_stack_existing_parameters'
@@ -898,6 +898,111 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
             tmpl = mock_stack.call_args[0][2]
             self.assertEqual({'KeyName': 'test', 'newparam': 123},
                              tmpl.env.params)
+            self.assertEqual(stack.identifier(), result)
+
+    def test_stack_update_existing_registry(self):
+        '''Use a template with existing flag and ensure the
+        environment registry is preserved.
+        '''
+        stack_name = 'service_update_test_stack_existing_registry'
+        intital_registry = {'OS::Foo': 'foo.yaml',
+                            'OS::Foo2': 'foo2.yaml',
+                            'resources': {
+                                'myserver': {'OS::Server': 'myserver.yaml'}}}
+        intial_params = {'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'parameters': {},
+                         'resource_registry': intital_registry}
+        initial_files = {'foo.yaml': 'foo',
+                         'foo2.yaml': 'foo2',
+                         'myserver.yaml': 'myserver'}
+        update_registry = {'OS::Foo2': 'newfoo2.yaml',
+                           'resources': {
+                               'myother': {'OS::Other': 'myother.yaml'}}}
+        update_params = {'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'parameters': {},
+                         'resource_registry': update_registry}
+        update_files = {'newfoo2.yaml': 'newfoo',
+                        'myother.yaml': 'myother'}
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
+        t = template_format.parse(tools.wp_template)
+
+        stack = utils.parse_stack(t, stack_name=stack_name,
+                                  params=intial_params,
+                                  files=initial_files)
+        stack.set_stack_user_project_id('1234')
+        self.assertEqual(intial_params,
+                         stack.t.env.user_env_as_dict())
+
+        expected_reg = {'OS::Foo': 'foo.yaml',
+                        'OS::Foo2': 'newfoo2.yaml',
+                        'resources': {
+                            'myother': {'OS::Other': 'myother.yaml'},
+                            'myserver': {'OS::Server': 'myserver.yaml'}}}
+        expected_env = {'encrypted_param_names': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': expected_reg}
+        # FIXME(shardy): Currently we don't prune unused old files
+        expected_files = {'foo.yaml': 'foo',
+                          'foo2.yaml': 'foo2',
+                          'myserver.yaml': 'myserver',
+                          'newfoo2.yaml': 'newfoo',
+                          'myother.yaml': 'myother'}
+        with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            mock_stack.load.return_value = stack
+            mock_stack.validate.return_value = None
+            result = self.man.update_stack(self.ctx, stack.identifier(),
+                                           t,
+                                           update_params,
+                                           update_files,
+                                           api_args)
+            tmpl = mock_stack.call_args[0][2]
+            self.assertEqual(expected_env,
+                             tmpl.env.user_env_as_dict())
+            self.assertEqual(expected_files,
+                             tmpl.files)
+            self.assertEqual(stack.identifier(), result)
+
+    def test_stack_update_existing_parameter_defaults(self):
+        '''Use a template with existing flag and ensure the
+        environment parameter_defaults are preserved.
+        '''
+        stack_name = 'service_update_test_stack_existing_param_defaults'
+        intial_params = {'encrypted_param_names': [],
+                         'parameter_defaults': {'mydefault': 123},
+                         'parameters': {},
+                         'resource_registry': {}}
+        update_params = {'encrypted_param_names': [],
+                         'parameter_defaults': {'default2': 456},
+                         'parameters': {},
+                         'resource_registry': {}}
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
+        t = template_format.parse(tools.wp_template)
+
+        stack = utils.parse_stack(t, stack_name=stack_name,
+                                  params=intial_params)
+        stack.set_stack_user_project_id('1234')
+
+        expected_env = {'encrypted_param_names': [],
+                        'parameter_defaults': {
+                            'mydefault': 123,
+                            'default2': 456},
+                        'parameters': {},
+                        'resource_registry': {'resources': {}}}
+        with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            mock_stack.load.return_value = stack
+            mock_stack.validate.return_value = None
+            result = self.man.update_stack(self.ctx, stack.identifier(),
+                                           t,
+                                           update_params,
+                                           None, api_args)
+            tmpl = mock_stack.call_args[0][2]
+            self.assertEqual(expected_env,
+                             tmpl.env.user_env_as_dict())
             self.assertEqual(stack.identifier(), result)
 
     def test_stack_update_reuses_api_params(self):
