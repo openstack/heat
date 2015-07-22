@@ -74,7 +74,7 @@ class KeystoneEndpoint(resource.Resource):
                          url,
                          region=None,
                          name=None):
-        return self.keystone().client.endpoints.create(
+        return self.client().client.endpoints.create(
             region=region,
             service=service,
             interface=interface,
@@ -82,7 +82,7 @@ class KeystoneEndpoint(resource.Resource):
             name=name)
 
     def _delete_endpoint(self, endpoint_id):
-        return self.keystone().client.endpoints.delete(endpoint_id)
+        return self.client().client.endpoints.delete(endpoint_id)
 
     def _update_endpoint(self,
                          endpoint_id,
@@ -91,7 +91,7 @@ class KeystoneEndpoint(resource.Resource):
                          new_interface=None,
                          new_url=None,
                          new_name=None):
-        return self.keystone().client.endpoints.update(
+        return self.client().client.endpoints.update(
             endpoint=endpoint_id,
             region=new_region,
             service=new_service,

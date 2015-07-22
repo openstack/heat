@@ -25,6 +25,8 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
         version='2015.1',
         message=_('Supported versions: keystone v3'))
 
+    default_client_name = 'keystone'
+
     PROPERTIES = (
         NAME, DOMAIN, DESCRIPTION, ENABLED, EMAIL, PASSWORD,
         DEFAULT_PROJECT, GROUPS
@@ -102,7 +104,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
             default_project = (self.client_plugin().
                                get_project_id(default_project))
 
-        return self.keystone().client.users.create(
+        return self.client().client.users.create(
             name=user_name,
             domain=domain,
             description=description,
@@ -112,7 +114,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
             default_project=default_project)
 
     def _delete_user(self, user_id):
-        return self.keystone().client.users.delete(user_id)
+        return self.client().client.users.delete(user_id)
 
     def _update_user(self,
                      user_id,
@@ -143,7 +145,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
 
         values['domain'] = domain
 
-        return self.keystone().client.users.update(**values)
+        return self.client().client.users.update(**values)
 
     def _add_user_to_groups(self, user_id, groups):
         if groups is not None:
@@ -151,8 +153,8 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
                          for group in groups]
 
             for group_id in group_ids:
-                self.keystone().client.users.add_to_group(user_id,
-                                                          group_id)
+                self.client().client.users.add_to_group(user_id,
+                                                        group_id)
 
     def _remove_user_from_groups(self, user_id, groups):
         if groups is not None:
@@ -160,8 +162,8 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
                          for group in groups]
 
             for group_id in group_ids:
-                self.keystone().client.users.remove_from_group(user_id,
-                                                               group_id)
+                self.client().client.users.remove_from_group(user_id,
+                                                             group_id)
 
     def _find_diff(self, updated_prps, stored_prps):
         new_group_ids = [self.client_plugin().get_group_id(group)

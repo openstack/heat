@@ -53,8 +53,8 @@ class KeystoneGroupTest(common.HeatTestCase):
 
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_group.keystone = mock.MagicMock()
-        self.test_group.keystone.return_value = self.keystoneclient
+        self.test_group.client = mock.MagicMock()
+        self.test_group.client.return_value = self.keystoneclient
         self.groups = self.keystoneclient.client.groups
 
         # Mock client plugin

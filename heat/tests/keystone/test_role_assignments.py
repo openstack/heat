@@ -65,8 +65,8 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
 
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_role_assignment.keystone = mock.MagicMock()
-        self.test_role_assignment.keystone.return_value = self.keystoneclient
+        self.test_role_assignment.client = mock.MagicMock()
+        self.test_role_assignment.client.return_value = self.keystoneclient
         self.roles = self.keystoneclient.client.roles
 
         # Mock client plugin

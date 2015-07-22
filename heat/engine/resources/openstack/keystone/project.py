@@ -67,14 +67,14 @@ class KeystoneProject(resource.Resource):
                         enabled):
         domain = self.client_plugin().get_domain_id(domain)
 
-        return self.keystone().client.projects.create(
+        return self.client().client.projects.create(
             name=project_name,
             domain=domain,
             description=description,
             enabled=enabled)
 
     def _delete_project(self, project_id):
-        return self.keystone().client.projects.delete(project_id)
+        return self.client().client.projects.delete(project_id)
 
     def _update_project(self,
                         project_id,
@@ -96,7 +96,7 @@ class KeystoneProject(resource.Resource):
 
         values['domain'] = domain
 
-        return self.keystone().client.projects.update(**values)
+        return self.client().client.projects.update(**values)
 
     def handle_create(self):
         project_name = (self.properties.get(self.NAME) or

@@ -52,8 +52,8 @@ class KeystoneServiceTest(common.HeatTestCase):
 
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_service.keystone = mock.MagicMock()
-        self.test_service.keystone.return_value = self.keystoneclient
+        self.test_service.client = mock.MagicMock()
+        self.test_service.client.return_value = self.keystoneclient
         self.services = self.keystoneclient.client.services
 
         # Mock client plugin

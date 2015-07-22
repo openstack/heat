@@ -55,20 +55,20 @@ class KeystoneService(resource.Resource):
                         name,
                         type,
                         description=None):
-        return self.keystone().client.services.create(
+        return self.client().client.services.create(
             name=name,
             description=description,
             type=type)
 
     def _delete_service(self, service_id):
-        return self.keystone().client.services.delete(service_id)
+        return self.client().client.services.delete(service_id)
 
     def _update_service(self,
                         service_id,
                         new_name=None,
                         new_description=None,
                         new_type=None):
-        return self.keystone().client.services.update(
+        return self.client().client.services.update(
             service=service_id,
             name=new_name,
             description=new_description,
