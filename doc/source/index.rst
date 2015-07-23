@@ -55,6 +55,7 @@ Developers Documentation
    pluginguide
    schedulerhints
    gmr
+   supportstatus
 
 API Documentation
 ========================
