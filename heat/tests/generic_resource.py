@@ -151,6 +151,12 @@ class ResourceWithRequiredProps(GenericResource):
                                                   required=True)}
 
 
+class ResourceWithRequiredPropsAndEmptyAttrs(GenericResource):
+    properties_schema = {'Foo': properties.Schema(properties.Schema.STRING,
+                                                  required=True)}
+    attributes_schema = {}
+
+
 class SignalResource(signal_responder.SignalResponder):
     properties_schema = {
         'signal_transport': properties.Schema(properties.Schema.STRING,

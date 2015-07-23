@@ -2214,6 +2214,9 @@ class StackServiceTest(common.HeatTestCase):
                           'type': 'string'},
                 'attr2': {'description': 'Another generic attribute',
                           'type': 'map'},
+                'show': {
+                    'description': 'Dictionary with resource attributes.',
+                    'type': 'map'},
             },
             'support_status': {
                 'status': 'SUPPORTED',

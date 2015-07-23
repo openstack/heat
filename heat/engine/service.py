@@ -13,6 +13,7 @@
 
 import collections
 import datetime
+import itertools
 import os
 import socket
 import warnings
@@ -1084,7 +1085,9 @@ class EngineService(service.Service):
                     yield name, dict(schema)
 
         def attributes_schema():
-            for name, schema_data in resource_class.attributes_schema.items():
+            for name, schema_data in itertools.chain(
+                    resource_class.attributes_schema.items(),
+                    resource_class.base_attributes_schema.items()):
                 schema = attributes.Schema.from_attribute(schema_data)
                 yield name, dict(schema)
 

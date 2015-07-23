@@ -109,9 +109,7 @@ class ProviderTemplateTest(common.HeatTestCase):
 
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-
+        class DummyResource(generic_rsrc.GenericResource):
             attributes_schema = {"Foo": attributes.Schema("A test attribute")}
             properties_schema = {
                 "Foo": {"Type": "String"},
@@ -198,9 +196,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-            properties_schema = {}
+        class DummyResource(generic_rsrc.GenericResource):
             attributes_schema = {"Foo": attributes.Schema("A test attribute")}
 
         env = environment.Environment()
@@ -227,9 +223,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-            properties_schema = {}
+        class DummyResource(generic_rsrc.GenericResource):
             attributes_schema = {"Foo": attributes.Schema("A test attribute")}
 
         env = environment.Environment()
@@ -284,7 +278,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
+        class DummyResource(generic_rsrc.GenericResource):
             support_status = support.SupportStatus()
             properties_schema = {}
             attributes_schema = {"Foo": attributes.Schema(
@@ -322,25 +316,19 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-            properties_schema = {"Foo":
-                                 properties.Schema(properties.Schema.STRING,
-                                                   required=True)}
-            attributes_schema = {}
-
         env = environment.Environment()
-        resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
-                  {'DummyResource': 'test_resource.template'}})
+                  {'ResourceWithRequiredPropsAndEmptyAttrs':
+                   'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
-        definition = rsrc_defn.ResourceDefinition('test_t_res',
-                                                  "DummyResource",
-                                                  {"Foo": "bar"})
+        definition = rsrc_defn.ResourceDefinition(
+            'test_t_res',
+            "ResourceWithRequiredPropsAndEmptyAttrs",
+            {"Foo": "bar"})
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
         self.assertIsNone(temp_res.validate())
@@ -354,24 +342,18 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-            properties_schema = {"Foo":
-                                 properties.Schema(properties.Schema.STRING,
-                                                   required=True)}
-            attributes_schema = {}
-
         env = environment.Environment()
-        resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
-                  {'DummyResource': 'test_resource.template'}})
+                  {'ResourceWithRequiredPropsAndEmptyAttrs':
+                   'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
-        definition = rsrc_defn.ResourceDefinition('test_t_res',
-                                                  "DummyResource")
+        definition = rsrc_defn.ResourceDefinition(
+            'test_t_res',
+            "ResourceWithRequiredPropsAndEmptyAttrs")
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
         self.assertRaises(exception.StackValidationFailed,
@@ -417,7 +399,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
+        class DummyResource(generic_rsrc.GenericResource):
             support_status = support.SupportStatus()
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.MAP)}
@@ -453,7 +435,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
+        class DummyResource(generic_rsrc.GenericResource):
             support_status = support.SupportStatus()
             properties_schema = {"Length":
                                  properties.Schema(properties.Schema.INTEGER)}
@@ -485,7 +467,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         }
         files = {'test_resource.template': json.dumps(provider)}
 
-        class DummyResource(object):
+        class DummyResource(generic_rsrc.GenericResource):
             support_status = support.SupportStatus()
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.BOOLEAN)}
@@ -518,8 +500,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         files = {'test_resource.template': json.dumps(provider),
                  'foo.template': json.dumps(provider)}
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
+        class DummyResource(generic_rsrc.GenericResource):
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.BOOLEAN)}
             attributes_schema = {}
@@ -882,17 +863,10 @@ class TemplateDataTest(common.HeatTestCase):
         files = {}
         self.ctx = utils.dummy_context()
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-            properties_schema = {"Foo":
-                                 properties.Schema(properties.Schema.STRING,
-                                                   required=True)}
-            attributes_schema = {}
-
         env = environment.Environment()
-        resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
-                  {'DummyResource': 'test_resource.template'}})
+                  {'ResourceWithRequiredPropsAndEmptyAttrs':
+                   'test_resource.template'}})
 
         self.stack = parser.Stack(self.ctx, 'test_stack',
                                   template.Template(empty_template,
@@ -900,9 +874,10 @@ class TemplateDataTest(common.HeatTestCase):
                                                     env=env),
                                   stack_id=str(uuid.uuid4()))
 
-        self.defn = rsrc_defn.ResourceDefinition('test_t_res',
-                                                 "DummyResource",
-                                                 {"Foo": "bar"})
+        self.defn = rsrc_defn.ResourceDefinition(
+            'test_t_res',
+            "ResourceWithRequiredPropsAndEmptyAttrs",
+            {"Foo": "bar"})
         self.res = template_resource.TemplateResource('test_t_res',
                                                       self.defn, self.stack)
 
@@ -937,26 +912,20 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         files = {'test_resource.template': json.dumps(self.provider)}
         self.ctx = utils.dummy_context()
 
-        class DummyResource(object):
-            support_status = support.SupportStatus()
-            properties_schema = {"Foo":
-                                 properties.Schema(properties.Schema.STRING,
-                                                   required=True)}
-            attributes_schema = {}
-
         env = environment.Environment()
-        resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
-                  {'DummyResource': 'test_resource.template'}})
+                  {'ResourceWithRequiredPropsAndEmptyAttrs':
+                      'test_resource.template'}})
         self.stack = parser.Stack(self.ctx, 'test_stack',
                                   template.Template(empty_template,
                                                     files=files,
                                                     env=env),
                                   stack_id=str(uuid.uuid4()))
 
-        self.defn = rsrc_defn.ResourceDefinition('test_t_res',
-                                                 "DummyResource",
-                                                 {"Foo": "bar"})
+        self.defn = rsrc_defn.ResourceDefinition(
+            'test_t_res',
+            "ResourceWithRequiredPropsAndEmptyAttrs",
+            {"Foo": "bar"})
         self.res = template_resource.TemplateResource('test_t_res',
                                                       self.defn, self.stack)
         self.assertIsNone(self.res.validate())
