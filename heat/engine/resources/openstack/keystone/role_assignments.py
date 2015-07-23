@@ -15,6 +15,8 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
+from heat.engine import support
 
 
 class KeystoneRoleAssignmentMixin(object):
@@ -306,3 +308,112 @@ class KeystoneRoleAssignmentMixin(object):
                     msg = _('Either project or domain must be specified for'
                             ' role %s') % role_assignment.get(self.ROLE)
                     raise exception.StackValidationFailed(message=msg)
+
+
+class KeystoneUserRoleAssignment(resource.Resource,
+                                 KeystoneRoleAssignmentMixin):
+    '''Resource for granting roles to a user.'''
+
+    support_status = support.SupportStatus(
+        version='5.0.0',
+        message=_('Supported versions: keystone v3'))
+
+    default_client_name = 'keystone'
+
+    PROPERTIES = (
+        USER,
+    ) = (
+        'user',
+    )
+
+    properties_schema = {
+        USER: properties.Schema(
+            properties.Schema.STRING,
+            _('Name or id of keystone user.'),
+            required=True,
+            update_allowed=True,
+            constraints=[constraints.CustomConstraint('keystone.user')]
+        )
+    }
+
+    properties_schema.update(
+        KeystoneRoleAssignmentMixin.mixin_properties_schema)
+
+    def __init__(self, *args, **kwargs):
+        super(KeystoneUserRoleAssignment, self).__init__(*args, **kwargs)
+
+    @property
+    def user_id(self):
+        return (self.client_plugin().get_user_id(
+                self.properties.get(self.USER)))
+
+    def handle_create(self):
+        self.create_assignment(user_id=self.user_id)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        self.update_assignment(user_id=self.user_id, prop_diff=prop_diff)
+
+    def handle_delete(self):
+        self.delete_assignment(user_id=self.user_id)
+
+    def validate(self):
+        super(KeystoneUserRoleAssignment, self).validate()
+        self.validate_assignment_properties()
+
+
+class KeystoneGroupRoleAssignment(resource.Resource,
+                                  KeystoneRoleAssignmentMixin):
+    '''Resource for granting roles to a group.'''
+
+    support_status = support.SupportStatus(
+        version='5.0.0',
+        message=_('Supported versions: keystone v3'))
+
+    default_client_name = 'keystone'
+
+    PROPERTIES = (
+        GROUP,
+    ) = (
+        'group',
+    )
+
+    properties_schema = {
+        GROUP: properties.Schema(
+            properties.Schema.STRING,
+            _('Name or id of keystone group.'),
+            required=True,
+            update_allowed=True,
+            constraints=[constraints.CustomConstraint('keystone.group')]
+        )
+    }
+
+    properties_schema.update(
+        KeystoneRoleAssignmentMixin.mixin_properties_schema)
+
+    def __init__(self, *args, **kwargs):
+        super(KeystoneGroupRoleAssignment, self).__init__(*args, **kwargs)
+
+    @property
+    def group_id(self):
+        return (self.client_plugin().get_group_id(
+                self.properties.get(self.GROUP)))
+
+    def handle_create(self):
+        self.create_assignment(group_id=self.group_id)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        self.update_assignment(group_id=self.group_id, prop_diff=prop_diff)
+
+    def handle_delete(self):
+        self.delete_assignment(group_id=self.group_id)
+
+    def validate(self):
+        super(KeystoneGroupRoleAssignment, self).validate()
+        self.validate_assignment_properties()
+
+
+def resource_mapping():
+    return {
+        'OS::Keystone::UserRoleAssignment': KeystoneUserRoleAssignment,
+        'OS::Keystone::GroupRoleAssignment': KeystoneGroupRoleAssignment
+    }
