@@ -145,7 +145,7 @@ class S3Bucket(resource.Resource):
         else:
             headers['X-Container-Write'] = tenant_username
 
-        self.swift().put_container(container, headers)
+        self.client().put_container(container, headers)
         self.resource_id_set(container)
 
     def handle_delete(self):
@@ -153,10 +153,10 @@ class S3Bucket(resource.Resource):
         if self.resource_id is None:
             return
         try:
-            self.swift().delete_container(self.resource_id)
+            self.client().delete_container(self.resource_id)
         except Exception as ex:
             if self.client_plugin().is_conflict(ex):
-                container, objects = self.swift().get_container(
+                container, objects = self.client().get_container(
                     self.resource_id)
                 if objects:
                     msg = _("The bucket you tried to delete is not empty (%s)."
@@ -168,7 +168,7 @@ class S3Bucket(resource.Resource):
         return six.text_type(self.resource_id)
 
     def _resolve_attribute(self, name):
-        url = self.swift().get_auth()[0]
+        url = self.client().get_auth()[0]
         parsed = list(urlparse.urlparse(url))
         if name == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
