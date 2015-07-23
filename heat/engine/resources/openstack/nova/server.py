@@ -25,6 +25,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
+from heat.engine.clients.os import nova as heat_nova
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
@@ -1371,6 +1372,15 @@ class Server(stack_user.StackUser):
             client_plugin.ignore_not_found(ex)
         self.data_delete('metadata_queue_id')
 
+    def handle_snapshot_delete(self, state):
+        if state[0] != self.FAILED:
+            client = self.nova()
+            image_id = client.servers.create_image(
+                self.resource_id, self.physical_resource_name())
+            return heat_nova.ServerDeleteProgress(
+                self.resource_id, image_id, False)
+        return self.handle_delete()
+
     def handle_delete(self):
 
         if self.resource_id is None:
@@ -1386,12 +1396,24 @@ class Server(stack_user.StackUser):
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             return
-        return self.resource_id
+        return heat_nova.ServerDeleteProgress(self.resource_id)
 
-    def check_delete_complete(self, server_id):
-        if not server_id:
+    def check_delete_complete(self, progress):
+        if not progress:
             return True
-        return self.client_plugin().check_delete_server_complete(server_id)
+
+        if not progress.image_complete:
+            image = self.nova().images.get(progress.image_id)
+            if image.status in ('DELETED', 'ERROR'):
+                raise exception.Error(image.status)
+            elif image.status == 'ACTIVE':
+                progress.image_complete = True
+                if not self.handle_delete():
+                    return True
+            return False
+
+        return self.client_plugin().check_delete_server_complete(
+            progress.server_id)
 
     def handle_suspend(self):
         '''
