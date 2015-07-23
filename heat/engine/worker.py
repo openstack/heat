@@ -323,7 +323,7 @@ def check_resource_update(rsrc, template_id, data, engine_id):
                          resource.Resource.COMPLETE,
                          resource.Resource.FAILED
                      ])):
-        rsrc.create_convergence(data, engine_id)
+        rsrc.create_convergence(template_id, data, engine_id)
     else:
         rsrc.update_convergence(template_id, data, engine_id)
 

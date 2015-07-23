@@ -693,7 +693,7 @@ class Resource(object):
         '''
         return self
 
-    def create_convergence(self, resource_data, engine_id):
+    def create_convergence(self, template_id, resource_data, engine_id):
         '''
         Creates the resource by invoking the scheduler TaskRunner.
         '''
@@ -702,6 +702,7 @@ class Resource(object):
                 set(data[u'id'] for data in resource_data.values()
                     if data is not None)
             )
+            self.current_template_id = template_id
             adopt_data = self.stack._adopt_kwargs(self)
             if adopt_data['resource_data'] is None:
                 runner = scheduler.TaskRunner(self.create)
