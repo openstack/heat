@@ -126,6 +126,25 @@ class KeystoneServiceConstraintTest(common.HeatTestCase):
         )
 
 
+class KeystoneUserConstraintTest(common.HeatTestCase):
+
+    def test_expected_exceptions(self):
+        self.assertEqual((exception.EntityNotFound,),
+                         client.KeystoneUserConstraint.expected_exceptions,
+                         "KeystoneUserConstraint expected exceptions error")
+
+    def test_constrain(self):
+        constrain = client.KeystoneUserConstraint()
+        client_mock = mock.MagicMock()
+        client_plugin_mock = mock.MagicMock()
+        client_plugin_mock.get_user_id.return_value = None
+        client_mock.client_plugin.return_value = client_plugin_mock
+
+        self.assertIsNone(constrain.validate_with_client(client_mock, 'admin'))
+
+        client_plugin_mock.get_user_id.assert_called_once_with('admin')
+
+
 class KeystoneClientPluginServiceTest(common.HeatTestCase):
 
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd152'
@@ -531,4 +550,78 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
                           self._client.client.groups.get,
                           self.sample_name)
         self._client.client.groups.list.assert_called_once_with(
+            name=self.sample_name)
+
+
+class KeystoneClientPluginUserTest(common.HeatTestCase):
+
+    sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd152'
+    sample_name = 'sample_user'
+
+    def _get_mock_user(self):
+        user = mock.MagicMock()
+        user.id = self.sample_uuid
+        user.name = self.sample_name
+        return user
+
+    def setUp(self):
+        super(KeystoneClientPluginUserTest, self).setUp()
+        self._client = mock.MagicMock()
+
+    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    def test_get_user_id(self, client_keystone):
+        self._client.client.users.get.return_value = self._get_mock_user()
+
+        client_keystone.return_value = self._client
+        client_plugin = client.KeystoneClientPlugin(
+            context=mock.MagicMock()
+        )
+
+        self.assertEqual(self.sample_uuid,
+                         client_plugin.get_user_id(self.sample_uuid))
+        self._client.client.users.get.assert_called_once_with(
+            self.sample_uuid)
+
+    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    def test_get_user_id_with_name(self, client_keystone):
+        self._client.client.users.get.side_effect = (keystone_exceptions
+                                                     .NotFound)
+        self._client.client.users.list.return_value = [
+            self._get_mock_user()
+        ]
+
+        client_keystone.return_value = self._client
+        client_plugin = client.KeystoneClientPlugin(
+            context=mock.MagicMock()
+        )
+
+        self.assertEqual(self.sample_uuid,
+                         client_plugin.get_user_id(self.sample_name))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.users.get,
+                          self.sample_name)
+        self._client.client.users.list.assert_called_once_with(
+            name=self.sample_name)
+
+    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    def test_get_user_id_not_found(self, client_keystone):
+        self._client.client.users.get.side_effect = (keystone_exceptions
+                                                     .NotFound)
+        self._client.client.users.list.return_value = []
+
+        client_keystone.return_value = self._client
+        client_plugin = client.KeystoneClientPlugin(
+            context=mock.MagicMock()
+        )
+
+        ex = self.assertRaises(exception.EntityNotFound,
+                               client_plugin.get_user_id,
+                               self.sample_name)
+        msg = ('The KeystoneUser (%(name)s) could not be found.' %
+               {'name': self.sample_name})
+        self.assertEqual(msg, six.text_type(ex))
+        self.assertRaises(keystone_exceptions.NotFound,
+                          self._client.client.users.get,
+                          self.sample_name)
+        self._client.client.users.list.assert_called_once_with(
             name=self.sample_name)
