@@ -19,7 +19,6 @@ import mox
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils as json
-from oslo_service import threadgroup
 import six
 
 from heat.common import context
@@ -693,7 +692,7 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         super(StackServiceAdoptUpdateTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
-        self.man.create_periodic_tasks()
+        self.man.thread_group_mgr = tools.DummyThreadGroupManager()
 
     def _get_stack_adopt_data_and_template(self, environment=None):
         template = {
@@ -758,7 +757,7 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
                                        {'adopt_stack_data': str(adopt_data)})
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
-        self.assertEqual((parser.Stack.ADOPT, parser.Stack.IN_PROGRESS),
+        self.assertEqual((parser.Stack.ADOPT, parser.Stack.COMPLETE),
                          (stack.action, stack.status))
 
     def test_stack_adopt_disabled(self):
@@ -824,8 +823,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         evt_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(grevent, 'Event')
         grevent.Event().AndReturn(evt_mock)
-        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -835,7 +832,7 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
-        self.assertEqual([evt_mock], self.man.thread_group_mgr.events[sid])
+        self.assertEqual([evt_mock], self.man.thread_group_mgr.events)
         self.m.VerifyAll()
 
     def test_stack_update_existing_parameters(self):
@@ -881,8 +878,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         evt_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(grevent, 'Event')
         grevent.Event().AndReturn(evt_mock)
-        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -894,7 +889,7 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
-        self.assertEqual([evt_mock], self.man.thread_group_mgr.events[sid])
+        self.assertEqual([evt_mock], self.man.thread_group_mgr.events)
         self.m.VerifyAll()
 
     def test_stack_update_reuses_api_params(self):
@@ -930,9 +925,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
-
-        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -1040,9 +1032,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
 
-        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
-
         self.m.ReplayAll()
 
         cfg.CONF.set_override('max_resources_per_stack', 3)
@@ -1098,8 +1087,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         result = self.man.update_stack(self.ctx, create_stack.identifier(),
                                        tpl, {}, None, {})
 
-        self.man.thread_group_mgr.groups[sid].wait()
-
         self.assertEqual((old_stack.UPDATE, old_stack.COMPLETE),
                          old_stack.state)
         self.assertEqual(create_stack.identifier(), result)
@@ -1108,8 +1095,6 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
                          old_stack['A'].properties['Foo'])
 
         self.assertEqual(create_stack['A'].id, old_stack['A'].id)
-        self.man.thread_group_mgr.groups[sid].wait()
-
         self.m.VerifyAll()
 
     def test_stack_update_exceeds_resource_limit(self):
@@ -1258,7 +1243,6 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         cfg.CONF.set_override('convergence_engine', True)
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
-        self.man.create_periodic_tasks()
 
     def _stub_update_mocks(self, stack_to_load, stack_to_return):
         self.m.StubOutWithMock(parser, 'Stack')
@@ -1457,7 +1441,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
         self.eng = service.EngineService('a-host', 'a-topic')
-        self.eng.create_periodic_tasks()
+        self.eng.thread_group_mgr = tools.DummyThreadGroupManager()
         self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
@@ -1894,7 +1878,6 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIn('environment', ret)
         self.assertIn('files', ret)
         self.m.VerifyAll()
-        self.eng.thread_group_mgr.groups[self.stack.id].wait()
 
     def test_stack_describe_nonexistent(self):
         non_exist_identifier = identifier.HeatIdentifier(
@@ -2408,6 +2391,7 @@ class StackServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_signal_reception_async(self):
+        self.eng.thread_group_mgr = tools.DummyThreadGroupMgrLogStart()
         stack_name = 'signal_reception_async'
         stack = tools.get_stack(stack_name, self.ctx, policy_template)
         self.stack = stack
@@ -2422,15 +2406,6 @@ class StackServiceTest(common.HeatTestCase):
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
-        # Mock out the aync work of thread starting
-        self.eng.thread_group_mgr.groups[stack.id] = tools.DummyThreadGroup()
-        self.m.StubOutWithMock(self.eng.thread_group_mgr, 'start')
-        self.eng.thread_group_mgr.start(stack.id,
-                                        mox.IgnoreArg(),
-                                        mox.IgnoreArg(),
-                                        mox.IgnoreArg(),
-                                        mox.IgnoreArg()).AndReturn(None)
-
         self.m.ReplayAll()
 
         self.eng.resource_signal(self.ctx,
@@ -2438,6 +2413,8 @@ class StackServiceTest(common.HeatTestCase):
                                  'WebServerScaleDownPolicy',
                                  test_data)
 
+        self.assertEqual([(self.stack.id, mox.IgnoreArg())],
+                         self.eng.thread_group_mgr.started)
         self.m.VerifyAll()
 
         self.stack.delete()
@@ -2653,6 +2630,7 @@ class StackServiceTest(common.HeatTestCase):
 
     @tools.stack_context('service_show_watch_state_test_stack')
     def test_set_watch_state(self):
+        self.eng.thread_group_mgr = tools.DummyThreadGroupMgrLogStart()
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmActions': [u'WebServerRestartPolicy'],
@@ -2680,11 +2658,6 @@ class StackServiceTest(common.HeatTestCase):
         parser.Stack.resource_by_refid(
             'WebServerRestartPolicy').AndReturn(dummy_action)
 
-        # Replace the real stack threadgroup with a dummy one, so we can
-        # check the function returned on ALARM is correctly scheduled
-        dtg = tools.DummyThreadGroup()
-        self.eng.thread_group_mgr.groups[self.stack.id] = dtg
-
         self.m.ReplayAll()
 
         state = watchrule.WatchRule.NODATA
@@ -2692,25 +2665,22 @@ class StackServiceTest(common.HeatTestCase):
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(state, result[rpc_api.WATCH_STATE_VALUE])
-        self.assertEqual(
-            [], self.eng.thread_group_mgr.groups[self.stack.id].threads)
+        self.assertEqual([], self.eng.thread_group_mgr.started)
 
         state = watchrule.WatchRule.NORMAL
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(state, result[rpc_api.WATCH_STATE_VALUE])
-        self.assertEqual(
-            [], self.eng.thread_group_mgr.groups[self.stack.id].threads)
+        self.assertEqual([], self.eng.thread_group_mgr.started)
 
         state = watchrule.WatchRule.ALARM
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(state, result[rpc_api.WATCH_STATE_VALUE])
-        self.assertEqual(
-            [dummy_action.signal],
-            self.eng.thread_group_mgr.groups[self.stack.id].threads)
+        self.assertEqual([(self.stack.id, dummy_action.signal)],
+                         self.eng.thread_group_mgr.started)
 
         self.m.VerifyAll()
 
