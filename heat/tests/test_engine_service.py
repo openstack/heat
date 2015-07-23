@@ -2545,10 +2545,9 @@ class StackServiceTest(common.HeatTestCase):
 
         md = self.eng.resource_signal(self.ctx,
                                       dict(self.stack.identifier()),
-                                      'WebServerScaleDownPolicy', None)
-
-        self.eng.thread_group_mgr.groups[stack.id].wait()
-        self.assertIsNone(md)
+                                      'WebServerScaleDownPolicy', None,
+                                      sync_call=True)
+        self.assertEqual(test_metadata, md)
         self.m.VerifyAll()
 
     @tools.stack_context('service_show_watch_test_stack', False)
