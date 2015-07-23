@@ -12,9 +12,9 @@
 #    under the License.
 
 import mock
-from oslo_utils import importutils
 import six
-import testtools
+
+from mistralclient.api.v2 import executions
 
 from heat.common import exception
 from heat.common import template_format
@@ -25,13 +25,9 @@ from heat.engine.resources.openstack.mistral import workflow
 from heat.engine.resources import signal_responder
 from heat.engine.resources import stack_user
 from heat.engine import scheduler
-from heat.engine import stack as stack_parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-mistral_client = importutils.try_import('mistralclient.api.base')
-executions = importutils.try_import('mistralclient.api.v2.executions')
 
 workflow_template = """
 heat_template_version: 2013-05-23
@@ -434,8 +430,6 @@ class TestMistralWorkflow(common.HeatTestCase):
                          "Signal data error: Unknown input 1")
         self.assertEqual(error_message, six.text_type(err))
 
-    @testtools.skipIf(executions is None,
-                      'Uses the actual mistral client')
     def test_signal_and_delete_with_executions(self):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
@@ -510,10 +504,3 @@ class TestMistralWorkflow(common.HeatTestCase):
         execution = mock.Mock()
         execution.id = '12345'
         return execution
-
-    @testtools.skipIf(mistral_client is not None,
-                      'Tests mistral client not installed')
-    def test_no_client(self):
-        tmpl = template.Template((template_format.parse(workflow_template)))
-        stack = stack_parser.Stack(utils.dummy_context(), 'foo', tmpl)
-        self.assertRaises(exception.ResourceTypeNotFound, stack.validate)

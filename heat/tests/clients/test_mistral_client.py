@@ -11,18 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import importutils
-import testtools
-
 from heat.tests import common
 from heat.tests import utils
-
-mistral_client = importutils.try_import('mistralclient.api.base')
 
 
 class MistralClientPluginTests(common.HeatTestCase):
 
-    @testtools.skipIf(mistral_client is None, 'Tests the mistral client')
     def test_create(self):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('mistral')

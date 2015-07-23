@@ -11,12 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import importutils
+from mistralclient.api import base as mistral_base
+from mistralclient.api import client as mistral_client
 
 from heat.engine.clients import client_plugin
-
-mistral_base = importutils.try_import('mistralclient.api.base')
-mistral_client = importutils.try_import('mistralclient.api.client')
 
 
 class MistralClientPlugin(client_plugin.ClientPlugin):
