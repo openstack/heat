@@ -506,6 +506,17 @@ class CloudLoadBalancer(resource.Resource):
         else:
             return False
 
+    def _valid_HTTPS_redirect_with_HTTP_prot(self):
+        """Determine if HTTPS redirect is valid when protocol is HTTP"""
+        proto = self.properties[self.PROTOCOL]
+        redir = self.properties[self.HTTPS_REDIRECT]
+        termcfg = self.properties.get(self.SSL_TERMINATION) or {}
+        seconly = termcfg.get(self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY, False)
+        secport = termcfg.get(self.SSL_TERMINATION_SECURE_PORT, 0)
+        if (redir and (proto == "HTTP") and seconly and (secport == 443)):
+            return True
+        return False
+
     def _configure_post_creation(self, loadbalancer):
         """Configure all load balancer properties post creation.
 
@@ -535,6 +546,11 @@ class CloudLoadBalancer(resource.Resource):
                 secureTrafficOnly=ssl_term[
                     self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY])
 
+        if self._valid_HTTPS_redirect_with_HTTP_prot():
+            while not self._check_status(loadbalancer, ['ACTIVE']):
+                yield
+            loadbalancer.update(httpsRedirect=True)
+
         if self.CONTENT_CACHING in self.properties:
             enabled = self.properties[self.CONTENT_CACHING] == 'ENABLED'
             while not self._check_status(loadbalancer, ['ACTIVE']):
@@ -554,6 +570,18 @@ class CloudLoadBalancer(resource.Resource):
     def _process_nodes(self, node_list):
         node_itr = six.moves.map(self._process_node, node_list)
         return itertools.chain.from_iterable(node_itr)
+
+    def _validate_https_redirect(self):
+        redir = self.properties[self.HTTPS_REDIRECT]
+        proto = self.properties[self.PROTOCOL]
+
+        if (redir and (proto != "HTTPS") and
+                not self._valid_HTTPS_redirect_with_HTTP_prot()):
+            message = _("HTTPS redirect is only available for the HTTPS "
+                        "protocol (port=443), or the HTTP protocol with "
+                        "a properly configured SSL termination "
+                        "(secureTrafficOnly=true, securePort=443).")
+            raise exception.StackValidationFailed(message=message)
 
     def handle_create(self):
         node_list = self._process_nodes(self.properties.get(self.NODES))
@@ -581,6 +609,9 @@ class CloudLoadBalancer(resource.Resource):
             'connectionLogging': connection_logging,
             self.HTTPS_REDIRECT: self.properties[self.HTTPS_REDIRECT]
         }
+        if self._valid_HTTPS_redirect_with_HTTP_prot():
+            lb_body[self.HTTPS_REDIRECT] = False
+        self._validate_https_redirect()
 
         lb_name = (self.properties.get(self.NAME) or
                    self.physical_resource_name())
@@ -909,22 +940,8 @@ class CloudLoadBalancer(resource.Resource):
                                   function.resolve,
                                   self.name).validate()
 
-        # validate if HTTPS_REDIRECT is true and we're not HTTPS
-        redir = self.properties[self.HTTPS_REDIRECT]
-        proto = self.properties[self.PROTOCOL]
-
-        if redir and (proto != "HTTPS"):
-            termcfg = self.properties.get(self.SSL_TERMINATION) or {}
-            seconly = termcfg.get(self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY,
-                                  False)
-            secport = termcfg.get(self.SSL_TERMINATION_SECURE_PORT, 0)
-            if not (seconly and (secport == 443) and (proto == "HTTP")):
-                message = _("HTTPS redirect is only available for the HTTPS "
-                            "protocol (port=443), or the HTTP protocol with "
-                            "a properly configured SSL termination "
-                            "(secureTrafficOnly=true, securePort=443).")
-                raise exception.StackValidationFailed(message=message)
-
+        # validate if HTTPS_REDIRECT is true
+        self._validate_https_redirect()
         # if a vip specifies and id, it can't specify version or type;
         # otherwise version and type are required
         for vip in self.properties.get(self.VIRTUAL_IPS, []):
