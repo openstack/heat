@@ -185,9 +185,6 @@ class Workflow(signal_responder.SignalResponder,
         )
     }
 
-    def mistral(self):
-        return self.client()
-
     def FnGetRefId(self):
         return self._workflow_name()
 
@@ -309,7 +306,7 @@ class Workflow(signal_responder.SignalResponder,
         super(Workflow, self).handle_create()
         props = self.prepare_properties(self.properties)
         try:
-            workflow = self.mistral().workflows.create(props)
+            workflow = self.client().workflows.create(props)
         except Exception as ex:
             raise exception.ResourceFailure(ex, self)
         # NOTE(prazumovsky): Mistral uses unique names for resource
@@ -343,7 +340,7 @@ class Workflow(signal_responder.SignalResponder,
             result_params.update(self.properties.get(self.PARAMS))
 
         try:
-            execution = self.mistral().executions.create(
+            execution = self.client().executions.create(
                 self._workflow_name(),
                 jsonutils.dumps(result_input),
                 **result_params)
@@ -362,7 +359,7 @@ class Workflow(signal_responder.SignalResponder,
         if len(prop_diff) > 0:
             new_props = self.prepare_properties(tmpl_diff['Properties'])
             try:
-                workflow = self.mistral().workflows.update(new_props)
+                workflow = self.client().workflows.update(new_props)
             except Exception as ex:
                 raise exception.ResourceFailure(ex, self)
             self.data_set(self.NAME, workflow[0].name)
@@ -375,12 +372,12 @@ class Workflow(signal_responder.SignalResponder,
             return
 
         try:
-            self.mistral().workflows.delete(self.resource_id)
+            self.client().workflows.delete(self.resource_id)
             if self.data().get(self.EXECUTIONS):
                 for id in self.data().get(self.EXECUTIONS).split(','):
-                    self.mistral().executions.delete(id)
+                    self.client().executions.delete(id)
         except Exception as e:
-            self.client_plugin('mistral').ignore_not_found(e)
+            self.client_plugin().ignore_not_found(e)
 
     def _resolve_attribute(self, name):
         if name == self.EXECUTIONS:
@@ -399,7 +396,7 @@ class Workflow(signal_responder.SignalResponder,
                 }
 
             return [parse_execution_response(
-                self.mistral().executions.get(exec_id))
+                self.client().executions.get(exec_id))
                 for exec_id in
                 self.data().get(self.EXECUTIONS).split(',')]
 

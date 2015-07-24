@@ -199,7 +199,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.rsrc_defn = resource_defns['workflow']
 
         self.mistral = mock.Mock()
-        self.patchobject(MistralWorkFlowTestResource, 'mistral',
+        self.patchobject(MistralWorkFlowTestResource, 'client',
                          return_value=self.mistral)
 
         self.patches = []
