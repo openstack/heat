@@ -1142,24 +1142,12 @@ class ServersTest(common.HeatTestCase):
               'network': network_name}])
 
         resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_validate_with_networks',
-                                resource_defns['WebServer'], stack)
+        ex = self.assertRaises(ValueError, servers.Server,
+                               'server_validate_with_networks',
+                               resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
-        self.stub_NetworkConstraint_validate()
-        self.m.ReplayAll()
-
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               server.validate)
-        self.assertIn(_('Properties "uuid" and "network" are both set to '
-                        'the network "%(network)s" for the server '
-                        '"%(server)s". The "uuid" property is deprecated. '
-                        'Use only "network" property.'
-                        '') % dict(network=network_name, server=server.name),
+        self.assertIn(_('Cannot use network and uuid at the same time.'),
                       six.text_type(ex))
-        self.m.VerifyAll()
 
     def test_server_validate_with_network_empty_ref(self):
         stack_name = 'srv_net'

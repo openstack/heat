@@ -330,9 +330,14 @@ class Server(stack_user.StackUser):
                         properties.Schema.STRING,
                         _('ID of network to create a port on.'),
                         support_status=support.SupportStatus(
-                            status=support.DEPRECATED,
-                            message=_('Use property %s.') % NETWORK_ID,
-                            version='2014.1'),
+                            status=support.HIDDEN,
+                            version='5.0.0',
+                            previous_status=support.SupportStatus(
+                                status=support.DEPRECATED,
+                                message=_('Use property %s.') % NETWORK_ID,
+                                version='2014.1'
+                            )
+                        ),
                         constraints=[
                             constraints.CustomConstraint('neutron.network')
                         ]
@@ -510,6 +515,13 @@ class Server(stack_user.StackUser):
     physical_resource_name_limit = 53
 
     default_client_name = 'nova'
+
+    def translation_rules(self):
+        return [properties.TranslationRule(
+            self.properties,
+            properties.TranslationRule.REPLACE,
+            source_path=[self.NETWORKS, self.NETWORK_ID],
+            value_name=self.NETWORK_UUID)]
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
