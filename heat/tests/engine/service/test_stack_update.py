@@ -601,6 +601,68 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             user_creds_id=u'1', username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
 
+    def test_stack_update_existing_template(self):
+        '''Update a stack using the same template.'''
+        stack_name = 'service_update_test_stack_existing_template'
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
+        t = template_format.parse(tools.wp_template)
+        # Don't actually run the update as the mocking breaks it, instead
+        # we just ensure the expected template is passed in to the updated
+        # template, and that the update task is scheduled.
+        self.man.thread_group_mgr = tools.DummyThreadGroupMgrLogStart()
+
+        params = {}
+        stack = utils.parse_stack(t, stack_name=stack_name,
+                                  params=params)
+        stack.set_stack_user_project_id('1234')
+        self.assertEqual(stack.t.t,
+                         t)
+        stack.action = stack.CREATE
+        stack.status = stack.COMPLETE
+
+        with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            mock_stack.load.return_value = stack
+            mock_stack.validate.return_value = None
+            result = self.man.update_stack(self.ctx, stack.identifier(),
+                                           None,
+                                           params,
+                                           None, api_args)
+            tmpl = mock_stack.call_args[0][2]
+            self.assertEqual(t,
+                             tmpl.t)
+            self.assertEqual(stack.identifier(), result)
+            self.assertEqual(1, len(self.man.thread_group_mgr.started))
+
+    def test_stack_update_existing_failed(self):
+        '''Update a stack using the same template doesn't work when FAILED.'''
+        stack_name = 'service_update_test_stack_existing_template'
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
+        t = template_format.parse(tools.wp_template)
+        # Don't actually run the update as the mocking breaks it, instead
+        # we just ensure the expected template is passed in to the updated
+        # template, and that the update task is scheduled.
+        self.man.thread_group_mgr = tools.DummyThreadGroupMgrLogStart()
+
+        params = {}
+        stack = utils.parse_stack(t, stack_name=stack_name,
+                                  params=params)
+        stack.set_stack_user_project_id('1234')
+        self.assertEqual(stack.t.t,
+                         t)
+        stack.action = stack.UPDATE
+        stack.status = stack.FAILED
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.update_stack,
+                               self.ctx, stack.identifier(),
+                               None, params, None, api_args)
+
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])
+        self.assertIn("PATCH update to non-COMPLETE stack",
+                      six.text_type(ex.exc_info[1]))
+
 
 class ServiceStackUpdatePreviewTest(common.HeatTestCase):
 
