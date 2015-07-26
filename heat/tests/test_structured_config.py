@@ -170,6 +170,7 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
         super(StructuredDeploymentDerivedTest, self).setUp()
         self.ctx = utils.dummy_context()
         props = {
+            'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'input_values': {'bar': 'baz'},
         }
         self.template['Resources']['deploy_mysql']['Properties'] = props
