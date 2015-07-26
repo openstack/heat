@@ -98,9 +98,6 @@ class SwiftSignalHandle(resource.Resource):
         self.data_set(self.ENDPOINT, url)
         self.resource_id_set(self.physical_resource_name())
 
-    def update(self, after, before=None, prev_resource=None):
-        raise resource.UpdateReplace(self.name)
-
     def _resolve_attribute(self, key):
         if self.resource_id:
             if key == self.TOKEN:

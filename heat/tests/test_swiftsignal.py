@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import datetime
 import json
 import uuid
@@ -267,23 +266,21 @@ class SwiftSignalHandleTest(common.HeatTestCase):
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     def test_handle_update(self, mock_swift):
         st = create_stack(swiftsignalhandle_template)
-
+        handle = st['test_wait_condition_handle']
         mock_swift_object = mock.Mock()
         mock_swift.return_value = mock_swift_object
-        mock_swift_object.head_account.return_value = {}
+        mock_swift_object.head_account.return_value = {
+            'x-account-meta-temp-url-key': "1234"
+        }
         mock_swift_object.url = "http://fake-host.com:8080/v1/AUTH_1234"
-
         st.create()
-
-        handle = st['test_wait_condition_handle']
-        uprops = copy.copy(handle.properties.data)
-        uprops['count'] = '5'
+        rsrc = st.resources['test_wait_condition_handle']
+        old_url = rsrc.FnGetRefId()
         update_snippet = rsrc_defn.ResourceDefinition(handle.name,
                                                       handle.type(),
-                                                      uprops)
-
-        updater = scheduler.TaskRunner(handle.update, update_snippet)
-        self.assertRaises(resource.UpdateReplace, updater)
+                                                      handle.properties.data)
+        scheduler.TaskRunner(handle.update, update_snippet)()
+        self.assertEqual(old_url, rsrc.FnGetRefId())
 
 
 class SwiftSignalTest(common.HeatTestCase):
