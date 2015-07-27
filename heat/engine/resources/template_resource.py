@@ -16,6 +16,7 @@ from requests import exceptions
 import six
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.common import urlfetch
@@ -293,30 +294,9 @@ class TemplateResource(stack_resource.StackResource):
         if stack is None:
             return None
 
-        def _get_inner_resource(resource_name):
-            if self.nested() is not None:
-                try:
-                    return self.nested()[resource_name]
-                except KeyError:
-                    raise exception.ResourceNotFound(
-                        resource_name=resource_name,
-                        stack_name=self.nested().name)
-
-        def get_rsrc_attr(resource_name, *attr_path):
-            resource = _get_inner_resource(resource_name)
-            return resource.FnGetAtt(*attr_path)
-
-        def get_rsrc_id(resource_name):
-            resource = _get_inner_resource(resource_name)
-            return resource.FnGetRefId()
-
         # first look for explicit resource.x.y
         if key.startswith('resource.'):
-            npath = key.split(".", 2)[1:] + list(path)
-            if len(npath) > 1:
-                return get_rsrc_attr(*npath)
-            else:
-                return get_rsrc_id(*npath)
+            return grouputils.get_nested_attrs(self, key, False, *path)
 
         # then look for normal outputs
         if key in stack.outputs:
