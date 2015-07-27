@@ -398,10 +398,15 @@ class StackResource(resource.Resource):
         '''
         Delete the nested stack.
         '''
-        stack_identity = identifier.HeatIdentifier(
-            self.context.tenant_id,
-            self.physical_resource_name(),
-            self.resource_id)
+        try:
+            stack = self.nested()
+        except exception.NotFound:
+            return
+
+        if stack is None:
+            return
+
+        stack_identity = stack.identifier()
 
         try:
             self.rpc_client().delete_stack(self.context, stack_identity)
