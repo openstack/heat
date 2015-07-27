@@ -250,3 +250,48 @@ class DummyThreadGroup(object):
 
     def wait(self):
         pass
+
+
+class DummyThreadGroupManager(object):
+    def __init__(self):
+        self.events = []
+        self.messages = []
+
+    def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
+        # Just run the function, so we know it's completed in the test
+        func(*args, **kwargs)
+        return DummyThread()
+
+    def start_with_acquired_lock(self, stack, lock, func, *args, **kwargs):
+        # Just run the function, so we know it's completed in the test
+        func(*args, **kwargs)
+        return DummyThread()
+
+    def send(self, stack_id, message):
+        self.messages.append(message)
+
+    def add_event(self, stack_id, event):
+        self.events.append(event)
+
+    def remove_event(self, gt, stack_id, event):
+        for e in self.events.pop(stack_id, []):
+            if e is not event:
+                self.add_event(stack_id, e)
+
+
+class DummyThreadGroupMgrLogStart(DummyThreadGroupManager):
+    def __init__(self):
+        super(DummyThreadGroupMgrLogStart, self).__init__()
+        self.started = []
+
+    def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
+        self.started.append((stack.id, func))
+        return DummyThread()
+
+    def start_with_acquired_lock(self, stack, lock, func, *args, **kwargs):
+        self.started.append((stack.id, func))
+        return DummyThread()
+
+    def start(self, stack_id, func, *args, **kwargs):
+        # Here we only store the started task so it can be checked
+        self.started.append((stack_id, func))
