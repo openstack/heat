@@ -29,7 +29,7 @@ Template resources provide a feature similar to the
 :ref:`AWS::CloudFormation::Stack` resource, but also provide a way to:
 
 * Define new resource types and build your own resource library.
-* Override the default behaviour of existing resource types.
+* Override the default behavior of existing resource types.
 
 To achieve this:
 

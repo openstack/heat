@@ -20,7 +20,7 @@
 Environments
 ============
 
-The environment affects the runtime behaviour of a template. It provides a way
+The environment affects the runtime behavior of a template. It provides a way
 to override the resource implementations and a mechanism to place parameters
 that the service needs.
 
@@ -95,7 +95,7 @@ passed into all template resources::
 Mapping resources
 -----------------
 You can map one resource to another in the ``resource_registry`` section
-of an evironment file. The resource you provide in this manner must have an
+of an environment file. The resource you provide in this manner must have an
 identifier, and must reference either another resource's ID or the URL of an
 existing template file.
 
@@ -163,7 +163,7 @@ templates or type mapping::
 
 When heat encounters a resource that has a hook, it pauses the resource
 action until the hook clears. Any resources that depend on the paused action
-wait as well. Non-dependant resources are created in parallel unless they have
+wait as well. Non-dependent resources are created in parallel unless they have
 their own hooks.
 
 It is possible to perform a wild card match using an asterisk (`*`) in the
