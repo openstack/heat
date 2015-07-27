@@ -320,7 +320,7 @@ class TemplateResource(stack_resource.StackResource):
 
         # then look for normal outputs
         if key in stack.outputs:
-            return attributes.select_from_attribute(stack.output(key), path)
+            return attributes.select_from_attribute(self.get_output(key), path)
 
         # otherwise the key must be wrong.
         raise exception.InvalidTemplateAttribute(resource=self.name,

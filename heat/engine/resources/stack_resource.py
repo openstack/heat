@@ -513,7 +513,11 @@ class StackResource(resource.Resource):
         if op not in stack.outputs:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=op)
-        return stack.output(op)
+        result = stack.output(op)
+        if result is None and stack.outputs[op].get('error_msg') is not None:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=op)
+        return result
 
     def _resolve_attribute(self, name):
         # NOTE(skraynev): should be removed in patch with methods,

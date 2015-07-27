@@ -218,7 +218,7 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition, stack)
         self.assertIsNone(temp_res.validate())
 
-    def test_attributes_missing(self):
+    def test_attributes_missing_based_on_class(self):
         provider = {
             'HeatTemplateFormatVersion': '2012-12-12',
             'Outputs': {
@@ -247,6 +247,63 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition, stack)
         self.assertRaises(exception.StackValidationFailed,
                           temp_res.validate)
+
+    def test_attributes_missing_no_class(self):
+        provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Outputs': {
+                'Blarg': {'Value': 'wibble'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        env = environment.Environment()
+        env.load({'resource_registry':
+                  {'DummyResource2': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             template.Template(empty_template, files=files,
+                             env=env),
+                             stack_id=str(uuid.uuid4()))
+
+        definition = rsrc_defn.ResourceDefinition('test_t_res',
+                                                  "DummyResource2")
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      definition, stack)
+        nested = mock.Mock()
+        nested.outputs = {'Blarg': {'Value': 'fluffy'}}
+        temp_res._nested = nested
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          temp_res.FnGetAtt, 'Foo')
+
+    def test_attributes_not_parsable(self):
+        provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Outputs': {
+                'Blarg': {'Value': 'wibble'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        env = environment.Environment()
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             template.Template(empty_template, files=files,
+                             env=env),
+                             stack_id=str(uuid.uuid4()))
+
+        definition = rsrc_defn.ResourceDefinition('test_t_res',
+                                                  "DummyResource")
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      definition, stack)
+        self.assertIsNone(temp_res.validate())
+        nested = mock.Mock()
+        nested.outputs = {'Blarg': {'Value': 'not-this',
+                                    'error_msg': 'it is all bad'}}
+        nested.output.return_value = None
+        temp_res._nested = nested
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          temp_res.FnGetAtt, 'Blarg')
 
     def test_properties_normal(self):
         provider = {
