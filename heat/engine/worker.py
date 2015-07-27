@@ -25,6 +25,7 @@ from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common import messaging as rpc_messaging
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.objects import resource as resource_objects
@@ -107,13 +108,7 @@ class WorkerService(service.Service):
                  {'action': stack.action, 'stack_name': stack.name})
         stack.rollback()
 
-    def _handle_resource_failure(self, cnxt, stack_id, traversal_id,
-                                 failure_reason):
-        stack = parser.Stack.load(cnxt, stack_id=stack_id)
-        # make sure no new stack operation was triggered
-        if stack.current_traversal != traversal_id:
-            return
-
+    def _handle_failure(self, cnxt, stack, failure_reason):
         stack.state_set(stack.action, stack.FAILED, failure_reason)
 
         if (not stack.disable_rollback and
@@ -121,6 +116,19 @@ class WorkerService(service.Service):
             self._trigger_rollback(stack)
         else:
             stack.purge_db()
+
+    def _handle_resource_failure(self, cnxt, stack_id, traversal_id,
+                                 failure_reason):
+        stack = parser.Stack.load(cnxt, stack_id=stack_id)
+        # make sure no new stack operation was triggered
+        if stack.current_traversal != traversal_id:
+            return
+
+        self._handle_failure(cnxt, stack, failure_reason)
+
+    def _handle_stack_timeout(self, cnxt, stack):
+        failure_reason = u'Timed out'
+        self._handle_failure(cnxt, stack, failure_reason)
 
     def _load_resource(self, cnxt, resource_id, resource_data, is_update):
         if is_update:
@@ -141,12 +149,13 @@ class WorkerService(service.Service):
         return rsrc, stack
 
     def _do_check_resource(self, cnxt, current_traversal, tmpl, resource_data,
-                           is_update, rsrc, stack_id, adopt_stack_data):
+                           is_update, rsrc, stack, adopt_stack_data):
         try:
             if is_update:
                 try:
                     check_resource_update(rsrc, tmpl.id, resource_data,
-                                          self.engine_id)
+                                          self.engine_id,
+                                          stack.time_remaining())
                 except resource.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
                     LOG.info("Replacing resource with new id %s", new_res_id)
@@ -160,7 +169,7 @@ class WorkerService(service.Service):
 
             else:
                 check_resource_cleanup(rsrc, tmpl.id, resource_data,
-                                       self.engine_id)
+                                       self.engine_id, stack.time_remaining())
 
             return True
         except resource.UpdateInProgress:
@@ -175,7 +184,13 @@ class WorkerService(service.Service):
             reason = 'Resource %s failed: %s' % (rsrc.action,
                                                  six.text_type(ex))
             self._handle_resource_failure(
-                cnxt, stack_id, current_traversal, reason)
+                cnxt, stack.id, current_traversal, reason)
+        except scheduler.Timeout:
+            # reload the stack to verify current traversal
+            stack = parser.Stack.load(cnxt, stack_id=stack.id)
+            if stack.current_traversal != current_traversal:
+                return
+            self._handle_stack_timeout(cnxt, stack)
 
         return False
 
@@ -267,6 +282,10 @@ class WorkerService(service.Service):
             LOG.debug('[%s] Traversal cancelled; stopping.', current_traversal)
             return
 
+        if stack.has_timed_out():
+            self._handle_stack_timeout(cnxt, stack)
+            return
+
         tmpl = stack.t
         stack.adopt_stack_data = adopt_stack_data
 
@@ -278,7 +297,7 @@ class WorkerService(service.Service):
         check_resource_done = self._do_check_resource(cnxt, current_traversal,
                                                       tmpl, resource_data,
                                                       is_update,
-                                                      rsrc, stack.id,
+                                                      rsrc, stack,
                                                       adopt_stack_data)
 
         if check_resource_done:
@@ -343,18 +362,20 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
                     {sender_key: sender_data})
 
 
-def check_resource_update(rsrc, template_id, resource_data, engine_id):
+def check_resource_update(rsrc, template_id, resource_data, engine_id,
+                          timeout):
     '''
     Create or update the Resource if appropriate.
     '''
     if rsrc.action == resource.Resource.INIT:
-        rsrc.create_convergence(template_id, resource_data, engine_id)
+        rsrc.create_convergence(template_id, resource_data, engine_id, timeout)
     else:
-        rsrc.update_convergence(template_id, resource_data, engine_id)
+        rsrc.update_convergence(template_id, resource_data, engine_id, timeout)
 
 
-def check_resource_cleanup(rsrc, template_id, resource_data, engine_id):
+def check_resource_cleanup(rsrc, template_id, resource_data, engine_id,
+                           timeout):
     '''
     Delete the Resource if appropriate.
     '''
-    rsrc.delete_convergence(template_id, resource_data, engine_id)
+    rsrc.delete_convergence(template_id, resource_data, engine_id, timeout)

@@ -17,6 +17,7 @@ import mock
 
 from heat.common import exception
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import sync_point
 from heat.engine import worker
@@ -146,7 +147,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id)
+                                         {}, self.worker.engine_id,
+                                         mock.ANY)
         self.assertFalse(mock_crc.called)
 
         expected_calls = []
@@ -171,7 +173,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id)
+                                         {}, self.worker.engine_id,
+                                         self.stack.timeout_secs())
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -188,7 +191,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id)
+                                         {}, self.worker.engine_id,
+                                         self.stack.timeout_secs())
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -400,6 +404,62 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         actual_predecessors = call_args[5]
         self.assertItemsEqual(expected_predecessors, actual_predecessors)
 
+    @mock.patch.object(stack.Stack, 'purge_db')
+    def test_handle_failure(self, mock_purgedb, mock_cru, mock_crc, mock_pcr,
+                            mock_csc, mock_cid):
+        self.worker._handle_failure(self.ctx, self.stack, 'dummy-reason')
+        mock_purgedb.assert_called_once_with()
+        self.assertEqual('dummy-reason', self.stack.status_reason)
+
+        # test with rollback
+        self.worker._trigger_rollback = mock.Mock()
+        self.stack.disable_rollback = False
+        self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
+        self.worker._handle_failure(self.ctx, self.stack, 'dummy-reason')
+        self.worker._trigger_rollback.assert_called_once_with(self.stack)
+
+    def test_handle_stack_timeout(self, mock_cru, mock_crc, mock_pcr,
+                                  mock_csc, mock_cid):
+        self.worker._handle_failure = mock.Mock()
+        self.worker._handle_stack_timeout(self.ctx, self.stack)
+        self.worker._handle_failure.assert_called_once_with(
+            self.ctx, self.stack, u'Timed out')
+
+    def test_do_check_resource_marks_stack_as_failed_if_stack_timesout(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        mock_cru.side_effect = scheduler.Timeout(None, 60)
+        self.is_update = True
+        self.worker._handle_stack_timeout = mock.Mock()
+        self.worker._do_check_resource(self.ctx, self.stack.current_traversal,
+                                       self.stack.t, {}, self.is_update,
+                                       self.resource, self.stack, {})
+        self.worker._handle_stack_timeout.assert_called_once_with(
+            self.ctx, self.stack)
+
+    def test_do_check_resource_ignores_timeout_for_new_update(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        # Ensure current_traversal is check before marking the stack as
+        # failed due to time-out.
+        mock_cru.side_effect = scheduler.Timeout(None, 60)
+        self.is_update = True
+        self.worker._handle_stack_timeout = mock.Mock()
+        old_traversal = self.stack.current_traversal
+        self.stack.current_traversal = 'new_traversal'
+        self.worker._do_check_resource(self.ctx, old_traversal,
+                                       self.stack.t, {}, self.is_update,
+                                       self.resource, self.stack, {})
+        self.assertFalse(self.worker._handle_stack_timeout.called)
+
+    @mock.patch.object(stack.Stack, 'has_timed_out')
+    def test_check_resource_handles_timeout(self, mock_to, mock_cru, mock_crc,
+                                            mock_pcr, mock_csc, mock_cid):
+        mock_to.return_value = True
+        self.worker._handle_stack_timeout = mock.Mock()
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal,
+                                   {}, self.is_update, {})
+        self.assertTrue(self.worker._handle_stack_timeout.called)
+
 
 @mock.patch.object(worker, 'construct_input_data')
 @mock.patch.object(worker, 'check_stack_complete')
@@ -436,7 +496,8 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         self.assertFalse(mock_cru.called)
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
-            {}, self.worker.engine_id)
+            {}, self.worker.engine_id,
+            self.stack.timeout_secs())
 
     def test_is_cleanup_traversal_raise_update_inprogress(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
@@ -446,7 +507,8 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
             self.is_update, None)
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id)
+                                         {}, self.worker.engine_id,
+                                         self.stack.timeout_secs())
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -512,7 +574,8 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_check_resource_update_init_action(self, mock_update, mock_create):
         self.resource.action = 'INIT'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
-                                     {}, 'engine-id')
+                                     {}, 'engine-id',
+                                     self.stack.timeout_secs())
         self.assertTrue(mock_create.called)
         self.assertFalse(mock_update.called)
 
@@ -522,7 +585,8 @@ class MiscMethodsTest(common.HeatTestCase):
             self, mock_update, mock_create):
         self.resource.action = 'CREATE'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
-                                     {}, 'engine-id')
+                                     {}, 'engine-id',
+                                     self.stack.timeout_secs())
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
@@ -532,7 +596,8 @@ class MiscMethodsTest(common.HeatTestCase):
             self, mock_update, mock_create):
         self.resource.action = 'UPDATE'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
-                                     {}, 'engine-id')
+                                     {}, 'engine-id',
+                                     self.stack.timeout_secs())
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
@@ -540,5 +605,6 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_check_resource_cleanup_delete(self, mock_delete):
         self.resource.current_template_id = 'new-template-id'
         worker.check_resource_cleanup(self.resource, self.resource.stack.t.id,
-                                      {}, 'engine-id')
+                                      {}, 'engine-id',
+                                      self.stack.timeout_secs())
         self.assertTrue(mock_delete.called)

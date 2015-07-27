@@ -1655,3 +1655,25 @@ class Stack(collections.Mapping):
                 stack_object.Stack.delete(self.context, self.id)
             except exception.NotFound:
                 pass
+
+    def time_elapsed(self):
+        '''
+        Time elapsed in seconds since the stack operation started.
+        '''
+        start_time = self.updated_time or self.created_time
+        return (datetime.datetime.utcnow() - start_time).seconds
+
+    def time_remaining(self):
+        '''
+        Time left before stack times out.
+        '''
+        return self.timeout_secs() - self.time_elapsed()
+
+    def has_timed_out(self):
+        '''
+        Returns True if this stack has timed-out.
+        '''
+        if self.status == self.IN_PROGRESS:
+            return self.time_elapsed() > self.timeout_secs()
+
+        return False

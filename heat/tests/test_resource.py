@@ -65,6 +65,7 @@ class ResourceTest(common.HeatTestCase):
                                   template.Template(empty_template,
                                                     env=self.env),
                                   stack_id=str(uuid.uuid4()))
+        self.dummy_timeout = 10
 
     def test_get_class_ok(self):
         cls = resources.global_env().get_class('GenericResourceType')
@@ -1466,8 +1467,10 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(engine_id, rs.engine_id)
         self.assertEqual(atomic_key, rs.atomic_key)
 
-    @mock.patch.object(resource.Resource, 'create')
-    def test_create_convergence(self, mock_create):
+    @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
+                       return_value=None)
+    @mock.patch.object(resource.scheduler.TaskRunner, '__call__')
+    def test_create_convergence(self, mock_call, mock_init):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
@@ -1475,12 +1478,27 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res.create_convergence(self.stack.t.id, res_data, 'engine-007')
 
-        mock_create.assert_called_once_with()
+        res.create_convergence(self.stack.t.id, res_data, 'engine-007',
+                               60)
+
+        mock_init.assert_called_once_with(res.create)
+        mock_call.assert_called_once_with(timeout=60)
         self.assertEqual(self.stack.t.id, res.current_template_id)
         self.assertItemsEqual([1, 3], res.requires)
         self._assert_resource_lock(res.id, None, 2)
+
+    def test_create_convergence_throws_timeout(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.action = res.CREATE
+        res._store()
+        res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
+                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+
+        self.assertRaises(scheduler.Timeout, res.create_convergence,
+                          self.stack.t.id, res_data, 'engine-007',
+                          0)
 
     def test_create_convergence_sets_requires_for_failure(self):
         '''
@@ -1497,7 +1515,7 @@ class ResourceTest(common.HeatTestCase):
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
         self.assertRaises(exception.ResourceNotAvailable,
                           res.create_convergence, self.stack.t.id, res_data,
-                          'engine-007')
+                          'engine-007', self.dummy_timeout)
         self.assertItemsEqual([5, 3], res.requires)
         self._assert_resource_lock(res.id, None, 2)
 
@@ -1512,7 +1530,8 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res.create_convergence(self.stack.t.id, res_data, 'engine-007')
+        res.create_convergence(self.stack.t.id, res_data, 'engine-007',
+                               self.dummy_timeout)
 
         mock_adopt.assert_called_once_with(
             resource_data={'resource_id': 'fluffy'})
@@ -1530,11 +1549,13 @@ class ResourceTest(common.HeatTestCase):
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
         exc = self.assertRaises(exception.ResourceFailure,
                                 res.create_convergence, self.stack.t.id,
-                                res_data, 'engine-007')
+                                res_data, 'engine-007', self.dummy_timeout)
         self.assertIn('Resource ID was not provided', six.text_type(exc))
 
-    @mock.patch.object(resource.Resource, 'update')
-    def test_update_convergence(self, mock_update):
+    @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
+                       return_value=None)
+    @mock.patch.object(resource.scheduler.TaskRunner, '__call__')
+    def test_update_convergence(self, mock_call, mock_init):
         tmpl = rsrc_defn.ResourceDefinition('test_res',
                                             'ResourceWithPropsType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
@@ -1552,13 +1573,33 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res.update_convergence(new_temp.id, res_data, 'engine-007')
+        res.update_convergence(new_temp.id, res_data, 'engine-007', 120)
 
-        mock_update.assert_called_once_with(
-            new_temp.resource_definitions(self.stack)[res.name])
+        expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
+        mock_init.assert_called_once_with(res.update, expected_rsrc_def)
+        mock_call.assert_called_once_with(timeout=120)
         self.assertEqual(new_temp.id, res.current_template_id)
         self.assertItemsEqual([3, 4], res.requires)
         self._assert_resource_lock(res.id, None, 2)
+
+    def test_update_convergence_throws_timeout(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res',
+                                            'ResourceWithPropsType')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res._store()
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_temp.store()
+
+        res_data = {}
+        self.assertRaises(scheduler.Timeout, res.update_convergence,
+                          new_temp.id, res_data, 'engine-007',
+                          0)
 
     def test_update_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -1574,14 +1615,18 @@ class ResourceTest(common.HeatTestCase):
         ex = self.assertRaises(resource.UpdateInProgress,
                                res.update_convergence,
                                'template_key',
-                               res_data, 'engine-007')
+                               res_data, 'engine-007',
+                               self.dummy_timeout)
         msg = ("The resource %s is already being updated." %
                res.name)
         self.assertEqual(msg, six.text_type(ex))
         # ensure requirements are not updated for failed resource
         self.assertEqual([1, 2], res.requires)
 
-    def test_delete_convergence_ok(self):
+    @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
+                       return_value=None)
+    @mock.patch.object(resource.scheduler.TaskRunner, '__call__')
+    def test_delete_convergence_ok(self, mock_call, mock_init):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -1590,15 +1635,13 @@ class ResourceTest(common.HeatTestCase):
         res.status = res.COMPLETE
         res.action = res.CREATE
         res._store()
-        res_id = res.id
         res.handle_delete = mock.Mock(return_value=None)
         res._update_replacement_data = mock.Mock()
         self._assert_resource_lock(res.id, None, None)
-        res.delete_convergence(2, {}, 'engine-007')
-        self.assertTrue(res.handle_delete.called)
-        self.assertRaises(exception.NotFound,
-                          resource_objects.Resource.get_obj,
-                          self.stack.context, res_id)
+        res.delete_convergence(2, {}, 'engine-007', 20)
+
+        mock_init.assert_called_once_with(res.destroy)
+        mock_call.assert_called_once_with(timeout=20)
         self.assertTrue(res._update_replacement_data.called)
 
     def test_delete_convergence_does_not_delete_same_template_resource(self):
@@ -1607,7 +1650,8 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = 'same-template'
         res._store()
         res.destroy = mock.Mock()
-        res.delete_convergence('same-template', {}, 'engine-007')
+        res.delete_convergence('same-template', {}, 'engine-007',
+                               self.dummy_timeout)
         self.assertFalse(res.destroy.called)
 
     def test_delete_convergence_fail(self):
@@ -1621,7 +1665,8 @@ class ResourceTest(common.HeatTestCase):
         res.handle_delete = mock.Mock(side_effect=ValueError('test'))
         self._assert_resource_lock(res.id, None, None)
         self.assertRaises(exception.ResourceFailure,
-                          res.delete_convergence, 2, {}, 'engine-007')
+                          res.delete_convergence, 2, {}, 'engine-007',
+                          self.dummy_timeout)
         self.assertTrue(res.handle_delete.called)
 
         # confirm that the DB object still exists, and it's lock is released.
@@ -1642,7 +1687,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, 'not-this', None)
         ex = self.assertRaises(resource.UpdateInProgress,
                                res.delete_convergence,
-                               1, {}, 'engine-007')
+                               1, {}, 'engine-007', self.dummy_timeout)
         msg = ("The resource %s is already being updated." %
                res.name)
         self.assertEqual(msg, six.text_type(ex))
@@ -1657,7 +1702,7 @@ class ResourceTest(common.HeatTestCase):
         res.destroy = mock.Mock()
         input_data = {(1, False): 4, (2, False): 5}  # needed_by resource ids
         self._assert_resource_lock(res.id, None, None)
-        res.delete_convergence(1, input_data, 'engine-007')
+        res.delete_convergence(1, input_data, 'engine-007', self.dummy_timeout)
         self.assertItemsEqual([4, 5], res.needed_by)
 
     @mock.patch.object(resource_objects.Resource, 'get_obj')
@@ -1764,6 +1809,14 @@ class ResourceTest(common.HeatTestCase):
         # check handling AttributeError exception
         test_obj.get.side_effect = AttributeError
         self.assertIsNone(res._show_resource())
+
+    def test_delete_convergence_throws_timeout(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res._store()
+        timeout = 0  # to emulate timeout
+        self.assertRaises(scheduler.Timeout, res.delete_convergence,
+                          1, {}, 'engine-007', timeout)
 
 
 class ResourceAdoptTest(common.HeatTestCase):
