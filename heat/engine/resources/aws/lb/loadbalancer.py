@@ -35,6 +35,10 @@ lb_template_default = r'''
     "KeyName" : {
       "Type" : "String"
     },
+    "LbImageId" : {
+      "Type" : "String",
+      "Default" : "Fedora-Cloud-Base-20141203-21.x86_64"
+    },
     "LbFlavor" : {
       "Type" : "String",
       "Default" : "m1.small"
@@ -169,7 +173,7 @@ lb_template_default = r'''
         }
       },
       "Properties": {
-        "ImageId": "Fedora-Cloud-Base-20141203-21.x86_64",
+        "ImageId": { "Ref": "LbImageId" },
         "InstanceType": { "Ref": "LbFlavor" },
         "KeyName": { "Ref": "KeyName" },
         "SecurityGroups": { "Ref": "SecurityGroups" },
@@ -536,7 +540,7 @@ backend servers
         params['SecurityGroups'] = self.properties[self.SECURITY_GROUPS]
         # If the owning stack defines KeyName, we use that key for the nested
         # template, otherwise use no key
-        for magic_param in ('KeyName', 'LbFlavor', 'LBTimeout'):
+        for magic_param in ('KeyName', 'LbFlavor', 'LBTimeout', 'LbImageId'):
             if magic_param in self.stack.parameters:
                 params[magic_param] = self.stack.parameters[magic_param]
 
