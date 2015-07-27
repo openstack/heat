@@ -269,7 +269,13 @@ def construct_input_data(rsrc):
         six.itervalues(rsrc.stack.resources),
         rsrc.stack.outputs,
         rsrc.name)
-    resolved_attributes = {attr: rsrc.FnGetAtt(attr) for attr in attributes}
+    resolved_attributes = {}
+    for attr in attributes:
+        try:
+            resolved_attributes[attr] = rsrc.FnGetAtt(attr)
+        except exception.InvalidTemplateAttribute as ita:
+            LOG.info(six.text_type(ita))
+
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
                   'physical_resource_id': rsrc.resource_id,
