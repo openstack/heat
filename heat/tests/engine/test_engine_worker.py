@@ -360,6 +360,26 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    self.is_update)
         self.assertTrue(self.stack.purge_db.called)
 
+    @mock.patch.object(worker.WorkerService, '_retrigger_check_resource')
+    @mock.patch.object(stack.Stack, 'load')
+    def test_initiate_propagate_rsrc_retriggers_check_rsrc_on_new_stack_update(
+            self, mock_stack_load, mock_rcr, mock_cru, mock_crc, mock_pcr,
+            mock_csc, mock_cid):
+        key = sync_point.make_key(self.resource.id,
+                                  self.stack.current_traversal,
+                                  self.is_update)
+        mock_pcr.side_effect = sync_point.SyncPointNotFound(key)
+        updated_stack = stack.Stack(self.ctx, self.stack.name, self.stack.t,
+                                    self.stack.id,
+                                    current_traversal='some_newy_trvl_uuid')
+        mock_stack_load.return_value = updated_stack
+        self.worker._initiate_propagate_resource(self.ctx, self.resource.id,
+                                                 self.stack.current_traversal,
+                                                 self.is_update, self.resource,
+                                                 self.stack)
+        mock_rcr.assert_called_once_with(self.ctx, self.is_update,
+                                         self.resource.id, updated_stack)
+
 
 @mock.patch.object(worker, 'construct_input_data')
 @mock.patch.object(worker, 'check_stack_complete')

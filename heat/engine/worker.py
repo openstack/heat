@@ -221,7 +221,7 @@ class WorkerService(service.Service):
             # If it is, then retrigger the current node with the appropriate
             # data for the latest traversal.
             stack = parser.Stack.load(cnxt, stack_id=rsrc.stack.id)
-            if current_traversal == rsrc.stack.current_traversal:
+            if current_traversal == stack.current_traversal:
                 LOG.debug('[%s] Traversal sync point missing.',
                           current_traversal)
                 return
