@@ -92,3 +92,7 @@
 
 # Timeout in seconds to wait for connectivity to server. (integer value)
 #connectivity_timeout = 120
+
+# Timeout in seconds to wait for adding or removing childprocess after
+# receiving of sighup signal (integer value)
+#sighup_timeout = 30
