@@ -380,6 +380,26 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_rcr.assert_called_once_with(self.ctx, self.is_update,
                                          self.resource.id, updated_stack)
 
+    @mock.patch.object(sync_point, 'sync')
+    def test_retrigger_check_resource(self, mock_sync, mock_cru, mock_crc,
+                                      mock_pcr, mock_csc, mock_cid):
+        self.is_update = True
+        resC = self.stack['C']
+        expected_graph_key = (resC.id, self.is_update)
+        # A, B are predecessors to C when is_update is True
+        expected_predecessors = {(self.stack['A'].id, True),
+                                 (self.stack['B'].id, True)}
+        self.worker._retrigger_check_resource(self.ctx, self.is_update,
+                                              resC.id, self.stack)
+        mock_sync.assert_called_once_with(self.ctx, resC.id,
+                                          self.stack.current_traversal,
+                                          self.is_update, mock.ANY,
+                                          mock.ANY,
+                                          {expected_graph_key: None})
+        call_args, call_kwargs = mock_sync.call_args
+        actual_predecessors = call_args[5]
+        self.assertItemsEqual(expected_predecessors, actual_predecessors)
+
 
 @mock.patch.object(worker, 'construct_input_data')
 @mock.patch.object(worker, 'check_stack_complete')

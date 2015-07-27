@@ -174,7 +174,7 @@ class WorkerService(service.Service):
     def _retrigger_check_resource(self, cnxt, is_update, resource_id, stack):
         current_traversal = stack.current_traversal
         graph = self._compute_dependencies(stack).graph()
-        key = sync_point.make_key(resource_id, current_traversal, is_update)
+        key = (resource_id, is_update)
         predecessors = graph[key]
 
         def do_check(target_key, data):
@@ -184,7 +184,7 @@ class WorkerService(service.Service):
         try:
             sync_point.sync(cnxt, resource_id, current_traversal, is_update,
                             do_check, predecessors, {key: None})
-        except sync_point.sync_points.NotFound:
+        except sync_point.SyncPointNotFound:
             pass
 
     def _initiate_propagate_resource(self, cnxt, resource_id,
