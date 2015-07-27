@@ -34,4 +34,5 @@ echo -e 'hidden_stack_tags=hidden\n' >> $localconf
 echo -e '[heat_api]\nworkers=1\n' >> $localconf
 echo -e '[heat_api_cfn]\nworkers=1\n' >> $localconf
 echo -e '[heat_api_cloudwatch]\nworkers=1' >> $localconf
+echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf
 
