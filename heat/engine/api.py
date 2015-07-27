@@ -271,7 +271,7 @@ def format_notification_body(stack):
     result = {
         rpc_api.NOTIFY_TENANT_ID: stack.context.tenant_id,
         rpc_api.NOTIFY_USER_ID: stack.context.user,
-        rpc_api.NOTIFY_STACK_ID: stack.identifier().arn(),
+        rpc_api.NOTIFY_STACK_ID: stack.id,
         rpc_api.NOTIFY_STACK_NAME: stack.name,
         rpc_api.NOTIFY_STATE: state,
         rpc_api.NOTIFY_STATE_REASON: stack.status_reason,

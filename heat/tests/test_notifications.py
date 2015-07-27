@@ -35,7 +35,7 @@ class StackTest(common.HeatTestCase):
         st.status_reason = 'this is why'
         st.created_time = created_time
         st.context = self.ctx
-        st.identifier.return_value.arn.return_value = 'hay-are-en'
+        st.id = 'hay-are-en'
 
         notify = self.patchobject(notification, 'notify')
 
@@ -66,7 +66,7 @@ class AutoScaleTest(common.HeatTestCase):
         st.status_reason = 'this is why'
         st.created_time = created_time
         st.context = self.ctx
-        st.identifier.return_value.arn.return_value = 'hay-are-en'
+        st.id = 'hay-are-en'
 
         notify = self.patchobject(notification, 'notify')
 
@@ -98,7 +98,7 @@ class AutoScaleTest(common.HeatTestCase):
         st.status_reason = 'this is why'
         st.created_time = created_time
         st.context = self.ctx
-        st.identifier.return_value.arn.return_value = 'hay-are-en'
+        st.id = 'hay-are-en'
 
         notify = self.patchobject(notification, 'notify')
 
