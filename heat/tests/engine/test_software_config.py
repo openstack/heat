@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.db import api as db_api
 from heat.engine.clients.os import swift
 from heat.engine.clients.os import zaqar
 from heat.engine import service
@@ -559,14 +560,18 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')
-    @mock.patch.object(service_software_config.resource_object.Resource,
-                       'get_by_physical_resource_id')
+    @mock.patch.object(db_api, 'resource_update')
+    @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(service_software_config.requests, 'put')
-    def test_push_metadata_software_deployments(self, put, res_get, md_sd):
+    def test_push_metadata_software_deployments(
+            self, put, res_get, res_upd, md_sd):
         rs = mock.Mock()
         rs.rsrc_metadata = {'original': 'metadata'}
+        rs.id = '1234'
+        rs.atomic_key = 1
         rs.data = []
         res_get.return_value = rs
+        res_upd.return_value = 1
 
         deployments = {'deploy': 'this'}
         md_sd.return_value = deployments
@@ -578,24 +583,56 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         self.engine.software_config._push_metadata_software_deployments(
             self.ctx, '1234', None)
-        rs.update_and_save.assert_called_once_with(
-            {'rsrc_metadata': result_metadata})
+        res_upd.assert_called_once_with(
+            self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
         put.side_effect = Exception('Unexpected requests.put')
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')
-    @mock.patch.object(service_software_config.resource_object.Resource,
-                       'get_by_physical_resource_id')
+    @mock.patch.object(db_api, 'resource_update')
+    @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(service_software_config.requests, 'put')
-    def test_push_metadata_software_deployments_temp_url(
-            self, put, res_get, md_sd):
+    def test_push_metadata_software_deployments_retry(
+            self, put, res_get, res_upd, md_sd):
         rs = mock.Mock()
         rs.rsrc_metadata = {'original': 'metadata'}
+        rs.id = '1234'
+        rs.atomic_key = 1
+        rs.data = []
+        res_get.return_value = rs
+        # zero update means another transaction updated
+        res_upd.return_value = 0
+
+        deployments = {'deploy': 'this'}
+        md_sd.return_value = deployments
+
+        self.assertRaises(
+            exception.DeploymentConcurrentTransaction,
+            self.engine.software_config._push_metadata_software_deployments,
+            self.ctx,
+            '1234',
+            None)
+        # retry ten times then the final failure
+        self.assertEqual(11, res_upd.call_count)
+        put.assert_not_called()
+
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       'metadata_software_deployments')
+    @mock.patch.object(db_api, 'resource_update')
+    @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
+    @mock.patch.object(service_software_config.requests, 'put')
+    def test_push_metadata_software_deployments_temp_url(
+            self, put, res_get, res_upd, md_sd):
+        rs = mock.Mock()
+        rs.rsrc_metadata = {'original': 'metadata'}
+        rs.id = '1234'
+        rs.atomic_key = 1
         rd = mock.Mock()
         rd.key = 'metadata_put_url'
         rd.value = 'http://192.168.2.2/foo/bar'
         rs.data = [rd]
         res_get.return_value = rs
+        res_upd.return_value = 1
 
         deployments = {'deploy': 'this'}
         md_sd.return_value = deployments
@@ -607,26 +644,29 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         self.engine.software_config._push_metadata_software_deployments(
             self.ctx, '1234', None)
-        rs.update_and_save.assert_called_once_with(
-            {'rsrc_metadata': result_metadata})
+        res_upd.assert_called_once_with(
+            self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 
         put.assert_called_once_with(
             'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')
-    @mock.patch.object(service_software_config.resource_object.Resource,
-                       'get_by_physical_resource_id')
+    @mock.patch.object(db_api, 'resource_update')
+    @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(zaqar.ZaqarClientPlugin, 'create_for_tenant')
     def test_push_metadata_software_deployments_queue(
-            self, plugin, res_get, md_sd):
+            self, plugin, res_get, res_upd, md_sd):
         rs = mock.Mock()
         rs.rsrc_metadata = {'original': 'metadata'}
+        rs.id = '1234'
+        rs.atomic_key = 1
         rd = mock.Mock()
         rd.key = 'metadata_queue_id'
         rd.value = '6789'
         rs.data = [rd]
         res_get.return_value = rs
+        res_upd.return_value = 1
         sd = mock.Mock()
         sd.stack_user_project_id = 'project1'
         queue = mock.Mock()
@@ -644,8 +684,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         self.engine.software_config._push_metadata_software_deployments(
             self.ctx, '1234', sd)
-        rs.update_and_save.assert_called_once_with(
-            {'rsrc_metadata': result_metadata})
+        res_upd.assert_called_once_with(
+            self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 
         plugin.assert_called_once_with('project1')
         zaqar_client.queue.assert_called_once_with('6789')
