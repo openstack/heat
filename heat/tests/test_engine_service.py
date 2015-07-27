@@ -1406,7 +1406,6 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
         self.assertFalse(self.eng._authorize_stack_user(
             self.ctx, self.stack, 'NoSuchResource'))
 
-        self.stack.delete()
         self.m.VerifyAll()
 
     def test_stack_authorize_stack_user_user_id(self):
@@ -2417,8 +2416,6 @@ class StackServiceTest(common.HeatTestCase):
                          self.eng.thread_group_mgr.started)
         self.m.VerifyAll()
 
-        self.stack.delete()
-
     def test_signal_reception_sync(self):
         stack_name = 'signal_reception_sync'
         stack = tools.get_stack(stack_name, self.ctx, policy_template)
@@ -2443,9 +2440,7 @@ class StackServiceTest(common.HeatTestCase):
                                  'WebServerScaleDownPolicy',
                                  test_data,
                                  sync_call=True)
-
         self.m.VerifyAll()
-        self.stack.delete()
 
     def test_signal_reception_no_resource(self):
         stack_name = 'signal_reception_no_resource'
@@ -2470,7 +2465,6 @@ class StackServiceTest(common.HeatTestCase):
                                test_data)
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
         self.m.VerifyAll()
-        self.stack.delete()
 
     def test_signal_reception_unavailable_resource(self):
         stack_name = 'signal_reception_unavailable_resource'
@@ -2498,7 +2492,6 @@ class StackServiceTest(common.HeatTestCase):
                                test_data)
         self.assertEqual(exception.ResourceNotAvailable, ex.exc_info[0])
         self.m.VerifyAll()
-        self.stack.delete()
 
     def test_signal_returns_metadata(self):
         stack = tools.get_stack('signal_reception', self.ctx, policy_template)
