@@ -511,14 +511,19 @@ class StackResourceTest(StackResourceBaseTest):
                           force_reload=True)
         self.m.VerifyAll()
 
-    def test_delete_nested_not_found_nested_stack(self):
-
+    def test_delete_nested_none_nested_stack(self):
         self.parent_resource._nested = None
+        self.assertIsNone(self.parent_resource.delete_nested())
+
+    def test_delete_nested_not_found_nested_stack(self):
+        self.parent_resource._nested = mock.MagicMock()
         rpcc = mock.Mock()
         self.parent_resource.rpc_client = rpcc
         rpcc.return_value.delete_stack = mock.Mock(
             side_effect=exception.NotFound())
         self.assertIsNone(self.parent_resource.delete_nested())
+        rpcc.return_value.delete_stack.assert_called_once_with(
+            self.parent_resource.context, mock.ANY)
 
     def test_need_update_for_nested_resource(self):
         """

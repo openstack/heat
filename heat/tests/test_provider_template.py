@@ -928,9 +928,13 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res.uuid = six.text_type(uuid.uuid4())
         self.res.resource_id = six.text_type(uuid.uuid4())
         self.res.action = self.res.CREATE
+        self.res.nested = mock.MagicMock()
         ident = identifier.HeatIdentifier(self.ctx.tenant_id,
                                           self.res.physical_resource_name(),
                                           self.res.resource_id)
+        self.res.nested().identifier.return_value = ident
         self.res.handle_delete()
         rpcc = self.res.rpc_client.return_value
-        rpcc.delete_stack.assert_called_once_with(self.ctx, ident)
+        rpcc.delete_stack.assert_called_once_with(
+            self.ctx,
+            self.res.nested().identifier())
