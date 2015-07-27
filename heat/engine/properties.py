@@ -618,12 +618,12 @@ class TranslationRule(object):
            list-type values can be added to such properties. Using for other
            cases is prohibited and will be returned with error.
     - REPLACE. This rule allows to replace some property value to another. Used
-      for all types of properties. Note, that if property has list type, then
-      value will be replaced for all elements of list, where it needed. If
-      element in such property must be replaced by value of another element of
-      this property, value_name must be defined.
+           for all types of properties. Note, that if property has list type,
+           then value will be replaced for all elements of list, where it
+           needed. If element in such property must be replaced by value of
+           another element of this property, value_name must be defined.
     - DELETE. This rule allows to delete some property. If property has list
-      type, then deleting affects value in all list elements.
+           type, then deleting affects value in all list elements.
     """
 
     RULE_KEYS = (ADD, REPLACE, DELETE) = ('Add', 'Replace', 'Delete')
@@ -669,7 +669,7 @@ class TranslationRule(object):
             raise ValueError(_('Use value_name only for replacing list '
                                'elements.'))
         elif self.rule == self.ADD and not isinstance(self.value, list):
-            raise ValueError(_('value must be list type when rule is ADD.'))
+            raise ValueError(_('value must be list type when rule is Add.'))
 
     def execute_rule(self):
         (source_key, source_data) = self.get_data_from_source_path(
@@ -695,7 +695,7 @@ class TranslationRule(object):
             if isinstance(source_data, list):
                 source_data.extend(value)
             else:
-                raise ValueError(_('ADD rule must be used only for '
+                raise ValueError(_('Add rule must be used only for '
                                    'lists.'))
         elif self.rule == TranslationRule.REPLACE:
             if isinstance(source_data, list):
@@ -718,6 +718,10 @@ class TranslationRule(object):
                                      % dict(key=source_key,
                                             name=value_key))
                 source_data[source_key] = value
+                # If value defined with value_path, need to delete value_path
+                # property data after it's replacing.
+                if value_data and value_data.get(value_key):
+                    del value_data[value_key]
         elif self.rule == TranslationRule.DELETE:
             if isinstance(source_data, list):
                 for item in source_data:

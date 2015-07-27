@@ -1877,7 +1877,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 properties.TranslationRule.ADD,
                                 ['any'],
                                 'value')
-        self.assertEqual('value must be list type when rule is ADD.',
+        self.assertEqual('value must be list type when rule is Add.',
                          six.text_type(exc))
 
     def test_add_rule_exist(self):
@@ -1969,7 +1969,7 @@ class TestTranslationRule(common.HeatTestCase):
                                           [props.get('bar')])
         exc = self.assertRaises(ValueError, rule.execute_rule)
 
-        self.assertEqual('ADD rule must be used only for lists.',
+        self.assertEqual('Add rule must be used only for lists.',
                          six.text_type(exc))
 
     def test_replace_rule_map_exist(self):
@@ -2110,6 +2110,7 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertEqual('one', props.get('bar'))
+        self.assertEqual('one', props.get('far'))
 
     def test_replace_rule_str_value_path_error(self):
         schema = {
@@ -2146,6 +2147,7 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertEqual('one', props.get('bar'))
+        self.assertIsNone(props.get('far'))
 
     def test_replace_rule_str_invalid(self):
         schema = {
