@@ -158,7 +158,10 @@ def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     session = _session(context)
     with session.begin():
-        values['atomic_key'] = atomic_key + 1
+        if atomic_key is None:
+            values['atomic_key'] = 1
+        else:
+            values['atomic_key'] = atomic_key + 1
         rows_updated = session.query(models.Resource).filter_by(
             id=resource_id, engine_id=expected_engine_id,
             atomic_key=atomic_key).update(values)

@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_db import api as oslo_db_api
+from oslo_db import exception as db_exc
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
@@ -18,10 +20,11 @@ import requests
 import six
 from six.moves.urllib import parse as urlparse
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
+from heat.db import api as db_api
 from heat.engine import api
-from heat.objects import resource as resource_object
 from heat.objects import software_config as software_config_object
 from heat.objects import software_deployment as software_deployment_object
 from heat.openstack.common import service
@@ -71,15 +74,19 @@ class SoftwareConfigService(service.Service):
         result = [api.format_software_config(sd.config) for sd in all_sd_s]
         return result
 
+    @oslo_db_api.wrap_db_retry(max_retries=10, retry_on_request=True)
     def _push_metadata_software_deployments(self, cnxt, server_id):
-        rs = (resource_object.Resource.
-              get_by_physical_resource_id(cnxt, server_id))
+        rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
         if not rs:
             return
         deployments = self.metadata_software_deployments(cnxt, server_id)
         md = rs.rsrc_metadata or {}
         md['deployments'] = deployments
-        rs.update_and_save({'rsrc_metadata': md})
+        rows_updated = db_api.resource_update(
+            cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
+        if not rows_updated:
+            raise db_exc.RetryRequest(
+                exception.DeploymentConcurrentTransaction(server=server_id))
 
         metadata_put_url = None
         for rd in rs.data:
