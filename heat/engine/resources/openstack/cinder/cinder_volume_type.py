@@ -84,7 +84,7 @@ class CinderVolumeType(resource.Resource):
             'description': self.properties[self.DESCRIPTION]
         }
 
-        volume_type = self.cinder().volume_types.create(**args)
+        volume_type = self.client().volume_types.create(**args)
         self.resource_id_set(volume_type.id)
         vtype_metadata = self.properties[self.METADATA]
         if vtype_metadata:
@@ -100,10 +100,10 @@ class CinderVolumeType(resource.Resource):
         if self.NAME in prop_diff:
             update_args['name'] = prop_diff.get(self.NAME)
         if update_args:
-            self.cinder().volume_types.update(self.resource_id, **update_args)
+            self.client().volume_types.update(self.resource_id, **update_args)
         # Update the key-value pairs of cinder volume type.
         if self.METADATA in prop_diff:
-            volume_type = self.cinder().volume_types.get(self.resource_id)
+            volume_type = self.client().volume_types.get(self.resource_id)
             old_keys = volume_type.get_keys()
             volume_type.unset_keys(old_keys)
             new_keys = prop_diff.get(self.METADATA)
@@ -115,7 +115,7 @@ class CinderVolumeType(resource.Resource):
             return
 
         try:
-            self.cinder().volume_types.delete(self.resource_id)
+            self.client().volume_types.delete(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
 

@@ -497,7 +497,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
         fake_volume = vt_base.FakeVolume('in-use')
-        res.cinder().volumes.get.return_value = fake_volume
+        res.client().volumes.get.return_value = fake_volume
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
