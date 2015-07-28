@@ -2426,7 +2426,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
     def test_service_not_deployed_throws_exception(self):
         '''
         When the service is not deployed, make sure resource is throwing
-        StackResourceUnavailable exception.
+        ResourceTypeUnavailable exception.
         '''
         with mock.patch.object(
                 generic_rsrc.ResourceWithDefaultClientName,
@@ -2435,12 +2435,12 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
             definition = rsrc_defn.ResourceDefinition(
                 name='Test Resource',
-                resource_type=mock.Mock())
+                resource_type='UnavailableResourceType')
 
             mock_stack = mock.MagicMock()
 
             ex = self.assertRaises(
-                exception.StackResourceUnavailable,
+                exception.ResourceTypeUnavailable,
                 generic_rsrc.ResourceWithDefaultClientName.__new__,
                 cls=generic_rsrc.ResourceWithDefaultClientName,
                 name='test_stack',
@@ -2448,7 +2448,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                 stack=mock_stack)
 
             msg = ('Service sample does not have required endpoint in service'
-                   ' catalog for the resource test_stack')
+                   ' catalog for the resource type UnavailableResourceType')
             self.assertEqual(msg,
                              six.text_type(ex),
                              'invalid exception message')
