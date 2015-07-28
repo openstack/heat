@@ -180,6 +180,9 @@ heat_template_version: 2014-10-16
 resources:
   secret1:
     type: OS::Heat::RandomString
+outputs:
+  nested_str:
+    value: {get_attr: [secret1, value]}
 '''
         stack_identifier = self.stack_create(
             template=self.main_templ,

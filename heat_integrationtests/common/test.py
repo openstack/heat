@@ -175,10 +175,18 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 return net
 
     @staticmethod
-    def _stack_output(stack, output_key):
+    def _stack_output(stack, output_key, validate_errors=True):
         """Return a stack output value for a given key."""
-        return next((o['output_value'] for o in stack.outputs
-                    if o['output_key'] == output_key), None)
+        value = None
+        for o in stack.outputs:
+            if validate_errors and 'output_error' in o:
+                # scan for errors in the stack output.
+                raise ValueError(
+                    'Unexpected output errors in %s : %s' % (
+                        output_key, o['output_error']))
+            if o['output_key'] == output_key:
+                value = o['output_value']
+        return value
 
     def _ping_ip_address(self, ip_address, should_succeed=True):
         cmd = ['ping', '-c1', '-w1', ip_address]

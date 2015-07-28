@@ -244,14 +244,14 @@ resources:
 
         env = {'resource_registry':
                {'My::RandomString': 'OS::Heat::RandomString'}}
-        template_one = self.template.replace("count: 0", "count: 1")
+        template_one = self.template.replace("count: 0", "count: 2")
         stack_identifier = self.stack_create(template=template_one,
                                              environment=env)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
         initial_nested_ident = self._group_nested_identifier(stack_identifier)
-        self.assertEqual({'0': 'My::RandomString'},
+        self.assertEqual({'0': 'My::RandomString', '1': 'My::RandomString'},
                          self.list_resources(initial_nested_ident))
         # get the output
         stack0 = self.client.stacks.get(stack_identifier)
@@ -301,7 +301,7 @@ outputs:
         env = {'resource_registry':
                {'My::RandomString': 'my_random.yaml'}}
 
-        template_one = self.template.replace("count: 0", "count: 1")
+        template_one = self.template.replace("count: 0", "count: 2")
         stack_identifier = self.stack_create(template=template_one,
                                              environment=env,
                                              files=files1)
@@ -309,7 +309,7 @@ outputs:
                          self.list_resources(stack_identifier))
 
         initial_nested_ident = self._group_nested_identifier(stack_identifier)
-        self.assertEqual({'0': 'My::RandomString'},
+        self.assertEqual({'0': 'My::RandomString', '1': 'My::RandomString'},
                          self.list_resources(initial_nested_ident))
         # get the output
         stack0 = self.client.stacks.get(stack_identifier)
