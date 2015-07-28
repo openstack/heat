@@ -186,7 +186,7 @@ resources:
         return cmp(x_prop.support_status.status,
                    y_prop.support_status.status)
 
-    def contribute_property(self, prop_list, prop_key, prop):
+    def contribute_property(self, prop_list, prop_key, prop, upd_para=None):
         prop_item = nodes.definition_list_item(
             '', nodes.term('', prop_key))
         prop_list.append(prop_item)
@@ -208,18 +208,22 @@ resources:
             para = nodes.paragraph('', prop.description)
             definition.append(para)
 
-        if prop.update_allowed:
-            para = nodes.paragraph('',
-                                   _('Can be updated without replacement.'))
-            definition.append(para)
-        elif prop.immutable:
-            para = nodes.paragraph('', _('Updates are not supported. '
-                                         'Resource update will fail on any '
-                                         'attempt to update this property.'))
-            definition.append(para)
+        if upd_para is not None:
+            definition.append(upd_para)
         else:
-            para = nodes.paragraph('', _('Updates cause replacement.'))
-            definition.append(para)
+            if prop.update_allowed:
+                upd_para = nodes.paragraph(
+                    '', _('Can be updated without replacement.'))
+                definition.append(upd_para)
+            elif prop.immutable:
+                upd_para = nodes.paragraph('', _('Updates are not supported. '
+                                                 'Resource update will fail on'
+                                                 ' any attempt to update this '
+                                                 'property.'))
+                definition.append(upd_para)
+            else:
+                upd_para = nodes.paragraph('', _('Updates cause replacement.'))
+                definition.append(upd_para)
 
         if prop.required:
             para = nodes.paragraph('', _('Required property.'))
@@ -257,7 +261,7 @@ resources:
                                                  self.cmp_prop):
                 if sub_prop.support_status.status != support.HIDDEN:
                     self.contribute_property(
-                        sub_prop_list, sub_prop_key, sub_prop)
+                        sub_prop_list, sub_prop_key, sub_prop, upd_para)
 
     def contribute_properties(self, parent):
         if not self.props_schemata:
