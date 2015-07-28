@@ -187,6 +187,8 @@ class ManilaShare(resource.Resource):
 
     default_client_name = 'manila'
 
+    entity = 'shares'
+
     def _request_share(self):
         return self.client().shares.get(self.resource_id)
 

@@ -45,6 +45,7 @@ class DummyShareNetwork(object):
         self.cidr = '3'
         self.ip_version = '5'
         self.network_type = '6'
+        self.to_dict = lambda: {'attr': 'val'}
 
 
 class ManilaShareNetworkTest(common.HeatTestCase):
@@ -208,6 +209,7 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.assertEqual('3', net.FnGetAtt('cidr'))
         self.assertEqual('5', net.FnGetAtt('ip_version'))
         self.assertEqual('6', net.FnGetAtt('network_type'))
+        self.assertEqual({'attr': 'val'}, net.FnGetAtt('show'))
 
     def test_resource_mapping(self):
         mapping = share_network.resource_mapping()
