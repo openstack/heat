@@ -222,8 +222,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
-                    {'input_data': {}, 'adopt_stack_data': None},
-                    is_update))
+                    {'input_data': []},
+                    is_update, None))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def test_conv_string_five_instance_stack_create(self, mock_cr):
@@ -279,8 +279,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
-                    {'input_data': {}, 'adopt_stack_data': None},
-                    is_update))
+                    {'input_data': []},
+                    is_update, None))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def _mock_conv_update_requires(self, stack, conv_deps):
@@ -415,16 +415,16 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
-                    {'input_data': {}, 'adopt_stack_data': None},
-                    is_update))
+                    {'input_data': []},
+                    is_update, None))
 
         leaves = curr_stack.convergence_dependencies.leaves()
         for rsrc_id, is_update in leaves:
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     curr_stack.context, rsrc_id, curr_stack.current_traversal,
-                    {'input_data': {}, 'adopt_stack_data': None},
-                    is_update))
+                    {'input_data': []},
+                    is_update, None))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def test_conv_empty_template_stack_update_delete(self, mock_cr):
@@ -496,16 +496,16 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
-                    {'input_data': {}, 'adopt_stack_data': None},
-                    is_update))
+                    {'input_data': []},
+                    is_update, None))
 
         leaves = curr_stack.convergence_dependencies.leaves()
         for rsrc_id, is_update in leaves:
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     curr_stack.context, rsrc_id, curr_stack.current_traversal,
-                    {'input_data': {}, 'adopt_stack_data': None},
-                    is_update))
+                    {'input_data': []},
+                    is_update, None))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def test_mark_complete_purges_db(self, mock_cr):

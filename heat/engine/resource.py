@@ -273,8 +273,6 @@ class Resource(object):
         def special_stack(tmpl, swap_template):
             # TODO(sirushtim): Load stack from cache
             stk = stack_mod.Stack.load(context, db_res.stack_id)
-            stk.adopt_stack_data = data.get('adopt_stack_data')
-
             # NOTE(sirushtim): Because on delete/cleanup operations, we simply
             # update with another template, the stack object won't have the
             # template of the previous stack-run.

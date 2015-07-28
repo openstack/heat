@@ -999,11 +999,11 @@ class Stack(collections.Mapping):
                 LOG.info(_LI("Triggering resource %(rsrc_id)s "
                              "for %(is_update)s update"),
                          {'rsrc_id': rsrc_id, 'is_update': is_update})
-                input_data = {'input_data': {},
-                              'adopt_stack_data': self.adopt_stack_data}
+                input_data = sync_point.serialize_input_data({})
                 self.worker_client.check_resource(self.context, rsrc_id,
                                                   self.current_traversal,
-                                                  input_data, is_update)
+                                                  input_data, is_update,
+                                                  self.adopt_stack_data)
 
     def rollback(self):
         old_tmpl_id = self.prev_raw_template_id

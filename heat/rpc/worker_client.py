@@ -28,6 +28,7 @@ class WorkerClient(object):
 
         1.0 - Initial version.
         1.1 - Added check_resource.
+        1.2 - Add adopt data argument to check_resource.
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -50,8 +51,10 @@ class WorkerClient(object):
         client.cast(ctxt, method, **kwargs)
 
     def check_resource(self, ctxt, resource_id,
-                       current_traversal, data, is_update):
-        self.cast(ctxt, self.make_msg(
-            'check_resource', resource_id=resource_id,
-            current_traversal=current_traversal, data=data,
-            is_update=is_update))
+                       current_traversal, data, is_update, adopt_stack_data):
+        self.cast(ctxt,
+                  self.make_msg(
+                      'check_resource', resource_id=resource_id,
+                      current_traversal=current_traversal, data=data,
+                      is_update=is_update, adopt_stack_data=adopt_stack_data),
+                  version='1.2')
