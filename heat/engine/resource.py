@@ -1113,7 +1113,8 @@ class Resource(object):
         replaced by more recent resource, then delete this and update
         the replacement resource's needed_by and replaces fields.
         '''
-        with self.lock(engine_id):
+        self._aquire(engine_id)
+        try:
             self.needed_by = list(set(v for v in input_data.values()
                                       if v is not None))
 
@@ -1123,6 +1124,11 @@ class Resource(object):
 
                 # update needed_by and replaces of replacement resource
                 self._update_replacement_data(template_id)
+            else:
+                self._release(engine_id)
+        except:  # noqa
+            with excutils.save_and_reraise_exception():
+                self._release(engine_id)
 
     @scheduler.wrappertask
     def delete(self):
@@ -1267,6 +1273,16 @@ class Resource(object):
 
     @contextlib.contextmanager
     def lock(self, engine_id):
+        self._aquire(engine_id)
+        try:
+            yield
+        except:  # noqa
+            with excutils.save_and_reraise_exception():
+                self._release(engine_id)
+        else:
+            self._release(engine_id)
+
+    def _aquire(self, engine_id):
         updated_ok = False
         try:
             rs = resource_objects.Resource.get_obj(self.context, self.id)
@@ -1284,29 +1300,23 @@ class Resource(object):
                 rs.atomic_key, rs.engine_id, engine_id))
             raise ex
 
-        try:
-            yield
-        except:  # noqa
-            with excutils.save_and_reraise_exception():
-                self.unlock(rs, engine_id, rs.atomic_key)
-        else:
-            self.unlock(rs, engine_id, rs.atomic_key)
-
-    def unlock(self, rsrc, engine_id, atomic_key):
+    def _release(self, engine_id):
+        rs = resource_objects.Resource.get_obj(self.context, self.id)
+        atomic_key = rs.atomic_key
         if atomic_key is None:
             atomic_key = 0
 
-        updated_ok = rsrc.select_and_update(
+        updated_ok = rs.select_and_update(
             {'engine_id': None,
              'current_template_id': self.current_template_id,
              'updated_at': self.updated_time,
              'requires': self.requires,
              'needed_by': self.needed_by},
             expected_engine_id=engine_id,
-            atomic_key=atomic_key + 1)
+            atomic_key=atomic_key)
 
         if not updated_ok:
-            LOG.warn(_LW('Failed to unlock resource %s'), rsrc.name)
+            LOG.warn(_LW('Failed to unlock resource %s'), self.name)
 
     def _resolve_attribute(self, name):
         """
