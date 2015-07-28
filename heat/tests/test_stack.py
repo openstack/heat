@@ -871,21 +871,9 @@ class StackTest(common.HeatTestCase):
         this test fails the second instance
         '''
 
-        class ResourceTypeA(generic_rsrc.ResourceWithProps):
-            count = 0
-
-            def handle_create(self):
-                ResourceTypeA.count += 1
-                self.resource_id_set('%s%d' % (self.name, self.count))
-
-            def handle_delete(self):
-                return super(ResourceTypeA, self).handle_delete()
-
-        resource._register_class('ResourceTypeA', ResourceTypeA)
-
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
-                    'AResource': {'Type': 'ResourceTypeA',
+                    'AResource': {'Type': 'OverwrittenFnGetRefIdType',
                                   'Properties': {'Foo': 'abc'}},
                     'BResource': {'Type': 'ResourceWithPropsType',
                                   'Properties': {
@@ -894,16 +882,18 @@ class StackTest(common.HeatTestCase):
                                  template.Template(tmpl),
                                  disable_rollback=True)
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        self.m.StubOutWithMock(ResourceTypeA, 'handle_delete')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithFnGetRefIdType,
+                               'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithFnGetRefIdType,
+                               'handle_delete')
 
         # create
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
+        generic_rsrc.ResourceWithFnGetRefIdType.handle_create().AndRaise(
+            Exception)
 
         # update
-        generic_rsrc.ResourceWithProps.handle_delete()
-        generic_rsrc.ResourceWithProps.handle_create()
+        generic_rsrc.ResourceWithFnGetRefIdType.handle_delete()
+        generic_rsrc.ResourceWithFnGetRefIdType.handle_create()
 
         self.m.ReplayAll()
 
@@ -921,7 +911,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource1',
+        self.assertEqual('ID-AResource',
                          self.stack['BResource'].properties['Foo'])
 
         self.m.VerifyAll()
@@ -1835,21 +1825,9 @@ class StackTest(common.HeatTestCase):
 
     def test_hot_restore(self):
 
-        class ResourceWithRestore(generic_rsrc.ResWithComplexPropsAndAttrs):
-
-            def handle_restore(self, defn, data):
-                props = dict(
-                    (key, value) for (key, value) in
-                    six.iteritems(defn.properties(self.properties_schema))
-                    if value is not None)
-                value = data['resource_data']['a_string']
-                props['a_string'] = value
-                return defn.freeze(properties=props)
-
-        resource._register_class('ResourceWithRestore', ResourceWithRestore)
         tpl = {'heat_template_version': '2013-05-23',
                'resources':
-               {'A': {'type': 'ResourceWithRestore'}}}
+               {'A': {'type': 'ResourceWithRestoreType'}}}
         self.stack = stack.Stack(self.ctx, 'stack_details_test',
                                  template.Template(tpl))
         self.stack.store()

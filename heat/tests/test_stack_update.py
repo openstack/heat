@@ -1446,15 +1446,9 @@ class StackUpdateTest(common.HeatTestCase):
 
     def test_update_deletion_policy_no_handle_update(self):
 
-        class ResourceWithNoUpdate(resource.Resource):
-            properties_schema = {'Foo': {'Type': 'String'}}
-
-        resource._register_class('ResourceWithNoUpdate',
-                                 ResourceWithNoUpdate)
-
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
-                    'AResource': {'Type': 'ResourceWithNoUpdate',
+                    'AResource': {'Type': 'ResourceWithRequiredProps',
                                   'Properties': {'Foo': 'Bar'}}}}
 
         self.stack = stack.Stack(self.ctx, 'update_test_stack',
@@ -1468,7 +1462,7 @@ class StackUpdateTest(common.HeatTestCase):
 
         new_tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                     'Resources': {
-                        'AResource': {'Type': 'ResourceWithNoUpdate',
+                        'AResource': {'Type': 'ResourceWithRequiredProps',
                                       'DeletionPolicy': 'Retain',
                                       'Properties': {'Foo': 'Bar'}}}}
 
