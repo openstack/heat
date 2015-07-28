@@ -339,8 +339,6 @@ class EngineService(service.Service):
                 thread_group_mgr=self.thread_group_mgr
             )
             self.worker_service.start()
-            LOG.debug("WorkerService is started in engine %s" %
-                      self.engine_id)
 
         target = messaging.Target(
             version=self.RPC_API_VERSION, server=self.host,
@@ -376,8 +374,6 @@ class EngineService(service.Service):
         if cfg.CONF.convergence_engine:
             # Stop the WorkerService
             self.worker_service.stop()
-            LOG.info(_LI("WorkerService is stopped in engine %s"),
-                     self.engine_id)
 
         # Wait for all active threads to be finished
         for stack_id in list(self.thread_group_mgr.groups.keys()):

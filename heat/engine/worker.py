@@ -66,7 +66,10 @@ class WorkerService(service.Service):
             version=self.RPC_API_VERSION,
             server=self.host,
             topic=self.topic)
-        LOG.info(_LI("Starting WorkerService ..."))
+        LOG.info(_LI("Starting %(topic)s (%(version)s) in engine %(engine)s."),
+                 {'topic': self.topic,
+                  'version': self.RPC_API_VERSION,
+                  'engine': self.engine_id})
 
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
@@ -75,12 +78,14 @@ class WorkerService(service.Service):
 
     def stop(self):
         # Stop rpc connection at first for preventing new requests
-        LOG.info(_LI("Stopping WorkerService ..."))
+        LOG.info(_LI("Stopping %(topic)s in engine %(engine)s."),
+                 {'topic': self.topic, 'engine': self.engine_id})
         try:
             self._rpc_server.stop()
             self._rpc_server.wait()
         except Exception as e:
-            LOG.error(_LE("WorkerService is failed to stop, %s"), e)
+            LOG.error(_LE("%(topic)s is failed to stop, %(exc)s"),
+                      {'topic': self.topic, 'exc': e})
 
         super(WorkerService, self).stop()
 
