@@ -13,6 +13,7 @@
 
 import hashlib
 
+from keystoneclient import discover as ks_discover
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils as json
@@ -78,10 +79,17 @@ class EC2Token(wsgi.Middleware):
         if auth_uri:
             return auth_uri
         else:
-            # Import auth_token to have keystone_authtoken settings setup.
-            # We can use the auth_uri from the keystone_authtoken section
-            importutils.import_module('keystonemiddleware.auth_token')
-            return cfg.CONF.keystone_authtoken['auth_uri']
+            # First we check the [clients_keystone] section, and if it is not
+            # set we look in [keystone_authtoken]
+            if cfg.CONF.clients_keystone.auth_uri:
+                discover = ks_discover.Discover(
+                    auth_url=cfg.CONF.clients_keystone.auth_uri)
+                return discover.url_for('3.0')
+            else:
+                # Import auth_token to have keystone_authtoken settings setup.
+                # We can use the auth_uri from the keystone_authtoken section
+                importutils.import_module('keystonemiddleware.auth_token')
+                return cfg.CONF.keystone_authtoken['auth_uri']
 
     @staticmethod
     def _conf_get_keystone_ec2_uri(auth_uri):
