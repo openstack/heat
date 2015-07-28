@@ -836,61 +836,34 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_update_existing_parameters(self):
-        '''Use a template with default parameter and no input parameter
-        then update with a template without default and no input
-        parameter, using the existing parameter.
+        '''Use a template with existing parameters, then update with a
+        template containing additional paramters and ensure all are preserved.
         '''
         stack_name = 'service_update_test_stack_existing_parameters'
-        no_params = {}
-        with_params = {'KeyName': 'foo'}
-
-        old_stack = tools.get_stack(stack_name, self.ctx, with_params=False)
-        sid = old_stack.store()
-        old_stack.set_stack_user_project_id('1234')
-        s = stack_object.Stack.get_by_id(self.ctx, sid)
-
-        t = template_format.parse(wp_template_no_default)
-        env = environment.Environment({'parameters': with_params,
-                                       'resource_registry': {'rsc': 'test'}})
-        template = templatem.Template(t, env=env)
-        stack = parser.Stack(self.ctx, stack_name, template)
-
-        self._stub_update_mocks(s, old_stack)
-
-        templatem.Template(wp_template_no_default,
-                           files=None, env=old_stack.env).AndReturn(stack.t)
-        environment.Environment(no_params).AndReturn(old_stack.env)
-        parser.Stack(self.ctx, stack.name,
-                     stack.t,
-                     convergence=False, current_traversal=None,
-                     prev_raw_template_id=None, current_deps=None,
-                     disable_rollback=True, nested_depth=0,
-                     owner_id=None, parent_resource=None,
-                     stack_user_project_id='1234',
-                     strict_validate=True,
-                     tenant_id='test_tenant_id', timeout_mins=60,
-                     user_creds_id=u'1',
-                     username='test_username').AndReturn(stack)
-
-        self.m.StubOutWithMock(stack, 'validate')
-        stack.validate().AndReturn(None)
-
-        evt_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(grevent, 'Event')
-        grevent.Event().AndReturn(evt_mock)
-
-        self.m.ReplayAll()
-
+        update_params = {'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'parameters': {'newparam': 123},
+                         'resource_registry': {'resources': {}}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
                     rpc_api.PARAM_EXISTING: True}
-        result = self.man.update_stack(self.ctx, old_stack.identifier(),
-                                       wp_template_no_default, no_params,
-                                       None, api_args)
-        self.assertEqual(old_stack.identifier(), result)
-        self.assertIsInstance(result, dict)
-        self.assertTrue(result['stack_id'])
-        self.assertEqual([evt_mock], self.man.thread_group_mgr.events)
-        self.m.VerifyAll()
+        t = template_format.parse(tools.wp_template)
+
+        stack = tools.get_stack(stack_name, self.ctx, with_params=True)
+        stack.store()
+        stack.set_stack_user_project_id('1234')
+        self.assertEqual({'KeyName': 'test'}, stack.t.env.params)
+
+        with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            mock_stack.load.return_value = stack
+            mock_stack.validate.return_value = None
+            result = self.man.update_stack(self.ctx, stack.identifier(),
+                                           t,
+                                           update_params,
+                                           None, api_args)
+            tmpl = mock_stack.call_args[0][2]
+            self.assertEqual({'KeyName': 'test', 'newparam': 123},
+                             tmpl.env.params)
+            self.assertEqual(stack.identifier(), result)
 
     def test_stack_update_reuses_api_params(self):
         stack_name = 'service_update_test_stack'
