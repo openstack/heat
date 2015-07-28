@@ -280,6 +280,16 @@ class InstanceGroup(stack_resource.StackResource):
                           policy[self.MAX_BATCH_SIZE],
                           pause_sec)
 
+    def _update_timeout(self, efft_capacity, efft_bat_sz, pause_sec):
+        batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
+        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
+            msg = _('The current %s will result in stack update '
+                    'timeout.') % rsrc_defn.UPDATE_POLICY
+            raise ValueError(msg)
+        update_timeout = self.stack.timeout_secs() - (
+            pause_sec * (batch_cnt - 1))
+        return update_timeout
+
     def _replace(self, min_in_service, batch_size, pause_sec):
         """
         Replace the instances in the group using updated launch configuration
@@ -306,13 +316,8 @@ class InstanceGroup(stack_resource.StackResource):
         # effective capacity includes temporary capacity added to accommodate
         # the minimum number of instances in service during update
         efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
-        batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
-        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
-            msg = _('The current %s will result in stack update '
-                    'timeout.') % rsrc_defn.UPDATE_POLICY
-            raise ValueError(msg)
-        update_timeout = (self.stack.timeout_secs() - (
-            pause_sec * (batch_cnt - 1)) / batch_cnt)
+        update_timeout = self._update_timeout(efft_capacity,
+                                              efft_bat_sz, pause_sec)
         try:
             remainder = capacity
             while remainder > 0 or efft_capacity > capacity:
