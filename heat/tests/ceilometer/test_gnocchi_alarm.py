@@ -145,9 +145,9 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         snippet = template_format.parse(gnocchi_resources_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['GnoResAlarm']
-        res.ceilometer = mock.Mock()
+        res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.ceilometer().alarms.get.return_value = mock_alarm
+        res.client().alarms.get.return_value = mock_alarm
         return res
 
     def test_create(self):
@@ -216,7 +216,7 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
 
     def test_check_failure(self):
         res = self._prepare_check_resource()
-        res.ceilometer().alarms.get.side_effect = Exception('Boom')
+        res.client().alarms.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(res.check))
@@ -284,9 +284,9 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
             gnocchi_aggregation_by_metrics_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['GnoAggregationByMetricsAlarm']
-        res.ceilometer = mock.Mock()
+        res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.ceilometer().alarms.get.return_value = mock_alarm
+        res.client().alarms.get.return_value = mock_alarm
         return res
 
 
@@ -349,7 +349,7 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
             gnocchi_aggregation_by_resources_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['GnoAggregationByResourcesAlarm']
-        res.ceilometer = mock.Mock()
+        res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.ceilometer().alarms.get.return_value = mock_alarm
+        res.client().alarms.get.return_value = mock_alarm
         return res
