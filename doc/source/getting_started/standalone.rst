@@ -42,6 +42,7 @@ The localrc looked like this::
   RABBIT_PASSWORD=$MY_PASSWORD
 
   disable_all_services
+  # Alternative RPC backends are zeromq and rabbit
   ENABLED_SERVICES=qpid
   enable_service mysql heat h-api h-api-cfn h-api-cw h-eng
 
