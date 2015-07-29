@@ -11,22 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import importutils
+from magnumclient.openstack.common.apiclient import exceptions
+from magnumclient.v1 import client as magnum_client
 
 from heat.engine.clients import client_plugin
-
-exceptions = importutils.try_import(
-    'magnumclient.openstack.common.apiclient.exceptions')
-magnum_client = importutils.try_import('magnumclient.v1.client')
 
 
 class MagnumClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [CONTAINER] = ['container']
-
-    @staticmethod
-    def is_available():
-        return magnum_client is not None
 
     def _create(self):
         endpoint_type = self._get_client_option('magnum', 'endpoint_type')
