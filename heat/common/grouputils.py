@@ -67,6 +67,8 @@ def get_member_names(group):
 
 def get_resource(stack, resource_name, use_indices, key):
     nested_stack = stack.nested()
+    if not nested_stack:
+        return None
     try:
         if use_indices:
             return get_members(stack)[int(resource_name)]
@@ -79,12 +81,14 @@ def get_resource(stack, resource_name, use_indices, key):
 
 def get_rsrc_attr(stack, key, use_indices, resource_name, *attr_path):
     resource = get_resource(stack, resource_name, use_indices, key)
-    return resource.FnGetAtt(*attr_path)
+    if resource:
+        return resource.FnGetAtt(*attr_path)
 
 
 def get_rsrc_id(stack, key, use_indices, resource_name):
     resource = get_resource(stack, resource_name, use_indices, key)
-    return resource.FnGetRefId()
+    if resource:
+        return resource.FnGetRefId()
 
 
 def get_nested_attrs(stack, key, use_indices, *path):

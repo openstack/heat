@@ -252,6 +252,12 @@ class StackResourceType(stack_resource.StackResource, GenericResource):
     def handle_delete(self):
         self.delete_nested()
 
+    def has_nested(self):
+        if self.nested() is not None:
+            return True
+
+        return False
+
 
 class ResourceWithRestoreType(ResWithComplexPropsAndAttrs):
 
