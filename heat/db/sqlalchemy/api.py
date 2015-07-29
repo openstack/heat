@@ -1151,25 +1151,27 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key):
 
         for raw_template in raw_templates:
             tmpl = template.Template.load(ctxt, raw_template.id, raw_template)
+            env = raw_template.environment
 
-            encrypted_params = []
+            if 'encrypted_param_names' in env:
+                encrypted_params = env['encrypted_param_names']
+            else:
+                encrypted_params = []
             for param_name, param in tmpl.param_schemata().items():
                 if (param_name in encrypted_params) or (not param.hidden):
                     continue
 
                 try:
-                    param_val = raw_template.environment['parameters'][
-                        param_name]
+                    param_val = env['parameters'][param_name]
                 except KeyError:
                     param_val = param.default
 
                 encrypted_val = crypt.encrypt(param_val, encryption_key)
-                raw_template.environment['parameters'][param_name] = \
-                    encrypted_val
+                env['parameters'][param_name] = encrypted_val
                 encrypted_params.append(param_name)
 
             if encrypted_params:
-                environment = raw_template.environment.copy()
+                environment = env.copy()
                 environment['encrypted_param_names'] = encrypted_params
                 raw_template_update(ctxt, raw_template.id,
                                     {'environment': environment})
