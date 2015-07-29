@@ -15,6 +15,7 @@
 Stack endpoint for Heat v1 ReST API.
 """
 
+import contextlib
 from oslo_log import log as logging
 import six
 from six.moves.urllib import parse
@@ -69,17 +70,10 @@ class InstantiationData(object):
             self.data[rpc_api.PARAM_EXISTING] = True
 
     @staticmethod
-    def format_parse(data, data_type):
-        """
-        Parse the supplied data as JSON or YAML, raising the appropriate
-        exception if it is in the wrong format.
-        """
-
+    @contextlib.contextmanager
+    def parse_error_check(data_type):
         try:
-            if data_type == 'Environment':
-                return environment_format.parse(data)
-            else:
-                return template_format.parse(data)
+            yield
         except ValueError as parse_ex:
             mdict = {'type': data_type, 'error': six.text_type(parse_ex)}
             msg = _("%(type)s not in valid format: %(error)s") % mdict
@@ -121,7 +115,8 @@ class InstantiationData(object):
         else:
             raise exc.HTTPBadRequest(_("No template specified"))
 
-        return self.format_parse(template_data, 'Template')
+        with self.parse_error_check('Template'):
+            return template_format.parse(template_data)
 
     def environment(self):
         """
@@ -135,8 +130,8 @@ class InstantiationData(object):
             if isinstance(env_data, dict):
                 env = env_data
             else:
-                env = self.format_parse(env_data,
-                                        'Environment')
+                with self.parse_error_check('Environment'):
+                    env = environment_format.parse(env_data)
 
         environment_format.default_for_missing(env)
         parameters = self.data.get(self.PARAM_USER_PARAMS, {})
