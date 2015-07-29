@@ -62,6 +62,21 @@ class GenericResource(resource.Resource):
                  self.type())
 
 
+class ResWithShowAttr(GenericResource):
+    attributes_schema = {'foo': attributes.Schema('A generic attribute'),
+                         'Foo': attributes.Schema('Another generic attribute'),
+                         'show': attributes.Schema('A dict of all details '
+                                                   'of attributes')}
+
+    def _resolve_attribute(self, name):
+        if name == 'show':
+            return {'foo': self.name,
+                    'Foo': self.name,
+                    'Another': self.name}
+        else:
+            return self.name
+
+
 class ResWithComplexPropsAndAttrs(GenericResource):
 
     properties_schema = {
