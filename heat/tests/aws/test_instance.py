@@ -106,7 +106,7 @@ class InstancesTest(common.HeatTestCase):
         return tmpl, stack
 
     def _setup_test_instance(self, return_server, name, image_id=None,
-                             stub_create=True):
+                             stub_create=True, stub_complete=False):
         stack_name = '%s_s' % name
         tmpl, self.stack = self._get_test_template(stack_name, image_id)
         resource_defns = tmpl.resource_definitions(self.stack)
@@ -134,15 +134,24 @@ class InstancesTest(common.HeatTestCase):
                 meta=None, nics=None, availability_zone=None,
                 block_device_mapping=bdm).AndReturn(
                     return_server)
-
+            if stub_complete:
+                self.m.StubOutWithMock(self.fc.servers, 'get')
+                self.fc.servers.get(return_server.id
+                                    ).MultipleTimes().AndReturn(return_server)
         return instance
 
-    def _create_test_instance(self, return_server, name, stub_create=True):
+    def _create_test_instance(self, return_server, name,
+                              stub_create=True):
         instance = self._setup_test_instance(return_server, name,
-                                             stub_create=stub_create)
+                                             stub_create=stub_create,
+                                             stub_complete=True)
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
+        self.m.UnsetStubs()
         return instance
+
+    def _stub_glance_for_update(self, image_id=None):
+        self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
     def test_instance_create(self):
         return_server = self.fc.servers.list()[1]
@@ -154,6 +163,10 @@ class InstancesTest(common.HeatTestCase):
         expected_ip = return_server.networks['public'][0]
         expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
 
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(instance.resource_id).MultipleTimes(
+        ).AndReturn(return_server)
+        self.m.ReplayAll()
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicDnsName'))
@@ -470,39 +483,45 @@ class InstancesTest(common.HeatTestCase):
         exc = self.assertRaises(exception.Error, instance.handle_check)
         self.assertIn('foo', six.text_type(exc))
 
-    class FakeVolumeAttach(object):
-        def started(self):
-            return False
-
     def test_instance_create_unexpected_status(self):
+        # checking via check_create_complete only so not to mock
+        # all retry logic on resource creation
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'test_instance_create')
-        return_server.get = lambda: None
+
+        creator = nova.ServerCreateProgress(instance.resource_id)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
         return_server.status = 'BOGUS'
+        self.fc.servers.get(instance.resource_id).AndReturn(return_server)
+        self.m.ReplayAll()
         e = self.assertRaises(resource.ResourceUnknownStatus,
                               instance.check_create_complete,
-                              (return_server, self.FakeVolumeAttach()))
+                              (creator, None))
         self.assertEqual('Instance is not active - Unknown status BOGUS '
                          'due to "Unknown"', six.text_type(e))
+        self.m.VerifyAll()
 
     def test_instance_create_error_status(self):
+        # checking via check_create_complete only so not to mock
+        # all retry logic on resource creation
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'test_instance_create')
+        creator = nova.ServerCreateProgress(instance.resource_id)
         return_server.status = 'ERROR'
         return_server.fault = {
             'message': 'NoValidHost',
             'code': 500,
             'created': '2013-08-14T03:12:10Z'
         }
-        self.m.StubOutWithMock(return_server, 'get')
-        return_server.get()
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(instance.resource_id).AndReturn(return_server)
         self.m.ReplayAll()
 
         e = self.assertRaises(resource.ResourceInError,
                               instance.check_create_complete,
-                              (return_server, self.FakeVolumeAttach()))
+                              (creator, None))
         self.assertEqual(
             'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
             six.text_type(e))
@@ -510,18 +529,21 @@ class InstancesTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_instance_create_error_no_fault(self):
+        # checking via check_create_complete only so not to mock
+        # all retry logic on resource creation
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_create')
+        creator = nova.ServerCreateProgress(instance.resource_id)
         return_server.status = 'ERROR'
 
-        self.m.StubOutWithMock(return_server, 'get')
-        return_server.get()
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(instance.resource_id).AndReturn(return_server)
         self.m.ReplayAll()
 
         e = self.assertRaises(
             resource.ResourceInError, instance.check_create_complete,
-            (return_server, self.FakeVolumeAttach()))
+            (creator, None))
         self.assertEqual(
             'Went to status ERROR due to "Message: Unknown, Code: Unknown"',
             six.text_type(e))
@@ -648,6 +670,7 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_md')
 
+        self._stub_glance_for_update()
         ud_tmpl = self._get_test_template('update_stack')[0]
         ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 123}
         resource_defns = ud_tmpl.resource_definitions(instance.stack)
@@ -664,6 +687,7 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_type')
 
+        self._stub_glance_for_update()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['InstanceType'] = 'm1.small'
 
@@ -695,6 +719,7 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_type_f')
 
+        self._stub_glance_for_update()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['InstanceType'] = 'm1.small'
 
@@ -737,6 +762,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         # if new overlaps with old, detach the different ones in old, and
         # attach the different ones in new
         old_interfaces = [
@@ -777,6 +803,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         # if old include new, just detach the different ones in old
         old_interfaces = [
             {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
@@ -811,6 +838,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         # if new include old, just attach the different ones in new
         old_interfaces = [
             {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
@@ -845,6 +873,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         # if different, detach the old ones and attach the new ones
         old_interfaces = [
             {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
@@ -884,6 +913,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         new_interfaces = [
             {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
              'DeviceIndex': '2'},
@@ -924,6 +954,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         iface = self.create_fake_iface('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
                                        'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
                                        '10.0.0.4')
@@ -955,6 +986,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.id = '1234'
         instance = self._create_test_instance(return_server,
                                               'ud_network_interfaces')
+        self._stub_glance_for_update()
         iface = self.create_fake_iface('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
                                        'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
                                        '10.0.0.4')
@@ -1004,10 +1036,15 @@ class InstancesTest(common.HeatTestCase):
                                              'in_sts_build')
         instance.resource_id = '1234'
 
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+
         # Bind fake get method which Instance.check_create_complete will call
-        def activate_status(server):
-            server.status = 'ACTIVE'
-        return_server.get = activate_status.__get__(return_server)
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.fc.servers.get(instance.resource_id).WithSideEffects(
+            status_active).MultipleTimes().AndReturn(return_server)
+
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
@@ -1046,7 +1083,7 @@ class InstancesTest(common.HeatTestCase):
             name='test_suspend_in_suspend_failed',
             state=('SUSPEND', 'FAILED'))
 
-    def test_server_suspend_in_suspend_complete(self):
+    def test_instance_suspend_in_suspend_complete(self):
         self._test_instance_status_suspend(
             name='test_suspend_in_suspend_complete',
             state=('SUSPEND', 'COMPLETE'))
@@ -1091,7 +1128,7 @@ class InstancesTest(common.HeatTestCase):
             name='test_resume_in_resume_complete',
             state=('RESUME', 'COMPLETE'))
 
-    def test_server_resume_other_exception(self):
+    def test_instance_resume_other_exception(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_resume_wait')
@@ -1149,17 +1186,20 @@ class InstancesTest(common.HeatTestCase):
                                              'in_sts_bld')
         instance.resource_id = '1234'
 
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+
         # Bind fake get method which Instance.check_create_complete will call
-        def activate_status(server):
-            if hasattr(server, '_test_check_iterations'):
-                server._test_check_iterations += 1
-            else:
-                server._test_check_iterations = 1
-            if server._test_check_iterations == 1:
-                server.status = uncommon_status
-            if server._test_check_iterations > 2:
-                server.status = 'ACTIVE'
-        return_server.get = activate_status.__get__(return_server)
+        def status_not_build(*args):
+            return_server.status = uncommon_status
+
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.fc.servers.get(instance.resource_id).WithSideEffects(
+            status_not_build).AndReturn(return_server)
+        self.fc.servers.get(instance.resource_id).WithSideEffects(
+            status_active).MultipleTimes().AndReturn(return_server)
+
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()

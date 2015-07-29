@@ -160,12 +160,14 @@ class CloudServer(server.Server):
             msg = _("Unknown RackConnect automation status: %s") % rc_status
             raise exception.Error(msg)
 
-    def check_create_complete(self, server):
+    def check_create_complete(self, server_id):
         """Check if server creation is complete and handle server configs."""
-        if not super(CloudServer, self).check_create_complete(server):
+        if not super(CloudServer, self).check_create_complete(server_id):
             return False
 
-        self.client_plugin().refresh_server(server)
+        server = self.client_plugin().fetch_server(server_id)
+        if not server:
+            return False
 
         if ('rack_connect' in self.context.roles and not
                 self._check_rack_connect_complete(server)):

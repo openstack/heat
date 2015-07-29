@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
+from heat.engine.clients.os import nova as nova_cp
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -576,7 +577,12 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        return server, scheduler.TaskRunner(self._attach_volumes_task())
+        if self.volumes():
+            attacher = scheduler.TaskRunner(self._attach_volumes_task())
+        else:
+            attacher = None
+        creator = nova_cp.ServerCreateProgress(server.id)
+        return creator, attacher
 
     def _attach_volumes_task(self):
         attach_tasks = (vol_task.VolumeAttachTask(self.stack,
@@ -587,13 +593,21 @@ class Instance(resource.Resource):
         return scheduler.PollingTaskGroup(attach_tasks)
 
     def check_create_complete(self, cookie):
-        server, volume_attach_task = cookie
-        return (self.client_plugin()._check_active(server, 'Instance') and
-                self._check_volume_attached(server, volume_attach_task))
+        creator, attacher = cookie
 
-    def _check_volume_attached(self, server, volume_attach_task):
+        if not creator.complete:
+            creator.complete = self.client_plugin()._check_active(
+                creator.server_id, 'Instance')
+            if creator.complete:
+                server = self.client_plugin().get_server(creator.server_id)
+                self._set_ipaddress(server.networks)
+                return attacher is None
+            else:
+                return False
+        return self._check_volume_attached(attacher)
+
+    def _check_volume_attached(self, volume_attach_task):
         if not volume_attach_task.started():
-            self._set_ipaddress(server.networks)
             volume_attach_task.start()
             return volume_attach_task.done()
         else:

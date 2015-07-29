@@ -185,8 +185,7 @@ class ServersTest(common.HeatTestCase):
         return tmpl, stack
 
     def _setup_test_server(self, return_server, name, image_id=None,
-                           override_name=False, stub_create=True,
-                           server_rebuild=False):
+                           override_name=False, stub_create=True):
         stack_name = '%s_s' % name
         server_name = str(name) if override_name else None
         tmpl, self.stack = self._get_test_template(stack_name, server_name,
@@ -195,8 +194,7 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server(str(name), resource_defns['WebServer'],
                                 self.stack)
 
-        self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1,
-                                        server_rebuild=server_rebuild)
+        self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -213,17 +211,30 @@ class ServersTest(common.HeatTestCase):
                 block_device_mapping=None, block_device_mapping_v2=None,
                 config_drive=None, disk_config=None, reservation_id=None,
                 files={}, admin_pass=None).AndReturn(return_server)
+            # mock check_create_complete innards
+            self.m.StubOutWithMock(self.fc.servers, 'get')
+            self.fc.servers.get(return_server.id).AndReturn(return_server)
 
         return server
 
     def _create_test_server(self, return_server, name, override_name=False,
-                            stub_create=True, server_rebuild=False):
+                            stub_create=True):
         server = self._setup_test_server(return_server, name,
-                                         stub_create=stub_create,
-                                         server_rebuild=server_rebuild)
+                                         stub_create=stub_create)
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
+        self.m.UnsetStubs()
         return server
+
+    def _stub_glance_for_update(self, image_id=None, rebuild=False):
+        if rebuild:
+            image = 'F17-x86_64-gold'
+            imageId = 744
+        else:
+            image = image_id or 'CentOS 5.2'
+            imageId = 1
+
+        self._mock_get_image_id_success(image, imageId)
 
     def _create_fake_iface(self, port, mac, ip):
         class fake_interface(object):
@@ -234,15 +245,10 @@ class ServersTest(common.HeatTestCase):
 
         return fake_interface(port, mac, ip)
 
-    def _mock_get_image_id_success(self, imageId_input, imageId,
-                                   server_rebuild=False):
+    def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
         glance.GlanceClientPlugin.get_image_id(
             imageId_input).MultipleTimes().AndReturn(imageId)
-
-        if server_rebuild:
-            glance.GlanceClientPlugin.get_image_id(
-                'F17-x86_64-gold').MultipleTimes().AndReturn(744)
 
     def _mock_get_image_id_fail(self, image_id, exp):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
@@ -378,7 +384,6 @@ class ServersTest(common.HeatTestCase):
             self._create_fake_iface(
                 '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
 
-        self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
@@ -490,18 +495,27 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_create_unexpected_status(self):
+        # NOTE(pshchelo) checking is done only on check_create_complete
+        # level so not to mock out all delete/retry logic that kicks in
+        # on resource create failure
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'cr_unexp_sts')
-        return_server.get = lambda: None
+        self.m.StubOutWithMock(self.fc.servers, 'get')
         return_server.status = 'BOGUS'
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
+        self.m.ReplayAll()
+
         e = self.assertRaises(resource.ResourceUnknownStatus,
                               server.check_create_complete,
-                              return_server)
+                              server.resource_id)
         self.assertEqual('Server is not active - Unknown status BOGUS due to '
                          '"Unknown"', six.text_type(e))
 
     def test_server_create_error_status(self):
+        # NOTE(pshchelo) checking is done only on check_create_complete
+        # level so not to mock out all delete/retry logic that kicks in
+        # on resource create failure
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'cr_err_sts')
@@ -511,13 +525,13 @@ class ServersTest(common.HeatTestCase):
             'code': 500,
             'created': '2013-08-14T03:12:10Z'
         }
-        self.m.StubOutWithMock(return_server, 'get')
-        return_server.get()
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
         self.m.ReplayAll()
 
         e = self.assertRaises(resource.ResourceInError,
                               server.check_create_complete,
-                              return_server)
+                              server.resource_id)
         self.assertEqual(
             'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
             six.text_type(e))
@@ -970,8 +984,7 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server(server_name,
                                 resource_defns['WebServer'], stack)
 
-        self._mock_get_image_id_success('CentOS 5.2', 1,
-                                        server_rebuild=False)
+        self._mock_get_image_id_success('CentOS 5.2', 1)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
@@ -1292,12 +1305,10 @@ class ServersTest(common.HeatTestCase):
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
 
-        server_get = self.fc.client.get_servers_1234()
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn(server_get)
-        get().AndRaise(fakes_nova.fake_exception())
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(server)
+        self.fc.servers.get(server.resource_id).AndRaise(
+            fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.delete)()
@@ -1331,21 +1342,19 @@ class ServersTest(common.HeatTestCase):
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
 
-        server_get = self.fc.client.get_servers_1234()
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        def make_error(*args):
+            return_server.status = "ERROR"
 
-        def make_error():
-            server_get[1]["server"]['status'] = "ERROR"
-
-        get = self.fc.client.get_servers_1234
-        get().AndReturn(server_get)
-        get().AndReturn(server_get)
-        get().WithSideEffects(make_error).AndReturn(server_get)
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            make_error).AndReturn(return_server)
+        self.m.ReplayAll()
 
         resf = self.assertRaises(exception.ResourceFailure,
                                  scheduler.TaskRunner(server.delete))
-        self.assertIn("Server sample-server delete failed",
+        self.assertIn("Server %s delete failed" % return_server.name,
                       six.text_type(resf))
 
         self.m.VerifyAll()
@@ -1356,25 +1365,25 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'create_delete')
         server.resource_id = '1234'
-        server_get = self.fc.client.get_servers_1234()
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
 
-        def make_error():
-            server_get[1]["server"]['status'] = "ERROR"
-            server_get[1]["server"]['OS-EXT-STS:task_state'] = 'deleting'
+        def make_error(*args):
+            return_server.status = "ERROR"
+            setattr(return_server, 'OS-EXT-STS:task_state', 'deleting')
 
-        def make_error_done():
-            server_get[1]["server"]['status'] = "ERROR"
-            server_get[1]["server"]['OS-EXT-STS:task_state'] = None
+        def make_error_done(*args):
+            return_server.status = "ERROR"
+            setattr(return_server, 'OS-EXT-STS:task_state', None)
 
-        get = self.fc.client.get_servers_1234
-        get().WithSideEffects(make_error).AndReturn(server_get)
-        get().WithSideEffects(make_error_done).AndReturn(server_get)
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            make_error).AndReturn(return_server)
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            make_error_done).AndReturn(return_server)
+        self.m.ReplayAll()
 
         resf = self.assertRaises(exception.ResourceFailure,
                                  scheduler.TaskRunner(server.delete))
-        self.assertIn("Server sample-server delete failed",
+        self.assertIn("Server %s delete failed" % return_server.name,
                       six.text_type(resf))
         self.m.VerifyAll()
 
@@ -1387,17 +1396,15 @@ class ServersTest(common.HeatTestCase):
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
 
-        server_get = self.fc.client.get_servers_1234()
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        def make_soft_delete(*args):
+            return_server.status = "SOFT_DELETED"
 
-        def make_soft_delete():
-            server_get[1]["server"]['status'] = "SOFT_DELETED"
-
-        get = self.fc.client.get_servers_1234
-        get().AndReturn(server_get)
-        get().AndReturn(server_get)
-        get().WithSideEffects(make_soft_delete).AndReturn(server_get)
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            make_soft_delete).AndReturn(return_server)
+        self.m.ReplayAll()
 
         scheduler.TaskRunner(server.delete)()
         self.assertEqual((server.DELETE, server.COMPLETE), server.state)
@@ -1408,6 +1415,7 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'md_update')
 
+        self._stub_glance_for_update()
         ud_tmpl = self._get_test_template('update_stack')[0]
         ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 123}
         resource_defns = ud_tmpl.resource_definitions(server.stack)
@@ -1427,6 +1435,9 @@ class ServersTest(common.HeatTestCase):
                                           'md_update')
 
         new_meta = {'test': 123}
+        self._stub_glance_for_update()
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(return_server,
                                  server.client_plugin().meta_serialize(
@@ -1448,6 +1459,9 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'md_update')
 
+        self._stub_glance_for_update()
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
         new_meta = {'test': {'testkey': 'testvalue'}}
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
 
@@ -1469,7 +1483,10 @@ class ServersTest(common.HeatTestCase):
                                           'md_update')
 
         # part one, add some metadata
+        self._stub_glance_for_update()
         new_meta = {'test': '123', 'this': 'that'}
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(return_server,
                                  new_meta).AndReturn(None)
@@ -1484,9 +1501,13 @@ class ServersTest(common.HeatTestCase):
         # part two change the metadata (test removing the old key)
         self.m.ReplayAll()
         new_meta = {'new_key': 'yeah'}
+        # new fake with the correct metadata
+        server.resource_id = '56789'
 
-        self.m.StubOutWithMock(self.fc.servers, 'delete_meta')
         new_return_server = self.fc.servers.list()[5]
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(new_return_server)
+        self.m.StubOutWithMock(self.fc.servers, 'delete_meta')
         self.fc.servers.delete_meta(new_return_server,
                                     ['test', 'this']).AndReturn(None)
 
@@ -1497,9 +1518,6 @@ class ServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['metadata'] = new_meta
-
-        # new fake with the correct metadata
-        server.resource_id = '56789'
 
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
@@ -1517,6 +1535,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['name'] = new_name
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('5678').AndReturn(return_server)
 
@@ -1535,6 +1554,7 @@ class ServersTest(common.HeatTestCase):
         return_server.id = '5678'
         server = self._create_test_server(return_server,
                                           'change_password')
+        self._stub_glance_for_update()
         new_password = 'new_password'
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['admin_pass'] = new_password
@@ -1560,6 +1580,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.small'
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').AndReturn(return_server)
 
@@ -1588,6 +1609,7 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_update2')
 
+        self._stub_glance_for_update()
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.small'
 
@@ -1628,6 +1650,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server_resource.t)
         update_template['Properties']['flavor'] = 'm1.small'
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').AndReturn(server)
 
@@ -1726,10 +1749,10 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
         server = self._create_test_server(return_server,
-                                          'srv_updimgrbld',
-                                          server_rebuild=True)
+                                          'srv_updimgrbld')
 
         new_image = 'F17-x86_64-gold'
+        self._stub_glance_for_update(rebuild=True)
         # current test demonstrate updating when image_update_policy was not
         # changed, so image_update_policy will be used from self.properties
         server.t['Properties']['image_update_policy'] = policy
@@ -1740,7 +1763,7 @@ class ServersTest(common.HeatTestCase):
             update_template['Properties']['admin_pass'] = password
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('1234').AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'rebuild')
         # 744 is a static lookup from the fake images list
         if 'REBUILD' == policy:
@@ -1752,10 +1775,15 @@ class ServersTest(common.HeatTestCase):
                 return_server, 744, password=password,
                 preserve_ephemeral=True)
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
+
+        def get_sideeff(stat):
+            def sideeff(*args):
+                return_server.status = stat
+            return sideeff
+
         for stat in status:
-            def activate_status(serv):
-                serv.status = stat
-            return_server.get = activate_status.__get__(return_server)
+            self.fc.servers.get('1234').WithSideEffects(
+                get_sideeff(stat)).AndReturn(return_server)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(server.update, update_template)()
@@ -1778,7 +1806,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_update_image_rebuild_status_active_keep_ephemeral(self):
         # It is possible for us to miss the REBUILD status.
         self._test_server_update_image_rebuild(
-            policy='REBUILD_PRESERVE_EPHEMERAL', status=('ACTIVE'))
+            policy='REBUILD_PRESERVE_EPHEMERAL', status=('ACTIVE',))
 
     def test_server_update_image_rebuild_with_new_password(self):
         # Normally we will see 'REBUILD' first and then 'ACTIVE".
@@ -1791,10 +1819,10 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
         server = self._create_test_server(return_server,
-                                          'srv_updrbldfail',
-                                          server_rebuild=True)
+                                          'srv_updrbldfail')
 
         new_image = 'F17-x86_64-gold'
+        self._stub_glance_for_update(rebuild=True)
         # current test demonstrate updating when image_update_policy was not
         # changed, so image_update_policy will be used from self.properties
         server.t['Properties']['image_update_policy'] = 'REBUILD'
@@ -1802,21 +1830,25 @@ class ServersTest(common.HeatTestCase):
         update_template['Properties']['image'] = new_image
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('1234').AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'rebuild')
         # 744 is a static lookup from the fake images list
         self.fc.servers.rebuild(
             return_server, 744, password=None, preserve_ephemeral=False)
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
 
-        def activate_status(server):
-            server.status = 'REBUILD'
-        return_server.get = activate_status.__get__(return_server)
+        def status_rebuild(*args):
+            return_server.status = 'REBUILD'
 
-        def activate_status2(server):
-            server.status = 'ERROR'
-        return_server.get = activate_status2.__get__(return_server)
+        def status_error(*args):
+            return_server.status = 'ERROR'
+
+        self.fc.servers.get('1234').WithSideEffects(
+            status_rebuild).AndReturn(return_server)
+        self.fc.servers.get('1234').WithSideEffects(
+            status_error).AndReturn(return_server)
         self.m.ReplayAll()
+
         updater = scheduler.TaskRunner(server.update, update_template)
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
@@ -1846,10 +1878,11 @@ class ServersTest(common.HeatTestCase):
                                          'sts_build')
         server.resource_id = '1234'
 
-        # Bind fake get method which Server.check_create_complete will call
-        def activate_status(server):
-            server.status = 'ACTIVE'
-        return_server.get = activate_status.__get__(return_server)
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            status_active).AndReturn(return_server)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.create)()
@@ -1879,10 +1912,9 @@ class ServersTest(common.HeatTestCase):
                                           'srv_sus2')
 
         server.resource_id = '1234'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_nova.fake_exception())
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndRaise(
+            fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.ResourceFailure,
@@ -1901,15 +1933,22 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         server.state_set(state[0], state[1])
 
-        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d2 = copy.deepcopy(d1)
-        d1['server']['status'] = 'ACTIVE'
-        d2['server']['status'] = 'SUSPENDED'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d1))
-        get().AndReturn((200, d1))
-        get().AndReturn((200, d2))
+        def status_suspended(*args):
+            return_server.status = 'SUSPENDED'
+
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            status_active).AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'suspend')
+        return_server.suspend().AndReturn(None)
+        self.fc.servers.get(return_server.id).WithSideEffects(
+            status_active).AndReturn(return_server)
+        self.fc.servers.get(return_server.id).WithSideEffects(
+            status_suspended).AndReturn(return_server)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.suspend)()
@@ -1936,26 +1975,31 @@ class ServersTest(common.HeatTestCase):
                                           'srv_susp_uk')
 
         server.resource_id = '1234'
-        self.m.ReplayAll()
 
-        # Override the get_servers_1234 handler status to SUSPENDED, but
-        # return the ACTIVE state first (twice, so we sleep)
-        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d2 = copy.deepcopy(d1)
-        d1['server']['status'] = 'ACTIVE'
-        d2['server']['status'] = 'TRANSMOGRIFIED'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d1))
-        get().AndReturn((200, d1))
-        get().AndReturn((200, d2))
+        def status_unknown(*args):
+            return_server.status = 'TRANSMOGRIFIED'
+
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            status_active).AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'suspend')
+        return_server.suspend().AndReturn(None)
+        self.fc.servers.get(return_server.id).WithSideEffects(
+            status_active).AndReturn(return_server)
+        self.fc.servers.get(return_server.id).WithSideEffects(
+            status_unknown).AndReturn(return_server)
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
         self.assertIsInstance(ex.exc, resource.ResourceUnknownStatus)
-        self.assertEqual('Suspend of server sample-server failed - '
-                         'Unknown status TRANSMOGRIFIED due to "Unknown"',
+        self.assertEqual('Suspend of server %s failed - '
+                         'Unknown status TRANSMOGRIFIED '
+                         'due to "Unknown"' % return_server.name,
                          six.text_type(ex.exc.message))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
@@ -1968,15 +2012,22 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         server.state_set(state[0], state[1])
 
-        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
-        d2 = copy.deepcopy(d1)
-        d1['server']['status'] = 'SUSPENDED'
-        d2['server']['status'] = 'ACTIVE'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d1))
-        get().AndReturn((200, d1))
-        get().AndReturn((200, d2))
+        def status_suspended(*args):
+            return_server.status = 'SUSPENDED'
+
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            status_suspended).AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'resume')
+        return_server.resume().AndReturn(None)
+        self.fc.servers.get(return_server.id).WithSideEffects(
+            status_suspended).AndReturn(return_server)
+        self.fc.servers.get(return_server.id).WithSideEffects(
+            status_active).AndReturn(return_server)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.resume)()
@@ -2023,13 +2074,9 @@ class ServersTest(common.HeatTestCase):
                                           'srv_res_nf')
 
         server.resource_id = '1234'
-        self.m.ReplayAll()
-
-        # Override the get_servers_1234 handler status to ACTIVE, but
-        # return the SUSPENDED state first (twice, so we sleep)
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_nova.fake_exception())
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndRaise(
+            fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         server.state_set(server.SUSPEND, server.COMPLETE)
@@ -2079,16 +2126,16 @@ class ServersTest(common.HeatTestCase):
                                          'srv_sts_bld')
         server.resource_id = '1234'
 
-        check_iterations = [0]
+        def status_uncommon(*args):
+            return_server.status = uncommon_status
 
-        # Bind fake get method which Server.check_create_complete will call
-        def activate_status(server):
-            check_iterations[0] += 1
-            if check_iterations[0] == 1:
-                server.status = uncommon_status
-            if check_iterations[0] > 2:
-                server.status = 'ACTIVE'
-        return_server.get = activate_status.__get__(return_server)
+        def status_active(*args):
+            return_server.status = 'ACTIVE'
+
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            status_uncommon).AndReturn(return_server)
+        self.fc.servers.get(server.resource_id).WithSideEffects(
+            status_active).AndReturn(return_server)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.create)()
@@ -2632,10 +2679,9 @@ class ServersTest(common.HeatTestCase):
                                           'srv_resolve_attr')
 
         server.resource_id = '1234'
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_nova.fake_exception())
-        mox.Replay(get)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndRaise(
+            fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         self.assertEqual('', server._resolve_attribute("accessIPv4"))
@@ -2994,6 +3040,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = new_networks
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
         # to make sure, that old_networks will be None
@@ -3029,6 +3076,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = new_networks
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
         # to make sure, that old_networks will be None
@@ -3068,6 +3116,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = new_networks
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
         # to make sure, that old_networks will be None
@@ -3116,6 +3165,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = new_networks
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
@@ -3174,6 +3224,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = None
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
@@ -3225,6 +3276,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = new_networks
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
@@ -3269,6 +3321,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['networks'] = []
 
+        self._stub_glance_for_update()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
@@ -3310,18 +3363,16 @@ class ServersTest(common.HeatTestCase):
     def test_server_properties_validation_create_and_update(self):
         return_server = self.fc.servers.list()[1]
 
+        # create
+        # validation calls are already mocked there
+        server = self._create_test_server(return_server,
+                                          'my_server')
+
         self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        # verify that validate gets invoked exactly once for create
-        glance.ImageConstraint.validate(
-            'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
         # verify that validate gets invoked exactly once for update
         glance.ImageConstraint.validate(
             'Update Image', mox.IgnoreArg()).AndReturn(True)
         self.m.ReplayAll()
-
-        # create
-        server = self._create_test_server(return_server,
-                                          'my_server')
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'Update Image'
@@ -3336,19 +3387,17 @@ class ServersTest(common.HeatTestCase):
     def test_server_properties_validation_create_and_update_fail(self):
         return_server = self.fc.servers.list()[1]
 
+        # create
+        # validation calls are already mocked there
+        server = self._create_test_server(return_server,
+                                          'my_server')
+
         self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        # verify that validate gets invoked exactly once for create
-        glance.ImageConstraint.validate(
-            'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
         # verify that validate gets invoked exactly once for update
         ex = exception.EntityNotFound(entity='Image', name='Update Image')
         glance.ImageConstraint.validate('Update Image',
                                         mox.IgnoreArg()).AndRaise(ex)
         self.m.ReplayAll()
-
-        # create
-        server = self._create_test_server(return_server,
-                                          'my_server')
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'Update Image'
@@ -3365,7 +3414,7 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_snapshot(self):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'test_server_snapshot')
         scheduler.TaskRunner(server.snapshot)()
@@ -3384,7 +3433,7 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_check_snapshot_complete_fail(self, image_status='ERROR'):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'test_server_snapshot')
         image_in_error = mock.Mock()
@@ -3435,7 +3484,7 @@ class ServersTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -3448,6 +3497,8 @@ class ServersTest(common.HeatTestCase):
             block_device_mapping=None, block_device_mapping_v2=None,
             config_drive=None, disk_config=None, reservation_id=None,
             files={}, admin_pass=None).AndReturn(return_server)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(return_server.id).AndReturn(return_server)
 
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
         glance.GlanceClientPlugin.get_image_id(
@@ -3458,6 +3509,9 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         self.stub_NetworkConstraint_validate()
+        self.fc.servers.get(return_server.id).AndReturn(return_server)
+        self.fc.servers.get(return_server.id).AndReturn(return_server)
+        self.patchobject(return_server, 'get', return_value=None)
 
         self.m.ReplayAll()
 
@@ -3496,12 +3550,14 @@ class ServersTest(common.HeatTestCase):
         get_image.return_value = 744
 
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
 
         mock_create = self.patchobject(self.fc.servers, 'create')
         mock_create.return_value = return_server
+        mock_get = self.patchobject(self.fc.servers, 'get')
+        mock_get.return_value = return_server
 
-        image = self.fc.servers.create_image(1234, 'name')
+        image = self.fc.servers.create_image('1234', 'name')
         create_image = self.patchobject(self.fc.servers, 'create_image')
         create_image.return_value = image
 
@@ -3518,9 +3574,9 @@ class ServersTest(common.HeatTestCase):
 
         get_image.assert_called_with('F17-x86_64-gold')
         create_image.assert_called_once_with(
-            1234, utils.PhysName('snapshot_policy', 'WebServer'))
+            '1234', utils.PhysName('snapshot_policy', 'WebServer'))
 
-        delete_server.assert_called_once_with(1234)
+        delete_server.assert_called_once_with('1234')
 
     def test_snapshot_policy_image_failed(self):
         t = template_format.parse(wp_template)
@@ -3537,12 +3593,14 @@ class ServersTest(common.HeatTestCase):
         get_image.return_value = 744
 
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
 
         mock_create = self.patchobject(self.fc.servers, 'create')
         mock_create.return_value = return_server
+        mock_get = self.patchobject(self.fc.servers, 'get')
+        mock_get.return_value = return_server
 
-        image = self.fc.servers.create_image(1234, 'name')
+        image = self.fc.servers.create_image('1234', 'name')
         create_image = self.patchobject(self.fc.servers, 'create_image')
         create_image.return_value = image
 
@@ -3571,6 +3629,6 @@ class ServersTest(common.HeatTestCase):
 
         get_image.assert_called_with('F17-x86_64-gold')
         create_image.assert_called_once_with(
-            1234, utils.PhysName('snapshot_policy', 'WebServer'))
+            '1234', utils.PhysName('snapshot_policy', 'WebServer'))
 
         delete_server.assert_not_called()
