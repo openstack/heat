@@ -6,16 +6,16 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b2.dev299\n"
+"Project-Id-Version: heat 5.0.0.0b2.dev397\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-23 06:01+0000\n"
+"POT-Creation-Date: 2015-07-29 06:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 1.3\n"
+"Generated-By: Babel 2.0\n"
 
 #: heat/api/cloudwatch/watch.py:202
 #, python-format
@@ -90,22 +90,22 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:1134
+#: heat/engine/resource.py:1146
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1215
+#: heat/engine/resource.py:1227
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1258
+#: heat/engine/resource.py:1270
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1430
+#: heat/engine/resource.py:1442
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -243,32 +243,32 @@ msgid ""
 "clusters.get(): %(exception)s"
 msgstr ""
 
-#: heat/tests/generic_resource.py:41
+#: heat/tests/generic_resource.py:42
 #, python-format
 msgid "Creating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:45
+#: heat/tests/generic_resource.py:46
 #, python-format
 msgid "Updating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:49
+#: heat/tests/generic_resource.py:50
 #, python-format
 msgid "Deleting generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:56
+#: heat/tests/generic_resource.py:57
 #, python-format
 msgid "Suspending generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:60
+#: heat/tests/generic_resource.py:61
 #, python-format
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:150
+#: heat/tests/generic_resource.py:166
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
