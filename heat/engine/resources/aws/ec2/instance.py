@@ -21,12 +21,12 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
+from heat.engine.clients.os import cinder as cinder_cp
 from heat.engine.clients.os import nova as nova_cp
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.engine import volume_tasks as vol_task
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
@@ -577,23 +577,15 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        if self.volumes():
-            attacher = scheduler.TaskRunner(self._attach_volumes_task())
-        else:
-            attacher = None
         creator = nova_cp.ServerCreateProgress(server.id)
-        return creator, attacher
-
-    def _attach_volumes_task(self):
-        attach_tasks = (vol_task.VolumeAttachTask(self.stack,
-                                                  self.resource_id,
-                                                  volume_id,
-                                                  device)
-                        for volume_id, device in self.volumes())
-        return scheduler.PollingTaskGroup(attach_tasks)
+        attachers = []
+        for vol_id, device in self.volumes():
+            attachers.append(cinder_cp.VolumeAttachProgress(self.resource_id,
+                                                            vol_id, device))
+        return creator, tuple(attachers)
 
     def check_create_complete(self, cookie):
-        creator, attacher = cookie
+        creator, attachers = cookie
 
         if not creator.complete:
             creator.complete = self.client_plugin()._check_active(
@@ -601,17 +593,30 @@ class Instance(resource.Resource):
             if creator.complete:
                 server = self.client_plugin().get_server(creator.server_id)
                 self._set_ipaddress(server.networks)
-                return attacher is None
+                # NOTE(pas-ha) small optimization,
+                # return True if there are no volumes to attach
+                # to save one check_create_complete call
+                return not len(attachers)
             else:
                 return False
-        return self._check_volume_attached(attacher)
+        return self._attach_volumes(attachers)
 
-    def _check_volume_attached(self, volume_attach_task):
-        if not volume_attach_task.started():
-            volume_attach_task.start()
-            return volume_attach_task.done()
-        else:
-            return volume_attach_task.step()
+    def _attach_volumes(self, attachers):
+        for attacher in attachers:
+            if not attacher.called:
+                self.client_plugin().attach_volume(attacher.srv_id,
+                                                   attacher.vol_id,
+                                                   attacher.device)
+                attacher.called = True
+                return False
+
+        for attacher in attachers:
+            if not attacher.complete:
+                attacher.complete = self.client_plugin(
+                    'cinder').check_attach_volume_complete(attacher.vol_id)
+                break
+        out = all(attacher.complete for attacher in attachers)
+        return out
 
     def volumes(self):
         """
