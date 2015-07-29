@@ -246,17 +246,20 @@ class Stack(collections.Mapping):
             for nested_res in nested_stack.iter_resources(nested_depth - 1):
                 yield nested_res
 
+    def _db_resources_get(self, key_id=False):
+        try:
+            return resource_objects.Resource.get_all_by_stack(
+                self.context, self.id, key_id)
+        except exception.NotFound:
+            return None
+
     def db_resource_get(self, name):
         if not self.id:
             return None
         if self._db_resources is None:
-            try:
-                _db_resources = resource_objects.Resource.get_all_by_stack(
-                    self.context, self.id)
-                self._db_resources = _db_resources
-            except exception.NotFound:
-                return None
-        return self._db_resources.get(name)
+            self._db_resources = self._db_resources_get()
+
+        return self._db_resources.get(name) if self._db_resources else None
 
     @property
     def dependencies(self):
@@ -1034,14 +1037,7 @@ class Stack(collections.Mapping):
         return candidate
 
     def _update_or_store_resources(self):
-        try:
-            ext_rsrcs_db = resource_objects.Resource.get_all_by_stack(
-                self.context, self.id)
-        except exception.NotFound:
-            self.ext_rsrcs_db = None
-        else:
-            self.ext_rsrcs_db = {res.id: res
-                                 for res_name, res in ext_rsrcs_db.items()}
+        self.ext_rsrcs_db = self._db_resources_get(key_id=True)
 
         curr_name_translated_dep = self.dependencies.translate(lambda res:
                                                                res.name)

@@ -298,7 +298,7 @@ def resource_create(context, values):
     return resource_ref
 
 
-def resource_get_all_by_stack(context, stack_id):
+def resource_get_all_by_stack(context, stack_id, key_id=False):
     results = model_query(
         context, models.Resource
     ).filter_by(
@@ -308,7 +308,10 @@ def resource_get_all_by_stack(context, stack_id):
     if not results:
         raise exception.NotFound(_("no resources for stack_id %s were found")
                                  % stack_id)
-    return dict((res.name, res) for res in results)
+    if key_id:
+        return dict((res.id, res) for res in results)
+    else:
+        return dict((res.name, res) for res in results)
 
 
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
