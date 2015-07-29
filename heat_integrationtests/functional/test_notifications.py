@@ -124,6 +124,8 @@ outputs:
 
     def setUp(self):
         super(NotificationTest, self).setUp()
+        if self.conf.skip_notification_tests:
+            self.skipTest('Testing Notifications disabled in conf, skipping')
 
         self.client = self.orchestration_client
         self.exchange = kombu.Exchange('heat', 'topic', durable=False)
