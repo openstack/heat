@@ -279,12 +279,19 @@ class ProviderTemplateTest(common.HeatTestCase):
         provider = {
             'HeatTemplateFormatVersion': '2012-12-12',
             'Outputs': {
-                'Blarg': {'Value': 'wibble'},
+                'Foo': {'Value': 'bar'},
             },
         }
         files = {'test_resource.template': json.dumps(provider)}
 
+        class DummyResource(object):
+            support_status = support.SupportStatus()
+            properties_schema = {}
+            attributes_schema = {"Foo": attributes.Schema(
+                "A test attribute")}
+
         env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
@@ -298,12 +305,12 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition, stack)
         self.assertIsNone(temp_res.validate())
         nested = mock.Mock()
-        nested.outputs = {'Blarg': {'Value': 'not-this',
-                                    'error_msg': 'it is all bad'}}
+        nested.outputs = {'Foo': {'Value': 'not-this',
+                                  'error_msg': 'it is all bad'}}
         nested.output.return_value = None
         temp_res._nested = nested
         self.assertRaises(exception.InvalidTemplateAttribute,
-                          temp_res.FnGetAtt, 'Blarg')
+                          temp_res.FnGetAtt, 'Foo')
 
     def test_properties_normal(self):
         provider = {
