@@ -18,6 +18,7 @@ import sys
 from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
+from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import six
@@ -1173,6 +1174,23 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key):
                 raw_template_update(ctxt, raw_template.id,
                                     {'environment': environment})
 
+        resources = session.query(models.Resource).filter(
+            ~models.Resource.properties_data.is_(None),
+            ~models.Resource.properties_data_encrypted.is_(True)).all()
+        for resource in resources:
+            result = {}
+            for prop_name, prop_value in resource.properties_data.items():
+                prop_string = jsonutils.dumps(prop_value)
+                encrypted_value = crypt.encrypt(prop_string,
+                                                encryption_key)
+                result[prop_name] = encrypted_value
+            resource.properties_data = result
+            resource.properties_data_encrypted = True
+            resource_update(ctxt, resource.id,
+                            {'properties_data': result,
+                             'properties_data_encrypted': True},
+                            resource.atomic_key)
+
 
 def db_decrypt_parameters_and_properties(ctxt, encryption_key):
     session = get_session()
@@ -1193,3 +1211,21 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key):
             environment['encrypted_param_names'] = []
             raw_template_update(ctxt, raw_template.id,
                                 {'environment': environment})
+
+        resources = session.query(models.Resource).filter(
+            ~models.Resource.properties_data.is_(None),
+            models.Resource.properties_data_encrypted.is_(True)).all()
+        for resource in resources:
+            result = {}
+            for prop_name, prop_value in resource.properties_data.items():
+                method, value = prop_value
+                decrypted_value = crypt.decrypt(method, value,
+                                                encryption_key)
+                prop_string = jsonutils.loads(decrypted_value)
+                result[prop_name] = prop_string
+            resource.properties_data = result
+            resource.properties_data_encrypted = False
+            resource_update(ctxt, resource.id,
+                            {'properties_data': result,
+                             'properties_data_encrypted': False},
+                            resource.atomic_key)

@@ -1345,7 +1345,8 @@ def create_resource(ctx, stack, **kwargs):
         'status': 'complete',
         'status_reason': 'create_complete',
         'rsrc_metadata': json.loads('{"foo": "123"}'),
-        'stack_id': stack.id
+        'stack_id': stack.id,
+        'properties_data': {'foo1': 'bar1'}
     }
     values.update(kwargs)
     return db_api.resource_create(ctx, values)
@@ -2728,30 +2729,41 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             'environment': {'parameters': {'param1': 'foo',
                                            'param2': 'bar'}}}
         self.template = db_api.raw_template_create(self.ctx, template)
+        self.user_creds = create_user_creds(self.ctx)
+        self.stack = create_stack(self.ctx, self.template, self.user_creds)
+        self.resources = [create_resource(self.ctx, self.stack, name='res1')]
 
     def test_db_encrypt_decrypt(self):
         session = db_api.get_session()
-
         env = session.query(models.RawTemplate).all()[0].environment
         self.assertEqual('bar', env['parameters']['param2'])
+        prop_data = session.query(models.Resource).all()[0].properties_data
+        self.assertEqual('bar1', prop_data['foo1'])
 
         db_api.db_encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key)
 
+        session = db_api.get_session()
         env = session.query(models.RawTemplate).all()[0].environment
         self.assertEqual('cryptography_decrypt_v1',
                          env['parameters']['param2'][0])
         encrypt_value = env['parameters']['param2'][1]
+        prop_data = session.query(models.Resource).all()[0].properties_data
+        self.assertEqual('cryptography_decrypt_v1', prop_data['foo1'][0])
 
         db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key)
 
+        session = db_api.get_session()
         env = session.query(models.RawTemplate).all()[0].environment
         self.assertEqual('bar', env['parameters']['param2'])
+        prop_data = session.query(models.Resource).all()[0].properties_data
+        self.assertEqual('bar1', prop_data['foo1'])
 
         # Use a different encryption key to decrypt
         db_api.db_encrypt_parameters_and_properties(
             self.ctx, '774c15be099ea74123a9b9592ff12680')
+        session = db_api.get_session()
         env = session.query(models.RawTemplate).all()[0].environment
         self.assertNotEqual(encrypt_value,
                             env['parameters']['param2'][1])
@@ -2759,5 +2771,6 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         db_api.db_decrypt_parameters_and_properties(
             self.ctx, '774c15be099ea74123a9b9592ff12680')
 
+        session = db_api.get_session()
         env = session.query(models.RawTemplate).all()[0].environment
         self.assertEqual('bar', env['parameters']['param2'])
