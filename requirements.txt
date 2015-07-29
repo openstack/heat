@@ -40,6 +40,7 @@ python-designateclient>=1.0.0
 python-glanceclient>=0.18.0
 python-heatclient>=0.3.0
 python-keystoneclient>=1.6.0
+python-magnumclient>=0.2.1
 python-manilaclient>=1.0.4
 python-mistralclient>=1.0.0
 python-neutronclient<3,>=2.3.11
