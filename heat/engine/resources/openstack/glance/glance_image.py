@@ -104,12 +104,12 @@ class GlanceImage(resource.Resource):
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
-        image_id = self.glance().images.create(**args).id
+        image_id = self.client().images.create(**args).id
         self.resource_id_set(image_id)
         return image_id
 
     def check_create_complete(self, image_id):
-        image = self.glance().images.get(image_id)
+        image = self.client().images.get(image_id)
         return image.status == 'active'
 
     def handle_delete(self):
@@ -117,7 +117,7 @@ class GlanceImage(resource.Resource):
             return
 
         try:
-            self.glance().images.delete(self.resource_id)
+            self.client().images.delete(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 

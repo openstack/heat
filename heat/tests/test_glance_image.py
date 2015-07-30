@@ -71,7 +71,7 @@ class GlanceImageTest(common.HeatTestCase):
         self.my_image = self.stack['my_image']
         glance = mock.MagicMock()
         self.glanceclient = mock.MagicMock()
-        self.my_image.glance = glance
+        self.my_image.client = glance
         glance.return_value = self.glanceclient
         self.images = self.glanceclient.images
 
