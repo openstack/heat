@@ -99,6 +99,7 @@ class FakeVolume(object):
 
     def __init__(self, status, **attrs):
         self.status = status
+        self._info = {'volume': 'info'}
         for key, value in six.iteritems(attrs):
             setattr(self, key, value)
         if 'id' not in attrs:

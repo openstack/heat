@@ -45,6 +45,8 @@ class CinderVolumeType(resource.Resource):
 
     default_client_name = 'cinder'
 
+    entity = 'volume_types'
+
     PROPERTIES = (
         NAME, METADATA, IS_PUBLIC, DESCRIPTION,
     ) = (
@@ -118,6 +120,11 @@ class CinderVolumeType(resource.Resource):
             self.client().volume_types.delete(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
+
+    # TODO(huangtianhua): remove this method when bug #1479641 is fixed.
+    def _show_resource(self):
+        vtype = self.client().volume_types.get(self.resource_id)
+        return vtype._info
 
 
 def resource_mapping():
