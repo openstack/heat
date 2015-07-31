@@ -43,6 +43,11 @@ magnum_template = '''
 RESOURCE_TYPE = 'OS::Magnum::BayModel'
 
 
+class FakeBayModel(object):
+    def __init__(self):
+        self.to_dict = lambda: {'attr': 'val'}
+
+
 class TestMagnumBayModel(common.HeatTestCase):
     def setUp(self):
         super(TestMagnumBayModel, self).setUp()
@@ -84,3 +89,8 @@ class TestMagnumBayModel(common.HeatTestCase):
         mapping = baymodel.resource_mapping()
         self.assertEqual(1, len(mapping))
         self.assertEqual(baymodel.BayModel, mapping[RESOURCE_TYPE])
+
+    def test_show_resource(self):
+        bm = self._create_resource('bm', self.rsrc_defn, self.stack)
+        self.client.baymodels.get.return_value = FakeBayModel()
+        self.assertEqual({'attr': 'val'}, bm.FnGetAtt('show'))
