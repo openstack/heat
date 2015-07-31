@@ -21,6 +21,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
+from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -670,6 +671,54 @@ class StackUpdateTest(common.HeatTestCase):
         mock_id.assert_has_calls(
             [mock.call(None), mock.call('c_res'), mock.call('b_res'),
              mock.call('a_res')])
+
+    def _update_force_cancel(self, state, disable_rollback=False,
+                             cancel_message=rpc_api.THREAD_CANCEL):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = stack.Stack(self.ctx, 'update_test_stack',
+                                 template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {
+                     'AResource': {'Type': 'GenericResourceType'},
+                     'BResource': {'Type': 'GenericResourceType'}}}
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl2),
+                                    disable_rollback=disable_rollback)
+
+        evt_mock = mock.MagicMock()
+        evt_mock.ready.return_value = True
+        evt_mock.wait.return_value = cancel_message
+
+        self.stack.update(updated_stack, event=evt_mock)
+
+        self.assertEqual(state, self.stack.state)
+        evt_mock.ready.assert_called_once_with()
+        evt_mock.wait.assert_called_once_with()
+
+    def test_update_force_cancel_no_rollback(self):
+        self._update_force_cancel(
+            state=(stack.Stack.UPDATE, stack.Stack.FAILED),
+            disable_rollback=True,
+            cancel_message=rpc_api.THREAD_CANCEL)
+
+    def test_update_force_cancel_rollback(self):
+        self._update_force_cancel(
+            state=(stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
+            disable_rollback=False,
+            cancel_message=rpc_api.THREAD_CANCEL)
+
+    def test_update_force_cancel_force_rollback(self):
+        self._update_force_cancel(
+            state=(stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
+            disable_rollback=False,
+            cancel_message=rpc_api.THREAD_CANCEL_WITH_ROLLBACK)
 
     def test_update_add_signal(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',

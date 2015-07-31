@@ -374,7 +374,7 @@ class StackController(object):
         stack_identity = self._get_identity(con, stack_name)
         try:
             self.rpc_client.stack_cancel_update(
-                con, stack_identity=stack_identity)
+                con, stack_identity=stack_identity, cancel_with_rollback=True)
         except Exception as ex:
             return exception.map_remote_error(ex)
 

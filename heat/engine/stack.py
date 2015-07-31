@@ -61,6 +61,9 @@ LOG = logging.getLogger(__name__)
 class ForcedCancel(BaseException):
     """Exception raised to cancel task execution."""
 
+    def __init__(self, with_rollback=True):
+        self.with_rollback = with_rollback
+
     def __str__(self):
         return "Operation cancelled"
 
@@ -1197,20 +1200,27 @@ class Stack(collections.Mapping):
                                            (self.status == self.FAILED))
 
     def _update_exception_handler(self, exc, action, update_task):
-        require_rollback = False
+        '''
+        Handle exceptions in update_task. Decide if we should cancel tasks or
+        not. Also decide if we should rollback or not, depend on disable
+        rollback flag if force rollback flag not trigered.
+        :returns: a boolean for require rollback flag
+        '''
         self.status_reason = six.text_type(exc)
         self.status = self.FAILED
-        if action == self.UPDATE:
-            if not self.disable_rollback:
-                require_rollback = True
-            if isinstance(exc, ForcedCancel):
-                update_task.updater.cancel_all()
-                require_rollback = True
-        return require_rollback
+        if action != self.UPDATE:
+            return False
+        if isinstance(exc, ForcedCancel):
+            update_task.updater.cancel_all()
+            return exc.with_rollback or not self.disable_rollback
+
+        return not self.disable_rollback
 
     def _message_parser(self, message):
         if message == rpc_api.THREAD_CANCEL:
-            raise ForcedCancel()
+            raise ForcedCancel(with_rollback=False)
+        elif message == rpc_api.THREAD_CANCEL_WITH_ROLLBACK:
+            raise ForcedCancel(with_rollback=True)
 
     def _delete_backup_stack(self, stack):
         # Delete resources in the backup stack referred to by 'stack'

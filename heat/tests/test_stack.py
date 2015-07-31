@@ -2219,7 +2219,10 @@ class StackTest(common.HeatTestCase):
                 self.assertTrue(res)
         elif isinstance(exc, stack.ForcedCancel):
             update_task.updater.cancel_all.assert_called_once_with()
-            self.assertTrue(res)
+            if exc.with_rollback or not disable_rollback:
+                self.assertTrue(res)
+            else:
+                self.assertFalse(res)
         self.m.VerifyAll()
 
     def test_update_exception_handler_resource_failure_no_rollback(self):
@@ -2232,9 +2235,13 @@ class StackTest(common.HeatTestCase):
         exc = exception.ResourceFailure(reason, None, action='UPDATE')
         self.update_exception_handler(exc, disable_rollback=False)
 
-    def test_update_exception_handler_force_cancel(self):
-        exc = stack.ForcedCancel()
+    def test_update_exception_handler_force_cancel_with_rollback(self):
+        exc = stack.ForcedCancel(with_rollback=True)
         self.update_exception_handler(exc, disable_rollback=False)
+
+    def test_update_exception_handler_force_cancel_no_rollback(self):
+        exc = stack.ForcedCancel(with_rollback=False)
+        self.update_exception_handler(exc, disable_rollback=True)
 
 
 class StackKwargsForCloningTest(common.HeatTestCase):
