@@ -23,6 +23,7 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(CfnInitIntegrationTest, self).setUp()
+        raise self.skipException("Skipping until bug #1479869 is fixed.")
 
     def check_stack(self, sid):
         # Check status of all resources

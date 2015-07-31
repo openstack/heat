@@ -20,6 +20,7 @@ class NeutronAutoscalingTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(NeutronAutoscalingTest, self).setUp()
+        raise self.skipException("Skipping until bug #1479869 is fixed.")
         if not self.conf.fixed_subnet_name:
             raise self.skipException("No sub-network configured to test")
         self.template_name = 'test_neutron_autoscaling.yaml'
