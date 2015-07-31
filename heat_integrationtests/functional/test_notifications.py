@@ -17,7 +17,7 @@ from oslo_messaging import transport
 import requests
 
 from heat_integrationtests.common import test
-
+from heat_integrationtests.functional import functional_base
 
 BASIC_NOTIFICATIONS = [
     'orchestration.stack.create.start',
@@ -70,7 +70,7 @@ class NotificationHandler(object):
         return self._notifications
 
 
-class NotificationTest(test.HeatIntegrationTest):
+class NotificationTest(functional_base.FunctionalTestsBase):
 
     basic_template = '''
 heat_template_version: 2013-05-23
@@ -124,10 +124,6 @@ outputs:
 
     def setUp(self):
         super(NotificationTest, self).setUp()
-        if self.conf.skip_notification_tests:
-            self.skipTest('Testing Notifications disabled in conf, skipping')
-
-        self.client = self.orchestration_client
         self.exchange = kombu.Exchange('heat', 'topic', durable=False)
         queue = kombu.Queue(exchange=self.exchange,
                             routing_key='notifications.info',

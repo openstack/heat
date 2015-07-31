@@ -44,9 +44,6 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(SoftwareConfigIntegrationTest, self).setUp()
-        if self.conf.skip_software_config_tests:
-            self.skipTest('Testing software config disabled in conf, '
-                          'skipping')
         self.stack_name = self._stack_rand_name()
 
     def check_stack(self):

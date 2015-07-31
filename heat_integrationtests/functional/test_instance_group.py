@@ -15,10 +15,10 @@ import json
 
 from testtools import matchers
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class InstanceGroupTest(test.HeatIntegrationTest):
+class InstanceGroupTest(functional_base.FunctionalTestsBase):
 
     template = '''
 {
@@ -105,7 +105,6 @@ outputs:
 
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
-        self.client = self.orchestration_client
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")
         if not self.conf.minimal_image_ref:

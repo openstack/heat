@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class StackTagTest(test.HeatIntegrationTest):
+class StackTagTest(functional_base.FunctionalTestsBase):
 
     template = '''
 heat_template_version: 2014-10-16
@@ -23,7 +23,6 @@ description:
 
     def setUp(self):
         super(StackTagTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_stack_tag(self):
         # Stack create with stack tags

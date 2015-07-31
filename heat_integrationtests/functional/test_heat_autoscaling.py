@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class HeatAutoscalingTest(test.HeatIntegrationTest):
+class HeatAutoscalingTest(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: 2014-10-16
 
@@ -74,7 +74,6 @@ outputs:
 
     def setUp(self):
         super(HeatAutoscalingTest, self).setUp()
-        self.client = self.orchestration_client
 
     def _assert_output_values(self, stack_id):
         stack = self.client.stacks.get(stack_id)
@@ -99,7 +98,7 @@ outputs:
         self._assert_output_values(stack_id)
 
 
-class AutoScalingGroupUpdateWithNoChanges(test.HeatIntegrationTest):
+class AutoScalingGroupUpdateWithNoChanges(functional_base.FunctionalTestsBase):
 
     template = '''
 heat_template_version: 2013-05-23
@@ -123,7 +122,6 @@ resources:
 
     def setUp(self):
         super(AutoScalingGroupUpdateWithNoChanges, self).setUp()
-        self.client = self.orchestration_client
 
     def test_as_group_update_without_resource_changes(self):
         stack_identifier = self.stack_create(template=self.template)

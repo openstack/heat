@@ -13,15 +13,15 @@
 from oslo_log import log as logging
 
 from heat_integrationtests.common import test
+from heat_integrationtests.scenario import scenario_base
 
 LOG = logging.getLogger(__name__)
 
 
-class CeilometerAlarmTest(test.HeatIntegrationTest):
+class CeilometerAlarmTest(scenario_base.ScenarioTestsBase):
     """Class is responsible for testing of ceilometer usage."""
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
-        self.client = self.orchestration_client
         self.template = self._load_template(__file__,
                                             'test_ceilometer_alarm.yaml',
                                             'templates')

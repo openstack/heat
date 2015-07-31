@@ -12,7 +12,7 @@
 
 from testtools import testcase
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
 test_template = '''
@@ -44,11 +44,10 @@ outputs:
 '''
 
 
-class UpdatePortTest(test.HeatIntegrationTest):
+class UpdatePortTest(functional_base.FunctionalTestsBase):
 
     def setUp(self):
         super(UpdatePortTest, self).setUp()
-        self.client = self.orchestration_client
 
     def get_port_id_and_ip(self, stack_identifier):
         resources = self.client.resources.list(stack_identifier)

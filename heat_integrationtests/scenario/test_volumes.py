@@ -14,7 +14,6 @@
 from cinderclient import exceptions as cinder_exceptions
 from oslo_log import log as logging
 import six
-from testtools import testcase
 
 from heat_integrationtests.common import exceptions
 from heat_integrationtests.scenario import scenario_base
@@ -101,8 +100,6 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
                           self.volume_client.volumes.get,
                           volume_id2)
 
-    @testcase.skip('Skipped until failure rate '
-                   'can be reduced ref bug #1382300')
     def test_cinder_volume_create_backup_restore(self):
         """
         Ensure the 'Snapshot' deletion policy works.
