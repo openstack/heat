@@ -269,7 +269,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.13'
+    RPC_API_VERSION = '1.14'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -799,11 +799,13 @@ class EngineService(service.Service):
         return dict(current_stack.identifier())
 
     @context.request_context
-    def stack_cancel_update(self, cnxt, stack_identity):
+    def stack_cancel_update(self, cnxt, stack_identity,
+                            cancel_with_rollback=True):
         """Cancel currently running stack update.
 
         :param cnxt: RPC context.
         :param stack_identity: Name of the stack for which to cancel update.
+        :param cancel_with_rollback: Force rollback when cancel update.
         """
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
@@ -821,19 +823,25 @@ class EngineService(service.Service):
         lock = stack_lock.StackLock(cnxt, current_stack.id,
                                     self.engine_id)
         engine_id = lock.try_acquire()
+
+        if cancel_with_rollback:
+            cancel_message = rpc_api.THREAD_CANCEL_WITH_ROLLBACK
+        else:
+            cancel_message = rpc_api.THREAD_CANCEL
+
         # Current engine has the lock
         if engine_id == self.engine_id:
-            self.thread_group_mgr.send(current_stack.id, 'cancel')
+            self.thread_group_mgr.send(current_stack.id, cancel_message)
 
         # Another active engine has the lock
         elif stack_lock.StackLock.engine_alive(cnxt, engine_id):
             cancel_result = self._remote_call(
                 cnxt, engine_id, self.listener.SEND,
-                stack_identity=stack_identity, message=rpc_api.THREAD_CANCEL)
+                stack_identity=stack_identity, message=cancel_message)
             if cancel_result is None:
                 LOG.debug("Successfully sent %(msg)s message "
                           "to remote task on engine %(eng)s" % {
-                              'eng': engine_id, 'msg': 'cancel'})
+                              'eng': engine_id, 'msg': cancel_message})
             else:
                 raise exception.EventSendFailed(stack_name=current_stack.name,
                                                 engine_id=engine_id)

@@ -956,7 +956,8 @@ class StackServiceAdoptUpdateTest(common.HeatTestCase):
         lock_mock = self.patchobject(stack_lock.StackLock, 'try_acquire')
         lock_mock.return_value = self.man.engine_id
         self.patchobject(self.man.thread_group_mgr, 'send')
-        self.man.stack_cancel_update(self.ctx, old_stack.identifier())
+        self.man.stack_cancel_update(self.ctx, old_stack.identifier(),
+                                     cancel_with_rollback=False)
         self.man.thread_group_mgr.send.assert_called_once_with(old_stack.id,
                                                                'cancel')
 

@@ -34,6 +34,7 @@ class EngineClient(object):
         1.11 - Add support for template versions list
         1.12 - Add with_detail option for stack resources list
         1.13 - Add support for template functions list
+        1.14 - Add cancel_with_rollback option to stack_cancel_update
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -463,9 +464,14 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('stack_check',
                                              stack_identity=stack_identity))
 
-    def stack_cancel_update(self, ctxt, stack_identity):
-        return self.call(ctxt, self.make_msg('stack_cancel_update',
-                                             stack_identity=stack_identity))
+    def stack_cancel_update(self, ctxt, stack_identity,
+                            cancel_with_rollback=True):
+        return self.call(ctxt,
+                         self.make_msg(
+                             'stack_cancel_update',
+                             stack_identity=stack_identity,
+                             cancel_with_rollback=cancel_with_rollback),
+                         version='1.14')
 
     def resource_signal(self, ctxt, stack_identity, resource_name, details,
                         sync_call=False):
