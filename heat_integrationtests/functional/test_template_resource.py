@@ -687,3 +687,36 @@ Resources:
         exp = 'Resource CREATE failed: ValueError: %s: %s' % (exp_path,
                                                               exp_msg)
         self.assertEqual(exp, stack.stack_status_reason)
+
+
+class TemplateResourceSuspendResumeTest(test.HeatIntegrationTest):
+    """Prove that we can do template resource suspend/resume."""
+
+    main_template = '''
+heat_template_version: 2014-10-16
+parameters:
+resources:
+  the_nested:
+    type: the.yaml
+'''
+
+    nested_templ = '''
+heat_template_version: 2014-10-16
+resources:
+  test_random_string:
+    type: OS::Heat::RandomString
+'''
+
+    def setUp(self):
+        super(TemplateResourceSuspendResumeTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_suspend_resume(self):
+        """Basic test for template resource suspend resume"""
+        stack_identifier = self.stack_create(
+            template=self.main_template,
+            files={'the.yaml': self.nested_templ}
+        )
+
+        self.stack_suspend(stack_identifier=stack_identifier)
+        self.stack_resume(stack_identifier=stack_identifier)
