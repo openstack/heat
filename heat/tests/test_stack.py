@@ -1942,7 +1942,6 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('foo', params['param1'])
         self.assertEqual('bar', params['param2'])
 
-    @testtools.skipIf(six.PY3, "needs a separate change")
     def test_parameters_stored_encrypted_decrypted_on_load(self):
         '''
         Test stack loading with disabled parameter value validation.
