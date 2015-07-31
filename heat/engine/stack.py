@@ -1156,37 +1156,25 @@ class Stack(collections.Mapping):
                         yield
                     else:
                         message = event.wait()
-                        if message == rpc_api.THREAD_CANCEL:
-                            raise ForcedCancel()
+                        self._message_parser(message)
             finally:
                 self.reset_dependencies()
 
             if action in (self.UPDATE, self.RESTORE, self.ROLLBACK):
-                reason = 'Stack %s completed successfully' % action
-            stack_status = self.COMPLETE
+                self.status_reason = 'Stack %s completed successfully' % action
+            self.status = self.COMPLETE
 
         except scheduler.Timeout:
-            stack_status = self.FAILED
-            reason = 'Timed out'
-        except ForcedCancel as e:
-            reason = six.text_type(e)
-
-            stack_status = self.FAILED
-            if action == self.UPDATE:
-                update_task.updater.cancel_all()
+            self.status = self.FAILED
+            self.status_reason = 'Timed out'
+        except (ForcedCancel, exception.ResourceFailure) as e:
+            # If rollback is enabled when resource failure occurred,
+            # we do another update, with the existing template,
+            # so we roll back to the original state
+            if self._update_exception_handler(
+                    exc=e, action=action, update_task=update_task):
                 yield self.update_task(oldstack, action=self.ROLLBACK)
                 return
-
-        except exception.ResourceFailure as e:
-            reason = six.text_type(e)
-
-            stack_status = self.FAILED
-            if action == self.UPDATE:
-                # If rollback is enabled, we do another update, with the
-                # existing template, so we roll back to the original state
-                if not self.disable_rollback:
-                    yield self.update_task(oldstack, action=self.ROLLBACK)
-                    return
         else:
             LOG.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
@@ -1199,8 +1187,6 @@ class Stack(collections.Mapping):
         # Don't use state_set to do only one update query and avoid race
         # condition with the COMPLETE status
         self.action = action
-        self.status = stack_status
-        self.status_reason = reason
 
         notification.send(self)
         self._add_event(self.action, self.status, self.status_reason)
@@ -1209,6 +1195,22 @@ class Stack(collections.Mapping):
         lifecycle_plugin_utils.do_post_ops(self.context, self,
                                            newstack, action,
                                            (self.status == self.FAILED))
+
+    def _update_exception_handler(self, exc, action, update_task):
+        require_rollback = False
+        self.status_reason = six.text_type(exc)
+        self.status = self.FAILED
+        if action == self.UPDATE:
+            if not self.disable_rollback:
+                require_rollback = True
+            if isinstance(exc, ForcedCancel):
+                update_task.updater.cancel_all()
+                require_rollback = True
+        return require_rollback
+
+    def _message_parser(self, message):
+        if message == rpc_api.THREAD_CANCEL:
+            raise ForcedCancel()
 
     def _delete_backup_stack(self, stack):
         # Delete resources in the backup stack referred to by 'stack'
