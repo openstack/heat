@@ -109,6 +109,9 @@ combination_alarm_template = '''
 class FakeCeilometerAlarm(object):
     alarm_id = 'foo'
 
+    def __init__(self):
+        self.to_dict = lambda: {'attr': 'val'}
+
 
 class CeilometerAlarmTest(common.HeatTestCase):
     def setUp(self):
@@ -465,6 +468,14 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.assertEqual((res.CHECK, res.FAILED), res.state)
         self.assertIn('Boom', res.status_reason)
 
+    def test_show_resource(self):
+        res = self._prepare_check_resource()
+        res.client().alarms.create.return_value = mock.MagicMock(
+            alarm_id='2')
+        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
+
 
 class CombinationAlarmTest(common.HeatTestCase):
 
@@ -606,3 +617,11 @@ class CombinationAlarmTest(common.HeatTestCase):
                           scheduler.TaskRunner(res.check))
         self.assertEqual((res.CHECK, res.FAILED), res.state)
         self.assertIn('Boom', res.status_reason)
+
+    def test_show_resource(self):
+        res = self._prepare_check_resource()
+        res.client().alarms.create.return_value = mock.MagicMock(
+            alarm_id='2')
+        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))

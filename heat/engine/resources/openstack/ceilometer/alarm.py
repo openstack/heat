@@ -216,6 +216,8 @@ class CeilometerAlarm(resource.Resource):
 
     default_client_name = 'ceilometer'
 
+    entity = 'alarms'
+
     def cfn_to_ceilometer(self, stack, properties):
         """Apply all relevant compatibility xforms."""
 
@@ -315,6 +317,8 @@ class CeilometerAlarm(resource.Resource):
 
 class BaseCeilometerAlarm(resource.Resource):
     default_client_name = 'ceilometer'
+
+    entity = 'alarms'
 
     def handle_create(self):
         properties = actions_to_urls(self.stack,

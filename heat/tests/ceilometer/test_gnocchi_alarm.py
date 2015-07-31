@@ -86,6 +86,9 @@ resources:
 class FakeCeilometerAlarm(object):
     alarm_id = 'foo'
 
+    def __init__(self):
+        self.to_dict = lambda: {'attr': 'val'}
+
 
 class GnocchiResourcesAlarmTest(common.HeatTestCase):
     def setUp(self):
@@ -223,6 +226,14 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.assertEqual((res.CHECK, res.FAILED), res.state)
         self.assertIn('Boom', res.status_reason)
 
+    def test_show_resource(self):
+        res = self._prepare_check_resource()
+        res.client().alarms.create.return_value = mock.MagicMock(
+            alarm_id='2')
+        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
+
 
 class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
 
@@ -289,6 +300,14 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
         res.client().alarms.get.return_value = mock_alarm
         return res
 
+    def test_show_resource(self):
+        res = self._prepare_check_resource()
+        res.client().alarms.create.return_value = mock.MagicMock(
+            alarm_id='2')
+        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
+
 
 class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
 
@@ -353,3 +372,11 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarms.get.return_value = mock_alarm
         return res
+
+    def test_show_resource(self):
+        res = self._prepare_check_resource()
+        res.client().alarms.create.return_value = mock.MagicMock(
+            alarm_id='2')
+        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
