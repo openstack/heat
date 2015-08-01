@@ -289,9 +289,9 @@ class TestTemplateValidate(common.HeatTestCase):
         tmpl = template.Template(t)
         self.assertIsNone(tmpl.t_digest)
         tmpl.validate()
-        self.assertEqual(hashlib.sha256(six.text_type(t)).hexdigest(),
-                         tmpl.t_digest,
-                         'invalid template digest')
+        self.assertEqual(
+            hashlib.sha256(six.text_type(t).encode('utf-8')).hexdigest(),
+            tmpl.t_digest, 'invalid template digest')
 
     def test_template_validate_cfn_good(self):
         t = {
@@ -375,9 +375,9 @@ class TestTemplateValidate(common.HeatTestCase):
         tmpl = template.Template(t)
         self.assertIsNone(tmpl.t_digest)
         tmpl.validate()
-        self.assertEqual(hashlib.sha256(six.text_type(t)).hexdigest(),
-                         tmpl.t_digest,
-                         'invalid template digest')
+        self.assertEqual(hashlib.sha256(
+            six.text_type(t).encode('utf-8')).hexdigest(),
+            tmpl.t_digest, 'invalid template digest')
 
     def test_template_validate_hot_good(self):
         t = {
@@ -450,8 +450,8 @@ class TemplateTest(common.HeatTestCase):
             }''')
         init_ex = self.assertRaises(exception.InvalidTemplateVersion,
                                     template.Template, invalid_hot_version_tmp)
-        valid_versions = ['2015-10-15', '2013-05-23', '2014-10-16',
-                          '2015-04-30']
+        valid_versions = ['2013-05-23', '2014-10-16',
+                          '2015-04-30', '2015-10-15']
         ex_error_msg = ('The template version is invalid: '
                         '"heat_template_version: 2012-12-12". '
                         '"heat_template_version" should be one of: %s'

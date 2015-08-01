@@ -74,7 +74,8 @@ def get_template_class(template_data):
     try:
         return _template_classes[version]
     except KeyError:
-        av_list = [v for k, v in available_versions if k == version_type]
+        av_list = sorted(
+            [v for k, v in available_versions if k == version_type])
         msg_data = {'version': ': '.join(version),
                     'version_type': version_type,
                     'available': ', '.join(v for v in av_list)}
