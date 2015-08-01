@@ -216,7 +216,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
         self.assertEqual(u"Property error: "
                          u"resources.node-group.properties.flavor: "
-                         u"Error validating value u'm1.large'",
+                         u"Error validating value 'm1.large'",
                          six.text_type(ex))
 
     def test_template_invalid_name(self):
