@@ -127,6 +127,9 @@ class LaunchConfigurationTest(common.HeatTestCase):
         lcp['InstanceId'] = '5678'
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         rsrc = stack['LaunchConfig']
+        self.stub_SnapshotConstraint_validate()
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.patchobject(nova.NovaClientPlugin, 'get_server',
                          side_effect=exception.EntityNotFound(
@@ -135,6 +138,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                "Resources.LaunchConfig.Properties.InstanceId: "
                "Error validating value '5678': The Server (5678) "
                "could not be found.")
+        self.m.ReplayAll()
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn(msg, six.text_type(exc))
@@ -187,6 +191,8 @@ class LaunchConfigurationTest(common.HeatTestCase):
         lcp['BlockDeviceMappings'] = bdm
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
         self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
