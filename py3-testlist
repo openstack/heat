@@ -107,6 +107,8 @@ heat.tests.test_properties
 heat.tests.test_provider_template
 heat.tests.test_random_string
 heat.tests.test_remote_stack
+heat.tests.test_resource
+heat.tests.test_resource_group
 heat.tests.test_restarter
 heat.tests.test_rpc_client
 heat.tests.test_rpc_listener_client
