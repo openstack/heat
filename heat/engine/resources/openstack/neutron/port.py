@@ -71,9 +71,14 @@ class Port(neutron.NeutronResource):
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
+                status=support.HIDDEN,
+                version='5.0.0',
                 message=_('Use property %s.') % NETWORK,
-                version='2014.2'),
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.2'
+                )
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -118,9 +123,14 @@ class Port(neutron.NeutronResource):
                     FIXED_IP_SUBNET_ID: properties.Schema(
                         properties.Schema.STRING,
                         support_status=support.SupportStatus(
-                            status=support.DEPRECATED,
+                            status=support.HIDDEN,
+                            version='5.0.0',
                             message=_('Use property %s.') % FIXED_IP_SUBNET,
-                            version='2014.2 '),
+                            previous_status=support.SupportStatus(
+                                status=support.DEPRECATED,
+                                version='2014.2 '
+                            )
+                        ),
                         constraints=[
                             constraints.CustomConstraint('neutron.subnet')
                         ]
@@ -287,6 +297,22 @@ class Port(neutron.NeutronResource):
             type=attributes.Schema.BOOLEAN
         ),
     }
+
+    def translation_rules(self):
+        return [
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.NETWORK],
+                value_path=[self.NETWORK_ID]
+            ),
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.FIXED_IPS, self.FIXED_IP_SUBNET],
+                value_name=self.FIXED_IP_SUBNET_ID
+            )
+        ]
 
     def validate(self):
         super(Port, self).validate()

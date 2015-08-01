@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
@@ -679,7 +680,7 @@ class NeutronPortTest(common.HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        prop_update2 = prop_update.copy()
+        prop_update2 = copy.deepcopy(prop_update)
         prop_update2['binding:vnic_type'] = 'direct'
         neutronclient.Client.update_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
@@ -703,14 +704,15 @@ class NeutronPortTest(common.HeatTestCase):
         # update to normal
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_port_prop)
+        new_port_prop2 = copy.deepcopy(new_port_prop)
         scheduler.TaskRunner(port.update, update_snippet)()
         self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
         self.assertEqual('normal', port.properties['binding:vnic_type'])
 
         # update back to direct
-        new_port_prop['binding:vnic_type'] = 'direct'
+        new_port_prop2['binding:vnic_type'] = 'direct'
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
-                                                      new_port_prop)
+                                                      new_port_prop2)
         scheduler.TaskRunner(port.update, update_snippet)()
         self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
         self.assertEqual('direct', port.properties['binding:vnic_type'])
