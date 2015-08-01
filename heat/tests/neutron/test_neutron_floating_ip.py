@@ -154,11 +154,21 @@ class NeutronFloatingIPTest(common.HeatTestCase):
     def test_floating_ip_deprecated_router_interface(self):
         t = template_format.parse(neutron_floating_template_deprecated)
         del t['resources']['gateway']
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234'
+        ).MultipleTimes().AndReturn('abcd1234')
         self._test_floating_ip(t, resolve_neutron=False)
 
     def test_floating_ip_deprecated_router_gateway(self):
         t = template_format.parse(neutron_floating_template_deprecated)
         del t['resources']['router_interface']
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234'
+        ).MultipleTimes().AndReturn('abcd1234')
         self._test_floating_ip(t, resolve_neutron=False, r_iface=False)
 
     def _test_floating_ip(self, tmpl, resolve_neutron=True, r_iface=True):
