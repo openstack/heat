@@ -702,7 +702,7 @@ class Resource(object):
         with self.lock(engine_id):
             self.requires = list(
                 set(data[u'id'] for data in resource_data.values()
-                    if data is not None)
+                    if data)
             )
             self.current_template_id = template_id
             adopt_data = self.stack._adopt_kwargs(self)
