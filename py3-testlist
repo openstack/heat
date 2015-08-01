@@ -57,10 +57,13 @@ heat.tests.manila.test_manila_share_type
 heat.tests.manila.test_share_network
 heat.tests.mistral.test_mistral_cron_trigger
 heat.tests.neutron.test_extraroute
+heat.tests.neutron.test_neutron
 heat.tests.neutron.test_neutron_firewall
+heat.tests.neutron.test_neutron_floating_ip
 heat.tests.neutron.test_neutron_metering
 heat.tests.neutron.test_neutron_net
 heat.tests.neutron.test_neutron_network_gateway
+heat.tests.neutron.test_neutron_port
 heat.tests.neutron.test_neutron_provider_net
 heat.tests.neutron.test_neutron_router
 heat.tests.neutron.test_neutron_security_group
