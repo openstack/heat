@@ -14,7 +14,6 @@
 import collections
 import itertools
 
-from oslo_utils import encodeutils
 import six
 
 from heat.common import exception
@@ -277,10 +276,11 @@ class Dependencies(object):
         return six.text_type(self._graph)
 
     def __repr__(self):
-        '''Return a string representation of the object.'''
-        edge_reprs = (repr(e) for e in self._graph.edges())
+        '''Return a consistent string representation of the object.'''
+        edge_reprs = list(repr(e) for e in self._graph.edges())
+        edge_reprs.sort()
         text = 'Dependencies([%s])' % ', '.join(edge_reprs)
-        return encodeutils.safe_encode(text)
+        return text
 
     def graph(self, reverse=False):
         '''Return a copy of the underlying dependency graph.'''

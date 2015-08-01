@@ -85,6 +85,7 @@ heat.tests.test_crypt
 heat.tests.test_cw_alarm
 heat.tests.test_dbinstance
 heat.tests.test_empty_stack
+heat.tests.test_engine_service
 heat.tests.test_engine_service_stack_watch
 heat.tests.test_environment
 heat.tests.test_environment_format

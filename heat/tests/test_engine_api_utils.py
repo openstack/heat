@@ -383,7 +383,8 @@ class FormatTest(common.HeatTestCase):
                      'output_key': 'correct_output',
                      'output_value': 'generic'}]
 
-        self.assertEqual(expected, info)
+        self.assertEqual(expected, sorted(info, key=lambda k: k['output_key'],
+                                          reverse=True))
 
 
 class FormatValidateParameterTest(common.HeatTestCase):

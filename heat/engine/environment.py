@@ -447,7 +447,7 @@ class ResourceRegistry(object):
         def status_matches(cls):
             return (support_status is None or
                     cls.get_class().support_status.status ==
-                    support_status.encode())
+                    support_status)
 
         def is_available(cls):
             if cnxt is None:
