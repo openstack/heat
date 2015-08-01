@@ -106,9 +106,14 @@ class CinderVolume(vb.BaseVolume):
             properties.Schema.STRING,
             _('The ID of the image to create the volume from.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
+                status=support.HIDDEN,
                 message=_('Use property %s.') % IMAGE,
-                version='2014.1')
+                version='5.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.1'
+                )
+            )
         ),
         IMAGE: properties.Schema(
             properties.Schema.STRING,
@@ -199,6 +204,16 @@ class CinderVolume(vb.BaseVolume):
     }
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
+
+    def translation_rules(self):
+        return [
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.IMAGE],
+                value_path=[self.IMAGE_REF]
+            )
+        ]
 
     def _name(self):
         name = self.properties[self.NAME]

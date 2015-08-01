@@ -898,12 +898,14 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_create_with_image_and_imageRef(self):
         stack_name = 'test_create_with_image_and_imageRef'
         combinations = {'imageRef': 'image-456', 'image': 'image-123'}
-        err_msg = ("Cannot define the following properties at the same "
-                   "time: image, imageRef.")
+        err_msg = "Cannot use image and imageRef at the same time."
         self.stub_ImageConstraint_validate()
-        self._test_cinder_create_invalid_property_combinations(
-            stack_name, combinations,
-            err_msg, exception.ResourcePropertyConflict)
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        vp = stack.t['Resources']['volume2']['Properties']
+        vp.pop('size')
+        vp.update(combinations)
+        ex = self.assertRaises(ValueError, stack.get, 'volume2')
+        self.assertEqual(err_msg, six.text_type(ex))
 
     def test_cinder_create_with_size_snapshot_and_image(self):
         stack_name = 'test_create_with_size_snapshot_and_image'
@@ -929,10 +931,11 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             'snapshot_id': 'snapshot-123'}
         self.stub_ImageConstraint_validate()
         self.stub_SnapshotConstraint_validate()
+        # image appears there because of translation rule
         err_msg = ('If "size" is provided, only one of "image", "imageRef", '
                    '"source_volid", "snapshot_id" can be specified, but '
                    'currently specified options: '
-                   '[\'snapshot_id\', \'imageRef\'].')
+                   '[\'snapshot_id\', \'image\'].')
         self._test_cinder_create_invalid_property_combinations(
             stack_name, combinations,
             err_msg, exception.StackValidationFailed)
