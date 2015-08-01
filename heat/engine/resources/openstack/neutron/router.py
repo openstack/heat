@@ -290,9 +290,14 @@ class RouterInterface(neutron.NeutronResource):
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
+                status=support.HIDDEN,
                 message=_('Use property %s.') % SUBNET,
-                version='2014.2'),
+                version='5.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2014.2'
+                )
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ]
@@ -327,6 +332,16 @@ class RouterInterface(neutron.NeutronResource):
             ]
         )
     }
+
+    def translation_rules(self):
+        return [
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.SUBNET],
+                value_path=[self.SUBNET_ID]
+            )
+        ]
 
     @staticmethod
     def _validate_deprecated_keys(props, key, deprecated_key):
