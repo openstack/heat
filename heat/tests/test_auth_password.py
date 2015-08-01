@@ -19,6 +19,7 @@ from keystoneclient import exceptions as keystone_exc
 from keystoneclient import session as ks_session
 import mox
 from oslo_config import cfg
+import six
 import webob
 
 from heat.common import auth_password
@@ -100,7 +101,7 @@ class FakeApp(object):
         for k, v in self.expected_env.items():
             assert env[k] == v, '%s != %s' % (env[k], v)
         resp = webob.Response()
-        resp.body = 'SUCCESS'
+        resp.body = six.b('SUCCESS')
         return resp(env, start_response)
 
 
