@@ -189,13 +189,12 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
     def _test_network_gateway_create(self, resolve_neutron=True):
         rsrc = self.prepare_create_network_gateway(resolve_neutron)
-        if resolve_neutron:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'network',
-                '6af055d3-26f6-48dd-a597-7611d7e58d35'
-            ).MultipleTimes().AndReturn(
-                '6af055d3-26f6-48dd-a597-7611d7e58d35')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).MultipleTimes().AndReturn(
+            '6af055d3-26f6-48dd-a597-7611d7e58d35')
 
         neutronclient.Client.disconnect_network_gateway(
             'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
