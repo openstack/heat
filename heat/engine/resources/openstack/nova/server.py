@@ -905,7 +905,7 @@ class Server(stack_user.StackUser):
 
     def _extend_networks(self, networks):
         nets = copy.deepcopy(networks)
-        for key in nets.keys():
+        for key in list(nets.keys()):
             try:
                 net_id = self.client_plugin().get_net_id_by_label(key)
             except (exception.NovaNetworkNotFound,
@@ -1354,7 +1354,7 @@ class Server(stack_user.StackUser):
                          "file size (%(max_size)s bytes).") %
                        {'path': path,
                         'max_size': limits['maxPersonalitySize']})
-                self._check_maximum(len(bytes(contents)),
+                self._check_maximum(len(bytes(contents.encode('utf-8'))),
                                     limits['maxPersonalitySize'], msg)
 
     def _delete_temp_url(self):

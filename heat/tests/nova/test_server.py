@@ -432,6 +432,8 @@ class ServersTest(common.HeatTestCase):
                                      exception.EntityNotFound(
                                          entity='Image',
                                          name='Slackware'))
+        self.stub_FlavorConstraint_validate()
+        self.stub_KeypairConstraint_validate()
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -457,6 +459,8 @@ class ServersTest(common.HeatTestCase):
         self._mock_get_image_id_fail('CentOS 5.2',
                                      exception.PhysicalResourceNameAmbiguity(
                                          name='CentOS 5.2'))
+        self.stub_FlavorConstraint_validate()
+        self.stub_KeypairConstraint_validate()
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -482,6 +486,8 @@ class ServersTest(common.HeatTestCase):
         self._mock_get_image_id_fail('1',
                                      exception.EntityNotFound(
                                          entity='Image', name='1'))
+        self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -1133,7 +1139,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         error = self.assertRaises(exception.StackValidationFailed,
@@ -2279,9 +2285,11 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        self.patchobject(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_ImageConstraint_validate()
+        self.stub_VolumeConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)

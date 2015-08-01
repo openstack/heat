@@ -76,6 +76,7 @@ heat.tests.nova.test_nova_flavor
 heat.tests.nova.test_nova_floatingip
 heat.tests.nova.test_nova_keypair
 heat.tests.nova.test_nova_servergroup
+heat.tests.nova.test_server
 heat.tests.test_attributes
 heat.tests.test_auth_password
 heat.tests.test_auth_url
