@@ -504,7 +504,7 @@ class MiscMethodsTest(common.HeatTestCase):
         worker.propagate_check_resource(
             self.ctx, mock.ANY, mock.ANY,
             self.stack.current_traversal, mock.ANY,
-            mock.ANY, {}, True, None)
+            ('A', True), {}, True, None)
         self.assertTrue(mock_sync.called)
 
     @mock.patch.object(resource.Resource, 'create_convergence')
