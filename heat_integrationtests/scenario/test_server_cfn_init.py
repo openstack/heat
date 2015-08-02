@@ -28,7 +28,7 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
     def check_stack(self, sid):
         # Check status of all resources
         for res in ('WaitHandle', 'SmokeSecurityGroup', 'SmokeKeys',
-                    'CfnUser', 'SmokeServer', 'IPAddress'):
+                    'CfnUser', 'SmokeServer', 'SmokeServerElasticIp'):
             self._wait_for_resource_status(
                 sid, res, 'CREATE_COMPLETE')
 
@@ -60,7 +60,22 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
             self._stack_output(stack, 'WaitConditionStatus'))
         self.assertEqual('smoke test complete', wait_status['smoke_status'])
 
-        server_ip = self._stack_output(stack, 'SmokeServerIp')
+        # Check EIP attributes.
+        server_floatingip_id = self._stack_output(stack,
+                                                  'ElasticIp_Id')
+        self.assertIsNotNone(server_floatingip_id)
+
+        # Fetch EIP details.
+        net_show = self.network_client.show_floatingip(
+            floatingip=server_floatingip_id)
+        floating_ip = net_show['floatingip']['floating_ip_address']
+        port_id = net_show['floatingip']['port_id']
+
+        # Ensure that EIP was assigned to server.
+        port_show = self.network_client.show_port(port=port_id)
+        self.assertEqual(server.id, port_show['port']['device_id'])
+        server_ip = self._stack_output(stack, 'SmokeServerElasticIp')
+        self.assertEqual(server_ip, floating_ip)
 
         # Check that created server is reachable
         if not self._ping_ip_address(server_ip):
