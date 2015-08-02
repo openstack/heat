@@ -755,15 +755,21 @@ class EngineService(service.Service):
         # stack definition.  If PARAM_EXISTING is specified, we merge
         # any environment provided into the existing one.
         if args.get(rpc_api.PARAM_EXISTING, None):
-            existing_params = current_stack.env.params
+            existing_env = current_stack.env.user_env_as_dict()
+            existing_params = existing_env[env_fmt.PARAMETERS]
             clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
             retained = dict((k, v) for k, v in existing_params.items()
                             if k not in clear_params)
-            new_env = environment.Environment({env_fmt.PARAMETERS: retained})
+            existing_env[env_fmt.PARAMETERS] = retained
+            new_env = environment.Environment(existing_env)
             new_env.load(params)
+
+            new_files = current_stack.t.files.copy()
+            new_files.update(files or {})
         else:
             new_env = environment.Environment(params)
-        tmpl = templatem.Template(template, files=files, env=new_env)
+            new_files = files
+        tmpl = templatem.Template(template, files=new_files, env=new_env)
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
             raise exception.RequestLimitExceeded(
