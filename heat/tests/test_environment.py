@@ -54,67 +54,6 @@ class EnvironmentTest(common.HeatTestCase):
         env = environment.Environment(new_env)
         self.assertEqual(new_env, env.user_env_as_dict())
 
-    def test_existing_parameters(self):
-        # This tests reusing the existing parameters as is
-        prev_params = {'foo': 'bar', 'tester': 'Yes'}
-        params = {}
-        expected = {'parameters': prev_params,
-                    'encrypted_param_names': [],
-                    'parameter_defaults': {},
-                    'resource_registry': {'resources': {}}}
-        prev_env = environment.Environment(
-            {'parameters': prev_params,
-             'resource_registry': {'resources': {}}})
-        env = environment.Environment(params)
-        env.patch_previous_parameters(prev_env)
-        self.assertEqual(expected, env.user_env_as_dict())
-
-    def test_patch_existing_parameters(self):
-        # This tests patching cli parameters over the existing parameters
-        prev_params = {'foo': 'bar', 'tester': 'Yes'}
-        params = {'tester': 'patched'}
-        expected = {'parameters': {'foo': 'bar', 'tester': 'patched'},
-                    'encrypted_param_names': [],
-                    'parameter_defaults': {},
-                    'resource_registry': {'resources': {}}}
-        prev_env = environment.Environment(
-            {'parameters': prev_params,
-             'resource_registry': {'resources': {}}})
-        env = environment.Environment(params)
-        env.patch_previous_parameters(prev_env)
-        self.assertEqual(expected, env.user_env_as_dict())
-
-    def test_patch_and_clear_existing_parameters(self):
-        # This tests patching cli parameters over the existing parameters
-        prev_params = {'foo': 'bar', 'tester': 'Yes',
-                       'another_tester': 'Yes'}
-        params = {'tester': 'patched'}
-        expected = {'parameters': {'foo': 'bar', 'tester': 'patched'},
-                    'encrypted_param_names': [],
-                    'parameter_defaults': {},
-                    'resource_registry': {'resources': {}}}
-        prev_env = environment.Environment(
-            {'parameters': prev_params,
-             'resource_registry': {'resources': {}}})
-        env = environment.Environment(params)
-        env.patch_previous_parameters(prev_env, ['another_tester'])
-        self.assertEqual(expected, env.user_env_as_dict())
-
-    def test_clear_existing_parameters(self):
-        # This tests removing some parameters in the existing set of parameters
-        prev_params = {'foo': 'bar', 'tester': 'Yes'}
-        params = {}
-        expected = {'parameters': {'foo': 'bar'},
-                    'encrypted_param_names': [],
-                    'parameter_defaults': {},
-                    'resource_registry': {'resources': {}}}
-        prev_env = environment.Environment(
-            {'parameters': prev_params,
-             'resource_registry': {'resources': {}}})
-        env = environment.Environment(params)
-        env.patch_previous_parameters(prev_env, ['tester'])
-        self.assertEqual(expected, env.user_env_as_dict())
-
     def test_global_registry(self):
         self.g_env.register_class('CloudX::Nova::Server',
                                   generic_resource.GenericResource)
