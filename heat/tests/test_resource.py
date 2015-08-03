@@ -1567,16 +1567,24 @@ class ResourceTest(common.HeatTestCase):
         # ensure requirements are not updated for failed resource
         self.assertEqual([1, 2], res.requires)
 
-    def test_delete_convergence(self):
+    def test_delete_convergence_ok(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 1
+        res.status = res.COMPLETE
+        res.action = res.CREATE
         res._store()
-        res.destroy = mock.Mock()
+        res_id = res.id
+        res.handle_delete = mock.Mock(return_value=None)
         res._update_replacement_data = mock.Mock()
         self._assert_resource_lock(res.id, None, None)
         res.delete_convergence(2, {}, 'engine-007')
-        self.assertTrue(res.destroy.called)
+        self.assertTrue(res.handle_delete.called)
+        self.assertRaises(exception.NotFound,
+                          resource_objects.Resource.get_obj,
+                          self.stack.context, res_id)
         self.assertTrue(res._update_replacement_data.called)
 
     def test_delete_convergence_does_not_delete_same_template_resource(self):
@@ -1588,10 +1596,32 @@ class ResourceTest(common.HeatTestCase):
         res.delete_convergence('same-template', {}, 'engine-007')
         self.assertFalse(res.destroy.called)
 
+    def test_delete_convergence_fail(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.current_template_id = 1
+        res.status = res.COMPLETE
+        res.action = res.CREATE
+        res._store()
+        res_id = res.id
+        res.handle_delete = mock.Mock(side_effect=ValueError('test'))
+        self._assert_resource_lock(res.id, None, None)
+        self.assertRaises(exception.ResourceFailure,
+                          res.delete_convergence, 2, {}, 'engine-007')
+        self.assertTrue(res.handle_delete.called)
+
+        # confirm that the DB object still exists, and it's lock is released.
+        rs = resource_objects.Resource.get_obj(self.stack.context, res_id)
+        self.assertEqual(rs.id, res_id)
+        self.assertEqual(res.FAILED, rs.status)
+        self._assert_resource_lock(res.id, None, 2)
+
     def test_delete_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 1
+        res.status = res.COMPLETE
+        res.action = res.CREATE
         res._store()
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
         rs.update_and_save({'engine_id': 'not-this'})
@@ -1607,6 +1637,8 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 1
+        res.status = res.COMPLETE
+        res.action = res.CREATE
         res._store()
         res.destroy = mock.Mock()
         input_data = {(1, False): 4, (2, False): 5}  # needed_by resource ids
