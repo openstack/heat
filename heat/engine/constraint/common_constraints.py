@@ -11,12 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import croniter
 import iso8601
 import netaddr
+import pytz
 import six
 
 from oslo_utils import netutils
 
+from heat.common.i18n import _
 from heat.engine import constraints
 
 
@@ -61,3 +64,31 @@ class ISO8601Constraint(object):
             return False
         else:
             return True
+
+
+class CRONExpressionConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        if not value:
+            return True
+        try:
+            croniter.croniter(value)
+            return True
+        except Exception as ex:
+            self._error_message = _(
+                'Invalid CRON expression: %s') % six.text_type(ex)
+        return False
+
+
+class TimezoneConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        if not value:
+            return True
+        try:
+            pytz.timezone(value)
+            return True
+        except Exception as ex:
+            self._error_message = _(
+                'Invalid timezone: %s') % six.text_type(ex)
+        return False
