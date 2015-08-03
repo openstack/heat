@@ -637,9 +637,6 @@ class EngineService(service.Service):
         LOG.info(_LI('previewing stack %s'), stack_name)
 
         conv_eng = cfg.CONF.convergence_engine
-        if conv_eng:
-            raise exception.NotSupported(feature=_('Convergence engine'))
-
         stack = self._parse_template_and_validate_stack(cnxt,
                                                         stack_name,
                                                         template,
@@ -710,7 +707,6 @@ class EngineService(service.Service):
         stack.store()
         _create_stack_user(stack)
         if convergence:
-            raise exception.NotSupported(feature=_('Convergence engine'))
             action = stack.CREATE
             if stack.adopt_stack_data:
                 action = stack.ADOPT
