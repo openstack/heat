@@ -53,13 +53,13 @@ parameters: }
         env = 'just string'
         expect = 'The environment is not a valid YAML mapping data type.'
         msg = self.assertRaises(ValueError, environment_format.parse, env)
-        self.assertIn(expect, msg)
+        self.assertIn(expect, msg.args)
 
     def test_parse_document(self):
         env = '["foo" , "bar"]'
         expect = 'The environment is not a valid YAML mapping data type.'
         msg = self.assertRaises(ValueError, environment_format.parse, env)
-        self.assertIn(expect, msg)
+        self.assertIn(expect, msg.args)
 
 
 class YamlParseExceptions(common.HeatTestCase):

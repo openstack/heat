@@ -303,7 +303,8 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             return msg
 
         def read_cloudinit_file(fn):
-            return pkgutil.get_data('heat', 'cloudinit/%s' % fn)
+            return pkgutil.get_data(
+                'heat', 'cloudinit/%s' % fn).decode('utf-8')
 
         if instance_user:
             config_custom_user = 'user: %s' % instance_user
