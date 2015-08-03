@@ -53,9 +53,10 @@ parameters:
                       'description'):
             self.assertIn(field, res)
             self.assertEqual('', res[field])
+        # 'creation_time' and 'updated_time' are None when preview
         for field in ('creation_time', 'updated_time'):
             self.assertIn(field, res)
-            self.assertIsNotNone(res[field])
+            self.assertIsNone(res[field])
         self.assertIn('output', res['attributes'])
 
         # resource_identity

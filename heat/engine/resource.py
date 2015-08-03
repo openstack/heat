@@ -213,9 +213,11 @@ class Resource(object):
         self.abandon_in_progress = False
 
         self.resource_id = None
-        # if the stack is being deleted, assume we've already been deleted
-        if stack.action == stack.DELETE:
-            self.action = self.DELETE
+        # if the stack is being deleted, assume we've already been deleted.
+        # or if the resource has not been created yet, and the stack was
+        # rollback, we set the resource to rollback
+        if stack.action == stack.DELETE or stack.action == stack.ROLLBACK:
+            self.action = stack.action
         else:
             self.action = self.INIT
         self.status = self.COMPLETE
@@ -225,8 +227,8 @@ class Resource(object):
         self._data = {}
         self._rsrc_metadata = None
         self._stored_properties_data = None
-        self.created_time = None
-        self.updated_time = None
+        self.created_time = stack.created_time
+        self.updated_time = stack.updated_time
         self._rpc_client = None
         self.needed_by = []
         self.requires = []
