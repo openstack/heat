@@ -593,16 +593,19 @@ class BaseCustomConstraint(object):
     def validate(self, value, context):
 
         @MEMOIZE
-        def check_cache_or_validate_value(class_name, value_to_validate):
+        def check_cache_or_validate_value(cache_value_prefix,
+                                          value_to_validate):
             """Check if validation result stored in cache or validate value.
 
             The function checks that value was validated and validation
             result stored in cache. If not then it executes validation and
             stores the result of validation in cache.
-            If caching is disable it requests for validation each time.
+            If caching is disabled it requests for validation each time.
 
-            :param class_name: name of custom constraint class, it will be
-                               used in cache key to distinguish values
+            :param cache_value_prefix: cache prefix that used to distinguish
+                                       value in heat cache. So the cache key
+                                       would be the following:
+                                       cache_value_prefix + value_to_validate.
             :param value_to_validate: value that need to be validated
             :return: True if value is valid otherwise False
             """
@@ -614,12 +617,14 @@ class BaseCustomConstraint(object):
             else:
                 return True
 
+        cache_value_prefix = "{0}:{1}".format(self.__class__.__name__,
+                                              six.text_type(context.tenant_id))
         validation_result = check_cache_or_validate_value(
-            self.__class__.__name__, value)
+            cache_value_prefix, value)
         # if validation failed we should not store it in cache
         # cause validation will be fixed soon (by admin or other guy)
         # and we don't need to require user wait for expiration time
         if not validation_result:
-            check_cache_or_validate_value.invalidate(self.__class__.__name__,
+            check_cache_or_validate_value.invalidate(cache_value_prefix,
                                                      value)
         return validation_result
