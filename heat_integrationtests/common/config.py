@@ -27,7 +27,8 @@ IntegrationTestGroup = [
                help="API key to use when authenticating.",
                secret=True),
     cfg.StrOpt('tenant_name',
-               default=os.environ.get('OS_TENANT_NAME'),
+               default=(os.environ.get('OS_PROJECT_NAME') or
+                        os.environ.get('OS_TENANT_NAME')),
                help="Tenant name to use for API requests."),
     cfg.StrOpt('auth_url',
                default=os.environ.get('OS_AUTH_URL'),
