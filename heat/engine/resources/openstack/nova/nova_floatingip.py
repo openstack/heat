@@ -64,14 +64,15 @@ class NovaFloatingIp(resource.Resource):
 
     def _get_resource(self):
         if self._floating_ip is None and self.resource_id is not None:
-            self._floating_ip = self.nova().floating_ips.get(self.resource_id)
+            self._floating_ip = self.client().floating_ips.get(
+                self.resource_id)
 
         return self._floating_ip
 
     def handle_create(self):
         try:
             pool = self.properties[self.POOL]
-            floating_ip = self.nova().floating_ips.create(pool=pool)
+            floating_ip = self.client().floating_ips.create(pool=pool)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 if self.client_plugin().is_not_found(e):
@@ -86,7 +87,7 @@ class NovaFloatingIp(resource.Resource):
     def handle_delete(self):
         if self.resource_id is not None:
             try:
-                self.nova().floating_ips.delete(self.resource_id)
+                self.client().floating_ips.delete(self.resource_id)
             except Exception as e:
                 self.client_plugin().ignore_not_found(e)
 
@@ -132,10 +133,11 @@ class NovaFloatingIpAssociation(resource.Resource):
         return self.physical_resource_name_or_FnGetRefId()
 
     def handle_create(self):
-        server = self.nova().servers.get(self.properties[self.SERVER])
-        fl_ip = self.nova().floating_ips.get(self.properties[self.FLOATING_IP])
+        server = self.client().servers.get(self.properties[self.SERVER])
+        fl_ip = self.client().floating_ips.get(
+            self.properties[self.FLOATING_IP])
 
-        self.nova().servers.add_floating_ip(server, fl_ip.ip)
+        self.client().servers.add_floating_ip(server, fl_ip.ip)
         self.resource_id_set(self.id)
 
     def handle_delete(self):
@@ -143,11 +145,11 @@ class NovaFloatingIpAssociation(resource.Resource):
             return
 
         try:
-            server = self.nova().servers.get(self.properties[self.SERVER])
+            server = self.client().servers.get(self.properties[self.SERVER])
             if server:
-                fl_ip = self.nova().floating_ips.get(
+                fl_ip = self.client().floating_ips.get(
                     self.properties[self.FLOATING_IP])
-                self.nova().servers.remove_floating_ip(server, fl_ip.ip)
+                self.client().servers.remove_floating_ip(server, fl_ip.ip)
         except Exception as e:
             self.client_plugin().ignore_conflict_and_not_found(e)
 
@@ -165,10 +167,10 @@ class NovaFloatingIpAssociation(resource.Resource):
                          self.properties[self.SERVER])
             fl_ip_id = (prop_diff.get(self.FLOATING_IP) or
                         self.properties[self.FLOATING_IP])
-            server = self.nova().servers.get(server_id)
-            fl_ip = self.nova().floating_ips.get(fl_ip_id)
+            server = self.client().servers.get(server_id)
+            fl_ip = self.client().floating_ips.get(fl_ip_id)
 
-            self.nova().servers.add_floating_ip(server, fl_ip.ip)
+            self.client().servers.add_floating_ip(server, fl_ip.ip)
             self.resource_id_set(self.id)
 
 

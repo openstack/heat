@@ -479,7 +479,7 @@ class InstancesTest(common.HeatTestCase):
 
         instance = instances.Instance('instance_create_image',
                                       res_definitions['WebServer'], stack)
-        instance.nova = mock.Mock()
+        instance.client = mock.Mock()
         self.patchobject(nova.NovaClientPlugin, '_check_active',
                          return_value=True)
 
@@ -491,8 +491,8 @@ class InstancesTest(common.HeatTestCase):
 
         instance = instances.Instance('instance_create_image',
                                       res_definitions['WebServer'], stack)
-        instance.nova = mock.Mock()
-        instance.nova.return_value.servers.get.return_value.status = 'foo'
+        instance.client = mock.Mock()
+        instance.client.return_value.servers.get.return_value.status = 'foo'
         self.patchobject(nova.NovaClientPlugin, '_check_active',
                          return_value=False)
 

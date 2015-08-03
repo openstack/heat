@@ -53,7 +53,7 @@ class NovaFlavorTest(common.HeatTestCase):
         self.my_flavor = self.stack['my_flavor']
         nova = mock.MagicMock()
         self.novaclient = mock.MagicMock()
-        self.my_flavor.nova = nova
+        self.my_flavor.client = nova
         nova.return_value = self.novaclient
         self.flavors = self.novaclient.flavors
 

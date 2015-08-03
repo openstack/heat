@@ -139,14 +139,14 @@ class NovaKeyPairTest(common.HeatTestCase):
 
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)
-        res.nova = mock.Mock()
+        res.client = mock.Mock()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     def test_check_key_fail(self):
         res = self._get_test_resource(self.kp_template)
-        res.nova = mock.Mock()
-        res.nova().keypairs.get.side_effect = Exception("boom")
+        res.client = mock.Mock()
+        res.client().keypairs.get.side_effect = Exception("boom")
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.check))
         self.assertIn("boom", six.text_type(exc))

@@ -115,8 +115,8 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def _mock_create(self, mocks):
         fc = fakes_nova.FakeClient()
-        mocks.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().MultipleTimes().AndReturn(fc)
+        mocks.StubOutWithMock(instances.Instance, 'client')
+        instances.Instance.client().MultipleTimes().AndReturn(fc)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)

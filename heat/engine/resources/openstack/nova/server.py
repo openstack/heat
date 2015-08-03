@@ -735,7 +735,7 @@ class Server(stack_user.StackUser):
 
         server = None
         try:
-            server = self.nova().servers.create(
+            server = self.client().servers.create(
                 name=self._server_name(),
                 image=image,
                 flavor=flavor_id,
@@ -920,7 +920,7 @@ class Server(stack_user.StackUser):
         if name == self.NAME_ATTR:
             return self._server_name()
         try:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             return ''
@@ -1044,7 +1044,7 @@ class Server(stack_user.StackUser):
 
         flavor_id = self.client_plugin().get_flavor_id(flavor)
         if not server:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         return scheduler.TaskRunner(self.client_plugin().resize,
                                     server, flavor, flavor_id)
 
@@ -1057,7 +1057,7 @@ class Server(stack_user.StackUser):
         image = prop_diff[self.IMAGE]
         image_id = self.client_plugin('glance').get_image_id(image)
         if not server:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
         password = (prop_diff.get(self.ADMIN_PASS) or
@@ -1077,7 +1077,7 @@ class Server(stack_user.StackUser):
         old_networks = self.properties[self.NETWORKS]
 
         if not server:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         interfaces = server.interface_list()
 
         # if old networks is None, it means that the server got first
@@ -1148,7 +1148,7 @@ class Server(stack_user.StackUser):
         server = None
 
         if self.METADATA in prop_diff:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
             self.client_plugin().meta_update(server,
                                              prop_diff[self.METADATA])
 
@@ -1159,12 +1159,12 @@ class Server(stack_user.StackUser):
             checkers.append(self._update_image(server, prop_diff))
         elif self.ADMIN_PASS in prop_diff:
             if not server:
-                server = self.nova().servers.get(self.resource_id)
+                server = self.client().servers.get(self.resource_id)
             server.change_password(prop_diff[self.ADMIN_PASS])
 
         if self.NAME in prop_diff:
             if not server:
-                server = self.nova().servers.get(self.resource_id)
+                server = self.client().servers.get(self.resource_id)
             self.client_plugin().rename(server, prop_diff[self.NAME])
 
         if self.NETWORKS in prop_diff:
@@ -1438,7 +1438,7 @@ class Server(stack_user.StackUser):
                                   self.name)
 
         try:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         except Exception as e:
             if self.client_plugin().is_not_found(e):
                 raise exception.NotFound(_('Failed to find server %s') %
@@ -1480,7 +1480,7 @@ class Server(stack_user.StackUser):
                                   self.name)
 
         try:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         except Exception as e:
             if self.client_plugin().is_not_found(e):
                 raise exception.NotFound(_('Failed to find server %s') %
@@ -1499,13 +1499,13 @@ class Server(stack_user.StackUser):
         return self.client_plugin()._check_active(server_id)
 
     def handle_snapshot(self):
-        image_id = self.nova().servers.create_image(
+        image_id = self.client().servers.create_image(
             self.resource_id, self.physical_resource_name())
         self.data_set('snapshot_image_id', image_id)
         return image_id
 
     def check_snapshot_complete(self, image_id):
-        image = self.nova().images.get(image_id)
+        image = self.client().images.get(image_id)
         if image.status == 'ACTIVE':
             return True
         elif image.status == 'ERROR' or image.status == 'DELETED':
@@ -1516,7 +1516,7 @@ class Server(stack_user.StackUser):
     def handle_delete_snapshot(self, snapshot):
         image_id = snapshot['resource_data'].get('snapshot_image_id')
         try:
-            self.nova().images.delete(image_id)
+            self.client().images.delete(image_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
 

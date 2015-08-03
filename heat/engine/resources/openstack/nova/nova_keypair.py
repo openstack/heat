@@ -110,8 +110,8 @@ class KeyPair(resource.Resource):
 
     def handle_create(self):
         pub_key = self.properties[self.PUBLIC_KEY] or None
-        new_keypair = self.nova().keypairs.create(self.properties[self.NAME],
-                                                  public_key=pub_key)
+        new_keypair = self.client().keypairs.create(self.properties[self.NAME],
+                                                    public_key=pub_key)
         if (self.properties[self.SAVE_PRIVATE_KEY] and
                 hasattr(new_keypair, 'private_key')):
             self.data_set('private_key',
@@ -122,12 +122,12 @@ class KeyPair(resource.Resource):
     def handle_delete(self):
         if self.resource_id:
             try:
-                self.nova().keypairs.delete(self.resource_id)
+                self.client().keypairs.delete(self.resource_id)
             except Exception as e:
                 self.client_plugin().ignore_not_found(e)
 
     def handle_check(self):
-        self.nova().keypairs.get(self.resource_id)
+        self.client().keypairs.get(self.resource_id)
 
     def _resolve_attribute(self, key):
         attr_fn = {self.PRIVATE_KEY_ATTR: self.private_key,

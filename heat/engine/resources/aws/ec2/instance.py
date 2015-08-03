@@ -381,7 +381,7 @@ class Instance(resource.Resource):
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
         if availability_zone is None:
             try:
-                server = self.nova().servers.get(self.resource_id)
+                server = self.client().servers.get(self.resource_id)
                 availability_zone = getattr(server,
                                             'OS-EXT-AZ:availability_zone')
             except Exception as e:
@@ -558,7 +558,7 @@ class Instance(resource.Resource):
             instance_user = 'ec2-user'
 
         try:
-            server = self.nova().servers.create(
+            server = self.client().servers.create(
                 name=self.physical_resource_name(),
                 image=image_id,
                 flavor=flavor_id,
@@ -637,7 +637,7 @@ class Instance(resource.Resource):
                 old_network_ifaces.remove(iface)
 
     def handle_check(self):
-        server = self.nova().servers.get(self.resource_id)
+        server = self.client().servers.get(self.resource_id)
         if not self.client_plugin()._check_active(server, 'Instance'):
             raise exception.Error(_("Instance is not ACTIVE (was: %s)") %
                                   server.status.strip())
@@ -648,7 +648,7 @@ class Instance(resource.Resource):
         checkers = []
         server = None
         if self.TAGS in prop_diff:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
             self.client_plugin().meta_update(
                 server, self._get_nova_metadata(prop_diff))
 
@@ -656,7 +656,7 @@ class Instance(resource.Resource):
             flavor = prop_diff[self.INSTANCE_TYPE]
             flavor_id = self.client_plugin().get_flavor_id(flavor)
             if not server:
-                server = self.nova().servers.get(self.resource_id)
+                server = self.client().servers.get(self.resource_id)
             checker = scheduler.TaskRunner(self.client_plugin().resize,
                                            server, flavor, flavor_id)
             checkers.append(checker)
@@ -668,7 +668,7 @@ class Instance(resource.Resource):
                 self.properties.get(self.SUBNET_ID))
             security_groups = self._get_security_groups()
             if not server:
-                server = self.nova().servers.get(self.resource_id)
+                server = self.client().servers.get(self.resource_id)
             # if there is entrys in old_network_ifaces and new_network_ifaces,
             # remove the same entrys from old and new ifaces
             if old_network_ifaces and new_network_ifaces:
@@ -806,7 +806,7 @@ class Instance(resource.Resource):
                                   self.name)
 
         try:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         except Exception as e:
             if self.client_plugin().is_not_found(e):
                 raise exception.NotFound(_('Failed to find instance %s') %
@@ -848,7 +848,7 @@ class Instance(resource.Resource):
                                   self.name)
 
         try:
-            server = self.nova().servers.get(self.resource_id)
+            server = self.client().servers.get(self.resource_id)
         except Exception as e:
             if self.client_plugin().is_not_found(e):
                 raise exception.NotFound(_('Failed to find instance %s') %
