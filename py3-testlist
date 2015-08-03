@@ -32,6 +32,8 @@ heat.tests.clients.test_mistral_client
 heat.tests.clients.test_neutron_client
 heat.tests.clients.test_sahara_client
 heat.tests.clients.test_zaqar_client
+heat.tests.db.test_migrations
+heat.tests.db.test_sqlalchemy_api
 heat.tests.db.test_sqlalchemy_filters
 heat.tests.db.test_sqlalchemy_types
 heat.tests.db.test_utils

@@ -40,7 +40,7 @@ def encrypt(value, encryption_key=None):
     encoded_key = base64.b64encode(encryption_key.encode('utf-8'))
     sym = fernet.Fernet(encoded_key)
     res = sym.encrypt(encodeutils.safe_encode(value))
-    return 'cryptography_decrypt_v1', res
+    return 'cryptography_decrypt_v1', encodeutils.safe_decode(res)
 
 
 def decrypt(method, data, encryption_key=None):
