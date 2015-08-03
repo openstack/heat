@@ -11,8 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.engine.constraint import common_constraints as cc
 from heat.tests import common
+from heat.tests import utils
 
 
 class TestIPConstraint(common.HeatTestCase):
@@ -137,3 +140,58 @@ class TestISO8601Constraint(common.HeatTestCase):
 
     def test_validate_refuses_other_formats(self):
         self.assertFalse(self.constraint.validate('Fri 13th, 2050', None))
+
+
+class CRONExpressionConstraint(common.HeatTestCase):
+
+    def setUp(self):
+        super(CRONExpressionConstraint, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.constraint = cc.CRONExpressionConstraint()
+
+    def test_validation(self):
+        self.assertTrue(self.constraint.validate("0 23 * * *", self.ctx))
+
+    def test_validation_none(self):
+        self.assertTrue(self.constraint.validate(None, self.ctx))
+
+    def test_validation_out_of_range_error(self):
+        cron_expression = "* * * * * 100"
+        expect = ("Invalid CRON expression: [%s] "
+                  "is not acceptable, out of range") % cron_expression
+        self.assertFalse(self.constraint.validate(cron_expression, self.ctx))
+        self.assertEqual(expect,
+                         six.text_type(self.constraint._error_message))
+
+    def test_validation_columns_length_error(self):
+        cron_expression = "* *"
+        expect = ("Invalid CRON expression: Exactly 5 "
+                  "or 6 columns has to be specified for "
+                  "iteratorexpression.")
+        self.assertFalse(self.constraint.validate(cron_expression, self.ctx))
+        self.assertEqual(expect,
+                         six.text_type(self.constraint._error_message))
+
+
+class TimezoneConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(TimezoneConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.constraint = cc.TimezoneConstraint()
+
+    def test_validation(self):
+        self.assertTrue(self.constraint.validate("Asia/Taipei", self.ctx))
+
+    def test_validation_error(self):
+        timezone = "wrong_timezone"
+        expected = "Invalid timezone: '%s'" % timezone
+
+        self.assertFalse(self.constraint.validate(timezone, self.ctx))
+        self.assertEqual(
+            expected,
+            six.text_type(self.constraint._error_message)
+        )
+
+    def test_validation_none(self):
+        self.assertTrue(self.constraint.validate(None, self.ctx))
