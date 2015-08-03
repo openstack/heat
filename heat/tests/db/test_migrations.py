@@ -31,6 +31,7 @@ from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
 import six
 import sqlalchemy
+from sqlalchemy import dialects
 import testtools
 
 from heat.db.sqlalchemy import migrate_repo
@@ -622,7 +623,35 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
-    pass
+    def _check_065(self, engine, data):
+        server_ver = engine.dialect.server_version_info
+        if server_ver < (5, 6, 4):
+            self.skip('MySQL server version too old %s' %
+                      six.text_type(server_ver))
+
+        for tab_name in ['raw_template', 'user_creds', 'stack',
+                         'resource', 'resource_data', 'event',
+                         'watch_rule', 'watch_data', 'snapshot',
+                         'software_deployment', 'software_config',
+                         'sync_point', 'service', 'stack_tag']:
+            self.assertColumnType(engine, tab_name, 'updated_at',
+                                  dialects.mysql.DATETIME)
+            self.assertColumnType(engine, tab_name, 'created_at',
+                                  dialects.mysql.DATETIME)
+
+        # test on one table that we can write and read a subsecond
+        # datetime.
+        test_dt = datetime.datetime.now()
+        if test_dt.microsecond == 0:
+            test_dt.microsecond = 814673
+        raw_table = utils.get_table(engine, 'raw_template')
+        templ = [dict(id=15, template='{}', files='{}',
+                      updated_at=test_dt)]
+        engine.execute(raw_table.insert(), templ)
+        temps_in_db = list(raw_table.select().
+                           where(raw_table.c.id == '15').execute())
+        self.assertEqual(1, len(temps_in_db))
+        self.assertEqual(test_dt, temps_in_db[0].updated_at)
 
 
 class TestHeatMigrationsPostgreSQL(HeatMigrationsCheckers,
