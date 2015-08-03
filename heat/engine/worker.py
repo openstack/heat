@@ -353,12 +353,7 @@ def check_resource_update(rsrc, template_id, resource_data, engine_id):
     '''
     Create or update the Resource if appropriate.
     '''
-    if (rsrc.resource_id is None
-            and not (rsrc.action == resource.Resource.CREATE and
-                     rsrc.status in [
-                         resource.Resource.COMPLETE,
-                         resource.Resource.FAILED
-                     ])):
+    if rsrc.action == resource.Resource.INIT:
         rsrc.create_convergence(template_id, resource_data, engine_id)
     else:
         rsrc.update_convergence(template_id, resource_data, engine_id)
