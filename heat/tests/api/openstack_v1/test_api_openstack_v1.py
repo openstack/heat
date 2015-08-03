@@ -34,6 +34,7 @@ import heat.api.openstack.v1.stacks as stacks
 from heat.common import exception as heat_exc
 from heat.common import identifier
 from heat.common import policy
+from heat.common import template_format
 from heat.common import urlfetch
 from heat.common import wsgi
 from heat.rpc import api as rpc_api
@@ -64,22 +65,18 @@ def to_remote_error(error):
 
 class InstantiationDataTest(common.HeatTestCase):
 
-    def test_format_parse(self):
-        data = {"AWSTemplateFormatVersion": "2010-09-09",
-                "key1": ["val1[0]", "val1[1]"],
-                "key2": "val2"}
-        json_repr = ('{"AWSTemplateFormatVersion" : "2010-09-09",'
-                     '"key1": [ "val1[0]", "val1[1]" ], '
-                     '"key2": "val2" }')
-        parsed = stacks.InstantiationData.format_parse(json_repr, 'foo')
-        self.assertEqual(data, parsed)
+    def test_parse_error_success(self):
+        with stacks.InstantiationData.parse_error_check('Garbage'):
+            pass
 
-    def test_format_parse_invalid(self):
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          stacks.InstantiationData.format_parse,
-                          '!@#$%^&not json', 'Garbage')
+    def test_parse_error(self):
+        def generate_error():
+            with stacks.InstantiationData.parse_error_check('Garbage'):
+                raise ValueError
 
-    def test_format_parse_invalid_message(self):
+        self.assertRaises(webob.exc.HTTPBadRequest, generate_error)
+
+    def test_parse_error_message(self):
         # make sure the parser error gets through to the caller.
         bad_temp = '''
 heat_template_version: '2013-05-23'
@@ -89,10 +86,13 @@ parameters:
     description: bla
         '''
 
-        parse_ex = self.assertRaises(webob.exc.HTTPBadRequest,
-                                     stacks.InstantiationData.format_parse,
-                                     bad_temp, 'foo')
+        def generate_error():
+            with stacks.InstantiationData.parse_error_check('foo'):
+                template_format.parse(bad_temp)
+
+        parse_ex = self.assertRaises(webob.exc.HTTPBadRequest, generate_error)
         self.assertIn('line 4, column 3', six.text_type(parse_ex))
+        self.assertIn('foo', six.text_type(parse_ex))
 
     def test_stack_name(self):
         body = {'stack_name': 'wibble'}
