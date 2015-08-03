@@ -1488,7 +1488,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, 2)
 
     @mock.patch.object(resource.Resource, 'adopt')
-    def test_adopt_convergence(self, mock_adopt):
+    def test_adopt_convergence_ok(self, mock_adopt):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.ADOPT
@@ -1504,6 +1504,20 @@ class ResourceTest(common.HeatTestCase):
             resource_data={'resource_id': 'fluffy'})
         self.assertItemsEqual([5, 3], res.requires)
         self._assert_resource_lock(res.id, None, 2)
+
+    def test_adopt_convergence_bad_data(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.action = res.ADOPT
+        res._store()
+        self.stack.adopt_stack_data = {'resources': {}}
+        self._assert_resource_lock(res.id, None, None)
+        res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
+                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        exc = self.assertRaises(exception.ResourceFailure,
+                                res.create_convergence, self.stack.t.id,
+                                res_data, 'engine-007')
+        self.assertIn('Resource ID was not provided', six.text_type(exc))
 
     @mock.patch.object(resource.Resource, 'update')
     def test_update_convergence(self, mock_update):

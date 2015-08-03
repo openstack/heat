@@ -703,10 +703,10 @@ class Resource(object):
                     if data)
             )
             self.current_template_id = template_id
-            adopt_data = self.stack._adopt_kwargs(self)
-            if adopt_data['resource_data'] is None:
+            if self.stack.adopt_stack_data is None:
                 runner = scheduler.TaskRunner(self.create)
             else:
+                adopt_data = self.stack._adopt_kwargs(self)
                 runner = scheduler.TaskRunner(self.adopt, **adopt_data)
             runner()
 
