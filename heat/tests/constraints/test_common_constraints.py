@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import iso_8601
+from heat.engine.constraint import common_constraints as cc
 from heat.tests import common
 
 
@@ -19,7 +19,7 @@ class TestISO8601Constraint(common.HeatTestCase):
 
     def setUp(self):
         super(TestISO8601Constraint, self).setUp()
-        self.constraint = iso_8601.ISO8601Constraint()
+        self.constraint = cc.ISO8601Constraint()
 
     def test_validate_date_format(self):
         date = '2050-01-01'
