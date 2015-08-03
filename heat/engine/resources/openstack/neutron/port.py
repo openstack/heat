@@ -348,7 +348,7 @@ class Port(neutron.NeutronResource):
 
     def _prepare_port_properties(self, props, prepare_for_update=False):
         for fixed_ip in props.get(self.FIXED_IPS, []):
-            for key, value in fixed_ip.items():
+            for key, value in list(fixed_ip.items()):
                 if value is None:
                     fixed_ip.pop(key)
             if fixed_ip.get(self.FIXED_IP_SUBNET):
