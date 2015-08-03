@@ -90,6 +90,9 @@
 # Skip Stack Abandon Integration tests (boolean value)
 #skip_stack_abandon_tests = false
 
+# Skip Notification Integration tests (boolean value)
+#skip_notification_tests = false
+
 # Timeout in seconds to wait for connectivity to server. (integer value)
 #connectivity_timeout = 120
 
