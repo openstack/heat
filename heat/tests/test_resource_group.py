@@ -219,7 +219,11 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        self.assertEqual(expect, resg._assemble_nested(['0', '1', '2']))
+        nested = resg._assemble_nested(['0', '1', '2'])
+        for res in nested['resources']:
+            nested['resources'][res]['properties']['listprop'] = \
+                list(nested['resources'][res]['properties']['listprop'])
+        self.assertEqual(expect, nested)
 
     def test_custom_index_var(self):
         templ = copy.deepcopy(template_repl)
@@ -241,7 +245,10 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        self.assertEqual(expect, resg._assemble_nested(['0']))
+        nested = resg._assemble_nested(['0'])
+        nested['resources']['0']['properties']['listprop'] = \
+            list(nested['resources']['0']['properties']['listprop'])
+        self.assertEqual(expect, nested)
 
         res_def = snip['Properties']['resource_def']
         res_def['properties']['Foo'] = "Bar___foo__"
@@ -263,7 +270,10 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        self.assertEqual(expect, resg._assemble_nested(['0']))
+        nested = resg._assemble_nested(['0'])
+        nested['resources']['0']['properties']['listprop'] = \
+            list(nested['resources']['0']['properties']['listprop'])
+        self.assertEqual(expect, nested)
 
     def test_assemble_no_properties(self):
         templ = copy.deepcopy(template)

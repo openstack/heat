@@ -254,10 +254,10 @@ class ResourceGroup(stack_resource.StackResource):
         def is_blacklisted(name):
             return name in name_blacklist
 
-        candidates = itertools.imap(six.text_type, itertools.count())
+        candidates = six.moves.map(six.text_type, itertools.count())
 
-        return itertools.islice(itertools.ifilterfalse(is_blacklisted,
-                                                       candidates),
+        return itertools.islice(six.moves.filterfalse(is_blacklisted,
+                                                      candidates),
                                 req_count)
 
     def handle_create(self):
