@@ -261,6 +261,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual(u'False', rsrc.FnGetAtt('bootable'))
         self.assertEqual(u'False', rsrc.FnGetAtt('encrypted'))
         self.assertEqual(u'[]', rsrc.FnGetAtt('attachments'))
+        self.assertEqual({'volume': 'info'}, rsrc.FnGetAtt('show'))
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'unknown')
         self.assertEqual(

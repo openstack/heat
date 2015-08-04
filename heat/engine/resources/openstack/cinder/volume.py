@@ -205,6 +205,8 @@ class CinderVolume(vb.BaseVolume):
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
 
+    entity = 'volumes'
+
     def translation_rules(self):
         return [
             properties.TranslationRule(
@@ -255,6 +257,11 @@ class CinderVolume(vb.BaseVolume):
             elif name == self.DISPLAY_DESCRIPTION_ATTR:
                 return vol.description
         return six.text_type(getattr(vol, name))
+
+    # TODO(huangtianhua): remove this method when bug #1479641 is fixed.
+    def _show_resource(self):
+        volume = self.client().volumes.get(self.resource_id)
+        return volume._info
 
     def handle_create(self):
         vol_id = super(CinderVolume, self).handle_create()
