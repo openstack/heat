@@ -200,7 +200,9 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         mock_stack = mock.Mock()
         mock_stack.db_resource_get.return_value = None
 
-        mockclient.return_value.queue.side_effect = ResourceNotFound
+        zaqar_q = mock.Mock()
+        zaqar_q.delete.side_effect = ResourceNotFound
+        mockclient.return_value.queue.return_value = zaqar_q
         mockplugin.return_value.ignore_not_found.return_value = None
         zplugin = queue.ZaqarQueue("test_delete_not_found", mock_def,
                                    mock_stack)
