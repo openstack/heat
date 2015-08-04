@@ -508,32 +508,32 @@ class MiscMethodsTest(common.HeatTestCase):
         self.assertTrue(mock_sync.called)
 
     @mock.patch.object(resource.Resource, 'create_convergence')
-    def test_check_resource_update_create(self, mock_create):
+    @mock.patch.object(resource.Resource, 'update_convergence')
+    def test_check_resource_update_init_action(self, mock_update, mock_create):
+        self.resource.action = 'INIT'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {}, 'engine-id')
         self.assertTrue(mock_create.called)
+        self.assertFalse(mock_update.called)
 
+    @mock.patch.object(resource.Resource, 'create_convergence')
     @mock.patch.object(resource.Resource, 'update_convergence')
-    def test_check_resource_update_update(self, mock_update):
-        self.resource.resource_id = 'physical-res-id'
+    def test_check_resource_update_create_action(
+            self, mock_update, mock_create):
+        self.resource.action = 'CREATE'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {}, 'engine-id')
+        self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
+    @mock.patch.object(resource.Resource, 'create_convergence')
     @mock.patch.object(resource.Resource, 'update_convergence')
-    def test_check_resource_update_complete(self, mock_update):
-        self.resource.action = 'CREATE'
-        self.resource.status = 'COMPLETE'
+    def test_check_resource_update_update_action(
+            self, mock_update, mock_create):
+        self.resource.action = 'UPDATE'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {}, 'engine-id')
-        self.assertTrue(mock_update.called)
-
-    @mock.patch.object(resource.Resource, 'update_convergence')
-    def test_check_resource_update_failed(self, mock_update):
-        self.resource.action = 'CREATE'
-        self.resource.status = 'FAILED'
-        worker.check_resource_update(self.resource, self.resource.stack.t.id,
-                                     {}, 'engine-id')
+        self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
     @mock.patch.object(resource.Resource, 'delete_convergence')
