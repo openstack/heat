@@ -157,7 +157,8 @@ class Attributes(collections.Mapping):
         :returns: The attributes of the specified resource_class as a template
                   Output map
         """
-        schema = resource_class.attributes_schema
+        schema = resource_class.attributes_schema.copy()
+        schema.update(resource_class.base_attributes_schema)
         attribs = Attributes._make_attributes(schema).items()
 
         return dict((n, att.as_output(resource_name,
