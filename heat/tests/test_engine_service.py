@@ -187,6 +187,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def setUp(self):
         super(StackConvergenceCreateUpdateDeleteTest, self).setUp()
         cfg.CONF.set_override('convergence_engine', True)
+        self.stack = None
 
     @mock.patch.object(parser.Stack, 'mark_complete')
     def test_converge_empty_template(self, mock_mc, mock_cr):
@@ -283,23 +284,23 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     is_update, None))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
-    def _mock_conv_update_requires(self, stack, conv_deps):
+    def _mock_convg_db_update_requires(self, key_id=False):
         """Updates requires column of resources.
         Required for testing the generation of convergence dependency graph
         on an update.
         """
         requires = dict()
-        for rsrc_id, is_update in conv_deps:
-            reqs = conv_deps.requires((rsrc_id, is_update))
+        for rsrc_id, is_update in self.stack.convergence_dependencies:
+            reqs = self.stack.convergence_dependencies.requires((rsrc_id,
+                                                                 is_update))
             requires[rsrc_id] = list({id for id, is_update in reqs})
 
         rsrcs_db = resource_objects.Resource.get_all_by_stack(
-            stack.context, stack.id)
+            self.stack.context, self.stack.id, key_id=key_id)
 
-        for res_name, rsrc in rsrcs_db.items():
+        for rsrc_id, rsrc in rsrcs_db.items():
             if rsrc.id in requires:
-                rsrcs_db[res_name].requires = requires[rsrc.id]
-
+                rsrcs_db[rsrc_id].requires = requires[rsrc.id]
         return rsrcs_db
 
     def test_conv_string_five_instance_stack_update(self, mock_cr):
@@ -320,9 +321,10 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         # on our previous create_complete, worker would have updated the
         # rsrc.requires. Mock the same behavior here.
-        with mock.patch.object(resource_objects.Resource, 'get_all_by_stack',
-                               return_value=self._mock_conv_update_requires(
-                                   stack, stack.convergence_dependencies)):
+        self.stack = stack
+        with mock.patch.object(
+                parser.Stack, '_db_resources_get',
+                side_effect=self._mock_convg_db_update_requires):
             curr_stack.converge_stack(template=template2, action=stack.UPDATE)
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
@@ -444,9 +446,10 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                                        stack=curr_stack_db)
         # on our previous create_complete, worker would have updated the
         # rsrc.requires. Mock the same behavior here.
-        with mock.patch.object(resource_objects.Resource, 'get_all_by_stack',
-                               return_value=self._mock_conv_update_requires(
-                                   stack, stack.convergence_dependencies)):
+        self.stack = stack
+        with mock.patch.object(
+                parser.Stack, '_db_resources_get',
+                side_effect=self._mock_convg_db_update_requires):
             curr_stack.converge_stack(template=template2, action=stack.DELETE)
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
