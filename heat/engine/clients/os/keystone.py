@@ -101,6 +101,18 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                 raise exception.EntityNotFound(entity='KeystoneService',
                                                name=service)
 
+    def get_user_id(self, user):
+        try:
+            user_obj = self.client().client.users.get(user)
+            return user_obj.id
+        except exceptions.NotFound:
+            user_list = self.client().client.users.list(name=user)
+            for user_obj in user_list:
+                if user_obj.name == user:
+                    return user_obj.id
+
+        raise exception.EntityNotFound(entity='KeystoneUser', name=user)
+
 
 class KeystoneRoleConstraint(constraints.BaseCustomConstraint):
 
@@ -141,3 +153,11 @@ class KeystoneServiceConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, service):
         client.client_plugin('keystone').get_service_id(service)
+
+
+class KeystoneUserConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.EntityNotFound,)
+
+    def validate_with_client(self, client, user):
+        client.client_plugin('keystone').get_user_id(user)
