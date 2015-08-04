@@ -50,7 +50,41 @@ alarm_template = '''
         "threshold": "50",
         "alarm_actions": [],
         "matching_metadata": {},
-        "comparison_operator": "gt"
+        "comparison_operator": "gt",
+      }
+    },
+    "signal_handler" : {
+      "Type" : "SignalResourceType"
+    }
+  }
+}
+'''
+
+alarm_template_with_time_constraints = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Alarm Test",
+  "Parameters" : {},
+  "Resources" : {
+    "MEMAlarmHigh": {
+     "Type": "OS::Ceilometer::Alarm",
+     "Properties": {
+        "description": "Scale-up if MEM > 50% for 1 minute",
+        "meter_name": "MemoryUtilization",
+        "statistic": "avg",
+        "period": "60",
+        "evaluation_periods": "1",
+        "threshold": "50",
+        "alarm_actions": [],
+        "matching_metadata": {},
+        "comparison_operator": "gt",
+        "time_constraints":
+        [{"name": "tc1",
+        "start": "0 23 * * *",
+        "timezone": "Asia/Taipei",
+        "duration": 10800,
+        "description": "a description"
+        }]
       }
     },
     "signal_handler" : {
@@ -77,7 +111,7 @@ not_string_alarm_template = '''
         "threshold": 50,
         "alarm_actions": [],
         "matching_metadata": {},
-        "comparison_operator": "gt"
+        "comparison_operator": "gt",
       }
     },
     "signal_handler" : {
@@ -118,7 +152,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         super(CeilometerAlarmTest, self).setUp()
         self.fa = mock.Mock()
 
-    def create_stack(self, template=None):
+    def create_stack(self, template=None, time_constraints=[]):
         if template is None:
             template = alarm_template
         temp = template_format.parse(template)
@@ -140,6 +174,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         al['ok_actions'] = None
         al['repeat_actions'] = True
         al['enabled'] = True
+        al['time_constraints'] = time_constraints
         rule = dict(
             period=60,
             evaluation_periods=1,
@@ -190,6 +225,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         al2 = dict((k, mox.IgnoreArg())
                    for k, s in schema.items()
                    if s.update_allowed and k not in exns)
+        al2['time_constraints'] = mox.IgnoreArg()
         al2['alarm_id'] = mox.IgnoreArg()
         al2['type'] = 'threshold'
         al2['threshold_rule'] = dict(
@@ -476,6 +512,112 @@ class CeilometerAlarmTest(common.HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
 
+    def test_alarm_with_wrong_start_time(self):
+        t = template_format.parse(alarm_template_with_time_constraints)
+        time_constraints = [{"name": "tc1",
+                             "start": "0 23 * * *",
+                             "timezone": "Asia/Taipei",
+                             "duration": 10800,
+                             "description": "a description"
+                             }]
+        self.stack = self.create_stack(template=json.dumps(t),
+                                       time_constraints=time_constraints)
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['MEMAlarmHigh']
+
+        properties = copy.copy(rsrc.properties.data)
+        start_time = '* * * * * 100'
+        properties.update({
+            'comparison_operator': 'lt',
+            'description': 'fruity',
+            'evaluation_periods': '2',
+            'period': '90',
+            'enabled': True,
+            'repeat_actions': True,
+            'statistic': 'max',
+            'threshold': '39',
+            'insufficient_data_actions': [],
+            'alarm_actions': [],
+            'ok_actions': ['signal_handler'],
+            'matching_metadata': {'x': 'y'},
+            'query': [dict(field='c', op='ne', value='z')],
+            'time_constraints': [{"name": "tc1",
+                                  "start": start_time,
+                                  "timezone": "Asia/Taipei",
+                                  "duration": 10800,
+                                  "description": "a description"
+                                  }]
+        })
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               properties)
+        error = self.assertRaises(
+            exception.ResourceFailure,
+            scheduler.TaskRunner(rsrc.update, snippet)
+        )
+        self.assertEqual(
+            "StackValidationFailed: resources.MEMAlarmHigh: Property error: "
+            "MEMAlarmHigh.Properties.time_constraints[0].start: Error "
+            "validating value '%s': Invalid CRON expression: "
+            "[%s] is not acceptable, out of range" % (start_time, start_time),
+            error.message)
+
+        self.m.VerifyAll()
+
+    def test_alarm_with_wrong_timezone(self):
+        t = template_format.parse(alarm_template_with_time_constraints)
+        time_constraints = [{"name": "tc1",
+                             "start": "0 23 * * *",
+                             "timezone": "Asia/Taipei",
+                             "duration": 10800,
+                             "description": "a description"
+                             }]
+        self.stack = self.create_stack(template=json.dumps(t),
+                                       time_constraints=time_constraints)
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['MEMAlarmHigh']
+
+        properties = copy.copy(rsrc.properties.data)
+        timezone = 'wrongtimezone'
+        properties.update({
+            'comparison_operator': 'lt',
+            'description': 'fruity',
+            'evaluation_periods': '2',
+            'period': '90',
+            'enabled': True,
+            'repeat_actions': True,
+            'statistic': 'max',
+            'threshold': '39',
+            'insufficient_data_actions': [],
+            'alarm_actions': [],
+            'ok_actions': ['signal_handler'],
+            'matching_metadata': {'x': 'y'},
+            'query': [dict(field='c', op='ne', value='z')],
+            'time_constraints': [{"name": "tc1",
+                                  "start": "0 23 * * *",
+                                  "timezone": timezone,
+                                  "duration": 10800,
+                                  "description": "a description"
+                                  }]
+        })
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               properties)
+        error = self.assertRaises(
+            exception.ResourceFailure,
+            scheduler.TaskRunner(rsrc.update, snippet)
+        )
+        self.assertEqual(
+            "StackValidationFailed: resources.MEMAlarmHigh: Property error: "
+            "MEMAlarmHigh.Properties.time_constraints[0].timezone: Error "
+            "validating value '%s': Invalid timezone: '%s'"
+            % (timezone, timezone),
+            error.message)
+
+        self.m.VerifyAll()
+
 
 class CombinationAlarmTest(common.HeatTestCase):
 
@@ -497,7 +639,8 @@ class CombinationAlarmTest(common.HeatTestCase):
             name=mox.IgnoreArg(), type='combination',
             repeat_actions=True,
             combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
-                              'operator': u'and'}
+                              'operator': u'and'},
+            time_constraints=[]
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(combination_alarm_template)
         self.stack = utils.parse_stack(snippet)
