@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b2.dev397\n"
+"Project-Id-Version: heat 5.0.0.0b3.dev76\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-29 06:18+0000\n"
+"POT-Creation-Date: 2015-08-04 06:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Invalid filter key %s, ignoring"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:295
+#: heat/api/openstack/v1/stacks.py:290
 #, python-format
 msgid "Old Engine Version: %s"
 msgstr ""
@@ -80,47 +80,52 @@ msgstr ""
 msgid "Attribute %(name)s is not of type %(att_type)s"
 msgstr ""
 
-#: heat/engine/environment.py:241 heat/engine/environment.py:247
+#: heat/engine/environment.py:240 heat/engine/environment.py:246
 #, python-format
 msgid "Removing %(item)s from %(path)s"
 msgstr ""
 
-#: heat/engine/environment.py:260
+#: heat/engine/environment.py:259
 #, python-format
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:1146
+#: heat/engine/resource.py:1194
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1227
+#: heat/engine/resource.py:1275
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1270
+#: heat/engine/resource.py:1323
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1442
+#: heat/engine/resource.py:1360
+#, python-format
+msgid "Resolving 'show' attribute has failed : %s"
+msgstr ""
+
+#: heat/engine/resource.py:1533
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:1198
+#: heat/engine/service.py:1202
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1455
+#: heat/engine/service.py:1459
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1484
+#: heat/engine/service.py:1488
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -192,7 +197,7 @@ msgid ""
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:503
+#: heat/engine/clients/os/nova.py:504
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
@@ -201,7 +206,7 @@ msgstr ""
 msgid "Cannot generate signed url, unable to create keypair"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:169
+#: heat/engine/resources/stack_resource.py:171
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
@@ -215,11 +220,11 @@ msgstr ""
 msgid "Overwriting Metadata item for id %s!"
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/eip.py:402
+#: heat/engine/resources/aws/ec2/eip.py:407
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:384
+#: heat/engine/resources/openstack/neutron/port.py:410
 #, python-format
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
@@ -229,14 +234,14 @@ msgstr ""
 msgid "Head container failed: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:371
+#: heat/engine/resources/openstack/trove/os_database.py:373
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
 "instance.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/trove_cluster.py:166
+#: heat/engine/resources/openstack/trove/trove_cluster.py:168
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
@@ -268,7 +273,7 @@ msgstr ""
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:166
+#: heat/tests/generic_resource.py:158
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""

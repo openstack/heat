@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b2.dev397\n"
+"Project-Id-Version: heat 5.0.0.0b3.dev76\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-29 06:18+0000\n"
+"POT-Creation-Date: 2015-08-04 06:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -118,25 +118,25 @@ msgstr ""
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
 
-#: heat/engine/api.py:41
+#: heat/engine/api.py:43
 msgid "Timeout conversion failed"
 msgstr ""
 
-#: heat/engine/api.py:333
+#: heat/engine/api.py:340
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:613
+#: heat/engine/environment.py:599
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:625
+#: heat/engine/environment.py:611
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:629
+#: heat/engine/environment.py:615
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -151,31 +151,31 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:628
+#: heat/engine/resource.py:632
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:1177 heat/engine/resource.py:1222
-#: heat/engine/resource.py:1240
+#: heat/engine/resource.py:1225 heat/engine/resource.py:1270
+#: heat/engine/resource.py:1298
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1428
+#: heat/engine/resource.py:1519
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:371
+#: heat/engine/service.py:370
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1478
+#: heat/engine/service.py:1482
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service.py:1627
+#: heat/engine/service.py:1631
 #, python-format
 msgid "Service %(service_id)s update failed: %(error)s"
 msgstr ""
@@ -210,16 +210,16 @@ msgstr ""
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/worker.py:83
+#: heat/engine/worker.py:89
 #, python-format
-msgid "WorkerService is failed to stop, %s"
+msgid "%(topic)s is failed to stop, %(exc)s"
 msgstr ""
 
 #: heat/engine/clients/os/zaqar.py:40
 msgid "Zaqar connection failed, no auth_token!"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:428
+#: heat/engine/resources/stack_resource.py:430
 msgid "update_stack"
 msgstr ""
 
@@ -232,14 +232,14 @@ msgstr ""
 msgid "Failed sending error notification"
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/eip.py:114
+#: heat/engine/resources/aws/ec2/eip.py:116
 msgid ""
 "No default floating IP pool configured. Set 'default_floating_pool' in "
 "nova.conf."
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/eip.py:335
-#: heat/engine/resources/aws/ec2/eip.py:358
+#: heat/engine/resources/aws/ec2/eip.py:339
+#: heat/engine/resources/aws/ec2/eip.py:362
 msgid "Port not specified."
 msgstr ""
 
@@ -248,7 +248,7 @@ msgstr ""
 msgid "exception: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/nova_floatingip.py:79
+#: heat/engine/resources/openstack/nova/nova_floatingip.py:82
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
