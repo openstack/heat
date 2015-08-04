@@ -131,6 +131,8 @@ class TroveCluster(resource.Resource):
 
     default_client_name = 'trove'
 
+    entity = 'clusters'
+
     def _cluster_name(self):
         return self.properties[self.NAME] or self.physical_resource_name()
 

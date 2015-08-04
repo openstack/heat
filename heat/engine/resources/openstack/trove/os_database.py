@@ -276,6 +276,8 @@ class OSDBInstance(resource.Resource):
 
     default_client_name = 'trove'
 
+    entity = 'instances'
+
     def __init__(self, name, json_snippet, stack):
         super(OSDBInstance, self).__init__(name, json_snippet, stack)
         self._href = None
