@@ -107,6 +107,7 @@ heat.tests.test_exception
 heat.tests.test_function
 heat.tests.test_glance_image
 heat.tests.test_grouputils
+heat.tests.test_hot
 heat.tests.test_identifier
 heat.tests.test_instance_group
 heat.tests.test_instance_group_update_policy
@@ -156,6 +157,7 @@ heat.tests.test_template_format
 heat.tests.test_timeutils
 heat.tests.test_trove_cluster
 heat.tests.test_urlfetch
+heat.tests.test_validate
 heat.tests.test_version
 heat.tests.test_vpc
 heat.tests.test_watch

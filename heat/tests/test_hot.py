@@ -203,8 +203,8 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         err = self.assertRaises(exception.StackValidationFailed,
                                 tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('u\'"Type" is not a valid keyword '
-                         'inside a resource definition\'',
+        self.assertEqual('"Type" is not a valid keyword '
+                         'inside a resource definition',
                          six.text_type(err))
 
     def test_translate_resources_bad_properties(self):
@@ -228,8 +228,8 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         err = self.assertRaises(exception.StackValidationFailed,
                                 tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('u\'"Properties" is not a valid keyword '
-                         'inside a resource definition\'',
+        self.assertEqual('"Properties" is not a valid keyword '
+                         'inside a resource definition',
                          six.text_type(err))
 
     def test_translate_resources_resources_without_name(self):
@@ -272,8 +272,9 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         err = self.assertRaises(exception.StackValidationFailed,
                                 tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('u\'"Metadata" is not a valid keyword '
-                         'inside a resource definition\'',
+
+        self.assertEqual('"Metadata" is not a valid keyword '
+                         'inside a resource definition',
                          six.text_type(err))
 
     def test_translate_resources_bad_depends_on(self):
@@ -297,8 +298,8 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         err = self.assertRaises(exception.StackValidationFailed,
                                 tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('u\'"DependsOn" is not a valid keyword '
-                         'inside a resource definition\'',
+        self.assertEqual('"DependsOn" is not a valid keyword '
+                         'inside a resource definition',
                          six.text_type(err))
 
     def test_translate_resources_bad_deletion_policy(self):
@@ -322,8 +323,8 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         err = self.assertRaises(exception.StackValidationFailed,
                                 tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('u\'"DeletionPolicy" is not a valid keyword '
-                         'inside a resource definition\'',
+        self.assertEqual('"DeletionPolicy" is not a valid keyword '
+                         'inside a resource definition',
                          six.text_type(err))
 
     def test_translate_resources_bad_update_policy(self):
@@ -347,8 +348,8 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         err = self.assertRaises(exception.StackValidationFailed,
                                 tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('u\'"UpdatePolicy" is not a valid keyword '
-                         'inside a resource definition\'',
+        self.assertEqual('"UpdatePolicy" is not a valid keyword '
+                         'inside a resource definition',
                          six.text_type(err))
 
     def test_translate_outputs_good(self):

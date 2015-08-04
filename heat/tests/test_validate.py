@@ -218,13 +218,7 @@ test_template_invalid_resources = '''
         }
     },
     "Resources" : {
-        "Type" : "AWS::EC2::Instance",
-        "Metadata" : {
-        },
-        "Properties" : {
-            "ImageId" : { "Ref" : "centos-6.4-20130701-0" },
-            "InstanceType" : { "Ref" : "InstanceType" }
-         }
+        "Type" : "AWS::EC2::Instance"
     }
 }
 '''
@@ -1226,8 +1220,8 @@ class ValidateTest(common.HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'u\'"Type" is not a valid keyword '
-                                   'inside a resource definition\''}, res)
+        self.assertEqual({'Error': '"Type" is not a valid keyword '
+                                   'inside a resource definition'}, res)
 
     def test_validate_template_with_invalid_resource_properties(self):
         hot_tpl = template_format.parse('''
@@ -1247,8 +1241,8 @@ class ValidateTest(common.HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'u\'"Properties" is not a valid keyword '
-                                   'inside a resource definition\''}, res)
+        self.assertEqual({'Error': '"Properties" is not a valid keyword '
+                                   'inside a resource definition'}, res)
 
     def test_validate_template_with_invalid_resource_matadata(self):
         hot_tpl = template_format.parse('''
@@ -1268,8 +1262,8 @@ class ValidateTest(common.HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'u\'"Metadata" is not a valid keyword '
-                                   'inside a resource definition\''}, res)
+        self.assertEqual({'Error': '"Metadata" is not a valid keyword '
+                                   'inside a resource definition'}, res)
 
     def test_validate_template_with_invalid_resource_depends_on(self):
         hot_tpl = template_format.parse('''
@@ -1289,8 +1283,8 @@ class ValidateTest(common.HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'u\'"DependsOn" is not a valid keyword '
-                                   'inside a resource definition\''}, res)
+        self.assertEqual({'Error': '"DependsOn" is not a valid keyword '
+                                   'inside a resource definition'}, res)
 
     def test_validate_template_with_invalid_resource_deletion_policy(self):
         hot_tpl = template_format.parse('''
@@ -1310,8 +1304,8 @@ class ValidateTest(common.HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'u\'"DeletionPolicy" is not a valid '
-                                   'keyword inside a resource definition\''},
+        self.assertEqual({'Error': '"DeletionPolicy" is not a valid '
+                                   'keyword inside a resource definition'},
                          res)
 
     def test_validate_template_with_invalid_resource_update_policy(self):
@@ -1332,8 +1326,8 @@ class ValidateTest(common.HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'u\'"UpdatePolicy" is not a valid '
-                                   'keyword inside a resource definition\''},
+        self.assertEqual({'Error': '"UpdatePolicy" is not a valid '
+                                   'keyword inside a resource definition'},
                          res)
 
     def test_unregistered_key(self):
@@ -1342,7 +1336,8 @@ class ValidateTest(common.HeatTestCase):
         template = tmpl.Template(t, env=environment.Environment(params))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
-        self._mock_get_image_id_success('image_name', 'image_id')
+        self.stub_FlavorConstraint_validate()
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1361,6 +1356,8 @@ class ValidateTest(common.HeatTestCase):
                                      exception.EntityNotFound(
                                          entity='Image',
                                          name='image_name'))
+        self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1380,6 +1377,8 @@ class ValidateTest(common.HeatTestCase):
                                      exception.PhysicalResourceNameAmbiguity(
                                          name='image_name'))
 
+        self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1433,6 +1432,7 @@ class ValidateTest(common.HeatTestCase):
             glance_exceptions.ClientException(500))
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
         glance.GlanceClientPlugin._create().AndReturn(self.gc)
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)

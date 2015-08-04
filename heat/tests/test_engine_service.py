@@ -2852,12 +2852,8 @@ class StackServiceTest(common.HeatTestCase):
                                self.eng._validate_new_stack,
                                self.ctx, 'test_existing_stack',
                                parsed_template)
-        msg = (u'u\'"Type" is not a valid keyword '
-               'inside a resource definition\'')
-
-        if six.PY3:
-            msg = ('\'"Type" is not a valid keyword inside a '
-                   'resource definition\'')
+        msg = (u'"Type" is not a valid keyword '
+               'inside a resource definition')
 
         self.assertEqual(msg, six.text_type(ex))
 

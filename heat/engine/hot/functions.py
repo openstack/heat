@@ -408,13 +408,18 @@ class Digest(function.Function):
             msg = _('Function "%s" usage: ["<algorithm>", "<value>"]')
             raise ValueError(msg % self.fn_name)
 
-        if args[0].lower() not in hashlib.algorithms:
+        if six.PY3:
+            algorithms = hashlib.algorithms_available
+        else:
+            algorithms = hashlib.algorithms
+
+        if args[0].lower() not in algorithms:
             msg = _('Algorithm must be one of %s')
-            raise ValueError(msg % six.text_type(hashlib.algorithms))
+            raise ValueError(msg % six.text_type(algorithms))
 
     def digest(self, algorithm, value):
         _hash = hashlib.new(algorithm)
-        _hash.update(value)
+        _hash.update(six.b(value))
 
         return _hash.hexdigest()
 
