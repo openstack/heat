@@ -234,10 +234,10 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
-                         '((3, True), (5, True)), '
-                         '((3, True), (4, True)), '
                          '((1, True), (3, True)), '
-                         '((2, True), (3, True))])',
+                         '((2, True), (3, True)), '
+                         '((3, True), (4, True)), '
+                         '((3, True), (5, True))])',
                          repr(stack.convergence_dependencies))
 
         stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
@@ -327,16 +327,16 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
-                         '((7, True), (8, True)), '
-                         '((8, True), (5, True)), '
-                         '((8, True), (4, True)), '
-                         '((6, True), (8, True)), '
-                         '((3, False), (2, False)), '
                          '((3, False), (1, False)), '
+                         '((3, False), (2, False)), '
+                         '((4, False), (3, False)), '
+                         '((4, False), (4, True)), '
                          '((5, False), (3, False)), '
                          '((5, False), (5, True)), '
-                         '((4, False), (3, False)), '
-                         '((4, False), (4, True))])',
+                         '((6, True), (8, True)), '
+                         '((7, True), (8, True)), '
+                         '((8, True), (4, True)), '
+                         '((8, True), (5, True))])',
                          repr(curr_stack.convergence_dependencies))
 
         stack_db = stack_object.Stack.get_by_id(curr_stack.context,
@@ -451,10 +451,10 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
         self.assertEqual('Dependencies(['
-                         '((3, False), (2, False)), '
                          '((3, False), (1, False)), '
-                         '((5, False), (3, False)), '
-                         '((4, False), (3, False))])',
+                         '((3, False), (2, False)), '
+                         '((4, False), (3, False)), '
+                         '((5, False), (3, False))])',
                          repr(curr_stack.convergence_dependencies))
 
         stack_db = stack_object.Stack.get_by_id(curr_stack.context,
@@ -604,7 +604,7 @@ class StackCreateTest(common.HeatTestCase):
         stack.create()
 
         self.assertIsNotNone(stack['WebServer'])
-        self.assertTrue(stack['WebServer'].resource_id > 0)
+        self.assertTrue(int(stack['WebServer'].resource_id) > 0)
         self.assertNotEqual(stack['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_adopt(self):
@@ -670,7 +670,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
 
         self.assertIsNotNone(stack['WebServer'])
-        self.assertTrue(stack['WebServer'].resource_id > 0)
+        self.assertTrue(int(stack['WebServer'].resource_id) > 0)
 
         self.patchobject(fc.servers, 'delete',
                          side_effect=fakes_nova.fake_exception())
@@ -2156,7 +2156,8 @@ class StackServiceTest(common.HeatTestCase):
                      'description': 'Dummy Func1'},
                     {'functions': 'dummy2',
                      'description': 'Dummy Func2'}]
-        self.assertEqual(sorted(expected), sorted(functions))
+        self.assertEqual(sorted(expected, key=lambda k: k['functions']),
+                         sorted(functions, key=lambda k: k['functions']))
 
     @mock.patch.object(res.Resource, 'is_service_available')
     def test_list_resource_types_unavailable(
@@ -2915,11 +2916,11 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIsInstance(stack['resources'], list)
         self.assertEqual(2, len(stack['resources']))
 
-        resource_types = (r['resource_type'] for r in stack['resources'])
+        resource_types = set(r['resource_type'] for r in stack['resources'])
         self.assertIn('GenericResource1', resource_types)
         self.assertIn('GenericResource2', resource_types)
 
-        resource_names = (r['resource_name'] for r in stack['resources'])
+        resource_names = set(r['resource_name'] for r in stack['resources'])
         self.assertIn('SampleResource1', resource_names)
         self.assertIn('SampleResource2', resource_names)
 
@@ -2970,6 +2971,11 @@ class StackServiceTest(common.HeatTestCase):
                                parsed_template)
         msg = (u'u\'"Type" is not a valid keyword '
                'inside a resource definition\'')
+
+        if six.PY3:
+            msg = ('\'"Type" is not a valid keyword inside a '
+                   'resource definition\'')
+
         self.assertEqual(msg, six.text_type(ex))
 
     def test_validate_new_stack_checks_incorrect_sections(self):

@@ -242,7 +242,7 @@ def format_stack_preview(stack):
         return format_stack_resource(res, with_props=True)
 
     fmt_stack = format_stack(stack, preview=True)
-    fmt_resources = map(format_resource, stack.preview_resources())
+    fmt_resources = list(map(format_resource, stack.preview_resources()))
     fmt_stack['resources'] = fmt_resources
 
     return fmt_stack
