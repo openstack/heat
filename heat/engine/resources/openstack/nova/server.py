@@ -1386,8 +1386,7 @@ class Server(stack_user.StackUser):
 
     def handle_snapshot_delete(self, state):
         if state[0] != self.FAILED:
-            client = self.nova()
-            image_id = client.servers.create_image(
+            image_id = self.client().servers.create_image(
                 self.resource_id, self.physical_resource_name())
             return nova_cp.ServerDeleteProgress(
                 self.resource_id, image_id, False)
@@ -1415,7 +1414,7 @@ class Server(stack_user.StackUser):
             return True
 
         if not progress.image_complete:
-            image = self.nova().images.get(progress.image_id)
+            image = self.client().images.get(progress.image_id)
             if image.status in ('DELETED', 'ERROR'):
                 raise exception.Error(image.status)
             elif image.status == 'ACTIVE':
