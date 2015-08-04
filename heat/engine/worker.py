@@ -24,7 +24,6 @@ from heat.common import exception
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common import messaging as rpc_messaging
-from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import stack as parser
 from heat.engine import sync_point
@@ -180,14 +179,9 @@ class WorkerService(service.Service):
 
         return False
 
-    def _compute_dependencies(self, stack):
-        current_deps = ([tuple(i), (tuple(j) if j is not None else None)]
-                        for i, j in stack.current_deps['edges'])
-        return dependencies.Dependencies(edges=current_deps)
-
     def _retrigger_check_resource(self, cnxt, is_update, resource_id, stack):
         current_traversal = stack.current_traversal
-        graph = self._compute_dependencies(stack).graph()
+        graph = stack.convergence_dependencies.graph()
         key = (resource_id, is_update)
         predecessors = graph[key]
 
@@ -204,7 +198,7 @@ class WorkerService(service.Service):
     def _initiate_propagate_resource(self, cnxt, resource_id,
                                      current_traversal, is_update, rsrc,
                                      stack):
-        deps = self._compute_dependencies(stack)
+        deps = stack.convergence_dependencies
         graph = deps.graph()
         graph_key = (resource_id, is_update)
 

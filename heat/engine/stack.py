@@ -144,6 +144,7 @@ class Stack(collections.Mapping):
         self.current_deps = current_deps
         self.cache_data = cache_data
         self._worker_client = None
+        self._convg_deps = None
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -971,8 +972,13 @@ class Stack(collections.Mapping):
 
     def _converge_create_or_update(self):
         self._update_or_store_resources()
-        self.convergence_dependencies = self._convergence_dependencies(
-            self.ext_rsrcs_db, self.dependencies)
+        self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies)
+        # Store list of edges
+        self.current_deps = {
+            'edges': [[rqr, rqd] for rqr, rqd in
+                      self.convergence_dependencies.graph().edges()]}
+        self.store()
+
         LOG.info(_LI('convergence_dependencies: %s'),
                  self.convergence_dependencies)
 
@@ -984,12 +990,6 @@ class Stack(collections.Mapping):
         # create sync_point entry for stack
         sync_point.create(
             self.context, self.id, self.current_traversal, True, self.id)
-
-        # Store list of edges
-        self.current_deps = {
-            'edges': [[rqr, rqd] for rqr, rqd in
-                      self.convergence_dependencies.graph().edges()]}
-        self.store()
 
         leaves = set(self.convergence_dependencies.leaves())
         if not any(leaves):
@@ -1070,8 +1070,8 @@ class Stack(collections.Mapping):
                 )
                 rsrcs[existing_rsrc_db.name] = existing_rsrc_db
 
-    def _convergence_dependencies(self, existing_resources,
-                                  curr_template_dep):
+    def _compute_convg_dependencies(self, existing_resources,
+                                    curr_template_dep):
         dep = curr_template_dep.translate(lambda res: (res.id, True))
         if existing_resources:
             for rsrc_id, rsrc in existing_resources.items():
@@ -1085,7 +1085,17 @@ class Stack(collections.Mapping):
 
                 if (rsrc.id, True) in dep:
                     dep += (rsrc_id, False), (rsrc_id, True)
-        return dep
+
+        self._convg_deps = dep
+
+    @property
+    def convergence_dependencies(self):
+        if self._convg_deps is None:
+            current_deps = ([tuple(i), (tuple(j) if j is not None else None)]
+                            for i, j in self.current_deps['edges'])
+            self._convg_deps = dependencies.Dependencies(edges=current_deps)
+
+        return self._convg_deps
 
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE, event=None):
