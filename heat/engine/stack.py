@@ -974,8 +974,9 @@ class Stack(collections.Mapping):
         self._converge_create_or_update()
 
     def _converge_create_or_update(self):
-        self._update_or_store_resources()
-        self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies)
+        current_resources = self._update_or_store_resources()
+        self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies,
+                                         current_resources)
         # Store list of edges
         self.current_deps = {
             'edges': [[rqr, rqd] for rqr, rqd in
@@ -1065,10 +1066,13 @@ class Stack(collections.Mapping):
                     existing_rsrc_db, existing_rsrc_db.needed_by
                 )
                 rsrcs[existing_rsrc_db.name] = existing_rsrc_db
+        return rsrcs
 
     def _compute_convg_dependencies(self, existing_resources,
-                                    curr_template_dep):
-        dep = curr_template_dep.translate(lambda res: (res.id, True))
+                                    current_template_deps, current_resources):
+        def make_graph_key(rsrc):
+            return current_resources[rsrc.name].id, True
+        dep = current_template_deps.translate(make_graph_key)
         if existing_resources:
             for rsrc_id, rsrc in existing_resources.items():
                 dep += (rsrc_id, False), None
