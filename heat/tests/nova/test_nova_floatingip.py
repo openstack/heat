@@ -118,6 +118,10 @@ class NovaFloatingIPTest(common.HeatTestCase):
 
     def test_floating_ip_create(self):
         rsrc = self.prepare_floating_ip()
+
+        fip = mock.MagicMock()
+        fip.to_dict.return_value = {'fip': 'info'}
+        self.novaclient.floating_ips.get('1').AndReturn(fip)
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -127,6 +131,8 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.assertEqual('1', rsrc.FnGetRefId())
         self.assertEqual('11.0.0.1', rsrc.FnGetAtt('ip'))
         self.assertEqual('public', rsrc.FnGetAtt('pool'))
+
+        self.assertEqual({'fip': 'info'}, rsrc.FnGetAtt('show'))
 
         self.m.VerifyAll()
 

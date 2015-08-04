@@ -85,6 +85,8 @@ class KeyPair(resource.Resource):
 
     default_client_name = 'nova'
 
+    entity = 'keypairs'
+
     def __init__(self, name, json_snippet, stack):
         super(KeyPair, self).__init__(name, json_snippet, stack)
         self._public_key = None

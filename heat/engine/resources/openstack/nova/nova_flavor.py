@@ -49,6 +49,8 @@ class NovaFlavor(resource.Resource):
 
     default_client_name = 'nova'
 
+    entity = 'flavors'
+
     PROPERTIES = (
         RAM, VCPUS, DISK, SWAP, EPHEMERAL,
         RXTX_FACTOR, EXTRA_SPECS,

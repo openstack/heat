@@ -26,6 +26,8 @@ class ServerGroup(resource.Resource):
 
     default_client_name = 'nova'
 
+    entity = 'server_groups'
+
     PROPERTIES = (
         NAME, POLICIES
     ) = (

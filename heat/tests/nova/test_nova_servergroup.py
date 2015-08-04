@@ -105,3 +105,14 @@ class NovaServerGroupTest(common.HeatTestCase):
         self.sg_mgr.delete.assert_called_once_with('test')
         self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),
                          self.sg.state)
+
+    def test_sg_show_resourse(self):
+        self._create_sg('test')
+        self.sg.client = mock.MagicMock()
+        s_groups = mock.MagicMock()
+        sg = mock.MagicMock()
+        sg.to_dict.return_value = {'server_gr': 'info'}
+        s_groups.get.return_value = sg
+        self.sg.client().server_groups = s_groups
+        self.assertEqual({'server_gr': 'info'}, self.sg.FnGetAtt('show'))
+        s_groups.get.assert_called_once_with('test')

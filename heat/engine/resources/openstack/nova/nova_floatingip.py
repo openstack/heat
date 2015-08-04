@@ -58,6 +58,8 @@ class NovaFloatingIp(resource.Resource):
 
     default_client_name = 'nova'
 
+    entity = 'floating_ips'
+
     def __init__(self, name, json_snippet, stack):
         super(NovaFloatingIp, self).__init__(name, json_snippet, stack)
         self._floating_ip = None
