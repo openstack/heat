@@ -117,6 +117,8 @@ class BayModel(resource.Resource):
 
     default_client_name = 'magnum'
 
+    entity = 'baymodels'
+
     def handle_create(self):
         args = {
             'name': self.properties[self.NAME],
