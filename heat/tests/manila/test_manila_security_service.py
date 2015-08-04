@@ -170,3 +170,10 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
                                 scheduler.TaskRunner(ss.update, new_ss))
         msg = 'The Resource security_service requires replacement.'
         self.assertEqual(msg, six.text_type(err))
+
+    def test_show_resource(self):
+        sservice = self._create_resource('service', self.rsrc_defn, self.stack)
+        service = mock.Mock()
+        service.to_dict.return_value = {'attr': 'val'}
+        self.client.security_services.get.return_value = service
+        self.assertEqual({'attr': 'val'}, sservice.FnGetAtt('show'))

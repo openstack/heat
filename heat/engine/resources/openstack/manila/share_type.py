@@ -65,6 +65,8 @@ class ManilaShareType(resource.Resource):
 
     default_client_name = 'manila'
 
+    entity = 'share_types'
+
     def handle_create(self):
         share_type = self.client().share_types.create(
             name=self.properties.get(self.NAME),

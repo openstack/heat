@@ -84,6 +84,8 @@ class SecurityService(resource.Resource):
 
     default_client_name = 'manila'
 
+    entity = 'security_services'
+
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)

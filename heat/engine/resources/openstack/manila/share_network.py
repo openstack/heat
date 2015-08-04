@@ -105,6 +105,8 @@ class ManilaShareNetwork(resource.Resource):
 
     default_client_name = 'manila'
 
+    entity = 'share_networks'
+
     def _request_network(self):
         return self.client().share_networks.get(self.resource_id)
 
