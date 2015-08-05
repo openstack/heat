@@ -1418,6 +1418,12 @@ class ResourceTest(common.HeatTestCase):
         res_obj = res_objs['test_res_enc']
         self.assertEqual('string', res_obj.properties_data['prop1'])
 
+        # The properties data should be decrypted when the object is
+        # refreshed
+        res_obj = resource_objects.Resource.get_obj(res.context, res.id)
+        res_obj.refresh()
+        self.assertEqual('string', res_obj.properties_data['prop1'])
+
     def test_properties_data_no_encryption(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', False)
 

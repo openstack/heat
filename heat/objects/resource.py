@@ -159,7 +159,7 @@ class Resource(
     def update_and_save(self, values):
         resource_db = db_api.resource_get(self._context, self.id)
         resource_db.update_and_save(values)
-        return self._refresh()
+        return self.refresh()
 
     def select_and_update(self, values, expected_engine_id=None,
                           atomic_key=0):
@@ -167,16 +167,13 @@ class Resource(
                                       atomic_key=atomic_key,
                                       expected_engine_id=expected_engine_id)
 
-    def _refresh(self):
-        return self.__class__._from_db_object(
-            self,
-            self._context,
-            self.__class__.get_obj(self._context, self.id))
-
     def refresh(self, attrs=None):
         resource_db = db_api.resource_get(self._context, self.id)
         resource_db.refresh(attrs=attrs)
-        return self._refresh()
+        return self.__class__._from_db_object(
+            self,
+            self._context,
+            resource_db)
 
     @staticmethod
     def encrypt_properties_data(data):
