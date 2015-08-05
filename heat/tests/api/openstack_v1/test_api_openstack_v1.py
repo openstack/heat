@@ -4206,7 +4206,10 @@ class ActionControllerTest(ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('stack_cancel_update', {'stack_identity': stack_identity})
+            ('stack_cancel_update',
+             {'stack_identity': stack_identity,
+              'cancel_with_rollback': True}),
+            version='1.14'
         ).AndReturn(None)
         self.m.ReplayAll()
 

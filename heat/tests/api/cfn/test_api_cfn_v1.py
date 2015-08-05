@@ -886,7 +886,9 @@ class CfnStackControllerTest(common.HeatTestCase):
         rpc_client.EngineClient.call(
             dummy_req.context,
             ('stack_cancel_update',
-             {'stack_identity': identity})
+             {'stack_identity': identity,
+              'cancel_with_rollback': True}),
+            version='1.14'
         ).AndReturn(identity)
 
         self.m.ReplayAll()

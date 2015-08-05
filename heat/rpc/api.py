@@ -279,4 +279,6 @@ SNAPSHOT_KEYS = (
     'creation_time'
 )
 
-THREAD_MESSAGES = (THREAD_CANCEL,) = ('cancel',)
+THREAD_MESSAGES = (THREAD_CANCEL,
+                   THREAD_CANCEL_WITH_ROLLBACK
+                   ) = ('cancel', 'cancel_with_rollback')

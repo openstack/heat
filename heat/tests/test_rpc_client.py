@@ -243,7 +243,9 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def test_stack_cancel_update(self):
         self._test_engine_api('stack_cancel_update', 'call',
-                              stack_identity=self.identity)
+                              stack_identity=self.identity,
+                              cancel_with_rollback=False,
+                              version='1.14')
 
     def test_resource_signal(self):
         self._test_engine_api('resource_signal', 'call',
