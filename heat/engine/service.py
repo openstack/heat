@@ -273,7 +273,7 @@ class EngineService(service.Service):
 
     RPC_API_VERSION = '1.14'
 
-    def __init__(self, host, topic, manager=None):
+    def __init__(self, host, topic):
         super(EngineService, self).__init__()
         resources.initialise()
         self.host = host
