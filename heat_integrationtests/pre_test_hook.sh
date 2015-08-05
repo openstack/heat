@@ -30,9 +30,9 @@ echo -e 'notification_driver=messagingv2\n' >> $localconf
 echo -e 'num_engine_workers=2\n' >> $localconf
 echo -e 'plugin_dirs=$HEAT_DIR/heat_integrationtests/common/test_resources\n' >> $localconf
 echo -e 'hidden_stack_tags=hidden\n' >> $localconf
+echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf
 
 echo -e '[heat_api]\nworkers=1\n' >> $localconf
 echo -e '[heat_api_cfn]\nworkers=1\n' >> $localconf
-echo -e '[heat_api_cloudwatch]\nworkers=1' >> $localconf
-echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf
+echo -e '[heat_api_cloudwatch]\nworkers=1\n' >> $localconf
 
