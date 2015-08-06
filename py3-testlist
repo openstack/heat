@@ -37,6 +37,7 @@ heat.tests.db.test_sqlalchemy_api
 heat.tests.db.test_sqlalchemy_filters
 heat.tests.db.test_sqlalchemy_types
 heat.tests.db.test_utils
+heat.tests.engine.test_engine_worker
 heat.tests.engine.test_service_engine
 heat.tests.engine.test_stack_action
 heat.tests.engine.test_stack_create
@@ -85,6 +86,7 @@ heat.tests.test_crypt
 heat.tests.test_cw_alarm
 heat.tests.test_dbinstance
 heat.tests.test_empty_stack
+heat.tests.test_engine_api_utils
 heat.tests.test_engine_service
 heat.tests.test_engine_service_stack_watch
 heat.tests.test_environment

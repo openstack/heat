@@ -294,7 +294,14 @@ class FormatTest(common.HeatTestCase):
         self.assertIsNone(stack.get('status_reason'))
         self.assertEqual('test_stack', stack['stack_name'])
         self.assertIn('resources', stack)
-        self.assertEqual(['fmt1', ['fmt2', ['fmt3']]], stack['resources'])
+        resources = list(stack['resources'])
+        self.assertEqual('fmt1', resources[0])
+
+        resources = list(resources[1])
+        self.assertEqual('fmt2', resources[0])
+
+        resources = list(resources[1])
+        self.assertEqual('fmt3', resources[0])
 
         kwargs = mock_fmt_resource.call_args[1]
         self.assertTrue(kwargs['with_props'])
