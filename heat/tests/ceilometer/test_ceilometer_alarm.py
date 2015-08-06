@@ -152,7 +152,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         super(CeilometerAlarmTest, self).setUp()
         self.fa = mock.Mock()
 
-    def create_stack(self, template=None, time_constraints=[]):
+    def create_stack(self, template=None, time_constraints=None):
         if template is None:
             template = alarm_template
         temp = template_format.parse(template)
@@ -174,7 +174,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
         al['ok_actions'] = None
         al['repeat_actions'] = True
         al['enabled'] = True
-        al['time_constraints'] = time_constraints
+        al['time_constraints'] = time_constraints if time_constraints else []
+        al['severity'] = 'low'
         rule = dict(
             period=60,
             evaluation_periods=1,
@@ -640,7 +641,8 @@ class CombinationAlarmTest(common.HeatTestCase):
             repeat_actions=True,
             combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
                               'operator': u'and'},
-            time_constraints=[]
+            time_constraints=[],
+            severity='low'
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(combination_alarm_template)
         self.stack = utils.parse_stack(snippet)
