@@ -32,6 +32,11 @@ function _heat_set_user {
 }
 
 function create {
+    # run heat_integrationtests instead of tempest smoke before create
+    pushd $BASE_DEVSTACK_DIR/../heat
+    tox -eintegration heat_integrationtests.functional.test_create_update
+    popd
+
     # creates a tenant for the server
     eval $(openstack project create -f shell -c id $HEAT_PROJECT)
     if [[ -z "$id" ]]; then

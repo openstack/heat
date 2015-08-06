@@ -2,3 +2,5 @@ register_project_for_upgrade heat
 register_db_to_save heat
 devstack_localrc base enable_service h-api h-api-cfn h-api-cw h-eng heat tempest ceilometer-alarm-evaluator ceilometer-alarm-notifier ceilometer-anotification
 devstack_localrc target enable_service h-api h-api-cfn h-api-cw h-eng heat tempest ceilometer-alarm-evaluator ceilometer-alarm-notifier ceilometer-anotification
+BASE_RUN_SMOKE=False
+TARGET_RUN_SMOKE=False
