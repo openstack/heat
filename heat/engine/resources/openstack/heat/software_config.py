@@ -81,7 +81,7 @@ class SoftwareConfig(resource.Resource):
             _('Type of the value of the input.'),
             default='String',
             constraints=[constraints.AllowedValues((
-                'String', 'Number', 'CommaDelimitedList', 'Json'))]
+                'String', 'Number', 'CommaDelimitedList', 'Json', 'Boolean'))]
         ),
         DEFAULT: properties.Schema(
             properties.Schema.STRING,
@@ -104,7 +104,7 @@ class SoftwareConfig(resource.Resource):
             _('Type of the value of the output.'),
             default='String',
             constraints=[constraints.AllowedValues((
-                'String', 'Number', 'CommaDelimitedList', 'Json'))]
+                'String', 'Number', 'CommaDelimitedList', 'Json', 'Boolean'))]
         ),
         ERROR_OUTPUT: properties.Schema(
             properties.Schema.BOOLEAN,
