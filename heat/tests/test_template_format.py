@@ -99,7 +99,8 @@ class YamlMinimalTest(common.HeatTestCase):
     def test_long_yaml(self):
         template = {'HeatTemplateFormatVersion': '2012-12-12'}
         config.cfg.CONF.set_override('max_template_size', 1024)
-        template['Resources'] = ['a'] * (config.cfg.CONF.max_template_size / 3)
+        template['Resources'] = ['a'] * int(
+            config.cfg.CONF.max_template_size / 3)
         limit = config.cfg.CONF.max_template_size
         long_yaml = yaml.safe_dump(template)
         self.assertTrue(len(long_yaml) > limit)
@@ -151,7 +152,8 @@ class YamlParseExceptions(common.HeatTestCase):
         ('scanner', dict(raised_exception=yaml.scanner.ScannerError())),
         ('parser', dict(raised_exception=yaml.parser.ParserError())),
         ('reader',
-         dict(raised_exception=yaml.reader.ReaderError('', 42, 'x', '', ''))),
+         dict(raised_exception=yaml.reader.ReaderError(
+             '', 42, six.b('x'), '', ''))),
     ]
 
     def test_parse_to_value_exception(self):

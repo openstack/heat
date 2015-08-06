@@ -140,6 +140,8 @@ heat.tests.test_support
 heat.tests.test_swift
 heat.tests.test_swiftsignal
 heat.tests.test_sync_point
+heat.tests.test_template
+heat.tests.test_template_format
 heat.tests.test_timeutils
 heat.tests.test_trove_cluster
 heat.tests.test_urlfetch
