@@ -346,8 +346,6 @@ class NovaClientPluginUserdataTests(NovaClientPluginTestCase):
 
     def test_build_userdata_without_instance_user(self):
         """Don't add a custom instance user when not requested."""
-        cfg.CONF.set_override('instance_user',
-                              'config_instance_user')
         cfg.CONF.set_override('heat_metadata_server_url',
                               'http://server.test:123')
         cfg.CONF.set_override('heat_watch_server_url',
@@ -355,19 +353,18 @@ class NovaClientPluginUserdataTests(NovaClientPluginTestCase):
         data = self.nova_plugin.build_userdata({}, instance_user=None)
         self.assertNotIn('user: ', data)
         self.assertNotIn('useradd', data)
-        self.assertNotIn('config_instance_user', data)
+        self.assertNotIn('ec2-user', data)
 
     def test_build_userdata_with_instance_user(self):
-        """Add the custom instance user when requested."""
-        self.m.StubOutWithMock(nova.cfg, 'CONF')
-        cnf = nova.cfg.CONF
-        cnf.instance_user = 'config_instance_user'
-        cnf.heat_metadata_server_url = 'http://server.test:123'
-        cnf.heat_watch_server_url = 'http://server.test:345'
-        data = self.nova_plugin.build_userdata(
-            None, instance_user="custominstanceuser")
-        self.assertNotIn('config_instance_user', data)
-        self.assertIn("custominstanceuser", data)
+        """Add a custom instance user."""
+        cfg.CONF.set_override('heat_metadata_server_url',
+                              'http://server.test:123')
+        cfg.CONF.set_override('heat_watch_server_url',
+                              'http://server.test:345')
+        data = self.nova_plugin.build_userdata({}, instance_user='ec2-user')
+        self.assertIn('user: ', data)
+        self.assertIn('useradd', data)
+        self.assertIn('ec2-user', data)
 
 
 class NovaClientPluginMetadataTests(NovaClientPluginTestCase):

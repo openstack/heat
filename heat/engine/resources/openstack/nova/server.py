@@ -36,7 +36,6 @@ from heat.engine import scheduler
 from heat.engine import support
 from heat.rpc import api as rpc_api
 
-cfg.CONF.import_opt('instance_user', 'heat.common.config')
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
 cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
 
@@ -688,17 +687,10 @@ class Server(stack_user.StackUser):
             self._create_transport_credentials()
             self._populate_deployments_metadata(metadata)
 
-        if self.properties[self.ADMIN_USER]:
-            instance_user = self.properties[self.ADMIN_USER]
-        elif cfg.CONF.instance_user:
-            instance_user = cfg.CONF.instance_user
-        else:
-            instance_user = None
-
         userdata = self.client_plugin().build_userdata(
             metadata,
             ud_content,
-            instance_user=instance_user,
+            instance_user=None,
             user_data_format=user_data_format)
 
         flavor = self.properties[self.FLAVOR]

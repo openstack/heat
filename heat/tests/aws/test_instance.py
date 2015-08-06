@@ -1411,50 +1411,9 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual('0.0.0.0', instance.FnGetAtt('PrivateIp'))
 
     def test_default_instance_user(self):
-        """The default value for instance_user in heat.conf is ec2-user."""
+        """CFN instances automatically create the `ec2-user` admin user."""
         return_server = self.fc.servers.list()[1]
         instance = self._setup_test_instance(return_server, 'default_user')
-        metadata = instance.metadata_get()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata, 'wordpress', 'ec2-user')
-        self.m.ReplayAll()
-        scheduler.TaskRunner(instance.create)()
-        self.m.VerifyAll()
-
-    def test_custom_instance_user(self):
-        """Test instance_user in heat.conf being set to a custom value.
-
-        Launching the instance should call build_userdata with the custom user
-        name.
-
-        This option is deprecated and will be removed in Juno.
-        """
-        return_server = self.fc.servers.list()[1]
-        instance = self._setup_test_instance(return_server, 'custom_user')
-        self.m.StubOutWithMock(instances.cfg.CONF, 'instance_user')
-        instances.cfg.CONF.instance_user = 'custom_user'
-        metadata = instance.metadata_get()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata, 'wordpress', 'custom_user')
-        self.m.ReplayAll()
-        scheduler.TaskRunner(instance.create)()
-        self.m.VerifyAll()
-
-    def test_empty_instance_user(self):
-        """Test instance_user in heat.conf being empty.
-
-        Launching the instance should call build_userdata with
-        "ec2-user".
-
-        This behaviour is compatible with CloudFormation and will be
-        the default in Juno once the instance_user option gets removed.
-        """
-        return_server = self.fc.servers.list()[1]
-        instance = self._setup_test_instance(return_server, 'empty_user')
-        self.m.StubOutWithMock(instances.cfg.CONF, 'instance_user')
-        instances.cfg.CONF.instance_user = ''
         metadata = instance.metadata_get()
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
         nova.NovaClientPlugin.build_userdata(

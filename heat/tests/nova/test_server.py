@@ -2726,98 +2726,15 @@ class ServersTest(common.HeatTestCase):
                          server._resolve_attribute("networks"))
         self.m.VerifyAll()
 
-    def test_default_instance_user(self):
-        """Test instance_user is disabled by default."""
-        return_server = self.fc.servers.list()[1]
-        server = self._setup_test_server(return_server, 'default_user')
-        metadata = server.metadata_get()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            'wordpress',
-            instance_user=None,
-            user_data_format='HEAT_CFNTOOLS')
-        self.m.ReplayAll()
-        scheduler.TaskRunner(server.create)()
-        self.m.VerifyAll()
-
-    def test_admin_user_property(self):
-        """Test the admin_user property on the server overrides instance_user.
-
-        Launching the instance should call build_userdata with the
-        custom user name. This property is deprecated and will be
-        removed in Juno.
-        """
-        return_server = self.fc.servers.list()[1]
-        stack_name = 'stack_with_custom_admin_user_server'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['admin_user'] = 'custom_user'
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('create_metadata_test_server',
-                                resource_defns['WebServer'], stack)
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        image_id = mox.IgnoreArg()
-        self.fc.servers.create(
-            image=image_id, flavor=mox.IgnoreArg(), key_name='test',
-            name=mox.IgnoreArg(), security_groups=[],
-            userdata=mox.IgnoreArg(), scheduler_hints=None,
-            meta=mox.IgnoreArg(), nics=None, availability_zone=None,
-            block_device_mapping=None, block_device_mapping_v2=None,
-            config_drive=None, disk_config=None, reservation_id=None,
-            files={}, admin_pass=None).AndReturn(return_server)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self._mock_get_image_id_success('F17-x86_64-gold', image_id)
-        metadata = server.metadata_get()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            'wordpress',
-            instance_user='custom_user',
-            user_data_format='HEAT_CFNTOOLS')
-        self.m.ReplayAll()
-        scheduler.TaskRunner(server.create)()
-        self.m.VerifyAll()
-
-    def test_custom_instance_user(self):
-        """Test instance_user in heat.conf being set to a custom value.
-
-        Launching the instance should call build_userdata with the
-        custom user name.
-
-        This option is deprecated and will be removed in Juno.
-        """
-        return_server = self.fc.servers.list()[1]
-        server = self._setup_test_server(return_server, 'custom_user')
-        self.m.StubOutWithMock(servers.cfg.CONF, 'instance_user')
-        servers.cfg.CONF.instance_user = 'custom_user'
-        metadata = server.metadata_get()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            'wordpress',
-            instance_user='custom_user',
-            user_data_format='HEAT_CFNTOOLS')
-        self.m.ReplayAll()
-        scheduler.TaskRunner(server.create)()
-        self.m.VerifyAll()
-
     def test_empty_instance_user(self):
-        """Test instance_user in heat.conf being empty.
+        """Test Nova server doesn't set instance_user in build_userdata
 
-        Launching the instance should not pass any user to
+        Launching the instance should not pass any user name to
         build_userdata. The default cloud-init user set up for the image
         will be used instead.
-
-        This will the default behaviour in Juno once we remove the
-        instance_user option.
         """
         return_server = self.fc.servers.list()[1]
-        server = self._setup_test_server(return_server, 'custom_user')
-        self.m.StubOutWithMock(servers.cfg.CONF, 'instance_user')
-        servers.cfg.CONF.instance_user = ''
+        server = self._setup_test_server(return_server, 'without_user')
         metadata = server.metadata_get()
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
         nova.NovaClientPlugin.build_userdata(

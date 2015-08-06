@@ -28,7 +28,6 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
 
-cfg.CONF.import_opt('instance_user', 'heat.common.config')
 cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
@@ -549,14 +548,6 @@ class Instance(resource.Resource):
 
         server = None
 
-        # FIXME(shadower): the instance_user config option is deprecated. Once
-        # it's gone, we should always use ec2-user for compatibility with
-        # CloudFormation.
-        if cfg.CONF.instance_user:
-            instance_user = cfg.CONF.instance_user
-        else:
-            instance_user = 'ec2-user'
-
         try:
             server = self.client().servers.create(
                 name=self.physical_resource_name(),
@@ -565,7 +556,7 @@ class Instance(resource.Resource):
                 key_name=self.properties[self.KEY_NAME],
                 security_groups=security_groups,
                 userdata=self.client_plugin().build_userdata(
-                    self.metadata_get(), userdata, instance_user),
+                    self.metadata_get(), userdata, 'ec2-user'),
                 meta=self._get_nova_metadata(self.properties),
                 scheduler_hints=scheduler_hints,
                 nics=nics,
