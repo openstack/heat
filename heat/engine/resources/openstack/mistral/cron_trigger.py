@@ -13,6 +13,7 @@
 
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -46,7 +47,11 @@ class CronTrigger(resource.Resource):
         ),
         PATTERN: properties.Schema(
             properties.Schema.STRING,
-            _('Cron expression.')
+            _('Cron expression.'),
+            constraints=[
+                constraints.CustomConstraint(
+                    'cron_expression')
+            ]
         ),
         WORKFLOW: properties.Schema(
             properties.Schema.MAP,
