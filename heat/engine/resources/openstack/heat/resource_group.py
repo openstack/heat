@@ -218,8 +218,11 @@ class ResourceGroup(stack_resource.StackResource):
     }
 
     update_policy_schema = {
-        ROLLING_UPDATE: properties.Schema(properties.Schema.MAP,
-                                          schema=rolling_update_schema)
+        ROLLING_UPDATE: properties.Schema(
+            properties.Schema.MAP,
+            schema=rolling_update_schema,
+            support_status=support.SupportStatus(version='5.0.0')
+        )
     }
 
     def __init__(self, name, json_snippet, stack):
