@@ -121,7 +121,7 @@ Option *support_status* may be used for whole resource:
    class ResourceWithType(resource.Resource):
 
        support_status=support.SupportStatus(
-           version='2015.2',
+           version='5.0.0',
            message=_('Optional message')
        )
 
@@ -132,7 +132,7 @@ To define *support_status* for property or attribute, follow next steps:
    PROPERTY: properties.Schema(
        ...
        support_status=support.SupportStatus(
-           version='2015.2',
+           version='5.0.0',
            message=_('Optional message')
        )
    )
@@ -163,7 +163,7 @@ Using Support Status during resource deprecating looks like:
 
        support_status=support.SupportStatus(
            status=support.DEPRECATED,
-           version='2015.2',
+           version='5.0.0',
            message=_('Optional message'),
            previous_status=support.SupportStatus(version='2014.2')
        )
@@ -176,7 +176,7 @@ Using Support Status during attribute (or property) deprecating looks like:
        ...
        support_status=support.SupportStatus(
            status=support.DEPRECATED,
-           version='2015.2',
+           version='5.0.0',
            message=_('Optional message like: Use attribute new_attr'),
            previous_status=support.SupportStatus(
                version='2014.2',
@@ -194,7 +194,7 @@ status should be moved to *previous_status*, e.g.:
 
     support.SupportStatus(
         status=support.HIDDEN,
-        version='2015.2',
+        version='5.0.0',
         message=_('Some message'),
         previous_status=support.SupportStatus(
             status=support.DEPRECATED,
