@@ -118,7 +118,8 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
                 "resource_id": "5a517ceb-b068-4aca-9eb9-3e4eb9b90d9a",
                 "comparison_operator": "gt",
             },
-            time_constraints=[]
+            time_constraints=[],
+            severity='low',
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(gnocchi_resources_alarm_template)
         self.stack = utils.parse_stack(snippet)
@@ -261,7 +262,8 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
                 "metrics": ["911fce07-e0d7-4210-8c8c-4a9d811fcabc",
                             "2543d435-fe93-4443-9351-fb0156930f94"],
             },
-            time_constraints=[]
+            time_constraints=[],
+            severity='low',
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(
             gnocchi_aggregation_by_metrics_alarm_template)
@@ -337,7 +339,8 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
                 "resource_type": "instance",
                 "query": '{"=": {"server_group": "my_autoscaling_group"}}',
             },
-            time_constraints=[]
+            time_constraints=[],
+            severity='low',
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(
             gnocchi_aggregation_by_resources_alarm_template)

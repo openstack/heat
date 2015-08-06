@@ -23,17 +23,19 @@ from heat.engine import watchrule
 
 
 COMMON_PROPERTIES = (
-    ALARM_ACTIONS, OK_ACTIONS, REPEAT_ACTIONS, INSUFFICIENT_DATA_ACTIONS,
-    DESCRIPTION, ENABLED, TIME_CONSTRAINTS
+    ALARM_ACTIONS, OK_ACTIONS, REPEAT_ACTIONS,
+    INSUFFICIENT_DATA_ACTIONS, DESCRIPTION, ENABLED, TIME_CONSTRAINTS,
+    SEVERITY,
 ) = (
     'alarm_actions', 'ok_actions', 'repeat_actions',
-    'insufficient_data_actions', 'description', 'enabled', 'time_constraints'
+    'insufficient_data_actions', 'description', 'enabled', 'time_constraints',
+    'severity',
 )
 
 _TIME_CONSTRAINT_KEYS = (
     NAME, START, DURATION, TIMEZONE, TIME_CONSTRAINT_DESCRIPTION,
 ) = (
-    'name', 'start', 'duration', 'timezone', 'description'
+    'name', 'start', 'duration', 'timezone', 'description',
 )
 
 common_properties_schema = {
@@ -73,6 +75,16 @@ common_properties_schema = {
           "each time the threshold is reached."),
         default='true',
         update_allowed=True
+    ),
+    SEVERITY: properties.Schema(
+        properties.Schema.STRING,
+        _('Severity of the alarm.'),
+        default='low',
+        constraints=[
+            constraints.AllowedValues(['low', 'moderate', 'critical'])
+        ],
+        update_allowed=True,
+        support_status=support.SupportStatus(version='5.0.0'),
     ),
     TIME_CONSTRAINTS: properties.Schema(
         properties.Schema.LIST,
