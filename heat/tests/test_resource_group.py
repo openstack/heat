@@ -17,7 +17,11 @@ import mock
 import six
 
 from heat.common import exception
+from heat.common import template_format
+from heat.engine import function
 from heat.engine.resources.openstack.heat import resource_group
+from heat.engine import rsrc_defn
+from heat.engine import scheduler
 from heat.engine import stack as stackm
 from heat.tests import common
 from heat.tests import utils
@@ -182,6 +186,74 @@ class ResourceGroupTest(common.HeatTestCase):
             "resources": {}
         }
         self.assertEqual(expect, resg._assemble_nested([]))
+
+    def test_assemble_nested_rolling_update(self):
+        expect = {
+            "heat_template_version": "2013-05-23",
+            "resources": {
+                "0": {
+                    "depends_on": [],
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "baz"
+                    }
+                },
+                "1": {
+                    "depends_on": [],
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "bar"
+                    }
+                }
+            }
+        }
+        resource_def = {
+            "depends_on": [],
+            "type": "OverwrittenFnGetRefIdType",
+            "properties": {
+                "foo": "baz"
+            }
+        }
+        stack = utils.parse_stack(template)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        resg._nested = get_fake_nested_stack(['0', '1'])
+        resg._build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update(['0'], []))
+
+    def test_assemble_nested_rolling_update_none(self):
+        expect = {
+            "heat_template_version": "2013-05-23",
+            "resources": {
+                "0": {
+                    "depends_on": [],
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "bar"
+                    }
+                },
+                "1": {
+                    "depends_on": [],
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "bar"
+                    }
+                }
+            }
+        }
+        resource_def = {
+            "depends_on": [],
+            "type": "OverwrittenFnGetRefIdType",
+            "properties": {
+                "foo": "baz"
+            }
+        }
+        stack = utils.parse_stack(template)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        resg._nested = get_fake_nested_stack(['0', '1'])
+        resg._build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update([], []))
 
     def test_index_var(self):
         stack = utils.parse_stack(template_repl)
@@ -349,6 +421,44 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertEqual({}, resgrp.child_params())
+
+    def test_handle_create(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp.create_with_template = mock.Mock(return_value=None)
+        resgrp.handle_create()
+        self.assertEqual(1, resgrp.create_with_template.call_count)
+
+    def test_update_in_failed(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp.state_set('CREATE', 'FAILED')
+        resgrp._assemble_nested = mock.Mock(return_value='tmpl')
+        resgrp.properties.data[resgrp.COUNT] = 2
+        resgrp._assemble_nested_for_size = mock.Mock(return_value=None)
+        self.patchobject(scheduler.TaskRunner, 'start')
+        resgrp.handle_update(snip, None, None)
+        resgrp._assemble_nested_for_size.assert_called_once_with(2)
+
+    def test_handle_delete(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp.delete_nested = mock.Mock(return_value=None)
+        resgrp.handle_delete()
+        resgrp.delete_nested.assert_called_once_with()
+
+    def test_handle_update_size(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp._assemble_nested_for_size = mock.Mock(return_value=None)
+        resgrp.properties.data[resgrp.COUNT] = 5
+        self.patchobject(scheduler.TaskRunner, 'start')
+        resgrp.handle_update(snip, None, None)
+        resgrp._assemble_nested_for_size.assert_called_once_with(5)
 
 
 class ResourceGroupBlackList(common.HeatTestCase):
@@ -606,3 +716,327 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         names = [str(name) for name in range(expect_count)]
         resg._resource_names = mock.Mock(return_value=names)
         return resg
+
+
+class ReplaceTest(common.HeatTestCase):
+    # 1. no min_in_service
+    # 2. min_in_service > count and existing with no blacklist
+    # 3. min_in_service > count and existing with blacklist
+    # 4. existing > count and min_in_service with blacklist
+    # 5. existing > count and min_in_service with no blacklist
+    # 6. all existing blacklisted
+    # 7. count > existing and min_in_service with no blacklist
+    # 8. count > existing and min_in_service with blacklist
+    # 9. count < existing - blacklisted
+    # 10. pause_sec > 0
+
+    scenarios = [
+        ('1', dict(min_in_service=0, count=2,
+                   existing=['0', '1'], black_listed=['0'],
+                   batch_size=1, pause_sec=0, tasks=1)),
+        ('2', dict(min_in_service=3, count=2,
+                   existing=['0', '1'], black_listed=[],
+                   batch_size=2, pause_sec=0, tasks=2)),
+        ('3', dict(min_in_service=3, count=2,
+                   existing=['0', '1'], black_listed=['0'],
+                   batch_size=2, pause_sec=0, tasks=2)),
+        ('4', dict(min_in_service=3, count=2,
+                   existing=['0', '1', '2', '3'], black_listed=['2', '3'],
+                   batch_size=1, pause_sec=0, tasks=3)),
+        ('5', dict(min_in_service=2, count=2,
+                   existing=['0', '1', '2', '3'], black_listed=[],
+                   batch_size=2, pause_sec=0, tasks=1)),
+        ('6', dict(min_in_service=2, count=3,
+                   existing=['0', '1'], black_listed=['0', '1'],
+                   batch_size=2, pause_sec=0, tasks=0)),
+        ('7', dict(min_in_service=0, count=5,
+                   existing=['0', '1'], black_listed=[],
+                   batch_size=1, pause_sec=0, tasks=2)),
+        ('8', dict(min_in_service=0, count=5,
+                   existing=['0', '1'], black_listed=['0'],
+                   batch_size=1, pause_sec=0, tasks=1)),
+        ('9', dict(min_in_service=0, count=3,
+                   existing=['0', '1', '2', '3', '4', '5'],
+                   black_listed=['0'],
+                   batch_size=2, pause_sec=0, tasks=2)),
+        ('10', dict(min_in_service=0, count=3,
+                    existing=['0', '1', '2', '3', '4', '5'],
+                    black_listed=['0'],
+                    batch_size=2, pause_sec=10, tasks=3))]
+
+    def setUp(self):
+        super(ReplaceTest, self).setUp()
+        templ = copy.deepcopy(template)
+        self.stack = utils.parse_stack(templ)
+        snip = self.stack.t.resource_definitions(self.stack)['group1']
+        self.group = resource_group.ResourceGroup('test', snip, self.stack)
+        self.group.update_with_template = mock.Mock()
+        self.group.check_update_complete = mock.Mock()
+
+    def test_rolling_updates(self):
+        self.group._nested = get_fake_nested_stack(self.existing)
+        self.group.get_size = mock.Mock(return_value=self.count)
+        self.group._name_blacklist = mock.Mock(
+            return_value=set(self.black_listed))
+        tasks = self.group._replace(self.min_in_service, self.batch_size,
+                                    self.pause_sec)
+        self.assertEqual(self.tasks,
+                         len(tasks))
+
+
+def tmpl_with_bad_updt_policy():
+    t = copy.deepcopy(template)
+    rg = t['resources']['group1']
+    rg["update_policy"] = {"foo": {}}
+    return t
+
+
+def tmpl_with_default_updt_policy():
+    t = copy.deepcopy(template)
+    rg = t['resources']['group1']
+    rg["update_policy"] = {"rolling_update": {}}
+    return t
+
+
+def tmpl_with_updt_policy():
+    t = copy.deepcopy(template)
+    rg = t['resources']['group1']
+    rg["update_policy"] = {"rolling_update": {
+        "min_in_service": "1",
+        "max_batch_size": "2",
+        "pause_time": "1"
+    }}
+    return t
+
+
+def get_fake_nested_stack(names):
+    nested_t = '''
+    heat_template_version: 2015-04-30
+    description: Resource Group
+    resources:
+    '''
+    resource_snip = '''
+      '%s':
+        type: OverwrittenFnGetRefIdType
+        properties:
+          foo: bar
+    '''
+    resources = [nested_t]
+    for res_name in names:
+        resources.extend([resource_snip % res_name])
+
+    nested_t = ''.join(resources)
+    return utils.parse_stack(template_format.parse(nested_t))
+
+
+class RollingUpdatePolicyTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdatePolicyTest, self).setUp()
+
+    def test_parse_without_update_policy(self):
+        stack = utils.parse_stack(template)
+        stack.validate()
+        grp = stack['group1']
+        self.assertFalse(grp.update_policy['rolling_update'])
+
+    def test_parse_with_update_policy(self):
+        tmpl = tmpl_with_updt_policy()
+        stack = utils.parse_stack(tmpl)
+        stack.validate()
+        tmpl_grp = tmpl['resources']['group1']
+        tmpl_policy = tmpl_grp['update_policy']['rolling_update']
+        tmpl_batch_sz = int(tmpl_policy['max_batch_size'])
+        grp = stack['group1']
+        self.assertTrue(grp.update_policy)
+        self.assertEqual(1, len(grp.update_policy))
+        self.assertIn('rolling_update', grp.update_policy)
+        policy = grp.update_policy['rolling_update']
+        self.assertTrue(policy and len(policy) > 0)
+        self.assertEqual(1, int(policy['min_in_service']))
+        self.assertEqual(tmpl_batch_sz, int(policy['max_batch_size']))
+        self.assertEqual(1, policy['pause_time'])
+
+    def test_parse_with_default_update_policy(self):
+        tmpl = tmpl_with_default_updt_policy()
+        stack = utils.parse_stack(tmpl)
+        stack.validate()
+        grp = stack['group1']
+        self.assertTrue(grp.update_policy)
+        self.assertEqual(1, len(grp.update_policy))
+        self.assertIn('rolling_update', grp.update_policy)
+        policy = grp.update_policy['rolling_update']
+        self.assertTrue(policy and len(policy) > 0)
+        self.assertEqual(0, int(policy['min_in_service']))
+        self.assertEqual(1, int(policy['max_batch_size']))
+        self.assertEqual(0, policy['pause_time'])
+
+    def test_parse_with_bad_update_policy(self):
+        tmpl = tmpl_with_bad_updt_policy()
+        stack = utils.parse_stack(tmpl)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("foo", six.text_type(error))
+
+    def test_parse_with_max_pausetime_in_update_policy(self):
+        tmpl = tmpl_with_default_updt_policy()
+        group = tmpl['resources']['group1']
+        policy = group['update_policy']['rolling_update']
+        policy['pause_time'] = '7200'
+        stack = utils.parse_stack(tmpl)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("Maximum pause_time allowed is 1hr(3600s), "
+                      "provided 7200 seconds.", six.text_type(error))
+
+
+class RollingUpdatePolicyDiffTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdatePolicyDiffTest, self).setUp()
+
+    def validate_update_policy_diff(self, current, updated):
+        # load current stack
+        current_stack = utils.parse_stack(current)
+        current_grp = current_stack['group1']
+        current_grp_json = function.resolve(
+            current_grp.t)
+
+        updated_stack = utils.parse_stack(updated)
+        updated_grp = updated_stack['group1']
+        updated_grp_json = function.resolve(
+            updated_grp.t)
+
+        # identify the template difference
+        tmpl_diff = updated_grp.update_template_diff(
+            updated_grp_json, current_grp_json)
+        updated_policy = (updated_grp_json['UpdatePolicy']
+                          if 'UpdatePolicy' in updated_grp_json else None)
+        expected = {u'UpdatePolicy': updated_policy}
+        self.assertEqual(expected, tmpl_diff)
+
+        # test application of the new update policy in handle_update
+        update_snippet = rsrc_defn.ResourceDefinition(
+            current_grp.name,
+            current_grp.type(),
+            properties=updated_grp_json['Properties'],
+            update_policy=updated_policy)
+
+        current_grp._try_rolling_update = mock.Mock()
+        current_grp._assemble_nested_for_size = mock.Mock()
+        self.patchobject(scheduler.TaskRunner, 'start')
+        current_grp.handle_update(update_snippet, tmpl_diff, None)
+        if updated_policy is None:
+            self.assertEqual({}, current_grp.update_policy.data)
+        else:
+            self.assertEqual(updated_policy, current_grp.update_policy.data)
+
+    def test_update_policy_added(self):
+        self.validate_update_policy_diff(template,
+                                         tmpl_with_updt_policy())
+
+    def test_update_policy_updated(self):
+        updt_template = tmpl_with_updt_policy()
+        grp = updt_template['resources']['group1']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '2'
+        policy['max_batch_size'] = '4'
+        policy['pause_time'] = '90'
+        self.validate_update_policy_diff(tmpl_with_updt_policy(),
+                                         updt_template)
+
+    def test_update_policy_removed(self):
+        self.validate_update_policy_diff(tmpl_with_updt_policy(),
+                                         template)
+
+
+class RollingUpdateTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdateTest, self).setUp()
+
+    def check_with_update(self, with_policy=False, with_diff=False):
+        current = copy.deepcopy(template)
+        self.current_stack = utils.parse_stack(current)
+        self.current_grp = self.current_stack['group1']
+        current_grp_json = function.resolve(
+            self.current_grp.t)
+        prop_diff, tmpl_diff = None, None
+        updated = tmpl_with_updt_policy() if (
+            with_policy) else copy.deepcopy(template)
+        if with_diff:
+            res_def = updated['resources']['group1'][
+                'properties']['resource_def']
+            res_def['properties']['Foo'] = 'baz'
+            prop_diff = dict(
+                {'count': 2,
+                 'resource_def': {'properties': {'Foo': 'baz'},
+                                  'type': 'OverwrittenFnGetRefIdType'}})
+        updated_stack = utils.parse_stack(updated)
+        updated_grp = updated_stack['group1']
+        updated_grp_json = function.resolve(updated_grp.t)
+        tmpl_diff = updated_grp.update_template_diff(
+            updated_grp_json, current_grp_json)
+
+        updated_policy = updated_grp_json[
+            'UpdatePolicy']if 'UpdatePolicy' in updated_grp_json else None
+        update_snippet = rsrc_defn.ResourceDefinition(
+            self.current_grp.name,
+            self.current_grp.type(),
+            properties=updated_grp_json['Properties'],
+            update_policy=updated_policy)
+        self.current_grp._replace = mock.Mock(return_value=[])
+        self.current_grp._assemble_nested_for_size = mock.Mock()
+        self.patchobject(scheduler.TaskRunner, 'start')
+        self.current_grp.handle_update(update_snippet, tmpl_diff, prop_diff)
+
+    def test_update_without_policy_prop_diff(self):
+        self.check_with_update(with_diff=True)
+        self.current_grp._assemble_nested_for_size.assert_called_once_with(2)
+
+    def test_update_with_policy_prop_diff(self):
+        self.check_with_update(with_policy=True, with_diff=True)
+        self.current_grp._replace.assert_called_once_with(1, 2, 1)
+        self.current_grp._assemble_nested_for_size.assert_called_once_with(2)
+
+    def test_update_time_not_sufficient(self):
+        efft_capacity, efft_bat_sz, pause_sec = 5, 2, 100
+        current = copy.deepcopy(template)
+        self.stack = utils.parse_stack(current)
+        self.current_grp = self.stack['group1']
+        self.stack.timeout_secs = mock.Mock(return_value=200)
+        err = self.assertRaises(ValueError, self.current_grp._update_timeout,
+                                efft_capacity, efft_bat_sz, pause_sec)
+        self.assertIn('The current UpdatePolicy will result in stack update '
+                      'timeout.', six.text_type(err))
+
+    def test_update_time_sufficient(self):
+        efft_capacity, efft_bat_sz, pause_sec = 5, 2, 100
+        current = copy.deepcopy(template)
+        self.stack = utils.parse_stack(current)
+        self.current_grp = self.stack['group1']
+        self.stack.timeout_secs = mock.Mock(return_value=400)
+        self.assertEqual(200, self.current_grp._update_timeout(
+            efft_capacity, efft_bat_sz, pause_sec))
+
+
+class TestUtils(common.HeatTestCase):
+    # 1. No existing no blacklist
+    # 2. Existing with no blacklist
+    # 3. Existing with blacklist
+    scenarios = [
+        ('1', dict(existing=[], black_listed=[], count=0)),
+        ('2', dict(existing=['0', '1'], black_listed=[], count=0)),
+        ('3', dict(existing=['0', '1'], black_listed=['0'], count=1)),
+        ('4', dict(existing=['0', '1'], black_listed=['1', '2'], count=1))
+
+    ]
+
+    def setUp(self):
+        super(TestUtils, self).setUp()
+
+    def test_count_black_listed(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp._nested = get_fake_nested_stack(self.existing)
+        resgrp._name_blacklist = mock.Mock(return_value=set(self.black_listed))
+        rcount = resgrp._count_black_listed()
+        self.assertEqual(self.count, rcount)

@@ -16,14 +16,18 @@ import copy
 import itertools
 
 import six
+from six.moves import range
 
 from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
+from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources import stack_resource
+from heat.engine import rsrc_defn
+from heat.engine import scheduler
 from heat.engine import support
 from heat.engine import template
 
@@ -89,6 +93,14 @@ class ResourceGroup(stack_resource.StackResource):
     ) = (
         'resource_list',
     )
+
+    _ROLLING_UPDATES_SCHEMA_KEYS = (
+        MIN_IN_SERVICE, MAX_BATCH_SIZE, PAUSE_TIME,
+    ) = (
+        'min_in_service', 'max_batch_size', 'pause_time',
+    )
+
+    _UPDATE_POLICY_SCHEMA_KEYS = (ROLLING_UPDATE,) = ('rolling_update',)
 
     ATTRIBUTES = (
         REFS, ATTR_ATTRIBUTES,
@@ -185,11 +197,63 @@ class ResourceGroup(stack_resource.StackResource):
         ),
     }
 
+    rolling_update_schema = {
+        MIN_IN_SERVICE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('The minimum number of resources in service while '
+              'rolling updates are being executed.'),
+            constraints=[constraints.Range(min=0)],
+            default=0),
+        MAX_BATCH_SIZE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('The maximum number of resources to replace at once.'),
+            constraints=[constraints.Range(min=0)],
+            default=1),
+        PAUSE_TIME: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of seconds to wait between batches of '
+              'updates.'),
+            constraints=[constraints.Range(min=0)],
+            default=0),
+    }
+
+    update_policy_schema = {
+        ROLLING_UPDATE: properties.Schema(properties.Schema.MAP,
+                                          schema=rolling_update_schema)
+    }
+
+    def __init__(self, name, json_snippet, stack):
+        super(ResourceGroup, self).__init__(name, json_snippet, stack)
+        self.update_policy = self.t.update_policy(self.update_policy_schema,
+                                                  self.context)
+
+    def get_size(self):
+        return self.properties.get(self.COUNT)
+
+    def validate(self):
+        """
+        Validation for update_policy
+        """
+        super(ResourceGroup, self).validate()
+
+        if self.update_policy is not None:
+            self.update_policy.validate()
+            policy_name = self.ROLLING_UPDATE
+            if (policy_name in self.update_policy and
+                    self.update_policy[policy_name] is not None):
+                pause_time = self.update_policy[policy_name][self.PAUSE_TIME]
+                if pause_time > 3600:
+                    msg = _('Maximum %(arg1)s allowed is 1hr(3600s),'
+                            ' provided %(arg2)s seconds.') % dict(
+                        arg1=self.PAUSE_TIME,
+                        arg2=pause_time)
+                    raise ValueError(msg)
+
     def validate_nested_stack(self):
         # Only validate the resource definition (which may be a
         # nested template) if count is non-zero, to enable folks
         # to disable features via a zero count if they wish
-        if not self.properties.get(self.COUNT):
+        if not self.get_size():
             return
 
         test_tmpl = self._assemble_nested(["0"], include_all=True)
@@ -247,9 +311,10 @@ class ResourceGroup(stack_resource.StackResource):
             self.data_set('name_blacklist', ','.join(rsrc_names))
         return rsrc_names
 
-    def _resource_names(self):
+    def _resource_names(self, size=None):
         name_blacklist = self._name_blacklist()
-        req_count = self.properties.get(self.COUNT)
+        if size is None:
+            size = self.get_size()
 
         def is_blacklisted(name):
             return name in name_blacklist
@@ -258,20 +323,67 @@ class ResourceGroup(stack_resource.StackResource):
 
         return itertools.islice(six.moves.filterfalse(is_blacklisted,
                                                       candidates),
-                                req_count)
+                                size)
+
+    def _get_resources(self):
+        """Get templates for resources."""
+        return [(resource.name, resource.t.render_hot())
+                for resource in grouputils.get_members(self)]
+
+    def _count_black_listed(self):
+        """Get black list count"""
+        return len(self._name_blacklist()
+                   & set(grouputils.get_member_names(self)))
 
     def handle_create(self):
         names = self._resource_names()
-        return self.create_with_template(self._assemble_nested(names),
-                                         {}, self.stack.timeout_mins)
+        self.create_with_template(self._assemble_nested(names),
+                                  {},
+                                  self.stack.timeout_mins)
+
+    def _run_to_completion(self, template, timeout):
+        updater = self.update_with_template(template, {},
+                                            timeout)
+
+        while not super(ResourceGroup,
+                        self).check_update_complete(updater):
+            yield
+
+    def check_update_complete(self, checkers):
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if tmpl_diff:
+            # parse update policy
+            if rsrc_defn.UPDATE_POLICY in tmpl_diff:
+                up = json_snippet.update_policy(self.update_policy_schema,
+                                                self.context)
+                self.update_policy = up
+
+        checkers = []
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
-        new_names = self._resource_names()
-        return self.update_with_template(self._assemble_nested(new_names),
-                                         {},
-                                         self.stack.timeout_mins)
+        if prop_diff and self.RESOURCE_DEF in prop_diff:
+            updaters = self._try_rolling_update()
+            if updaters:
+                checkers.extend(updaters)
+        resizer = scheduler.TaskRunner(
+            self._run_to_completion,
+            self._assemble_nested_for_size(self.get_size()),
+            self.stack.timeout_mins)
+
+        checkers.append(resizer)
+        checkers[0].start()
+        return checkers
+
+    def _assemble_nested_for_size(self, new_capacity):
+        new_names = self._resource_names(new_capacity)
+        return self._assemble_nested(new_names)
 
     def FnGetAtt(self, key, *path):
         if key.startswith("resource."):
@@ -324,12 +436,96 @@ class ResourceGroup(stack_resource.StackResource):
 
     def _assemble_nested(self, names, include_all=False):
         res_def = self._build_resource_definition(include_all)
-
         resources = dict((k, self._do_prop_replace(k, res_def))
                          for k in names)
         child_template = copy.deepcopy(template_template)
         child_template['resources'] = resources
         return child_template
+
+    def _assemble_for_rolling_update(self, names, name_blacklist,
+                                     include_all=False):
+        old_resources = self._get_resources()
+        res_def = self._build_resource_definition(include_all)
+        child_template = copy.deepcopy(template_template)
+        resources = dict((k, v)
+                         for k, v in old_resources if k not in name_blacklist)
+        resources.update(dict((k, self._do_prop_replace(k, res_def))
+                         for k in names))
+        child_template['resources'] = resources
+        return child_template
+
+    def _try_rolling_update(self):
+        if self.update_policy[self.ROLLING_UPDATE]:
+            policy = self.update_policy[self.ROLLING_UPDATE]
+            return self._replace(policy[self.MIN_IN_SERVICE],
+                                 policy[self.MAX_BATCH_SIZE],
+                                 policy[self.PAUSE_TIME])
+
+    def _update_timeout(self, efft_capacity, efft_bat_sz, pause_sec):
+        batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
+        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
+            msg = _('The current %s will result in stack update '
+                    'timeout.') % rsrc_defn.UPDATE_POLICY
+            raise ValueError(msg)
+        update_timeout = self.stack.timeout_secs() - (
+            pause_sec * (batch_cnt - 1))
+        return update_timeout
+
+    def _replace(self, min_in_service, batch_size, pause_sec):
+
+        def pause_between_batch(pause_sec):
+            duration = timeutils.Duration(pause_sec)
+            while not duration.expired():
+                yield
+
+        def get_batched_names(names, batch_size):
+            for i in range(0, len(names), batch_size):
+                yield names[0:i + batch_size]
+
+        # blacklisted names exiting and new
+        name_blacklist = self._name_blacklist()
+
+        # blacklist count existing
+        num_blacklist = self._count_black_listed()
+
+        # current capacity not including existing blacklisted
+        curr_cap = len(self.nested()) - num_blacklist if self.nested() else 0
+
+        # final capacity expected after replace
+        capacity = min(curr_cap, self.get_size())
+
+        efft_bat_sz = min(batch_size, capacity)
+        efft_min_sz = min(min_in_service, capacity)
+
+        # effective capacity taking into account min_in_service and batch_size
+        efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
+
+        # Reset effective capacity, if there are enough resources
+        if efft_capacity <= curr_cap:
+            efft_capacity = capacity
+
+        if efft_capacity > 0:
+            update_timeout = self._update_timeout(efft_capacity,
+                                                  efft_bat_sz, pause_sec)
+        checkers = []
+        remainder = efft_capacity
+        # filtered names for effective capacity
+        new_names = self._resource_names(efft_capacity)
+        # batched names in reverse order, we've to add new
+        # resources if required before modifing existing
+        batched_names = get_batched_names(list(new_names)[::-1], efft_bat_sz)
+        while remainder > 0:
+            checkers.append(scheduler.TaskRunner(
+                self._run_to_completion,
+                self._assemble_for_rolling_update(next(batched_names),
+                                                  name_blacklist),
+                update_timeout))
+            remainder -= efft_bat_sz
+
+            if remainder > 0 and pause_sec > 0:
+                checkers.append(scheduler.TaskRunner(pause_between_batch,
+                                                     pause_sec))
+        return checkers
 
     def child_template(self):
         names = self._resource_names()
