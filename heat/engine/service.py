@@ -294,11 +294,6 @@ class EngineService(service.Service):
         self._rpc_server = None
         self.software_config = service_software_config.SoftwareConfigService()
 
-        if cfg.CONF.instance_user:
-            warnings.warn('The "instance_user" option in heat.conf is '
-                          'deprecated and will be removed in the Juno '
-                          'release.', DeprecationWarning)
-
         if cfg.CONF.trusts_delegated_roles:
             warnings.warn('The default value of "trusts_delegated_roles" '
                           'option in heat.conf is changed to [] in Kilo '
