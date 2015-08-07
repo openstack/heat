@@ -17,6 +17,7 @@ from distutils import version
 import errno
 import logging
 import os
+import re
 import subprocess
 import sys
 
@@ -28,9 +29,20 @@ LOG = logging.getLogger('heat-provision')
 
 
 def chk_ci_version():
-    v = version.LooseVersion(
-        pkg_resources.get_distribution('cloud-init').version)
-    return v >= version.LooseVersion('0.6.0')
+    try:
+        v = version.LooseVersion(
+            pkg_resources.get_distribution('cloud-init').version)
+        return v >= version.LooseVersion('0.6.0')
+    except Exception:
+        pass
+    data = subprocess.Popen(['cloud-init', '--version'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE).communicate()
+    if data[0]:
+        raise Exception()
+    # data[1] has such format: 'cloud-init 0.7.5\n', need to parse version
+    v = re.split(' |\n', data[1])[1].split('.')
+    return tuple(v) >= tuple('0', '6', '0')
 
 
 def init_logging():
@@ -74,11 +86,15 @@ def call(args):
 
 def main():
 
-    if not chk_ci_version():
-        # pre 0.6.0 - user data executed via cloudinit, not this helper
-        LOG.error('Unable to log provisioning, need a newer version of '
-                  'cloud-init')
-        return -1
+    try:
+        if not chk_ci_version():
+            # pre 0.6.0 - user data executed via cloudinit, not this helper
+            LOG.error('Unable to log provisioning, need a newer version of '
+                      'cloud-init')
+            return -1
+    except Exception:
+        LOG.warning('Can not determine the version of cloud-init. It is '
+                    'possible to get errors while logging provisioning.')
 
     userdata_path = os.path.join(VAR_PATH, 'cfn-userdata')
     os.chmod(userdata_path, int("700", 8))
