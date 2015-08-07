@@ -20,6 +20,7 @@ from heat.engine.resources.openstack.keystone import role_assignments
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
+from heat.tests import generic_resource
 from heat.tests import utils
 
 RESOURCE_TYPE = 'OS::Keystone::DummyRoleAssignment'
@@ -46,16 +47,26 @@ keystone_role_assignment_template = {
     }
 }
 
+MixinClass = role_assignments.KeystoneRoleAssignmentMixin
 
-class KeystoneRoleAssignmentTest(common.HeatTestCase):
+
+class DummyRoleAssignment(generic_resource.GenericResource, MixinClass):
+    properties_schema = {}
+    properties_schema.update(MixinClass.mixin_properties_schema)
+
+    def validate(self):
+        super(DummyRoleAssignment, self).validate()
+        self.validate_assignment_properties()
+
+
+class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
     def setUp(self):
-        super(KeystoneRoleAssignmentTest, self).setUp()
+        super(KeystoneRoleAssignmentMixinTest, self).setUp()
 
         self.ctx = utils.dummy_context()
 
         # For unit testing purpose. Register resource provider explicitly.
-        resource._register_class(RESOURCE_TYPE,
-                                 role_assignments.KeystoneRoleAssignment)
+        resource._register_class(RESOURCE_TYPE, DummyRoleAssignment)
 
         self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
@@ -84,66 +95,52 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
         (self.test_role_assignment.client_plugin.
          return_value) = self.keystone_client_plugin
 
-    def test_resource_mapping_not_defined(self):
-        # this resource is not planned to support in heat, so resource_mapping
-        # is not to be defined in KeystoneRoleAssignment
-        try:
-            from ..resources.role_assignments import resource_mapping  # noqa
-            self.fail("KeystoneRoleAssignment is designed to be exposed as"
-                      "Heat resource")
-        except Exception:
-            pass
-
     def test_properties_title(self):
-        property_title_map = {
-            role_assignments.KeystoneRoleAssignment.ROLES: 'roles'
-        }
+        property_title_map = {MixinClass.ROLES: 'roles'}
 
         for actual_title, expected_title in property_title_map.items():
             self.assertEqual(
                 expected_title,
                 actual_title,
-                'KeystoneRoleAssignment PROPERTIES(%s) title modified.' %
+                'KeystoneRoleAssignmentMixin PROPERTIES(%s) title modified.' %
                 actual_title)
 
     def test_property_roles_validate_schema(self):
-        schema = (role_assignments.KeystoneRoleAssignment.
-                  properties_schema[
-                      role_assignments.KeystoneRoleAssignment.ROLES])
+        schema = MixinClass.mixin_properties_schema[MixinClass.ROLES]
         self.assertEqual(
             True,
             schema.update_allowed,
             'update_allowed for property %s is modified' %
-            role_assignments.KeystoneRoleAssignment.ROLES)
+            MixinClass.ROLES)
 
         self.assertEqual(properties.Schema.LIST,
                          schema.type,
                          'type for property %s is modified' %
-                         role_assignments.KeystoneRoleAssignment.ROLES)
+                         MixinClass.ROLES)
 
         self.assertEqual('List of role assignments.',
                          schema.description,
                          'description for property %s is modified' %
-                         role_assignments.KeystoneRoleAssignment.ROLES)
+                         MixinClass.ROLES)
 
-    def test_role_assignment_handle_create_user(self):
-        # validate the properties
-        self.assertEqual([
+    def test_role_assignment_create_user(self):
+        expected = [
             {
                 'role': 'role_1',
                 'project': 'project_1',
                 'domain': None
-            },
-            {
+            }, {
                 'role': 'role_1',
                 'project': None,
                 'domain': 'domain_1'
-            }],
-            (self.test_role_assignment.properties.
-             get(role_assignments.KeystoneRoleAssignment.ROLES)))
+            }
+        ]
+        # validate the properties
+        self.assertEqual(
+            expected,
+            self.test_role_assignment.properties.get(MixinClass.ROLES))
 
-        self.test_role_assignment.handle_create(user_id='user_1',
-                                                group_id=None)
+        self.test_role_assignment.create_assignment(user_id='user_1')
 
         # validate role assignment creation
         # role-user-domain
@@ -158,24 +155,24 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             user='user_1',
             project='project_1')
 
-    def test_role_assignment_handle_create_group(self):
-        # validate the properties
-        self.assertEqual([
+    def test_role_assignment_create_group(self):
+        expected = [
             {
                 'role': 'role_1',
                 'project': 'project_1',
                 'domain': None
-            },
-            {
+            }, {
                 'role': 'role_1',
                 'project': None,
                 'domain': 'domain_1'
-            }],
-            (self.test_role_assignment.properties.
-             get(role_assignments.KeystoneRoleAssignment.ROLES)))
+            }
+        ]
+        # validate the properties
+        self.assertEqual(
+            expected,
+            self.test_role_assignment.properties.get(MixinClass.ROLES))
 
-        self.test_role_assignment.handle_create(user_id=None,
-                                                group_id='group_1')
+        self.test_role_assignment.create_assignment(group_id='group_1')
 
         # validate role assignment creation
         # role-group-domain
@@ -190,7 +187,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             group='group_1',
             project='project_1')
 
-    def test_role_assignment_handle_update_user(self):
+    def test_role_assignment_update_user(self):
         self.test_role_assignment._stored_properties_data = {
             'roles': [
                 {
@@ -205,7 +202,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
         }
 
         prop_diff = {
-            role_assignments.KeystoneRoleAssignment.ROLES: [
+            MixinClass.ROLES: [
                 {
                     'role': 'role_2',
                     'project': 'project_1'
@@ -217,9 +214,8 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             ]
         }
 
-        self.test_role_assignment.handle_update(
+        self.test_role_assignment.update_assignment(
             user_id='user_1',
-            group_id=None,
             prop_diff=prop_diff)
 
         # Add role2-project1-domain1
@@ -248,7 +244,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             user='user_1',
             project='project_1')
 
-    def test_role_assignment_handle_update_group(self):
+    def test_role_assignment_update_group(self):
         self.test_role_assignment._stored_properties_data = {
             'roles': [
                 {
@@ -263,7 +259,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
         }
 
         prop_diff = {
-            role_assignments.KeystoneRoleAssignment.ROLES: [
+            MixinClass.ROLES: [
                 {
                     'role': 'role_2',
                     'project': 'project_1'
@@ -275,8 +271,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             ]
         }
 
-        self.test_role_assignment.handle_update(
-            user_id=None,
+        self.test_role_assignment.update_assignment(
             group_id='group_1',
             prop_diff=prop_diff)
 
@@ -306,7 +301,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             group='group_1',
             project='project_1')
 
-    def test_role_assignment_handle_delete_user(self):
+    def test_role_assignment_delete_user(self):
         self.test_role_assignment._stored_properties_data = {
             'roles': [
                 {
@@ -319,10 +314,8 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
                 }
             ]
         }
-        self.assertIsNone(self.test_role_assignment.handle_delete(
-            user_id='user_1',
-            group_id=None
-        ))
+        self.assertIsNone(self.test_role_assignment.delete_assignment(
+            user_id='user_1'))
 
         # Remove role1-project1-domain1
         # role-user-domain
@@ -337,7 +330,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
             user='user_1',
             project='project_1')
 
-    def test_role_assignment_handle_delete_group(self):
+    def test_role_assignment_delete_group(self):
         self.test_role_assignment._stored_properties_data = {
             'roles': [
                 {
@@ -350,8 +343,7 @@ class KeystoneRoleAssignmentTest(common.HeatTestCase):
                 }
             ]
         }
-        self.assertIsNone(self.test_role_assignment.handle_delete(
-            user_id=None,
+        self.assertIsNone(self.test_role_assignment.delete_assignment(
             group_id='group_1'
         ))
 
