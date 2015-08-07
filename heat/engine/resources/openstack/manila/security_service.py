@@ -92,7 +92,7 @@ class SecurityService(resource.Resource):
         security_service = self.client().security_services.create(**args)
         self.resource_id_set(security_service.id)
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.client().security_services.update(self.resource_id,
                                                    **prop_diff)
