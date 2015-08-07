@@ -18,6 +18,7 @@ import uuid
 import mock
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
+from oslo_serialization import jsonutils as json
 import six
 
 from heat.common import exception
@@ -386,7 +387,9 @@ class NovaClientPluginMetadataTests(NovaClientPluginTestCase):
     def test_serialize_dict(self):
         original = {'test_key': {'a': 'b', 'c': 'd'}}
         expected = {'test_key': '{"a": "b", "c": "d"}'}
-        self.assertEqual(expected, self.nova_plugin.meta_serialize(original))
+        actual = self.nova_plugin.meta_serialize(original)
+        self.assertEqual(json.loads(expected['test_key']),
+                         json.loads(actual['test_key']))
 
     def test_serialize_none(self):
         original = {'test_key': None}

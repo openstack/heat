@@ -26,6 +26,7 @@ heat.tests.ceilometer.test_gnocchi_alarm
 heat.tests.cinder.test_cinder_volume_type
 heat.tests.cinder.test_volume
 heat.tests.cinder.test_volume_type_encryption
+heat.tests.clients
 heat.tests.clients.test_barbican_client
 heat.tests.clients.test_cinder_client
 heat.tests.clients.test_glance_client
@@ -83,6 +84,7 @@ heat.tests.nova.test_nova_floatingip
 heat.tests.nova.test_nova_keypair
 heat.tests.nova.test_nova_servergroup
 heat.tests.nova.test_server
+heat.tests.openstack
 heat.tests.test_attributes
 heat.tests.test_auth_password
 heat.tests.test_auth_url

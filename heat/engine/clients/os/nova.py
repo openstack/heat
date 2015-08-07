@@ -297,6 +297,8 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         def make_subpart(content, filename, subtype=None):
             if subtype is None:
                 subtype = os.path.splitext(filename)[0]
+            if content is None:
+                content = ''
             msg = text.MIMEText(content, _subtype=subtype)
             msg.add_header('Content-Disposition', 'attachment',
                            filename=filename)
