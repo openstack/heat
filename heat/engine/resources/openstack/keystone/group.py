@@ -105,7 +105,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
         super(KeystoneGroup, self).handle_create(user_id=None,
                                                  group_id=group.id)
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         name = prop_diff.get(self.NAME) or self.physical_resource_name()
         description = prop_diff.get(self.DESCRIPTION)
         domain = (prop_diff.get(self.DOMAIN) or

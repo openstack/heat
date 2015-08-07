@@ -114,10 +114,7 @@ class KeystoneProject(resource.Resource):
 
         self.resource_id_set(project.id)
 
-    def handle_update(self,
-                      json_snippet=None,
-                      tmpl_diff=None,
-                      prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         name = prop_diff.get(self.NAME) or self.physical_resource_name()
         description = prop_diff.get(self.DESCRIPTION)
         enabled = prop_diff.get(self.ENABLED)

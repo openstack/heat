@@ -89,10 +89,7 @@ class DesignateDomain(resource.Resource):
 
         self.resource_id_set(domain.id)
 
-    def handle_update(self,
-                      json_snippet=None,
-                      tmpl_diff=None,
-                      prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         args = dict()
 
         if prop_diff.get(self.EMAIL):

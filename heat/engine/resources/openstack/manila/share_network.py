@@ -140,7 +140,7 @@ class ManilaShareNetwork(resource.Resource):
                 self.resource_id,
                 self.client_plugin().get_security_service(service).id)
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if self.SECURITY_SERVICES in prop_diff:
             services = prop_diff.pop(self.SECURITY_SERVICES)
             s_curr = set([self.client_plugin().get_security_service(s).id

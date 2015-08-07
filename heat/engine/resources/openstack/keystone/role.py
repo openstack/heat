@@ -60,15 +60,13 @@ class KeystoneRole(resource.Resource):
 
         self.resource_id_set(role.id)
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
-        if prop_diff is None:
-            return
-
-        name = prop_diff.get(self.NAME) or self.physical_resource_name()
-        self._update_role(
-            role_id=self.resource_id,
-            new_name=name
-        )
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if self.NAME in prop_diff:
+            name = prop_diff.get(self.NAME) or self.physical_resource_name()
+            self._update_role(
+                role_id=self.resource_id,
+                new_name=name
+            )
 
     def handle_delete(self):
         if self.resource_id is not None:
