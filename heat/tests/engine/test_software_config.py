@@ -32,6 +32,41 @@ from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests import utils
 
+software_config_inputs = '''
+heat_template_version: 2013-05-23
+description: Validate software config input/output types
+
+resources:
+
+  InputOutputTestConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: puppet
+      inputs:
+      - name: boolean_input
+        type: Boolean
+      - name: json_input
+        type: Json
+      - name: number_input
+        type: Number
+      - name: string_input
+        type: String
+      - name: comma_delimited_list_input
+        type: CommaDelimitedList
+      outputs:
+      - name: boolean_output
+        type: Boolean
+      - name: json_output
+        type: Json
+      - name: number_output
+        type: Number
+      - name: string_output
+        type: String
+      - name: comma_delimited_list_output
+        type: CommaDelimitedList
+
+'''
+
 
 class SoftwareConfigServiceTest(common.HeatTestCase):
 
@@ -107,6 +142,15 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                                self.engine.show_software_config,
                                self.ctx, config_id)
         self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+    def test_boolean_inputs_valid(self):
+        stack_name = 'test_boolean_inputs_valid'
+        t = template_format.parse(software_config_inputs)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+        try:
+            stack.validate()
+        except exception.StackValidationFailed as exc:
+            self.fail("Validation should have passed: %s" % six.text_type(exc))
 
     def _create_software_deployment(self, config_id=None, input_values=None,
                                     action='INIT',
