@@ -656,6 +656,9 @@ to perform specific tasks, such as getting the value of a resource attribute at
 runtime. The following section describes the role and syntax of the intrinsic
 functions.
 
+Note: these functions can only be used within the "properties" section
+of each resource or in the outputs section.
+
 
 get_attr
 --------
