@@ -167,14 +167,13 @@ class DepAttrsTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
     def test_dep_attrs(self):
-
         parsed_tmpl = template_format.parse(self.tmpl)
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(parsed_tmpl))
-        resources = six.itervalues(self.stack.resources)
-        outputs = self.stack.outputs
 
-        for res in resources:
+        for res in six.itervalues(self.stack):
+            outputs = self.stack.outputs
+            resources = six.itervalues(self.stack.resources)
             self.assertEqual(self.expected[res.name],
                              self.stack.get_dep_attrs(resources, outputs,
                                                       res.name))
