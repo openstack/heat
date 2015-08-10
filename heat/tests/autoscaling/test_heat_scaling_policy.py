@@ -244,12 +244,12 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         self.assertEqual('resources', res[3])
         self.assertEqual('my-policy', res[4])
 
-        args = alarm_url.split('?')[1].split('&')
-        self.assertEqual('Timestamp', args[0].split('=')[0])
-        self.assertEqual('SignatureMethod', args[1].split('=')[0])
-        self.assertEqual('AWSAccessKeyId', args[2].split('=')[0])
+        args = sorted(alarm_url.split('?')[1].split('&'))
+        self.assertEqual('AWSAccessKeyId', args[0].split('=')[0])
+        self.assertEqual('Signature', args[1].split('=')[0])
+        self.assertEqual('SignatureMethod', args[2].split('=')[0])
         self.assertEqual('SignatureVersion', args[3].split('=')[0])
-        self.assertEqual('Signature', args[4].split('=')[0])
+        self.assertEqual('Timestamp', args[4].split('=')[0])
         self.m.VerifyAll()
 
     def test_signal_attribute(self):
