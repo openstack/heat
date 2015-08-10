@@ -486,8 +486,8 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         """Delete/Add the metadata in nova as needed."""
         metadata = self.meta_serialize(metadata)
         current_md = server.metadata
-        to_del = [key for key in six.iterkeys(current_md)
-                  if key not in metadata]
+        to_del = sorted([key for key in six.iterkeys(current_md)
+                         if key not in metadata])
         client = self.client()
         if len(to_del) > 0:
             client.servers.delete_meta(server, to_del)
