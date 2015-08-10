@@ -474,23 +474,24 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         return info
 
     def stack_suspend(self, stack_identifier):
-        stack_name = stack_identifier.split('/')[0]
-        self.client.actions.suspend(stack_name)
         if (self.conf.skip_test_stack_action_list and
                 'SUSPEND' in self.conf.skip_test_stack_action_list):
+            self.addCleanup(self.client.stacks.delete, stack_identifier)
             self.skipTest('Testing Stack suspend disabled in conf, skipping')
+        stack_name = stack_identifier.split('/')[0]
+        self.client.actions.suspend(stack_name)
         # improve debugging by first checking the resource's state.
         self._wait_for_all_resource_status(stack_identifier,
                                            'SUSPEND_COMPLETE')
         self._wait_for_stack_status(stack_identifier, 'SUSPEND_COMPLETE')
 
     def stack_resume(self, stack_identifier):
-        stack_name = stack_identifier.split('/')[0]
-        self.client.actions.resume(stack_name)
         if (self.conf.skip_test_stack_action_list and
                 'RESUME' in self.conf.skip_test_stack_action_list):
+            self.addCleanup(self.client.stacks.delete, stack_identifier)
             self.skipTest('Testing Stack resume disabled in conf, skipping')
-
+        stack_name = stack_identifier.split('/')[0]
+        self.client.actions.resume(stack_name)
         # improve debugging by first checking the resource's state.
         self._wait_for_all_resource_status(stack_identifier,
                                            'RESUME_COMPLETE')
