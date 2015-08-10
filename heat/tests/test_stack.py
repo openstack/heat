@@ -2194,6 +2194,48 @@ class StackTest(common.HeatTestCase):
                                                None)
         self.assertEqual(expected_message, six.text_type(expected_exception))
 
+    def update_exception_handler(self, exc, action=stack.Stack.UPDATE,
+                                 disable_rollback=False):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+        update_task = mock.MagicMock()
+
+        self.stack = stack.Stack(utils.dummy_context(),
+                                 'test_stack',
+                                 tmpl,
+                                 disable_rollback=disable_rollback)
+        self.stack.store()
+        self.m.ReplayAll()
+        res = self.stack._update_exception_handler(
+            exc=exc, action=action, update_task=update_task)
+        if isinstance(exc, exception.ResourceFailure):
+            if disable_rollback:
+                self.assertFalse(res)
+            else:
+                self.assertTrue(res)
+        elif isinstance(exc, stack.ForcedCancel):
+            update_task.updater.cancel_all.assert_called_once_with()
+            self.assertTrue(res)
+        self.m.VerifyAll()
+
+    def test_update_exception_handler_resource_failure_no_rollback(self):
+        reason = 'something strange happened'
+        exc = exception.ResourceFailure(reason, None, action='UPDATE')
+        self.update_exception_handler(exc, disable_rollback=True)
+
+    def test_update_exception_handler_resource_failure_rollback(self):
+        reason = 'something strange happened'
+        exc = exception.ResourceFailure(reason, None, action='UPDATE')
+        self.update_exception_handler(exc, disable_rollback=False)
+
+    def test_update_exception_handler_force_cancel(self):
+        exc = stack.ForcedCancel()
+        self.update_exception_handler(exc, disable_rollback=False)
+
 
 class StackKwargsForCloningTest(common.HeatTestCase):
     scenarios = [
