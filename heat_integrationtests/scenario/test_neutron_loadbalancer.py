@@ -25,7 +25,6 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(NeutronLoadBalancerTest, self).setUp()
-        raise self.skipException("Skipping until bug #1479869 is fixed.")
         self.public_net = self._get_network(self.conf.floating_network_name)
         self.template_name = 'test_neutron_loadbalancer.yaml'
 
