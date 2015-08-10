@@ -586,8 +586,8 @@ class BaseCustomConstraint(object):
 
     def error(self, value):
         if self._error_message is None:
-            return _("Error validating value %(value)r") % {"value": value}
-        return _("Error validating value %(value)r: %(message)s") % {
+            return _("Error validating value '%(value)s'") % {"value": value}
+        return _("Error validating value '%(value)s': %(message)s") % {
             "value": value, "message": self._error_message}
 
     def validate(self, value, context):

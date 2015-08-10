@@ -123,11 +123,13 @@ heat.tests.test_rpc_listener_client
 heat.tests.test_rpc_worker_client
 heat.tests.test_rsrc_defn
 heat.tests.test_sahara_cluster
+heat.tests.test_sahara_templates
 heat.tests.test_scaling_template
 heat.tests.test_server_tags
 heat.tests.test_short_id
 heat.tests.test_software_component
 heat.tests.test_software_config
+heat.tests.test_software_deployment
 heat.tests.test_stack
 heat.tests.test_stack_collect_attributes
 heat.tests.test_stack_delete
