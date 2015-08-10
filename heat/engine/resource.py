@@ -697,7 +697,8 @@ class Resource(object):
         '''
         return self
 
-    def create_convergence(self, template_id, resource_data, engine_id):
+    def create_convergence(self, template_id, resource_data, engine_id,
+                           timeout):
         '''
         Creates the resource by invoking the scheduler TaskRunner.
         '''
@@ -712,7 +713,7 @@ class Resource(object):
             else:
                 adopt_data = self.stack._adopt_kwargs(self)
                 runner = scheduler.TaskRunner(self.adopt, **adopt_data)
-            runner()
+            runner(timeout=timeout)
 
     @scheduler.wrappertask
     def create(self):
@@ -865,7 +866,8 @@ class Resource(object):
         except ValueError:
             return True
 
-    def update_convergence(self, template_id, resource_data, engine_id):
+    def update_convergence(self, template_id, resource_data, engine_id,
+                           timeout):
         '''
         Updates the resource by invoking the scheduler TaskRunner
         and it persists the resource's current_template_id to template_id and
@@ -876,7 +878,7 @@ class Resource(object):
             new_temp = template.Template.load(self.context, template_id)
             new_res_def = new_temp.resource_definitions(self.stack)[self.name]
             runner = scheduler.TaskRunner(self.update, new_res_def)
-            runner()
+            runner(timeout=timeout)
 
             # update the resource db record (stored in unlock)
             self.current_template_id = template_id
@@ -1107,7 +1109,7 @@ class Resource(object):
                     expected_engine_id=None
                 )
 
-    def delete_convergence(self, template_id, input_data, engine_id):
+    def delete_convergence(self, template_id, input_data, engine_id, timeout):
         '''Destroys the resource if it doesn't belong to given
         template. The given template is suppose to be the current
         template being provisioned.
@@ -1124,7 +1126,7 @@ class Resource(object):
 
             if self.current_template_id != template_id:
                 runner = scheduler.TaskRunner(self.destroy)
-                runner()
+                runner(timeout=timeout)
 
                 # update needed_by and replaces of replacement resource
                 self._update_replacement_data(template_id)

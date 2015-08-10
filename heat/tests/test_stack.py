@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import datetime
 import json
 import time
 
@@ -99,6 +100,59 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
                                  timeout_mins=10)
         self.assertEqual(600, self.stack.timeout_secs())
+
+    @mock.patch.object(stack, 'datetime')
+    def test_time_elapsed(self, mock_dt):
+        self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
+        # dummy create time 10:00:00
+        self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 0, 0)
+        # mock utcnow set to 10:10:00 (600s offset)
+        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
+                                                                 10, 10, 0)
+        self.assertEqual(600, self.stack.time_elapsed())
+
+    @mock.patch.object(stack, 'datetime')
+    def test_time_elapsed_with_updated_time(self, mock_dt):
+        self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
+        # dummy create time 10:00:00
+        self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 0, 0)
+        # dummy updated time 11:00:00; should consider this not created_time
+        self.stack.updated_time = datetime.datetime(2015, 7, 27, 11, 0, 0)
+        # mock utcnow set to 11:10:00 (600s offset)
+        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
+                                                                 11, 10, 0)
+        self.assertEqual(600, self.stack.time_elapsed())
+
+    @mock.patch.object(stack.Stack, 'time_elapsed')
+    def test_time_remaining(self, mock_te):
+        self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
+        # mock time elapsed; set to 600 seconds
+        mock_te.return_value = 600
+        # default stack timeout is 3600 seconds; remaining time 3000 secs
+        self.assertEqual(3000, self.stack.time_remaining())
+
+    @mock.patch.object(stack.Stack, 'time_elapsed')
+    def test_has_timed_out(self, mock_te):
+        self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
+        self.stack.status = self.stack.IN_PROGRESS
+
+        # test with timed out stack
+        mock_te.return_value = 3601
+        # default stack timeout is 3600 seconds; stack should time out
+        self.assertTrue(self.stack.has_timed_out())
+
+        # mock time elapsed; set to 600 seconds
+        mock_te.return_value = 600
+        # default stack timeout is 3600 seconds; remaining time 3000 secs
+        self.assertFalse(self.stack.has_timed_out())
+
+        # has_timed_out has no meaning when stack completes/fails;
+        # should return false
+        self.stack.status = self.stack.COMPLETE
+        self.assertFalse(self.stack.has_timed_out())
+
+        self.stack.status = self.stack.FAILED
+        self.assertFalse(self.stack.has_timed_out())
 
     def test_no_auth_token(self):
         ctx = utils.dummy_context()
