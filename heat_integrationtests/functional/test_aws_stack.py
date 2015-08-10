@@ -20,12 +20,12 @@ from swiftclient import utils as swiftclient_utils
 import yaml
 
 from heat_integrationtests.common import test
-
+from heat_integrationtests.functional import functional_base
 
 LOG = logging.getLogger(__name__)
 
 
-class AwsStackTest(test.HeatIntegrationTest):
+class AwsStackTest(functional_base.FunctionalTestsBase):
     test_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
@@ -75,7 +75,6 @@ Outputs:
 
     def setUp(self):
         super(AwsStackTest, self).setUp()
-        self.client = self.orchestration_client
         self.object_container_name = AwsStackTest.__name__
         self.project_id = self.identity_client.auth_ref.project_id
         self.object_client.put_container(self.object_container_name)

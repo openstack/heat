@@ -11,7 +11,7 @@
 #    under the License.
 
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 test_template = '''
 heat_template_version: 2014-10-16
@@ -31,11 +31,10 @@ outputs:
 '''
 
 
-class SwiftSignalHandleUpdateTest(test.HeatIntegrationTest):
+class SwiftSignalHandleUpdateTest(functional_base.FunctionalTestsBase):
 
     def setUp(self):
         super(SwiftSignalHandleUpdateTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_stack_update_same_template_replace_no_url(self):
         stack_identifier = self.stack_create(template=test_template)

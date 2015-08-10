@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class ParallelDeploymentsTest(test.HeatIntegrationTest):
+class ParallelDeploymentsTest(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: "2013-05-23"
 parameters:
@@ -63,7 +63,6 @@ resources:
 
     def setUp(self):
         super(ParallelDeploymentsTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_fail(self):
         parms = {'flavor': self.conf.minimal_instance_type,

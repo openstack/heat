@@ -17,10 +17,10 @@ from heatclient import exc
 import six
 import yaml
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class ResourceGroupTest(test.HeatIntegrationTest):
+class ResourceGroupTest(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: 2013-05-23
 resources:
@@ -44,7 +44,6 @@ outputs:
 
     def setUp(self):
         super(ResourceGroupTest, self).setUp()
-        self.client = self.orchestration_client
 
     def _group_nested_identifier(self, stack_identifier,
                                  group_name='random_group'):
@@ -328,7 +327,7 @@ outputs:
         self.assertNotEqual(initial_rand, updated_rand)
 
 
-class ResourceGroupTestNullParams(test.HeatIntegrationTest):
+class ResourceGroupTestNullParams(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: 2013-05-23
 parameters:
@@ -383,7 +382,6 @@ outputs:
 
     def setUp(self):
         super(ResourceGroupTestNullParams, self).setUp()
-        self.client = self.orchestration_client
 
     def test_create_pass_zero_parameter(self):
         templ = self.template.replace('type: empty',
@@ -403,7 +401,7 @@ outputs:
         self.assertEqual(self.param, self._stack_output(stack, 'val')[0])
 
 
-class ResourceGroupAdoptTest(test.HeatIntegrationTest):
+class ResourceGroupAdoptTest(functional_base.FunctionalTestsBase):
     """Prove that we can do resource group adopt."""
 
     main_template = '''
@@ -424,7 +422,6 @@ outputs:
 
     def setUp(self):
         super(ResourceGroupAdoptTest, self).setUp()
-        self.client = self.orchestration_client
 
     def _yaml_to_json(self, yaml_templ):
         return yaml.load(yaml_templ)
@@ -474,7 +471,7 @@ outputs:
         self.assertEqual('different', self._stack_output(stack, 'test1'))
 
 
-class ResourceGroupErrorResourceTest(test.HeatIntegrationTest):
+class ResourceGroupErrorResourceTest(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: "2013-05-23"
 resources:
@@ -497,7 +494,6 @@ resources:
 
     def setUp(self):
         super(ResourceGroupErrorResourceTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_fail(self):
         stack_identifier = self.stack_create(

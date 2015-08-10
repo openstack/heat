@@ -12,10 +12,10 @@
 
 import yaml
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class DefaultParametersTest(test.HeatIntegrationTest):
+class DefaultParametersTest(functional_base.FunctionalTestsBase):
 
     template = '''
 heat_template_version: 2013-05-23
@@ -65,7 +65,6 @@ outputs:
 
     def setUp(self):
         super(DefaultParametersTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_defaults(self):
         env = {'parameters': {}, 'parameter_defaults': {}}

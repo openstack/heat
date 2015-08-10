@@ -14,17 +14,16 @@ import logging
 
 import yaml
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
 LOG = logging.getLogger(__name__)
 
 
-class HooksTest(test.HeatIntegrationTest):
+class HooksTest(functional_base.FunctionalTestsBase):
 
     def setUp(self):
         super(HooksTest, self).setUp()
-        self.client = self.orchestration_client
         self.template = {'heat_template_version': '2014-10-16',
                          'resources': {
                              'foo_step1': {'type': 'OS::Heat::RandomString'},

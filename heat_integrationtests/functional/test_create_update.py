@@ -12,8 +12,9 @@
 
 
 import copy
-from heat_integrationtests.common import test
 import json
+
+from heat_integrationtests.functional import functional_base
 
 test_template_one_resource = {
     'heat_template_version': '2013-05-23',
@@ -68,10 +69,9 @@ def _change_rsrc_properties(template, rsrcs, values):
         return modified_template
 
 
-class CreateStackTest(test.HeatIntegrationTest):
+class CreateStackTest(functional_base.FunctionalTestsBase):
     def setUp(self):
         super(CreateStackTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_create_rollback(self):
         values = {'fail': True, 'value': 'test_create_rollback'}
@@ -84,7 +84,7 @@ class CreateStackTest(test.HeatIntegrationTest):
             disable_rollback=False)
 
 
-class UpdateStackTest(test.HeatIntegrationTest):
+class UpdateStackTest(functional_base.FunctionalTestsBase):
 
     provider_template = {
         'heat_template_version': '2013-05-23',
@@ -132,7 +132,6 @@ resources:
 
     def setUp(self):
         super(UpdateStackTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_stack_update_nochange(self):
         template = _change_rsrc_properties(test_template_one_resource,

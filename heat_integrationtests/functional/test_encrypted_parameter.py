@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class EncryptedParametersTest(test.HeatIntegrationTest):
+class EncryptedParametersTest(functional_base.FunctionalTestsBase):
 
     template = '''
 heat_template_version: 2013-05-23
@@ -31,7 +31,6 @@ outputs:
 
     def setUp(self):
         super(EncryptedParametersTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_db_encryption(self):
         # Create a stack with a non-default value for 'foo' to be encrypted

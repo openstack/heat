@@ -36,4 +36,8 @@ iniset heat_integrationtests.conf DEFAULT image_ref fedora-heat-test-image
 iniset heat_integrationtests.conf DEFAULT boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 iniset heat_integrationtests.conf DEFAULT minimal_image_ref cirros-0.3.4-x86_64-uec
 
+# Add scenario tests to skip
+# VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
+iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+
 cat heat_integrationtests.conf

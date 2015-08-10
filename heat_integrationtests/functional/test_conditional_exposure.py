@@ -13,13 +13,12 @@
 from heatclient import exc
 import keystoneclient
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class ConditionalExposureTestBase(test.HeatIntegrationTest):
+class ConditionalExposureTestBase(functional_base.FunctionalTestsBase):
     def setUp(self):
         super(ConditionalExposureTestBase, self).setUp()
-        self.client = self.orchestration_client
 
     def _delete(self, stack_name):
         stacks = self.client.stacks.list()

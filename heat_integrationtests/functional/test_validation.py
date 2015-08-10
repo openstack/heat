@@ -11,14 +11,13 @@
 #    under the License.
 
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class StackValidationTest(test.HeatIntegrationTest):
+class StackValidationTest(functional_base.FunctionalTestsBase):
 
     def setUp(self):
         super(StackValidationTest, self).setUp()
-        self.client = self.orchestration_client
         if not self.conf.minimal_image_ref:
             raise self.skipException("No image configured to test")
 

@@ -78,20 +78,26 @@
 # The mask bits for tenant ipv4 subnets (integer value)
 #tenant_network_mask_bits = 28
 
-# Skip software config deployment tests (boolean value)
-#skip_software_config_tests = true
+# Skip all scenario tests (boolean value)
+#skip_scenario_tests = false
+
+# Skip all functional tests (boolean value)
+#skip_functional_tests = false
+
+# List of functional test class names to skip ex. AutoscalingGroupTest,
+# CreateStackTest (list value)
+#skip_functional_test_list = <None>
+
+# List of scenario test class names to skip ex. NeutronLoadBalancerTest, (list
+# value)
+#skip_scenario_test_list = <None>
+
+# List of stack actions in tests to skip ex. ABANDON, ADOPT, SUSPEND, RESUME
+# (list value)
+#skip_test_stack_action_list = <None>
 
 # Default size in GB for volumes created by volumes tests (integer value)
 #volume_size = 1
-
-# Skip Stack Adopt Integration tests (boolean value)
-#skip_stack_adopt_tests = false
-
-# Skip Stack Abandon Integration tests (boolean value)
-#skip_stack_abandon_tests = false
-
-# Skip Notification Integration tests (boolean value)
-#skip_notification_tests = false
 
 # Timeout in seconds to wait for connectivity to server. (integer value)
 #connectivity_timeout = 120

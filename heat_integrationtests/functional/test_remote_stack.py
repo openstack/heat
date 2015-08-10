@@ -14,10 +14,10 @@
 from heatclient import exc
 import six
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class RemoteStackTest(test.HeatIntegrationTest):
+class RemoteStackTest(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: 2013-05-23
 resources:
@@ -45,7 +45,6 @@ outputs:
 
     def setUp(self):
         super(RemoteStackTest, self).setUp()
-        self.client = self.orchestration_client
 
     def test_remote_stack_alone(self):
         stack_id = self.stack_create(template=self.remote_template)

@@ -18,6 +18,8 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
 
     def setUp(self):
         super(ScenarioTestsBase, self).setUp()
+        self.check_skip_test()
+
         self.client = self.orchestration_client
         self.sub_dir = 'templates'
         self.assign_keypair()
@@ -55,3 +57,10 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
         )
 
         return stack_id
+
+    def check_skip_test(self):
+        test_name = self.__class__.__name__
+        test_skipped = (self.conf.skip_scenario_test_list and
+                        test_name in self.conf.skip_scenario_test_list)
+        if self.conf.skip_scenario_tests or test_skipped:
+            self.skipTest('Test disabled in conf, skipping')

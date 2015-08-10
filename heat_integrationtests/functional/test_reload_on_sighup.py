@@ -17,10 +17,10 @@ import eventlet
 from oslo_concurrency import processutils
 from six.moves import configparser
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 
 
-class ReloadOnSighupTest(test.HeatIntegrationTest):
+class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
 
     def setUp(self):
         self.config_file = "/etc/heat/heat.conf"
