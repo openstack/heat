@@ -93,6 +93,7 @@ heat.tests.test_cloudwatch
 heat.tests.test_common_context
 heat.tests.test_common_param_utils
 heat.tests.test_common_policy
+heat.tests.test_common_serializers
 heat.tests.test_common_service_utils
 heat.tests.test_constraints
 heat.tests.test_crypt
