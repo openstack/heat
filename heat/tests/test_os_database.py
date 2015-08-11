@@ -121,10 +121,10 @@ class OSDBInstanceTest(common.HeatTestCase):
 
     def _stubout_common_create(self):
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'flavors')
+        self.fc.flavors = self.m.CreateMockAnything()
         self.m.StubOutWithMock(trove.TroveClientPlugin, 'get_flavor_id')
         trove.TroveClientPlugin.get_flavor_id('1GB').AndReturn(1)
-        self.m.StubOutWithMock(self.fc, 'instances')
+        self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'create')
         self.m.StubOutWithMock(self.fc.instances, 'get')
 
@@ -157,7 +157,7 @@ class OSDBInstanceTest(common.HeatTestCase):
             self.stub_NetworkConstraint_validate()
 
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'datastore_versions')
+        self.fc.datastore_versions = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.datastore_versions, 'list')
         self.fc.datastore_versions.list(instance.properties['datastore_type']
                                         ).AndReturn([FakeVersion()])
@@ -232,11 +232,11 @@ class OSDBInstanceTest(common.HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_create', t)
 
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'flavors')
+        self.fc.flavors = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.flavors, "list")
         self.fc.flavors.list().AndReturn([FakeFlavor(1, '1GB'),
                                           FakeFlavor(2, '2GB')])
-        self.m.StubOutWithMock(self.fc, 'instances')
+        self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'create')
         users = [{"name": "testuser", "password": "pass", "host": "%",
                   "databases": [{"name": "validdb"}]}]
@@ -405,7 +405,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'instances')
+        self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'get')
         self.fc.instances.get(12345).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
@@ -419,7 +419,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'instances')
+        self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'get')
         self.fc.instances.get(12345).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
@@ -434,7 +434,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'instances')
+        self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'get')
         self.fc.instances.get(12345).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
@@ -540,7 +540,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         t['Resources']['MySqlCloudDB']['Properties'].pop('datastore_version')
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'datastore_versions')
+        self.fc.datastore_versions = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.datastore_versions, 'list')
         self.fc.datastore_versions.list(
             instance.properties['datastore_type']
@@ -680,7 +680,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.patchobject(instance, 'is_using_neutron', return_value=False)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.nova)
-        self.m.StubOutWithMock(self.nova, 'networks')
+        self.nova.networks = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.nova.networks, 'find')
         self.nova.networks.find(label='somenetname').AndReturn(FakeNet())
         self.fc.instances.create('test', 1, volume={'size': 30},
@@ -746,7 +746,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         trove.TroveClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc, 'instances')
+        self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'get')
         self.fc.instances.get(12345).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
