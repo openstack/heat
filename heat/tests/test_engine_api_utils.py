@@ -113,17 +113,17 @@ class FormatTest(common.HeatTestCase):
         # the _resolve_attribute method of  'generic1' returns map with all
         # attributes except 'show' (because it's None in this test)
         formatted_attributes = api.format_resource_attributes(res)
-        expected = {'foo': 'generic1', 'Foo': 'generic1'}
+        expected = {'foo': 'generic1', 'Foo': 'generic1', 'show': None}
         self.assertEqual(expected, formatted_attributes)
 
     def test_format_resource_attributes_show_attribute(self):
         res = self.stack['generic3']
         res.resource_id = 'generic3_id'
         formatted_attributes = api.format_resource_attributes(res)
-        self.assertEqual(3, len(formatted_attributes))
-        self.assertIn('foo', formatted_attributes)
-        self.assertIn('Foo', formatted_attributes)
-        self.assertIn('Another', formatted_attributes)
+        self.assertEqual(3, len(formatted_attributes['show']))
+        self.assertIn('foo', formatted_attributes['show'])
+        self.assertIn('Foo', formatted_attributes['show'])
+        self.assertIn('Another', formatted_attributes['show'])
 
     def test_format_resource_attributes_show_attribute_with_attr(self):
         res = self.stack['generic3']
@@ -131,9 +131,10 @@ class FormatTest(common.HeatTestCase):
         formatted_attributes = api.format_resource_attributes(
             res, with_attr=['c'])
         self.assertEqual(4, len(formatted_attributes))
-        self.assertIn('foo', formatted_attributes)
-        self.assertIn('Foo', formatted_attributes)
-        self.assertIn('Another', formatted_attributes)
+        self.assertEqual(3, len(formatted_attributes['show']))
+        self.assertIn('foo', formatted_attributes['show'])
+        self.assertIn('Foo', formatted_attributes['show'])
+        self.assertIn('Another', formatted_attributes['show'])
         self.assertIn('c', formatted_attributes)
 
     def _get_formatted_resource_properties(self, res_name):
