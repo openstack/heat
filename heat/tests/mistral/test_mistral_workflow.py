@@ -173,6 +173,7 @@ resources:
 class FakeWorkflow(object):
     def __init__(self, name):
         self.name = name
+        self._data = {'workflow': 'info'}
 
 
 class MistralWorkFlowTestResource(workflow.Workflow):
@@ -247,9 +248,12 @@ class TestMistralWorkflow(common.HeatTestCase):
 
     def test_attributes(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        self.mistral.workflows.get.return_value = \
+            FakeWorkflow('test_stack-workflow-b5fiekfci3yc')
         self.assertEqual({'name': 'test_stack-workflow-b5fiekfci3yc',
                           'input': None}, wf.FnGetAtt('data'))
         self.assertEqual([], wf.FnGetAtt('executions'))
+        self.assertEqual({'workflow': 'info'}, wf.FnGetAtt('show'))
 
     def test_direct_workflow_validation_error(self):
         error_msg = ("Mistral resource validation error: "

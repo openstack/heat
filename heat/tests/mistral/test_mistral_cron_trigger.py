@@ -41,6 +41,7 @@ class FakeCronTrigger(object):
         self.name = name
         self.next_execution_time = '2015-03-01 00:00:00'
         self.remaining_executions = 3
+        self._data = {'trigger': 'info'}
 
 
 class MistralCronTriggerTestResource(cron_trigger.CronTrigger):
@@ -98,6 +99,7 @@ class MistralCronTriggerTest(common.HeatTestCase):
         self.assertEqual('2015-03-01 00:00:00',
                          ct.FnGetAtt('next_execution_time'))
         self.assertEqual(3, ct.FnGetAtt('remaining_executions'))
+        self.assertEqual({'trigger': 'info'}, ct.FnGetAtt('show'))
 
     def test_delete(self):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)

@@ -89,6 +89,8 @@ class CronTrigger(resource.Resource):
 
     default_client_name = 'mistral'
 
+    entity = 'cron_triggers'
+
     def _cron_trigger_name(self):
         return self.properties.get(self.NAME) or self.physical_resource_name()
 
@@ -125,6 +127,13 @@ class CronTrigger(resource.Resource):
             return trigger.next_execution_time
         elif name == self.REMAINING_EXECUTIONS:
             return trigger.remaining_executions
+
+    # TODO(tlashchova): remove this method when mistralclient>1.0.0 is used.
+    def _show_resource(self):
+        cron_trigger = self.client().cron_triggers.get(self.resource_id)
+        if hasattr(cron_trigger, 'to_dict'):
+            super(CronTrigger, self)._show_resource()
+        return cron_trigger._data
 
 
 def resource_mapping():
