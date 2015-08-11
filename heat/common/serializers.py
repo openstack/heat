@@ -36,7 +36,7 @@ class JSONResponseSerializer(object):
         def sanitizer(obj):
             if isinstance(obj, datetime.datetime):
                 return obj.isoformat()
-            return obj
+            return six.text_type(obj)
 
         response = jsonutils.dumps(data, default=sanitizer)
         LOG.debug("JSON response : %s" % response)
