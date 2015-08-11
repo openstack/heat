@@ -14,6 +14,8 @@
 
 import datetime
 
+from ceilometerclient import client as cc
+from keystoneclient import exceptions
 import mox
 from oslo_utils import timeutils
 
@@ -635,6 +637,8 @@ class WatchRuleTest(common.HeatTestCase):
                                       stack_id=self.stack_id, rule=rule)
         self.wr.store()
 
+        self.patchobject(cc.AuthPlugin, 'redirect_to_aodh_endpoint',
+                         side_effect=exceptions.EndpointNotFound)
         self.m.StubOutWithMock(self.wr.context.clients.client('ceilometer').
                                samples, 'create', True)
 

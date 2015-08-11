@@ -11,6 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from ceilometerclient import client as cc
+from keystoneclient import exceptions
+
 from heat.tests import common
 from heat.tests import utils
 
@@ -18,6 +21,8 @@ from heat.tests import utils
 class CeilometerClientPluginTests(common.HeatTestCase):
 
     def test_create(self):
+        self.patchobject(cc.AuthPlugin, 'redirect_to_aodh_endpoint',
+                         side_effect=exceptions.EndpointNotFound)
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('ceilometer')
         client = plugin.client()
