@@ -182,6 +182,18 @@ class Resource(object):
 
         return super(Resource, cls).__new__(ResourceClass)
 
+    def _init_attributes(self):
+        """The method that defines attribute initialization for a resource.
+
+        Some resource requires different initialization of resource attributes.
+        So they must override this method and return the initialized
+        attributes to the resource.
+        :return: resource attributes
+        """
+        return attributes.Attributes(self.name,
+                                     self.attributes_schema,
+                                     self._resolve_all_attributes)
+
     def __init__(self, name, definition, stack):
 
         def _validate_name(res_name):
@@ -196,9 +208,7 @@ class Resource(object):
         self.t = definition
         self.reparse()
         self.attributes_schema.update(self.base_attributes_schema)
-        self.attributes = attributes.Attributes(self.name,
-                                                self.attributes_schema,
-                                                self._resolve_all_attributes)
+        self.attributes = self._init_attributes()
 
         self.abandon_in_progress = False
 
