@@ -105,7 +105,7 @@ resources:
   waiter:
     type: AWS::CloudFormation::WaitCondition
     properties:
-      Handle: {Ref: ready_poster}
+      Handle: {get_resource: ready_poster}
       Timeout: 1
 outputs:
   PublicIp:
