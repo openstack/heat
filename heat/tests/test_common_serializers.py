@@ -42,6 +42,12 @@ class JSONResponseSerializerTest(common.HeatTestCase):
         actual = serializers.JSONResponseSerializer().to_json(fixture)
         self.assertEqual(expected, actual)
 
+    def test_to_json_with_objects(self):
+        fixture = {"is_public": True, "value": complex(1, 2)}
+        expected = '{"is_public": true, "value": "(1+2j)"}'
+        actual = serializers.JSONResponseSerializer().to_json(fixture)
+        self.assertEqual(expected, actual)
+
     def test_default(self):
         fixture = {"key": "value"}
         response = webob.Response()
