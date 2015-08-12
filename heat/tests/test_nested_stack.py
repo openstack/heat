@@ -355,11 +355,12 @@ Outputs:
     def test_handle_delete(self):
         self.res.rpc_client = mock.MagicMock()
         self.res.action = self.res.CREATE
+        self.res.nested = mock.MagicMock()
         stack_identity = identifier.HeatIdentifier(
             self.ctx.tenant_id,
             self.res.physical_resource_name(),
             self.res.resource_id)
-
+        self.res.nested().identifier.return_value = stack_identity
         self.res.handle_delete()
         self.res.rpc_client.return_value.delete_stack.assert_called_once_with(
-            self.ctx, stack_identity)
+            self.ctx, self.res.nested().identifier())
