@@ -46,7 +46,7 @@ To use Ceilometer Alarms you need to enable Ceilometer in devstack.
 Adding the following lines to your `localrc` file will enable the ceilometer services::
 
     CEILOMETER_BACKEND=mongodb
-    enable_service ceilometer-acompute ceilometer-acentral ceilometer-collector ceilometer-api
+    enable_service ceilometer-anotification ceilometer-acompute ceilometer-acentral ceilometer-collector ceilometer-api
     enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator
 
 Configure DevStack to enable OSprofiler
