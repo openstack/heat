@@ -16,6 +16,8 @@ from oslo_messaging._drivers import common
 from oslo_messaging import transport
 import requests
 
+from testtools import testcase
+
 from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
 
@@ -162,6 +164,7 @@ outputs:
         for n in BASIC_NOTIFICATIONS:
             self.assertIn(n, handler.notifications)
 
+    @testcase.skip('Skipped until keystone fixed #1484086')
     def test_asg_notifications(self):
         stack_identifier = self.stack_create(template=self.asg_template)
 
