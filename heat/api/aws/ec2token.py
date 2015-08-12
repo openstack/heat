@@ -76,12 +76,14 @@ class EC2Token(wsgi.Middleware):
     def _conf_get_auth_uri(self):
         auth_uri = self._conf_get('auth_uri')
         if auth_uri:
-            return auth_uri
+            return auth_uri.replace('v2.0', 'v3')
         else:
             # Import auth_token to have keystone_authtoken settings setup.
             # We can use the auth_uri from the keystone_authtoken section
             importutils.import_module('keystonemiddleware.auth_token')
-            return cfg.CONF.keystone_authtoken['auth_uri']
+            auth_uri = cfg.CONF.keystone_authtoken['auth_uri']
+            if auth_uri:
+                return auth_uri.replace('v2.0', 'v3')
 
     @staticmethod
     def _conf_get_keystone_ec2_uri(auth_uri):
@@ -218,10 +220,11 @@ class EC2Token(wsgi.Middleware):
                                  cert=self.ssl_options['cert'])
         result = response.json()
         try:
-            token_id = result['access']['token']['id']
-            tenant = result['access']['token']['tenant']['name']
-            tenant_id = result['access']['token']['tenant']['id']
-            LOG.info(_LI("AWS authentication successful."))
+            token_id = response.headers['X-Subject-Token']
+            tenant = result['token']['project']['name']
+            tenant_id = result['token']['project']['id']
+            roles = [role['name']
+                     for role in result['token'].get('roles', [])]
         except (AttributeError, KeyError):
             LOG.info(_LI("AWS authentication failure."))
             # Try to extract the reason for failure so we can return the
@@ -237,6 +240,8 @@ class EC2Token(wsgi.Middleware):
                 raise exception.HeatSignatureError()
             else:
                 raise exception.HeatAccessDeniedError()
+        else:
+            LOG.info(_LI("AWS authentication successful."))
 
         # Authenticated!
         ec2_creds = {'ec2Credentials': {'access': access,
@@ -247,8 +252,6 @@ class EC2Token(wsgi.Middleware):
         req.headers['X-Tenant-Id'] = tenant_id
         req.headers['X-Auth-URL'] = auth_uri
 
-        metadata = result['access'].get('metadata', {})
-        roles = metadata.get('roles', [])
         req.headers['X-Roles'] = ','.join(roles)
 
         return self.application
