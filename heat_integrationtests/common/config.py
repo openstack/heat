@@ -101,11 +101,13 @@ IntegrationTestGroup = [
                 default=False,
                 help="Skip all functional tests"),
     cfg.ListOpt('skip_functional_test_list',
-                help="List of functional test class names to skip "
-                     "ex. AutoscalingGroupTest, CreateStackTest"),
+                help="List of functional test class or class.method "
+                     "names to skip ex. AutoscalingGroupTest,"
+                     "InstanceGroupBasicTest.test_size_updates_work"),
     cfg.ListOpt('skip_scenario_test_list',
-                help="List of scenario test class names to skip "
-                     "ex. NeutronLoadBalancerTest,"),
+                help="List of scenario test class or class.method "
+                     "names to skip ex. NeutronLoadBalancerTest, "
+                     "CeilometerAlarmTest.test_alarm"),
     cfg.ListOpt('skip_test_stack_action_list',
                 help="List of stack actions in tests to skip "
                      "ex. ABANDON, ADOPT, SUSPEND, RESUME"),

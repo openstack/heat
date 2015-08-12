@@ -21,8 +21,11 @@ class FunctionalTestsBase(test.HeatIntegrationTest):
         self.client = self.orchestration_client
 
     def check_skip_test(self):
-        test_name = self.__class__.__name__
-        test_skipped = (self.conf.skip_functional_test_list and
-                        test_name in self.conf.skip_functional_test_list)
+        test_cls_name = self.__class__.__name__
+        test_method_name = '.'.join([test_cls_name, self._testMethodName])
+        test_skipped = (self.conf.skip_functional_test_list and (
+            test_cls_name in self.conf.skip_functional_test_list or
+            test_method_name in self.conf.skip_functional_test_list))
+
         if self.conf.skip_functional_tests or test_skipped:
             self.skipTest('Test disabled in conf, skipping')
