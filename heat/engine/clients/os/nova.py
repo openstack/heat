@@ -60,13 +60,9 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [COMPUTE] = ['compute']
 
-    def _create(self):
-        endpoint_type = self._get_client_option('nova', 'endpoint_type')
-        management_url = self.url_for(service_type=self.COMPUTE,
-                                      endpoint_type=endpoint_type)
-
+    def _get_extensions(self):
         if hasattr(nc, 'discover_extensions'):
-            extensions = nc.discover_extensions(NOVACLIENT_VERSION)
+            return nc.discover_extensions(NOVACLIENT_VERSION)
         else:
             # TODO(lyj): The else condition is for backward compatibility,
             #            once novaclient bump to a newer version with
@@ -74,11 +70,18 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             #            removed.
             from novaclient import shell as novashell
             computeshell = novashell.OpenStackComputeShell()
-            extensions = computeshell._discover_extensions(NOVACLIENT_VERSION)
+            return computeshell._discover_extensions(NOVACLIENT_VERSION)
+
+    def _create(self):
+        endpoint_type = self._get_client_option('nova', 'endpoint_type')
+        management_url = self.url_for(service_type=self.COMPUTE,
+                                      endpoint_type=endpoint_type)
+        extensions = self._get_extensions()
 
         args = {
             'project_id': self.context.tenant,
             'auth_url': self.context.auth_url,
+            'auth_token': self.auth_token,
             'service_type': self.COMPUTE,
             'username': None,
             'api_key': None,
@@ -91,8 +94,8 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         }
 
         client = nc.Client(NOVACLIENT_VERSION, **args)
-        client.client.auth_token = self.auth_token
-        client.client.management_url = management_url
+
+        client.client.set_management_url(management_url)
 
         return client
 

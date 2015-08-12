@@ -45,20 +45,24 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
     """
 
     def test_create(self):
-        self.nova_plugin._get_client_option = mock.MagicMock()
-        self.nova_plugin.url_for = mock.MagicMock()
+        context = utils.dummy_context()
+        plugin = context.clients.client_plugin('nova')
+        client = plugin.client()
+        self.assertIsNotNone(client.servers)
+
+    def test_get_extensions(self):
         if hasattr(nova.nc, 'discover_extensions'):
             # novaclient >= 2.24.0 has this function
             # so we should test it
             nova.nc.discover_extensions = mock.MagicMock()
-            self.nova_plugin._create()
+            self.nova_plugin._get_extensions()
             nova.nc.discover_extensions.assert_called_once_with('2')
         else:
             # FIXME(kairat_kushaev) need to delete this leaf when novaclient
             # version will be greater than 2.24.0
             with mock.patch(
                     "nova.novashell.OpenStackComputeShell") as comp_shell:
-                self.nova_plugin._create()
+                self.nova_plugin._get_extensions()
                 comp_shell._discover_extensions.assert_called_once_with('2')
 
     def test_get_ip(self):
