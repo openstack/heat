@@ -12,8 +12,6 @@
 
 import json
 
-from testtools import testcase
-
 from heat_integrationtests.common import exceptions
 from heat_integrationtests.scenario import scenario_base
 
@@ -95,7 +93,6 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
                 self._log_console_output(servers=[server])
                 raise e
 
-    @testcase.skip('Skipped until keystone fixed #1484086')
     def test_server_cfn_init(self):
         """
         Check cfn-init and cfn-signal availability on the created server.
