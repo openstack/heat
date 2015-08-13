@@ -15,6 +15,7 @@ from keystoneclient import access
 from keystoneclient.auth.identity import access as access_plugin
 from keystoneclient.auth.identity import v3
 from keystoneclient.auth import token_endpoint
+from keystoneclient import discover as ks_discover
 from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log as logging
@@ -121,14 +122,29 @@ class RequestContext(context.RequestContext):
         return cls(**values)
 
     @property
-    def _keystone_v3_endpoint(self):
+    def keystone_v3_endpoint(self):
         if self.auth_url:
-            auth_uri = self.auth_url
+            auth_uri = self.auth_url.replace('v2.0', 'v3')
         else:
-            importutils.import_module('keystonemiddleware.auth_token')
-            auth_uri = cfg.CONF.keystone_authtoken.auth_uri
-
-        return auth_uri.replace('v2.0', 'v3')
+            # Look for the keystone auth_uri in the configuration. First we
+            # check the [clients_keystone] section, and if it is not set we
+            # look in [keystone_authtoken]
+            if cfg.CONF.clients_keystone.auth_uri:
+                discover = ks_discover.Discover(
+                    auth_url=cfg.CONF.clients_keystone.auth_uri)
+                auth_uri = discover.url_for('3.0')
+            else:
+                # Import auth_token to have keystone_authtoken settings setup.
+                importutils.import_module('keystonemiddleware.auth_token')
+                if cfg.CONF.keystone_authtoken.auth_uri:
+                    auth_uri = cfg.CONF.keystone_authtoken.auth_uri.replace(
+                        'v2.0', 'v3')
+                else:
+                    LOG.error('Keystone API endpoint not provided. Set '
+                              'auth_uri in section [clients_keystone] '
+                              'of the configuration file.')
+                    raise exception.AuthorizationFailure()
+        return auth_uri
 
     def _create_auth_plugin(self):
         if self.trust_id:
@@ -139,14 +155,14 @@ class RequestContext(context.RequestContext):
             return v3.Password(username=username,
                                password=password,
                                user_domain_id='default',
-                               auth_url=self._keystone_v3_endpoint,
+                               auth_url=self.keystone_v3_endpoint,
                                trust_id=self.trust_id)
 
         if self.auth_token_info:
             auth_ref = access.AccessInfo.factory(body=self.auth_token_info,
                                                  auth_token=self.auth_token)
             return access_plugin.AccessInfoPlugin(
-                auth_url=self._keystone_v3_endpoint,
+                auth_url=self.keystone_v3_endpoint,
                 auth_ref=auth_ref)
 
         if self.auth_token:
@@ -154,7 +170,7 @@ class RequestContext(context.RequestContext):
             # only have a token but don't load a service catalog then
             # url_for wont work. Stub with the keystone endpoint so at
             # least it might be right.
-            return token_endpoint.Token(endpoint=self._keystone_v3_endpoint,
+            return token_endpoint.Token(endpoint=self.keystone_v3_endpoint,
                                         token=self.auth_token)
 
         if self.password:
@@ -162,7 +178,7 @@ class RequestContext(context.RequestContext):
                                password=self.password,
                                project_id=self.tenant_id,
                                user_domain_id='default',
-                               auth_url=self._keystone_v3_endpoint)
+                               auth_url=self.keystone_v3_endpoint)
 
         LOG.error(_LE("Keystone v3 API connection failed, no password "
                       "trust or auth_token!"))

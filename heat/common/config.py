@@ -287,6 +287,12 @@ heat_client_opts = [
                help=_('Optional heat url in format like'
                       ' http://0.0.0.0:8004/v1/%(tenant_id)s.'))]
 
+keystone_client_opts = [
+    cfg.StrOpt('auth_uri',
+               default='',
+               help=_('Unversioned keystone url in format like'
+                      ' http://0.0.0.0:5000.'))]
+
 client_http_log_debug_opts = [
     cfg.BoolOpt('http_log_debug',
                 default=False,
@@ -344,6 +350,7 @@ def list_opts():
         yield client_specific_group, clients_opts
 
     yield 'clients_heat', heat_client_opts
+    yield 'clients_keystone', keystone_client_opts
     yield 'clients_nova', client_http_log_debug_opts
     yield 'clients_cinder', client_http_log_debug_opts
 

@@ -76,14 +76,7 @@ class KeystoneClientV3(object):
         self._domain_admin_client = None
 
         self.session = session.Session.construct(self._ssl_options())
-
-        if self.context.auth_url:
-            self.v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
-        else:
-            # Import auth_token to have keystone_authtoken settings setup.
-            importutils.import_module('keystonemiddleware.auth_token')
-            self.v3_endpoint = cfg.CONF.keystone_authtoken.auth_uri.replace(
-                'v2.0', 'v3')
+        self.v3_endpoint = self.context.keystone_v3_endpoint
 
         if self.context.trust_id:
             # Create a client with the specified trust_id, this
