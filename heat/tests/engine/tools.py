@@ -84,6 +84,45 @@ resources:
             salt: {get_param: salt}
 '''
 
+string_template_five_update = '''
+heat_template_version: 2013-05-23
+description: Random String templates
+
+parameters:
+    salt:
+        type: string
+        default: "quickbrownfox123"
+
+resources:
+    A:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    B:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    F:
+        type: OS::Heat::RandomString
+        depends_on: [A, B]
+        properties:
+            salt: {get_param: salt}
+
+    G:
+        type: OS::Heat::RandomString
+        depends_on: F
+        properties:
+            salt: {get_param: salt}
+
+    H:
+        type: OS::Heat::RandomString
+        depends_on: F
+        properties:
+            salt: {get_param: salt}
+'''
+
 
 def get_stack(stack_name, ctx, template=None, with_params=True,
               convergence=False):
