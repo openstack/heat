@@ -87,7 +87,7 @@ class ResourceTypeTest(common.HeatTestCase):
                 'foo': {'description': 'A generic attribute'},
                 'Foo': {'description': 'Another generic attribute'},
                 'show': {
-                    'description': 'Dictionary with resource attributes.',
+                    'description': 'Detailed information about resource.',
                     'type': 'map'},
             },
             'support_status': {
@@ -113,7 +113,7 @@ class ResourceTypeTest(common.HeatTestCase):
                 'attr2': {'description': 'Another generic attribute',
                           'type': 'map'},
                 'show': {
-                    'description': 'Dictionary with resource attributes.',
+                    'description': 'Detailed information about resource.',
                     'type': 'map'},
             },
             'support_status': {

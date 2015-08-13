@@ -130,7 +130,7 @@ class Resource(object):
     # resources
     base_attributes_schema = {
         SHOW: attributes.Schema(
-            _("Dictionary with resource attributes."),
+            _("Detailed information about resource."),
             type=attributes.Schema.MAP
         )
     }

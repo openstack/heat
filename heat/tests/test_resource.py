@@ -1156,7 +1156,7 @@ class ResourceTest(common.HeatTestCase):
                     'Value': '{"Fn::GetAtt": ["TestResource", "output2"]}'
                 },
                 'show': {
-                    'Description': u'Dictionary with resource attributes.',
+                    'Description': u'Detailed information about resource.',
                     'Value': '{"Fn::GetAtt": ["TestResource", "show"]}'
                 }
             }
@@ -1239,7 +1239,7 @@ class ResourceTest(common.HeatTestCase):
                     'value': '{"get_attr": ["TestResource", "output2"]}'
                 },
                 'show': {
-                    'description': u'Dictionary with resource attributes.',
+                    'description': u'Detailed information about resource.',
                     'value': '{"get_attr": ["TestResource", "show"]}'
                 }
             }
