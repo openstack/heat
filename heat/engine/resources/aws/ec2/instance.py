@@ -358,7 +358,7 @@ class Instance(resource.Resource):
         Read the server's IP address from a list of networks provided by Nova
         '''
         # Just record the first ipaddress
-        for n in networks:
+        for n in sorted(networks, reverse=True):
             if len(networks[n]) > 0:
                 self.ipaddress = networks[n][0]
                 break

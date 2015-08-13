@@ -504,7 +504,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             LOG.warn(_LW('Instance (%(server)s) not found: %(ex)s'),
                      {'server': server, 'ex': ex})
         else:
-            for n in server.networks:
+            for n in sorted(server.networks, reverse=True):
                 if len(server.networks[n]) > 0:
                     return server.networks[n][0]
 

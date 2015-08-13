@@ -302,7 +302,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         if action in ['addFloatingIp',
                       'removeFloatingIp',
                       ]:
-            assert body[action].keys() == ['address']
+            assert list(body[action].keys()) == ['address']
 
         return (resp, _body)
 

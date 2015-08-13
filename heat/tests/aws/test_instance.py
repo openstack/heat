@@ -242,11 +242,10 @@ class InstancesTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('validate_volumes',
                                       resource_defns['WebServer'], stack)
-
-        self._mock_get_image_id_success('F17-x86_64-gold', 1)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        self.stub_ImageConstraint_validate()
         self.stub_SnapshotConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_KeypairConstraint_validate()
         self.m.StubOutWithMock(cinder.CinderClientPlugin, 'get_volume')
         ex = exception.EntityNotFound(entity='Volume', name='1234')
         cinder.CinderClientPlugin.get_volume('1234').AndRaise(ex)
@@ -345,10 +344,11 @@ class InstancesTest(common.HeatTestCase):
         instance = instances.Instance('validate_without_DeviceName',
                                       resource_defns['WebServer'], stack)
 
-        self._mock_get_image_id_success('F17-x86_64-gold', 1)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
-
+        self.stub_VolumeConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -409,6 +409,10 @@ class InstancesTest(common.HeatTestCase):
         self._mock_get_image_id_fail('Slackware',
                                      exception.EntityNotFound(
                                          entity='Image', name='Slackware'))
+        self.stub_VolumeConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(instance.create)
@@ -437,6 +441,10 @@ class InstancesTest(common.HeatTestCase):
                                      exception.PhysicalResourceNameAmbiguity(
                                          name='CentOS 5.2'))
 
+        self.stub_KeypairConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(instance.create)
@@ -462,6 +470,10 @@ class InstancesTest(common.HeatTestCase):
 
         self._mock_get_image_id_fail('1', glance_exceptions.NotFound(404))
 
+        self.stub_VolumeConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(instance.create)
