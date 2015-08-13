@@ -198,6 +198,7 @@ Number      0
 Integer     0
 List        []
 Map         {}
+Boolean     False
 ======= ============
 
 Property Constraints
