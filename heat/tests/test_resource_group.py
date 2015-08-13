@@ -187,6 +187,32 @@ class ResourceGroupTest(common.HeatTestCase):
         }
         self.assertEqual(expect, resg._assemble_nested([]))
 
+    def test_assemble_nested_with_metadata(self):
+        templ = copy.deepcopy(template)
+        res_def = templ["resources"]["group1"]["properties"]['resource_def']
+        res_def['properties']['Foo'] = None
+        res_def['metadata'] = {
+            'priority': 'low',
+            'role': 'webserver'
+        }
+        stack = utils.parse_stack(templ)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        expect = {
+            "heat_template_version": "2013-05-23",
+            "resources": {
+                "0": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {},
+                    "metadata": {
+                        'priority': 'low',
+                        'role': 'webserver'
+                    }
+                }
+            }
+        }
+        self.assertEqual(expect, resg._assemble_nested(['0']))
+
     def test_assemble_nested_rolling_update(self):
         expect = {
             "heat_template_version": "2013-05-23",
