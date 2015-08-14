@@ -28,6 +28,8 @@ class MonascaNotification(resource.Resource):
 
     default_client_name = 'monasca'
 
+    entity = 'notifications'
+
     NOTIFICATION_TYPES = (
         EMAIL, WEBHOOK, PAGERDUTY
     ) = (
@@ -100,6 +102,11 @@ class MonascaNotification(resource.Resource):
                     notification_id=self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
+
+    # FIXME(kanagaraj-manickam) Remove this method once monasca defect 1484900
+    # is fixed.
+    def _show_resource(self):
+        return self.client().notifications.get(self.resource_id)
 
 
 def resource_mapping():

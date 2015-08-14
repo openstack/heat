@@ -28,6 +28,8 @@ class MonascaAlarmDefinition(resource.Resource):
 
     default_client_name = 'monasca'
 
+    entity = 'alarm_definitions'
+
     SEVERITY_LEVELS = (
         LOW, MEDIUM, HIGH, CRITICAL
     ) = (
@@ -190,6 +192,11 @@ class MonascaAlarmDefinition(resource.Resource):
                     alarm_id=self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
+
+    # FIXME(kanagaraj-manickam) Remove this method once monasca defect 1484900
+    # is fixed.
+    def _show_resource(self):
+        return self.client().alarm_definitions.get(self.resource_id)
 
 
 def resource_mapping():

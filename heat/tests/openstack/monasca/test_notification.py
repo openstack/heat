@@ -175,3 +175,11 @@ class MonascaNotificationTest(common.HeatTestCase):
                          mapping[RESOURCE_TYPE])
         self.assertIsInstance(self.test_resource,
                               notification.MonascaNotification)
+
+    def test_resource_show_resource(self):
+        mock_notification_get = self.test_client.notifications.get
+        mock_notification_get.return_value = {}
+
+        self.assertEqual({},
+                         self.test_resource._show_resource(),
+                         'Failed to show resource')
