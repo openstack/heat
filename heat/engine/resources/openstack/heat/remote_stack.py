@@ -290,12 +290,7 @@ class RemoteStack(resource.Resource):
         return self._check_action_complete(action=self.CHECK)
 
     def _resolve_attribute(self, name):
-        try:
-            stack = self.heat().stacks.get(stack_id=self.resource_id)
-        except Exception as e:
-            self.client_plugin().ignore_not_found(e)
-            return None
-
+        stack = self.heat().stacks.get(stack_id=self.resource_id)
         if name == self.NAME_ATTR:
             value = getattr(stack, name, None)
             return value or self.physical_resource_name_or_FnGetRefId()

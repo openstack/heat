@@ -158,14 +158,11 @@ class NetworkInterface(resource.Resource):
                 self.client().update_port(self.resource_id,
                                           {'port': update_props})
 
-    def _get_fixed_ip_address(self, ):
+    def _get_fixed_ip_address(self):
         if self.fixed_ip_address is None:
-            try:
-                port = self.client().show_port(self.resource_id)['port']
-                if port['fixed_ips'] and len(port['fixed_ips']) > 0:
-                    self.fixed_ip_address = port['fixed_ips'][0]['ip_address']
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
+            port = self.client().show_port(self.resource_id)['port']
+            if port['fixed_ips'] and len(port['fixed_ips']) > 0:
+                self.fixed_ip_address = port['fixed_ips'][0]['ip_address']
 
         return self.fixed_ip_address
 
