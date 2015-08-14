@@ -136,7 +136,7 @@ class HOTemplate20130523(template.Template):
         obj_name = section[:-1]
         err_msg = _('"%%s" is not a valid keyword inside a %s '
                     'definition') % obj_name
-        for name, attrs in six.iteritems(data):
+        for name, attrs in sorted(data.items()):
             cfn_object = {}
 
             if not attrs:
@@ -159,7 +159,7 @@ class HOTemplate20130523(template.Template):
                 raise exception.StackValidationFailed(message=message)
             except KeyError as e:
                 # an invalid keyword was found
-                raise exception.StackValidationFailed(message=six.text_type(e))
+                raise exception.StackValidationFailed(message=e.args[0])
 
         return cfn_objects
 
