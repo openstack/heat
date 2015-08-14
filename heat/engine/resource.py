@@ -401,7 +401,7 @@ class Resource(object):
                 self.clear_hook(hook)
                 self._add_event(
                     self.action, self.status,
-                    "Failure occured while waiting.")
+                    "Failure occurred while waiting.")
 
     def has_hook(self, hook):
         # Clear the cache to make sure the data is up to date:
