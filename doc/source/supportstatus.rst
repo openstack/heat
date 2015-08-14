@@ -29,7 +29,6 @@ which has follow options:
 
 *status*:
   Current status of object. Allowed values:
-    - PROTOTYPE. Prototype of object. Not supported at current time.
     - SUPPORTED. Default value of status parameter. All objects with this
       status are available and can be used.
     - DEPRECATED. Object with this status is available, but using it in
@@ -43,12 +42,11 @@ which has follow options:
       resource-type-show and in documentation. See below more details about
       removing and deprecating process.
     - UNSUPPORTED. Resources with UNSUPPORTED status are not supported by Heat
-      team, i.e. user can use it, but it may be broken. Not used at current
-      time.
+      team, i.e. user can use it, but it may be broken.
 
 *version*:
   Release name, since which current status is active. Parameter is optional,
-  but should be defined or changes any time SupportStatus is specified or
+  but should be defined or changed any time SupportStatus is specified or
   status changed. It used for better understanding from which release object
   in current status.
   .. note::
@@ -56,24 +54,24 @@ which has follow options:
      Since Liberty release mark looks like 5.0.0 instead of 2015.2.
 
 *message*:
-  Any additional information about object's state, e.g. 'Use property
-  new_property instead.'.
+  Any additional information about object's state, e.g.
+  ``'Use property new_property instead.'``.
 
 *previous_status*:
   Option, which allows to display object's previous status, if any. This is
-  helpful for displaying full life cycle of object. Type of `previous_status`
+  helpful for displaying full life cycle of object. Type of *previous_status*
   is SupportStatus.
 
 Life cycle of resource, property, attribute
 -------------------------------------------
-This section described life cycle of such objects as resource, property
-and attribute. All these objects have same life cycle:
+This section describes life cycle of such objects as resource, property
+and attribute. All these objects have same life cycle::
 
-PROTOTYPE -> SUPPORTED -> DEPRECATED -> HIDDEN
-                                    \
-                                     -> UNSUPPORTED
+  UNSUPPORTED -> SUPPORTED -> DEPRECATED -> HIDDEN
+                                        \
+                                         -> UNSUPPORTED
 
-where PROTOTYPE and UNSUPPORTED are optional.
+where UNSUPPORTED is optional.
 
 Creating process of object
 ++++++++++++++++++++++++++
@@ -89,7 +87,7 @@ When some object becomes obsolete, user should know about that, so there is
 need to add information about deprecation in *support_status* of object.
 Status of ``SupportStatus`` must equals to DEPRECATED. If there is no *version*
 parameter, need to add one with current release otherwise move current status
-to *previous_status* and add to version current release as value. If some new
+to *previous_status* and add to *version* current release as value. If some new
 object replaces old object, it will be good decision to add some information
 about new object to *support_status* message of old object, e.g. 'Use property
 new_property instead.'.
@@ -97,9 +95,10 @@ new_property instead.'.
 Removing process of object
 ++++++++++++++++++++++++++
 After at least one full release cycle deprecated object should be hidden and
-*support_status* status should equals to HIDDEN. All using of hidden object in
-new stacks is prohibited, but old stacks continue running. So if template uses
-removed object, StackValidationFailed exception will raised.
+*support_status* status should equals to HIDDEN. HIDDEN status means hiding
+object from documentation and from result of :code:`resource-type-list` CLI
+command, if object is resource. Also, :code:`resource-type-show` command with
+such resource will raise `NotSupported` exception.
 
 Using Support Status during code writing
 ----------------------------------------
