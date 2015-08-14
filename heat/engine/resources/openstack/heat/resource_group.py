@@ -83,9 +83,9 @@ class ResourceGroup(stack_resource.StackResource):
     )
 
     _RESOURCE_DEF_KEYS = (
-        RESOURCE_DEF_TYPE, RESOURCE_DEF_PROPERTIES,
+        RESOURCE_DEF_TYPE, RESOURCE_DEF_PROPERTIES, RESOURCE_DEF_METADATA,
     ) = (
-        'type', 'properties',
+        'type', 'properties', 'metadata',
     )
 
     _REMOVAL_POLICIES_KEYS = (
@@ -146,6 +146,12 @@ class ResourceGroup(stack_resource.StackResource):
                     properties.Schema.MAP,
                     _('Property values for the resources in the group')
                 ),
+                RESOURCE_DEF_METADATA: properties.Schema(
+                    properties.Schema.MAP,
+                    _('Supplied metadata for the resources in the group'),
+                    support_status=support.SupportStatus(version='5.0.0')
+                ),
+
             },
             required=True,
             update_allowed=True
@@ -411,6 +417,8 @@ class ResourceGroup(stack_resource.StackResource):
         res_def = self.properties[self.RESOURCE_DEF]
         if res_def[self.RESOURCE_DEF_PROPERTIES] is None:
             res_def[self.RESOURCE_DEF_PROPERTIES] = {}
+        if res_def[self.RESOURCE_DEF_METADATA] is None:
+            del res_def[self.RESOURCE_DEF_METADATA]
         if not include_all:
             resource_def_props = res_def[self.RESOURCE_DEF_PROPERTIES]
             clean = dict((k, v) for k, v in resource_def_props.items()
