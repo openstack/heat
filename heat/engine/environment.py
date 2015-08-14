@@ -16,6 +16,7 @@ import fnmatch
 import glob
 import itertools
 import os.path
+import re
 import warnings
 
 from oslo_config import cfg
@@ -438,7 +439,10 @@ class ResourceRegistry(object):
 
         return _as_dict(self._registry)
 
-    def get_types(self, cnxt=None, support_status=None):
+    def get_types(self,
+                  cnxt=None,
+                  support_status=None,
+                  type_name=None):
         '''Return a list of valid resource types.'''
 
         # validate the support status
@@ -478,8 +482,15 @@ class ResourceRegistry(object):
 
         enforcer = policy.ResourceEnforcer()
 
+        def name_matches(name):
+            try:
+                return type_name is None or re.match(type_name, name)
+            except:  # noqa
+                return False
+
         return [name for name, cls in six.iteritems(self._registry)
                 if (is_resource(name) and
+                    name_matches(name) and
                     status_matches(cls) and
                     is_available(cls) and
                     is_allowed(enforcer, name) and
