@@ -57,3 +57,7 @@ class SupportStatus(object):
                     'version': self.version,
                     'previous_status': self.previous_status.to_dict()
                     if self.previous_status is not None else None}
+
+
+def is_valid_status(status):
+    return status in SUPPORT_STATUSES
