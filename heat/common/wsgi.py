@@ -64,7 +64,7 @@ api_opts = [
                help=_('Address to bind the server. Useful when '
                       'selecting a particular network interface.'),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('bind_port', default=8004,
+    cfg.IntOpt('bind_port', default=8004, min=1, max=65535,
                help=_('The port on which the server will listen.'),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
@@ -102,7 +102,7 @@ api_cfn_opts = [
                help=_('Address to bind the server. Useful when '
                       'selecting a particular network interface.'),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('bind_port', default=8000,
+    cfg.IntOpt('bind_port', default=8000, min=1, max=65535,
                help=_('The port on which the server will listen.'),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
@@ -140,7 +140,7 @@ api_cw_opts = [
                help=_('Address to bind the server. Useful when '
                       'selecting a particular network interface.'),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('bind_port', default=8003,
+    cfg.IntOpt('bind_port', default=8003, min=1, max=65535,
                help=_('The port on which the server will listen.'),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
