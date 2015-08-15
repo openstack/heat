@@ -15,28 +15,40 @@ from heat.common import short_id
 from heat.engine import template
 
 
-def resource_templates(old_resources, resource_definition,
-                       num_resources, num_replace):
+def member_definitions(old_resources, new_definition,
+                       num_resources, num_new):
     """
-    Create the template for the nested stack of existing and new instances
-    For rolling update, if launch configuration is different, the
-    instance definition should come from the existing instance instead
-    of using the new launch configuration.
+    Iterate over resource definitions for a scaling group
+
+    Generates the definitions for the next change to the scaling group. Each
+    item is a (name, definition) tuple.
+
+    The input is a list of (name, definition) tuples for existing resources in
+    the group, sorted in the order that they should be replaced or removed
+    (i.e. the resource that should be the first to be replaced (on update) or
+    removed (on scale down) appears at the beginning of the list.) New
+    resources are added or old resources removed as necessary to ensure a total
+    of num_resources.
+
+    The number of resources to have their definition changed to the new one is
+    controlled by num_new. This value includes any new resources to be added,
+    with any shortfall made up by modifying the definitions of existing
+    resources.
     """
     old_resources = old_resources[-num_resources:]
     num_create = num_resources - len(old_resources)
-    num_replace -= num_create
+    num_replace = num_new - num_create
 
     for i in range(num_resources):
         if i < len(old_resources):
-            old_name, old_template = old_resources[i]
-            if old_template != resource_definition and num_replace > 0:
+            old_name, old_definition = old_resources[i]
+            if old_definition != new_definition and num_replace > 0:
                 num_replace -= 1
-                yield old_name, resource_definition
+                yield old_name, new_definition
             else:
-                yield old_name, old_template
+                yield old_name, old_definition
         else:
-            yield short_id.generate_id(), resource_definition
+            yield short_id.generate_id(), new_definition
 
 
 def make_template(resource_definitions,

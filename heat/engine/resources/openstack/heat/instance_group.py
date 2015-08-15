@@ -258,11 +258,11 @@ class InstanceGroup(stack_resource.StackResource):
         """
         Create a template to represent autoscaled instances.
 
-        Also see heat.scaling.template.resource_templates.
+        Also see heat.scaling.template.member_definitions.
         """
         instance_definition = self._get_instance_definition()
         old_resources = self._get_instance_templates()
-        definitions = template.resource_templates(
+        definitions = template.member_definitions(
             old_resources, instance_definition, num_instances, num_replace)
 
         child_env = environment.get_child_environment(
