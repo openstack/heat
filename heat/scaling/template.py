@@ -11,12 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import short_id
 from heat.engine import template
 
 
 def member_definitions(old_resources, new_definition,
-                       num_resources, num_new):
+                       num_resources, num_new,
+                       get_new_id):
     """
     Iterate over resource definitions for a scaling group
 
@@ -48,7 +48,7 @@ def member_definitions(old_resources, new_definition,
             else:
                 yield old_name, old_definition
         else:
-            yield short_id.generate_id(), new_definition
+            yield get_new_id(), new_definition
 
 
 def make_template(resource_definitions,

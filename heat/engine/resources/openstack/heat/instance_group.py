@@ -14,6 +14,7 @@
 from heat.common import environment_format
 from heat.common import grouputils
 from heat.common.i18n import _
+from heat.common import short_id
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import environment
@@ -263,7 +264,8 @@ class InstanceGroup(stack_resource.StackResource):
         instance_definition = self._get_instance_definition()
         old_resources = self._get_instance_templates()
         definitions = template.member_definitions(
-            old_resources, instance_definition, num_instances, num_replace)
+            old_resources, instance_definition, num_instances, num_replace,
+            short_id.generate_id)
 
         child_env = environment.get_child_environment(
             self.stack.env,

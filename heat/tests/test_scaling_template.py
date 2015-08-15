@@ -11,10 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import itertools
 
-from heat.common import short_id
 from heat.scaling import template
 from heat.tests import common
 
@@ -24,16 +22,15 @@ class ResourceTemplatesTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceTemplatesTest, self).setUp()
         ids = ('stubbed-id-%s' % (i,) for i in itertools.count())
-        self.patchobject(
-            short_id, 'generate_id').side_effect = functools.partial(next,
-                                                                     ids)
+        self.next_id = lambda: next(ids)
 
     def test_create_template(self):
         """
         When creating a template from scratch, an empty list is accepted as
         the "old" resources and new resources are created up to num_resource.
         """
-        templates = template.member_definitions([], {'type': 'Foo'}, 2, 0)
+        templates = template.member_definitions([], {'type': 'Foo'}, 2, 0,
+                                                self.next_id)
         expected = [
             ('stubbed-id-0', {'type': 'Foo'}),
             ('stubbed-id-1', {'type': 'Foo'})]
@@ -48,7 +45,7 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', {'type': 'Foo'}),
             ('old-id-1', {'type': 'Foo'})]
         templates = template.member_definitions(old_resources, {'type': 'Bar'},
-                                                1, 2)
+                                                1, 2, self.next_id)
         expected = [('old-id-1', {'type': 'Bar'})]
         self.assertEqual(expected, list(templates))
 
@@ -61,7 +58,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', {'type': 'Foo'}),
             ('old-id-1', {'type': 'Foo'})]
         new_spec = {'type': 'Bar'}
-        templates = template.member_definitions(old_resources, new_spec, 2, 1)
+        templates = template.member_definitions(old_resources, new_spec, 2, 1,
+                                                self.next_id)
         expected = [
             ('old-id-0', {'type': 'Bar'}),
             ('old-id-1', {'type': 'Foo'})]
@@ -78,7 +76,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', spec),
             ('old-id-1', spec)]
         new_spec = {'type': 'Bar'}
-        templates = template.member_definitions(old_resources, new_spec, 4, 2)
+        templates = template.member_definitions(old_resources, new_spec, 4, 2,
+                                                self.next_id)
         expected = [
             ('old-id-0', spec),
             ('old-id-1', spec),
@@ -96,7 +95,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', {'type': 'Bar'}),
             ('old-id-1', {'type': 'Foo'})]
         new_spec = {'type': 'Bar'}
-        templates = template.member_definitions(old_resources, new_spec, 2, 1)
+        templates = template.member_definitions(old_resources, new_spec, 2, 1,
+                                                self.next_id)
         second_batch_expected = [
             ('old-id-0', {'type': 'Bar'}),
             ('old-id-1', {'type': 'Bar'})]
