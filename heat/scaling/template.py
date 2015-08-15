@@ -14,9 +14,13 @@
 from heat.engine import template
 
 
+def _identity(resource_name, definition):
+    return definition
+
+
 def member_definitions(old_resources, new_definition,
                        num_resources, num_new,
-                       get_new_id):
+                       get_new_id, customise=_identity):
     """
     Iterate over resource definitions for a scaling group
 
@@ -42,13 +46,15 @@ def member_definitions(old_resources, new_definition,
     for i in range(num_resources):
         if i < len(old_resources):
             old_name, old_definition = old_resources[i]
-            if old_definition != new_definition and num_replace > 0:
+            custom_definition = customise(old_name, new_definition)
+            if old_definition != custom_definition and num_replace > 0:
                 num_replace -= 1
-                yield old_name, new_definition
+                yield old_name, custom_definition
             else:
                 yield old_name, old_definition
         else:
-            yield get_new_id(), new_definition
+            new_name = get_new_id()
+            yield new_name, customise(new_name, new_definition)
 
 
 def make_template(resource_definitions,
