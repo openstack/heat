@@ -198,7 +198,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         if 'matching_metadata' in al:
             del al['matching_metadata']
         if query:
-            rule['query'] = query
+            rule['query'] = mox.SameElementsAs(query)
         al['threshold_rule'] = rule
         al['type'] = 'threshold'
         self.m.StubOutWithMock(self.fa.alarms, 'create')
@@ -396,8 +396,9 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_mem_alarm_high_not_correct_string_parameters(self):
-        snippet = template_format.parse(not_string_alarm_template)
+        orig_snippet = template_format.parse(not_string_alarm_template)
         for p in ('period', 'evaluation_periods'):
+            snippet = copy.deepcopy(orig_snippet)
             snippet['Resources']['MEMAlarmHigh']['Properties'][p] = '60a'
             stack = utils.parse_stack(snippet)
 
@@ -411,8 +412,9 @@ class CeilometerAlarmTest(common.HeatTestCase):
                 "Value '60a' is not an integer" % p, six.text_type(error))
 
     def test_mem_alarm_high_not_integer_parameters(self):
-        snippet = template_format.parse(not_string_alarm_template)
+        orig_snippet = template_format.parse(not_string_alarm_template)
         for p in ('period', 'evaluation_periods'):
+            snippet = copy.deepcopy(orig_snippet)
             snippet['Resources']['MEMAlarmHigh']['Properties'][p] = [60]
             stack = utils.parse_stack(snippet)
 

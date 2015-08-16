@@ -17,6 +17,7 @@ import json
 import uuid
 
 import mock
+import mox
 import six
 
 from heat.common import exception
@@ -1229,11 +1230,11 @@ class LoadBalancerTest(common.HeatTestCase):
         template['Resources'][lb_name]['Properties']['metadata'] = {
             'a': 1, 'b': 2}
         expected_body = copy.deepcopy(self.expected_body)
-        expected_body['metadata'] = [{'key': 'a', 'value': 1},
-                                     {'key': 'b', 'value': 2}]
-        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
-                                                          self.lb_name,
-                                                          expected_body)
+        expected_body['metadata'] = mox.SameElementsAs(
+            [{'key': 'a', 'value': 1},
+             {'key': 'b', 'value': 2}])
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(
+            template, self.lb_name, expected_body)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()

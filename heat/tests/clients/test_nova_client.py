@@ -374,7 +374,12 @@ class NovaClientPluginMetadataTests(NovaClientPluginTestCase):
         self.assertEqual(expected, self.nova_plugin.meta_serialize(original))
 
     def test_serialize_dict(self):
-        original = {'test_key': {'a': 'b', 'c': 'd'}}
+        original = collections.OrderedDict([
+            ('test_key', collections.OrderedDict([
+                ('a', 'b'),
+                ('c', 'd'),
+            ]))
+        ])
         expected = {'test_key': '{"a": "b", "c": "d"}'}
         actual = self.nova_plugin.meta_serialize(original)
         self.assertEqual(json.loads(expected['test_key']),

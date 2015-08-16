@@ -73,11 +73,13 @@ class WatchControllerTest(common.HeatTestCase):
 
         dims = [{'StackId': u'21617058-781e-4262-97ab-5f9df371ee52',
                  'Foo': 'bar'}]
-        self.assertEqual([{'Name': 'StackId',
-                          'Value': u'21617058-781e-4262-97ab-5f9df371ee52'},
-                          {'Name': 'Foo', 'Value': 'bar'}],
-                         self.controller._reformat_dimensions(dims)
-                         )
+        self.assertEqual(
+            utils.recursive_sort(
+                [{'Name': 'StackId',
+                  'Value': u'21617058-781e-4262-97ab-5f9df371ee52'},
+                 {'Name': 'Foo',
+                  'Value': 'bar'}]),
+            utils.recursive_sort(self.controller._reformat_dimensions(dims)))
 
     def test_enforce_default(self):
         self.m.ReplayAll()
@@ -301,7 +303,9 @@ class WatchControllerTest(common.HeatTestCase):
                                    'MetricName': u'ServiceFailure3'}]}}}
 
         # First pass no query paramters filtering, should get all three
-        self.assertEqual(expected, self.controller.list_metrics(dummy_req))
+        self.assertEqual(
+            utils.recursive_sort(expected),
+            utils.recursive_sort(self.controller.list_metrics(dummy_req)))
 
     def test_list_metrics_filter_name(self):
 
@@ -358,7 +362,9 @@ class WatchControllerTest(common.HeatTestCase):
                           'Value': 1}],
                         'MetricName': u'ServiceFailure'}]}}}
         # First pass no query paramters filtering, should get all three
-        self.assertEqual(expected, self.controller.list_metrics(dummy_req))
+        self.assertEqual(
+            utils.recursive_sort(expected),
+            utils.recursive_sort(self.controller.list_metrics(dummy_req)))
 
     def test_list_metrics_filter_namespace(self):
 
@@ -426,7 +432,9 @@ class WatchControllerTest(common.HeatTestCase):
                          {'Name': u'Value',
                           'Value': 1}],
                         'MetricName': u'ServiceFailure2'}]}}}
-        self.assertEqual(expected, self.controller.list_metrics(dummy_req))
+        self.assertEqual(
+            utils.recursive_sort(expected),
+            utils.recursive_sort(self.controller.list_metrics(dummy_req)))
 
     def test_put_metric_alarm(self):
         # Not yet implemented, should raise HeatAPINotImplementedError

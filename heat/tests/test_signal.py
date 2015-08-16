@@ -17,6 +17,7 @@ import uuid
 from keystoneclient import exceptions as kc_exceptions
 import mox
 import six
+from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format
@@ -176,19 +177,25 @@ class SignalTest(common.HeatTestCase):
         rsrc.created_time = created_time
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        expected_url = "".join([
+        # url parameters come in unexpected order, so the conversion has to be
+        # done for comparison
+        expected_url_path = "".join([
             'http://server.test:8000/v1/signal/',
             'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
             'test_stack%2FSTACKABCD1234%2Fresources%2F',
-            'signal_handler?',
-            'Timestamp=2012-11-29T13%3A49%3A37Z&',
-            'SignatureMethod=HmacSHA256&',
-            'AWSAccessKeyId=4567&',
-            'SignatureVersion=2&',
-            'Signature=',
-            'VW4NyvRO4WhQdsQ4rxl5JMUr0AlefHN6OLsRz9oZyls%3D'])
+            'signal_handler'])
+        expected_url_params = {
+            'Timestamp': ['2012-11-29T13:49:37Z'],
+            'SignatureMethod': ['HmacSHA256'],
+            'AWSAccessKeyId': ['4567'],
+            'SignatureVersion': ['2'],
+            'Signature': ['VW4NyvRO4WhQdsQ4rxl5JMUr0AlefHN6OLsRz9oZyls=']}
 
-        self.assertEqual(expected_url, rsrc.FnGetAtt('AlarmUrl'))
+        url = rsrc.FnGetAtt('AlarmUrl')
+        url_path, url_params = url.split('?', 1)
+        url_params = urlparse.parse_qs(url_params)
+        self.assertEqual(expected_url_path, url_path)
+        self.assertEqual(expected_url_params, url_params)
         self.m.VerifyAll()
 
     def test_FnGetAtt_Alarm_Url_is_cached(self):
