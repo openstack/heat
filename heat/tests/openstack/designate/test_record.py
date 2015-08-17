@@ -14,6 +14,7 @@
 import mock
 
 from designateclient import exceptions as designate_exception
+from designateclient.v1 import records
 
 from heat.engine.resources.openstack.designate import record
 from heat.engine import stack
@@ -230,3 +231,20 @@ class DesignateRecordTest(common.HeatTestCase):
         self.assertEqual(1, len(mapping))
         self.assertEqual(record.DesignateRecord, mapping[RESOURCE_TYPE])
         self.assertIsInstance(self.test_resource, record.DesignateRecord)
+
+    def test_resource_show_resource(self):
+        args = dict(
+            name='test-record.com',
+            description='Test record',
+            ttl=3600,
+            type='A',
+            priority=1,
+            data='1.1.1.1'
+        )
+        rsc = records.Record(args)
+        mock_notification_get = self.test_client.records.get
+        mock_notification_get.return_value = rsc
+
+        self.assertEqual(args,
+                         self.test_resource._show_resource(),
+                         'Failed to show resource')

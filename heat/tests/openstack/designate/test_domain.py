@@ -14,6 +14,7 @@
 import mock
 
 from designateclient import exceptions as designate_exception
+from designateclient.v1 import domains
 
 from heat.engine.resources.openstack.designate import domain
 from heat.engine import stack
@@ -162,3 +163,19 @@ class DesignateDomainTest(common.HeatTestCase):
         self.assertEqual(1, len(mapping))
         self.assertEqual(domain.DesignateDomain, mapping[RESOURCE_TYPE])
         self.assertIsInstance(self.test_resource, domain.DesignateDomain)
+
+    def test_resource_show_resource(self):
+        args = dict(
+            name='test',
+            description='updated description',
+            ttl=4200,
+            email='xyz@test-domain.com'
+        )
+
+        rsc = domains.Domain(args)
+        mock_notification_get = self.test_client.domains.get
+        mock_notification_get.return_value = rsc
+
+        self.assertEqual(args,
+                         self.test_resource._show_resource(),
+                         'Failed to show resource')
