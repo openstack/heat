@@ -172,17 +172,20 @@ class Workflow(signal_responder.SignalResponder,
 
     attributes_schema = {
         WORKFLOW_DATA: attributes.Schema(
-            _('A dictionary which contains name and input of the workflow.')
+            _('A dictionary which contains name and input of the workflow.'),
+            type=attributes.Schema.MAP
         ),
         ALARM_URL: attributes.Schema(
             _("A signed url to create executions for workflows specified in "
-              "Workflow resource.")
+              "Workflow resource."),
+            type=attributes.Schema.STRING
         ),
         EXECUTIONS: attributes.Schema(
             _("List of workflows' executions, each of them is a dictionary "
               "with information about execution. Each dictionary returns "
               "values for next keys: id, workflow_name, created_at, "
-              "updated_at, state for current execution state, input, output.")
+              "updated_at, state for current execution state, input, output."),
+            type=attributes.Schema.LIST
         )
     }
 
