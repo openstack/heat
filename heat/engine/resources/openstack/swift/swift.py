@@ -249,6 +249,9 @@ class SwiftContainer(resource.Resource):
                 elif key == self.HEAD_CONTAINER:
                     return headers
 
+    def _show_resource(self):
+        return self.client().head_container(self.resource_id)
+
 
 def resource_mapping():
     return {

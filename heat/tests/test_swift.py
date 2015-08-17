@@ -157,6 +157,7 @@ class swiftTest(common.HeatTestCase):
         self.assertEqual('82', rsrc.FnGetAtt('ObjectCount'))
         self.assertEqual('17680980', rsrc.FnGetAtt('BytesUsed'))
         self.assertEqual(headers, rsrc.FnGetAtt('HeadContainer'))
+        self.assertEqual(headers, rsrc.FnGetAtt('show'))
 
         self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')
