@@ -1129,7 +1129,7 @@ class Resource(object):
         replaced by more recent resource, then delete this and update
         the replacement resource's needed_by and replaces fields.
         '''
-        self._aquire(engine_id)
+        self._acquire(engine_id)
         try:
             self.needed_by = list(set(v for v in input_data.values()
                                       if v is not None))
@@ -1289,7 +1289,7 @@ class Resource(object):
 
     @contextlib.contextmanager
     def lock(self, engine_id):
-        self._aquire(engine_id)
+        self._acquire(engine_id)
         try:
             yield
         except:  # noqa
@@ -1298,7 +1298,7 @@ class Resource(object):
         else:
             self._release(engine_id)
 
-    def _aquire(self, engine_id):
+    def _acquire(self, engine_id):
         updated_ok = False
         try:
             rs = resource_objects.Resource.get_obj(self.context, self.id)
