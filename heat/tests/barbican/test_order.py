@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 import mock
 import six
 
@@ -33,6 +35,7 @@ resources:
       algorithm: aes
       bit_length: 256
       mode: cbc
+      type: key
 '''
 
 
@@ -82,6 +85,15 @@ class TestOrder(common.HeatTestCase):
         self.assertEqual('aes', args['algorithm'])
         self.assertEqual('cbc', args['mode'])
         self.assertEqual(256, args['bit_length'])
+
+    def test_create_order_without_type_fail(self):
+        snippet = copy.deepcopy(self.res_template)
+        del snippet['Properties']['type']
+        self.assertRaisesRegexp(exception.ResourceFailure,
+                                'Property type not assigned',
+                                self._create_resource,
+                                'foo',
+                                snippet, self.stack)
 
     def test_attributes(self):
         mock_order = mock.Mock()
