@@ -260,15 +260,6 @@ class ManilaShare(resource.Resource):
             raise resource.ResourceUnknownStatus(status_reason=reason,
                                                  resource_status=share_status)
 
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-
-        try:
-            self.client().shares.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-
     def check_delete_complete(self, *args):
         if not self.resource_id:
             return True

@@ -77,6 +77,8 @@ class DesignateDomain(resource.Resource):
 
     default_client_name = 'designate'
 
+    entity = 'domains'
+
     def handle_create(self):
         args = dict(
             name=self.properties[self.NAME],
@@ -104,13 +106,6 @@ class DesignateDomain(resource.Resource):
         if len(args.keys()) > 0:
             args['id'] = self.resource_id
             self.client_plugin().domain_update(**args)
-
-    def handle_delete(self):
-        if self.resource_id is not None:
-            try:
-                self.client().domains.delete(self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
     def _resolve_attribute(self, name):
         if name == self.SERIAL:

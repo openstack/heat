@@ -109,7 +109,8 @@ class CinderEncryptedVolumeTypeTest(common.HeatTestCase):
         volume_type_id = '01bd581d-33fe-4d6d-bd7b-70ae076d39fb'
         self.my_encrypted_vol_type.resource_id = volume_type_id
         self.volume_encryption_types.delete.return_value = None
-        self.assertIsNone(self.my_encrypted_vol_type.handle_delete())
+        self.assertEqual('01bd581d-33fe-4d6d-bd7b-70ae076d39fb',
+                         self.my_encrypted_vol_type.handle_delete())
 
     def test_handle_delete_rsrc_not_found(self):
         exc = self.cinderclient.HTTPClientError('Not Found.')

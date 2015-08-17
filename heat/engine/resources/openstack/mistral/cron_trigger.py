@@ -110,15 +110,6 @@ class CronTrigger(resource.Resource):
         cron_trigger = self.client().cron_triggers.create(**args)
         self.resource_id_set(cron_trigger.name)
 
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-
-        try:
-            self.client().cron_triggers.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-
     def _resolve_attribute(self, name):
         try:
             trigger = self.client().cron_triggers.get(self.resource_id)

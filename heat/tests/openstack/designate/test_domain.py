@@ -131,7 +131,8 @@ class DesignateDomainTest(common.HeatTestCase):
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         mock_domain_delete.return_value = None
 
-        self.assertIsNone(self.test_resource.handle_delete())
+        self.assertEqual('477e8273-60a7-4c41-b683-fdb0bc7cd151',
+                         self.test_resource.handle_delete())
         mock_domain_delete.assert_called_once_with(
             self.test_resource.resource_id
         )

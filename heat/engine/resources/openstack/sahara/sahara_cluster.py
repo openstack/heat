@@ -118,6 +118,8 @@ class SaharaCluster(resource.Resource):
 
     default_client_name = 'sahara'
 
+    entity = 'clusters'
+
     def _validate_depr_keys(self, properties, key, depr_key):
         value = properties.get(key)
         depr_value = properties.get(depr_key)
@@ -180,18 +182,6 @@ class SaharaCluster(resource.Resource):
 
         LOG.info(_LI("Cluster '%s' has been created"), cluster.name)
         return True
-
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-
-        try:
-            self.client().clusters.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-            return None
-
-        return self.resource_id
 
     def check_delete_complete(self, resource_id):
         if not resource_id:

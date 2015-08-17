@@ -119,7 +119,10 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         self.my_volume_type.resource_id = volume_type_id
         self.volume_types.delete.return_value = None
-        self.assertIsNone(self.my_volume_type.handle_delete())
+        self.assertEqual('927202df-1afb-497f-8368-9c2d2f26e5db',
+                         self.my_volume_type.handle_delete())
+
+    def test_volume_type_handle_delete_not_found(self):
         exc = self.cinderclient.HTTPClientError('Not Found.')
         self.volume_types.delete.side_effect = exc
         self.assertIsNone(self.my_volume_type.handle_delete())

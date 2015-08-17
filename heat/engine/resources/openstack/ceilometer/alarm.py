@@ -372,11 +372,7 @@ class CeilometerAlarm(resource.Resource):
         except exception.WatchRuleNotFound:
             pass
 
-        if self.resource_id is not None:
-            try:
-                self.client().alarms.delete(self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
+        super(CeilometerAlarm, self).handle_delete()
 
     def handle_check(self):
         watch_name = self.physical_resource_name()
@@ -423,12 +419,6 @@ class BaseCeilometerAlarm(resource.Resource):
     def handle_resume(self):
         self.client().alarms.update(
             alarm_id=self.resource_id, enabled=True)
-
-    def handle_delete(self):
-        try:
-            self.client().alarms.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
     def handle_check(self):
         self.client().alarms.get(self.resource_id)

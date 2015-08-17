@@ -161,6 +161,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
 
     physical_resource_name_limit = 50
 
+    entity = 'node_group_templates'
+
     def _ngt_name(self):
         name = self.properties[self.NAME]
         if name:
@@ -209,17 +211,6 @@ class SaharaNodeGroupTemplate(resource.Resource):
                  node_group_template.name)
         self.resource_id_set(node_group_template.id)
         return self.resource_id
-
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-        try:
-            self.client().node_group_templates.delete(
-                self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-        LOG.info(_LI("Node Group Template '%s' has been deleted."),
-                 self._ngt_name())
 
     def validate(self):
         res = super(SaharaNodeGroupTemplate, self).validate()
@@ -350,6 +341,8 @@ class SaharaClusterTemplate(resource.Resource):
 
     physical_resource_name_limit = 50
 
+    entity = 'cluster_templates'
+
     def _cluster_template_name(self):
         name = self.properties[self.NAME]
         if name:
@@ -386,17 +379,6 @@ class SaharaClusterTemplate(resource.Resource):
                  cluster_template.name)
         self.resource_id_set(cluster_template.id)
         return self.resource_id
-
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-        try:
-            self.client().cluster_templates.delete(
-                self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-        LOG.info(_LI("Cluster Template '%s' has been deleted."),
-                 self._cluster_template_name())
 
     def validate(self):
         res = super(SaharaClusterTemplate, self).validate()

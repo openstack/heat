@@ -121,13 +121,6 @@ class KeyPair(resource.Resource):
                           True)
         self.resource_id_set(new_keypair.id)
 
-    def handle_delete(self):
-        if self.resource_id:
-            try:
-                self.client().keypairs.delete(self.resource_id)
-            except Exception as e:
-                self.client_plugin().ignore_not_found(e)
-
     def handle_check(self):
         self.client().keypairs.get(self.resource_id)
 

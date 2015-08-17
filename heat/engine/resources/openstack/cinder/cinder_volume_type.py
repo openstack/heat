@@ -96,15 +96,6 @@ class CinderVolumeType(resource.Resource):
             if new_keys is not None:
                 volume_type.set_keys(new_keys)
 
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-
-        try:
-            self.client().volume_types.delete(self.resource_id)
-        except Exception as e:
-            self.client_plugin().ignore_not_found(e)
-
     # TODO(huangtianhua): remove this method when bug #1479641 is fixed.
     def _show_resource(self):
         vtype = self.client().volume_types.get(self.resource_id)

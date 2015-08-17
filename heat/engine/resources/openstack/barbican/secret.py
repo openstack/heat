@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -115,19 +113,6 @@ class Secret(resource.Resource):
         secret_ref = secret.store()
         self.resource_id_set(secret_ref)
         return secret_ref
-
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-
-        client = self.client()
-        try:
-            client.secrets.delete(self.resource_id)
-        except Exception as exc:
-            # This is the only exception the client raises
-            # Inspecting the message to see if it's a 'Not Found'
-            if 'Not Found' not in six.text_type(exc):
-                raise
 
     def _resolve_attribute(self, name):
         secret = self.client().secrets.get(self.resource_id)

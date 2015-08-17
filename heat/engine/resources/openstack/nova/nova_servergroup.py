@@ -60,13 +60,6 @@ class ServerGroup(resource.Resource):
                                                           policies=policies)
         self.resource_id_set(server_group.id)
 
-    def handle_delete(self):
-        if self.resource_id:
-            try:
-                self.client().server_groups.delete(self.resource_id)
-            except Exception as e:
-                self.client_plugin().ignore_not_found(e)
-
     def physical_resource_name(self):
         name = self.properties[self.NAME]
         if name:
