@@ -19,7 +19,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
-from heat.engine.clients.os import cinder as heat_cinder
+from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -373,7 +373,7 @@ class CinderVolume(vb.BaseVolume):
             cinder.volumes.update_readonly_flag(self.resource_id, flag)
         # restore the volume from backup
         if self.BACKUP_ID in prop_diff:
-            prg_backup_restore = heat_cinder.VolumeBackupRestoreProgress(
+            prg_backup_restore = progress.VolumeBackupRestoreProgress(
                 vol_id=self.resource_id,
                 backup_id=prop_diff.get(self.BACKUP_ID))
         # extend volume size
@@ -386,7 +386,7 @@ class CinderVolume(vb.BaseVolume):
                 raise exception.NotSupported(feature=_("Shrinking volume"))
 
             elif new_size > vol.size:
-                prg_resize = heat_cinder.VolumeResizeProgress(size=new_size)
+                prg_resize = progress.VolumeResizeProgress(size=new_size)
                 if vol.attachments:
                     # NOTE(pshchelo):
                     # this relies on current behavior of cinder attachments,
@@ -398,9 +398,9 @@ class CinderVolume(vb.BaseVolume):
                     server_id = vol.attachments[0]['server_id']
                     device = vol.attachments[0]['device']
                     attachment_id = vol.attachments[0]['id']
-                    prg_detach = heat_cinder.VolumeDetachProgress(
+                    prg_detach = progress.VolumeDetachProgress(
                         server_id, vol.id, attachment_id)
-                    prg_attach = heat_cinder.VolumeAttachProgress(
+                    prg_attach = progress.VolumeAttachProgress(
                         server_id, vol.id, device)
 
         return prg_backup_restore, prg_detach, prg_resize, prg_attach
@@ -623,7 +623,7 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             server_id = self._stored_properties_data.get(self.INSTANCE_ID)
             self.client_plugin('nova').detach_volume(server_id,
                                                      self.resource_id)
-            prg_detach = heat_cinder.VolumeDetachProgress(
+            prg_detach = progress.VolumeDetachProgress(
                 server_id, volume_id, self.resource_id)
             prg_detach.called = True
 
@@ -636,7 +636,7 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
 
             if self.INSTANCE_ID in prop_diff:
                 server_id = prop_diff.get(self.INSTANCE_ID)
-            prg_attach = heat_cinder.VolumeAttachProgress(
+            prg_attach = progress.VolumeAttachProgress(
                 server_id, volume_id, device)
 
         return prg_detach, prg_attach

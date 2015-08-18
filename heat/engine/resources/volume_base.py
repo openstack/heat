@@ -13,7 +13,7 @@
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.engine.clients.os import cinder as heat_cinder
+from heat.engine.clients import progress
 from heat.engine import resource
 
 
@@ -84,18 +84,18 @@ class BaseVolume(resource.Resource):
     def handle_snapshot_delete(self, state):
         backup = state not in ((self.CREATE, self.FAILED),
                                (self.UPDATE, self.FAILED))
-        progress = heat_cinder.VolumeDeleteProgress()
-        progress.backup['called'] = not backup
-        progress.backup['complete'] = not backup
-        return progress
+        prg = progress.VolumeDeleteProgress()
+        prg.backup['called'] = not backup
+        prg.backup['complete'] = not backup
+        return prg
 
     def handle_delete(self):
         if self.resource_id is None:
-            return heat_cinder.VolumeDeleteProgress(True)
-        progress = heat_cinder.VolumeDeleteProgress()
-        progress.backup['called'] = True
-        progress.backup['complete'] = True
-        return progress
+            return progress.VolumeDeleteProgress(True)
+        prg = progress.VolumeDeleteProgress()
+        prg.backup['called'] = True
+        prg.backup['complete'] = True
+        return prg
 
     def _create_backup(self):
         backup = self.client().backups.create(self.resource_id)
@@ -184,7 +184,7 @@ class BaseVolumeAttachment(resource.Resource):
         vol_id = self.properties[self.VOLUME_ID]
         self.client_plugin('nova').detach_volume(server_id,
                                                  self.resource_id)
-        prg = heat_cinder.VolumeDetachProgress(
+        prg = progress.VolumeDetachProgress(
             server_id, vol_id, self.resource_id)
         prg.called = True
         return prg

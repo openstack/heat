@@ -22,7 +22,6 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.engine import attributes
-from heat.engine.clients.os import cinder as cinder_cp
 from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
@@ -571,8 +570,8 @@ class Instance(resource.Resource):
         creator = progress.ServerCreateProgress(server.id)
         attachers = []
         for vol_id, device in self.volumes():
-            attachers.append(cinder_cp.VolumeAttachProgress(self.resource_id,
-                                                            vol_id, device))
+            attachers.append(progress.VolumeAttachProgress(self.resource_id,
+                                                           vol_id, device))
         return creator, tuple(attachers)
 
     def check_create_complete(self, cookie):

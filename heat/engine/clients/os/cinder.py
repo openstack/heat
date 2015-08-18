@@ -177,52 +177,6 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         return True
 
 
-# NOTE(pshchelo): these Volume*Progress classes are simple key-value storages
-# meant to be passed between handle_<action> and check_<action>_complete,
-# being mutated during subsequent check_<action>_complete calls.
-class VolumeDetachProgress(object):
-    def __init__(self, srv_id, vol_id, attach_id, val=False):
-        self.called = val
-        self.cinder_complete = val
-        self.nova_complete = val
-        self.srv_id = srv_id
-        self.vol_id = vol_id
-        self.attach_id = attach_id
-
-
-class VolumeAttachProgress(object):
-    def __init__(self, srv_id, vol_id, device, val=False):
-        self.called = val
-        self.complete = val
-        self.srv_id = srv_id
-        self.vol_id = vol_id
-        self.device = device
-
-
-class VolumeDeleteProgress(object):
-    def __init__(self, val=False):
-        self.backup = {'called': val,
-                       'complete': val}
-        self.delete = {'called': val,
-                       'complete': val}
-        self.backup_id = None
-
-
-class VolumeResizeProgress(object):
-    def __init__(self, val=False, size=None):
-        self.called = val
-        self.complete = val
-        self.size = size
-
-
-class VolumeBackupRestoreProgress(object):
-    def __init__(self, vol_id, backup_id):
-        self.called = False
-        self.complete = False
-        self.vol_id = vol_id
-        self.backup_id = backup_id
-
-
 class VolumeConstraint(constraints.BaseCustomConstraint):
 
     expected_exceptions = (exception.EntityNotFound,)
