@@ -11,7 +11,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-from testtools import testcase
 
 from heat_integrationtests.common import test
 from heat_integrationtests.scenario import scenario_base
@@ -35,7 +34,6 @@ class CeilometerAlarmTest(scenario_base.ScenarioTestsBase):
                                                               actual))
         return actual == expected
 
-    @testcase.skip('Skipped until keystone fixed #1484086')
     def test_alarm(self):
         """Confirm we can create an alarm and trigger it."""
 

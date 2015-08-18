@@ -228,7 +228,7 @@ class Ec2TokenTest(common.HeatTestCase):
         self.assertEqual('xyz', ec2.__call__(dummy_req))
 
     def _stub_http_connection(self, headers=None, params=None, response=None,
-                              req_url='http://123:5000/v2.0/ec2tokens',
+                              req_url='http://123:5000/v3/ec2tokens',
                               verify=True, cert=None):
 
         headers = headers or {}
@@ -236,6 +236,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
         class DummyHTTPResponse(object):
             text = response
+            headers = {'X-Subject-Token': 123}
 
             def json(self):
                 return json.loads(self.text)
@@ -268,9 +269,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'HTTP_AUTHORIZATION': auth_str}
         dummy_req = self._dummy_GET_request(environ=req_env)
 
-        ok_resp = json.dumps({'access': {'token': {
-            'id': 123,
-            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        ok_resp = json.dumps({'token': {
+            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
         self.m.ReplayAll()
@@ -293,12 +293,12 @@ class Ec2TokenTest(common.HeatTestCase):
                    'HTTP_AUTHORIZATION': auth_str}
         dummy_req = self._dummy_GET_request(environ=req_env)
 
-        ok_resp = json.dumps({'access': {
+        ok_resp = json.dumps({
             'token': {
                 'id': 123,
-                'tenant': {'name': 'tenant', 'id': 'abcd1234'}
-            },
-            'metadata': {'roles': ['aa', 'bb', 'cc']}}})
+                'project': {'name': 'tenant', 'id': 'abcd1234'},
+                'roles': [{'name': 'aa'}, {'name': 'bb'}, {'name': 'cc'}]}
+        })
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
         self.m.ReplayAll()
@@ -384,9 +384,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
-            'id': 123,
-            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        ok_resp = json.dumps({'token': {
+            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
@@ -407,9 +406,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
-            'id': 123,
-            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        ok_resp = json.dumps({'token': {
+            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         err_msg = "EC2 access key not found."
         err_resp = json.dumps({'error': {'message': err_msg}})
 
@@ -511,9 +509,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
-            'id': 123,
-            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        ok_resp = json.dumps({'token': {
+            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
@@ -533,9 +530,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
-            'id': 123,
-            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        ok_resp = json.dumps({'token': {
+            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
@@ -556,9 +552,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
-            'id': 123,
-            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        ok_resp = json.dumps({'token': {
+            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
