@@ -1841,6 +1841,34 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(scheduler.Timeout, res.delete_convergence,
                           1, {}, 'engine-007', timeout)
 
+    @mock.patch.object(parser.Stack, 'load')
+    @mock.patch.object(resource.Resource, '_load_data')
+    @mock.patch.object(template.Template, 'load')
+    def test_load_loads_stack_with_cached_data(self, mock_tmpl_load,
+                                               mock_load_data,
+                                               mock_stack_load):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'GenericResourceType'
+                }
+            }
+        }, env=self.env)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl)
+        stack.store()
+        mock_tmpl_load.return_value = tmpl
+        res = stack['res']
+        res._store()
+        data = {'bar': {'atrr1': 'baz', 'attr2': 'baz2'}}
+        mock_stack_load.return_value = stack
+        resource.Resource.load(stack.context, res.id, True, data)
+        mock_stack_load.assert_called_once_with(stack.context,
+                                                stack.id,
+                                                cache_data=data)
+        self.assertTrue(mock_load_data.called)
+
 
 class ResourceAdoptTest(common.HeatTestCase):
 
