@@ -80,10 +80,12 @@ class CronTrigger(resource.Resource):
 
     attributes_schema = {
         NEXT_EXECUTION_TIME: attributes.Schema(
-            _('Time of the next execution in format "YYYY-MM-DD HH:MM:SS".')
+            _('Time of the next execution in format "YYYY-MM-DD HH:MM:SS".'),
+            type=attributes.Schema.STRING
         ),
         REMAINING_EXECUTIONS: attributes.Schema(
-            _('Number of remaining executions.')
+            _('Number of remaining executions.'),
+            type=attributes.Schema.INTEGER
         )
     }
 
