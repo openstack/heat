@@ -321,7 +321,7 @@ def construct_input_data(rsrc):
 
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
-                  'physical_resource_id': rsrc.resource_id,
+                  'reference_id': rsrc.FnGetRefId(),
                   'attrs': resolved_attributes}
     return input_data
 

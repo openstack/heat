@@ -1428,7 +1428,7 @@ class Resource(object):
         :results: the id or name of the resource.
         '''
         if self.stack.has_cache_data(self.name):
-            return self.stack.cache_data_resource_id(self.name)
+            return self.stack.cache_data_reference_id(self.name)
 
         if self.resource_id is not None:
             return six.text_type(self.resource_id)

@@ -1611,13 +1611,13 @@ class Stack(collections.Mapping):
         return (self.cache_data is not None and
                 self.cache_data.get(resource_name) is not None)
 
-    def cache_data_resource_id(self, resource_name):
+    def cache_data_reference_id(self, resource_name):
         return self.cache_data.get(
-            resource_name, {}).get('physical_resource_id')
+            resource_name, {}).get('reference_id')
 
     def cache_data_resource_attribute(self, resource_name, attribute_key):
         return self.cache_data.get(
-            resource_name, {}).get('attributes', {}).get(attribute_key)
+            resource_name, {}).get('attrs', {}).get(attribute_key)
 
     def mark_complete(self, traversal_id):
         '''

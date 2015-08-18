@@ -278,8 +278,8 @@ class StackTest(common.HeatTestCase):
                {'A': {'Type': 'GenericResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
 
-        cache_data = {'A': {'physical_resource_id': 'A-id'},
-                      'B': {'physical_resource_id': 'B-id'}}
+        cache_data = {'A': {'reference_id': 'A-id'},
+                      'B': {'reference_id': 'B-id'}}
 
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
@@ -1918,8 +1918,8 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        cache_data = {'foo': {'physical_resource_id': 'foo-id',
-                              'attributes': {'bar': 'baz'}},
+        cache_data = {'foo': {'reference_id': 'foo-id',
+                              'attrs': {'bar': 'baz'}},
                       'bar': {'reference_id': 'bar-id'}}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
@@ -1953,8 +1953,8 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        cache_data = {'foo': {'physical_resource_id': 'physical-resource-id'},
-                      'bar': {'physical_resource_id': 'physical-resource-id'}}
+        cache_data = {'foo': {'reference_id': 'physical-resource-id'},
+                      'bar': {'reference_id': 'bar-id'}}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
         lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,

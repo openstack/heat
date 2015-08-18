@@ -527,7 +527,7 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_construct_input_data_ok(self):
         expected_input_data = {'attrs': {'value': None},
                                'id': mock.ANY,
-                               'physical_resource_id': None,
+                               'reference_id': 'A',
                                'name': 'A'}
         actual_input_data = worker.construct_input_data(self.resource)
         self.assertEqual(expected_input_data, actual_input_data)
@@ -535,7 +535,7 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_construct_input_data_exception(self):
         expected_input_data = {'attrs': {},
                                'id': mock.ANY,
-                               'physical_resource_id': None,
+                               'reference_id': 'A',
                                'name': 'A'}
         self.resource.FnGetAtt = mock.Mock(
             side_effect=exception.InvalidTemplateAttribute(resource='A',
