@@ -75,6 +75,12 @@ class ResourcePages(compat.Directive):
                     self.resource_class.properties_schema)
                 self.attrs_schemata = attributes.schemata(
                     self.resource_class.attributes_schema)
+                # NOTE(prazumovsky): Adding base_attributes_schema dict to
+                # Resource class should means adding new attributes from this
+                # dict to documentation of each resource, else there is no
+                # chance to learn about base attributes.
+                self.attrs_schemata.update(
+                    self.resource_class.base_attributes_schema)
                 self.update_policy_schemata = properties.schemata(
                     self.resource_class.update_policy_schema)
 
