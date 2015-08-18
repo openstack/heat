@@ -123,6 +123,32 @@ resources:
             salt: {get_param: salt}
 '''
 
+attr_cache_template = '''
+heat_template_version: 2013-05-23
+resources:
+    A:
+        type: ResourceWithComplexAttributesType
+    B:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_attr: [A, flat_dict, key2]}
+    C:
+        type: OS::Heat::RandomString
+        depends_on: [A, B]
+        properties:
+            salt: {get_attr: [A, nested_dict, dict, a]}
+    D:
+        type: OS::Heat::RandomString
+        depends_on: C
+        properties:
+            salt: {get_attr: [A, nested_dict, dict, b]}
+    E:
+        type: OS::Heat::RandomString
+        depends_on: C
+        properties:
+            salt: {get_attr: [A, flat_dict, key3]}
+'''
+
 
 def get_stack(stack_name, ctx, template=None, with_params=True,
               convergence=False):

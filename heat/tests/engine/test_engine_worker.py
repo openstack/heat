@@ -520,12 +520,15 @@ class MiscMethodsTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
         self.stack = tools.get_stack(
             'check_workflow_create_stack', self.ctx,
-            template=tools.string_template_five, convergence=True)
+            template=tools.attr_cache_template, convergence=True)
         self.stack.converge_stack(self.stack.t)
         self.resource = self.stack['A']
 
     def test_construct_input_data_ok(self):
-        expected_input_data = {'attrs': {'value': None},
+        expected_input_data = {'attrs': {(u'flat_dict', u'key2'): 'val2',
+                                         (u'flat_dict', u'key3'): 'val3',
+                                         (u'nested_dict', u'dict', u'a'): 1,
+                                         (u'nested_dict', u'dict', u'b'): 2},
                                'id': mock.ANY,
                                'reference_id': 'A',
                                'name': 'A'}
