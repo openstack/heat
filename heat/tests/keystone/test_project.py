@@ -56,7 +56,7 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_project.client = mock.MagicMock()
         self.test_project.client.return_value = self.keystoneclient
-        self.projects = self.keystoneclient.client.projects
+        self.projects = self.keystoneclient.projects
 
         # Mock client plugin
         def _domain_side_effect(value):
@@ -342,3 +342,10 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.projects.delete.side_effect = exc
 
         self.assertIsNone(self.test_project.handle_delete())
+
+    def test_show_resource(self):
+        project = mock.Mock()
+        project.to_dict.return_value = {'attr': 'val'}
+        self.projects.get.return_value = project
+        res = self.test_project._show_resource()
+        self.assertEqual({'attr': 'val'}, res)

@@ -55,7 +55,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_group.client = mock.MagicMock()
         self.test_group.client.return_value = self.keystoneclient
-        self.groups = self.keystoneclient.client.groups
+        self.groups = self.keystoneclient.groups
 
         # Mock client plugin
         def _side_effect(value):
@@ -301,3 +301,10 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.groups.delete.side_effect = exc
 
         self.assertIsNone(self.test_group.handle_delete())
+
+    def test_show_resource(self):
+        group = mock.Mock()
+        group.to_dict.return_value = {'attr': 'val'}
+        self.groups.get.return_value = group
+        res = self.test_group._show_resource()
+        self.assertEqual({'attr': 'val'}, res)

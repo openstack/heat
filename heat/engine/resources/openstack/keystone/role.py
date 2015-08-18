@@ -26,6 +26,8 @@ class KeystoneRole(resource.Resource):
 
     default_client_name = 'keystone'
 
+    entity = 'roles'
+
     PROPERTIES = (
         NAME
     ) = (
@@ -40,14 +42,17 @@ class KeystoneRole(resource.Resource):
         )
     }
 
+    def client(self):
+        return super(KeystoneRole, self).client().client
+
     def _create_role(self, role_name):
-        return self.client().client.roles.create(name=role_name)
+        return self.client().roles.create(name=role_name)
 
     def _delete_role(self, role_id):
-        return self.client().client.roles.delete(role_id)
+        return self.client().roles.delete(role_id)
 
     def _update_role(self, role_id, new_name):
-        return self.client().client.roles.update(
+        return self.client().roles.update(
             role=role_id,
             name=new_name
         )

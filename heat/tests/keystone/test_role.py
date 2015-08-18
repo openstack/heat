@@ -50,7 +50,7 @@ class KeystoneRoleTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_role.client = mock.MagicMock()
         self.test_role.client.return_value = self.keystoneclient
-        self.roles = self.keystoneclient.client.roles
+        self.roles = self.keystoneclient.roles
 
     def _get_mock_role(self):
         value = mock.MagicMock()
@@ -128,3 +128,10 @@ class KeystoneRoleTest(common.HeatTestCase):
         self.roles.delete.side_effect = exc
 
         self.assertIsNone(self.test_role.handle_delete())
+
+    def test_show_resource(self):
+        role = mock.Mock()
+        role.to_dict.return_value = {'attr': 'val'}
+        self.roles.get.return_value = role
+        res = self.test_role._show_resource()
+        self.assertEqual({'attr': 'val'}, res)

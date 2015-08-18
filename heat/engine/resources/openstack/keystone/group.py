@@ -29,6 +29,8 @@ class KeystoneGroup(resource.Resource,
 
     default_client_name = 'keystone'
 
+    entity = 'groups'
+
     PROPERTIES = (
         NAME, DOMAIN, DESCRIPTION
     ) = (
@@ -63,19 +65,22 @@ class KeystoneGroup(resource.Resource,
         super(KeystoneGroup, self).validate()
         self.validate_assignment_properties()
 
+    def client(self):
+        return super(KeystoneGroup, self).client().client
+
     def _create_group(self,
                       group_name,
                       description,
                       domain):
         domain = self.client_plugin().get_domain_id(domain)
 
-        return self.client().client.groups.create(
+        return self.client().groups.create(
             name=group_name,
             domain=domain,
             description=description)
 
     def _delete_group(self, group_id):
-        return self.client().client.groups.delete(group_id)
+        return self.client().groups.delete(group_id)
 
     def _update_group(self,
                       group_id,
@@ -92,7 +97,7 @@ class KeystoneGroup(resource.Resource,
         values['group'] = group_id
         domain = self.client_plugin().get_domain_id(domain)
         values['domain_id'] = domain
-        return self.client().client.groups.update(**values)
+        return self.client().groups.update(**values)
 
     def handle_create(self):
         group_name = (self.properties.get(self.NAME) or
