@@ -234,7 +234,7 @@ class Resource(object):
         self.replaced_by = None
         self.current_template_id = None
 
-        if not stack.has_cache_data():
+        if not stack.has_cache_data(name):
             resource = stack.db_resource_get(name)
             if resource:
                 self._load_data(resource)
@@ -1427,7 +1427,7 @@ class Resource(object):
 
         :results: the id or name of the resource.
         '''
-        if self.stack.has_cache_data():
+        if self.stack.has_cache_data(self.name):
             return self.stack.cache_data_resource_id(self.name)
 
         if self.resource_id is not None:
@@ -1450,7 +1450,7 @@ class Resource(object):
         :param path: a list of path components to select from the attribute.
         :returns: the attribute value.
         '''
-        if self.stack.has_cache_data():
+        if self.stack.has_cache_data(self.name):
             # Load from cache for lightweight resources.
             attribute = self.stack.cache_data_resource_attribute(
                 self.name, key)
