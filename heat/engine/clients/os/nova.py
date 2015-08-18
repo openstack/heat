@@ -353,7 +353,10 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         If that's the case, confirm the resize, if not raise an error.
         """
         self.refresh_server(server)
-        while server.status == 'RESIZE':
+        # resize operation is asynchronous so the server resize may not start
+        # when checking server status (the server may stay ACTIVE instead
+        # of RESIZE).
+        while server.status in ('RESIZE', 'ACTIVE'):
             yield
             self.refresh_server(server)
         if server.status == 'VERIFY_RESIZE':
