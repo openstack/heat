@@ -491,3 +491,162 @@ class TestConvgStackRollback(common.HeatTestCase):
         call_args, call_kwargs = self.stack.converge_stack.call_args
         template_used_for_rollback = call_args[0]
         self.assertEqual({}, template_used_for_rollback['resources'])
+
+
+class TestConvgComputeDependencies(common.HeatTestCase):
+    def setUp(self):
+        super(TestConvgComputeDependencies, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.stack = tools.get_stack('test_stack_convg', self.ctx,
+                                     template=tools.string_template_five,
+                                     convergence=True)
+
+    def _fake_db_resources(self, stack):
+        db_resources = {}
+        i = 0
+        for rsrc_name in ['E', 'D', 'C', 'B', 'A']:
+            i += 1
+            rsrc = mock.MagicMock()
+            rsrc.id = i
+            rsrc.name = rsrc_name
+            rsrc.current_template_id = stack.prev_raw_template_id
+            db_resources[i] = rsrc
+        db_resources[3].requires = [4, 5]
+        db_resources[1].requires = [3]
+        db_resources[2].requires = [3]
+        return db_resources
+
+    def test_dependencies_create_stack_without_mock(self):
+        self.stack.store()
+        self.current_resources = self.stack._update_or_store_resources()
+        self.stack._compute_convg_dependencies(self.stack.ext_rsrcs_db,
+                                               self.stack.dependencies,
+                                               self.current_resources)
+        self.assertEqual('Dependencies(['
+                         '((1, True), (3, True)), '
+                         '((2, True), (3, True)), '
+                         '((3, True), (4, True)), '
+                         '((3, True), (5, True))])',
+                         repr(self.stack._convg_deps))
+
+    def test_dependencies_update_same_template(self):
+        t = template_format.parse(tools.string_template_five)
+        tmpl = templatem.Template(t)
+        self.stack.t = tmpl
+        self.stack.t.id = 2
+        self.stack.prev_raw_template_id = 1
+        db_resources = self._fake_db_resources(self.stack)
+        curr_resources = {res.name: res for id, res in db_resources.items()}
+        self.stack._compute_convg_dependencies(db_resources,
+                                               self.stack.dependencies,
+                                               curr_resources)
+        self.assertEqual('Dependencies(['
+                         '((1, False), (1, True)), '
+                         '((1, True), (3, True)), '
+                         '((2, False), (2, True)), '
+                         '((2, True), (3, True)), '
+                         '((3, False), (1, False)), '
+                         '((3, False), (2, False)), '
+                         '((3, False), (3, True)), '
+                         '((3, True), (4, True)), '
+                         '((3, True), (5, True)), '
+                         '((4, False), (3, False)), '
+                         '((4, False), (4, True)), '
+                         '((5, False), (3, False)), '
+                         '((5, False), (5, True))])',
+                         repr(self.stack._convg_deps))
+
+    def test_dependencies_update_new_template(self):
+        t = template_format.parse(tools.string_template_five_update)
+        tmpl = templatem.Template(t)
+        self.stack.t = tmpl
+        self.stack.t.id = 2
+        self.stack.prev_raw_template_id = 1
+        db_resources = self._fake_db_resources(self.stack)
+
+        curr_resources = {res.name: res for id, res in db_resources.items()}
+        # 'H', 'G', 'F' are part of new template
+        i = len(db_resources)
+        for new_rsrc in ['H', 'G', 'F']:
+            i += 1
+            rsrc = mock.MagicMock()
+            rsrc.name = new_rsrc
+            rsrc.id = i
+            curr_resources[new_rsrc] = rsrc
+
+        self.stack._compute_convg_dependencies(db_resources,
+                                               self.stack.dependencies,
+                                               curr_resources)
+        self.assertEqual('Dependencies(['
+                         '((3, False), (1, False)), '
+                         '((3, False), (2, False)), '
+                         '((4, False), (3, False)), '
+                         '((4, False), (4, True)), '
+                         '((5, False), (3, False)), '
+                         '((5, False), (5, True)), '
+                         '((6, True), (8, True)), '
+                         '((7, True), (8, True)), '
+                         '((8, True), (4, True)), '
+                         '((8, True), (5, True))])',
+                         repr(self.stack._convg_deps))
+
+    def test_dependencies_update_replace_rollback(self):
+        t = template_format.parse(tools.string_template_five)
+        tmpl = templatem.Template(t)
+        self.stack.t = tmpl
+        self.stack.t.id = 1
+        self.stack.prev_raw_template_id = 2
+        db_resources = self._fake_db_resources(self.stack)
+
+        # previous resource E still exists in db.
+        db_resources[1].current_template_id = 1
+        # resource that replaced E
+        res = mock.MagicMock()
+        res.id = 6
+        res.name = 'E'
+        res.requires = [3]
+        res.replaces = 1
+        res.current_template_id = 2
+        db_resources[6] = res
+
+        curr_resources = {res.name: res for id, res in db_resources.items()}
+        # best existing resource
+        curr_resources['E'] = db_resources[1]
+        self.stack._compute_convg_dependencies(db_resources,
+                                               self.stack.dependencies,
+                                               curr_resources)
+        self.assertEqual('Dependencies(['
+                         '((1, False), (1, True)), '
+                         '((1, False), (6, False)), '
+                         '((1, True), (3, True)), '
+                         '((2, False), (2, True)), '
+                         '((2, True), (3, True)), '
+                         '((3, False), (1, False)), '
+                         '((3, False), (2, False)), '
+                         '((3, False), (3, True)), '
+                         '((3, False), (6, False)), '
+                         '((3, True), (4, True)), '
+                         '((3, True), (5, True)), '
+                         '((4, False), (3, False)), '
+                         '((4, False), (4, True)), '
+                         '((5, False), (3, False)), '
+                         '((5, False), (5, True))])',
+                         repr(self.stack._convg_deps))
+
+    def test_dependencies_update_delete(self):
+        tmpl = templatem.Template.create_empty_template(
+            version=self.stack.t.version)
+        self.stack.t = tmpl
+        self.stack.t.id = 2
+        self.stack.prev_raw_template_id = 1
+        db_resources = self._fake_db_resources(self.stack)
+        curr_resources = {res.name: res for id, res in db_resources.items()}
+        self.stack._compute_convg_dependencies(db_resources,
+                                               self.stack.dependencies,
+                                               curr_resources)
+        self.assertEqual('Dependencies(['
+                         '((3, False), (1, False)), '
+                         '((3, False), (2, False)), '
+                         '((4, False), (3, False)), '
+                         '((5, False), (3, False))])',
+                         repr(self.stack._convg_deps))
