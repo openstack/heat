@@ -273,6 +273,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
 
         handle = self.stack['wait_handle']
         self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)
+        self.assertIsNotNone(handle.password)
+        self.assertEqual(handle.resource_id, handle.data().get('user_id'))
         return handle
 
     def test_get_status_none_complete(self):

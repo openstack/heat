@@ -65,10 +65,8 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
     }
 
     def handle_create(self):
-        password = uuid.uuid4().hex
-        self.data_set('password', password, True)
-        self._create_user()
-        self.resource_id_set(self._get_user_id())
+        self.password = uuid.uuid4().hex
+        super(HeatWaitConditionHandle, self).handle_create()
         # FIXME(shardy): The assumption here is that token expiry > timeout
         # but we probably need a check here to fail fast if that's not true
         # Also need to implement an update property, such that the handle
@@ -88,13 +86,6 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
                                    self.identifier().url_path())
         return rsrc_ep.replace(self.context.tenant_id,
                                self.stack.stack_user_project_id)
-
-    def handle_delete(self):
-        self._delete_user()
-
-    @property
-    def password(self):
-        return self.data().get('password')
 
     def _resolve_attribute(self, key):
         if self.resource_id:
