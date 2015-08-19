@@ -27,6 +27,8 @@ class Secret(resource.Resource):
 
     default_client_name = 'barbican'
 
+    entity = 'secrets'
+
     PROPERTIES = (
         NAME, PAYLOAD, PAYLOAD_CONTENT_TYPE, PAYLOAD_CONTENT_ENCODING,
         MODE, EXPIRATION, ALGORITHM, BIT_LENGTH,
@@ -135,6 +137,12 @@ class Secret(resource.Resource):
 
         if name == self.STATUS:
             return secret.status
+
+    # TODO(ochuprykov): remove this method when bug #1485619 will be fixed
+    def _show_resource(self):
+        order = self.client().secrets.get(self.resource_id)
+        info = order._get_formatted_entity()
+        return dict(zip(info[0], info[1]))
 
 
 def resource_mapping():
