@@ -16,19 +16,7 @@ import keystoneclient
 from heat_integrationtests.functional import functional_base
 
 
-class ConditionalExposureTestBase(functional_base.FunctionalTestsBase):
-    def setUp(self):
-        super(ConditionalExposureTestBase, self).setUp()
-
-    def _delete(self, stack_name):
-        stacks = self.client.stacks.list()
-        for s in stacks:
-            if s.stack_name == stack_name:
-                self._stack_delete(s.identifier)
-                break
-
-
-class ServiceBasedExposureTest(ConditionalExposureTestBase):
+class ServiceBasedExposureTest(functional_base.FunctionalTestsBase):
     # NOTE(pas-ha) if we ever decide to install Sahara on Heat
     # functional gate, this must be changed to other not-installed
     # but in principle supported service
@@ -72,7 +60,6 @@ resources:
 
     def test_unavailable_resources_not_created(self):
         stack_name = self._stack_rand_name()
-        self.addCleanup(self._delete, stack_name)
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.client.stacks.create,
                                stack_name=stack_name,

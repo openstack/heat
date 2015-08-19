@@ -426,7 +426,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             tags=tags
         )
         if expected_status not in ['ROLLBACK_COMPLETE'] and enable_cleanup:
-            self.addCleanup(self.client.stacks.delete, name)
+            self.addCleanup(self._stack_delete, name)
 
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)
@@ -458,7 +458,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             environment=env,
             adopt_stack_data=adopt_data,
         )
-        self.addCleanup(self.client.stacks.delete, name)
+        self.addCleanup(self._stack_delete, name)
 
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)
@@ -468,7 +468,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def stack_abandon(self, stack_id):
         if (self.conf.skip_test_stack_action_list and
                 'ABANDON' in self.conf.skip_test_stack_action_list):
-            self.addCleanup(self.client.stacks.delete, stack_id)
+            self.addCleanup(self._stack_delete, stack_id)
             self.skipTest('Testing Stack abandon disabled in conf, skipping')
         info = self.client.stacks.abandon(stack_id=stack_id)
         return info
@@ -476,7 +476,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def stack_suspend(self, stack_identifier):
         if (self.conf.skip_test_stack_action_list and
                 'SUSPEND' in self.conf.skip_test_stack_action_list):
-            self.addCleanup(self.client.stacks.delete, stack_identifier)
+            self.addCleanup(self._stack_delete, stack_identifier)
             self.skipTest('Testing Stack suspend disabled in conf, skipping')
         stack_name = stack_identifier.split('/')[0]
         self.client.actions.suspend(stack_name)
@@ -488,7 +488,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def stack_resume(self, stack_identifier):
         if (self.conf.skip_test_stack_action_list and
                 'RESUME' in self.conf.skip_test_stack_action_list):
-            self.addCleanup(self.client.stacks.delete, stack_identifier)
+            self.addCleanup(self._stack_delete, stack_identifier)
             self.skipTest('Testing Stack resume disabled in conf, skipping')
         stack_name = stack_identifier.split('/')[0]
         self.client.actions.resume(stack_name)

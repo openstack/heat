@@ -235,7 +235,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
             parameters={},
             environment=env
         )
-        self.addCleanup(self.client.stacks.delete, stack_name)
+        self.addCleanup(self._stack_delete, stack_name)
         stack = self.client.stacks.get(stack_name)
         stack_identifier = '%s/%s' % (stack_name, stack.id)
         self._wait_for_stack_status(stack_identifier, 'CREATE_FAILED')
