@@ -31,6 +31,7 @@ from heat.db import api as db_api
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import environment
+from heat.engine import function
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
@@ -1652,7 +1653,7 @@ class StackTest(common.HeatTestCase):
         self.assertIn('The specified reference "resource" '
                       '(in unknown) is incorrect.', six.text_type(ex))
 
-    def test_incorrect_outputs_cfn_empty_output(self):
+    def test_incorrect_outputs_cfn_missing_value(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'
         Resources:
@@ -1662,6 +1663,7 @@ class StackTest(common.HeatTestCase):
               Foo: abc
         Outputs:
           Resource_attr:
+            Description: the attr
         """)
         self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
                                  template.Template(tmpl))
@@ -1671,6 +1673,40 @@ class StackTest(common.HeatTestCase):
 
         self.assertIn('Each Output must contain a Value key.',
                       six.text_type(ex))
+
+    def test_incorrect_outputs_cfn_empty_value(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            Properties:
+              Foo: abc
+        Outputs:
+          Resource_attr:
+            Value: ''
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
+                                 template.Template(tmpl))
+
+        self.assertIsNone(self.stack.validate())
+
+    def test_incorrect_outputs_cfn_none_value(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            Properties:
+              Foo: abc
+        Outputs:
+          Resource_attr:
+            Value:
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
+                                 template.Template(tmpl))
+
+        self.assertIsNone(self.stack.validate())
 
     def test_incorrect_outputs_cfn_string_data(self):
         tmpl = template_format.parse("""
@@ -2160,7 +2196,8 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(tmpl_stack.prev_raw_template_id)
         self.assertFalse(mock_store.called)
 
-    def test_validate_assertion_exception_rethrow(self):
+    @mock.patch.object(function, 'validate')
+    def test_validate_assertion_exception_rethrow(self, func_val):
         expected_msg = 'Expected Assertion Error'
         with mock.patch('heat.engine.stack.dependencies',
                         new_callable=mock.PropertyMock) as mock_dependencies:
@@ -2174,12 +2211,10 @@ class StackTest(common.HeatTestCase):
             mock_dependency.validate.assert_called_once_with()
 
         stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)
-        output_value = mock.MagicMock()
-        output_value.get.side_effect = AssertionError(expected_msg)
-        stc.outputs = {'foo': output_value}
+        stc.outputs = {'foo': {'Value': 'bar'}}
+        func_val.side_effect = AssertionError(expected_msg)
         expected_exception = self.assertRaises(AssertionError, stc.validate)
         self.assertEqual(expected_msg, six.text_type(expected_exception))
-        output_value.get.assert_called_once_with('Value')
 
     def test_resolve_static_data_assertion_exception_rethrow(self):
         tmpl = mock.MagicMock()
