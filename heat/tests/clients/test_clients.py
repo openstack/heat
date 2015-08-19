@@ -425,7 +425,8 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=True,
             plugin='cinder',
-            exception=lambda: cinder_exc.ClientException(code=409),
+            exception=lambda: cinder_exc.ClientException(
+                code=409, message='conflict'),
         )),
         ('glance_not_found', dict(
             is_not_found=True,

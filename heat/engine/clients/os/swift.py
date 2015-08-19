@@ -17,6 +17,7 @@ import hashlib
 import random
 import time
 
+import six
 from six.moves.urllib import parse
 from swiftclient import client as sc
 from swiftclient import exceptions
@@ -98,7 +99,8 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         if key_header not in self.client().head_account():
             self.client().post_account({
                 key_header: hashlib.sha224(
-                    str(random.getrandbits(256))).hexdigest()[:32]})
+                    six.b(six.text_type(
+                        random.getrandbits(256)))).hexdigest()[:32]})
 
         key = self.client().head_account()[key_header]
 

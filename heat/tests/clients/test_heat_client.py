@@ -357,7 +357,7 @@ class KeystoneClientTest(common.HeatTestCase):
         err = self.assertRaises(ValueError,
                                 heat_ks_client.delete_stack_domain_user,
                                 user_id='duser123', project_id='aproject')
-        self.assertIn('User delete in invalid domain', err)
+        self.assertIn('User delete in invalid domain', err.args)
 
     def test_delete_stack_domain_user_error_project(self):
         """Test deleting a stack domain user, wrong project."""
@@ -379,7 +379,7 @@ class KeystoneClientTest(common.HeatTestCase):
         err = self.assertRaises(ValueError,
                                 heat_ks_client.delete_stack_domain_user,
                                 user_id='duser123', project_id='aproject')
-        self.assertIn('User delete in invalid project', err)
+        self.assertIn('User delete in invalid project', err.args)
 
     def test_delete_stack_user(self):
 
