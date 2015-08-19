@@ -16,6 +16,7 @@ import collections
 import uuid
 
 import mock
+from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 from oslo_serialization import jsonutils as json
@@ -47,8 +48,10 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
 
     def test_create(self):
         context = utils.dummy_context()
+        ext_mock = self.patchobject(nc, 'discover_extensions')
         plugin = context.clients.client_plugin('nova')
         client = plugin.client()
+        ext_mock.assert_called_once_with('2')
         self.assertIsNotNone(client.servers)
 
     def test_get_ip(self):

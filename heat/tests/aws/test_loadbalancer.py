@@ -88,7 +88,8 @@ class LoadBalancerTest(common.HeatTestCase):
         lb_defn = s.t.resource_definitions(s)[resource_name]
         rsrc = lb.LoadBalancer(resource_name, lb_defn, s)
 
-        nova.NovaClientPlugin._create = mock.Mock(return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
 
         initial_md = {'AWS::CloudFormation::Init':
                       {'config':
