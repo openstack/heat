@@ -30,6 +30,7 @@ resources:
     type: OS::Barbican::Secret
     properties:
       name: foobar-secret
+      secret_type: opaque
 '''
 
 
@@ -74,6 +75,7 @@ class TestSecret(common.HeatTestCase):
         self.assertEqual(expected_state, self.res.state)
         args = self.barbican.secrets.create.call_args[1]
         self.assertEqual('foobar-secret', args['name'])
+        self.assertEqual('opaque', args['secret_type'])
 
     def test_attributes(self):
         mock_secret = mock.Mock()

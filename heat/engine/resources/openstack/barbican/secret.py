@@ -31,10 +31,10 @@ class Secret(resource.Resource):
 
     PROPERTIES = (
         NAME, PAYLOAD, PAYLOAD_CONTENT_TYPE, PAYLOAD_CONTENT_ENCODING,
-        MODE, EXPIRATION, ALGORITHM, BIT_LENGTH,
+        MODE, EXPIRATION, ALGORITHM, BIT_LENGTH, SECRET_TYPE,
     ) = (
         'name', 'payload', 'payload_content_type', 'payload_content_encoding',
-        'mode', 'expiration', 'algorithm', 'bit_length',
+        'mode', 'expiration', 'algorithm', 'bit_length', 'secret_type'
     )
 
     ATTRIBUTES = (
@@ -51,6 +51,17 @@ class Secret(resource.Resource):
         PAYLOAD: properties.Schema(
             properties.Schema.STRING,
             _('The unencrypted plain text of the secret.'),
+        ),
+        SECRET_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('The type of the secret.'),
+            constraints=[
+                constraints.AllowedValues([
+                    'symmetric', 'public', 'private', 'certificate',
+                    'passphrase', 'opaque'
+                ]),
+            ],
+            support_status=support.SupportStatus(version='5.0.0'),
         ),
         PAYLOAD_CONTENT_TYPE: properties.Schema(
             properties.Schema.STRING,
