@@ -85,6 +85,7 @@ class Order(resource.Resource):
                     'key', 'asymmetric', 'certificate'
                 ]),
             ],
+            required=True,
             support_status=support.SupportStatus(version='5.0.0'),
         ),
         REQUEST_TYPE: properties.Schema(
