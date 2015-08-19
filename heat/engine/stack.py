@@ -647,8 +647,15 @@ class Stack(collections.Mapping):
                 raise exception.StackValidationFailed(message=result)
 
         for key, val in self.outputs.items():
+            if not isinstance(val, collections.Mapping):
+                message = _('Outputs must contain Output. '
+                            'Found a [%s] instead') % type(val)
+                raise exception.StackValidationFailed(
+                    error='Output validation error',
+                    path=[self.t.OUTPUTS],
+                    message=message)
             try:
-                if not val or not val.get('Value'):
+                if not val or 'Value' not in val:
                     message = _('Each Output must contain '
                                 'a Value key.')
                     raise exception.StackValidationFailed(
@@ -656,13 +663,6 @@ class Stack(collections.Mapping):
                         path=[self.t.OUTPUTS, key],
                         message=message)
                 function.validate(val.get('Value'))
-            except AttributeError:
-                message = _('Outputs must contain Output. '
-                            'Found a [%s] instead') % type(val)
-                raise exception.StackValidationFailed(
-                    error='Output validation error',
-                    path=[self.t.OUTPUTS],
-                    message=message)
             except exception.StackValidationFailed as ex:
                 raise
             except AssertionError:
