@@ -871,7 +871,7 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['NetworkInterfaces'] = new_interfaces
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_detach')
         return_server.interface_detach(
             'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
@@ -906,7 +906,7 @@ class InstancesTest(common.HeatTestCase):
         update_template['Properties']['NetworkInterfaces'] = new_interfaces
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
                                        None, None).AndReturn(None)
@@ -997,10 +997,9 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
 
-    def test_instance_update_network_interfaces_no_old_no_new(self):
+    def test_instance_update_network_interfaces_no_old_empty_new(self):
         """
-        Instance.handle_update supports changing the NetworkInterfaces,
-        and makes the change making a resize API call against Nova.
+        Instance.handle_update supports changing the NetworkInterfaces
         """
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
@@ -1029,43 +1028,77 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
 
-    def test_instance_update_network_interfaces_no_old_new_with_subnet(self):
-        """
-        Instance.handle_update supports changing the NetworkInterfaces,
-        and makes the change making a resize API call against Nova.
-        """
+    def _test_instance_update_with_subnet(self, stack_name,
+                                          new_interfaces=None,
+                                          old_interfaces=None,
+                                          need_update=True,
+                                          multiple_get=True):
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
-        instance = self._create_test_instance(return_server,
-                                              'ud_network_interfaces')
+        instance = self._create_test_instance(return_server, stack_name)
         self._stub_glance_for_update()
         iface = self.create_fake_iface('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
                                        'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
                                        '10.0.0.4')
         subnet_id = '8c1aaddf-e49e-4f28-93ea-ca9f0b3c6240'
         nics = [{'port-id': 'ea29f957-cd35-4364-98fb-57ce9732c10d'}]
+        if old_interfaces is not None:
+            instance.t['Properties']['NetworkInterfaces'] = old_interfaces
         update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = []
+        if new_interfaces is not None:
+            update_template['Properties']['NetworkInterfaces'] = new_interfaces
         update_template['Properties']['SubnetId'] = subnet_id
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
-        self.m.StubOutWithMock(return_server, 'interface_list')
-        return_server.interface_list().AndReturn([iface])
-        self.m.StubOutWithMock(return_server, 'interface_detach')
-        return_server.interface_detach(
-            'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
-        self.m.StubOutWithMock(instance, '_build_nics')
-        instance._build_nics([], security_groups=None,
-                             subnet_id=subnet_id).AndReturn(nics)
-        self.m.StubOutWithMock(return_server, 'interface_attach')
-        return_server.interface_attach('ea29f957-cd35-4364-98fb-57ce9732c10d',
-                                       None, None).AndReturn(None)
+
+        if need_update:
+            if multiple_get:
+                self.fc.servers.get('1234').MultipleTimes().AndReturn(
+                    return_server)
+            else:
+                self.fc.servers.get('1234').AndReturn(return_server)
+            self.m.StubOutWithMock(return_server, 'interface_list')
+            return_server.interface_list().AndReturn([iface])
+            self.m.StubOutWithMock(return_server, 'interface_detach')
+            return_server.interface_detach(
+                'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
+            self.m.StubOutWithMock(instance, '_build_nics')
+            instance._build_nics(new_interfaces, security_groups=None,
+                                 subnet_id=subnet_id).AndReturn(nics)
+            self.m.StubOutWithMock(return_server, 'interface_attach')
+            return_server.interface_attach(
+                'ea29f957-cd35-4364-98fb-57ce9732c10d',
+                None, None).AndReturn(None)
+
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.update, update_template)()
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
+
+    def test_instance_update_network_interfaces_empty_new_with_subnet(self):
+        """
+        Test update NetworkInterfaces to empty, and update with subnet.
+        """
+        stack_name = 'ud_network_interfaces_empty_with_subnet'
+        self._test_instance_update_with_subnet(
+            stack_name, new_interfaces=[])
+
+    def test_instance_update_no_old_no_new_with_subnet(self):
+        stack_name = 'ud_only_with_subnet'
+        self._test_instance_update_with_subnet(stack_name)
+
+    def test_instance_update_old_no_change_with_subnet(self):
+        # Test if there is old network interface and no change of
+        # it, will do nothing when updating.
+        old_interfaces = [
+            {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+             'DeviceIndex': '2'}]
+        stack_name = 'ud_old_no_change_only_with_subnet'
+        self._test_instance_update_with_subnet(stack_name,
+                                               old_interfaces=old_interfaces,
+                                               need_update=False,
+                                               multiple_get=False)
 
     def test_instance_update_properties(self):
         return_server = self.fc.servers.list()[1]

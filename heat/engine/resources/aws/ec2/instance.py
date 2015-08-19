@@ -20,6 +20,7 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine.clients.os import cinder as cinder_cp
 from heat.engine.clients import progress
@@ -650,10 +651,7 @@ class Instance(resource.Resource):
         updaters = []
         new_network_ifaces = prop_diff.get(self.NETWORK_INTERFACES)
         old_network_ifaces = self.properties.get(self.NETWORK_INTERFACES)
-        subnet_id = (
-            prop_diff.get(self.SUBNET_ID) or
-            self.properties.get(self.SUBNET_ID))
-        security_groups = self._get_security_groups()
+
         # if there is entrys in old_network_ifaces and new_network_ifaces,
         # remove the same entrys from old and new ifaces
         if old_network_ifaces and new_network_ifaces:
@@ -684,12 +682,25 @@ class Instance(resource.Resource):
                             complete=True,
                             handler_extra={'kwargs': handler_kwargs})
                     )
+        # if there is no change of 'NetworkInterfaces', do nothing,
+        # keep the behavior as creation
+        elif (old_network_ifaces and
+                (self.NETWORK_INTERFACES not in prop_diff)):
+            LOG.warn(_LW('There is no change of "%(net_interfaces)s" '
+                         'for instance %(server)s, do nothing '
+                         'when updating.'),
+                     {'net_interfaces': self.NETWORK_INTERFACES,
+                      'server': self.resource_id})
         # if the interfaces not come from property 'NetworkInterfaces',
         # the situation is somewhat complex, so to detach the old ifaces,
         # and then attach the new ones.
         else:
+            subnet_id = (prop_diff.get(self.SUBNET_ID) or
+                         self.properties.get(self.SUBNET_ID))
+            security_groups = self._get_security_groups()
             if not server:
                 server = self.client().servers.get(self.resource_id)
+
             interfaces = server.interface_list()
             for iface in interfaces:
                 updaters.append(
@@ -708,7 +719,6 @@ class Instance(resource.Resource):
             # _build_nics() will return nics = None,we should attach
             # first free port, according to similar behavior during
             # instance creation
-
             if not nics:
                 updaters.append(
                     progress.ServerUpdateProgress(
@@ -723,6 +733,7 @@ class Instance(resource.Resource):
                             handler_extra={'kwargs':
                                            {'port_id': nic['port-id']}})
                     )
+
         return updaters
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -738,7 +749,8 @@ class Instance(resource.Resource):
         if self.INSTANCE_TYPE in prop_diff:
             updaters.extend(self._update_instance_type(prop_diff))
 
-        if self.NETWORK_INTERFACES in prop_diff:
+        if (self.NETWORK_INTERFACES in prop_diff or
+                self.SUBNET_ID in prop_diff):
             updaters.extend(self._update_network_interfaces(server, prop_diff))
 
         # NOTE(pas-ha) optimization is possible (starting first task
@@ -778,7 +790,8 @@ class Instance(resource.Resource):
 
         # check validity of security groups vs. network interfaces
         security_groups = self._get_security_groups()
-        if security_groups and self.properties.get(self.NETWORK_INTERFACES):
+        network_interfaces = self.properties.get(self.NETWORK_INTERFACES)
+        if security_groups and network_interfaces:
             raise exception.ResourcePropertyConflict(
                 '/'.join([self.SECURITY_GROUPS, self.SECURITY_GROUP_IDS]),
                 self.NETWORK_INTERFACES)
@@ -799,6 +812,17 @@ class Instance(resource.Resource):
                     msg = _("Ebs is missing, this is required "
                             "when specifying BlockDeviceMappings.")
                     raise exception.StackValidationFailed(message=msg)
+
+        subnet_id = self.properties.get(self.SUBNET_ID)
+        if network_interfaces and subnet_id:
+            # consider the old templates, we only to log to warn user
+            # NetworkInterfaces has higher priority than SubnetId
+            LOG.warn(_LW('"%(subnet)s" will be ignored if specified '
+                         '"%(net_interfaces)s". So if you specified the '
+                         '"%(net_interfaces)s" property, '
+                         'do not specify "%(subnet)s" property.'),
+                     {'subnet': self.SUBNET_ID,
+                      'net_interfaces': self.NETWORK_INTERFACES})
 
     def handle_delete(self):
         # make sure to delete the port which implicit-created by heat
