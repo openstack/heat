@@ -16,28 +16,49 @@ from heat_integrationtests.functional import functional_base
 class EncryptedParametersTest(functional_base.FunctionalTestsBase):
 
     template = '''
-heat_template_version: 2013-05-23
+heat_template_version: 2014-10-16
 parameters:
+  image:
+    type: string
+  flavor:
+    type: string
+  network:
+    type: string
   foo:
     type: string
-    description: Parameter with encryption turned on
+    description: 'parameter with encryption turned on'
     hidden: true
     default: secret
+resources:
+  server_with_encrypted_property:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: foo }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks: [{network: {get_param: network} }]
 outputs:
   encrypted_foo_param:
-    description: ''
-    value: {get_param: foo}
+    description: 'encrypted param'
+    value: { get_param: foo }
 '''
 
     def setUp(self):
         super(EncryptedParametersTest, self).setUp()
 
     def test_db_encryption(self):
-        # Create a stack with a non-default value for 'foo' to be encrypted
+        # Create a stack with the value of 'foo' to be encrypted
         foo_param = 'my_encrypted_foo'
+        parameters = {
+            "image": self.conf.minimal_image_ref,
+            "flavor": self.conf.minimal_instance_type,
+            'network': self.conf.fixed_network_name,
+            "foo": foo_param
+        }
+
         stack_identifier = self.stack_create(
             template=self.template,
-            parameters={'foo': foo_param}
+            parameters=parameters
         )
         stack = self.client.stacks.get(stack_identifier)
 
