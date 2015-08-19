@@ -60,3 +60,8 @@ running single tests by providing a regex.
 testlist=$(mktemp)
 testr list-tests "$1" > $testlist
 python -m testtools.run --load-list $testlist
+
+Another way to use debugger for testing is run tox with command:
+$ tox -e debug -- heat.tests.test_stack.StackTest.test_stack_reads_tenant
+
+Note: last approach is mostly useful to run single tests.
