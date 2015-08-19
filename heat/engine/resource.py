@@ -1094,9 +1094,9 @@ class Resource(object):
                 raise exception.StackValidationFailed(message=msg)
 
     def _update_replacement_data(self, template_id):
-        # Udate the replacement resource's needed_by and replaces
+        # Update the replacement resource's needed_by and replaces
         # fields. Make sure that the replacement belongs to the given
-        # template and there is no engine is working on it.
+        # template and there is no engine working on it.
         if self.replaced_by is None:
             return
 
@@ -1104,8 +1104,8 @@ class Resource(object):
             db_res = resource_objects.Resource.get_obj(
                 self.context, self.replaced_by)
         except exception.NotFound:
-            LOG.info(_LI("Could not find replacement of resource %{name} "
-                         "with id %{id} while updating needed_by."),
+            LOG.info(_LI("Could not find replacement of resource %(name)s "
+                         "with id %(id)s while updating needed_by."),
                      {'name': self.name, 'id': self.replaced_by})
             return
 
