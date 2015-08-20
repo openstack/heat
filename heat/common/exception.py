@@ -107,7 +107,10 @@ class NotAuthenticated(HeatException):
 
 
 class Forbidden(HeatException):
-    msg_fmt = _("You are not authorized to complete this action.")
+    msg_fmt = _("You are not authorized to use %(action)s.")
+
+    def __init__(self, action='this action'):
+        super(Forbidden, self).__init__(action=action)
 
 
 # NOTE(bcwaldon): here for backwards-compatibility, need to deprecate.

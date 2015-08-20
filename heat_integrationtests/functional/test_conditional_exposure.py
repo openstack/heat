@@ -66,3 +66,36 @@ resources:
                                template=self.unavailable_template)
         self.assertIn('ResourceTypeUnavailable', ex.message)
         self.assertIn('OS::Sahara::NodeGroupTemplate', ex.message)
+
+
+class RoleBasedExposureTest(functional_base.FunctionalTestsBase):
+    forbidden_resource_type = "OS::Nova::Flavor"
+    fl_tmpl = """
+heat_template_version: 2015-10-15
+
+resources:
+  not4everyone:
+    type: OS::Nova::Flavor
+    properties:
+      ram: 20000
+      vcpus: 10
+"""
+
+    def test_non_admin_forbidden_create_flavors(self):
+        """Fail to create Flavor resource w/o admin role
+
+        Integration tests job runs as normal OpenStack user,
+        and OS::Nova:Flavor is configured to require
+        admin role in default policy file of Heat.
+        """
+        stack_name = self._stack_rand_name()
+        ex = self.assertRaises(exc.Forbidden,
+                               self.client.stacks.create,
+                               stack_name=stack_name,
+                               template=self.fl_tmpl)
+        self.assertIn(self.forbidden_resource_type, ex.message)
+
+    def test_forbidden_resource_not_listed(self):
+        resources = self.client.resource_types.list()
+        self.assertNotIn(self.forbidden_resource_type,
+                         (r.resource_type for r in resources))

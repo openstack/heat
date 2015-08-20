@@ -73,5 +73,7 @@
     "software_deployments:delete": "rule:deny_stack_user",
     "software_deployments:metadata": "",
 
-    "service:index": "rule:context_is_admin"
+    "service:index": "rule:context_is_admin",
+
+    "resource_types:OS::Nova::Flavor": "rule:context_is_admin"
 }

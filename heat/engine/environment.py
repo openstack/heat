@@ -28,6 +28,7 @@ from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
+from heat.common import policy
 from heat.engine import support
 
 LOG = log.getLogger(__name__)
@@ -458,10 +459,23 @@ class ResourceRegistry(object):
         def not_hidden_matches(cls):
             return cls.get_class().support_status.status != support.HIDDEN
 
+        def is_allowed(enforcer, name):
+            if cnxt is None:
+                return True
+            try:
+                enforcer.enforce(cnxt, name)
+            except enforcer.exc:
+                return False
+            else:
+                return True
+
+        enforcer = policy.ResourceEnforcer()
+
         return [name for name, cls in six.iteritems(self._registry)
                 if (is_resource(name) and
                     status_matches(cls) and
                     is_available(cls) and
+                    is_allowed(enforcer, name) and
                     not_hidden_matches(cls))]
 
 
