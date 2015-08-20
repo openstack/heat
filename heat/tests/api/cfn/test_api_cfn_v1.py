@@ -62,6 +62,10 @@ class CfnStackControllerTest(common.HeatTestCase):
                                                        'deny_stack_user.json')
         self.addCleanup(self.m.VerifyAll)
 
+    def test_default(self):
+        self.assertRaises(
+            exception.HeatInvalidActionError, self.controller.default, None)
+
     def tearDown(self):
         super(CfnStackControllerTest, self).tearDown()
         cfg.CONF.unregister_opts(self.opts)

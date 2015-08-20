@@ -48,6 +48,9 @@ class StackController(object):
         self.rpc_client = rpc_client.EngineClient()
         self.policy = policy.Enforcer(scope='cloudformation')
 
+    def default(self, req, **args):
+        raise exception.HeatInvalidActionError()
+
     def _enforce(self, req, action):
         """Authorize an action against the policy.json."""
         try:
