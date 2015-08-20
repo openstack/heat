@@ -33,10 +33,10 @@ policy_path = os.path.dirname(os.path.realpath(__file__)) + "/../../policy/"
 
 
 class CfnStackControllerTest(common.HeatTestCase):
-    '''
+    """
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
-    '''
+    """
 
     def setUp(self):
         super(CfnStackControllerTest, self).setUp()
@@ -333,7 +333,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
-        self.assertEqual(expected, response)
+        self.assertEqual(utils.recursive_sort(expected),
+                         utils.recursive_sort(response))
 
     def test_describe_arn(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -417,7 +418,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
-        self.assertEqual(expected, response)
+        self.assertEqual(utils.recursive_sort(expected),
+                         utils.recursive_sort(response))
 
     def test_describe_arn_invalidtenant(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -481,7 +483,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_get_template_int_body(self):
-        '''Test the internal _get_template function.'''
+        """Test the internal _get_template function."""
         params = {'TemplateBody': "abcdef"}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller._get_template(dummy_req)

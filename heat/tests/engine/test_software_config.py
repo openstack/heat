@@ -85,6 +85,11 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         return self.engine.create_software_config(
             self.ctx, group, name, config, inputs, outputs, options)
 
+    def assert_status_reason(self, expected, actual):
+        expected_dict = dict((i.split(' : ') for i in expected.split(', ')))
+        actual_dict = dict((i.split(' : ') for i in actual.split(', ')))
+        self.assertEqual(expected_dict, actual_dict)
+
     def test_list_software_configs(self):
         config = self._create_software_config()
         config_id = config['id']
@@ -362,7 +367,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
         self.assertEqual('FAILED', sd.status)
-        self.assertEqual(
+        self.assert_status_reason(
             ('deploy_status_code : Deployment exited with non-zero '
              'status code: -1'),
             sd.status_reason)
@@ -394,7 +399,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
         self.assertEqual('FAILED', sd.status)
-        self.assertEqual(
+        self.assert_status_reason(
             ('foo : bar, deploy_status_code : Deployment exited with '
              'non-zero status code: -1'),
             sd.status_reason)

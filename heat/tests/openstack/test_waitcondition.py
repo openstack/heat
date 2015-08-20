@@ -214,7 +214,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
                          'status': 'SUCCESS', 'id': '456'}
         ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(u'{"123": "foo", "456": "dog"}', wc_att)
+        self.assertEqual(json.loads(u'{"123": "foo", "456": "dog"}'),
+                         json.loads(wc_att))
         self.assertEqual('status:SUCCESS reason:cat', ret)
         self.m.VerifyAll()
 

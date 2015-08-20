@@ -24,12 +24,13 @@ from heat.api.aws import ec2token
 from heat.api.aws import exception
 from heat.common import wsgi
 from heat.tests import common
+from heat.tests import utils
 
 
 class Ec2TokenTest(common.HeatTestCase):
-    '''
+    """
     Tests the Ec2Token middleware
-    '''
+    """
 
     def setUp(self):
         super(Ec2TokenTest, self).setUp()
@@ -253,8 +254,9 @@ class Ec2TokenTest(common.HeatTestCase):
                                  "path": "/v1",
                                  "body_hash": body_hash}})
         req_headers = {'Content-Type': 'application/json'}
-        requests.post(req_url, data=req_creds, verify=verify, cert=cert,
-                      headers=req_headers).AndReturn(DummyHTTPResponse())
+        requests.post(
+            req_url, data=utils.JsonEquals(req_creds), verify=verify,
+            cert=cert, headers=req_headers).AndReturn(DummyHTTPResponse())
 
     def test_call_ok(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}

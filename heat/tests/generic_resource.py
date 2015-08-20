@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 from oslo_log import log as logging
 import six
 
@@ -31,8 +32,9 @@ class GenericResource(resource.Resource):
     Dummy resource for use in tests
     '''
     properties_schema = {}
-    attributes_schema = {'foo': attributes.Schema('A generic attribute'),
-                         'Foo': attributes.Schema('Another generic attribute')}
+    attributes_schema = collections.OrderedDict([
+        ('foo', attributes.Schema('A generic attribute')),
+        ('Foo', attributes.Schema('Another generic attribute'))])
 
     @classmethod
     def is_service_available(cls, context):

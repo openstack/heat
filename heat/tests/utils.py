@@ -15,8 +15,10 @@ import random
 import string
 import uuid
 
+import mox
 from oslo_config import cfg
 from oslo_db import options
+from oslo_serialization import jsonutils
 import sqlalchemy
 
 from heat.common import context
@@ -143,3 +145,32 @@ class PhysName(object):
 
     def __repr__(self):
         return self._physname
+
+
+def recursive_sort(obj):
+    """Recursively sort list in iterables for comparison."""
+    if isinstance(obj, dict):
+        for v in obj.values():
+            recursive_sort(v)
+    elif isinstance(obj, list):
+        obj.sort()
+        for i in obj:
+            recursive_sort(i)
+    return obj
+
+
+class JsonEquals(mox.Comparator):
+    """Comparison class used to check if two json strings equal.
+
+    If a dict is dumped to json, the order is undecided, so load the string
+    back to an object for comparison
+    """
+
+    def __init__(self, other_json):
+        self.other_json = other_json
+
+    def equals(self, rhs):
+        return jsonutils.loads(self.other_json) == jsonutils.loads(rhs)
+
+    def __repr__(self):
+        return "<equals to json '%s'>" % self.other_json

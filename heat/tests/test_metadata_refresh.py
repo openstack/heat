@@ -13,6 +13,7 @@
 
 import mock
 import mox
+from oslo_serialization import jsonutils
 
 from heat.common import identifier
 from heat.common import template_format
@@ -286,12 +287,13 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
 
         update_metadata('456', 'blarg', 'wibble')
 
-        self.assertEqual('{"123": "foo", "456": "blarg"}',
-                         watch.FnGetAtt('Data'))
+        self.assertEqual({'123': 'foo', '456': 'blarg'},
+                         jsonutils.loads(watch.FnGetAtt('Data')))
         self.assertEqual('{"123": "foo"}',
                          inst.metadata_get()['test'])
-        self.assertEqual('{"123": "foo", "456": "blarg"}',
-                         inst.metadata_get(refresh=True)['test'])
+        self.assertEqual(
+            {'123': 'foo', '456': 'blarg'},
+            jsonutils.loads(inst.metadata_get(refresh=True)['test']))
 
         self.m.VerifyAll()
 

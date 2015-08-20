@@ -75,7 +75,10 @@ class ParameterTestCommon(common.HeatTestCase):
 
     def test_param_to_str(self):
         p = new_parameter('p', {'Type': self.p_type}, self.value)
-        self.assertEqual(self.expected, str(p))
+        if self.p_type == 'Json':
+            self.assertEqual(json.loads(self.expected), json.loads(str(p)))
+        else:
+            self.assertEqual(self.expected, str(p))
 
     def test_default_no_override(self):
         p = new_parameter('defaulted', {'Type': self.p_type,
@@ -137,7 +140,10 @@ class ParameterTestCommon(common.HeatTestCase):
                                      'NoEcho': 'false'},
                           self.value)
         self.assertFalse(p.hidden())
-        self.assertEqual(self.expected, str(p))
+        if self.p_type == 'Json':
+            self.assertEqual(json.loads(self.expected), json.loads(str(p)))
+        else:
+            self.assertEqual(self.expected, str(p))
 
     def test_default_empty(self):
         p = new_parameter('defaulted', {'Type': self.p_type,

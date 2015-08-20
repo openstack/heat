@@ -38,10 +38,12 @@ class TestViewsCommon(common.HeatTestCase):
         self.setUpGetCollectionLinks()
         links = views_common.get_collection_links(self.request, self.items)
 
-        expected = 'http://example.com/fake/path?marker=id2&limit=2'
+        expected_params = {'marker': ['id2'], 'limit': ['2']}
         next_link = filter(lambda link: link['rel'] == 'next', links).pop()
         self.assertEqual('next', next_link['rel'])
-        self.assertEqual(expected, next_link['href'])
+        url_path, url_params = next_link['href'].split('?', 1)
+        self.assertEqual(url_path, self.request.path_url)
+        self.assertEqual(expected_params, urlparse.parse_qs(url_params))
 
     def test_get_collection_links_doesnt_create_next_if_no_limit(self):
         self.setUpGetCollectionLinks()
@@ -62,9 +64,12 @@ class TestViewsCommon(common.HeatTestCase):
         self.request.params = {'limit': '2', 'marker': 'some_marker'}
         links = views_common.get_collection_links(self.request, self.items)
 
-        expected = 'http://example.com/fake/path?marker=id2&limit=2'
+        expected_params = {'marker': ['id2'], 'limit': ['2']}
         next_link = filter(lambda link: link['rel'] == 'next', links).pop()
-        self.assertEqual(expected, next_link['href'])
+        self.assertEqual('next', next_link['rel'])
+        url_path, url_params = next_link['href'].split('?', 1)
+        self.assertEqual(url_path, self.request.path_url)
+        self.assertEqual(expected_params, urlparse.parse_qs(url_params))
 
     def test_get_collection_links_does_not_overwrite_other_params(self):
         self.setUpGetCollectionLinks()

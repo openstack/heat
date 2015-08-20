@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import json
 import os
 import uuid
@@ -140,8 +141,13 @@ class ProviderTemplateTest(common.HeatTestCase):
         prop_vals = {
             "Foo": "Bar",
             "AList": ["one", "two", "three"],
-            "MemList": [{"key": "name", "value": "three"},
-                        {"key": "name", "value": "four"}],
+            "MemList": [collections.OrderedDict([
+                ('key', 'name'),
+                ('value', 'three'),
+            ]), collections.OrderedDict([
+                ('key', 'name'),
+                ('value', 'four'),
+            ])],
             "ListEmpty": [],
             "ANum": 5,
             "AMap": map_prop_val,
@@ -165,7 +171,8 @@ class ProviderTemplateTest(common.HeatTestCase):
                    '.member.0.value=three,'
                    '.member.1.key=name,'
                    '.member.1.value=four')
-        self.assertEqual(mem_exp, converted_params.get("MemList"))
+        self.assertEqual(sorted(mem_exp.split(',')),
+                         sorted(converted_params.get("MemList").split(',')))
         # verify Number conversion
         self.assertEqual(5, converted_params.get("ANum"))
         # verify Map conversion
