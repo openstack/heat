@@ -249,7 +249,7 @@ class StackTest(common.HeatTestCase):
     def test_iter_resources(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
-               {'A': {'Type': 'GenericResourceType'},
+               {'A': {'Type': 'StackResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
@@ -276,7 +276,7 @@ class StackTest(common.HeatTestCase):
     def test_iter_resources_cached(self, mock_drg):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
-               {'A': {'Type': 'GenericResourceType'},
+               {'A': {'Type': 'StackResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
