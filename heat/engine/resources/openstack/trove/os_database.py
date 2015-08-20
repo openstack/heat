@@ -340,7 +340,7 @@ class OSDBInstance(resource.Resource):
             if port:
                 neutron = self.client_plugin('neutron')
                 nic_dict['port-id'] = neutron.find_neutron_resource(
-                    self.properties, self.PORT, 'port')
+                    nic, self.PORT, 'port')
             ip = nic.get(self.V4_FIXED_IP)
             if ip:
                 nic_dict['v4-fixed-ip'] = ip

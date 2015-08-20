@@ -611,7 +611,8 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutron.NeutronClientPlugin,
                                'find_neutron_resource')
         neutron.NeutronClientPlugin.find_neutron_resource(
-            instance.properties, 'port', 'port').AndReturn('someportid')
+            instance.properties.get('networks')[0],
+            'port', 'port').AndReturn('someportid')
 
         self.fc.instances.create('test', 1, volume={'size': 30},
                                  databases=[],
