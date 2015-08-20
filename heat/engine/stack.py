@@ -1603,11 +1603,9 @@ class Stack(collections.Mapping):
         for res in six.itervalues(self.resources):
             res.attributes.reset_resolved_values()
 
-    def has_cache_data(self):
-        if self.cache_data is not None:
-            return True
-
-        return False
+    def has_cache_data(self, resource_name):
+        return (self.cache_data is not None and
+                self.cache_data.get(resource_name) is not None)
 
     def cache_data_resource_id(self, resource_name):
         return self.cache_data.get(

@@ -200,7 +200,7 @@ class GetAtt(function.Function):
             return r.FnGetAtt(attribute)
         # NOTE(sirushtim): Add r.INIT to states above once convergence
         # is the default.
-        elif r.stack.has_cache_data() and r.action == r.INIT:
+        elif r.stack.has_cache_data(r.name) and r.action == r.INIT:
             return r.FnGetAtt(attribute)
         else:
             return None
