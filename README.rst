@@ -3,7 +3,7 @@ Heat
 ====
 
 Heat is a service to orchestrate multiple composite cloud applications using
-templates, through both an OpenStack-native ReST API and a
+templates, through both an OpenStack-native REST API and a
 CloudFormation-compatible Query API.
 
 Why heat? It makes the clouds rise and keeps them there.
