@@ -1629,8 +1629,6 @@ class ResourceTest(common.HeatTestCase):
     def test_delete_convergence_ok(self, mock_call, mock_init):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
-        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 1
         res.status = res.COMPLETE
         res.action = res.CREATE
