@@ -97,6 +97,7 @@ class CloudNetwork(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         resource.Resource.__init__(self, name, json_snippet, stack)
         self._network = None
+        self._delete_issued = False
 
     def network(self):
         if self.resource_id and not self._network:
@@ -118,39 +119,23 @@ class CloudNetwork(resource.Resource):
     def handle_check(self):
         self.cloud_networks().get(self.resource_id)
 
-    def handle_delete(self):
-        '''Delete cloud network.
-
-        Cloud Network doesn't have a status attribute, and there is a non-zero
-        window between the deletion of a server and the acknowledgement from
-        the cloud network that it's no longer in use, so it needs some way to
-        keep track of when the delete call was successfully issued.
-        '''
-        network_info = {
-            'delete_issued': False,
-            'network': self.network(),
-        }
-        return network_info
-
-    def check_delete_complete(self, network_info):
-        network = network_info['network']
+    def check_delete_complete(self, cookie):
+        try:
+            network = self.cloud_networks().get(self.resource_id)
+        except NotFound:
+            return True
 
         if not network:
             return True
 
-        if not network_info['delete_issued']:
+        if not self._delete_issued:
             try:
                 network.delete()
             except NetworkInUse:
                 LOG.warn(_LW("Network '%s' still in use."), network.id)
             else:
-                network_info['delete_issued'] = True
+                self._delete_issued = True
             return False
-
-        try:
-            network.get()
-        except NotFound:
-            return True
 
         return False
 
