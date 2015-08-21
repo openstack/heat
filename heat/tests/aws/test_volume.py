@@ -612,6 +612,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         # create script
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
+        self.patchobject(self.cinder_fc.backups, 'get')
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
@@ -640,6 +641,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         # create script
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
+        self.patchobject(self.cinder_fc.backups, 'get')
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)

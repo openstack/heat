@@ -489,6 +489,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack_name = 'test_cvolume_extend_snapsht_stack'
 
         # create script
+        self.stub_VolumeBackupConstraint_validate()
         fvbr = vt_base.FakeBackupRestore('vol-123')
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
@@ -1010,6 +1011,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        self.stub_VolumeBackupConstraint_validate()
 
         # snapshot script
         fb = vt_base.FakeBackup('creating')

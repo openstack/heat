@@ -78,6 +78,9 @@ class CinderVolume(vb.BaseVolume):
             properties.Schema.STRING,
             _('If specified, the backup to create the volume from.'),
             update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('cinder.backup')
+            ]
         ),
         NAME: properties.Schema(
             properties.Schema.STRING,
