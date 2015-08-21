@@ -213,7 +213,7 @@ class ResourceGroup(stack_resource.StackResource):
         MAX_BATCH_SIZE: properties.Schema(
             properties.Schema.INTEGER,
             _('The maximum number of resources to replace at once.'),
-            constraints=[constraints.Range(min=0)],
+            constraints=[constraints.Range(min=1)],
             default=1),
         PAUSE_TIME: properties.Schema(
             properties.Schema.NUMBER,
