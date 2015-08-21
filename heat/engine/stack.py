@@ -25,6 +25,7 @@ from osprofiler import profiler
 import six
 
 from heat.common import context as common_context
+from heat.common import environment_format as env_fmt
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
@@ -1130,6 +1131,8 @@ class Stack(collections.Mapping):
                              **kwargs)
 
         backup_stack = self._backup_stack()
+        existing_params = environment.Environment({env_fmt.PARAMETERS:
+                                                  self.t.env.params})
         try:
             update_task = update.StackUpdate(
                 self, newstack, backup_stack,
@@ -1193,6 +1196,12 @@ class Stack(collections.Mapping):
 
         notification.send(self)
         self._add_event(self.action, self.status, self.status_reason)
+        if self.status == self.FAILED:
+            # Since template was incrementally updated based on existing and
+            # new stack resources, we should have user params of both.
+            existing_params.load(newstack.t.env.user_env_as_dict())
+            self.t.env = existing_params
+            self.t.store(self.context)
         self.store()
 
         lifecycle_plugin_utils.do_post_ops(self.context, self,
