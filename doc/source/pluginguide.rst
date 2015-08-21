@@ -47,7 +47,7 @@ delete
   The plug-in should delete the physical resource.
 
 The base class ``Resource`` implements each of these life cycle methods and
-defines one or more handler methods that plug-ins should implement in order
+defines one or more handler methods that plug-ins can implement in order
 to manifest and manage the actual physical resource abstracted by the plug-in.
 These handler methods will be described in detail in the following sections.
 
@@ -458,6 +458,27 @@ Delete
 
   :return: a token containing sufficient data to verify the operations status
   :raise: any ``Exception`` if the delete operation failed
+
+  .. note::
+     As of the Liberty release, implementing handle_delete is optional. The
+     parent resource class can handle the most common pattern for deleting
+     resources:
+
+     .. code-block:: python
+
+        def handle_delete(self):
+            if self.resource_id is not None:
+                try:
+                    self.client().<entity>.delete(self.resource_id)
+                except Exception as ex:
+                    self.client_plugin().ignore_not_found(ex)
+                    return None
+                return self.resource_id
+
+     For this to work for a particular resource, the `entity` and
+     `default_client_name` attributes must be overridden in the resource
+     implementation. For example, `entity` of Ceilometer Alarm should equals
+     to "alarms" and `default_client_name` to "ceilometer".
 
 .. py:function:: handle_delete_snapshot(self, snapshot)
 
