@@ -231,15 +231,9 @@ resources:
                 upd_para = nodes.paragraph('', _('Updates cause replacement.'))
                 definition.append(upd_para)
 
-        if prop.required:
-            para = nodes.paragraph('', _('Required property.'))
-        elif prop.default is not None:
-            para = nodes.paragraph(
-                '',
-                _('Optional property, defaults to "%s".') % prop.default)
-        else:
-            para = nodes.paragraph('', _('Optional property.'))
-        definition.append(para)
+        if prop.default is not None:
+            para = nodes.paragraph('', _('Defaults to "%s".') % prop.default)
+            definition.append(para)
 
         for constraint in prop.constraints:
             para = nodes.paragraph('', str(constraint))
@@ -273,12 +267,23 @@ resources:
         if not self.props_schemata:
             return
         section = self._section(parent, _('Properties'), '%s-props')
-        prop_list = nodes.definition_list()
-        section.append(prop_list)
+        prop_list_required = nodes.definition_list()
+        subsection_required = self._section(section, _('required'),
+                                            '%s-props-req')
+        subsection_required.append(prop_list_required)
+
+        prop_list_optional = nodes.definition_list()
+        subsection_optional = self._section(section, _('optional'),
+                                            '%s-props-opt')
+        subsection_optional.append(prop_list_optional)
 
         for prop_key, prop in sorted(self.props_schemata.items(),
                                      self.cmp_prop):
             if prop.support_status.status != support.HIDDEN:
+                if prop.required:
+                    prop_list = prop_list_required
+                else:
+                    prop_list = prop_list_optional
                 self.contribute_property(prop_list, prop_key, prop)
 
     def contribute_attributes(self, parent):
