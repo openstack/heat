@@ -86,13 +86,6 @@ class NovaFloatingIp(resource.Resource):
         self.resource_id_set(floating_ip.id)
         self._floating_ip = floating_ip
 
-    def handle_delete(self):
-        if self.resource_id is not None:
-            try:
-                self.client().floating_ips.delete(self.resource_id)
-            except Exception as e:
-                self.client_plugin().ignore_not_found(e)
-
     def _resolve_attribute(self, key):
         floating_ip = self._get_resource()
         attributes = {

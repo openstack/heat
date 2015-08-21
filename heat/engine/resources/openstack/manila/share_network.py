@@ -164,12 +164,6 @@ class ManilaShareNetwork(resource.Resource):
                 nova_net_id=prop_diff.get(self.NOVA_NETWORK),
                 description=prop_diff.get(self.DESCRIPTION))
 
-    def handle_delete(self):
-        try:
-            self.client().share_networks.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-
 
 def resource_mapping():
     return {'OS::Manila::ShareNetwork': ManilaShareNetwork}

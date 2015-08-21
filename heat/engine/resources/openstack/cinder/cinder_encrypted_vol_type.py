@@ -30,6 +30,8 @@ class CinderEncryptedVolumeType(resource.Resource):
 
     default_client_name = 'cinder'
 
+    entity = 'volume_encryption_types'
+
     PROPERTIES = (
         PROVIDER, CONTROL_LOCATION, CIPHER, KEY_SIZE, VOLUME_TYPE
     ) = (
@@ -105,14 +107,6 @@ class CinderEncryptedVolumeType(resource.Resource):
             self.client().volume_encryption_types.update(
                 volume_type=self.resource_id, specs=prop_diff
             )
-
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-        try:
-            self.client().volume_encryption_types.delete(self.resource_id)
-        except Exception as e:
-            self.client_plugin().ignore_not_found(e)
 
 
 def resource_mapping():

@@ -136,14 +136,6 @@ class BayModel(resource.Resource):
         bm = self.client().baymodels.create(**args)
         self.resource_id_set(bm.uuid)
 
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-        try:
-            self.client().baymodels.delete(self.resource_id)
-        except Exception as exc:
-            self.client_plugin().ignore_not_found(exc)
-
 
 def resource_mapping():
     return {

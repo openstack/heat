@@ -90,7 +90,8 @@ class NovaFlavorTest(common.HeatTestCase):
         flavor_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         self.my_flavor.resource_id = flavor_id
         self.flavors.delete.return_value = None
-        self.assertIsNone(self.my_flavor.handle_delete())
+        self.assertEqual('927202df-1afb-497f-8368-9c2d2f26e5db',
+                         self.my_flavor.handle_delete())
         self.flavors.delete.side_effect = fakes.fake_exception()
         self.assertIsNone(self.my_flavor.handle_delete())
 

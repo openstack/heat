@@ -130,15 +130,6 @@ class NovaFlavor(resource.Resource):
             if new_keys is not None:
                 flavor.set_keys(new_keys)
 
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-
-        try:
-            self.client().flavors.delete(self.resource_id)
-        except Exception as e:
-            self.client_plugin().ignore_not_found(e)
-
 
 def resource_mapping():
     return {

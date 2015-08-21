@@ -97,15 +97,6 @@ class SecurityService(resource.Resource):
             self.client().security_services.update(self.resource_id,
                                                    **prop_diff)
 
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-
-        try:
-            self.client().security_services.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-
 
 def resource_mapping():
     return {

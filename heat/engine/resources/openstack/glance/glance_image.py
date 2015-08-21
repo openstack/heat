@@ -114,15 +114,6 @@ class GlanceImage(resource.Resource):
         image = self.client().images.get(image_id)
         return image.status == 'active'
 
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-
-        try:
-            self.client().images.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-
     def _show_resource(self):
         if self.glance().version == 1.0:
             return super(GlanceImage, self)._show_resource()

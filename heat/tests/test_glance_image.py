@@ -192,7 +192,8 @@ class GlanceImageTest(common.HeatTestCase):
         image_id = '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
         self.my_image.resource_id = image_id
         self.images.delete.return_value = None
-        self.assertIsNone(self.my_image.handle_delete())
+        self.assertEqual('41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+                         self.my_image.handle_delete())
         self.images.delete.side_effect = glance_exceptions.HTTPNotFound(404)
         self.assertIsNone(self.my_image.handle_delete())
 

@@ -87,15 +87,6 @@ class ManilaShareType(resource.Resource):
                 share_type.unset_keys(extra_specs_old)
             share_type.set_keys(prop_diff.get(self.EXTRA_SPECS))
 
-    def handle_delete(self):
-        if not self.resource_id:
-            return True
-
-        try:
-            self.client().share_types.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-
 
 def resource_mapping():
     return {

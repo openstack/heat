@@ -1152,6 +1152,17 @@ class Resource(object):
             with excutils.save_and_reraise_exception():
                 self._release(engine_id)
 
+    def handle_delete(self):
+        """Default implementation; should be overridden by resources."""
+        if self.entity and self.resource_id is not None:
+            try:
+                obj = getattr(self.client(), self.entity)
+                obj.delete(self.resource_id)
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
+                return None
+            return self.resource_id
+
     @scheduler.wrappertask
     def delete(self):
         '''

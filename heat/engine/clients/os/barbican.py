@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from heat.engine.clients import client_plugin
 
@@ -30,3 +31,8 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
             session=self._keystone_session, endpoint=endpoint)
 
         return client
+
+    def is_not_found(self, ex):
+        # This is the only exception the client raises
+        # Inspecting the message to see if it's a 'Not Found'
+        return 'Not Found' in six.text_type(ex)
