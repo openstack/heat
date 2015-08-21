@@ -898,6 +898,27 @@ class PropertyTest(common.HeatTestCase):
         self.assertRaises(exception.StackValidationFailed,
                           p.get_value, ['1', '2', '3'], True)
 
+    def test_map_list_default(self):
+        schema = {'Type': 'Map',
+                  'Default': ['foo', 'bar']}
+        p = properties.Property(schema)
+        p.schema.allow_conversion = True
+        self.assertEqual(jsonutils.dumps(['foo', 'bar']),
+                         p.get_value(None))
+
+    def test_map_list_default_empty(self):
+        schema = {'Type': 'Map',
+                  'Default': []}
+        p = properties.Property(schema)
+        p.schema.allow_conversion = True
+        self.assertEqual(jsonutils.dumps([]), p.get_value(None))
+
+    def test_map_list_no_default(self):
+        schema = {'Type': 'Map'}
+        p = properties.Property(schema)
+        p.schema.allow_conversion = True
+        self.assertEqual({}, p.get_value(None))
+
     def test_map_string(self):
         p = properties.Property({'Type': 'Map'})
         self.assertRaises(TypeError, p.get_value, 'foo')

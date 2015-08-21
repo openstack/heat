@@ -277,7 +277,7 @@ class Property(object):
 
     def _get_map(self, value, validate=False):
         if value is None:
-            value = self.has_default() and self.default() or {}
+            value = self.default() if self.has_default() else {}
         if not isinstance(value, collections.Mapping):
             # This is to handle passing Lists via Json parameters exposed
             # via a provider resource, in particular lists-of-dicts which
