@@ -111,8 +111,10 @@ class StackResource(resource.Resource):
                     self.context.tenant_id,
                     self.physical_resource_name(),
                     self.resource_id)
-                self.rpc_client().stack_cancel_update(self.context,
-                                                      stack_identity)
+                self.rpc_client().stack_cancel_update(
+                    self.context,
+                    stack_identity,
+                    cancel_with_rollback=False)
 
     def has_nested(self):
         if self.nested() is not None:
