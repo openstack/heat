@@ -173,7 +173,7 @@ floating IP to the instance:
         type: OS::Nova::FloatingIPAssociation
         properties:
           floating_ip: { get_resource: floating_ip }
-          server_id: { get_resource: instance }
+          server_id: { get_resource: inst1 }
 
 OS::Neutron resources
 +++++++++++++++++++++
