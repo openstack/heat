@@ -30,7 +30,7 @@ python-keystoneclient<1.2.0,>=0.10.0
 python-neutronclient<2.4.0,>=2.3.6
 python-novaclient<=2.20.0,>=2.18.0
 python-saharaclient<=0.7.6,>=0.7.3
-python-swiftclient<=2.3.1,>=2.2.0
+python-swiftclient<2.4.0,>=2.2.0
 python-troveclient<=1.0.8,>=1.0.4
 PyYAML<=3.10,>=3.1.0
 qpid-python<=0.26.1
