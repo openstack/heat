@@ -46,7 +46,7 @@ definition using only predefined properties (along with the mandatory Heat
 template version tag). For example, the template below could be used to simply
 deploy a single compute instance.
 
-::
+.. code-block:: yaml
 
   heat_template_version: 2013-05-23
 
@@ -66,7 +66,7 @@ it is good practice to include some useful text that describes what users can do
 with the template. In case you want to provide a longer description that does
 not fit on a single line, you can provide multi-line text in YAML, for example:
 
-::
+.. code-block:: yaml
 
   description: >
     This is how you can provide a longer description
@@ -96,7 +96,7 @@ their custom key-pairs, provide their own image, and to select a flavor for the
 compute instance. This can be achieved by extending the initial template as
 follows:
 
-::
+.. code-block:: yaml
 
   heat_template_version: 2013-05-23
 
@@ -135,7 +135,7 @@ case the user does not provide the respective parameter during deployment. For
 example, the following definition for the *instance_type* parameter would select
 the 'm1.small' flavor unless specified otherwise by the user.
 
-::
+.. code-block:: yaml
 
   parameters:
     instance_type:
@@ -149,7 +149,7 @@ users request information about a stack deployed from a template. This is
 achieved by the *hidden* attribute and useful, for example when requesting
 passwords as user input:
 
-::
+.. code-block:: yaml
 
   parameters:
     database_password:
@@ -170,7 +170,7 @@ templates can be restricted by adding a *constraints* section (see also
 For example, the following would allow only three values to be provided as input
 for the *instance_type* parameter:
 
-::
+.. code-block:: yaml
 
   parameters:
     instance_type:
@@ -186,7 +186,7 @@ all be fulfilled by user input. For example, the following list of constraints
 could be used to clearly specify format requirements on a password to be
 provided by users:
 
-::
+.. code-block:: yaml
 
   parameters:
     database_password:
@@ -218,7 +218,7 @@ above can be accessed should be provided to users. Otherwise, users would have
 to look it up themselves. The definition for providing the IP address of the
 compute instance as an output is shown in the following snippet:
 
-::
+.. code-block:: yaml
 
   outputs:
     instance_ip:

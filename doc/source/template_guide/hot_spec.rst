@@ -41,7 +41,7 @@ Template structure
 
 HOT templates are defined in YAML and follow the structure outlined below.
 
-::
+.. code-block:: yaml
 
   heat_template_version: 2013-05-23
 
@@ -160,9 +160,7 @@ For example, Heat currently supports the following values for the
     The key with value ``2015-10-15`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
     Liberty release. This version removes the *Fn::Select* function, path based
-    ``get_attr``/``get_param`` references should be used instead.
-
-::
+    ``get_attr``/``get_param`` references should be used instead::
 
   get_attr
   get_file
@@ -190,7 +188,7 @@ parameters. Each parameter should be associated to a specific group only once
 using the parameter name to bind it to a defined parameter in the
 ``parameters`` section.
 
-::
+.. code-block:: yaml
 
   parameter_groups:
   - label: <human-readable label of parameter group>
@@ -228,7 +226,7 @@ Each parameter is specified in a separated nested block with the name of the
 parameters defined in the first line and additional attributes such as type or
 default value defined as nested elements.
 
-::
+.. code-block:: yaml
 
   parameters:
     <param name>:
@@ -300,7 +298,9 @@ The table below describes all currently supported types with examples:
 |                      | false value.                  |                  |
 +----------------------+-------------------------------+------------------+
 
-The following example shows a minimalistic definition of two parameters::
+The following example shows a minimalistic definition of two parameters
+
+.. code-block:: yaml
 
   parameters:
     user_name:
@@ -326,7 +326,9 @@ The ``constraints`` block of a parameter definition defines
 additional validation constraints that apply to the value of the
 parameter. The parameter values provided by a user are validated against the
 constraints at instantiation time. The constraints are defined as a list with
-the following syntax::
+the following syntax
+
+.. code-block:: yaml
 
   constraints:
     - <constraint type>: <constraint definition>
@@ -351,7 +353,7 @@ constraints. Note that while the descriptions for each constraint are optional,
 it is good practice to provide concrete descriptions to present useful messages
 to the user at deployment time.
 
-::
+.. code-block:: yaml
 
   parameters:
     user_name:
@@ -378,7 +380,9 @@ The ``length`` constraint applies to parameters of type
 ``string``. It defines a lower and upper limit for the length of the
 string value.
 
-The syntax of the ``length`` constraint is::
+The syntax of the ``length`` constraint is
+
+.. code-block:: yaml
 
    length: { min: <lower limit>, max: <upper limit> }
 
@@ -391,7 +395,9 @@ The ``range`` constraint applies to parameters of type ``number``.
 It defines a lower and upper limit for the numeric value of the
 parameter.
 
-The syntax of the ``range`` constraint is::
+The syntax of the ``range`` constraint is
+
+.. code-block:: yaml
 
    range: { min: <lower limit>, max: <upper limit> }
 
@@ -400,7 +406,9 @@ upper limit. However, at least one of ``min`` or ``max`` must be specified.
 
 The minimum and maximum boundaries are included in the range. For example, the
 following range constraint would allow for all numeric values between 0 and
-10::
+10
+
+.. code-block:: yaml
 
    range: { min: 0, max: 10 }
 
@@ -412,18 +420,24 @@ The ``allowed_values`` constraint applies to parameters of type
 parameter. At deployment time, the user-provided value for the
 respective parameter must match one of the elements of the list.
 
-The syntax of the ``allowed_values`` constraint is::
+The syntax of the ``allowed_values`` constraint is
+
+.. code-block:: yaml
 
    allowed_values: [ <value>, <value>, ... ]
 
-Alternatively, the following YAML list notation can be used::
+Alternatively, the following YAML list notation can be used
+
+.. code-block:: yaml
 
    allowed_values:
      - <value>
      - <value>
      - ...
 
-For example::
+For example
+
+.. code-block:: yaml
 
    parameters:
      instance_type:
@@ -442,11 +456,15 @@ The ``allowed_pattern`` constraint applies to parameters of type
 ``string``. It specifies a regular expression against which a
 user-provided parameter value must evaluate at deployment.
 
-The syntax of the ``allowed_pattern`` constraint is::
+The syntax of the ``allowed_pattern`` constraint is
+
+.. code-block:: yaml
 
    allowed_pattern: <regular expression>
 
-For example::
+For example
+
+.. code-block:: yaml
 
    parameters:
      user_name:
@@ -465,7 +483,9 @@ generally to check that the specified resource exists in the backend. Custom
 constraints get implemented by plug-ins and can provide any kind of advanced
 constraint validation logic.
 
-The syntax of the ``custom_constraint`` constraint is::
+The syntax of the ``custom_constraint`` constraint is
+
+.. code-block:: yaml
 
    custom_constraint: <name>
 
@@ -473,7 +493,9 @@ The ``name`` attribute specifies the concrete type of custom constraint. It
 corresponds to the name under which the respective validation plugin has been
 registered in the Orchestration engine.
 
-For example::
+For example
+
+.. code-block:: yaml
 
    parameters:
      key_name
@@ -509,7 +531,9 @@ deployed from the HOT template (for instance compute instances, networks,
 storage volumes).
 
 Each resource is defined as a separate block in the ``resources`` section with
-the following syntax::
+the following syntax
+
+.. code-block:: yaml
 
    resources:
      <resource ID>:
@@ -562,7 +586,9 @@ All resource types that can be used in CFN templates can also be used in HOT
 templates, adapted to the YAML structure as outlined above.
 
 The following example demonstrates the definition of a simple compute resource
-with some fixed property values::
+with some fixed property values
+
+.. code-block:: yaml
 
    resources:
      my_instance:
@@ -581,7 +607,9 @@ resource and one or more other resources.
 
 If a resource depends on just one other resource, the ID of the other resource
 is specified as string of the ``depends_on`` attribute, as shown in the
-following example::
+following example
+
+.. code-block:: yaml
 
    resources:
      server1:
@@ -593,7 +621,9 @@ following example::
 
 If a resource depends on more than one other resources, the value of the
 ``depends_on`` attribute is specified as a list of resource IDs, as shown in
-the following example::
+the following example
+
+.. code-block:: yaml
 
    resources:
      server1:
@@ -617,7 +647,9 @@ such as IP addresses of deployed instances, or URLs of web applications
 deployed as part of a stack.
 
 Each output parameter is defined as a separate block within the outputs section
-according to the following syntax::
+according to the following syntax
+
+.. code-block:: yaml
 
    outputs:
      <parameter name>:
@@ -639,7 +671,9 @@ parameter value
     This attribute is required.
 
 The example below shows how the IP address of a compute resource can
-be defined as an output parameter::
+be defined as an output parameter
+
+.. code-block:: yaml
 
    outputs:
      instance_ip:
@@ -669,7 +703,9 @@ instance created from the respective resource definition.
 Path based attribute referencing using keys or indexes requires
 ``heat_template_version`` ``2014-10-16`` or higher.
 
-The syntax of the ``get_attr`` function is::
+The syntax of the ``get_attr`` function is
+
+.. code-block:: yaml
 
   get_attr:
     - <resource name>
@@ -689,7 +725,9 @@ attribute name
     specified. These additional parameters are used to navigate the data
     structure to return the desired value.
 
-The following example demonstrates how to use the :code:`get_attr` function::
+The following example demonstrates how to use the :code:`get_attr` function
+
+.. code-block:: yaml
 
     resources:
       my_instance:
@@ -719,7 +757,9 @@ The ``get_file`` function returns the content of a file into the template.
 It is generally used as a file inclusion mechanism for files
 containing scripts or configuration files.
 
-The syntax of ``get_file`` function is::
+The syntax of ``get_file`` function is
+
+.. code-block:: yaml
 
    get_file: <content key>
 
@@ -737,7 +777,9 @@ to the absolute URLs required by the Orchestration API.
     engine).
 
 The example below demonstrates the ``get_file`` function usage with both
-relative and absolute URLs::
+relative and absolute URLs
+
+.. code-block:: yaml
 
   resources:
     my_instance:
@@ -765,7 +807,9 @@ get_param
 The ``get_param`` function references an input parameter of a template. It
 resolves to the value provided for this input parameter at runtime.
 
-The syntax of the ``get_param`` function is::
+The syntax of the ``get_param`` function is
+
+.. code-block:: yaml
 
     get_param:
      - <parameter name>
@@ -779,7 +823,9 @@ parameter name
     specified. These additional parameters are used to navigate the data
     structure to return the desired value.
 
-The following example demonstrates the use of the ``get_param`` function::
+The following example demonstrates the use of the ``get_param`` function
+
+.. code-block:: yaml
 
     parameters:
        instance_type:
@@ -815,14 +861,18 @@ The ``get_resource`` function references another resource within the
 same template. At runtime, it is resolved to reference the ID of the referenced
 resource, which is resource type specific. For example, a reference to a
 floating IP resource returns the respective IP address at runtime.  The syntax
-of the ``get_resource`` function is::
+of the ``get_resource`` function is
+
+.. code-block:: yaml
 
     get_resource: <resource ID>
 
 The resource ID of the referenced resource is given as single parameter to the
 ``get_resource`` function.
 
-For example::
+For example
+
+.. code-block:: yaml
 
    resources:
      instance_port:
@@ -841,13 +891,17 @@ list_join
 ---------
 The ``list_join`` function joins a list of strings with the given delimiter.
 
-The syntax of the ``list_join`` function is::
+The syntax of the ``list_join`` function is
+
+.. code-block:: yaml
 
     list_join:
     - <delimiter>
     - <list to join>
 
-For example::
+For example
+
+.. code-block:: yaml
 
    list_join: [', ', ['one', 'two', 'and three']]
 
@@ -860,7 +914,9 @@ The ``digest`` function allows for performing digest operations on a given
 value. This function has been introduced in the Kilo release and is usable with
 HOT versions later than ``2015-04-30``.
 
-The syntax of the ``digest`` function is::
+The syntax of the ``digest`` function is
+
+.. code-block:: yaml
 
   digest:
     - <algorithm>
@@ -875,7 +931,9 @@ value
     of the value.
 
 
-For example::
+For example
+
+.. code-block:: yaml
 
   # from a user supplied parameter
   pwd_hash: { digest: ['sha512', { get_param: raw_password }] }
@@ -891,7 +949,9 @@ over the contents of one or more source lists and replacing the list elements
 into a template. The result of this function is a new list, where the elements
 are set to the template, rendered for each list item.
 
-The syntax of the ``repeat`` function is::
+The syntax of the ``repeat`` function is
+
+.. code-block:: yaml
 
   repeat:
     template:
@@ -916,7 +976,9 @@ for_each
     dictionary can be given as functions such as ``get_attr`` or ``get_param``.
 
 The following example shows how a security group resource can be defined to
-include a list of ports given as a parameter::
+include a list of ports given as a parameter
+
+.. code-block:: yaml
 
     parameters:
       ports:
@@ -939,7 +1001,9 @@ include a list of ports given as a parameter::
                 port_range_max: %port%
 
 The following example demonstrates how the use of multiple lists enables the
-security group to also include parameterized protocols::
+security group to also include parameterized protocols
+
+.. code-block:: yaml
 
     parameters:
       ports:
@@ -976,7 +1040,9 @@ provider template.
 
 A provider template provides a custom definition of a resource, called its
 facade. For more information about custom templates, see :ref:`composition`.
-The syntax of the ``resource_facade`` function is::
+The syntax of the ``resource_facade`` function is
+
+.. code-block:: yaml
 
    resource_facade: <data type>
 
@@ -991,7 +1057,9 @@ providing a template string with placeholders and a list of mappings to assign
 values to those placeholders at runtime. The placeholders are replaced with
 mapping values wherever a mapping key exactly matches a placeholder.
 
-The syntax of the ``str_replace`` function is::
+The syntax of the ``str_replace`` function is
+
+.. code-block:: yaml
 
    str_replace:
      template: <template string>
@@ -1007,7 +1075,9 @@ params
 
 The following example shows a simple use of the ``str_replace`` function in the
 outputs section of a template to build a URL for logging into a deployed
-application::
+application
+
+.. code-block:: yaml
 
     resources:
       my_instance:
@@ -1024,7 +1094,9 @@ application::
               host: { get_attr: [ my_instance, first_address ] }
 
 The following examples show the use of the ``str_replace``
-function to build an instance initialization script::
+function to build an instance initialization script
+
+.. code-block:: yaml
 
     parameters:
       DBRootPassword:
@@ -1062,26 +1134,34 @@ providing an arbitrary delimiter, the opposite of ``list_join``.
 
 The syntax of the ``str_split`` function is as follows:
 
-::
+.. code-block:: yaml
 
   str_split:
     - ','
     - string,to,split
 
-Or::
+Or:
+
+.. code-block:: yaml
 
   str_split: [',', 'string,to,split']
 
-The result of which is::
+The result of which is:
+
+.. code-block:: yaml
 
   ['string', 'to', 'split']
 
 Optionally, an index may be provided to select a specific entry from the
-resulting list, similar to ``get_attr``/``get_param``::
+resulting list, similar to ``get_attr``/``get_param``:
+
+.. code-block:: yaml
 
   str_split: [',', 'string,to,split', 0]
 
-The result of which is::
+The result of which is:
+
+.. code-block:: yaml
 
   'string'
 

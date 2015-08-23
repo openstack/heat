@@ -35,7 +35,8 @@ name : String
 
 Usage
 ~~~~~
-::
+
+.. code-block:: yaml
 
   {Ref: my_server}
 
@@ -57,7 +58,7 @@ value : String
 Usage
 ~~~~~
 
-::
+.. code-block:: yaml
 
   {"Fn::Base64": "convert this string please."}
 
@@ -85,7 +86,7 @@ second_level_key : String
 Usage
 ~~~~~
 
-::
+.. code-block:: yaml
 
   Mapping:
     MyContacts:
@@ -112,7 +113,7 @@ attribute : String
 Usage
 ~~~~~
 
-::
+.. code-block:: yaml
 
   {Fn::GetAtt: [my_server, PublicIp]}
 
@@ -132,7 +133,8 @@ region : String
 
 Usage
 ~~~~~
-::
+
+.. code-block:: yaml
 
   {Fn::GetAZs: ""}
 
@@ -154,7 +156,7 @@ list : list
 Usage
 ~~~~~
 
-::
+.. code-block:: yaml
 
   {Fn::Join: [",", ["beer", "wine", "more beer"]]}
 
@@ -179,14 +181,16 @@ Usage
 ~~~~~
 
 For a list lookup:
-::
+
+.. code-block:: yaml
 
   { "Fn::Select" : [ "2", [ "apples", "grapes", "mangoes" ] ] }
 
 Returns ``mangoes``.
 
 For a map lookup:
-::
+
+.. code-block:: yaml
 
   { "Fn::Select" : [ "red", {"red": "a", "flu": "b"} ] }
 
@@ -208,7 +212,8 @@ string : String
 
 Usage
 ~~~~~
-::
+
+.. code-block:: yaml
 
   { "Fn::Split" : [ ",", "str1,str2,str3,str4"]}
 
@@ -228,7 +233,8 @@ string: String
 
 Usage
 ~~~~~
-::
+
+.. code-block:: yaml
 
   {"Fn::Replace": [
    {'$var1': 'foo', '%var2%': 'bar'},
@@ -254,7 +260,7 @@ attribute_name : String
 Usage
 ~~~~~
 
-::
+.. code-block:: yaml
 
   {'Fn::ResourceFacade': 'Metadata'}
   {'Fn::ResourceFacade': 'DeletionPolicy'}
@@ -265,7 +271,7 @@ Example
 ~~~~~~~
 Here is a top level template ``top.yaml``
 
-::
+.. code-block:: yaml
 
   resources:
     my_server:
@@ -276,7 +282,8 @@ Here is a top level template ``top.yaml``
 
 
 Here is a resource template ``my_actual_server.yaml``
-::
+
+.. code-block:: yaml
 
   resources:
     _actual_server_:
@@ -284,7 +291,8 @@ Here is a resource template ``my_actual_server.yaml``
       metadata: {'Fn::ResourceFacade': Metadata}
 
 The environment file ``env.yaml``
-::
+
+.. code-block:: yaml
 
   resource_registry:
     resources:
@@ -320,7 +328,8 @@ list: A list of strings
 
 Usage
 ~~~~~
-::
+
+.. code-block:: yaml
 
   {'Fn::MemberListToMap': ['Name', 'Value', ['.member.0.Name=key',
                                              '.member.0.Value=door',
