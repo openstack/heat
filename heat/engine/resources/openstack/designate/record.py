@@ -24,6 +24,8 @@ class DesignateRecord(resource.Resource):
     support_status = support.SupportStatus(
         version='5.0.0')
 
+    entity = 'records'
+
     PROPERTIES = (
         NAME, TTL, DESCRIPTION, TYPE, DATA, PRIORITY, DOMAIN
     ) = (
@@ -152,6 +154,11 @@ class DesignateRecord(resource.Resource):
                 )
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
+
+    # FIXME(kanagaraj-manickam) Remove this method once designate defect
+    # 1485552 is fixed.
+    def _show_resource(self):
+        return dict(self.client().records.get(self.resource_id).items())
 
 
 def resource_mapping():

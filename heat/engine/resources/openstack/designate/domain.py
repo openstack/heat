@@ -25,6 +25,8 @@ class DesignateDomain(resource.Resource):
     support_status = support.SupportStatus(
         version='5.0.0')
 
+    entity = 'domains'
+
     PROPERTIES = (
         NAME, TTL, DESCRIPTION, EMAIL
     ) = (
@@ -111,6 +113,11 @@ class DesignateDomain(resource.Resource):
         if name == self.SERIAL:
             domain = self.client().domains.get(self.resource_id)
             return domain.serial
+
+    # FIXME(kanagaraj-manickam) Remove this method once designate defect
+    # 1485552 is fixed.
+    def _show_resource(self):
+        return dict(self.client().domains.get(self.resource_id).items())
 
 
 def resource_mapping():
