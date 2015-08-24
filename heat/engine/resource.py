@@ -295,6 +295,7 @@ class Resource(object):
             if swap_template:
                 prev_tmpl = stk.t
                 stk.t = tmpl
+                stk.resources
             yield stk
             if swap_template:
                 stk.t = prev_tmpl
