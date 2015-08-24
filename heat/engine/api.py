@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
@@ -145,32 +147,31 @@ def format_stack(stack, preview=False):
 
 
 def format_resource_attributes(resource, with_attr=None):
-    """Format resource attributes in user-friendly way for resource-show.
-
-    Fetch all resource attributes and return it to caller. If with_attr is
-    not empty request these attributes additionally and try to resolve them.
-    If some attribute cannot be resolved then return None as attribute value.
-
-    :param resource: resource for which we shows the attributes
-    :param with_attr: additional attributes that we need to show in output.
-                      This attributes is useful only if a resource have a
-                      dynamic attribute scheme (f.e. resource with nested stack
-                      or software deployment) because we can fetch these
-                      attributes using with_attr only
-    :type with_attr: list
-    :returns attributes and attribute values
-    :rtype dict
-    """
-    def resolve(attr, attr_resolver):
-        try:
-            return attr_resolver[attr]
-        except Exception:
-            return None
-
     resolver = resource.attributes
     if not with_attr:
         with_attr = []
 
+    def resolve(attr, resolver):
+        try:
+            return resolver._resolver(attr)
+        except Exception:
+            return None
+    # if 'show' in attribute_schema, will resolve all attributes of resource
+    # including the ones are not represented in response of show API, such as
+    # 'console_urls' for nova server, user can view it by taking with_attr
+    # parameter
+    if 'show' in six.iterkeys(resolver):
+        show_attr = resolve('show', resolver)
+        # check if 'show' resolved to dictionary. so it's not None
+        if isinstance(show_attr, collections.Mapping):
+            for a in with_attr:
+                if a not in show_attr:
+                    show_attr[a] = resolve(a, resolver)
+            return show_attr
+        else:
+            # remove 'show' attribute if it's None or not a mapping
+            # then resolve all attributes manually
+            del resolver._attributes['show']
     attributes = set(list(six.iterkeys(resolver)) + with_attr)
     return dict((attr, resolve(attr, resolver))
                 for attr in attributes)
