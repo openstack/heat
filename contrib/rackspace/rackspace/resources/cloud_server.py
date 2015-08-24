@@ -179,6 +179,27 @@ class CloudServer(server.Server):
 
         return True
 
+    # Since rackspace compute service does not support 'os-interface' endpoint,
+    # accessing addresses attribute of OS::Nova::Server results in NotFound
+    # error. Here overrdiing '_add_port_for_address' method and using different
+    # endpoint named 'os-virtual-interfacesv2' to get the same information.
+    def _add_port_for_address(self, server):
+        def get_port(net_name, address):
+            for iface in ifaces:
+                for ip_addr in iface.ip_addresses:
+                    if ip_addr['network_label'] == net_name and ip_addr[
+                            'address'] == address:
+                        return iface.id
+
+        nets = copy.deepcopy(server.addresses)
+        nova_ext = self.client().os_virtual_interfacesv2_python_novaclient_ext
+        ifaces = nova_ext.list(server.id)
+        for net_name, addresses in nets.items():
+            for address in addresses:
+                address['port'] = get_port(net_name, address['addr'])
+
+        return self._extend_networks(nets)
+
 
 def resource_mapping():
     return {'OS::Nova::Server': CloudServer}
