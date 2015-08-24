@@ -32,25 +32,27 @@ class ServerUpdateProgress(ServerCreateProgress):
 
     ``handler`` is a method of client plugin performing
     required update operation.
-    It must accept ``server_id`` as first positional argument and
-    be resilent to intermittent failures, returning ``True`` if
-    API was successfully called, ``False`` otherwise.
+    Its first positional argument must be ``server_id``
+    and this method must be resilent to intermittent failures,
+    returning ``True`` if API was successfully called, ``False`` otherwise.
 
     If result of API call is asyncronous, client plugin must have
-    corresponding ``check_<handler>`` method
-    accepting ``server_id`` as first positional argument and
-    returning ``True`` or ``False``.
+    corresponding ``check_<handler>`` method.
+    Its first positional argument must be ``server_id``
+    and it must return ``True`` or ``False`` indicating completeness
+    of the update operation.
 
     For syncronous API calls,
     set ``complete`` attribute of this object to ``True``.
 
-    ``*_extra`` arguments, if passed to constructor, should be dictionaries of
+    ``[handler|checker]_extra`` arguments, if passed to constructor,
+    should be dictionaries of
 
       {'args': tuple(), 'kwargs': dict()}
 
     structure and contain parameters with which corresponding ``handler`` and
     ``check_<handler>`` methods of client plugin must be called.
-    (``args`` is automatically prepended with ``server_id``).
+    ``args`` is automatically prepended with ``server_id``.
     Missing ``args`` or ``kwargs`` are interpreted
     as empty tuple/dict respectively.
     Defaults are interpreted as both ``args`` and ``kwargs`` being empty.
@@ -80,3 +82,54 @@ class ServerDeleteProgress(object):
         self.server_id = server_id
         self.image_id = image_id
         self.image_complete = image_complete
+
+
+class VolumeDetachProgress(object):
+    def __init__(self, srv_id, vol_id, attach_id, task_complete=False):
+        self.called = task_complete
+        self.cinder_complete = task_complete
+        self.nova_complete = task_complete
+        self.srv_id = srv_id
+        self.vol_id = vol_id
+        self.attach_id = attach_id
+
+
+class VolumeAttachProgress(object):
+    def __init__(self, srv_id, vol_id, device, task_complete=False):
+        self.called = task_complete
+        self.complete = task_complete
+        self.srv_id = srv_id
+        self.vol_id = vol_id
+        self.device = device
+
+
+class VolumeDeleteProgress(object):
+    def __init__(self, task_complete=False):
+        self.backup = {'called': task_complete,
+                       'complete': task_complete}
+        self.delete = {'called': task_complete,
+                       'complete': task_complete}
+        self.backup_id = None
+
+
+class VolumeResizeProgress(object):
+    def __init__(self, task_complete=False, size=None):
+        self.called = task_complete
+        self.complete = task_complete
+        self.size = size
+
+
+class VolumeBackupRestoreProgress(object):
+    def __init__(self, vol_id, backup_id):
+        self.called = False
+        self.complete = False
+        self.vol_id = vol_id
+        self.backup_id = backup_id
+
+
+class PoolDeleteProgress(object):
+    def __init__(self, task_complete=False):
+        self.pool = {'delete_called': task_complete,
+                     'deleted': task_complete}
+        self.vip = {'delete_called': task_complete,
+                    'deleted': task_complete}

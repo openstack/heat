@@ -16,6 +16,7 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -510,22 +511,15 @@ class Pool(neutron.NeutronResource):
 
     def handle_delete(self):
 
-        class PoolDeleteProgress(object):
-            def __init__(self, val=False):
-                self.pool = {'delete_called': val,
-                             'deleted': val}
-                self.vip = {'delete_called': val,
-                            'deleted': val}
-
         if not self.resource_id:
-            progress = PoolDeleteProgress(True)
-            return progress
+            prg = progress.PoolDeleteProgress(True)
+            return prg
 
-        progress = PoolDeleteProgress()
+        prg = progress.PoolDeleteProgress()
         if not self.metadata_get():
-            progress.vip['delete_called'] = True
-            progress.vip['deleted'] = True
-        return progress
+            prg.vip['delete_called'] = True
+            prg.vip['deleted'] = True
+        return prg
 
     def _delete_vip(self):
         return self._not_found_in_call(
