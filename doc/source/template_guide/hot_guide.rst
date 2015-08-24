@@ -48,7 +48,7 @@ deploy a single compute instance.
 
 .. code-block:: yaml
 
-  heat_template_version: 2013-05-23
+  heat_template_version: 2015-04-30
 
   description: Simple template to deploy a single compute instance
 
@@ -98,7 +98,7 @@ follows:
 
 .. code-block:: yaml
 
-  heat_template_version: 2013-05-23
+  heat_template_version: 2015-04-30
 
   description: Simple template to deploy a single compute instance
 

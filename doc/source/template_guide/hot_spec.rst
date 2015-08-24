@@ -43,7 +43,7 @@ HOT templates are defined in YAML and follow the structure outlined below.
 
 .. code-block:: yaml
 
-  heat_template_version: 2013-05-23
+  heat_template_version: 2015-04-30
 
   description:
     # a description of the template

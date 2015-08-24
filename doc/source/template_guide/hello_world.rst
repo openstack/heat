@@ -40,7 +40,7 @@ could be used to deploy a single compute instance:
 .. code-block:: yaml
   :linenos:
 
-  heat_template_version: 2013-05-23
+  heat_template_version: 2015-04-30
 
   description: Simple template to deploy a single compute instance
 
@@ -90,7 +90,7 @@ the key pair, image and flavor properties of the resource:
 .. code-block:: yaml
   :linenos:
 
-  heat_template_version: 2013-05-23
+  heat_template_version: 2015-04-30
 
   description: Simple template to deploy a single compute instance
 
