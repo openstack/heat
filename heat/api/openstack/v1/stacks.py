@@ -329,13 +329,13 @@ class StackController(object):
         """
 
         data = InstantiationData(body)
-
+        args = self.prepare_args(data)
         result = self.rpc_client.preview_stack(req.context,
                                                data.stack_name(),
                                                data.template(),
                                                data.environment(),
                                                data.files(),
-                                               data.args())
+                                               args)
 
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
