@@ -174,7 +174,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         self.stack.timeout_secs())
+                                         self.stack.time_remaining())
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -192,7 +192,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         self.stack.timeout_secs())
+                                         self.stack.time_remaining())
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -497,7 +497,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
             {}, self.worker.engine_id,
-            self.stack.timeout_secs())
+            self.stack.time_remaining())
 
     def test_is_cleanup_traversal_raise_update_inprogress(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
@@ -508,7 +508,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         self.stack.timeout_secs())
+                                         self.stack.time_remaining())
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
