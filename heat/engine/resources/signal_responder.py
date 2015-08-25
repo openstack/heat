@@ -156,8 +156,8 @@ class SignalResponder(stack_user.StackUser):
         if stored is not None:
             return stored
 
-        if self.id is None or self.action == self.DELETE:
-            # it is either too early or too late to do this
+        if self.id is None:
+            # it is too early
             return
 
         url = self.client_plugin('heat').get_heat_url()
@@ -182,8 +182,8 @@ class SignalResponder(stack_user.StackUser):
         if put_url:
             return put_url
 
-        if self.id is None or self.action == self.DELETE:
-            # it is either too early or too late to do this
+        if self.id is None:
+            # it is too early
             return
 
         container = self.stack.id
@@ -225,8 +225,8 @@ class SignalResponder(stack_user.StackUser):
         if queue_id:
             return queue_id
 
-        if self.id is None or self.action == self.DELETE:
-            # it is either too early or too late to do this
+        if self.id is None:
+            # it is too early
             return
 
         if self._get_user_id() is None:
