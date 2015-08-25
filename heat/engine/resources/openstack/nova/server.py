@@ -883,6 +883,10 @@ class Server(stack_user.StackUser):
         return nics
 
     def _add_port_for_address(self, server):
+        """Method adds port id to list of addresses.
+
+        This method is used only for resolving attributes.
+        """
         nets = copy.deepcopy(server.addresses)
         ifaces = server.interface_list()
         ip_mac_mapping_on_port_id = dict(((iface.fixed_ips[0]['ip_address'],
@@ -895,6 +899,10 @@ class Server(stack_user.StackUser):
         return self._extend_networks(nets)
 
     def _extend_networks(self, networks):
+        """Method adds same networks with replaced name on network id.
+
+        This method is used only for resolving attributes.
+        """
         nets = copy.deepcopy(networks)
         for key in list(nets.keys()):
             try:
@@ -1125,7 +1133,7 @@ class Server(stack_user.StackUser):
             elif net.get(self.NETWORK_ID):
                 handler_kwargs['net_id'] = self._get_network_id(net)
                 handler_kwargs['fip'] = net.get('fixed_ip')
-            elif net.get('uuid'):
+            elif net.get(self.NETWORK_UUID):
                 handler_kwargs['net_id'] = net['uuid']
                 handler_kwargs['fip'] = net.get('fixed_ip')
 
@@ -1273,6 +1281,39 @@ class Server(stack_user.StackUser):
 
         return bootable_vol
 
+    def _validate_network(self, network):
+        if (network.get(self.NETWORK_ID) is None
+            and network.get(self.NETWORK_PORT) is None
+                and network.get(self.NETWORK_UUID) is None):
+            msg = _('One of the properties "%(id)s", "%(port_id)s", '
+                    '"%(uuid)s" should be set for the '
+                    'specified network of server "%(server)s".'
+                    '') % dict(id=self.NETWORK_ID,
+                               port_id=self.NETWORK_PORT,
+                               uuid=self.NETWORK_UUID,
+                               server=self.name)
+            raise exception.StackValidationFailed(message=msg)
+
+        if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
+            msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
+                    'to the network "%(network)s" for the server '
+                    '"%(server)s". The "%(uuid)s" property is deprecated. '
+                    'Use only "%(id)s" property.'
+                    '') % dict(uuid=self.NETWORK_UUID,
+                               id=self.NETWORK_ID,
+                               network=network[self.NETWORK_ID],
+                               server=self.name)
+            raise exception.StackValidationFailed(message=msg)
+        elif network.get(self.NETWORK_UUID):
+            LOG.info(_LI('For the server "%(server)s" the "%(uuid)s" '
+                         'property is set to network "%(network)s". '
+                         '"%(uuid)s" property is deprecated. Use '
+                         '"%(id)s"  property instead.'),
+                     dict(uuid=self.NETWORK_UUID,
+                          id=self.NETWORK_ID,
+                          network=network[self.NETWORK_ID],
+                          server=self.name))
+
     def validate(self):
         '''
         Validate any of the provided params
@@ -1296,37 +1337,7 @@ class Server(stack_user.StackUser):
         for network in networks:
             networks_with_port = (networks_with_port or
                                   network.get(self.NETWORK_PORT))
-            if (network.get(self.NETWORK_ID) is None
-                and network.get(self.NETWORK_PORT) is None
-                    and network.get(self.NETWORK_UUID) is None):
-                msg = _('One of the properties "%(id)s", "%(port_id)s", '
-                        '"%(uuid)s" should be set for the '
-                        'specified network of server "%(server)s".'
-                        '') % dict(id=self.NETWORK_ID,
-                                   port_id=self.NETWORK_PORT,
-                                   uuid=self.NETWORK_UUID,
-                                   server=self.name)
-                raise exception.StackValidationFailed(message=msg)
-
-            if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
-                msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
-                        'to the network "%(network)s" for the server '
-                        '"%(server)s". The "%(uuid)s" property is deprecated. '
-                        'Use only "%(id)s" property.'
-                        '') % dict(uuid=self.NETWORK_UUID,
-                                   id=self.NETWORK_ID,
-                                   network=network[self.NETWORK_ID],
-                                   server=self.name)
-                raise exception.StackValidationFailed(message=msg)
-            elif network.get(self.NETWORK_UUID):
-                LOG.info(_LI('For the server "%(server)s" the "%(uuid)s" '
-                             'property is set to network "%(network)s". '
-                             '"%(uuid)s" property is deprecated. Use '
-                             '"%(id)s"  property instead.'),
-                         dict(uuid=self.NETWORK_UUID,
-                              id=self.NETWORK_ID,
-                              network=network[self.NETWORK_ID],
-                              server=self.name))
+            self._validate_network(network)
 
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties[self.METADATA]
