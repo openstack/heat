@@ -41,13 +41,14 @@ from heat.tests import utils
 
 
 TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN,
-                          'sqlalchemy': logging.WARN}
+                          'sqlalchemy': logging.WARN,
+                          'heat.engine.environment': logging.ERROR}
 _LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
 _TRUE_VALUES = ('True', 'true', '1', 'yes')
 
 
 class FakeLogMixin(object):
-    def setup_logging(self):
+    def setup_logging(self, quieten=True):
         # Assign default logs to self.LOG so we can still
         # assert on heat logs.
         default_level = logging.INFO
@@ -66,16 +67,22 @@ class FakeLogMixin(object):
             elif base != 'heat':
                 self.useFixture(fixtures.FakeLogger(
                     name=base, format=_LOG_FORMAT))
+        if quieten:
+            for ll in TEST_DEFAULT_LOGLEVELS:
+                if ll.startswith('heat.'):
+                    self.useFixture(fixtures.FakeLogger(
+                        level=TEST_DEFAULT_LOGLEVELS[ll],
+                        name=ll, format=_LOG_FORMAT))
 
 
 class HeatTestCase(testscenarios.WithScenarios,
                    testtools.TestCase, FakeLogMixin):
 
-    def setUp(self, mock_keystone=True):
+    def setUp(self, mock_keystone=True, quieten_logging=True):
         super(HeatTestCase, self).setUp()
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
-        self.setup_logging()
+        self.setup_logging(quieten=quieten_logging)
         self.warnings = self.useFixture(fixtures.WarningsCapture())
         scheduler.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(

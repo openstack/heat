@@ -207,6 +207,9 @@ class EnvironmentDuplicateTest(common.HeatTestCase):
                            expected_equal=False)),
     ]
 
+    def setUp(self):
+        super(EnvironmentDuplicateTest, self).setUp(quieten_logging=False)
+
     def test_env_load(self):
         env_initial = {u'resource_registry': {
             u'OS::Test::Dummy': 'test.yaml'}}
