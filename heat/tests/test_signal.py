@@ -339,9 +339,11 @@ class SignalTest(common.HeatTestCase):
         self.stack = self.create_stack()
         self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
                                'get_heat_cfn_url')
-
         self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
             'http://server.test:8000/v1')
+        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
+            'http://server.test:8000/v1')
+
         self.m.ReplayAll()
         self.stack.create()
 
@@ -353,7 +355,8 @@ class SignalTest(common.HeatTestCase):
                       rsrc.FnGetAtt('AlarmUrl'))
 
         scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual('None', rsrc.FnGetAtt('AlarmUrl'))
+        self.assertIn('http://server.test:8000/v1/signal',
+                      rsrc.FnGetAtt('AlarmUrl'))
 
         self.m.VerifyAll()
 

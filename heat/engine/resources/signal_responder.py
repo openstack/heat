@@ -92,8 +92,8 @@ class SignalResponder(stack_user.StackUser):
         secret_key = self.data().get('secret_key')
 
         if not access_key or not secret_key:
-            if self.id is None or self.action == self.DELETE:
-                # it is either too early or too late to do this
+            if self.id is None:
+                # it is too early
                 return
             if self._get_user_id() is None:
                 self._create_user()
