@@ -2195,12 +2195,13 @@ class ServersTest(common.HeatTestCase):
 
         self.assertIsNone(server._build_nics([]))
         self.assertIsNone(server._build_nics(None))
-        self.assertEqual([{'port-id': 'aaaabbbb'},
-                          {'v4-fixed-ip': '192.0.2.0'}],
+        self.assertEqual([{'port-id': 'aaaabbbb', 'net-id': None},
+                          {'v4-fixed-ip': '192.0.2.0', 'net-id': None}],
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '192.0.2.0'}]))
-        self.assertEqual([{'port-id': 'aaaabbbb'},
-                          {'v6-fixed-ip': '2002::2'}],
+
+        self.assertEqual([{'port-id': 'aaaabbbb', 'net-id': None},
+                          {'v6-fixed-ip': '2002::2', 'net-id': None}],
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '2002::2'}]))
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
@@ -2828,6 +2829,10 @@ class ServersTest(common.HeatTestCase):
         net_id = server._get_network_id(net)
         self.assertEqual('f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', net_id)
 
+        net = {'network': '', 'fixed_ip': '1.2.3.4'}
+        net_id = server._get_network_id(net)
+        self.assertEqual(None, net_id)
+
     def test_get_network_id_nova(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
@@ -2936,7 +2941,7 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
-        # old order 0 1 2 3 4 5
+        # old order 0 1 2 3 4
         nets = [
             self.create_old_net(port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
             self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg',
@@ -2944,12 +2949,9 @@ class ServersTest(common.HeatTestCase):
             self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg'),
             self.create_old_net(port='dddddddd-dddd-dddd-dddd-dddddddddddd'),
             self.create_old_net(uuid='gggggggg-1111-1111-1111-gggggggggggg',
-                                ip='5.6.7.8'),
-            self.create_old_net(uuid='0da8adbf-a7e2-4c59-a511-96b03d2da0d7')]
-        # new order 5 2 3 0 1 4
+                                ip='5.6.7.8')]
+        # new order 2 3 0 1 4
         interfaces = [
-            self.create_fake_iface('ffffffff-ffff-ffff-ffff-ffffffffffff',
-                                   nets[5]['uuid'], '10.0.0.10'),
             self.create_fake_iface('cccccccc-cccc-cccc-cccc-cccccccccccc',
                                    nets[2]['network'], '10.0.0.11'),
             self.create_fake_iface(nets[3]['port'],
@@ -2983,11 +2985,7 @@ class ServersTest(common.HeatTestCase):
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
              'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '5.6.7.8',
-             'network': None},
-            {'port': 'ffffffff-ffff-ffff-ffff-ffffffffffff',
-             'network': None,
-             'fixed_ip': None,
-             'uuid': '0da8adbf-a7e2-4c59-a511-96b03d2da0d7'}]
+             'network': None}]
 
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
                          return_value='gggggggg-1111-1111-1111-gggggggggggg')
@@ -3095,6 +3093,9 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(return_server, 'interface_detach')
         return_server.interface_detach(
             'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa').AndReturn(None)
+
+        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+                         return_value=None)
 
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach(
