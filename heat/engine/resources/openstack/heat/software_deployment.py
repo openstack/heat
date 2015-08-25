@@ -139,8 +139,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         ),
         DEPLOY_ACTIONS: properties.Schema(
             properties.Schema.LIST,
-            _('Which stack actions will result in this deployment being '
-              'triggered.'),
+            _('Which lifecycle actions of the deployment resource will result '
+              'in this deployment being triggered.'),
             update_allowed=True,
             default=[resource.Resource.CREATE, resource.Resource.UPDATE],
             constraints=[constraints.AllowedValues(ALLOWED_DEPLOY_ACTIONS)]
@@ -158,9 +158,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
               'keypair signed URL. TEMP_URL_SIGNAL will create a '
               'Swift TempURL to be signaled via HTTP PUT. HEAT_SIGNAL '
               'will allow calls to the Heat API resource-signal using the '
-              'provided keystone credentials. NO_SIGNAL will result in the '
-              'resource going to the COMPLETE state without waiting for '
-              'any signal.'),
+              'provided keystone credentials. ZAQAR_SIGNAL will create a'
+              'dedicated zaqar queue to be signaled using the provided '
+              'keystone credentials. NO_SIGNAL will result in the resource '
+              'going to the COMPLETE state without waiting for any signal.'),
             default=cfg.CONF.default_deployment_signal_transport,
             constraints=[
                 constraints.AllowedValues(SIGNAL_TRANSPORTS),
