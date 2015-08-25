@@ -12,6 +12,7 @@
 #    under the License.
 
 from requests import exceptions
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -92,6 +93,9 @@ class NestedStack(stack_resource.StackResource):
         return attributes.select_from_attribute(attribute, path)
 
     def FnGetRefId(self):
+        if self.nested() is None:
+            return six.text_type(self.name)
+
         return self.nested().identifier().arn()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):

@@ -83,8 +83,15 @@ class StackResource(resource.Resource):
         # resources in it decide if they need updating.
         return True
 
+    def has_nested(self):
+        if self.nested() is not None:
+            return True
+
+        return False
+
     def nested(self, force_reload=False, show_deleted=False):
         '''Return a Stack object representing the nested (child) stack.
+        if we catch NotFound exception when loading, return None.
 
         :param force_reload: Forces reloading from the DB instead of returning
                              the locally cached Stack object
@@ -94,13 +101,13 @@ class StackResource(resource.Resource):
             self._nested = None
 
         if self._nested is None and self.resource_id is not None:
-            self._nested = parser.Stack.load(self.context,
-                                             self.resource_id,
-                                             show_deleted=show_deleted,
-                                             force_reload=force_reload)
-
-            if self._nested is None:
-                raise exception.NotFound(_("Nested stack not found in DB"))
+            try:
+                self._nested = parser.Stack.load(self.context,
+                                                 self.resource_id,
+                                                 show_deleted=show_deleted,
+                                                 force_reload=force_reload)
+            except exception.NotFound:
+                return None
 
         return self._nested
 
@@ -282,17 +289,13 @@ class StackResource(resource.Resource):
 
     def _check_status_complete(self, action, show_deleted=False,
                                cookie=None):
-        try:
-            nested = self.nested(force_reload=True, show_deleted=show_deleted)
-        except exception.NotFound:
+        nested = self.nested(force_reload=True, show_deleted=show_deleted)
+        if nested is None:
             if action == resource.Resource.DELETE:
                 return True
             # It's possible the engine handling the create hasn't persisted
             # the stack to the DB when we first start polling for state
             return False
-
-        if nested is None:
-            return True
 
         if nested.action != action:
             return False
@@ -399,11 +402,7 @@ class StackResource(resource.Resource):
         '''
         Delete the nested stack.
         '''
-        try:
-            stack = self.nested()
-        except exception.NotFound:
-            return
-
+        stack = self.nested()
         if stack is None:
             return
 
@@ -462,7 +461,11 @@ class StackResource(resource.Resource):
         return self._check_status_complete(resource.Resource.CHECK)
 
     def prepare_abandon(self):
-        return self.nested().prepare_abandon()
+        nested_stack = self.nested()
+        if nested_stack:
+            return self.nested().prepare_abandon()
+
+        return {}
 
     def get_output(self, op):
         '''

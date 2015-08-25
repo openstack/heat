@@ -294,6 +294,10 @@ class Resource(object):
                     self.action, self.status,
                     "Failure occured while waiting.")
 
+    def has_nested(self):
+        # common resources have not nested, StackResource overrides it
+        return False
+
     def has_hook(self, hook):
         # Clear the cache to make sure the data is up to date:
         self._data = None

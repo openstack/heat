@@ -53,6 +53,8 @@ class StackTest(common.HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
+        resource._register_class('StackResourceType',
+                                 generic_rsrc.StackResourceType)
         resource._register_class('ResourceWithPropsType',
                                  generic_rsrc.ResourceWithProps)
         resource._register_class('ResWithComplexPropsAndAttrs',
@@ -197,7 +199,7 @@ class StackTest(common.HeatTestCase):
     def test_iter_resources(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
-               {'A': {'Type': 'GenericResourceType'},
+               {'A': {'Type': 'StackResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
