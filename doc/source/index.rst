@@ -12,11 +12,10 @@
       under the License.
 
 ==================================================
-Welcome to the Heat developer documentation!
+Welcome to the Heat documentation!
 ==================================================
-Heat is a service to :term:`orchestrate` multiple composite cloud
-applications using the AWS CloudFormation template format, through
-both an OpenStack-native REST API and a CloudFormation-compatible Query API.
+Heat is a service to orchestrate composite cloud applications
+using a declarative template format through an OpenStack-native REST API.
 
 What is the purpose of the project and vision for it?
 =====================================================
