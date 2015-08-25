@@ -191,8 +191,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.deployment
         self.assertEqual('CFN_SIGNAL', sd.properties.get('signal_transport'))
         sd.validate()
-        server = self.stack['server']
-        self.assertTrue(server.user_data_software_config())
 
     def test_validate_without_server(self):
         stack = utils.parse_stack(self.template_no_server)
