@@ -153,7 +153,9 @@ class CloudNetworkTest(common.HeatTestCase):
         fake_network = res.network()
         fake_network.delete = mock.Mock()
         fake_network.delete.side_effect = [cloudnetworks.NetworkInUse(), True]
-        fake_network.get = mock.Mock(side_effect=cloudnetworks.NotFound())
+        mock_client.return_value = fake_network
+        fake_network.get = mock.Mock()
+        fake_network.get.side_effect = [cloudnetworks.NotFound()]
 
         scheduler.TaskRunner(res.delete)()
         self.assertEqual((res.DELETE, res.COMPLETE), res.state)
@@ -161,8 +163,7 @@ class CloudNetworkTest(common.HeatTestCase):
     def test_delete_not_complete(self, mock_client):
         self._setup_stack(mock_client)
         res = self.stack['cnw']
-        fake_network = res.network()
-        fake_network.get = mock.Mock()
+        mock_client.get = mock.Mock()
 
         task = res.handle_delete()
         self.assertFalse(res.check_delete_complete(task))
