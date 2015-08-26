@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keystoneclient import discover as ks_discover
 from oslo_config import cfg
-from oslo_utils import importutils
 from webob import exc
 
+from heat.common import endpoint_utils
 from heat.common.i18n import _
 from heat.common import wsgi
 
@@ -34,18 +33,7 @@ class AuthUrlFilter(wsgi.Middleware):
         if 'auth_uri' in self.conf:
             return self.conf['auth_uri']
         else:
-            # Look for the keystone auth_uri in the configuration. First we
-            # check the [clients_keystone] section, and if it is not set we
-            # look in [keystone_authtoken]
-            if cfg.CONF.clients_keystone.auth_uri:
-                discover = ks_discover.Discover(
-                    auth_url=cfg.CONF.clients_keystone.auth_uri)
-                return discover.url_for('3.0')
-            else:
-                # Import auth_token to have keystone_authtoken settings setup.
-                auth_token_module = 'keystonemiddleware.auth_token'
-                importutils.import_module(auth_token_module)
-                return cfg.CONF.keystone_authtoken.auth_uri
+            return endpoint_utils.get_auth_uri(v3=False)
 
     def _validate_auth_url(self, auth_url):
         """Validate auth_url to ensure it can be used."""
