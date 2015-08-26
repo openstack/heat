@@ -634,14 +634,16 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     def FnGetAtt(self, key, *path):
         rg = super(SoftwareDeploymentGroup, self)
         if key == self.STDOUTS:
-            return rg.FnGetAtt(
-                rg.ATTR_ATTRIBUTES, SoftwareDeployment.STDOUT)
-        if key == self.STDERRS:
-            return rg.FnGetAtt(
-                rg.ATTR_ATTRIBUTES, SoftwareDeployment.STDERR)
-        if key == self.STATUS_CODES:
-            return rg.FnGetAtt(
-                rg.ATTR_ATTRIBUTES, SoftwareDeployment.STATUS_CODE)
+            n_attr = SoftwareDeployment.STDOUT
+        elif key == self.STDERRS:
+            n_attr = SoftwareDeployment.STDERR
+        elif key == self.STATUS_CODES:
+            n_attr = SoftwareDeployment.STATUS_CODE
+        else:
+            return None
+
+        rg_attr = rg.FnGetAtt(rg.ATTR_ATTRIBUTES, n_attr)
+        return attributes.select_from_attribute(rg_attr, path)
 
 
 class SoftwareDeployments(SoftwareDeploymentGroup):

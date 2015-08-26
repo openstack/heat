@@ -1279,6 +1279,60 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
             mock.call('deploy_status_code'),
         ])
 
+        server2.FnGetAtt.assert_has_calls([
+            mock.call('deploy_stdout'),
+            mock.call('deploy_stderr'),
+            mock.call('deploy_status_code'),
+        ])
+
+    def test_attributes_path(self):
+        stack = utils.parse_stack(self.template)
+        snip = stack.t.resource_definitions(stack)['deploy_mysql']
+        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
+        nested = self.patchobject(resg, 'nested')
+        server1 = mock.MagicMock()
+        server2 = mock.MagicMock()
+        nested.return_value = {
+            'server1': server1,
+            'server2': server2
+        }
+
+        server1.FnGetAtt.return_value = 'Thing happened on server1'
+        server2.FnGetAtt.return_value = 'ouch'
+        self.assertEqual('Thing happened on server1',
+                         resg.FnGetAtt('deploy_stdouts', 'server1'))
+        self.assertEqual('ouch',
+                         resg.FnGetAtt('deploy_stdouts', 'server2'))
+
+        server1.FnGetAtt.return_value = ''
+        server2.FnGetAtt.return_value = 'Its gone Pete Tong'
+        self.assertEqual('', resg.FnGetAtt('deploy_stderrs', 'server1'))
+        self.assertEqual('Its gone Pete Tong',
+                         resg.FnGetAtt('deploy_stderrs', 'server2'))
+
+        server1.FnGetAtt.return_value = 0
+        server2.FnGetAtt.return_value = 1
+        self.assertEqual(0, resg.FnGetAtt('deploy_status_codes', 'server1'))
+        self.assertEqual(1, resg.FnGetAtt('deploy_status_codes', 'server2'))
+
+        server1.FnGetAtt.assert_has_calls([
+            mock.call('deploy_stdout'),
+            mock.call('deploy_stdout'),
+            mock.call('deploy_stderr'),
+            mock.call('deploy_stderr'),
+            mock.call('deploy_status_code'),
+            mock.call('deploy_status_code'),
+        ])
+
+        server2.FnGetAtt.assert_has_calls([
+            mock.call('deploy_stdout'),
+            mock.call('deploy_stdout'),
+            mock.call('deploy_stderr'),
+            mock.call('deploy_stderr'),
+            mock.call('deploy_status_code'),
+            mock.call('deploy_status_code'),
+        ])
+
     def test_validate(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
