@@ -2895,6 +2895,36 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                 type: string
                 description: value2.
                 hidden: true
+            param3:
+                type: string
+                description: value3
+                hidden: true
+                default: "don't encrypt me! I'm not sensitive enough"
+            param_string_default_int:
+                type: string
+                description: String parameter with integer default value
+                default: 4353
+                hidden: true
+            param_number:
+                type: number
+                description: Number parameter
+                default: 4353
+                hidden: true
+            param_boolean:
+                type: boolean
+                description: boolean parameter
+                default: true
+                hidden: true
+            param_map:
+                type: json
+                description: json parameter
+                default: {"fee": {"fi":"fo"}}
+                hidden: true
+            param_comma_list:
+                type: comma_delimited_list
+                description: cdl parameter
+                default: ["hola", "senorita"]
+                hidden: true
         resources:
             a_resource:
                 type: GenericResourceType
@@ -2902,15 +2932,32 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         template = {
             'template': t,
             'files': {'foo': 'bar'},
-            'environment': {'parameters': {'param1': 'foo',
-                                           'param2': 'bar'}}}
+            'environment': {
+                'parameters': {
+                    'param1': 'foo',
+                    'param2': 'bar',
+                    'param_number': '456',
+                    'param_boolean': '1',
+                    'param_map': '{\"test\":\"json\"}',
+                    'param_comma_list': '[\"Hola\", \"Senor\"]'}}}
+
         return db_api.raw_template_create(self.ctx, template)
 
     def _test_db_encrypt_decrypt(self, batch_size=50):
         session = db_api.get_session()
+        hidden_params_dict = {
+            'param2': 'bar',
+            'param_number': '456',
+            'param_boolean': '1',
+            'param_map': '{\"test\":\"json\"}',
+            'param_comma_list': '[\"Hola\", \"Senor\"]'}
 
         for r_tmpl in session.query(models.RawTemplate).all():
-            self.assertEqual('bar', r_tmpl.environment['parameters']['param2'])
+            for param_name, param_value in hidden_params_dict.items():
+                self.assertEqual(param_value,
+                                 r_tmpl.environment['parameters'][param_name])
+                self.assertEqual('foo',
+                                 r_tmpl.environment['parameters']['param1'])
         for resource in session.query(models.Resource).all():
             self.assertEqual('bar1', resource.properties_data['foo1'])
 
@@ -2919,8 +2966,14 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=batch_size)
         session = db_api.get_session()
         for enc_tmpl in session.query(models.RawTemplate).all():
-            self.assertEqual('cryptography_decrypt_v1',
-                             enc_tmpl.environment['parameters']['param2'][0])
+            for param_name in hidden_params_dict.keys():
+                self.assertEqual(
+                    'cryptography_decrypt_v1',
+                    enc_tmpl.environment['parameters'][param_name][0])
+                self.assertEqual('foo',
+                                 enc_tmpl.environment['parameters']['param1'])
+            self.assertIsNone(enc_tmpl.environment['parameters'].get('param3'))
+
         encrypt_value = enc_tmpl.environment['parameters']['param2'][1]
         for enc_prop in session.query(models.Resource).all():
             self.assertEqual('cryptography_decrypt_v1',
@@ -2931,8 +2984,14 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=batch_size)
         session = db_api.get_session()
         for enc_tmpl in session.query(models.RawTemplate).all():
-            self.assertEqual('cryptography_decrypt_v1',
-                             enc_tmpl.environment['parameters']['param2'][0])
+            for param_name in hidden_params_dict.keys():
+                self.assertEqual(
+                    'cryptography_decrypt_v1',
+                    enc_tmpl.environment['parameters'][param_name][0])
+                self.assertEqual('foo',
+                                 enc_tmpl.environment['parameters']['param1'])
+                self.assertIsNone(
+                    enc_tmpl.environment['parameters'].get('param3'))
         for enc_prop in session.query(models.Resource).all():
             self.assertEqual('cryptography_decrypt_v1',
                              enc_prop.properties_data['foo1'][0])
@@ -2942,8 +3001,14 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=batch_size)
         session = db_api.get_session()
         for dec_tmpl in session.query(models.RawTemplate).all():
-            self.assertEqual('bar',
-                             dec_tmpl.environment['parameters']['param2'])
+            for param_name, param_value in hidden_params_dict.items():
+                self.assertEqual(
+                    param_value,
+                    dec_tmpl.environment['parameters'][param_name])
+                self.assertEqual('foo',
+                                 dec_tmpl.environment['parameters']['param1'])
+                self.assertIsNone(
+                    dec_tmpl.environment['parameters'].get('param3'))
         for dec_prop in session.query(models.Resource).all():
             self.assertEqual('bar1', dec_prop.properties_data['foo1'])
 
@@ -2952,8 +3017,14 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=batch_size)
         session = db_api.get_session()
         for dec_tmpl in session.query(models.RawTemplate).all():
-            self.assertEqual('bar',
-                             dec_tmpl.environment['parameters']['param2'])
+            for param_name, param_value in hidden_params_dict.items():
+                self.assertEqual(
+                    param_value,
+                    dec_tmpl.environment['parameters'][param_name])
+                self.assertEqual('foo',
+                                 dec_tmpl.environment['parameters']['param1'])
+                self.assertIsNone(
+                    dec_tmpl.environment['parameters'].get('param3'))
         for dec_prop in session.query(models.Resource).all():
             self.assertEqual('bar1', dec_prop.properties_data['foo1'])
 
@@ -2965,7 +3036,8 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         for r_tmpl in session.query(models.RawTemplate).all():
             self.assertNotEqual(encrypt_value,
                                 r_tmpl.environment['parameters']['param2'][1])
-
+            # test that default parameters are not encrypted
+            self.assertIsNone(r_tmpl.environment['parameters'].get('param3'))
         db_api.db_decrypt_parameters_and_properties(
             self.ctx, '774c15be099ea74123a9b9592ff12680',
             batch_size=batch_size)
@@ -2973,6 +3045,9 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         for r_tmpl in session.query(models.RawTemplate).all():
             self.assertEqual('bar',
                              r_tmpl.environment['parameters']['param2'])
+            # test that decryption does store default parameter values in
+            # raw_template.environment
+            self.assertIsNone(r_tmpl.environment['parameters'].get('param3'))
 
     def test_db_encrypt_decrypt(self):
         """Test encryption and decryption for single template"""
