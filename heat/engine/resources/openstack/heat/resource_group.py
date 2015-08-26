@@ -483,12 +483,8 @@ class ResourceGroup(stack_resource.StackResource):
         return self.stack.timeout_secs() - total_pause_time
 
     def _get_batches(self, targ_cap, init_cap, batch_size, min_in_service):
-        max_cap = curr_cap = init_cap
+        curr_cap = init_cap
 
-        # Total number of members that have been updated
-        total_updated = 0
-        # Total number of members we care about (i.e. index < targ_cap) that
-        # have been updated
         updated = 0
 
         while updated < targ_cap:
@@ -498,31 +494,26 @@ class ResourceGroup(stack_resource.StackResource):
                                                            batch_size,
                                                            min_in_service)
 
-            max_cap = max(new_cap, max_cap)
-            if max_cap <= init_cap:
+            if new_cap <= init_cap:
                 # Don't ever update existing nodes that are beyond the size
                 # of our target capacity, but continue to count them toward
                 # the number in service
                 high_water = targ_cap
             else:
-                high_water = max_cap
-            new_names = list(self._resource_names(high_water))[::-1]
+                high_water = new_cap
+            new_names = list(self._resource_names(high_water))
 
-            # New members created
-            num_created = max(high_water - init_cap, 0)
+            create_names = new_names[high_water - (new_cap - init_cap):]
 
-            total_updated += total_new - max(new_cap - curr_cap, 0)
+            num_updates = total_new - max(new_cap - curr_cap, 0)
+            upd_start = targ_cap - (updated + num_updates)
+            upd_end = targ_cap
+            update_names = new_names[upd_start:upd_end]
 
-            create_or_update_names = new_names[:num_created + total_updated]
+            yield new_cap, list(reversed(update_names + create_names))
 
-            yield new_cap, create_or_update_names
-
-            # Updates to members we don't care about (index < targ_cap)
-            ign_updates = min(max(min(high_water, init_cap) - targ_cap, 0),
-                              total_updated)
-
-            updated = total_updated - ign_updates
-            curr_cap = max_cap
+            updated += num_updates
+            curr_cap = new_cap
 
             if not rolling_update.needs_update(targ_cap, curr_cap,
                                                updated):
