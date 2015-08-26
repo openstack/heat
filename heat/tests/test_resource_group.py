@@ -1072,59 +1072,59 @@ class TestGetBatches(common.HeatTestCase):
         ('4_4_1_0', dict(targ_cap=4, init_cap=4, bat_size=1, min_serv=0,
                          batches=[
                              (4, 1, ['4']),
-                             (4, 1, ['4', '3']),
-                             (4, 1, ['4', '3', '2']),
-                             (4, 1, ['4', '3', '2', '1']),
+                             (4, 1, ['3']),
+                             (4, 1, ['2']),
+                             (4, 1, ['1']),
                          ])),
         ('4_4_1_4', dict(targ_cap=4, init_cap=4, bat_size=1, min_serv=4,
                          batches=[
                              (5, 1, ['5']),
-                             (5, 1, ['5', '4']),
-                             (5, 1, ['5', '4', '3']),
-                             (5, 1, ['5', '4', '3', '2']),
-                             (5, 1, ['5', '4', '3', '2', '1']),
+                             (5, 1, ['4']),
+                             (5, 1, ['3']),
+                             (5, 1, ['2']),
+                             (5, 1, ['1']),
                          ])),
         ('4_4_1_5', dict(targ_cap=4, init_cap=4, bat_size=1, min_serv=5,
                          batches=[
                              (5, 1, ['5']),
-                             (5, 1, ['5', '4']),
-                             (5, 1, ['5', '4', '3']),
-                             (5, 1, ['5', '4', '3', '2']),
-                             (5, 1, ['5', '4', '3', '2', '1']),
+                             (5, 1, ['4']),
+                             (5, 1, ['3']),
+                             (5, 1, ['2']),
+                             (5, 1, ['1']),
                          ])),
         ('4_4_2_0', dict(targ_cap=4, init_cap=4, bat_size=2, min_serv=0,
                          batches=[
                              (4, 2, ['4', '3']),
-                             (4, 2, ['4', '3', '2', '1']),
+                             (4, 2, ['2', '1']),
                          ])),
         ('4_4_2_4', dict(targ_cap=4, init_cap=4, bat_size=2, min_serv=4,
                          batches=[
                              (6, 2, ['6', '5']),
-                             (6, 2, ['6', '5', '4', '3']),
-                             (6, 2, ['6', '5', '4', '3', '2', '1']),
+                             (6, 2, ['4', '3']),
+                             (6, 2, ['2', '1']),
                          ])),
         ('5_5_2_0', dict(targ_cap=5, init_cap=5, bat_size=2, min_serv=0,
                          batches=[
                              (5, 2, ['5', '4']),
-                             (5, 2, ['5', '4', '3', '2']),
-                             (5, 1, ['5', '4', '3', '2', '1']),
+                             (5, 2, ['3', '2']),
+                             (5, 1, ['1']),
                          ])),
         ('5_5_2_4', dict(targ_cap=5, init_cap=5, bat_size=2, min_serv=4,
                          batches=[
                              (6, 2, ['6', '5']),
-                             (6, 2, ['6', '5', '4', '3']),
-                             (6, 2, ['6', '5', '4', '3', '2', '1']),
+                             (6, 2, ['4', '3']),
+                             (6, 2, ['2', '1']),
                          ])),
         ('3_3_2_0', dict(targ_cap=3, init_cap=3, bat_size=2, min_serv=0,
                          batches=[
                              (3, 2, ['3', '2']),
-                             (3, 1, ['3', '2', '1']),
+                             (3, 1, ['1']),
                          ])),
         ('3_3_2_4', dict(targ_cap=3, init_cap=3, bat_size=2, min_serv=4,
                          batches=[
                              (5, 2, ['5', '4']),
-                             (5, 2, ['5', '4', '3', '2']),
-                             (4, 1, ['4', '3', '2', '1']),
+                             (5, 2, ['3', '2']),
+                             (4, 1, ['1']),
                          ])),
         ('4_4_4_0', dict(targ_cap=4, init_cap=4, bat_size=4, min_serv=0,
                          batches=[
@@ -1137,81 +1137,81 @@ class TestGetBatches(common.HeatTestCase):
         ('4_4_4_1', dict(targ_cap=4, init_cap=4, bat_size=4, min_serv=1,
                          batches=[
                              (5, 4, ['5', '4', '3', '2']),
-                             (4, 1, ['4', '3', '2', '1']),
+                             (4, 1, ['1']),
                          ])),
         ('4_4_6_1', dict(targ_cap=4, init_cap=4, bat_size=6, min_serv=1,
                          batches=[
                              (5, 4, ['5', '4', '3', '2']),
-                             (4, 1, ['4', '3', '2', '1']),
+                             (4, 1, ['1']),
                          ])),
         ('4_4_4_2', dict(targ_cap=4, init_cap=4, bat_size=4, min_serv=2,
                          batches=[
                              (6, 4, ['6', '5', '4', '3']),
-                             (4, 2, ['4', '3', '2', '1']),
+                             (4, 2, ['2', '1']),
                          ])),
         ('4_4_4_4', dict(targ_cap=4, init_cap=4, bat_size=4, min_serv=4,
                          batches=[
                              (8, 4, ['8', '7', '6', '5']),
-                             (8, 4, ['8', '7', '6', '5', '4', '3', '2', '1']),
+                             (8, 4, ['4', '3', '2', '1']),
                          ])),
         ('4_4_5_6', dict(targ_cap=4, init_cap=4, bat_size=5, min_serv=6,
                          batches=[
                              (8, 4, ['8', '7', '6', '5']),
-                             (8, 4, ['8', '7', '6', '5', '4', '3', '2', '1']),
+                             (8, 4, ['4', '3', '2', '1']),
                          ])),
 
         ('4_7_1_0', dict(targ_cap=4, init_cap=7, bat_size=1, min_serv=0,
                          batches=[
                              (4, 1, ['4']),
-                             (4, 1, ['4', '3']),
-                             (4, 1, ['4', '3', '2']),
-                             (4, 1, ['4', '3', '2', '1']),
+                             (4, 1, ['3']),
+                             (4, 1, ['2']),
+                             (4, 1, ['1']),
                          ])),
         ('4_7_1_4', dict(targ_cap=4, init_cap=7, bat_size=1, min_serv=4,
                          batches=[
                              (5, 1, ['4']),
-                             (5, 1, ['4', '3']),
-                             (5, 1, ['4', '3', '2']),
-                             (5, 1, ['4', '3', '2', '1']),
+                             (5, 1, ['3']),
+                             (5, 1, ['2']),
+                             (5, 1, ['1']),
                          ])),
         ('4_7_1_5', dict(targ_cap=4, init_cap=7, bat_size=1, min_serv=5,
                          batches=[
                              (5, 1, ['4']),
-                             (5, 1, ['4', '3']),
-                             (5, 1, ['4', '3', '2']),
-                             (5, 1, ['4', '3', '2', '1']),
+                             (5, 1, ['3']),
+                             (5, 1, ['2']),
+                             (5, 1, ['1']),
                          ])),
         ('4_7_2_0', dict(targ_cap=4, init_cap=7, bat_size=2, min_serv=0,
                          batches=[
                              (4, 2, ['4', '3']),
-                             (4, 2, ['4', '3', '2', '1']),
+                             (4, 2, ['2', '1']),
                          ])),
         ('4_7_2_4', dict(targ_cap=4, init_cap=7, bat_size=2, min_serv=4,
                          batches=[
                              (6, 2, ['4', '3']),
-                             (6, 2, ['4', '3', '2', '1']),
+                             (6, 2, ['2', '1']),
                          ])),
         ('5_7_2_0', dict(targ_cap=5, init_cap=7, bat_size=2, min_serv=0,
                          batches=[
                              (5, 2, ['5', '4']),
-                             (5, 2, ['5', '4', '3', '2']),
-                             (5, 1, ['5', '4', '3', '2', '1']),
+                             (5, 2, ['3', '2']),
+                             (5, 1, ['1']),
                          ])),
         ('5_7_2_4', dict(targ_cap=5, init_cap=7, bat_size=2, min_serv=4,
                          batches=[
                              (6, 2, ['5', '4']),
-                             (6, 2, ['5', '4', '3', '2']),
-                             (5, 1, ['5', '4', '3', '2', '1']),
+                             (6, 2, ['3', '2']),
+                             (5, 1, ['1']),
                          ])),
         ('4_7_4_4', dict(targ_cap=4, init_cap=7, bat_size=4, min_serv=4,
                          batches=[
                              (8, 4, ['8', '4', '3', '2']),
-                             (5, 1, ['4', '3', '2', '1']),
+                             (5, 1, ['1']),
                          ])),
         ('4_7_5_6', dict(targ_cap=4, init_cap=7, bat_size=5, min_serv=6,
                          batches=[
                              (8, 4, ['8', '4', '3', '2']),
-                             (5, 1, ['4', '3', '2', '1']),
+                             (5, 1, ['1']),
                          ])),
     ]
 
@@ -1236,6 +1236,8 @@ class TestGetBatches(common.HeatTestCase):
         self.grp._get_resources = mock.Mock(return_value=resources)
         self.grp._do_prop_replace = mock.Mock(side_effect=lambda g, d: d)
 
+        all_updated_names = set()
+
         for size, max_upd, names in self.batches:
 
             template = self.grp._assemble_for_rolling_update(size,
@@ -1246,7 +1248,9 @@ class TestGetBatches(common.HeatTestCase):
             expected_names = set(map(str, range(1, size + 1)))
             self.assertEqual(expected_names, set(res_dict))
 
+            all_updated_names &= expected_names
+            all_updated_names |= set(names)
             updated = set(n for n, v in res_dict.items() if v is True)
-            self.assertEqual(set(names), updated)
+            self.assertEqual(all_updated_names, updated)
 
             resources[:] = sorted(res_dict.items(), key=lambda i: int(i[0]))

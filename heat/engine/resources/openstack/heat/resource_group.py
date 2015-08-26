@@ -529,11 +529,12 @@ class ResourceGroup(stack_resource.StackResource):
                 high_water = new_cap
             new_names = list(self._resource_names(high_water))
 
-            create_names = new_names[high_water - (new_cap - init_cap):]
+            num_created = max(new_cap - curr_cap, 0)
+            create_names = new_names[high_water - num_created:]
 
             num_updates = total_new - max(new_cap - curr_cap, 0)
             upd_start = targ_cap - (updated + num_updates)
-            upd_end = targ_cap
+            upd_end = targ_cap - updated
             update_names = new_names[upd_start:upd_end]
 
             yield (new_cap, total_new,
