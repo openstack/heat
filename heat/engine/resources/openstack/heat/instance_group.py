@@ -310,33 +310,41 @@ class InstanceGroup(stack_resource.StackResource):
                     return
 
         capacity = len(self.nested()) if self.nested() else 0
+        batches = list(self._get_batches(capacity, batch_size, min_in_service))
+
+        update_timeout = self._update_timeout(len(batches), 1, pause_sec)
+
+        try:
+            for index, (total_capacity, efft_bat_sz) in enumerate(batches):
+                template = self._create_template(total_capacity, efft_bat_sz)
+                self._lb_reload(exclude=changing_instances(template))
+                updater = self.update_with_template(template)
+                checker = scheduler.TaskRunner(self._check_for_completion,
+                                               updater)
+                checker(timeout=update_timeout)
+                if index < (len(batches) - 1) and pause_sec > 0:
+                    self._lb_reload()
+                    waiter = scheduler.TaskRunner(pause_between_batch)
+                    waiter(timeout=pause_sec)
+        finally:
+            self._lb_reload()
+
+    @staticmethod
+    def _get_batches(capacity, batch_size, min_in_service):
         efft_bat_sz = min(batch_size, capacity)
         efft_min_sz = min(min_in_service, capacity)
 
         # effective capacity includes temporary capacity added to accommodate
         # the minimum number of instances in service during update
         efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
-        update_timeout = self._update_timeout(efft_capacity,
-                                              efft_bat_sz, pause_sec)
-        try:
-            remainder = capacity
-            while remainder > 0 or efft_capacity > capacity:
-                if capacity - remainder >= efft_min_sz:
-                    efft_capacity = capacity
-                template = self._create_template(efft_capacity, efft_bat_sz)
-                self._lb_reload(exclude=changing_instances(template))
-                updater = self.update_with_template(template)
-                checker = scheduler.TaskRunner(self._check_for_completion,
-                                               updater)
-                checker(timeout=update_timeout)
-                remainder -= efft_bat_sz
-                if ((remainder > 0 or efft_capacity > capacity) and
-                        pause_sec > 0):
-                    self._lb_reload()
-                    waiter = scheduler.TaskRunner(pause_between_batch)
-                    waiter(timeout=pause_sec)
-        finally:
-            self._lb_reload()
+
+        remainder = capacity
+        while remainder > 0 or efft_capacity > capacity:
+            if capacity - remainder >= efft_min_sz:
+                efft_capacity = capacity
+            efft_bat_sz = min(remainder, efft_bat_sz)
+            yield efft_capacity, efft_bat_sz
+            remainder -= efft_bat_sz
 
     def _check_for_completion(self, updater):
         while not self.check_update_complete(updater):
