@@ -78,7 +78,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.doctest',
               'oslosphinx',
-              'ext.resources']
+              'ext.resources',
+              'stevedore.sphinxext']
 
 todo_include_todos = True
 
