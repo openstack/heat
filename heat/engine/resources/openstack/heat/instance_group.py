@@ -329,6 +329,14 @@ class InstanceGroup(stack_resource.StackResource):
 
     @staticmethod
     def _get_batches(capacity, batch_size, min_in_service):
+        """
+        Return an iterator over the batches in a batched update.
+
+        Each batch is a tuple comprising the total size of the group after
+        processing the batch, and the number of members that can receive the
+        new definition in that batch (either by creating a new member or
+        updating an existing one).
+        """
         efft_bat_sz = min(batch_size, capacity)
         efft_min_sz = min(min_in_service, capacity)
 
@@ -336,13 +344,13 @@ class InstanceGroup(stack_resource.StackResource):
         # the minimum number of instances in service during update
         efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
 
-        remainder = capacity
-        while remainder > 0 or efft_capacity > capacity:
-            if capacity - remainder >= efft_min_sz:
+        updated = 0
+        while updated < efft_capacity:
+            if updated >= efft_min_sz:
                 efft_capacity = capacity
-            efft_bat_sz = min(remainder, efft_bat_sz)
+            efft_bat_sz = min(capacity - updated, efft_bat_sz)
             yield efft_capacity, efft_bat_sz
-            remainder -= efft_bat_sz
+            updated += efft_bat_sz
 
     def _check_for_completion(self, updater):
         while not self.check_update_complete(updater):
