@@ -515,7 +515,7 @@ class ResourceGroup(stack_resource.StackResource):
 
             create_or_update_names = new_names[:num_created + total_updated]
 
-            yield high_water, create_or_update_names
+            yield new_cap, create_or_update_names
 
             # Updates to members we don't care about (index < targ_cap)
             ign_updates = min(max(min(high_water, init_cap) - targ_cap, 0),
