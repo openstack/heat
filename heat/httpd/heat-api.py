@@ -41,7 +41,7 @@ messaging.setup()
 
 port = cfg.CONF.heat_api.bind_port
 host = cfg.CONF.heat_api.bind_host
-LOG.info(_LI('Starting Heat ReST API on %(host)s:%(port)s'),
+LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
          {'host': host, 'port': port})
 profiler.setup('heat-api', host)
 
