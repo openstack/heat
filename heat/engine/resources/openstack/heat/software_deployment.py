@@ -188,6 +188,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     no_signal_actions = ()
 
+    # No need to make metadata_update() calls since deployments have a
+    # dedicated API for changing state on signals
+    signal_needs_metadata_updates = False
+
     def _signal_transport_cfn(self):
         return self.properties[
             self.SIGNAL_TRANSPORT] == self.CFN_SIGNAL
