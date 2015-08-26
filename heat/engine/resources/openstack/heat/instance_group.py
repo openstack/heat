@@ -23,6 +23,7 @@ from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.scaling import lbutils
+from heat.scaling import rolling_update
 from heat.scaling import template
 
 
@@ -337,20 +338,17 @@ class InstanceGroup(stack_resource.StackResource):
         new definition in that batch (either by creating a new member or
         updating an existing one).
         """
-        efft_bat_sz = min(batch_size, capacity)
-        efft_min_sz = min(min_in_service, capacity)
 
-        # effective capacity includes temporary capacity added to accommodate
-        # the minimum number of instances in service during update
-        efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
-
+        efft_capacity = capacity
         updated = 0
-        while updated < efft_capacity:
-            if updated >= efft_min_sz:
-                efft_capacity = capacity
-            efft_bat_sz = min(capacity - updated, efft_bat_sz)
-            yield efft_capacity, efft_bat_sz
-            updated += efft_bat_sz
+
+        while rolling_update.needs_update(capacity, efft_capacity, updated):
+            batch = rolling_update.next_batch(capacity, efft_capacity,
+                                              updated, batch_size,
+                                              min_in_service)
+            yield batch
+            efft_capacity, num_updates = batch
+            updated += num_updates
 
     def _check_for_completion(self, updater):
         while not self.check_update_complete(updater):
