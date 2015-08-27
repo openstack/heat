@@ -149,7 +149,7 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
 
     def _create_template(self, num_instances, num_replace=0,
                          template_version=('heat_template_version',
-                                           '2013-05-23')):
+                                           '2015-04-30')):
         """Create a template in the HOT format for the nested stack."""
         return super(AutoScalingResourceGroup,
                      self)._create_template(num_instances, num_replace,

@@ -40,7 +40,7 @@ def resource_templates(old_resources, resource_definition,
 
 
 def make_template(resource_definitions,
-                  version=('heat_template_version', '2013-05-23'),
+                  version=('heat_template_version', '2015-04-30'),
                   child_env=None):
     """
     Return a Template object containing the given resource definitions.

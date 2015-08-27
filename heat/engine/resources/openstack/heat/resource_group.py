@@ -32,7 +32,7 @@ from heat.engine import support
 from heat.engine import template
 
 template_template = {
-    "heat_template_version": "2013-05-23",
+    "heat_template_version": "2015-04-30",
     "resources": {}
 }
 

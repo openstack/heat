@@ -129,7 +129,7 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         templ = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "type": "OverwrittenFnGetRefIdType",
@@ -162,7 +162,7 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "type": "OverwrittenFnGetRefIdType",
@@ -182,7 +182,7 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {}
         }
         self.assertEqual(expect, resg._assemble_nested([]))
@@ -199,7 +199,7 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "type": "OverwrittenFnGetRefIdType",
@@ -215,7 +215,7 @@ class ResourceGroupTest(common.HeatTestCase):
 
     def test_assemble_nested_rolling_update(self):
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "depends_on": [],
@@ -249,7 +249,7 @@ class ResourceGroupTest(common.HeatTestCase):
 
     def test_assemble_nested_rolling_update_none(self):
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "depends_on": [],
@@ -286,7 +286,7 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "type": "ResourceWithListProp%index%",
@@ -330,7 +330,7 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "type": "ResourceWithListProp%index%",
@@ -355,7 +355,7 @@ class ResourceGroupTest(common.HeatTestCase):
         res_def['type'] = "ResourceWithListProp__foo__"
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
                     "type": "ResourceWithListProp__foo__",
