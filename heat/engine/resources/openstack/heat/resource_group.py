@@ -30,6 +30,7 @@ from heat.engine import scheduler
 from heat.engine import support
 from heat.engine import template
 from heat.scaling import rolling_update
+from heat.scaling import template as scale_template
 
 template_template = {
     "heat_template_version": "2015-04-30",
@@ -360,6 +361,12 @@ class ResourceGroup(stack_resource.StackResource):
                         self).check_update_complete(updater):
             yield
 
+    def _run_update(self, total_capacity, max_updates, names, timeout):
+        template = self._assemble_for_rolling_update(total_capacity,
+                                                     max_updates,
+                                                     names)
+        return self._run_to_completion(template, timeout)
+
     def check_update_complete(self, checkers):
         for checker in checkers:
             if not checker.started():
@@ -455,16 +462,35 @@ class ResourceGroup(stack_resource.StackResource):
         child_template['resources'] = resources
         return child_template
 
-    def _assemble_for_rolling_update(self, names, name_blacklist,
-                                     include_all=False):
-        old_resources = self._get_resources()
+    def _assemble_for_rolling_update(self, total_capacity, max_updates,
+                                     updated_names, include_all=False):
+        name_blacklist = self._name_blacklist()
+
+        valid_resources = [(n, d) for n, d in self._get_resources()
+                           if n not in name_blacklist][:total_capacity]
+
+        num_creating = max(total_capacity - len(valid_resources), 0)
+        new_names = iter(updated_names[:num_creating])
+        upd_names = updated_names[num_creating:]
+
+        def replace_priority(res_item):
+            name, defn = res_item
+            try:
+                return upd_names.index(name)
+            except ValueError:
+                return len(upd_names)
+
+        old_resources = sorted(valid_resources, key=replace_priority)
+
         res_def = self._build_resource_definition(include_all)
+        resources = scale_template.member_definitions(old_resources, res_def,
+                                                      total_capacity,
+                                                      max_updates,
+                                                      lambda: next(new_names),
+                                                      self._do_prop_replace)
+
         child_template = copy.deepcopy(template_template)
-        resources = dict((k, v)
-                         for k, v in old_resources if k not in name_blacklist)
-        resources.update(dict((k, self._do_prop_replace(k, res_def))
-                         for k in names))
-        child_template['resources'] = resources
+        child_template['resources'] = dict(resources)
         return child_template
 
     def _try_rolling_update(self):
@@ -527,9 +553,6 @@ class ResourceGroup(stack_resource.StackResource):
             while not duration.expired():
                 yield
 
-        # blacklisted names exiting and new
-        name_blacklist = self._name_blacklist()
-
         # blacklist count existing
         num_blacklist = self._count_black_listed()
 
@@ -545,11 +568,10 @@ class ResourceGroup(stack_resource.StackResource):
 
         def tasks():
             for index, (curr_cap, max_upd, update_rsrcs) in enumerate(batches):
-                yield scheduler.TaskRunner(
-                    self._run_to_completion,
-                    self._assemble_for_rolling_update(update_rsrcs,
-                                                      name_blacklist),
-                    update_timeout)
+                yield scheduler.TaskRunner(self._run_update,
+                                           curr_cap, max_upd,
+                                           update_rsrcs,
+                                           update_timeout)
 
                 if index < (len(batches) - 1) and pause_sec > 0:
                     yield scheduler.TaskRunner(pause_between_batch, pause_sec)
