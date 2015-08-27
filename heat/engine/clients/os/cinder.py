@@ -66,7 +66,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         args = {
             'service_type': service_type,
             'auth_url': con.auth_url or '',
-            'project_id': con.tenant,
+            'project_id': con.tenant_id,
             'username': None,
             'api_key': None,
             'endpoint_type': endpoint_type,
