@@ -103,10 +103,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     _NETWORK_KEYS = (
         NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
-        NETWORK_SUBNET, NETWORK_PORT_EXTRA
+        NETWORK_SUBNET, NETWORK_PORT_EXTRA, NETWORK_FLOATING_IP
     ) = (
         'uuid', 'network', 'fixed_ip', 'port',
-        'subnet', 'port_extra_properties'
+        'subnet', 'port_extra_properties', 'floating_ip'
     )
 
     _SOFTWARE_CONFIG_FORMATS = (
@@ -387,6 +387,11 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                           'properties. If subnet is specified, network '
                           'property becomes optional.'),
                         support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    NETWORK_FLOATING_IP: properties.Schema(
+                        properties.Schema.STRING,
+                        _('ID of the floating IP to associate.'),
+                        support_status=support.SupportStatus(version='6.0.0')
                     )
                 },
             ),
@@ -794,7 +799,19 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         check = self.client_plugin()._check_active(server_id)
         if check:
             self.store_external_ports()
+            # Addresses binds to server not immediately, so we need to wait
+            # until server is created and after that associate floating ip.
+            self.floating_ips_nova_associate()
         return check
+
+    def floating_ips_nova_associate(self):
+        # If there is no neutron used, floating_ip still unassociated,
+        # so need associate it with nova.
+        if not self.is_using_neutron():
+            for net in self.properties.get(self.NETWORKS) or []:
+                if net.get(self.NETWORK_FLOATING_IP):
+                    self._floating_ip_nova_associate(
+                        net.get(self.NETWORK_FLOATING_IP))
 
     def handle_check(self):
         server = self.client().servers.get(self.resource_id)
@@ -1337,6 +1354,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         if self.resource_id is None:
             return
+
+        self._floating_ips_disassociate()
 
         try:
             self.client().servers.delete(self.resource_id)
