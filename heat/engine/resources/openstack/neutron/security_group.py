@@ -153,7 +153,7 @@ class SecurityGroup(neutron.NeutronResource):
             self.physical_resource_name())
         rules = props.pop(self.RULES, [])
 
-        sec = self.neutron().create_security_group(
+        sec = self.client().create_security_group(
             {'security_group': props})['security_group']
 
         self.resource_id_set(sec['id'])
@@ -198,7 +198,7 @@ class SecurityGroup(neutron.NeutronResource):
             rule = self._format_rule(i)
 
             try:
-                self.neutron().create_security_group_rule(
+                self.client().create_security_group_rule(
                     {'security_group_rule': rule})
             except Exception as ex:
                 if not self.client_plugin().is_conflict(ex):
@@ -206,7 +206,7 @@ class SecurityGroup(neutron.NeutronResource):
 
     def _delete_rules(self, to_delete=None):
         try:
-            sec = self.neutron().show_security_group(
+            sec = self.client().show_security_group(
                 self.resource_id)['security_group']
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
@@ -214,7 +214,7 @@ class SecurityGroup(neutron.NeutronResource):
             for rule in sec['security_group_rules']:
                 if to_delete is None or to_delete(rule):
                     try:
-                        self.neutron().delete_security_group_rule(rule['id'])
+                        self.client().delete_security_group_rule(rule['id'])
                     except Exception as ex:
                         self.client_plugin().ignore_not_found(ex)
 
@@ -225,7 +225,7 @@ class SecurityGroup(neutron.NeutronResource):
 
         self._delete_rules()
         try:
-            self.neutron().delete_security_group(self.resource_id)
+            self.client().delete_security_group(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
@@ -233,7 +233,7 @@ class SecurityGroup(neutron.NeutronResource):
         props = self.prepare_update_properties(json_snippet)
         rules = props.pop(self.RULES, [])
 
-        self.neutron().update_security_group(
+        self.client().update_security_group(
             self.resource_id, {'security_group': props})
 
         # handle rules changes by:

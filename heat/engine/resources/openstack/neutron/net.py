@@ -128,14 +128,14 @@ class Net(neutron.NeutronResource):
 
         dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
 
-        net = self.neutron().create_network({'network': props})['network']
+        net = self.client().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
 
         if dhcp_agent_ids:
             self._replace_dhcp_agents(dhcp_agent_ids)
 
     def _show_resource(self):
-        return self.neutron().show_network(
+        return self.client().show_network(
             self.resource_id)['network']
 
     def check_create_complete(self, *args):
@@ -143,9 +143,8 @@ class Net(neutron.NeutronResource):
         return self.is_built(attributes)
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_network(self.resource_id)
+            self.client().delete_network(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -162,7 +161,7 @@ class Net(neutron.NeutronResource):
             del prop_diff[self.DHCP_AGENT_IDS]
 
         if len(prop_diff) > 0:
-            self.neutron().update_network(
+            self.client().update_network(
                 self.resource_id, {'network': props})
 
     def check_update_complete(self, *args):
@@ -170,14 +169,14 @@ class Net(neutron.NeutronResource):
         return self.is_built(attributes)
 
     def _replace_dhcp_agents(self, dhcp_agent_ids):
-        ret = self.neutron().list_dhcp_agent_hosting_networks(
+        ret = self.client().list_dhcp_agent_hosting_networks(
             self.resource_id)
         old = set([agent['id'] for agent in ret['agents']])
         new = set(dhcp_agent_ids)
 
         for dhcp_agent_id in new - old:
             try:
-                self.neutron().add_network_to_dhcp_agent(
+                self.client().add_network_to_dhcp_agent(
                     dhcp_agent_id, {'network_id': self.resource_id})
             except Exception as ex:
                 # if 409 is happened, the agent is already associated.
@@ -186,7 +185,7 @@ class Net(neutron.NeutronResource):
 
         for dhcp_agent_id in old - new:
             try:
-                self.neutron().remove_network_from_dhcp_agent(
+                self.client().remove_network_from_dhcp_agent(
                     dhcp_agent_id, self.resource_id)
             except Exception as ex:
                 # assume 2 patterns about status_code following:

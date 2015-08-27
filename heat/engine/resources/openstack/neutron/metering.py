@@ -76,18 +76,18 @@ class MeteringLabel(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        metering_label = self.neutron().create_metering_label(
+        metering_label = self.client().create_metering_label(
             {'metering_label': props})['metering_label']
 
         self.resource_id_set(metering_label['id'])
 
     def _show_resource(self):
-        return self.neutron().show_metering_label(
+        return self.client().show_metering_label(
             self.resource_id)['metering_label']
 
     def handle_delete(self):
         try:
-            self.neutron().delete_metering_label(self.resource_id)
+            self.client().delete_metering_label(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -168,18 +168,18 @@ class MeteringRule(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        metering_label_rule = self.neutron().create_metering_label_rule(
+        metering_label_rule = self.client().create_metering_label_rule(
             {'metering_label_rule': props})['metering_label_rule']
 
         self.resource_id_set(metering_label_rule['id'])
 
     def _show_resource(self):
-        return self.neutron().show_metering_label_rule(
+        return self.client().show_metering_label_rule(
             self.resource_id)['metering_label_rule']
 
     def handle_delete(self):
         try:
-            self.neutron().delete_metering_label_rule(self.resource_id)
+            self.client().delete_metering_label_rule(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:

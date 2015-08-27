@@ -147,7 +147,7 @@ class VPNService(neutron.NeutronResource):
         ]
 
     def _show_resource(self):
-        return self.neutron().show_vpnservice(self.resource_id)['vpnservice']
+        return self.client().show_vpnservice(self.resource_id)['vpnservice']
 
     def validate(self):
         super(VPNService, self).validate()
@@ -162,19 +162,18 @@ class VPNService(neutron.NeutronResource):
             self.physical_resource_name())
         self.client_plugin().resolve_subnet(props, self.SUBNET, 'subnet_id')
         self.client_plugin().resolve_router(props, self.ROUTER, 'router_id')
-        vpnservice = self.neutron().create_vpnservice({'vpnservice': props})[
+        vpnservice = self.client().create_vpnservice({'vpnservice': props})[
             'vpnservice']
         self.resource_id_set(vpnservice['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.neutron().update_vpnservice(self.resource_id,
-                                             {'vpnservice': prop_diff})
+            self.client().update_vpnservice(self.resource_id,
+                                            {'vpnservice': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_vpnservice(self.resource_id)
+            self.client().delete_vpnservice(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -400,26 +399,25 @@ class IPsecSiteConnection(neutron.NeutronResource):
     }
 
     def _show_resource(self):
-        return self.neutron().show_ipsec_site_connection(self.resource_id)[
+        return self.client().show_ipsec_site_connection(self.resource_id)[
             'ipsec_site_connection']
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        ipsec_site_connection = self.neutron().create_ipsec_site_connection(
+        ipsec_site_connection = self.client().create_ipsec_site_connection(
             {'ipsec_site_connection': props})['ipsec_site_connection']
         self.resource_id_set(ipsec_site_connection['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.neutron().update_ipsec_site_connection(
+            self.client().update_ipsec_site_connection(
                 self.resource_id, {'ipsec_site_connection': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_ipsec_site_connection(self.resource_id)
+            self.client().delete_ipsec_site_connection(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -570,25 +568,24 @@ class IKEPolicy(neutron.NeutronResource):
     }
 
     def _show_resource(self):
-        return self.neutron().show_ikepolicy(self.resource_id)['ikepolicy']
+        return self.client().show_ikepolicy(self.resource_id)['ikepolicy']
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        ikepolicy = self.neutron().create_ikepolicy({'ikepolicy': props})[
+        ikepolicy = self.client().create_ikepolicy({'ikepolicy': props})[
             'ikepolicy']
         self.resource_id_set(ikepolicy['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.neutron().update_ikepolicy(self.resource_id,
-                                            {'ikepolicy': prop_diff})
+            self.client().update_ikepolicy(self.resource_id,
+                                           {'ikepolicy': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_ikepolicy(self.resource_id)
+            self.client().delete_ikepolicy(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -741,25 +738,24 @@ class IPsecPolicy(neutron.NeutronResource):
     }
 
     def _show_resource(self):
-        return self.neutron().show_ipsecpolicy(self.resource_id)['ipsecpolicy']
+        return self.client().show_ipsecpolicy(self.resource_id)['ipsecpolicy']
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        ipsecpolicy = self.neutron().create_ipsecpolicy(
+        ipsecpolicy = self.client().create_ipsecpolicy(
             {'ipsecpolicy': props})['ipsecpolicy']
         self.resource_id_set(ipsecpolicy['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.neutron().update_ipsecpolicy(self.resource_id,
-                                              {'ipsecpolicy': prop_diff})
+            self.client().update_ipsecpolicy(self.resource_id,
+                                             {'ipsecpolicy': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_ipsecpolicy(self.resource_id)
+            self.client().delete_ipsecpolicy(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:

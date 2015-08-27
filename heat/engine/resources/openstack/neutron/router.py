@@ -209,14 +209,14 @@ class Router(neutron.NeutronResource):
 
         l3_agent_ids = self._get_l3_agent_list(props)
 
-        router = self.neutron().create_router({'router': props})['router']
+        router = self.client().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
         if l3_agent_ids:
             self._replace_agent(l3_agent_ids)
 
     def _show_resource(self):
-        return self.neutron().show_router(
+        return self.client().show_router(
             self.resource_id)['router']
 
     def check_create_complete(self, *args):
@@ -224,9 +224,8 @@ class Router(neutron.NeutronResource):
         return self.is_built(attributes)
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_router(self.resource_id)
+            self.client().delete_router(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -244,18 +243,18 @@ class Router(neutron.NeutronResource):
             del prop_diff[self.L3_AGENT_ID]
 
         if len(prop_diff) > 0:
-            self.neutron().update_router(
+            self.client().update_router(
                 self.resource_id, {'router': props})
 
     def _replace_agent(self, l3_agent_ids=None):
-        ret = self.neutron().list_l3_agent_hosting_routers(
+        ret = self.client().list_l3_agent_hosting_routers(
             self.resource_id)
         for agent in ret['agents']:
-            self.neutron().remove_router_from_l3_agent(
+            self.client().remove_router_from_l3_agent(
                 agent['id'], self.resource_id)
         if l3_agent_ids:
             for l3_agent_id in l3_agent_ids:
-                self.neutron().add_router_to_l3_agent(
+                self.client().add_router_to_l3_agent(
                     l3_agent_id, {'router_id': self.resource_id})
 
 
@@ -386,7 +385,7 @@ class RouterInterface(neutron.NeutronResource):
             key = 'port_id'
             value = self.client_plugin().resolve_port(
                 dict(self.properties), self.PORT, key)
-        self.neutron().add_interface_router(
+        self.client().add_interface_router(
             router_id,
             {key: value})
         self.resource_id_set('%s:%s=%s' % (router_id, key, value))
@@ -394,13 +393,12 @@ class RouterInterface(neutron.NeutronResource):
     def handle_delete(self):
         if not self.resource_id:
             return
-        client = self.neutron()
         tokens = self.resource_id.replace('=', ':').split(':')
         if len(tokens) == 2:    # compatible with old data
             tokens.insert(1, 'subnet_id')
         (router_id, key, value) = tokens
         try:
-            client.remove_interface_router(
+            self.client().remove_interface_router(
                 router_id,
                 {key: value})
         except Exception as ex:
@@ -487,7 +485,7 @@ class RouterGateway(neutron.NeutronResource):
         router_id = self.properties[self.ROUTER_ID]
         network_id = self.client_plugin().resolve_network(
             dict(self.properties), self.NETWORK, 'network_id')
-        self.neutron().add_gateway_router(
+        self.client().add_gateway_router(
             router_id,
             {'network_id': network_id})
         self.resource_id_set('%s:%s' % (router_id, network_id))
@@ -495,10 +493,10 @@ class RouterGateway(neutron.NeutronResource):
     def handle_delete(self):
         if not self.resource_id:
             return
-        client = self.neutron()
+
         (router_id, network_id) = self.resource_id.split(':')
         try:
-            client.remove_gateway_router(router_id)
+            self.client().remove_gateway_router(router_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
