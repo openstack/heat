@@ -17,24 +17,34 @@ https://github.com/openstack/heat-templates/blob/master/hot/hello_world.yaml
 
 Description
 -----------
- Hello world HOT template that just defines a single compute instance.
- Contains just base features to verify base HOT support.
+Hello world HOT template that just defines a single compute instance. Contains
+just base features to verify base HOT support.
 
 
 Parameters
 ----------
-*KeyName* :mod:`(required)`
+*key_name* :mod:`(required)`
 	*type*
 		*string*
 	*description*
-		*Name* of an existing key pair to use for the instance
-*InstanceType* :mod:`(required)`
+		Name of an existing key pair to use for the instance
+*flavor* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*Instance type* for the instance to be created
-*ImageId* :mod:`(required)`
+		Flavor for the instance to be created
+*image* :mod:`(required)`
 	*type*
 		*string*
 	*description*
-		*ID* of the image to use for the instance
+		Image *ID* or image name to use for the instance
+*admin_pass* :mod:`(required)`
+	*type*
+		*string*
+	*description*
+		The admin password for the instance
+*db_port* :mod:`(optional)`
+	*type*
+		*number*
+	*description*
+		The database port number
