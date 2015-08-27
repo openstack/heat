@@ -13,7 +13,7 @@
 #    under the License.
 
 """
-Heat API Server. An OpenStack ReST API to Heat.
+Heat API Server. An OpenStack REST API to Heat.
 """
 
 import eventlet
@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
         port = cfg.CONF.heat_api.bind_port
         host = cfg.CONF.heat_api.bind_host
-        LOG.info(_LI('Starting Heat ReST API on %(host)s:%(port)s'),
+        LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
         profiler.setup('heat-api', host)
         gmr.TextGuruMeditation.setup_autorun(version)

@@ -28,7 +28,7 @@ from heat.common import wsgi
 class API(wsgi.Router):
 
     """
-    WSGI router for Heat v1 ReST API requests.
+    WSGI router for Heat v1 REST API requests.
     """
 
     def __init__(self, conf, **local_conf):

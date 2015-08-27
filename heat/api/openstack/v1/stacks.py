@@ -12,7 +12,7 @@
 #    under the License.
 
 """
-Stack endpoint for Heat v1 ReST API.
+Stack endpoint for Heat v1 REST API.
 """
 
 import contextlib
