@@ -508,9 +508,7 @@ class ResourceGroup(stack_resource.StackResource):
             raise ValueError(msg)
         return self.stack.timeout_secs() - total_pause_time
 
-    def _get_batches(self, targ_cap, init_cap, batch_size, min_in_service):
-        curr_cap = init_cap
-
+    def _get_batches(self, targ_cap, curr_cap, batch_size, min_in_service):
         updated = 0
 
         while updated < targ_cap:
@@ -520,17 +518,10 @@ class ResourceGroup(stack_resource.StackResource):
                                                            batch_size,
                                                            min_in_service)
 
-            if new_cap <= init_cap:
-                # Don't ever update existing nodes that are beyond the size
-                # of our target capacity, but continue to count them toward
-                # the number in service
-                high_water = targ_cap
-            else:
-                high_water = new_cap
-            new_names = list(self._resource_names(high_water))
+            new_names = list(self._resource_names(new_cap))
 
             num_created = max(new_cap - curr_cap, 0)
-            create_names = new_names[high_water - num_created:]
+            create_names = new_names[new_cap - num_created:]
 
             num_updates = total_new - max(new_cap - curr_cap, 0)
             upd_start = targ_cap - (updated + num_updates)
