@@ -22,7 +22,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine import constraints
@@ -368,10 +367,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     NETWORK_SUBNET: properties.Schema(
                         properties.Schema.STRING,
                         _('Subnet in which to allocate the IP address for '
-                          'port. Used only if port property is not specified '
-                          'for creating port, based on derived properties.'),
-                        support_status=support.SupportStatus(version='5.0.0'),
-                        implemented=False
+                          'port. Used for creating port, based on derived '
+                          'properties. If subnet is specified, network '
+                          'property becomes optional.'),
+                        support_status=support.SupportStatus(version='5.0.0')
                     )
                 },
             ),
@@ -1163,43 +1162,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         return bootable_vol
 
-    def _validate_network(self, network):
-        if (network.get(self.NETWORK_ID) is None
-            and network.get(self.NETWORK_PORT) is None
-                and network.get(self.NETWORK_UUID) is None):
-            msg = _('One of the properties "%(id)s", "%(port_id)s", '
-                    '"%(uuid)s" should be set for the '
-                    'specified network of server "%(server)s".'
-                    '') % dict(id=self.NETWORK_ID,
-                               port_id=self.NETWORK_PORT,
-                               uuid=self.NETWORK_UUID,
-                               server=self.name)
-            raise exception.StackValidationFailed(message=msg)
-
-        if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
-            msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
-                    'to the network "%(network)s" for the server '
-                    '"%(server)s". The "%(uuid)s" property is deprecated. '
-                    'Use only "%(id)s" property.'
-                    '') % dict(uuid=self.NETWORK_UUID,
-                               id=self.NETWORK_ID,
-                               network=network[self.NETWORK_ID],
-                               server=self.name)
-            raise exception.StackValidationFailed(message=msg)
-        elif network.get(self.NETWORK_UUID):
-            LOG.info(_LI('For the server "%(server)s" the "%(uuid)s" '
-                         'property is set to network "%(network)s". '
-                         '"%(uuid)s" property is deprecated. Use '
-                         '"%(id)s"  property instead.'),
-                     dict(uuid=self.NETWORK_UUID,
-                          id=self.NETWORK_ID,
-                          network=network[self.NETWORK_ID],
-                          server=self.name))
-
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         super(Server, self).validate()
 
         if self.user_data_software_config():
@@ -1311,6 +1275,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self._delete_user()
             self._delete_temp_url()
             self._delete_queue()
+
+        if self.data().get('internal_ports'):
+            self._delete_internal_ports()
 
         try:
             self.client().servers.delete(self.resource_id)
