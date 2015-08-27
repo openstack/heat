@@ -510,7 +510,8 @@ class ResourceGroup(stack_resource.StackResource):
             upd_end = targ_cap
             update_names = new_names[upd_start:upd_end]
 
-            yield new_cap, list(reversed(update_names + create_names))
+            yield (new_cap, total_new,
+                   list(reversed(update_names + create_names)))
 
             updated += num_updates
             curr_cap = new_cap
@@ -543,10 +544,10 @@ class ResourceGroup(stack_resource.StackResource):
         update_timeout = self._update_timeout(len(batches), pause_sec)
 
         def tasks():
-            for index, (curr_cap, updated_resources) in enumerate(batches):
+            for index, (curr_cap, max_upd, update_rsrcs) in enumerate(batches):
                 yield scheduler.TaskRunner(
                     self._run_to_completion,
-                    self._assemble_for_rolling_update(updated_resources,
+                    self._assemble_for_rolling_update(update_rsrcs,
                                                       name_blacklist),
                     update_timeout)
 
