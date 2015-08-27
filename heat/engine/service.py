@@ -273,7 +273,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.15'
+    RPC_API_VERSION = '1.16'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -1106,12 +1106,22 @@ class EngineService(service.Service):
                                                            abandon=True)
             return stack_info
 
-    def list_resource_types(self, cnxt, support_status=None):
+    def list_resource_types(self,
+                            cnxt,
+                            support_status=None,
+                            type_name=None,
+                            heat_version=None):
         """Get a list of supported resource types.
 
         :param cnxt: RPC context.
+        :param support_status: Support status of resource type
+        :param type_name: Resource type's name (regular expression allowed)
+        :param heat_version: Heat version
         """
-        return resources.global_env().get_types(cnxt, support_status)
+        return resources.global_env().get_types(cnxt,
+                                                support_status=support_status,
+                                                type_name=type_name,
+                                                version=heat_version)
 
     def list_template_versions(self, cnxt):
         mgr = templatem._get_template_extension_manager()

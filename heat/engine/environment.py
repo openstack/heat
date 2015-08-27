@@ -567,8 +567,15 @@ class Environment(object):
     def get_class(self, resource_type, resource_name=None):
         return self.registry.get_class(resource_type, resource_name)
 
-    def get_types(self, cnxt=None, support_status=None):
-        return self.registry.get_types(cnxt, support_status)
+    def get_types(self,
+                  cnxt=None,
+                  support_status=None,
+                  type_name=None,
+                  version=None):
+        return self.registry.get_types(cnxt,
+                                       support_status=support_status,
+                                       type_name=type_name,
+                                       version=version)
 
     def get_resource_info(self, resource_type, resource_name=None,
                           registry_type=None):
