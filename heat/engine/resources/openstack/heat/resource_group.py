@@ -363,8 +363,7 @@ class ResourceGroup(stack_resource.StackResource):
 
     def _run_update(self, total_capacity, max_updates, names, timeout):
         template = self._assemble_for_rolling_update(total_capacity,
-                                                     max_updates,
-                                                     names)
+                                                     max_updates)
         return self._run_to_completion(template, timeout)
 
     def check_update_complete(self, checkers):
@@ -463,22 +462,31 @@ class ResourceGroup(stack_resource.StackResource):
         return child_template
 
     def _assemble_for_rolling_update(self, total_capacity, max_updates,
-                                     updated_names, include_all=False):
+                                     include_all=False):
+        names = list(self._resource_names(total_capacity))
         name_blacklist = self._name_blacklist()
 
         valid_resources = [(n, d) for n, d in self._get_resources()
-                           if n not in name_blacklist][:total_capacity]
+                           if n not in name_blacklist]
 
         num_creating = max(total_capacity - len(valid_resources), 0)
-        new_names = iter(updated_names[:num_creating])
-        upd_names = updated_names[num_creating:]
+        new_names = iter(names[total_capacity - num_creating:])
+        targ_cap = self.get_size()
 
         def replace_priority(res_item):
             name, defn = res_item
             try:
-                return upd_names.index(name)
+                index = names.index(name)
             except ValueError:
-                return len(upd_names)
+                # High priority - delete immediately
+                return 0
+            else:
+                if index < targ_cap:
+                    # Update higher indices first
+                    return targ_cap - index
+                else:
+                    # Low priority - don't update
+                    return total_capacity
 
         old_resources = sorted(valid_resources, key=replace_priority)
 
@@ -508,7 +516,8 @@ class ResourceGroup(stack_resource.StackResource):
             raise ValueError(msg)
         return self.stack.timeout_secs() - total_pause_time
 
-    def _get_batches(self, targ_cap, curr_cap, batch_size, min_in_service):
+    @staticmethod
+    def _get_batches(targ_cap, curr_cap, batch_size, min_in_service):
         updated = 0
 
         while updated < targ_cap:
@@ -518,20 +527,9 @@ class ResourceGroup(stack_resource.StackResource):
                                                            batch_size,
                                                            min_in_service)
 
-            new_names = list(self._resource_names(new_cap))
+            yield new_cap, total_new
 
-            num_created = max(new_cap - curr_cap, 0)
-            create_names = new_names[new_cap - num_created:]
-
-            num_updates = total_new - max(new_cap - curr_cap, 0)
-            upd_start = targ_cap - (updated + num_updates)
-            upd_end = targ_cap - updated
-            update_names = new_names[upd_start:upd_end]
-
-            yield (new_cap, total_new,
-                   list(reversed(update_names + create_names)))
-
-            updated += num_updates
+            updated += total_new - max(new_cap - curr_cap, 0)
             curr_cap = new_cap
 
             if not rolling_update.needs_update(targ_cap, curr_cap,
@@ -559,10 +557,9 @@ class ResourceGroup(stack_resource.StackResource):
         update_timeout = self._update_timeout(len(batches), pause_sec)
 
         def tasks():
-            for index, (curr_cap, max_upd, update_rsrcs) in enumerate(batches):
+            for index, (curr_cap, max_upd) in enumerate(batches):
                 yield scheduler.TaskRunner(self._run_update,
                                            curr_cap, max_upd,
-                                           update_rsrcs,
                                            update_timeout)
 
                 if index < (len(batches) - 1) and pause_sec > 0:
