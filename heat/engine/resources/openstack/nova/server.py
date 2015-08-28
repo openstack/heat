@@ -27,6 +27,7 @@ from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
+from heat.engine.resources.openstack.neutron import port as neutron_port
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine.resources.openstack.nova import server_network_mixin
 from heat.engine.resources import scheduler_hints as sh
@@ -96,10 +97,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     _NETWORK_KEYS = (
         NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
-        NETWORK_SUBNET
+        NETWORK_SUBNET, NETWORK_PORT_EXTRA
     ) = (
         'uuid', 'network', 'fixed_ip', 'port',
-        'subnet'
+        'subnet', 'port_extra_properties'
     )
 
     _SOFTWARE_CONFIG_FORMATS = (
@@ -121,6 +122,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         'name', 'addresses', 'networks', 'first_address',
         'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls',
     )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -363,6 +365,14 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                         constraints=[
                             constraints.CustomConstraint('neutron.port')
                         ]
+                    ),
+                    NETWORK_PORT_EXTRA: properties.Schema(
+                        properties.Schema.MAP,
+                        _('Dict, which has expand properties for port. '
+                          'Used only if port property is not specified '
+                          'for creating port.'),
+                        schema=neutron_port.Port.extra_properties_schema,
+                        support_status=support.SupportStatus(version='6.0.0')
                     ),
                     NETWORK_SUBNET: properties.Schema(
                         properties.Schema.STRING,
