@@ -389,12 +389,14 @@ class ResourceGroup(stack_resource.StackResource):
             updaters = self._try_rolling_update()
             if updaters:
                 checkers.extend(updaters)
-        resizer = scheduler.TaskRunner(
-            self._run_to_completion,
-            self._assemble_nested_for_size(self.get_size()),
-            self.stack.timeout_mins)
 
-        checkers.append(resizer)
+        if not checkers:
+            resizer = scheduler.TaskRunner(
+                self._run_to_completion,
+                self._assemble_nested_for_size(self.get_size()),
+                self.stack.timeout_mins)
+            checkers.append(resizer)
+
         checkers[0].start()
         return checkers
 
@@ -520,7 +522,7 @@ class ResourceGroup(stack_resource.StackResource):
     def _get_batches(targ_cap, curr_cap, batch_size, min_in_service):
         updated = 0
 
-        while updated < targ_cap:
+        while rolling_update.needs_update(targ_cap, curr_cap, updated):
             new_cap, total_new = rolling_update.next_batch(targ_cap,
                                                            curr_cap,
                                                            updated,
@@ -531,10 +533,6 @@ class ResourceGroup(stack_resource.StackResource):
 
             updated += total_new - max(new_cap - max(curr_cap, targ_cap), 0)
             curr_cap = new_cap
-
-            if not rolling_update.needs_update(targ_cap, curr_cap,
-                                               updated):
-                break
 
     def _replace(self, min_in_service, batch_size, pause_sec):
 
