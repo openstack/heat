@@ -1227,3 +1227,22 @@ class TestGetBatches(common.HeatTestCase):
                                              self.bat_size,
                                              self.min_serv))
         self.assertEqual(self.batches, batches)
+
+    def test_assemble(self):
+        resources = tuple((str(i), False) for i in range(self.init_cap + 1))
+
+        self.grp._build_resource_definition = mock.Mock(return_value=True)
+        self.grp._get_resources = mock.Mock(return_value=resources)
+        self.grp._do_prop_replace = mock.Mock(side_effect=lambda g, d: d)
+
+        for size, max_upd, names in self.batches:
+
+            template = self.grp._assemble_for_rolling_update(names, {'0'})
+            res_dict = template['resources']
+
+            expected_names = set(map(str,
+                                     range(1, max(self.init_cap, size) + 1)))
+            self.assertEqual(expected_names, set(res_dict))
+
+            updated = set(n for n, v in res_dict.items() if v is True)
+            self.assertEqual(set(names), updated)
