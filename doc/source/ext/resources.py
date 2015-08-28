@@ -12,11 +12,10 @@
 #    under the License.
 # -*- coding: utf-8 -*-
 
-import itertools
+import pydoc
 
 from docutils import core
 from docutils import nodes
-import pydoc
 import six
 from sphinx.util import compat
 
@@ -192,15 +191,13 @@ resources:
         return cmp(x_prop.support_status.status,
                    y_prop.support_status.status)
 
-    def contribute_property(self, prop_list, prop_key, prop, upd_para=None):
-        prop_item = nodes.definition_list_item(
-            '', nodes.term('', prop_key))
-        prop_list.append(prop_item)
+    def contribute_property(self, parent, prop_key, prop, upd_para=None,
+                            id_pattern_prefix=None):
+        if not id_pattern_prefix:
+            id_pattern_prefix = '%s-prop'
+        id_pattern = id_pattern_prefix + '-' + prop_key
 
-        prop_item.append(nodes.classifier('', prop.type))
-
-        definition = nodes.definition()
-        prop_item.append(definition)
+        definition = self._section(parent, prop_key, id_pattern)
 
         self._status_str(prop.support_status, definition)
 
@@ -213,6 +210,9 @@ resources:
         if prop.description:
             para = nodes.paragraph('', prop.description)
             definition.append(para)
+
+        type = nodes.paragraph('', _('%s value expected.') % prop.type)
+        definition.append(type)
 
         if upd_para is not None:
             definition.append(upd_para)
@@ -255,68 +255,64 @@ resources:
             sub_schema = prop.schema
 
         if sub_schema:
-            sub_prop_list = nodes.definition_list()
-            definition.append(sub_prop_list)
             for sub_prop_key, sub_prop in sorted(sub_schema.items(),
                                                  self.cmp_prop):
                 if sub_prop.support_status.status != support.HIDDEN:
+                    indent = nodes.block_quote()
+                    definition.append(indent)
                     self.contribute_property(
-                        sub_prop_list, sub_prop_key, sub_prop, upd_para)
+                        indent, sub_prop_key, sub_prop, upd_para, id_pattern)
 
     def contribute_properties(self, parent):
         if not self.props_schemata:
             return
-        section = self._section(parent, _('Properties'), '%s-props')
-        prop_list_required = nodes.definition_list()
-        subsection_required = self._section(section, _('required'),
-                                            '%s-props-req')
-        subsection_required.append(prop_list_required)
 
-        prop_list_optional = nodes.definition_list()
-        subsection_optional = self._section(section, _('optional'),
-                                            '%s-props-opt')
-        subsection_optional.append(prop_list_optional)
+        props = dict((k, v) for k, v in self.props_schemata.items()
+                     if v.support_status.status != support.HIDDEN)
 
-        for prop_key, prop in sorted(self.props_schemata.items(),
-                                     self.cmp_prop):
-            if prop.support_status.status != support.HIDDEN:
-                if prop.required:
-                    prop_list = prop_list_required
-                else:
-                    prop_list = prop_list_optional
-                self.contribute_property(prop_list, prop_key, prop)
+        required_props = dict((k, v) for k, v in props.items()
+                              if v.required)
+        if required_props:
+            section = self._section(
+                parent, _('Required Properties'), '%s-props-req')
+
+            for prop_key, prop in sorted(required_props.items(),
+                                         self.cmp_prop):
+                self.contribute_property(section, prop_key, prop)
+
+        optional_props = dict((k, v) for k, v in props.items()
+                              if not v.required)
+        if optional_props:
+            section = self._section(
+                parent, _('Optional Properties'), '%s-props-opt')
+
+            for prop_key, prop in sorted(optional_props.items(),
+                                         self.cmp_prop):
+                self.contribute_property(section, prop_key, prop)
 
     def contribute_attributes(self, parent):
         if not self.attrs_schemata:
             return
         section = self._section(parent, _('Attributes'), '%s-attrs')
-        prop_list = nodes.definition_list()
-        section.append(prop_list)
         for prop_key, prop in sorted(self.attrs_schemata.items()):
             if prop.support_status.status != support.HIDDEN:
                 description = prop.description
-                prop_item = nodes.definition_list_item(
-                    '', nodes.term('', prop_key))
-                prop_list.append(prop_item)
+                attr_section = self._section(
+                    section, prop_key, '%s-attr-' + prop_key)
 
-                definition = nodes.definition()
-                prop_item.append(definition)
-
-                self._status_str(prop.support_status, definition)
+                self._status_str(prop.support_status, attr_section)
 
                 if description:
                     def_para = nodes.paragraph('', description)
-                    definition.append(def_para)
+                    attr_section.append(def_para)
 
     def contribute_update_policy(self, parent):
         if not self.update_policy_schemata:
             return
         section = self._section(parent, _('UpdatePolicy'), '%s-updpolicy')
-        prop_list = nodes.definition_list()
-        section.append(prop_list)
         for prop_key, prop in sorted(self.update_policy_schemata.items(),
                                      self.cmp_prop):
-            self.contribute_property(prop_list, prop_key, prop)
+            self.contribute_property(section, prop_key, prop)
 
 
 class IntegrateResourcePages(ResourcePages):
