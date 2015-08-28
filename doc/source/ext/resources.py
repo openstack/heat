@@ -176,7 +176,7 @@ resources:
   the_resource:
     type: %s%s''' % (self.resource_type, props_str)
 
-        block = nodes.literal_block('', template, language="hot")
+        block = nodes.literal_block(template, template, language="yaml")
         section.append(block)
 
     @staticmethod
