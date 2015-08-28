@@ -475,10 +475,9 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp.state_set('CREATE', 'FAILED')
         resgrp._assemble_nested = mock.Mock(return_value='tmpl')
         resgrp.properties.data[resgrp.COUNT] = 2
-        resgrp._assemble_nested_for_size = mock.Mock(return_value=None)
         self.patchobject(scheduler.TaskRunner, 'start')
         resgrp.handle_update(snip, None, None)
-        resgrp._assemble_nested_for_size.assert_called_once_with(2)
+        self.assertTrue(resgrp._assemble_nested.called)
 
     def test_handle_delete(self):
         stack = utils.parse_stack(template2)
@@ -492,11 +491,11 @@ class ResourceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(template2)
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
-        resgrp._assemble_nested_for_size = mock.Mock(return_value=None)
+        resgrp._assemble_nested = mock.Mock(return_value=None)
         resgrp.properties.data[resgrp.COUNT] = 5
         self.patchobject(scheduler.TaskRunner, 'start')
         resgrp.handle_update(snip, None, None)
-        resgrp._assemble_nested_for_size.assert_called_once_with(5)
+        self.assertTrue(resgrp._assemble_nested.called)
 
 
 class ResourceGroupBlackList(common.HeatTestCase):
@@ -1021,18 +1020,18 @@ class RollingUpdateTest(common.HeatTestCase):
             properties=updated_grp_json['Properties'],
             update_policy=updated_policy)
         self.current_grp._replace = mock.Mock(return_value=[])
-        self.current_grp._assemble_nested_for_size = mock.Mock()
+        self.current_grp._assemble_nested = mock.Mock()
         self.patchobject(scheduler.TaskRunner, 'start')
         self.current_grp.handle_update(update_snippet, tmpl_diff, prop_diff)
 
     def test_update_without_policy_prop_diff(self):
         self.check_with_update(with_diff=True)
-        self.current_grp._assemble_nested_for_size.assert_called_once_with(2)
+        self.assertTrue(self.current_grp._assemble_nested.called)
 
     def test_update_with_policy_prop_diff(self):
         self.check_with_update(with_policy=True, with_diff=True)
         self.current_grp._replace.assert_called_once_with(1, 2, 1)
-        self.current_grp._assemble_nested_for_size.assert_called_once_with(2)
+        self.assertTrue(self.current_grp._assemble_nested.called)
 
     def test_update_time_not_sufficient(self):
         current = copy.deepcopy(template)
