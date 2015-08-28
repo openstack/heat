@@ -761,7 +761,7 @@ def is_json_content_type(request):
     if not content_type or content_type.startswith('text/plain'):
         content_type = 'application/json'
     if (content_type in ('JSON', 'application/json')
-            and request.body.startswith('{')):
+            and request.body.startswith(b'{')):
         return True
     return False
 
@@ -773,7 +773,8 @@ class JSONRequestDeserializer(object):
 
         :param request:  Webob.Request object
         """
-        if request.content_length > 0 and is_json_content_type(request):
+        if (int(request.content_length or 0) > 0 and
+                is_json_content_type(request)):
             return True
 
         return False
