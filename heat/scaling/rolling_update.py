@@ -41,10 +41,8 @@ def next_batch(targ_capacity, curr_capacity, num_up_to_date, batch_size,
 
     if num_up_to_date >= efft_min_sz:
         new_capacity = targ_capacity
-    elif num_up_to_date == 0:
+    else:
         new_capacity = max(targ_capacity - efft_bat_sz,
                            efft_min_sz) + efft_bat_sz
-    else:
-        new_capacity = curr_capacity
 
     return new_capacity, efft_bat_sz

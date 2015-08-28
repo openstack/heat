@@ -91,7 +91,7 @@ class TestNextBatch(common.HeatTestCase):
         ('3_3_0_2_4', dict(targ=3, curr=3, updated=0, bat_size=2, min_srv=4,
                            batch=(5, 2))),
         ('3_5_2_2_4', dict(targ=3, curr=5, updated=2, bat_size=2, min_srv=4,
-                           batch=(5, 1))),
+                           batch=(4, 1))),
         ('3_5_3_2_4', dict(targ=3, curr=5, updated=3, bat_size=2, min_srv=4,
                            batch=(3, 0))),
         ('4_4_0_4_0', dict(targ=4, curr=4, updated=0, bat_size=4, min_srv=0,
