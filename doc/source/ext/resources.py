@@ -83,7 +83,6 @@ class ResourcePages(compat.Directive):
                 self.update_policy_schemata = properties.schemata(
                     self.resource_class.update_policy_schema)
 
-
                 self._status_str(resource_class.support_status, section)
 
                 cls_doc = pydoc.getdoc(resource_class)
@@ -115,15 +114,17 @@ class ResourcePages(compat.Directive):
             else:
                 msg = sstatus['status']
             if sstatus['version'] is not None:
-                msg = _('%s since %s') % (msg,
-                                          self._version_str(
-                                              sstatus['version']))
+                msg = _('%(msg)s since %(version)s') % {
+                    'msg': msg,
+                    'version': self._version_str(sstatus['version'])}
             if sstatus['message'] is not None:
-                msg = _('%s - %s') % (msg, sstatus['message'])
+                msg = _('%(msg)s - %(status_msg)s') % {
+                    'msg': msg,
+                    'status_msg': sstatus['message']}
             if not (sstatus['status'] == support.SUPPORTED and
                     sstatus['version'] is None):
-                para = nodes.paragraph(_(''), msg)
-                note = nodes.note(_(''), para)
+                para = nodes.paragraph('', msg)
+                note = nodes.note('', para)
                 section.append(note)
             support_status = support_status.previous_status
 
@@ -384,7 +385,6 @@ def link_resource(app, env, node, contnode):
     reftarget = node.attributes['reftarget']
     for resource_name in all_resources:
         if resource_name.lower() == reftarget.lower():
-            resource = all_resources[resource_name]
             refnode = nodes.reference('', '', internal=True)
             refnode['reftitle'] = resource_name
             if resource_name.startswith('AWS'):
