@@ -529,7 +529,7 @@ class ResourceGroup(stack_resource.StackResource):
 
             yield new_cap, total_new
 
-            updated += total_new - max(new_cap - curr_cap, 0)
+            updated += total_new - max(new_cap - max(curr_cap, targ_cap), 0)
             curr_cap = new_cap
 
             if not rolling_update.needs_update(targ_cap, curr_cap,
@@ -549,10 +549,7 @@ class ResourceGroup(stack_resource.StackResource):
         # current capacity not including existing blacklisted
         curr_cap = len(self.nested()) - num_blacklist if self.nested() else 0
 
-        # final capacity expected after replace
-        capacity = min(curr_cap, self.get_size())
-
-        batches = list(self._get_batches(capacity, curr_cap, batch_size,
+        batches = list(self._get_batches(self.get_size(), curr_cap, batch_size,
                                          min_in_service))
         update_timeout = self._update_timeout(len(batches), pause_sec)
 
