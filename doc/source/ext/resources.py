@@ -169,7 +169,7 @@ class ResourcePages(compat.Directive):
             props_str = '''\n    properties:
       %s''' % ('\n      '.join(props))
 
-        template = '''heat_template_version: 2013-05-23
+        template = '''heat_template_version: 2015-04-30
 ...
 resources:
   ...

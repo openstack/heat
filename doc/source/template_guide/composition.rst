@@ -46,7 +46,7 @@ new types of resources. These examples use a custom template stored in a
 
 .. code-block:: yaml
 
-  heat_template_version: 2014-10-16
+  heat_template_version: 2015-04-30
 
   parameters:
     key_name:
@@ -68,7 +68,7 @@ The following template defines the :file:`my_nova.yaml` file as value for the
 
 .. code-block:: yaml
 
-  heat_template_version: 2014-10-16
+  heat_template_version: 2015-04-30
 
   resources:
     my_server:
@@ -118,7 +118,7 @@ You can now use the new ``OS::Nova::Server`` in your new template
 
 .. code-block:: yaml
 
-  heat_template_version: 2014-10-16
+  heat_template_version: 2015-04-30
 
   resources:
     my_server:
@@ -138,7 +138,7 @@ accessible as follows
 
 .. code-block:: yaml
 
-  heat_template_version: 2014-10-16
+  heat_template_version: 2015-04-30
 
   resources:
     my_server:
@@ -160,7 +160,7 @@ output ``OS::stack_id`` to your template resource
 
 .. code-block:: yaml
 
-  heat_template_version: 2014-10-16
+  heat_template_version: 2015-04-30
 
   resources:
     server:
