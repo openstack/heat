@@ -13,10 +13,15 @@
 
 import uuid
 
+from oslo_serialization import jsonutils
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
+from heat.engine.resources import signal_responder
 from heat.engine.resources import wait_condition as wc_base
 from heat.engine import support
 
@@ -25,55 +30,115 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
 
     support_status = support.SupportStatus(version='2014.2')
 
-    METADATA_KEYS = (
-        DATA, REASON, STATUS, UNIQUE_ID
+    PROPERTIES = (
+        SIGNAL_TRANSPORT,
     ) = (
-        'data', 'reason', 'status', 'id'
+        'signal_transport',
     )
+
+    SIGNAL_TRANSPORTS = (
+        CFN_SIGNAL, TEMP_URL_SIGNAL, HEAT_SIGNAL, NO_SIGNAL,
+        ZAQAR_SIGNAL, TOKEN_SIGNAL
+    ) = (
+        'CFN_SIGNAL', 'TEMP_URL_SIGNAL', 'HEAT_SIGNAL', 'NO_SIGNAL',
+        'ZAQAR_SIGNAL', 'TOKEN_SIGNAL'
+    )
+
+    properties_schema = {
+        SIGNAL_TRANSPORT: properties.Schema(
+            properties.Schema.STRING,
+            _('How the client will signal the wait condition. CFN_SIGNAL '
+              'will allow an HTTP POST to a CFN keypair signed URL. '
+              'TEMP_URL_SIGNAL will create a Swift TempURL to be '
+              'signalled via HTTP PUT. HEAT_SIGNAL will allow calls to the '
+              'Heat API resource-signal using the provided keystone '
+              'credentials. ZAQAR_SIGNAL will create a dedicated zaqar queue '
+              'to be signalled using the provided keystone credentials. '
+              'TOKEN_SIGNAL will allow and HTTP POST to a Heat API endpoint '
+              'with the provided keystone token. NO_SIGNAL will result in '
+              'the resource going to a signalled state without waiting for '
+              'any signal.'),
+            default='TOKEN_SIGNAL',
+            constraints=[
+                constraints.AllowedValues(SIGNAL_TRANSPORTS),
+            ],
+            support_status=support.SupportStatus(version='6.0.0'),
+        ),
+    }
 
     ATTRIBUTES = (
         TOKEN,
         ENDPOINT,
         CURL_CLI,
+        SIGNAL,
     ) = (
         'token',
         'endpoint',
         'curl_cli',
+        'signal',
     )
 
     attributes_schema = {
         TOKEN: attributes.Schema(
-            _('Token for stack-user which can be used for signalling handle'),
+            _('Token for stack-user which can be used for signalling handle '
+              'when signal_transport is set to TOKEN_SIGNAL. None for all '
+              'other signal transports.'),
             cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.STRING
         ),
         ENDPOINT: attributes.Schema(
-            _('Endpoint/url which can be used for signalling handle'),
+            _('Endpoint/url which can be used for signalling handle when '
+              'signal_transport is set to TOKEN_SIGNAL. None for all '
+              'other signal transports.'),
             cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.STRING
         ),
         CURL_CLI: attributes.Schema(
             _('Convenience attribute, provides curl CLI command '
               'prefix, which can be used for signalling handle completion or '
-              'failure.  You can signal success by adding '
+              'failure when signal_transport is set to TOKEN_SIGNAL.  You '
+              ' can signal success by adding '
               '--data-binary \'{"status": "SUCCESS"}\' '
               ', or signal failure by adding '
-              '--data-binary \'{"status": "FAILURE"}\''),
+              '--data-binary \'{"status": "FAILURE"}\'. '
+              'This attribute is set to None for all other signal '
+              'transports.'),
+
             cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.STRING
         ),
+        SIGNAL: attributes.Schema(
+            _('JSON serialized map that includes the endpoint, token and/or '
+              'other attributes the client must use for signalling this '
+              'handle. The contents of this map depend on the type of signal '
+              'selected in the signal_transport property.'),
+            cache_mode=attributes.Schema.CACHE_NONE,
+            type=attributes.Schema.STRING
+        )
     }
+
+    METADATA_KEYS = (
+        DATA, REASON, STATUS, UNIQUE_ID
+    ) = (
+        'data', 'reason', 'status', 'id'
+    )
+
+    def _signal_transport_token(self):
+        return self.properties.get(
+            self.SIGNAL_TRANSPORT) == self.TOKEN_SIGNAL
 
     def handle_create(self):
         self.password = uuid.uuid4().hex
         super(HeatWaitConditionHandle, self).handle_create()
-        # FIXME(shardy): The assumption here is that token expiry > timeout
-        # but we probably need a check here to fail fast if that's not true
-        # Also need to implement an update property, such that the handle
-        # can be replaced on update which will replace the token
-        token = self._user_token()
-        self.data_set('token', token, True)
-        self.data_set('endpoint', '%s/signal' % self._get_resource_endpoint())
+        if self._signal_transport_token():
+            # FIXME(shardy): The assumption here is that token expiry > timeout
+            # but we probably need a check here to fail fast if that's not true
+            # Also need to implement an update property, such that the handle
+            # can be replaced on update which will replace the token
+            token = self._user_token()
+            self.data_set('token', token, True)
+            self.data_set('endpoint',
+                          '%s/signal' % self._get_resource_endpoint())
 
     def _get_resource_endpoint(self):
         # Get the endpoint from stack.clients then replace the context
@@ -89,19 +154,33 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
 
     def _resolve_attribute(self, key):
         if self.resource_id:
-            if key == self.TOKEN:
+            if key == self.SIGNAL:
+                return jsonutils.dumps(self._get_signal(
+                    signal_type=signal_responder.WAITCONDITION,
+                    multiple_signals=True))
+            elif key == self.TOKEN:
                 return self.data().get('token')
             elif key == self.ENDPOINT:
                 return self.data().get('endpoint')
             elif key == self.CURL_CLI:
                 # Construct curl command for template-author convenience
+                endpoint = self.data().get('endpoint')
+                token = self.data().get('token')
+                if endpoint is None or token is None:
+                    return None
                 return ("curl -i -X POST "
                         "-H 'X-Auth-Token: %(token)s' "
                         "-H 'Content-Type: application/json' "
                         "-H 'Accept: application/json' "
                         "%(endpoint)s" %
-                        dict(token=self.data().get('token'),
-                             endpoint=self.data().get('endpoint')))
+                        dict(token=token, endpoint=endpoint))
+
+    def get_status(self):
+        # before we check status, we have to update the signal transports
+        # that require constant polling
+        self._service_signal()
+
+        return super(HeatWaitConditionHandle, self).get_status()
 
     def handle_signal(self, details=None):
         """Validate and update the resource metadata.

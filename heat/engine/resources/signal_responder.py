@@ -16,9 +16,13 @@ import uuid
 from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from six.moves.urllib import parse as urlparse
 
+from heat.common import exception
+from heat.common.i18n import _
 from heat.common.i18n import _LW
+from heat.engine.clients.os import swift
 from heat.engine.resources import stack_user
 
 LOG = logging.getLogger(__name__)
@@ -33,6 +37,18 @@ SIGNAL_VERB = {WAITCONDITION: 'PUT',
 
 
 class SignalResponder(stack_user.StackUser):
+
+    PROPERTIES = (
+        SIGNAL_TRANSPORT,
+    ) = (
+        'signal_transport',
+    )
+
+    ATTRIBUTES = (
+        SIGNAL_ATTR,
+    ) = (
+        'signal',
+    )
 
     # Anything which subclasses this may trigger authenticated
     # API operations as a consequence of handling a signal
@@ -59,6 +75,26 @@ class SignalResponder(stack_user.StackUser):
         else:
             self.data_set('password', password, True)
 
+    def _signal_transport_cfn(self):
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.CFN_SIGNAL
+
+    def _signal_transport_heat(self):
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.HEAT_SIGNAL
+
+    def _signal_transport_none(self):
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.NO_SIGNAL
+
+    def _signal_transport_temp_url(self):
+        return self.properties[
+            self.SIGNAL_TRANSPORT] == self.TEMP_URL_SIGNAL
+
+    def _signal_transport_zaqar(self):
+        return self.properties.get(
+            self.SIGNAL_TRANSPORT) == self.ZAQAR_SIGNAL
+
     def _get_heat_signal_credentials(self):
         """Return OpenStack credentials that can be used to send a signal.
 
@@ -73,7 +109,8 @@ class SignalResponder(stack_user.StackUser):
                 'username': self.physical_resource_name(),
                 'user_id': self._get_user_id(),
                 'password': self.password,
-                'project_id': self.stack.stack_user_project_id}
+                'project_id': self.stack.stack_user_project_id,
+                'domain_id': self.keystone().stack_domain_id}
 
     def _get_ec2_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
@@ -147,10 +184,13 @@ class SignalResponder(stack_user.StackUser):
         self.data_delete('ec2_signed_url')
         self._delete_keypair()
 
-    def _get_heat_signal_url(self):
+    def _get_heat_signal_url(self, project_id=None):
         """Return a heat-api signal URL for this resource.
 
         This URL is not pre-signed, valid user credentials are required.
+        If a project_id is provided, it is used in place of the original
+        project_id. This is useful to generate a signal URL that uses
+        the heat stack user project instead of the user's.
         """
         stored = self.data().get('heat_signal_url')
         if stored is not None:
@@ -163,6 +203,8 @@ class SignalResponder(stack_user.StackUser):
         url = self.client_plugin('heat').get_heat_url()
         host_url = urlparse.urlparse(url)
         path = self.identifier().url_path()
+        if project_id is not None:
+            path = project_id + path[path.find('/'):]
 
         url = urlparse.urlunsplit(
             (host_url.scheme, host_url.netloc, 'v1/%s/signal' % path, '', ''))
@@ -173,10 +215,12 @@ class SignalResponder(stack_user.StackUser):
     def _delete_heat_signal_url(self):
         self.data_delete('heat_signal_url')
 
-    def _get_swift_signal_url(self):
+    def _get_swift_signal_url(self, multiple_signals=False):
         """Create properly formatted and pre-signed Swift signal URL.
 
-        This uses a Swift pre-signed temp_url.
+        This uses a Swift pre-signed temp_url. If multiple_signals is
+        requested, the Swift object referenced by the returned URL will have
+        versioning enabled.
         """
         put_url = self.data().get('swift_signal_url')
         if put_url:
@@ -191,13 +235,16 @@ class SignalResponder(stack_user.StackUser):
 
         self.client('swift').put_container(container)
 
-        put_url = self.client_plugin('swift').get_temp_url(
-            container, object_name)
+        if multiple_signals:
+            put_url = self.client_plugin('swift').get_signal_url(container,
+                                                                 object_name)
+        else:
+            put_url = self.client_plugin('swift').get_temp_url(container,
+                                                               object_name)
+            self.client('swift').put_object(container, object_name, '')
         self.data_set('swift_signal_url', put_url)
         self.data_set('swift_signal_object_name', object_name)
 
-        self.client('swift').put_object(
-            container, object_name, '')
         return put_url
 
     def _delete_swift_signal_url(self):
@@ -205,12 +252,22 @@ class SignalResponder(stack_user.StackUser):
         if not object_name:
             return
         try:
-            container = self.physical_resource_name()
+            container_name = self.stack.id
             swift = self.client('swift')
-            swift.delete_object(container, object_name)
-            headers = swift.head_container(container)
+
+            # delete all versions of the object, in case there are some
+            # signals that are waiting to be handled
+            container = swift.get_container(container_name)
+            filtered = [obj for obj in container[1]
+                        if object_name in obj['name']]
+            for obj in filtered:
+                # we delete the main object every time, swift takes
+                # care of restoring the previous version after each delete
+                swift.delete_object(container_name, object_name)
+
+            headers = swift.head_container(container_name)
             if int(headers['x-container-object-count']) == 0:
-                swift.delete_container(container)
+                swift.delete_container(container_name)
         except Exception as ex:
             self.client_plugin('swift').ignore_not_found(ex)
         self.data_delete('swift_signal_object_name')
@@ -250,3 +307,102 @@ class SignalResponder(stack_user.StackUser):
         except Exception as ex:
             self.client_plugin('zaqar').ignore_not_found(ex)
         self.data_delete('zaqar_signal_queue_id')
+
+    def _get_signal(self, signal_type=SIGNAL, multiple_signals=False):
+        """Return a dictionary with signal details.
+
+        Subclasses can invoke this method to retrieve information of the
+        resource signal for the specified transport.
+        """
+        signal = None
+        if self._signal_transport_cfn():
+            signal = {'alarm_url': self._get_ec2_signed_url(
+                signal_type=signal_type)}
+        elif self._signal_transport_heat():
+            signal = self._get_heat_signal_credentials()
+            signal['alarm_url'] = self._get_heat_signal_url(
+                project_id=self.stack.stack_user_project_id)
+        elif self._signal_transport_temp_url():
+            signal = {'alarm_url': self._get_swift_signal_url(
+                multiple_signals=multiple_signals)}
+        elif self._signal_transport_zaqar():
+            signal = self._get_heat_signal_credentials()
+            signal['queue_id'] = self._get_zaqar_signal_queue_id()
+        elif self._signal_transport_none():
+            signal = {}
+        return signal
+
+    def _service_swift_signal(self):
+        swift_client = self.client('swift')
+        try:
+            container = swift_client.get_container(self.stack.id)
+        except Exception as exc:
+            self.client_plugin('swift').ignore_not_found(exc)
+            LOG.debug("Swift container %s was not found" % self.stack.id)
+            return
+
+        index = container[1]
+        if not index:  # Swift objects were deleted by user
+            LOG.debug("Swift objects in container %s were not found" %
+                      self.stack.id)
+            return
+
+        # Remove objects that are for other resources, given that
+        # multiple swift signals in the same stack share a container
+        object_name = self.physical_resource_name()
+        filtered = [obj for obj in index if object_name in obj['name']]
+
+        # Fetch objects from Swift and filter results
+        signal_names = []
+        for obj in filtered:
+            try:
+                signal = swift_client.get_object(self.stack.id, obj['name'])
+            except Exception as exc:
+                self.client_plugin('swift').ignore_not_found(exc)
+                continue
+
+            body = signal[1]
+            if body == swift.IN_PROGRESS:  # Ignore the initial object
+                continue
+            signal_names.append(obj['name'])
+
+            if body == "":
+                self.signal(details={})
+                continue
+            try:
+                self.signal(details=jsonutils.loads(body))
+            except ValueError:
+                raise exception.Error(_("Failed to parse JSON data: %s") %
+                                      body)
+
+        # remove the signals that were consumed
+        for signal_name in signal_names:
+            if signal_name != object_name:
+                swift_client.delete_object(self.stack.id, signal_name)
+        if object_name in signal_names:
+            swift_client.delete_object(self.stack.id, object_name)
+
+    def _service_zaqar_signal(self):
+        zaqar = self.client('zaqar')
+        try:
+            queue = zaqar.queue(self._get_zaqar_signal_queue_id())
+        except Exception as ex:
+            self.client_plugin('zaqar').ignore_not_found(ex)
+        messages = list(queue.pop())
+        for message in messages:
+            self.signal(details=message.body)
+
+    def _service_signal(self):
+        """Service the signal, when necessary.
+
+        This method must be called repeatedly by subclasses to update the
+        state of the signals that require polling, which are the ones based on
+        Swift temp URLs and Zaqar queues. The "NO_SIGNAL" case is also handled
+        here by triggering the signal once per call.
+        """
+        if self._signal_transport_temp_url():
+            self._service_swift_signal()
+        elif self._signal_transport_zaqar():
+            self._service_zaqar_signal()
+        elif self._signal_transport_none():
+            self.signal(details={})

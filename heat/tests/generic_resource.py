@@ -170,6 +170,14 @@ class ResourceWithRequiredPropsAndEmptyAttrs(GenericResource):
 
 
 class SignalResource(signal_responder.SignalResponder):
+    SIGNAL_TRANSPORTS = (
+        CFN_SIGNAL, TEMP_URL_SIGNAL, HEAT_SIGNAL, NO_SIGNAL,
+        ZAQAR_SIGNAL
+    ) = (
+        'CFN_SIGNAL', 'TEMP_URL_SIGNAL', 'HEAT_SIGNAL', 'NO_SIGNAL',
+        'ZAQAR_SIGNAL'
+    )
+
     properties_schema = {
         'signal_transport': properties.Schema(properties.Schema.STRING,
                                               default='CFN_SIGNAL')}
@@ -186,21 +194,10 @@ class SignalResource(signal_responder.SignalResponder):
 
     def _resolve_attribute(self, name):
         if self.resource_id is not None:
-            if self.properties['signal_transport'] == 'CFN_SIGNAL':
-                d = {'alarm_url': six.text_type(self._get_ec2_signed_url())}
-            elif self.properties['signal_transport'] == 'HEAT_SIGNAL':
-                d = self._get_heat_signal_credentials()
-                d['alarm_url'] = six.text_type(self._get_heat_signal_url())
-            elif self.properties['signal_transport'] == 'TEMP_URL_SIGNAL':
-                d = {'alarm_url': six.text_type(self._get_swift_signal_url())}
-            elif self.properties['signal_transport'] == 'ZAQAR_SIGNAL':
-                d = self._get_heat_signal_credentials()
-                d['queue_id'] = six.text_type(
-                    self._get_zaqar_signal_queue_id())
             if name == 'AlarmUrl':
-                return d['alarm_url']
+                return self._get_signal().get('alarm_url')
             elif name == 'signal':
-                return d
+                return self._get_signal()
 
 
 class StackUserResource(stack_user.StackUser):
