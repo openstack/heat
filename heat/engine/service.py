@@ -39,6 +39,7 @@ from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
+from heat.common import policy
 from heat.common import service_utils
 from heat.engine import api
 from heat.engine import attributes
@@ -293,6 +294,7 @@ class EngineService(service.Service):
         self.manage_thread_grp = None
         self._rpc_server = None
         self.software_config = service_software_config.SoftwareConfigService()
+        self.resource_enforcer = policy.ResourceEnforcer()
 
         if cfg.CONF.trusts_delegated_roles:
             warnings.warn('The default value of "trusts_delegated_roles" '
@@ -641,6 +643,7 @@ class EngineService(service.Service):
                                                         args,
                                                         convergence=conv_eng)
 
+        self.resource_enforcer.enforce_stack(stack)
         return api.format_stack_preview(stack)
 
     @context.request_context
@@ -700,6 +703,7 @@ class EngineService(service.Service):
             nested_depth, user_creds_id, stack_user_project_id, convergence,
             parent_resource_name)
 
+        self.resource_enforcer.enforce_stack(stack)
         stack.store()
         _create_stack_user(stack)
         if convergence:
@@ -734,6 +738,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Updating stack %s'), db_stack.name)
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
+        self.resource_enforcer.enforce_stack(current_stack)
 
         if current_stack.action == current_stack.SUSPEND:
             msg = _('Updating a stack when it is suspended')
@@ -778,6 +783,7 @@ class EngineService(service.Service):
         current_kwargs.update(common_params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      **current_kwargs)
+        self.resource_enforcer.enforce_stack(updated_stack)
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)
@@ -957,6 +963,7 @@ class EngineService(service.Service):
         st = self._get_stack(cnxt, stack_identity)
         LOG.info(_LI('Deleting stack %s'), st.name)
         stack = parser.Stack.load(cnxt, stack=st)
+        self.resource_enforcer.enforce_stack(stack)
 
         if stack.convergence:
             template = templatem.Template.create_empty_template()
@@ -1067,6 +1074,7 @@ class EngineService(service.Service):
         :param cnxt: RPC context.
         :param type_name: Name of the resource type to obtain the schema of.
         """
+        self.resource_enforcer.enforce(cnxt, type_name)
         try:
             resource_class = resources.global_env().get_class(type_name)
         except (exception.InvalidResourceType,
@@ -1112,6 +1120,7 @@ class EngineService(service.Service):
         :param type_name: Name of the resource type to generate a template for.
         :param template_type: the template type to generate, cfn or hot.
         """
+        self.resource_enforcer.enforce(cnxt, type_name)
         try:
             resource_class = resources.global_env().get_class(type_name)
             if resource_class.support_status.status == support.HIDDEN:
@@ -1317,6 +1326,7 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
+        self.resource_enforcer.enforce_stack(stack)
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               _stack_suspend, stack)
 
@@ -1332,6 +1342,7 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
+        self.resource_enforcer.enforce_stack(stack)
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               _stack_resume, stack)
 
@@ -1418,8 +1429,11 @@ class EngineService(service.Service):
 
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
+        self.resource_enforcer.enforce_stack(stack)
         snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
             cnxt, snapshot_id, s)
+        # FIXME(pas-ha) has to be ammended to deny restoring stacks
+        # that have disallowed for current user
 
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               _stack_restore, stack, snapshot)

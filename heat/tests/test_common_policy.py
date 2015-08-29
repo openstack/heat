@@ -40,7 +40,7 @@ class TestPolicyEnforcer(common.HeatTestCase):
                   "PutMetricAlarm", "PutMetricData", "SetAlarmState")
 
     def setUp(self):
-        super(TestPolicyEnforcer, self).setUp()
+        super(TestPolicyEnforcer, self).setUp(mock_resource_policy=False)
         opts = [
             cfg.StrOpt('config_dir', default=policy_path),
             cfg.StrOpt('config_file', default='foo'),
@@ -183,3 +183,47 @@ class TestPolicyEnforcer(common.HeatTestCase):
                                      False, exc=None).AndReturn(True)
         self.m.ReplayAll()
         self.assertTrue(enforcer.check_is_admin(ctx))
+
+    def test_resource_default_rule(self):
+        context = utils.dummy_context(roles=['non-admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'))
+        res_type = "OS::Test::NotInPolicy"
+        self.assertIsNone(enforcer.enforce(context, res_type))
+
+    def test_resource_enforce_success(self):
+        context = utils.dummy_context(roles=['admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'))
+        res_type = "OS::Test::AdminOnly"
+        self.assertIsNone(enforcer.enforce(context, res_type))
+
+    def test_resource_enforce_fail(self):
+        context = utils.dummy_context(roles=['non-admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'))
+        res_type = "OS::Test::AdminOnly"
+        ex = self.assertRaises(exception.Forbidden,
+                               enforcer.enforce,
+                               context, res_type)
+        self.assertIn(res_type, ex.message)
+
+    def test_resource_enforce_returns_false(self):
+        context = utils.dummy_context(roles=['non-admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'),
+            exc=None)
+        res_type = "OS::Test::AdminOnly"
+        self.assertFalse(enforcer.enforce(context, res_type))
+
+    def test_resource_enforce_exc_on_false(self):
+        context = utils.dummy_context(roles=['non-admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'))
+        res_type = "OS::Test::AdminOnly"
+        self.patchobject(base_policy.Enforcer, 'enforce',
+                         return_value=False)
+        ex = self.assertRaises(exception.Forbidden,
+                               enforcer.enforce,
+                               context, res_type)
+        self.assertIn(res_type, ex.message)

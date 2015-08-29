@@ -180,7 +180,7 @@ class Resource(object):
                 service_name=ResourceClass.default_client_name,
                 resource_type=definition.resource_type
             )
-            LOG.error(six.text_type(ex))
+            LOG.info(six.text_type(ex))
 
             raise ex
 

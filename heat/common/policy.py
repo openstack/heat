@@ -18,14 +18,18 @@
 """Policy Engine For Heat"""
 
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_policy import policy
+import six
 
 from heat.common import exception
 
 
 CONF = cfg.CONF
+LOG = logging.getLogger(__name__)
 
 DEFAULT_RULES = policy.Rules.from_dict({'default': '!'})
+DEFAULT_RESOURCE_RULES = policy.Rules.from_dict({'default': '@'})
 
 
 class Enforcer(object):
@@ -82,3 +86,30 @@ class Enforcer(object):
            :returns: A non-False value if the user is admin according to policy
         """
         return self._check(context, 'context_is_admin', target={}, exc=None)
+
+
+class ResourceEnforcer(Enforcer):
+    def __init__(self, default_rule=DEFAULT_RESOURCE_RULES['default'],
+                 **kwargs):
+        super(ResourceEnforcer, self).__init__(
+            default_rule=default_rule, **kwargs)
+
+    def enforce(self, context, res_type, scope=None, target=None):
+        # NOTE(pas-ha): try/except just to log the exception
+        try:
+            result = super(ResourceEnforcer, self).enforce(
+                context, res_type,
+                scope=scope or 'resource_types',
+                target=target)
+        except self.exc as ex:
+            LOG.info(six.text_type(ex))
+            raise
+        if not result:
+            if self.exc:
+                raise self.exc(action=res_type)
+            else:
+                return result
+
+    def enforce_stack(self, stack, scope=None, target=None):
+        for res in stack.resources.values():
+            self.enforce(stack.context, res.type(), scope=scope, target=target)

@@ -25,6 +25,7 @@ import testtools
 
 from heat.common import context
 from heat.common import messaging
+from heat.common import policy
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
@@ -78,7 +79,8 @@ class FakeLogMixin(object):
 class HeatTestCase(testscenarios.WithScenarios,
                    testtools.TestCase, FakeLogMixin):
 
-    def setUp(self, mock_keystone=True, quieten_logging=True):
+    def setUp(self, mock_keystone=True, mock_resource_policy=True,
+              quieten_logging=True):
         super(HeatTestCase, self).setUp()
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
@@ -124,6 +126,9 @@ class HeatTestCase(testscenarios.WithScenarios,
 
         if mock_keystone:
             self.stub_keystoneclient()
+        if mock_resource_policy:
+            self.mock_resource_policy = self.patchobject(
+                policy.ResourceEnforcer, 'enforce')
         utils.setup_dummy_db()
         self.register_test_resources()
         self.addCleanup(utils.reset_dummy_db)
