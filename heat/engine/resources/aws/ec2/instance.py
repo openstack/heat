@@ -13,7 +13,6 @@
 
 import copy
 
-from oslo_config import cfg
 from oslo_log import log as logging
 import six
 
@@ -26,13 +25,12 @@ from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-
-cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
+from heat.engine.resources import scheduler_hints as sh
 
 LOG = logging.getLogger(__name__)
 
 
-class Instance(resource.Resource):
+class Instance(resource.Resource, sh.SchedulerHintsMixin):
 
     PROPERTIES = (
         IMAGE_ID, INSTANCE_TYPE, KEY_NAME, AVAILABILITY_ZONE,
@@ -529,14 +527,7 @@ class Instance(resource.Resource):
                     scheduler_hints[hint] = hint_value
         else:
             scheduler_hints = None
-        if cfg.CONF.stack_scheduler_hints:
-            if scheduler_hints is None:
-                scheduler_hints = {}
-            scheduler_hints['heat_root_stack_id'] = self.stack.root_stack_id()
-            scheduler_hints['heat_stack_id'] = self.stack.id
-            scheduler_hints['heat_stack_name'] = self.stack.name
-            scheduler_hints['heat_path_in_stack'] = self.stack.path_in_stack()
-            scheduler_hints['heat_resource_name'] = self.name
+        scheduler_hints = self._scheduler_hints(scheduler_hints)
 
         nics = self._build_nics(self.properties[self.NETWORK_INTERFACES],
                                 security_groups=security_groups,
