@@ -328,7 +328,7 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
         resg = sc.StructuredDeploymentGroup('test', snip, stack)
         templ = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "server1": {
                     'type': 'OS::Heat::StructuredDeployment',

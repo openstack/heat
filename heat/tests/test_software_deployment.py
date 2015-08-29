@@ -1211,7 +1211,7 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
         resg = sd.SoftwareDeploymentGroup('test', snip, stack)
         templ = {
-            "heat_template_version": "2013-05-23",
+            "heat_template_version": "2015-04-30",
             "resources": {
                 "server1": {
                     'type': 'OS::Heat::SoftwareDeployment',
