@@ -360,6 +360,113 @@ class SignalTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_FnGetAtt_Heat_Signal_delete(self):
+        self.stack = self.create_stack(test_heat_template_signal)
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
+                               'get_heat_url')
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8004/v1')
+        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
+            'http://server.test:8004/v1')
+
+        def validate_signal():
+            signal = rsrc.FnGetAtt('signal')
+            self.assertEqual('http://localhost:5000/v3', signal['auth_url'])
+            self.assertEqual('aprojectid', signal['project_id'])
+            self.assertEqual('1234', signal['user_id'])
+            self.assertIn('username', signal)
+            self.assertIn('password', signal)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        validate_signal()
+        scheduler.TaskRunner(rsrc.delete)()
+        validate_signal()
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Swift_Signal_delete(self):
+        self.stack = self.create_stack(test_swift_template_signal)
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'put_container')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'put_object')
+        self.m.StubOutWithMock(self.stack.clients.client_plugin('swift'),
+                               'get_temp_url')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'delete_object')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'delete_container')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'head_container')
+
+        self.stack.clients.client('swift').put_container(
+            mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client_plugin('swift').get_temp_url(
+            mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(
+            'http://server.test/v1/AUTH_aprojectid/foo/bar')
+        self.stack.clients.client('swift').put_object(
+            mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
+
+        self.stack.clients.client('swift').put_container(
+            mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client_plugin('swift').get_temp_url(
+            mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(
+            'http://server.test/v1/AUTH_aprojectid/foo/bar')
+        self.stack.clients.client('swift').put_object(
+            mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client('swift').delete_object(
+            mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client('swift').head_container(
+            mox.IgnoreArg()).AndReturn({'x-container-object-count': 0})
+        self.stack.clients.client('swift').delete_container(
+            mox.IgnoreArg()).AndReturn(None)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        self.assertEqual('http://server.test/v1/AUTH_aprojectid/foo/bar',
+                         rsrc.FnGetAtt('AlarmUrl'))
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual('http://server.test/v1/AUTH_aprojectid/foo/bar',
+                         rsrc.FnGetAtt('AlarmUrl'))
+
+        self.m.VerifyAll()
+
+    def test_FnGetAtt_Zaqar_Signal_delete(self):
+        self.stack = self.create_stack(test_zaqar_template_signal)
+        rsrc = self.stack['signal_handler']
+        self.m.StubOutWithMock(rsrc, '_delete_zaqar_signal_queue')
+        rsrc._delete_zaqar_signal_queue().AndReturn(None)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        signal = rsrc.FnGetAtt('signal')
+        self.assertEqual('http://localhost:5000/v3', signal['auth_url'])
+        self.assertEqual('aprojectid', signal['project_id'])
+        self.assertEqual('1234', signal['user_id'])
+        self.assertIn('username', signal)
+        self.assertIn('password', signal)
+        self.assertIn('queue_id', signal)
+
+        scheduler.TaskRunner(rsrc.delete)()
+
+        self.assertEqual('http://localhost:5000/v3', signal['auth_url'])
+        self.assertEqual('aprojectid', signal['project_id'])
+        self.assertEqual('1234', signal['user_id'])
+        self.assertIn('username', signal)
+        self.assertIn('password', signal)
+        self.assertIn('queue_id', signal)
+        self.m.VerifyAll()
+
     def test_delete_not_found(self):
         self.stack = self.create_stack(stack_name='test_delete_not_found',
                                        stub=False)
