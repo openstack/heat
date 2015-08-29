@@ -302,7 +302,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
             self.adjust(current_capacity, adjustment_type=EXACT_CAPACITY)
 
     def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY,
-               min_adjustment_step=None):
+               min_adjustment_step=None, signal=False):
         """
         Adjust the size of the scaling group if the cooldown permits.
         """
@@ -311,7 +311,10 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                          "cooldown %(cooldown)s"),
                      {'name': self.name,
                       'cooldown': self.properties[self.COOLDOWN]})
-            return
+            if signal:
+                raise resource.NoActionRequired()
+            else:
+                return
 
         capacity = grouputils.get_size(self)
         lower = self.properties[self.MIN_SIZE]

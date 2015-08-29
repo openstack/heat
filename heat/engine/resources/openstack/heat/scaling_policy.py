@@ -185,7 +185,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
             adjustment_type = self._get_adjustement_type()
             group.adjust(self.properties[self.SCALING_ADJUSTMENT],
                          adjustment_type,
-                         self.properties[self.MIN_ADJUSTMENT_STEP])
+                         self.properties[self.MIN_ADJUSTMENT_STEP],
+                         signal=True)
 
         finally:
             self._cooldown_timestamp("%s : %s" % (
