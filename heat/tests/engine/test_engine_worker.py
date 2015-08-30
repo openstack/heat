@@ -278,6 +278,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
 
     def test_resource_update_failure_triggers_rollback_if_enabled(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        cfg.CONF.set_default('convergence_engine', True)
         self.stack.disable_rollback = False
         self.stack.store()
         self.worker._trigger_rollback = mock.Mock()
@@ -296,6 +297,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
 
     def test_resource_cleanup_failure_triggers_rollback_if_enabled(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        cfg.CONF.set_default('convergence_engine', True)
         self.is_update = False  # invokes check_resource_cleanup
         self.stack.disable_rollback = False
         self.stack.store()
@@ -345,6 +347,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
 
     def test_resource_update_failure_purges_db_for_stack_failure(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        cfg.CONF.set_default('convergence_engine', True)
         self.stack.disable_rollback = True
         self.stack.store()
         self.stack.purge_db = mock.Mock()
@@ -359,6 +362,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
 
     def test_resource_cleanup_failure_purges_db_for_stack_failure(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        cfg.CONF.set_default('convergence_engine', True)
         self.is_update = False
         self.stack.disable_rollback = True
         self.stack.store()
@@ -415,6 +419,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, 'purge_db')
     def test_handle_failure(self, mock_purgedb, mock_cru, mock_crc, mock_pcr,
                             mock_csc, mock_cid):
+        cfg.CONF.set_default('convergence_engine', True)
         self.worker._handle_failure(self.ctx, self.stack, 'dummy-reason')
         mock_purgedb.assert_called_once_with()
         self.assertEqual('dummy-reason', self.stack.status_reason)
@@ -425,6 +430,19 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
         self.worker._handle_failure(self.ctx, self.stack, 'dummy-reason')
         self.worker._trigger_rollback.assert_called_once_with(self.stack)
+
+    @mock.patch.object(stack.Stack, 'purge_db')
+    @mock.patch.object(stack.Stack, 'state_set')
+    def test_handle_failure_when_update_fails(self, mock_ss, mock_pdb,
+                                              mock_cru, mock_crc, mock_pcr,
+                                              mock_csc, mock_cid):
+        self.worker._trigger_rollback = mock.Mock()
+        # Emulate failure
+        mock_ss.return_value = False
+        self.worker._handle_failure(self.ctx, self.stack, 'dummy-reason')
+        self.assertTrue(mock_ss.called)
+        self.assertFalse(mock_pdb.called)
+        self.assertFalse(self.worker._trigger_rollback.called)
 
     def test_handle_stack_timeout(self, mock_cru, mock_crc, mock_pcr,
                                   mock_csc, mock_cid):

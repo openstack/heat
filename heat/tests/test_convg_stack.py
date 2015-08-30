@@ -44,7 +44,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.store()
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertFalse(mock_cr.called)
-        mock_mc.assert_called_once_with(stack.current_traversal)
+        mock_mc.assert_called_once_with()
 
     def test_conv_wordpress_single_instance_stack_create(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
@@ -366,7 +366,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                                 convergence=True)
         stack.store()
         stack.purge_db = mock.Mock()
-        stack.mark_complete(stack.current_traversal)
+        stack.mark_complete()
         self.assertTrue(stack.purge_db.called)
 
     @mock.patch.object(raw_template_object.RawTemplate, 'delete')

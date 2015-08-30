@@ -78,7 +78,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
-            convergence=False, current_traversal=None,
+            convergence=False,
+            current_traversal=old_stack.current_traversal,
             prev_raw_template_id=None,
             current_deps=None,
             disable_rollback=True,
@@ -306,7 +307,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
-            convergence=False, current_traversal=None,
+            convergence=False,
+            current_traversal=old_stack.current_traversal,
             prev_raw_template_id=None, current_deps=None,
             disable_rollback=False, nested_depth=0,
             owner_id=None, parent_resource=None,
@@ -418,7 +420,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
-            convergence=False, current_traversal=None,
+            convergence=False,
+            current_traversal=old_stack.current_traversal,
             prev_raw_template_id=None, current_deps=None,
             disable_rollback=True, nested_depth=0,
             owner_id=None, parent_resource=None,
@@ -533,7 +536,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
-            convergence=False, current_traversal=None,
+            convergence=False,
+            current_traversal=old_stack.current_traversal,
             prev_raw_template_id=None, current_deps=None,
             disable_rollback=True, nested_depth=0,
             owner_id=None, parent_resource=None,
@@ -595,7 +599,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
-            convergence=False, current_traversal=None,
+            convergence=False, current_traversal=stk.current_traversal,
             prev_raw_template_id=None, current_deps=None,
             disable_rollback=True, nested_depth=0,
             owner_id=None, parent_resource=None,
@@ -731,11 +735,11 @@ resources:
         # assertions
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t, convergence=False,
-            current_traversal=None, prev_raw_template_id=None,
-            current_deps=None, disable_rollback=True,
-            nested_depth=0, owner_id=None, parent_resource=None,
-            stack_user_project_id='1234', strict_validate=True,
-            tenant_id='test_tenant_id', timeout_mins=60,
+            current_traversal=old_stack.current_traversal,
+            prev_raw_template_id=None, current_deps=None,
+            disable_rollback=True, nested_depth=0, owner_id=None,
+            parent_resource=None, stack_user_project_id='1234',
+            strict_validate=True, tenant_id='test_tenant_id', timeout_mins=60,
             user_creds_id=u'1', username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_tmpl.assert_called_once_with(new_template, files=None,

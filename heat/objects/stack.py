@@ -151,6 +151,9 @@ class Stack(
     def select_and_update(cls, context, stack_id, values, exp_trvsl=None):
         """Update the stack by selecting on traversal ID.
 
+        Uses UPDATE ... WHERE (compare and swap) to catch any concurrent
+        update problem.
+
         If the stack is found with given traversal, it is updated.
 
         If there occurs a race while updating, only one will succeed and
