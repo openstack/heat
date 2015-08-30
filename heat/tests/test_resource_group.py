@@ -453,8 +453,20 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         resgrp.create_with_template = mock.Mock(return_value=None)
-        resgrp.handle_create()
-        self.assertEqual(1, resgrp.create_with_template.call_count)
+        self.patchobject(scheduler.TaskRunner, 'start')
+        checkers = resgrp.handle_create()
+        self.assertEqual(1, len(checkers))
+
+    def test_handle_create_with_batching(self):
+        stack = utils.parse_stack(tmpl_with_default_updt_policy())
+        snip = stack.t.resource_definitions(stack)['group1']
+        snip['UpdatePolicy']['batch_create'] = {'max_batch_size': 3}
+        snip['Properties']['count'] = 10
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp.create_with_template = mock.Mock(return_value=None)
+        self.patchobject(scheduler.TaskRunner, 'start')
+        checkers = resgrp.handle_create()
+        self.assertEqual(4, len(checkers))
 
     def test_update_in_failed(self):
         stack = utils.parse_stack(template2)
@@ -874,7 +886,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         tmpl_batch_sz = int(tmpl_policy['max_batch_size'])
         grp = stack['group1']
         self.assertTrue(grp.update_policy)
-        self.assertEqual(1, len(grp.update_policy))
+        self.assertEqual(2, len(grp.update_policy))
         self.assertIn('rolling_update', grp.update_policy)
         policy = grp.update_policy['rolling_update']
         self.assertTrue(policy and len(policy) > 0)
@@ -888,7 +900,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         stack.validate()
         grp = stack['group1']
         self.assertTrue(grp.update_policy)
-        self.assertEqual(1, len(grp.update_policy))
+        self.assertEqual(2, len(grp.update_policy))
         self.assertIn('rolling_update', grp.update_policy)
         policy = grp.update_policy['rolling_update']
         self.assertTrue(policy and len(policy) > 0)
