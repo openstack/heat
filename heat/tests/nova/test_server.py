@@ -655,10 +655,12 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
-    def _server_create_software_config(self, md=None):
+    def _server_create_software_config(self, md=None,
+                                       stack_name='software_config_s',
+                                       ret_tmpl=False):
         return_server = self.fc.servers.list()[1]
-        stack_name = 'software_config_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.stack = stack
 
         tmpl['Resources']['WebServer']['Properties'][
             'user_data_format'] = 'SOFTWARE_CONFIG'
@@ -700,7 +702,10 @@ class ServersTest(common.HeatTestCase):
         self.assertFalse(stack.access_allowed('45678', 'WebServer'))
         self.assertFalse(stack.access_allowed('4567', 'wWebServer'))
         self.m.VerifyAll()
-        return server
+        if ret_tmpl:
+            return server, tmpl
+        else:
+            return server
 
     def test_server_create_software_config(self):
         server = self._server_create_software_config()
@@ -1516,6 +1521,65 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual({'test': 123}, server.metadata_get())
         server.metadata_update()
         self.assertEqual({'test': 456}, server.metadata_get())
+
+    def test_server_update_metadata_software_config(self):
+        server, ud_tmpl = self._server_create_software_config(
+            stack_name='update_meta_sc', ret_tmpl=True)
+
+        expected_md = {
+            'os-collect-config': {
+                'cfn': {
+                    'access_key_id': '4567',
+                    'metadata_url': '/v1/',
+                    'path': 'WebServer.Metadata',
+                    'secret_access_key': '8901',
+                    'stack_name': 'update_meta_sc'
+                }
+            },
+            'deployments': []}
+        self.assertEqual(expected_md, server.metadata_get())
+
+        self.m.UnsetStubs()
+        self._stub_glance_for_update()
+
+        ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 123}
+        resource_defns = ud_tmpl.resource_definitions(server.stack)
+        scheduler.TaskRunner(server.update, resource_defns['WebServer'])()
+        expected_md.update({'test': 123})
+        self.assertEqual(expected_md, server.metadata_get())
+        server.metadata_update()
+        self.assertEqual(expected_md, server.metadata_get())
+
+    def test_server_update_metadata_software_config_merge(self):
+        md = {'os-collect-config': {'polling_interval': 10}}
+        server, ud_tmpl = self._server_create_software_config(
+            stack_name='update_meta_sc', ret_tmpl=True,
+            md=md)
+
+        expected_md = {
+            'os-collect-config': {
+                'cfn': {
+                    'access_key_id': '4567',
+                    'metadata_url': '/v1/',
+                    'path': 'WebServer.Metadata',
+                    'secret_access_key': '8901',
+                    'stack_name': 'update_meta_sc'
+                },
+                'polling_interval': 10
+            },
+            'deployments': []}
+        self.assertEqual(expected_md, server.metadata_get())
+
+        self.m.UnsetStubs()
+        self._stub_glance_for_update()
+
+        ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 123}
+        resource_defns = ud_tmpl.resource_definitions(server.stack)
+        scheduler.TaskRunner(server.update, resource_defns['WebServer'])()
+        expected_md.update({'test': 123})
+        self.assertEqual(expected_md, server.metadata_get())
+        server.metadata_update()
+        self.assertEqual(expected_md, server.metadata_get())
 
     def test_server_update_nova_metadata(self):
         return_server = self.fc.servers.list()[1]
