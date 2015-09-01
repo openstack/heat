@@ -44,7 +44,7 @@ class JSONResponseSerializer(object):
 
     def default(self, response, result):
         response.content_type = 'application/json'
-        response.body = self.to_json(result)
+        response.body = six.b(self.to_json(result))
 
 
 # Escape XML serialization for these keys, as the AWS API defines them as
