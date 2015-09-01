@@ -596,6 +596,23 @@ class SoftwareDeploymentTest(HeatTestCase):
         sd.status = 'COMPLETE'
         self.assertTrue(self.deployment.check_resume_complete(sd))
 
+    def test_no_signal_action(self):
+        self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = 'deployment succeeded'
+        details = {
+            'foo': 'bar',
+            'deploy_status_code': 0
+        }
+        actions = [self.deployment.SUSPEND, self.deployment.DELETE]
+        ev = self.patchobject(self.deployment, 'handle_signal')
+        for action in actions:
+            for status in self.deployment.STATUSES:
+                self.deployment.state_set(action, status)
+                self.deployment.signal(details)
+                ev.assert_called_with(details)
+
     def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
         sd = mock.MagicMock()
@@ -627,6 +644,11 @@ class SoftwareDeploymentTest(HeatTestCase):
             'status_reason': 'Outputs received'
         }, args)
 
+    def test_handle_delete_resource_id_is_None(self):
+        self._create_stack(self.template_delete_suspend_resume)
+        self.mock_software_config()
+        sd = self.mock_deployment()
+        self.assertEqual(sd, self.deployment.handle_delete())
     def test_handle_signal_ok_str_zero(self):
         self._create_stack(self.template)
         sd = mock.MagicMock()
