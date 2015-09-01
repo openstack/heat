@@ -275,8 +275,8 @@ class instancesTest(common.HeatTestCase):
 
         self._mock_get_image_id_success(image_id, 1)
         self.stub_SubnetConstraint_validate()
-        self.m.StubOutWithMock(nic, 'neutron')
-        nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
+        self.m.StubOutWithMock(nic, 'client')
+        nic.client().AndReturn(FakeNeutron())
 
         self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
         neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(

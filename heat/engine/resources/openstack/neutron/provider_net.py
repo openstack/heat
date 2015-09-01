@@ -120,7 +120,7 @@ class ProviderNet(net.Net):
 
         self.prepare_provider_properties(self, props)
 
-        prov_net = self.neutron().create_network({'network': props})['network']
+        prov_net = self.client().create_network({'network': props})['network']
         self.resource_id_set(prov_net['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -131,7 +131,7 @@ class ProviderNet(net.Net):
 
         self.prepare_provider_properties(self, props)
 
-        self.neutron().update_network(self.resource_id, {'network': props})
+        self.client().update_network(self.resource_id, {'network': props})
 
 
 def resource_mapping():

@@ -71,7 +71,7 @@ class ExtraRoute(neutron.NeutronResource):
 
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)
-        routes = self.neutron().show_router(
+        routes = self.client().show_router(
             router_id).get('router').get('routes')
         if not routes:
             routes = []
@@ -81,8 +81,8 @@ class ExtraRoute(neutron.NeutronResource):
             msg = _('Route duplicates an existing route.')
             raise exception.Error(msg)
         routes.append(new_route)
-        self.neutron().update_router(router_id, {'router':
-                                     {'routes': routes}})
+        self.client().update_router(router_id,
+                                    {'router': {'routes': routes}})
         new_route['router_id'] = router_id
         self.resource_id_set(
             '%(router_id)s:%(destination)s:%(nexthop)s' % new_route)
@@ -92,15 +92,15 @@ class ExtraRoute(neutron.NeutronResource):
             return
         (router_id, destination, nexthop) = self.resource_id.split(':')
         try:
-            routes = self.neutron().show_router(
+            routes = self.client().show_router(
                 router_id).get('router').get('routes', [])
             try:
                 routes.remove({'destination': destination,
                                'nexthop': nexthop})
             except ValueError:
                 return
-            self.neutron().update_router(router_id, {'router':
-                                         {'routes': routes}})
+            self.client().update_router(router_id,
+                                        {'router': {'routes': routes}})
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 

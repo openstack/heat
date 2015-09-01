@@ -73,14 +73,13 @@ class VPC(resource.Resource):
     default_client_name = 'neutron'
 
     def handle_create(self):
-        client = self.neutron()
         # The VPC's net and router are associated by having identical names.
         net_props = {'name': self.physical_resource_name()}
         router_props = {'name': self.physical_resource_name()}
 
-        net = client.create_network({'network': net_props})['network']
+        net = self.client().create_network({'network': net_props})['network']
         self.resource_id_set(net['id'])
-        client.create_router({'router': router_props})['router']
+        self.client().create_router({'router': router_props})['router']
 
     @staticmethod
     def network_for_vpc(client, network_id):
@@ -102,26 +101,25 @@ class VPC(resource.Resource):
         return routers[0]
 
     def check_create_complete(self, *args):
-        net = self.network_for_vpc(self.neutron(), self.resource_id)
+        net = self.network_for_vpc(self.client(), self.resource_id)
         if not neutron.NeutronResource.is_built(net):
             return False
-        router = self.router_for_vpc(self.neutron(), self.resource_id)
+        router = self.router_for_vpc(self.client(), self.resource_id)
         return neutron.NeutronResource.is_built(router)
 
     def handle_delete(self):
         if self.resource_id is None:
             return
-        client = self.neutron()
 
         try:
-            router = self.router_for_vpc(client, self.resource_id)
+            router = self.router_for_vpc(self.client(), self.resource_id)
             if router:
-                client.delete_router(router['id'])
+                self.client().delete_router(router['id'])
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
         try:
-            client.delete_network(self.resource_id)
+            self.client().delete_network(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 

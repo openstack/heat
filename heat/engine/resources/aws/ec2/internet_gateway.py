@@ -118,17 +118,16 @@ class VPCGatewayAttachment(resource.Resource):
             deps += (self, route_tbl)
 
     def handle_create(self):
-        client = self.neutron()
+        client = self.client()
         external_network_id = InternetGateway.get_external_network_id(client)
         for router in self._vpc_route_tables():
             client.add_gateway_router(router.resource_id, {
                 'network_id': external_network_id})
 
     def handle_delete(self):
-        client = self.neutron()
         for router in self._vpc_route_tables():
             try:
-                client.remove_gateway_router(router.resource_id)
+                self.client().remove_gateway_router(router.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 

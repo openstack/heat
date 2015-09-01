@@ -82,7 +82,6 @@ class Subnet(resource.Resource):
     default_client_name = 'neutron'
 
     def handle_create(self):
-        client = self.neutron()
         # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock
         network_id = self.properties.get(self.VPC_ID)
 
@@ -92,12 +91,12 @@ class Subnet(resource.Resource):
             'name': self.physical_resource_name(),
             'ip_version': 4
         }
-        subnet = client.create_subnet({'subnet': props})['subnet']
+        subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
 
-        router = vpc.VPC.router_for_vpc(self.neutron(), network_id)
+        router = vpc.VPC.router_for_vpc(self.client(), network_id)
         if router:
-            client.add_interface_router(
+            self.client().add_interface_router(
                 router['id'],
                 {'subnet_id': subnet['id']})
 
@@ -105,21 +104,20 @@ class Subnet(resource.Resource):
         if self.resource_id is None:
             return
 
-        client = self.neutron()
         network_id = self.properties.get(self.VPC_ID)
         subnet_id = self.resource_id
 
         try:
-            router = vpc.VPC.router_for_vpc(self.neutron(), network_id)
+            router = vpc.VPC.router_for_vpc(self.client(), network_id)
             if router:
-                client.remove_interface_router(
+                self.client().remove_interface_router(
                     router['id'],
                     {'subnet_id': subnet_id})
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
         try:
-            client.delete_subnet(subnet_id)
+            self.client().delete_subnet(subnet_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 

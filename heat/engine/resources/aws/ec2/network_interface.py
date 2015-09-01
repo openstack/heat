@@ -105,8 +105,6 @@ class NetworkInterface(resource.Resource):
         self.fixed_ip_address = None
 
     def handle_create(self):
-        client = self.neutron()
-
         subnet_id = self.properties[self.SUBNET_ID]
         network_id = self.client_plugin().network_id_from_subnet_id(
             subnet_id)
@@ -129,16 +127,15 @@ class NetworkInterface(resource.Resource):
             sgs = self.client_plugin().get_secgroup_uuids(
                 self.properties.get(self.GROUP_SET))
             props['security_groups'] = sgs
-        port = client.create_port({'port': props})['port']
+        port = self.client().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
     def handle_delete(self):
         if self.resource_id is None:
             return
 
-        client = self.neutron()
         try:
-            client.delete_port(self.resource_id)
+            self.client().delete_port(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
@@ -158,14 +155,13 @@ class NetworkInterface(resource.Resource):
 
                 update_props['security_groups'] = sgs
 
-                self.neutron().update_port(self.resource_id,
-                                           {'port': update_props})
+                self.client().update_port(self.resource_id,
+                                          {'port': update_props})
 
     def _get_fixed_ip_address(self, ):
         if self.fixed_ip_address is None:
-            client = self.neutron()
             try:
-                port = client.show_port(self.resource_id)['port']
+                port = self.client().show_port(self.resource_id)['port']
                 if port['fixed_ips'] and len(port['fixed_ips']) > 0:
                     self.fixed_ip_address = port['fixed_ips'][0]['ip_address']
             except Exception as ex:

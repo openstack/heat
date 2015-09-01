@@ -295,24 +295,23 @@ class Subnet(neutron.NeutronResource):
         self.client_plugin().resolve_network(props, self.NETWORK, 'network_id')
         self._null_gateway_ip(props)
 
-        subnet = self.neutron().create_subnet({'subnet': props})['subnet']
+        subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_subnet(self.resource_id)
+            self.client().delete_subnet(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
             return True
 
     def _show_resource(self):
-        return self.neutron().show_subnet(self.resource_id)['subnet']
+        return self.client().show_subnet(self.resource_id)['subnet']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
-        self.neutron().update_subnet(
+        self.client().update_subnet(
             self.resource_id, {'subnet': props})
 
 

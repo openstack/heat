@@ -110,25 +110,24 @@ class Firewall(neutron.NeutronResource):
     }
 
     def _show_resource(self):
-        return self.neutron().show_firewall(self.resource_id)['firewall']
+        return self.client().show_firewall(self.resource_id)['firewall']
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        firewall = self.neutron().create_firewall({'firewall': props})[
+        firewall = self.client().create_firewall({'firewall': props})[
             'firewall']
         self.resource_id_set(firewall['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.neutron().update_firewall(
+            self.client().update_firewall(
                 self.resource_id, {'firewall': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_firewall(self.resource_id)
+            self.client().delete_firewall(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -217,26 +216,25 @@ class FirewallPolicy(neutron.NeutronResource):
     }
 
     def _show_resource(self):
-        return self.neutron().show_firewall_policy(self.resource_id)[
+        return self.client().show_firewall_policy(self.resource_id)[
             'firewall_policy']
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        firewall_policy = self.neutron().create_firewall_policy(
+        firewall_policy = self.client().create_firewall_policy(
             {'firewall_policy': props})['firewall_policy']
         self.resource_id_set(firewall_policy['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.neutron().update_firewall_policy(
+            self.client().update_firewall_policy(
                 self.resource_id, {'firewall_policy': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_firewall_policy(self.resource_id)
+            self.client().delete_firewall_policy(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
@@ -409,7 +407,7 @@ class FirewallRule(neutron.NeutronResource):
     }
 
     def _show_resource(self):
-        return self.neutron().show_firewall_rule(
+        return self.client().show_firewall_rule(
             self.resource_id)['firewall_rule']
 
     def handle_create(self):
@@ -418,7 +416,7 @@ class FirewallRule(neutron.NeutronResource):
             self.physical_resource_name())
         if props.get(self.PROTOCOL) == 'any':
             props[self.PROTOCOL] = None
-        firewall_rule = self.neutron().create_firewall_rule(
+        firewall_rule = self.client().create_firewall_rule(
             {'firewall_rule': props})['firewall_rule']
         self.resource_id_set(firewall_rule['id'])
 
@@ -426,13 +424,12 @@ class FirewallRule(neutron.NeutronResource):
         if prop_diff:
             if prop_diff.get(self.PROTOCOL) == 'any':
                 prop_diff[self.PROTOCOL] = None
-            self.neutron().update_firewall_rule(
+            self.client().update_firewall_rule(
                 self.resource_id, {'firewall_rule': prop_diff})
 
     def handle_delete(self):
-        client = self.neutron()
         try:
-            client.delete_firewall_rule(self.resource_id)
+            self.client().delete_firewall_rule(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
