@@ -459,6 +459,24 @@ class StackController(object):
         raise exc.HTTPAccepted()
 
     @util.identified_stack
+    def preview_update(self, req, identity, body):
+        """
+        Preview an update to an existing stack with a new template/parameters
+        """
+        data = InstantiationData(body)
+
+        args = self.prepare_args(data)
+        changes = self.rpc_client.preview_update_stack(
+            req.context,
+            identity,
+            data.template(),
+            data.environment(),
+            data.files(),
+            args)
+
+        return {'resource_changes': changes}
+
+    @util.identified_stack
     def delete(self, req, identity):
         """
         Delete the specified stack

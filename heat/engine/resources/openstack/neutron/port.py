@@ -413,13 +413,14 @@ class Port(neutron.NeutronResource):
         return super(Port, self)._resolve_attribute(name)
 
     def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource):
+                      prev_resource, check_init_complete=True):
 
         if after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS':
             raise resource.UpdateReplace(self.name)
 
         return super(Port, self)._needs_update(
-            after, before, after_props, before_props, prev_resource)
+            after, before, after_props, before_props, prev_resource,
+            check_init_complete)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)

@@ -219,3 +219,43 @@ class StackUpdate(object):
                     yield (res, self.new_stack[name])
 
         return dependencies.Dependencies(edges())
+
+    def preview(self):
+        upd_keys = set(self.new_stack.resources.keys())
+        cur_keys = set(self.existing_stack.resources.keys())
+
+        common_keys = cur_keys.intersection(upd_keys)
+        deleted_keys = cur_keys.difference(upd_keys)
+        added_keys = upd_keys.difference(cur_keys)
+
+        updated_keys = []
+        replaced_keys = []
+
+        for key in common_keys:
+            current_res = self.existing_stack.resources[key]
+            updated_res = self.new_stack.resources[key]
+
+            current_props = current_res.frozen_definition().properties(
+                current_res.properties_schema, current_res.context)
+            updated_props = updated_res.frozen_definition().properties(
+                updated_res.properties_schema, updated_res.context)
+
+            try:
+                if current_res._needs_update(updated_res.frozen_definition(),
+                                             current_res.frozen_definition(),
+                                             updated_props, current_props,
+                                             None, check_init_complete=False):
+                    current_res.update_template_diff_properties(updated_props,
+                                                                current_props)
+                    updated_keys.append(key)
+            except resource.UpdateReplace:
+                replaced_keys.append(key)
+
+        return {
+            'unchanged': list(set(common_keys).difference(
+                set(updated_keys + replaced_keys))),
+            'updated': updated_keys,
+            'replaced': replaced_keys,
+            'added': added_keys,
+            'deleted': deleted_keys,
+        }

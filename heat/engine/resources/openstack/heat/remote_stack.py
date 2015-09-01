@@ -212,7 +212,7 @@ class RemoteStack(resource.Resource):
         self.heat().actions.check(stack_id=self.resource_id)
 
     def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource):
+                      prev_resource, check_init_complete=True):
         # Always issue an update to the remote stack and let the individual
         # resources in it decide if they need updating.
         return True

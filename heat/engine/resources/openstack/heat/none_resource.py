@@ -34,7 +34,7 @@ class NoneResource(resource.Resource):
     attributes_schema = {}
 
     def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource):
+                      prev_resource, check_init_complete=True):
         return False
 
     def reparse(self):

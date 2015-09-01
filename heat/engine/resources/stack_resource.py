@@ -86,16 +86,18 @@ class StackResource(resource.Resource):
                 self._resolve_all_attributes)
 
     def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource):
+                      prev_resource, check_init_complete=True):
         # Issue an update to the nested stack if the stack resource
         # is able to update. If return true, let the individual
         # resources in it decide if they need updating.
 
         # FIXME (ricolin): seems currently can not call super here
-        if self.nested() is None and (
-                self.status == self.FAILED
-                or (self.action == self.INIT
-                    and self.status == self.COMPLETE)):
+        if self.nested() is None and self.status == self.FAILED:
+            raise resource.UpdateReplace(self)
+
+        if (check_init_complete and
+                self.nested() is None and
+                self.action == self.INIT and self.status == self.COMPLETE):
             raise resource.UpdateReplace(self)
 
         return True

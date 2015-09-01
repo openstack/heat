@@ -57,6 +57,7 @@ from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import support
 from heat.engine import template as templatem
+from heat.engine import update
 from heat.engine import watchrule
 from heat.engine import worker
 from heat.objects import event as event_object
@@ -272,7 +273,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.14'
+    RPC_API_VERSION = '1.15'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -717,6 +718,46 @@ class EngineService(service.Service):
 
         return dict(stack.identifier())
 
+    def _prepare_stack_updates(self, cnxt, current_stack, tmpl, params,
+                               files, args):
+        """
+        Given a stack and update context, return the current and updated stack.
+
+        Changes *will not* be persisted, this is a helper method for
+        update_stack and preview_update_stack.
+
+        :param cnxt: RPC context.
+        :param stack: A stack to be updated.
+        :param tmpl: Template object of stack you want to update to.
+        :param params: Stack Input Params
+        :param files: Files referenced from the template
+        :param args: Request parameters/args passed from API
+        """
+        max_resources = cfg.CONF.max_resources_per_stack
+        if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
+            raise exception.RequestLimitExceeded(
+                message=exception.StackResourceLimitExceeded.msg_fmt)
+
+        stack_name = current_stack.name
+        current_kwargs = current_stack.get_kwargs_for_cloning()
+
+        common_params = api.extract_args(args)
+        common_params.setdefault(rpc_api.PARAM_TIMEOUT,
+                                 current_stack.timeout_mins)
+        common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
+                                 current_stack.disable_rollback)
+
+        current_kwargs.update(common_params)
+        updated_stack = parser.Stack(cnxt, stack_name, tmpl,
+                                     **current_kwargs)
+        self.resource_enforcer.enforce_stack(updated_stack)
+        updated_stack.parameters.set_stack_id(current_stack.identifier())
+
+        self._validate_deferred_auth_context(cnxt, updated_stack)
+        updated_stack.validate()
+
+        return current_stack, updated_stack
+
     @context.request_context
     def update_stack(self, cnxt, stack_identity, template, params,
                      files, args):
@@ -767,29 +808,11 @@ class EngineService(service.Service):
             new_env = environment.Environment(params)
             new_files = files
         tmpl = templatem.Template(template, files=new_files, env=new_env)
-        max_resources = cfg.CONF.max_resources_per_stack
-        if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
-            raise exception.RequestLimitExceeded(
-                message=exception.StackResourceLimitExceeded.msg_fmt)
-        stack_name = current_stack.name
-        current_kwargs = current_stack.get_kwargs_for_cloning()
 
-        common_params = api.extract_args(args)
-        common_params.setdefault(rpc_api.PARAM_TIMEOUT,
-                                 current_stack.timeout_mins)
-        common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
-                                 current_stack.disable_rollback)
+        current_stack, updated_stack = self._prepare_stack_updates(
+            cnxt, current_stack, tmpl, params, files, args)
 
-        current_kwargs.update(common_params)
-        updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     **current_kwargs)
-        self.resource_enforcer.enforce_stack(updated_stack)
-        updated_stack.parameters.set_stack_id(current_stack.identifier())
-
-        self._validate_deferred_auth_context(cnxt, updated_stack)
-        updated_stack.validate()
-
-        if current_kwargs['convergence']:
+        if current_stack.get_kwargs_for_cloning()['convergence']:
             current_stack.converge_stack(template=tmpl,
                                          new_stack=updated_stack)
         else:
@@ -803,6 +826,57 @@ class EngineService(service.Service):
                     current_stack.id, event)
             self.thread_group_mgr.add_event(current_stack.id, event)
         return dict(current_stack.identifier())
+
+    @context.request_context
+    def preview_update_stack(self, cnxt, stack_identity, template, params,
+                             files, args):
+        """
+        The preview_update_stack method shows the resources that would be
+        changed with an update to an existing stack based on the provided
+        template and parameters. See update_stack for description of
+        parameters.
+
+        This method *cannot* guarantee that an update will have the actions
+        specified because resource plugins can influence changes/replacements
+        at runtime.
+
+        Note that at this stage the template has already been fetched from the
+        heat-api process if using a template-url.
+        """
+        # Get the database representation of the existing stack
+        db_stack = self._get_stack(cnxt, stack_identity)
+        LOG.info(_LI('Previewing update of stack %s'), db_stack.name)
+
+        current_stack = parser.Stack.load(cnxt, stack=db_stack)
+
+        # Now parse the template and any parameters for the updated
+        # stack definition.
+        env = environment.Environment(params)
+        if args.get(rpc_api.PARAM_EXISTING, None):
+            env.patch_previous_parameters(
+                current_stack.env,
+                args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
+        tmpl = templatem.Template(template, files=files, env=env)
+
+        current_stack, updated_stack = self._prepare_stack_updates(
+            cnxt, current_stack, tmpl, params, files, args)
+
+        update_task = update.StackUpdate(current_stack, updated_stack, None)
+
+        actions = update_task.preview()
+
+        fmt_updated_res = lambda k: api.format_stack_resource(
+            updated_stack.resources.get(k))
+        fmt_current_res = lambda k: api.format_stack_resource(
+            current_stack.resources.get(k))
+
+        return {
+            'unchanged': map(fmt_updated_res, actions['unchanged']),
+            'updated': map(fmt_current_res, actions['updated']),
+            'replaced': map(fmt_updated_res, actions['replaced']),
+            'added': map(fmt_updated_res, actions['added']),
+            'deleted': map(fmt_current_res, actions['deleted']),
+        }
 
     @context.request_context
     def stack_cancel_update(self, cnxt, stack_identity,

@@ -865,8 +865,11 @@ class Resource(object):
                 resource_data.get('metadata'))
 
     def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource):
-        if self.status == self.FAILED or \
+                      prev_resource, check_init_complete=True):
+        if self.status == self.FAILED:
+            raise UpdateReplace(self)
+
+        if check_init_complete and \
                 (self.action == self.INIT and self.status == self.COMPLETE):
             raise UpdateReplace(self)
 
