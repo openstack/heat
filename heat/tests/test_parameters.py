@@ -55,11 +55,18 @@ class ParameterTestCommon(common.HeatTestCase):
                            default=['d', 'e', 'f'])),
         ('type_json', dict(p_type='Json',
                            inst=parameters.JsonParam,
-                           value={'a': 1, 'b': '2'},
-                           expected='{"a": 1, "b": "2"}',
+                           value={'a': '1'},
+                           expected='{"a": "1"}',
                            allowed_value=[{'foo': 'bar'}],
                            zero={},
-                           default={'d': 1, 'e': 'f'})),
+                           default={'d': '1'})),
+        ('type_int_json', dict(p_type='Json',
+                               inst=parameters.JsonParam,
+                               value={'a': 1},
+                               expected='{"a": 1}',
+                               allowed_value=[{'foo': 'bar'}],
+                               zero={},
+                               default={'d': 1})),
         ('type_boolean', dict(p_type='Boolean',
                               inst=parameters.BooleanParam,
                               value=True,
@@ -527,7 +534,7 @@ class ParametersTest(common.HeatTestCase):
 
         expected = {'Foo': 'foo',
                     'Bar': '42',
-                    'Uni': 'test\xe2\x99\xa5',
+                    'Uni': b'test\xe2\x99\xa5',
                     'AWS::Region': 'ap-southeast-1',
                     'AWS::StackId':
                     'arn:openstack:heat:::stacks/{0}/{1}'.format(
@@ -535,7 +542,9 @@ class ParametersTest(common.HeatTestCase):
                         'None'),
                     'AWS::StackName': 'test_params'}
 
-        self.assertEqual(expected, params.map(str))
+        mapped_params = params.map(six.text_type)
+        mapped_params['Uni'] = mapped_params['Uni'].encode('utf-8')
+        self.assertEqual(expected, mapped_params)
 
     def test_unknown_params(self):
         user_params = {'Foo': 'wibble'}

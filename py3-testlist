@@ -123,6 +123,7 @@ heat.tests.test_nested_stack
 heat.tests.test_nokey
 heat.tests.test_notifications
 heat.tests.test_os_database
+heat.tests.test_parameters
 heat.tests.test_plugin_loader
 heat.tests.test_plugin_manager
 heat.tests.test_properties
