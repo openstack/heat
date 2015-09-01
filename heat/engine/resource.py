@@ -1477,8 +1477,11 @@ class Resource(object):
         '''
         if self.stack.has_cache_data(self.name):
             # Load from cache for lightweight resources.
+            complex_key = key
+            if path:
+                complex_key = tuple([key] + list(path))
             attribute = self.stack.cache_data_resource_attribute(
-                self.name, key)
+                self.name, complex_key)
         else:
             try:
                 attribute = self.attributes[key]

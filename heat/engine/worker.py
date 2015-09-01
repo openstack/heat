@@ -315,7 +315,10 @@ def construct_input_data(rsrc):
     resolved_attributes = {}
     for attr in attributes:
         try:
-            resolved_attributes[attr] = rsrc.FnGetAtt(attr)
+            if isinstance(attr, six.string_types):
+                resolved_attributes[attr] = rsrc.FnGetAtt(attr)
+            else:
+                resolved_attributes[attr] = rsrc.FnGetAtt(*attr)
         except exception.InvalidTemplateAttribute as ita:
             LOG.info(six.text_type(ita))
 
