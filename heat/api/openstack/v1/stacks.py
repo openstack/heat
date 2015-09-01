@@ -616,7 +616,7 @@ class StackSerializer(serializers.JSONResponseSerializer):
         self._populate_response_header(response,
                                        result['stack']['links'][0]['href'],
                                        201)
-        response.body = self.to_json(result)
+        response.body = six.b(self.to_json(result))
         return response
 
 

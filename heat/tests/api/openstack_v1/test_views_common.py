@@ -39,7 +39,8 @@ class TestViewsCommon(common.HeatTestCase):
         links = views_common.get_collection_links(self.request, self.items)
 
         expected_params = {'marker': ['id2'], 'limit': ['2']}
-        next_link = filter(lambda link: link['rel'] == 'next', links).pop()
+        next_link = list(filter(
+            lambda link: link['rel'] == 'next', links)).pop()
         self.assertEqual('next', next_link['rel'])
         url_path, url_params = next_link['href'].split('?', 1)
         self.assertEqual(url_path, self.request.path_url)
@@ -63,9 +64,9 @@ class TestViewsCommon(common.HeatTestCase):
         self.setUpGetCollectionLinks()
         self.request.params = {'limit': '2', 'marker': 'some_marker'}
         links = views_common.get_collection_links(self.request, self.items)
-
         expected_params = {'marker': ['id2'], 'limit': ['2']}
-        next_link = filter(lambda link: link['rel'] == 'next', links).pop()
+        next_link = list(filter(
+            lambda link: link['rel'] == 'next', links)).pop()
         self.assertEqual('next', next_link['rel'])
         url_path, url_params = next_link['href'].split('?', 1)
         self.assertEqual(url_path, self.request.path_url)
@@ -76,7 +77,8 @@ class TestViewsCommon(common.HeatTestCase):
         self.request.params = {'limit': '2', 'foo': 'bar'}
         links = views_common.get_collection_links(self.request, self.items)
 
-        next_link = filter(lambda link: link['rel'] == 'next', links).pop()
+        next_link = list(
+            filter(lambda link: link['rel'] == 'next', links)).pop()
         url = next_link['href']
         query_string = urlparse.urlparse(url).query
         params = {}

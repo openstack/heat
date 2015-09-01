@@ -2252,5 +2252,5 @@ class StackSerializerTest(common.HeatTestCase):
         response = webob.Response()
         response = self.serializer.create(response, result)
         self.assertEqual(201, response.status_int)
-        self.assertEqual('location', response.headers['Location'])
+        self.assertEqual(b'location', response.headers['Location'])
         self.assertEqual('application/json', response.headers['Content-Type'])
