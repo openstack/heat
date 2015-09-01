@@ -919,6 +919,9 @@ class StackTest(common.HeatTestCase):
         try:
             self.assertIsNone(self.stack.resource_by_refid('aaaa'))
             self.assertIsNone(self.stack.resource_by_refid('bbbb'))
+            # if there is cached data, we should ignore the state
+            self.stack.cache_data = {'AResource': {'reference_id': 'aaaa'}}
+            self.assertEqual(rsrc, self.stack.resource_by_refid('aaaa'))
         finally:
             rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
 
