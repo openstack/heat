@@ -60,7 +60,7 @@
      retrieve instance-specific data. See `Metadata
      service (OpenStack Cloud Admin Guide)`_.
 
-     .. _Metadata service (OpenStack Cloud Admin Guide): http://docs.openstack.org/admin-guide-cloud/content/section_metadata-service.html
+     .. _Metadata service (OpenStack Cloud Admin Guide): http://docs.openstack.org/admin-guide-cloud/compute-networking-nova.html#metadata-service
 
    Multi-region
      A feature of Heat that supports deployment to multiple regions.
