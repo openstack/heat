@@ -154,7 +154,8 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
                            'node_configs': None,
                            'image_id': None,
                            'is_proxy_gateway': True,
-                           'volume_local_to_instance': None
+                           'volume_local_to_instance': None,
+                           'use_autoconfig': None
                            }
         self.ngt_mgr.create.assert_called_once_with(*expected_args,
                                                     **expected_kwargs)
