@@ -162,6 +162,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     default_client_name = 'heat'
 
+    no_signal_actions = ()
+
     def _signal_transport_cfn(self):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.CFN_SIGNAL
@@ -216,7 +218,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self._get_derived_config(action, config),
             action)
 
-        if action == self.CREATE:
+        if self.resource_id is None:
             sd = self.heat().software_deployments.create(**props)
             self.resource_id_set(sd.id)
         else:
