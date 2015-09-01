@@ -108,23 +108,38 @@ class TestCooldownMixin(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def test_is_in_progress(self):
+    def test_cooldown_is_in_progress_toosoon(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         now = timeutils.utcnow()
-        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        previous_meta = {'cooldown': {
+            now.isoformat(): 'ChangeInCapacity : 1'}}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertTrue(pol._cooldown_inprogress())
 
-    def test_not_in_progress(self):
+    def test_cooldown_is_in_progress_scaling_unfinished(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
+
+        previous_meta = {'scaling_in_progress': True}
+        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
+        self.assertTrue(pol._cooldown_inprogress())
+
+    def test_cooldown_not_in_progress(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
-        previous_meta = {timeutils.strtime(awhile_ago): 'ChangeInCapacity : 1'}
+        previous_meta = {
+            'cooldown': {
+                awhile_ago.isoformat(): 'ChangeInCapacity : 1'
+            },
+            'scaling_in_progress': False
+        }
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertFalse(pol._cooldown_inprogress())
 
@@ -139,7 +154,8 @@ class TestCooldownMixin(common.HeatTestCase):
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         now = timeutils.utcnow()
-        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        previous_meta = {'cooldown': {
+            now.isoformat(): 'ChangeInCapacity : 1'}}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertFalse(pol._cooldown_inprogress())
 
@@ -155,7 +171,8 @@ class TestCooldownMixin(common.HeatTestCase):
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         now = timeutils.utcnow()
-        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        previous_meta = {'cooldown': {
+            now.isoformat(): 'ChangeInCapacity : 1'}}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertFalse(pol._cooldown_inprogress())
 
@@ -164,12 +181,14 @@ class TestCooldownMixin(common.HeatTestCase):
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
-        nowish = timeutils.strtime()
+        nowish = timeutils.utcnow()
         reason = 'cool as'
         meta_set = self.patchobject(pol, 'metadata_set')
-        self.patchobject(timeutils, 'strtime', return_value=nowish)
+        self.patchobject(timeutils, 'utcnow', return_value=nowish)
         pol._cooldown_timestamp(reason)
-        meta_set.assert_called_once_with({nowish: reason})
+        meta_set.assert_called_once_with(
+            {'cooldown': {nowish.isoformat(): reason},
+             'scaling_in_progress': False})
 
 
 class ScalingPolicyAttrTest(common.HeatTestCase):
