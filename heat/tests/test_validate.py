@@ -12,6 +12,8 @@
 #    under the License.
 
 from glanceclient import exc as glance_exceptions
+import mock
+from oslo_messaging.rpc import dispatcher
 import six
 
 from heat.common import exception
@@ -905,6 +907,11 @@ class ValidateTest(common.HeatTestCase):
         self.gc = fakes_nova.FakeClient()
         resources.initialise()
         self.ctx = utils.dummy_context()
+        self.mock_isa = mock.patch(
+            'heat.engine.resource.Resource.is_service_available',
+            return_value=True)
+        self.mock_is_service_available = self.mock_isa.start()
+        self.addCleanup(self.mock_isa.stop)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
@@ -1655,3 +1662,20 @@ class ValidateTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
         self.assertEqual('Resource Resource Type type must be string',
                          six.text_type(ex))
+
+    def test_validate_is_service_available(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2015-10-15
+            resources:
+              my_instance:
+                type: AWS::EC2::Instance
+            """)
+        engine = service.EngineService('a', 't')
+        self.mock_is_service_available.return_value = False
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               engine.validate_template,
+                               None,
+                               t,
+                               {})
+        self.assertEqual(exception.ResourceTypeUnavailable, ex.exc_info[0])
