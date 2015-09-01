@@ -17,7 +17,10 @@ https://github.com/openstack/heat-templates/blob/master/cfn/F18/WordPress_Single
 
 Description
 -----------
-AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs a single-instance WordPress deployment using a local MySQL database to store the data.
+AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web
+software you can use to create a beautiful website or blog. This template
+installs a single-instance WordPress deployment using a local MySQL database to
+store the data.
 
 
 Parameters
@@ -26,34 +29,34 @@ Parameters
 	*type*
 		*string*
 	*description*
-		*Name* of an existing key pair to use for the instance
+		Name of an existing EC2 KeyPair to enable SSH access to the instance
 *InstanceType* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*Instance type* for the instance to be created
+		The EC2 instance type
 *DBName* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*The WordPress database name*
+		The WordPress database name
 *DBUsernameName* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*The WordPress database admin account username*
+		The WordPress database admin account username
 *DBPassword* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*The WordPress database admin account password*
+		The WordPress database admin account password
 *DBRootPassword* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*Root password for MySQL*
+		Root password for MySQL
 *LinuxDistribution* :mod:`(optional)`
 	*type*
 		*string*
 	*description*
-		*Distribution of choice*
+		Linux distribution of choice
