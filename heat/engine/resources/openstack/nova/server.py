@@ -1181,6 +1181,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         '''
         super(Server, self).validate()
 
+        if self.user_data_software_config():
+            if 'deployments' in self.t.metadata():
+                msg = _('deployments key not allowed in resource metadata '
+                        'with user_data_format of SOFTWARE_CONFIG')
+                raise exception.StackValidationFailed(message=msg)
+
         bootable_vol = self._validate_block_device_mapping()
 
         # make sure the image exists if specified.
