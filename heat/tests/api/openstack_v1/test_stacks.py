@@ -1092,8 +1092,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     @mock.patch.object(stacks.stacks_view, 'format_stack')
     def test_preview_stack(self, mock_format, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'preview', True)
-        body = {'stack_name': 'foo', 'template': {}}
-        req = self._get('/stacks/preview', params={})
+        body = {'stack_name': 'foo', 'template': {}, 'parameters': {}}
+        req = self._post('/stacks/preview', json.dumps(body))
         mock_call.return_value = {}
         mock_format.return_value = 'formatted_stack'
 
