@@ -513,7 +513,7 @@ class ServersTest(common.HeatTestCase):
         self.fc.servers.get(server.resource_id).AndReturn(return_server)
         self.m.ReplayAll()
 
-        e = self.assertRaises(resource.ResourceUnknownStatus,
+        e = self.assertRaises(exception.ResourceUnknownStatus,
                               server.check_create_complete,
                               server.resource_id)
         self.assertEqual('Server is not active - Unknown status BOGUS due to '
@@ -2040,7 +2040,7 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
-        self.assertIsInstance(ex.exc, resource.ResourceUnknownStatus)
+        self.assertIsInstance(ex.exc, exception.ResourceUnknownStatus)
         self.assertEqual('Suspend of server %s failed - '
                          'Unknown status TRANSMOGRIFIED '
                          'due to "Unknown"' % return_server.name,

@@ -222,7 +222,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                     'code': fault.get('code', _('Unknown'))
                 })
         else:
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=server.status,
                 result=_('%s is not active') % res_name)
 
@@ -451,8 +451,8 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return True
         else:
             msg = _("Could not confirm resize of server %s") % server_id
-            raise resource.ResourceUnknownStatus(result=msg,
-                                                 resource_status=status)
+            raise exception.ResourceUnknownStatus(
+                result=msg, resource_status=status)
 
     def check_verify_resize(self, server_id):
         server = self.fetch_server(server_id)
@@ -465,8 +465,8 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return False
         else:
             msg = _("Confirm resize for server %s failed") % server_id
-            raise resource.ResourceUnknownStatus(result=msg,
-                                                 resource_status=status)
+            raise exception.ResourceUnknownStatus(
+                result=msg, resource_status=status)
 
     def rebuild(self, server_id, image_id, password=None,
                 preserve_ephemeral=False):

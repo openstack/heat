@@ -70,16 +70,6 @@ class ResourceInError(exception.HeatException):
                                               **kwargs)
 
 
-class ResourceUnknownStatus(exception.HeatException):
-    msg_fmt = _('%(result)s - Unknown status %(resource_status)s due to '
-                '"%(status_reason)s"')
-
-    def __init__(self, result=_('Resource failed'),
-                 status_reason=_('Unknown'), **kwargs):
-        super(ResourceUnknownStatus, self).__init__(
-            result=result, status_reason=status_reason, **kwargs)
-
-
 class UpdateInProgress(Exception):
     def __init__(self, resource_name='Unknown'):
         msg = _("The resource %s is already being updated.") % resource_name

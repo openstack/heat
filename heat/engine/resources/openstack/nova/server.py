@@ -28,7 +28,6 @@ from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine.resources.openstack.nova import server_network_mixin
 from heat.engine.resources import scheduler_hints as sh
@@ -1338,7 +1337,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if status in list(cp.deferred_server_statuses + ['ACTIVE']):
             return status == 'SUSPENDED'
         else:
-            exc = resource.ResourceUnknownStatus(
+            exc = exception.ResourceUnknownStatus(
                 result=_('Suspend of server %s failed') % server.name,
                 resource_status=status)
             raise exc

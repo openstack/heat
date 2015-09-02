@@ -372,7 +372,7 @@ class StackResource(resource.Resource):
             raise exception.ResourceFailure(nested.status_reason, self,
                                             action=action)
         else:
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=nested.status,
                 status_reason=nested.status_reason,
                 result=_('Stack unknown status'))

@@ -97,7 +97,7 @@ class NeutronTest(common.HeatTestCase):
             'Went to status ERROR due to "Unknown"',
             six.text_type(e))
         e = self.assertRaises(
-            resource.ResourceUnknownStatus,
+            exception.ResourceUnknownStatus,
             nr.NeutronResource.is_built, {'status': 'FROBULATING'})
         self.assertEqual('Resource is not built - Unknown status '
                          'FROBULATING due to "Unknown"',

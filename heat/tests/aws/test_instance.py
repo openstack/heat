@@ -525,7 +525,7 @@ class InstancesTest(common.HeatTestCase):
         return_server.status = 'BOGUS'
         self.fc.servers.get(instance.resource_id).AndReturn(return_server)
         self.m.ReplayAll()
-        e = self.assertRaises(resource.ResourceUnknownStatus,
+        e = self.assertRaises(exception.ResourceUnknownStatus,
                               instance.check_create_complete,
                               (creator, None))
         self.assertEqual('Instance is not active - Unknown status BOGUS '
