@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
+
 from oslo_utils import netutils
 
 
@@ -45,27 +47,18 @@ class ServerNetworkMixin(object):
             nics.append(nic_info)
         return nics
 
-    def _get_network_matches(self, old_networks, new_networks):
-        # make new_networks similar on old_networks
-        for new_net in new_networks:
-            for key in ('port', 'network', 'fixed_ip', 'uuid'):
-                # if new_net.get(key) is '', convert to None
-                if not new_net.get(key):
-                    new_net[key] = None
-        for old_net in old_networks:
-            for key in ('port', 'network', 'fixed_ip', 'uuid'):
-                # if old_net.get(key) is '', convert to None
-                if not old_net.get(key):
-                    old_net[key] = None
+    def _exclude_not_updated_networks(self, old_nets, new_nets):
+        # make networks similar by adding None vlues for not used keys
+        for key in self._NETWORK_KEYS:
+            # if _net.get(key) is '', convert to None
+            for _net in itertools.chain(new_nets, old_nets):
+                _net[key] = _net.get(key) or None
         # find matches and remove them from old and new networks
-        not_updated_networks = []
-        for net in old_networks:
-            if net in new_networks:
-                new_networks.remove(net)
-                not_updated_networks.append(net)
-        for net in not_updated_networks:
-            old_networks.remove(net)
-        return not_updated_networks
+        not_updated_nets = [net for net in old_nets if net in new_nets]
+        for net in not_updated_nets:
+            old_nets.remove(net)
+            new_nets.remove(net)
+        return not_updated_nets
 
     def _get_network_id(self, net):
         net_id = None
@@ -137,7 +130,8 @@ class ServerNetworkMixin(object):
         else:
             # remove not updated networks from old and new networks lists,
             # also get list these networks
-            not_updated_nets = self._get_network_matches(old_nets, new_nets)
+            not_updated_nets = self._exclude_not_updated_networks(old_nets,
+                                                                  new_nets)
 
             self.update_networks_matching_iface_port(
                 old_nets + not_updated_nets, ifaces)

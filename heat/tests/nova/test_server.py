@@ -2854,7 +2854,7 @@ class ServersTest(common.HeatTestCase):
         net_id = server._get_network_id(net)
         self.assertEqual('f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', net_id)
 
-    def test_get_network_matches_no_matching(self):
+    def test_exclude_not_updated_networks_no_matching(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
@@ -2875,12 +2875,13 @@ class ServersTest(common.HeatTestCase):
                 for key in ('port', 'network', 'fixed_ip', 'uuid'):
                     net.setdefault(key)
 
-            matched_nets = server._get_network_matches(old_nets, new_nets)
+            matched_nets = server._exclude_not_updated_networks(old_nets,
+                                                                new_nets)
             self.assertEqual([], matched_nets)
             self.assertEqual(old_nets_copy, old_nets)
             self.assertEqual(new_nets_copy, new_nets)
 
-    def test_get_network_matches_success(self):
+    def test_exclude_not_updated_networks_success(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
@@ -2904,12 +2905,12 @@ class ServersTest(common.HeatTestCase):
             for key in ('port', 'network', 'fixed_ip', 'uuid'):
                 net.setdefault(key)
 
-        matched_nets = server._get_network_matches(old_nets, new_nets)
+        matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
         self.assertEqual(old_nets_copy[:-1], matched_nets)
         self.assertEqual([old_nets_copy[2]], old_nets)
         self.assertEqual([new_nets_copy[2]], new_nets)
 
-    def test_get_network_matches_not_to_update(self):
+    def test_exclude_not_updated_networks_nothing_for_update(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
@@ -2926,7 +2927,7 @@ class ServersTest(common.HeatTestCase):
              'uuid': None}]
         new_nets_copy = copy.deepcopy(new_nets)
 
-        matched_nets = server._get_network_matches(old_nets, new_nets)
+        matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
         self.assertEqual(new_nets_copy, matched_nets)
         self.assertEqual([], old_nets)
         self.assertEqual([], new_nets)
