@@ -1673,7 +1673,7 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        ex = self.assertRaises(resource.UpdateInProgress,
+        ex = self.assertRaises(exception.UpdateInProgress,
                                res.update_convergence,
                                'template_key',
                                res_data, 'engine-007',
@@ -1744,7 +1744,7 @@ class ResourceTest(common.HeatTestCase):
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
         rs.update_and_save({'engine_id': 'not-this'})
         self._assert_resource_lock(res.id, 'not-this', None)
-        ex = self.assertRaises(resource.UpdateInProgress,
+        ex = self.assertRaises(exception.UpdateInProgress,
                                res.delete_convergence,
                                1, {}, 'engine-007', self.dummy_timeout)
         msg = ("The resource %s is already being updated." %

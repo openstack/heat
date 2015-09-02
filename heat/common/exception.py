@@ -414,6 +414,12 @@ class ResourceInError(HeatException):
                                               **kwargs)
 
 
+class UpdateInProgress(Exception):
+    def __init__(self, resource_name='Unknown'):
+        msg = _("The resource %s is already being updated.") % resource_name
+        super(Exception, self).__init__(six.text_type(msg))
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions so they can be handled by the webob fault
     application in the wsgi pipeline.
