@@ -98,8 +98,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     _NETWORK_KEYS = (
         NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
+        NETWORK_SUBNET
     ) = (
         'uuid', 'network', 'fixed_ip', 'port',
+        'subnet'
     )
 
     _SOFTWARE_CONFIG_FORMATS = (
@@ -364,6 +366,14 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                             constraints.CustomConstraint('neutron.port')
                         ]
                     ),
+                    NETWORK_SUBNET: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Subnet in which to allocate the IP address for '
+                          'port. Used only if port property is not specified '
+                          'for creating port, based on derived properties.'),
+                        support_status=support.SupportStatus(version='5.0.0'),
+                        implemented=False
+                    )
                 },
             ),
             update_allowed=True

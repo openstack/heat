@@ -2793,8 +2793,10 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
-    def create_old_net(self, port=None, net=None, ip=None, uuid=None):
-        return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid}
+    def create_old_net(self, port=None, net=None, ip=None, uuid=None,
+                       subnet=None):
+        return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid,
+                'subnet': subnet}
 
     def create_fake_iface(self, port, net, ip):
         class fake_interface(object):
@@ -2877,7 +2879,7 @@ class ServersTest(common.HeatTestCase):
             new_nets_copy = copy.deepcopy(new_nets)
             old_nets_copy = copy.deepcopy(old_nets)
             for net in new_nets_copy:
-                for key in ('port', 'network', 'fixed_ip', 'uuid'):
+                for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet'):
                     net.setdefault(key)
 
             matched_nets = server._exclude_not_updated_networks(old_nets,
@@ -2907,7 +2909,7 @@ class ServersTest(common.HeatTestCase):
         new_nets_copy = copy.deepcopy(new_nets)
         old_nets_copy = copy.deepcopy(old_nets)
         for net in new_nets_copy:
-            for key in ('port', 'network', 'fixed_ip', 'uuid'):
+            for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet'):
                 net.setdefault(key)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -2929,7 +2931,8 @@ class ServersTest(common.HeatTestCase):
             {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
              'fixed_ip': None,
              'port': None,
-             'uuid': None}]
+             'uuid': None,
+             'subnet': None}]
         new_nets_copy = copy.deepcopy(new_nets)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -2969,23 +2972,28 @@ class ServersTest(common.HeatTestCase):
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'network': None,
              'fixed_ip': None,
-             'uuid': None},
+             'uuid': None,
+             'subnet': None},
             {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '1.2.3.4',
-             'uuid': None},
+             'uuid': None,
+             'subnet': None},
             {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': None,
-             'uuid': None},
+             'uuid': None,
+             'subnet': None},
             {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
              'network': None,
              'fixed_ip': None,
-             'uuid': None},
+             'uuid': None,
+             'subnet': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
              'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '5.6.7.8',
-             'network': None}]
+             'network': None,
+             'subnet': None}]
 
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
                          return_value='gggggggg-1111-1111-1111-gggggggggggg')
