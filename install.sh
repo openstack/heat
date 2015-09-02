@@ -83,7 +83,7 @@ basic_configuration() {
         then
             echo "rabbitmq detected, configuring $conf_path for rabbit" >&2
             iniset $conf_path DEFAULT rpc_backend kombu
-            iniset $conf_path DEFAULT rabbit_password guest
+            iniset $conf_path oslo_messaging_rabbit rabbit_password guest
         else
             echo "qpid detected, configuring $conf_path for qpid" >&2
             iniset $conf_path DEFAULT rpc_backend qpid
