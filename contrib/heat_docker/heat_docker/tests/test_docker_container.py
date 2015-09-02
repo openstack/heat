@@ -127,7 +127,7 @@ class DockerContainerTest(common.HeatTestCase):
         res_def = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         docker_res = docker_container.DockerContainer("test", res_def,
                                                       mock_stack)
-        exc = self.assertRaises(resource.ResourceInError,
+        exc = self.assertRaises(exception.ResourceInError,
                                 docker_res.check_create_complete,
                                 'foo')
         self.assertIn("Container startup failed", six.text_type(exc))

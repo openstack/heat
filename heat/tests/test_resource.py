@@ -682,11 +682,11 @@ class ResourceTest(common.HeatTestCase):
 
         # first attempt to create fails
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='CREATE',
-                                     status_reason='just because'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'))
         # delete error resource from first attempt
         generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
 
@@ -711,11 +711,11 @@ class ResourceTest(common.HeatTestCase):
 
         # attempt to create fails
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='CREATE',
-                                     status_reason='just because'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'))
         self.m.ReplayAll()
 
         estr = ('ResourceInError: resources.test_resource: '
@@ -738,26 +738,26 @@ class ResourceTest(common.HeatTestCase):
 
         # first attempt to create fails
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='CREATE',
-                                     status_reason='just because'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'))
         # first attempt to delete fails
         generic_rsrc.ResourceWithProps.handle_delete().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='DELETE',
-                                     status_reason='delete failed'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='DELETE',
+                                      status_reason='delete failed'))
         # second attempt to delete fails
         timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
         generic_rsrc.ResourceWithProps.handle_delete().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='DELETE',
-                                     status_reason='delete failed again'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='DELETE',
+                                      status_reason='delete failed again'))
 
         # third attempt to delete succeeds
         timeutils.retry_backoff_delay(2, jitter_max=2.0).AndReturn(0.01)
@@ -783,22 +783,22 @@ class ResourceTest(common.HeatTestCase):
 
         # first attempt to create fails
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='CREATE',
-                                     status_reason='just because'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'))
         # delete error resource from first attempt
         generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
 
         # second attempt to create fails
         timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(
-            resource.ResourceInError(resource_name='test_resource',
-                                     resource_status='ERROR',
-                                     resource_type='GenericResourceType',
-                                     resource_action='CREATE',
-                                     status_reason='just because'))
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'))
         # delete error resource from second attempt
         generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
 

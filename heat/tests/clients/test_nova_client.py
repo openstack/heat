@@ -24,7 +24,6 @@ import six
 
 from heat.common import exception
 from heat.engine.clients.os import nova
-from heat.engine import resource
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -267,7 +266,7 @@ class NovaClientPluginCheckActiveTests(NovaClientPluginTestCase):
             e_raise=False)),
         ('error', dict(
             status='ERROR',
-            e_raise=resource.ResourceInError)),
+            e_raise=exception.ResourceInError)),
         ('unknown', dict(
             status='VIKINGS!',
             e_raise=exception.ResourceUnknownStatus))

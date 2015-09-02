@@ -51,7 +51,7 @@ class BaseVolume(resource.Resource):
         if vol.status in self._volume_creating_status:
             return False
         if vol.status == 'error':
-            raise resource.ResourceInError(
+            raise exception.ResourceInError(
                 resource_status=vol.status)
         else:
             raise exception.ResourceUnknownStatus(

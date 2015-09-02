@@ -61,15 +61,6 @@ class NoActionRequired(Exception):
     pass
 
 
-class ResourceInError(exception.HeatException):
-    msg_fmt = _('Went to status %(resource_status)s '
-                'due to "%(status_reason)s"')
-
-    def __init__(self, status_reason=_('Unknown'), **kwargs):
-        super(ResourceInError, self).__init__(status_reason=status_reason,
-                                              **kwargs)
-
-
 class UpdateInProgress(Exception):
     def __init__(self, resource_name='Unknown'):
         msg = _("The resource %s is already being updated.") % resource_name
@@ -775,7 +766,7 @@ class Resource(object):
                 else:
                     action = self.CREATE
             except exception.ResourceFailure as failure:
-                if not isinstance(failure.exc, ResourceInError):
+                if not isinstance(failure.exc, exception.ResourceInError):
                     raise failure
 
                 count[action] += 1

@@ -20,7 +20,6 @@ from heat.common import exception
 from heat.engine.clients.os import neutron
 from heat.engine.hot import functions
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import neutron as nr
 from heat.engine.resources.openstack.neutron import subnet
@@ -91,7 +90,7 @@ class NeutronTest(common.HeatTestCase):
         self.assertTrue(nr.NeutronResource.is_built({'status': 'DOWN'}))
         self.assertFalse(nr.NeutronResource.is_built({'status': 'BUILD'}))
         e = self.assertRaises(
-            resource.ResourceInError,
+            exception.ResourceInError,
             nr.NeutronResource.is_built, {'status': 'ERROR'})
         self.assertEqual(
             'Went to status ERROR due to "Unknown"',
