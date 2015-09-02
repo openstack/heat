@@ -32,9 +32,11 @@ class SaharaCluster(resource.Resource):
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, CLUSTER_TEMPLATE_ID,
         KEY_NAME, IMAGE, MANAGEMENT_NETWORK, IMAGE_ID,
+        USE_AUTOCONFIG
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'cluster_template_id',
         'key_name', 'image', 'neutron_management_network', 'default_image_id',
+        'use_autoconfig'
     )
 
     ATTRIBUTES = (
@@ -103,6 +105,11 @@ class SaharaCluster(resource.Resource):
                 constraints.CustomConstraint('neutron.network')
             ],
         ),
+        USE_AUTOCONFIG: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _("Configure most important configs automatically."),
+            support_status=support.SupportStatus(version='5.0.0')
+        )
     }
 
     attributes_schema = {
@@ -160,6 +167,7 @@ class SaharaCluster(resource.Resource):
             else:
                 net_id = self.client_plugin('nova').get_nova_network_id(
                     net_id)
+        use_autoconfig = self.properties[self.USE_AUTOCONFIG]
 
         cluster = self.client().clusters.create(
             self._cluster_name(),
@@ -167,7 +175,8 @@ class SaharaCluster(resource.Resource):
             cluster_template_id=cluster_template_id,
             user_keypair_id=key_name,
             default_image_id=image_id,
-            net_id=net_id)
+            net_id=net_id,
+            use_autoconfig=use_autoconfig)
         LOG.info(_LI('Cluster "%s" is being started.'), cluster.name)
         self.resource_id_set(cluster.id)
         return self.resource_id
