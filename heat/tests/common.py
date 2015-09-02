@@ -175,6 +175,8 @@ class HeatTestCase(testscenarios.WithScenarios,
                                  generic_rsrc.ResourceWithRestoreType)
         resource._register_class('DynamicSchemaResource',
                                  generic_rsrc.DynamicSchemaResource)
+        resource._register_class('ResourceTypeUnSupportedLiberty',
+                                 generic_rsrc.ResourceTypeUnSupportedLiberty)
 
     def patchobject(self, obj, attr, **kwargs):
         mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,

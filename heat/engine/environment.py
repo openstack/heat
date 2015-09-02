@@ -441,6 +441,13 @@ class ResourceRegistry(object):
     def get_types(self, cnxt=None, support_status=None):
         '''Return a list of valid resource types.'''
 
+        # validate the support status
+        if support_status is not None and not support.is_valid_status(
+                support_status):
+            msg = (_('Invalid support status and should be one of %s') %
+                   six.text_type(support.SUPPORT_STATUSES))
+            raise exception.Invalid(reason=msg)
+
         def is_resource(key):
             return isinstance(self._registry[key], (ClassResourceInfo,
                                                     TemplateResourceInfo))
