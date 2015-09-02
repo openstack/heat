@@ -27,15 +27,13 @@ LOG = logging.getLogger(__name__)
 
 
 class TestResource(resource.Resource):
-    '''
-    A resource which stores the string value that was provided.
+    """A resource which stores the string value that was provided.
 
     This resource is to be used only for testing.
-    It has control knobs such as 'update_replace', 'fail', 'wait_secs'
+    It has control knobs such as 'update_replace', 'fail', 'wait_secs'.
+    """
 
-    '''
-
-    support_status = support.SupportStatus(version='2014.1')
+    support_status = support.SupportStatus(version='5.0.0')
 
     ACTION_TIMES = (
         CREATE_WAIT_SECS, UPDATE_WAIT_SECS, DELETE_WAIT_SECS
