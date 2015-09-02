@@ -948,7 +948,11 @@ class Stack(collections.Mapping):
             # no back-up template for create action
             self.prev_raw_template_id = getattr(self.t, 'id', None)
 
+        # switch template and reset dependencies
         self.t = template
+        self.reset_dependencies()
+        self._resources = None
+
         previous_traversal = self.current_traversal
         self.current_traversal = uuidutils.generate_uuid()
         self.updated_time = datetime.datetime.utcnow()
