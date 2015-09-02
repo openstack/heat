@@ -18,11 +18,11 @@ from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
 import six
 
+from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
-from heat.engine import resource
 from heat.engine.resources.openstack.heat import wait_condition_handle as h_wch
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
@@ -360,4 +360,4 @@ class HeatWaitConditionTest(common.HeatTestCase):
         handle = self.stack['update_wait_handle']
         self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)
         self.assertRaises(
-            resource.UpdateReplace, handle.update, None, None)
+            exception.UpdateReplace, handle.update, None, None)

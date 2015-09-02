@@ -23,7 +23,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import ceilometer
 from heat.engine import properties as props
-from heat.engine import resource
 from heat.engine.resources.openstack.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -293,7 +292,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
                                                properties)
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
         self.m.VerifyAll()
 

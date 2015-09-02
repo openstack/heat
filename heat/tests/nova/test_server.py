@@ -1742,7 +1742,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.small'
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
     def test_server_update_server_flavor_policy_update(self):
         stack_name = 'update_flvpol'
@@ -1763,7 +1763,7 @@ class ServersTest(common.HeatTestCase):
         update_template['Properties']['flavor_update_policy'] = 'REPLACE'
         update_template['Properties']['flavor'] = 'm1.small'
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
     def test_server_update_image_replace(self):
         stack_name = 'update_imgrep'
@@ -1784,7 +1784,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = image_id
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
     def _test_server_update_image_rebuild(self, status, policy='REBUILD',
                                           password=None):
@@ -1914,7 +1914,7 @@ class ServersTest(common.HeatTestCase):
         update_template['Properties']['image'] = 'mustreplace'
         update_template['Properties']['image_update_policy'] = 'REPLACE'
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
     def test_server_status_build(self):
         return_server = self.fc.servers.list()[0]
@@ -3353,7 +3353,7 @@ class ServersTest(common.HeatTestCase):
 
         # update
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
         self.m.VerifyAll()
 

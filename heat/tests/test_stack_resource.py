@@ -543,7 +543,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.state_set(self.parent_resource.INIT,
                                        self.parent_resource.FAILED)
         self.parent_resource._nested = None
-        self.assertRaises(resource.UpdateReplace,
+        self.assertRaises(exception.UpdateReplace,
                           self.parent_resource._needs_update,
                           self.parent_resource.t,
                           self.parent_resource.t,
@@ -559,7 +559,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.state_set(self.parent_resource.INIT,
                                        self.parent_resource.COMPLETE)
         self.parent_resource._nested = None
-        self.assertRaises(resource.UpdateReplace,
+        self.assertRaises(exception.UpdateReplace,
                           self.parent_resource._needs_update,
                           self.parent_resource.t,
                           self.parent_resource.t,

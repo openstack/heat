@@ -218,7 +218,7 @@ class LaunchConfiguration(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
-            raise resource.UpdateReplace(self.name)
+            raise exception.UpdateReplace(self.name)
 
     def FnGetRefId(self):
         return self.physical_resource_name_or_FnGetRefId()

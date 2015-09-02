@@ -13,9 +13,9 @@
 
 import uuid
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
-from heat.engine import resource
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine.resources import wait_condition as wc_base
 from heat.engine import support
@@ -141,7 +141,7 @@ class UpdateWaitConditionHandle(aws_wch.WaitConditionHandle):
     support_status = support.SupportStatus(version='2014.1')
 
     def update(self, after, before=None, prev_resource=None):
-        raise resource.UpdateReplace(self.name)
+        raise exception.UpdateReplace(self.name)
 
 
 def resource_mapping():

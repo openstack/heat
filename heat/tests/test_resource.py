@@ -371,7 +371,7 @@ class ResourceTest(common.HeatTestCase):
         utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
                                              {'a_string': 'foo'})
         self.assertRaises(
-            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+            exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
 
     def test_update_replace_in_failed_without_nested(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
@@ -394,7 +394,7 @@ class ResourceTest(common.HeatTestCase):
         # resource in failed status and hasn't nested will enter
         # UpdateReplace flow
         self.assertRaises(
-            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+            exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
 
         self.m.VerifyAll()
 
@@ -586,7 +586,7 @@ class ResourceTest(common.HeatTestCase):
         after_props = {'Bar': '456'}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Cat',)
-        self.assertRaises(resource.UpdateReplace,
+        self.assertRaises(exception.UpdateReplace,
                           res.update_template_diff_properties,
                           after_props, before_props)
 
@@ -859,12 +859,12 @@ class ResourceTest(common.HeatTestCase):
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, tmpl_diff, prop_diff).AndRaise(resource.UpdateReplace(
+            utmpl, tmpl_diff, prop_diff).AndRaise(exception.UpdateReplace(
                 res.name))
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         updater = scheduler.TaskRunner(res.update, utmpl)
-        ex = self.assertRaises(resource.UpdateReplace, updater)
+        ex = self.assertRaises(exception.UpdateReplace, updater)
         self.assertEqual('The Resource test_resource requires replacement.',
                          six.text_type(ex))
         self.m.VerifyAll()
@@ -885,11 +885,11 @@ class ResourceTest(common.HeatTestCase):
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, tmpl_diff, prop_diff).AndRaise(resource.UpdateReplace())
+            utmpl, tmpl_diff, prop_diff).AndRaise(exception.UpdateReplace())
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         updater = scheduler.TaskRunner(res.update, utmpl)
-        ex = self.assertRaises(resource.UpdateReplace, updater)
+        ex = self.assertRaises(exception.UpdateReplace, updater)
         self.assertEqual('The Resource Unknown requires replacement.',
                          six.text_type(ex))
         self.m.VerifyAll()
@@ -903,7 +903,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.INIT, res.COMPLETE), res.state)
 
         prop = {'Foo': 'abc'}
-        self.assertRaises(resource.UpdateReplace,
+        self.assertRaises(exception.UpdateReplace,
                           res._needs_update, tmpl, tmpl, prop, prop, res)
 
     def test_update_fail_missing_req_prop(self):

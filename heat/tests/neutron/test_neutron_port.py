@@ -19,7 +19,6 @@ from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -492,7 +491,7 @@ class NeutronPortTest(common.HeatTestCase):
         new_props['replacement_policy'] = 'REPLACE_ALWAYS'
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
-        self.assertRaises(resource.UpdateReplace, port._needs_update,
+        self.assertRaises(exception.UpdateReplace, port._needs_update,
                           update_snippet, port.frozen_definition(),
                           new_props, props, None)
 

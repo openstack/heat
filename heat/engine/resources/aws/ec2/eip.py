@@ -376,7 +376,7 @@ class ElasticIpAssociation(resource.Resource):
             ni_id = prop_diff.get(self.NETWORK_INTERFACE_ID)
 
             if instance_id or ni_id:
-                raise resource.UpdateReplace(self.name)
+                raise exception.UpdateReplace(self.name)
 
         # according to aws doc, when update the instance_id or
         # network_interface_id, if you also change the EIP or
@@ -386,7 +386,7 @@ class ElasticIpAssociation(resource.Resource):
             eip = prop_diff.get(self.EIP)
             allocation_id = prop_diff.get(self.ALLOCATION_ID)
             if eip or allocation_id:
-                raise resource.UpdateReplace(self.name)
+                raise exception.UpdateReplace(self.name)
 
     def handle_create(self):
         """Add a floating IP address to a server."""

@@ -16,6 +16,7 @@ import eventlet
 from oslo_utils import timeutils
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
@@ -156,7 +157,7 @@ class TestResource(resource.Resource):
         if value:
             update_replace = self.properties[self.UPDATE_REPLACE]
             if update_replace:
-                raise resource.UpdateReplace(self.name)
+                raise exception.UpdateReplace(self.name)
             else:
                 # emulate failure
                 fail_prop = self.properties[self.FAIL]

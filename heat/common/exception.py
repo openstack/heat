@@ -388,6 +388,13 @@ class PropertyUnspecifiedError(HeatException):
         super(PropertyUnspecifiedError, self).__init__(**kwargs)
 
 
+class UpdateReplace(Exception):
+    '''Raised when resource update requires replacement.'''
+    def __init__(self, resource_name='Unknown'):
+        msg = _("The Resource %s requires replacement.") % resource_name
+        super(Exception, self).__init__(six.text_type(msg))
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions so they can be handled by the webob fault
     application in the wsgi pipeline.

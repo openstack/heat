@@ -945,7 +945,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         flavor = prop_diff[self.FLAVOR]
 
         if flavor_update_policy == 'REPLACE':
-            raise resource.UpdateReplace(self.name)
+            raise exception.UpdateReplace(self.name)
 
         flavor_id = self.client_plugin().get_flavor_id(flavor)
         handler_args = {'args': (flavor_id,)}
@@ -964,7 +964,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
             self.properties[self.IMAGE_UPDATE_POLICY])
         if image_update_policy == 'REPLACE':
-            raise resource.UpdateReplace(self.name)
+            raise exception.UpdateReplace(self.name)
         image = prop_diff[self.IMAGE]
         image_id = self.client_plugin('glance').get_image_id(image)
         preserve_ephemeral = (
