@@ -519,3 +519,7 @@ class SIGHUPInterrupt(HeatException):
 class ResourceTypeUnavailable(HeatException):
     msg_fmt = _("Service %(service_name)s does not have required endpoint in "
                 "service catalog for the resource type %(resource_type)s")
+
+
+class NoActionRequired(Exception):
+    pass
