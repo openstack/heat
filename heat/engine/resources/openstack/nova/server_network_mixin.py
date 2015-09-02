@@ -23,27 +23,17 @@ class ServerNetworkMixin(object):
 
         nics = []
 
-        for net_data in networks:
+        for net in networks:
             nic_info = {}
-            net_identifier = (net_data.get(self.NETWORK_UUID) or
-                              net_data.get(self.NETWORK_ID))
-            if net_identifier:
-                if self.is_using_neutron():
-                    net_id = (self.client_plugin(
-                        'neutron').resolve_network(
-                        net_data, self.NETWORK_ID, self.NETWORK_UUID))
-                else:
-                    net_id = (self.client_plugin(
-                        'nova').get_nova_network_id(net_identifier))
-                nic_info['net-id'] = net_id
-            if net_data.get(self.NETWORK_FIXED_IP):
-                ip = net_data[self.NETWORK_FIXED_IP]
+            nic_info['net-id'] = self._get_network_id(net)
+            if net.get(self.NETWORK_FIXED_IP):
+                ip = net[self.NETWORK_FIXED_IP]
                 if netutils.is_valid_ipv6(ip):
                     nic_info['v6-fixed-ip'] = ip
                 else:
                     nic_info['v4-fixed-ip'] = ip
-            if net_data.get(self.NETWORK_PORT):
-                nic_info['port-id'] = net_data[self.NETWORK_PORT]
+            if net.get(self.NETWORK_PORT):
+                nic_info['port-id'] = net[self.NETWORK_PORT]
             nics.append(nic_info)
         return nics
 
@@ -61,16 +51,20 @@ class ServerNetworkMixin(object):
         return not_updated_nets
 
     def _get_network_id(self, net):
-        net_id = None
-        if net.get(self.NETWORK_ID):
+        # network and network_id properties can be used interchangeably
+        # if move the same value from one properties to another, it should
+        # not change anything, i.e. it will be the same port/interface
+        net_id = (net.get(self.NETWORK_UUID) or
+                  net.get(self.NETWORK_ID) or None)
+
+        if net_id:
             if self.is_using_neutron():
                 net_id = self.client_plugin(
                     'neutron').resolve_network(
-                    net,
-                    self.NETWORK_ID, self.NETWORK_UUID)
+                    net, self.NETWORK_ID, self.NETWORK_UUID)
             else:
                 net_id = self.client_plugin(
-                    'nova').get_nova_network_id(net.get(self.NETWORK_ID))
+                    'nova').get_nova_network_id(net_id)
         return net_id
 
     def update_networks_matching_iface_port(self, nets, interfaces):
@@ -80,15 +74,13 @@ class ServerNetworkMixin(object):
 
                 if (net.get('port') == port or
                         (net.get('fixed_ip') == ip and
-                         (self._get_network_id(net) == net_id or
-                          net.get('uuid') == net_id))):
+                         self._get_network_id(net) == net_id)):
                     return net
 
         def find_poor_net(net_id, nets):
             for net in nets:
                 if (not net.get('port') and not net.get('fixed_ip') and
-                        (self._get_network_id(net) == net_id or
-                         net.get('uuid') == net_id)):
+                        self._get_network_id(net) == net_id):
                     return net
 
         for iface in interfaces:
@@ -141,6 +133,7 @@ class ServerNetworkMixin(object):
             for net in old_nets:
                 if net.get(self.NETWORK_PORT):
                     remove_ports.append(net.get(self.NETWORK_PORT))
+
         handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
         # if new_nets is None, we should attach first free port,
         # according to similar behavior during instance creation
@@ -149,14 +142,12 @@ class ServerNetworkMixin(object):
         # attach section similar for both variants that
         # were mentioned above
         for net in new_nets:
+            handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
+            handler_kwargs['net_id'] = self._get_network_id(net)
+            if handler_kwargs['net_id']:
+                handler_kwargs['fip'] = net.get('fixed_ip')
             if net.get(self.NETWORK_PORT):
                 handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
-            elif net.get(self.NETWORK_ID):
-                handler_kwargs['net_id'] = self._get_network_id(net)
-                handler_kwargs['fip'] = net.get('fixed_ip')
-            elif net.get(self.NETWORK_UUID):
-                handler_kwargs['net_id'] = net['uuid']
-                handler_kwargs['fip'] = net.get('fixed_ip')
 
             add_nets.append(handler_kwargs)
 
