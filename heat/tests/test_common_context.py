@@ -42,11 +42,11 @@ class TestRequestContext(common.HeatTestCase):
                     'roles': ['arole', 'notadmin'],
                     'tenant_id': '456tenant',
                     'user_id': 'fooUser',
-                    'tenant': 'atenant',
+                    'tenant': u'\u5218\u80dc',
                     'auth_url': 'http://xyz',
                     'aws_creds': 'blah',
                     'region_name': 'RegionOne',
-                    'user_identity': 'mick atenant'}
+                    'user_identity': 'fooUser 456tenant'}
 
         super(TestRequestContext, self).setUp()
 
