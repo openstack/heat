@@ -962,6 +962,12 @@ class EngineService(service.Service):
                 # parameters into properties_schema.
                 continue
 
+            if not ResourceClass.is_service_available(cnxt):
+                raise exception.ResourceTypeUnavailable(
+                    service_name=ResourceClass.default_client_name,
+                    resource_type=res['Type']
+                )
+
             props = properties.Properties(
                 ResourceClass.properties_schema,
                 res.get('Properties', {}),
