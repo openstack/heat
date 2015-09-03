@@ -250,12 +250,12 @@ class KeystoneUser(resource.Resource,
             try:
                 self.delete_assignment(user_id=self.resource_id)
 
-                if self._stored_properties_data[self.GROUPS] is not None:
+                if self._stored_properties_data.get(self.GROUPS) is not None:
                     self._remove_user_from_groups(
                         self.resource_id,
                         [self.client_plugin().get_group_id(group)
                          for group in
-                         self._stored_properties_data[self.GROUPS]])
+                         self._stored_properties_data.get(self.GROUPS)])
 
                 self._delete_user(user_id=self.resource_id)
             except Exception as ex:
