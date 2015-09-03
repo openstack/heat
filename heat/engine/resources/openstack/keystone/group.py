@@ -14,11 +14,13 @@
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import role_assignments
 from heat.engine import support
 
 
-class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
+class KeystoneGroup(resource.Resource,
+                    role_assignments.KeystoneRoleAssignmentMixin):
     """Heat Template Resource for Keystone Group."""
 
     support_status = support.SupportStatus(
@@ -54,8 +56,12 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
         )
     }
 
-    (properties_schema.
-     update(role_assignments.KeystoneRoleAssignment.properties_schema))
+    properties_schema.update(
+        role_assignments.KeystoneRoleAssignmentMixin.mixin_properties_schema)
+
+    def validate(self):
+        super(KeystoneGroup, self).validate()
+        self.validate_assignment_properties()
 
     def _create_group(self,
                       group_name,
@@ -102,8 +108,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
 
         self.resource_id_set(group.id)
 
-        super(KeystoneGroup, self).handle_create(user_id=None,
-                                                 group_id=group.id)
+        self.create_assignment(group_id=group.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         name = prop_diff.get(self.NAME) or self.physical_resource_name()
@@ -118,16 +123,12 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
             domain=domain
         )
 
-        super(KeystoneGroup, self).handle_update(user_id=None,
-                                                 group_id=self.resource_id,
-                                                 prop_diff=prop_diff)
+        self.update_assignment(prop_diff=prop_diff, group_id=self.resource_id)
 
     def handle_delete(self):
         if self.resource_id is not None:
             try:
-                super(KeystoneGroup, self).handle_delete(
-                    user_id=None,
-                    group_id=self.resource_id)
+                self.delete_assignment(group_id=self.resource_id)
 
                 self._delete_group(group_id=self.resource_id)
             except Exception as ex:

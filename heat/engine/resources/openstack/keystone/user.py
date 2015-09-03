@@ -14,11 +14,13 @@
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import role_assignments
 from heat.engine import support
 
 
-class KeystoneUser(role_assignments.KeystoneRoleAssignment):
+class KeystoneUser(resource.Resource,
+                   role_assignments.KeystoneRoleAssignmentMixin):
     """Heat Template Resource for Keystone User."""
 
     support_status = support.SupportStatus(
@@ -88,8 +90,12 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
         )
     }
 
-    (properties_schema.update(
-        role_assignments.KeystoneRoleAssignment.properties_schema))
+    properties_schema.update(
+        role_assignments.KeystoneRoleAssignmentMixin.mixin_properties_schema)
+
+    def validate(self):
+        super(KeystoneUser, self).validate()
+        self.validate_assignment_properties()
 
     def _create_user(self,
                      user_name,
@@ -203,8 +209,7 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
 
         self._add_user_to_groups(user.id, groups)
 
-        super(KeystoneUser, self).handle_create(user_id=user.id,
-                                                group_id=None)
+        self.create_assignment(user_id=user.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         name = prop_diff.get(self.NAME) or self.physical_resource_name()
@@ -238,16 +243,12 @@ class KeystoneUser(role_assignments.KeystoneRoleAssignment):
         if len(removed_group_ids) > 0:
             self._remove_user_from_groups(self.resource_id, removed_group_ids)
 
-        super(KeystoneUser, self).handle_update(user_id=self.resource_id,
-                                                group_id=None,
-                                                prop_diff=prop_diff)
+        self.update_assignment(prop_diff=prop_diff, user_id=self.resource_id)
 
     def handle_delete(self):
         if self.resource_id is not None:
             try:
-                super(KeystoneUser, self).handle_delete(
-                    user_id=self.resource_id,
-                    group_id=None)
+                self.delete_assignment(user_id=self.resource_id)
 
                 if self._stored_properties_data[self.GROUPS] is not None:
                     self._remove_user_from_groups(
