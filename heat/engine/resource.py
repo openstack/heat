@@ -899,31 +899,61 @@ class Resource(object):
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_PRE_UPDATE)
 
-        if not self._needs_update(after, before, after_props, before_props,
-                                  prev_resource):
-            return
+        try:
+            if not self._needs_update(after, before, after_props, before_props,
+                                      prev_resource):
+                return
 
-        if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
-                                          (self.UPDATE, self.IN_PROGRESS),
-                                          (self.ADOPT, self.IN_PROGRESS)):
-            exc = Exception(_('Resource update already requested'))
-            raise exception.ResourceFailure(exc, self, action)
+            if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
+                                              (self.UPDATE, self.IN_PROGRESS),
+                                              (self.ADOPT, self.IN_PROGRESS)):
+                exc = Exception(_('Resource update already requested'))
+                raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_LI('updating %s'), six.text_type(self))
+            LOG.info(_LI('updating %s'), six.text_type(self))
 
-        self.updated_time = datetime.utcnow()
-        with self._action_recorder(action, exception.UpdateReplace):
-            after_props.validate()
-            tmpl_diff = self.update_template_diff(function.resolve(after),
-                                                  before)
-            prop_diff = self.update_template_diff_properties(after_props,
-                                                             before_props)
-            yield self.action_handler_task(action,
-                                           args=[after, tmpl_diff, prop_diff])
+            self.updated_time = datetime.utcnow()
+            with self._action_recorder(action, exception.UpdateReplace):
+                after_props.validate()
+                tmpl_diff = self.update_template_diff(function.resolve(after),
+                                                      before)
+                prop_diff = self.update_template_diff_properties(after_props,
+                                                                 before_props)
+                yield self.action_handler_task(action,
+                                               args=[after, tmpl_diff,
+                                                     prop_diff])
 
-            self.t = after
-            self.reparse()
-            self._update_stored_properties()
+                self.t = after
+                self.reparse()
+                self._update_stored_properties()
+        except exception.UpdateReplace as ex:
+            # catch all UpdateReplace expections
+            if (self.stack.action == 'ROLLBACK' and
+                    self.stack.status == 'IN_PROGRESS'):
+                # handle case, when it's rollback and we should restore
+                # old resource
+                self.restore_after_rollback()
+            else:
+                self.prepare_for_replace()
+            raise ex
+
+    def prepare_for_replace(self):
+        '''Prepare resource for replacing.
+
+        Some resources requires additional actions before replace them.
+        If resource need to be changed before replacing, this method should
+        be implemented in resource class.
+        '''
+        pass
+
+    def restore_after_rollback(self):
+        '''Restore resource after rollback.
+
+        Some resources requires additional actions after rollback.
+        If resource need to be changed during rollback, this method should
+        be implemented in resource class.
+        '''
+        pass
 
     def check(self):
         """Checks that the physical resource is in its expected state
