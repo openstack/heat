@@ -1333,6 +1333,34 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
             mock.call('deploy_status_code'),
         ])
 
+    def test_attributes_passthrough_key(self):
+        '''Prove attributes not in the schema pass-through.'''
+        stack = utils.parse_stack(self.template)
+        snip = stack.t.resource_definitions(stack)['deploy_mysql']
+        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
+        nested = self.patchobject(resg, 'nested')
+        server1 = mock.MagicMock()
+        server2 = mock.MagicMock()
+        nested.return_value = {
+            'server1': server1,
+            'server2': server2
+        }
+
+        server1.FnGetAtt.return_value = 'attr1'
+        server2.FnGetAtt.return_value = 'attr2'
+        self.assertEqual({
+            'server1': 'attr1',
+            'server2': 'attr2'
+        }, resg.FnGetAtt('some_attr'))
+
+        server1.FnGetAtt.assert_has_calls([
+            mock.call('some_attr'),
+        ])
+
+        server2.FnGetAtt.assert_has_calls([
+            mock.call('some_attr'),
+        ])
+
     def test_validate(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
