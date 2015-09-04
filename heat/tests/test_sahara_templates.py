@@ -102,8 +102,9 @@ class FakeClusterTemplate(object):
 class SaharaNodeGroupTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(SaharaNodeGroupTemplateTest, self).setUp()
-        self.patchobject(st.constraints.CustomConstraint,
-                         '_is_valid').return_value = True
+        self.stub_FlavorConstraint_validate()
+        self.stub_SaharaPluginConstraint()
+        self.stub_VolumeTypeConstraint_validate()
         self.patchobject(nova.NovaClientPlugin, 'get_flavor_id'
                          ).return_value = 'someflavorid'
         self.patchobject(neutron.NeutronClientPlugin, '_create')
@@ -215,7 +216,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.t['resources']['node-group']['properties'].pop('floating_ip_pool')
         self.t['resources']['node-group']['properties'].pop('volume_type')
         ngt = self._init_ngt(self.t)
-        self.patchobject(st.constraints.CustomConstraint, '_is_valid'
+        self.patchobject(nova.FlavorConstraint, 'validate'
                          ).return_value = False
         self.patchobject(ngt, 'is_using_neutron').return_value = False
 
