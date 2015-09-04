@@ -12,6 +12,7 @@
 #    under the License.
 
 from keystoneclient import access
+from keystoneclient import auth
 from keystoneclient.auth.identity import access as access_plugin
 from keystoneclient.auth.identity import v3
 from keystoneclient.auth import token_endpoint
@@ -25,13 +26,16 @@ from oslo_utils import importutils
 import six
 
 from heat.common import exception
-from heat.common.i18n import _LE
+from heat.common.i18n import _LE, _LW
 from heat.common import policy
 from heat.common import wsgi
 from heat.db import api as db_api
 from heat.engine import clients
 
 LOG = logging.getLogger(__name__)
+
+TRUSTEE_CONF_GROUP = 'trustee'
+auth.register_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
 
 
 class RequestContext(context.RequestContext):
@@ -46,7 +50,7 @@ class RequestContext(context.RequestContext):
                  read_only=False, show_deleted=False,
                  overwrite=True, trust_id=None, trustor_user_id=None,
                  request_id=None, auth_token_info=None, region_name=None,
-                 auth_plugin=None, **kwargs):
+                 auth_plugin=None, trusts_auth_plugin=None, **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
@@ -76,6 +80,7 @@ class RequestContext(context.RequestContext):
         self.trustor_user_id = trustor_user_id
         self.policy = policy.Enforcer()
         self._auth_plugin = auth_plugin
+        self._trusts_auth_plugin = trusts_auth_plugin
 
         if is_admin is None:
             self.is_admin = self.policy.check_is_admin(self)
@@ -146,18 +151,34 @@ class RequestContext(context.RequestContext):
                     raise exception.AuthorizationFailure()
         return auth_uri
 
+    @property
+    def trusts_auth_plugin(self):
+        if self._trusts_auth_plugin:
+            return self._trusts_auth_plugin
+
+        self._trusts_auth_plugin = auth.load_from_conf_options(
+            cfg.CONF, TRUSTEE_CONF_GROUP, trust_id=self.trust_id)
+
+        if self._trusts_auth_plugin:
+            return self._trusts_auth_plugin
+
+        LOG.warn(_LW('Using the keystone_authtoken user as the heat '
+                     'trustee user directly is deprecated. Please add the '
+                     'trustee credentials you need to the %s section of '
+                     'your heat.conf file.') % TRUSTEE_CONF_GROUP)
+
+        cfg.CONF.import_group('keystone_authtoken',
+                              'keystonemiddleware.auth_token')
+
+        self._trusts_auth_plugin = v3.Password(
+            username=cfg.CONF.keystone_authtoken.admin_user,
+            password=cfg.CONF.keystone_authtoken.admin_password,
+            user_domain_id='default',
+            auth_url=self.keystone_v3_endpoint,
+            trust_id=self.trust_id)
+        return self._trusts_auth_plugin
+
     def _create_auth_plugin(self):
-        if self.trust_id:
-            importutils.import_module('keystonemiddleware.auth_token')
-            username = cfg.CONF.keystone_authtoken.admin_user
-            password = cfg.CONF.keystone_authtoken.admin_password
-
-            return v3.Password(username=username,
-                               password=password,
-                               user_domain_id='default',
-                               auth_url=self.keystone_v3_endpoint,
-                               trust_id=self.trust_id)
-
         if self.auth_token_info:
             auth_ref = access.AccessInfo.factory(body=self.auth_token_info,
                                                  auth_token=self.auth_token)
@@ -187,7 +208,10 @@ class RequestContext(context.RequestContext):
     @property
     def auth_plugin(self):
         if not self._auth_plugin:
-            self._auth_plugin = self._create_auth_plugin()
+            if self.trust_id:
+                self._auth_plugin = self.trusts_auth_plugin
+            else:
+                self._auth_plugin = self._create_auth_plugin()
 
         return self._auth_plugin
 
