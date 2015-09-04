@@ -10,8 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from testtools import testcase
-
 from heat_integrationtests.functional import functional_base
 
 
@@ -38,6 +36,12 @@ resources:
       fixed_ips:
         - subnet: {get_resource: subnet}
           ip_address: 11.11.11.11
+  test:
+    depends_on: port
+    type: OS::Heat::TestResource
+    properties:
+      value: Test1
+      fail: False
 outputs:
   port_ip:
     value: {get_attr: [port, fixed_ips, 0, ip_address]}
@@ -73,7 +77,6 @@ class UpdatePortTest(functional_base.FunctionalTestsBase):
         self.assertNotEqual(_ip, new_ip)
         self.assertNotEqual(_id, new_id)
 
-    @testcase.skip('Skipped until bug #1455100 is fixed.')
     def test_stack_update_replace_with_ip(self):
         # create with default 'mac' parameter
         stack_identifier = self.stack_create(template=test_template)
@@ -89,6 +92,62 @@ class UpdatePortTest(functional_base.FunctionalTestsBase):
 
         new_id, new_ip = self.get_port_id_and_ip(stack_identifier)
         # port id should be different, ip should be the same
+        self.assertEqual(_ip, new_ip)
+        self.assertNotEqual(_id, new_id)
+
+    def test_stack_update_replace_with_ip_rollback(self):
+        # create with default 'mac' parameter
+        stack_identifier = self.stack_create(template=test_template)
+
+        _id, _ip = self.get_port_id_and_ip(stack_identifier)
+
+        # Update with another 'mac' parameter
+        parameters = {'mac': '00-00-00-00-AA-AA'}
+
+        # make test resource failing during update
+        fail_template = test_template.replace('fail: False',
+                                              'fail: True')
+        fail_template = fail_template.replace('value: Test1',
+                                              'value: Rollback')
+
+        # port should be replaced with same ip
+        self.update_stack(stack_identifier, fail_template,
+                          parameters=parameters,
+                          expected_status='ROLLBACK_COMPLETE',
+                          disable_rollback=False)
+
+        new_id, new_ip = self.get_port_id_and_ip(stack_identifier)
+        # port id and ip should be the same after rollback
+        self.assertEqual(_ip, new_ip)
+        self.assertEqual(_id, new_id)
+
+    def test_stack_update_replace_with_ip_after_failed_update(self):
+        # create with default 'mac' parameter
+        stack_identifier = self.stack_create(template=test_template)
+
+        _id, _ip = self.get_port_id_and_ip(stack_identifier)
+
+        # Update with another 'mac' parameter
+        parameters = {'mac': '00-00-00-00-AA-AA'}
+
+        # make test resource failing during update
+        fail_template = test_template.replace('fail: False',
+                                              'fail: True')
+        fail_template = fail_template.replace('value: Test1',
+                                              'value: Rollback')
+
+        # port should be replaced with same ip
+        self.update_stack(stack_identifier, fail_template,
+                          parameters=parameters,
+                          expected_status='UPDATE_FAILED')
+
+        # port should be replaced with same ip
+        self.update_stack(stack_identifier, test_template,
+                          parameters=parameters)
+
+        new_id, new_ip = self.get_port_id_and_ip(stack_identifier)
+        # ip should be the same, but port id should be different, because it's
+        # restore replace
         self.assertEqual(_ip, new_ip)
         self.assertNotEqual(_id, new_id)
 
