@@ -65,8 +65,8 @@ class CinderVolumeType(resource.Resource):
         ),
         PROJECTS: properties.Schema(
             properties.Schema.LIST,
-            _('Projects to add volume type access for. NOTE: This'
-              'property only supported since Cinder API V2.'),
+            _('Projects to add volume type access to. NOTE: This '
+              'property is only supported since Cinder API V2.'),
             support_status=support.SupportStatus(version='5.0.0'),
             update_allowed=True,
             schema=properties.Schema(
