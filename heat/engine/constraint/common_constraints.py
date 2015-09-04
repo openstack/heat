@@ -12,12 +12,12 @@
 #    under the License.
 
 import croniter
-import iso8601
 import netaddr
 import pytz
 import six
 
 from oslo_utils import netutils
+from oslo_utils import timeutils
 
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -59,7 +59,7 @@ class ISO8601Constraint(object):
 
     def validate(self, value, context):
         try:
-            iso8601.parse_date(value)
+            timeutils.parse_isotime(value)
         except Exception:
             return False
         else:
