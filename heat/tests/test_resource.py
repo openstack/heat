@@ -1406,6 +1406,42 @@ class ResourceTest(common.HeatTestCase):
         res.FnGetAtt('attr2')
         self.assertIn("Attribute attr2 is not of type Map", self.LOG.output)
 
+    def test_getatts(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'ResourceWithComplexAttributesType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+        res = stack['res']
+        self.assertEqual({'list': ['foo', 'bar'],
+                          'flat_dict': {'key1': 'val1',
+                                        'key2': 'val2',
+                                        'key3': 'val3'},
+                          'nested_dict': {'list': [1, 2, 3],
+                                          'string': 'abc',
+                                          'dict': {'a': 1, 'b': 2, 'c': 3}},
+                          'none': None}, res.FnGetAtts())
+
+    def test_getatts_with_cache_data(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'ResourceWithPropsType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
+                             cache_data={
+                                 'res': {'attributes': {'Foo': 'res',
+                                                        'foo': 'res'}}})
+        res = stack['res']
+        self.assertEqual({'foo': 'res', 'Foo': 'res'}, res.FnGetAtts())
+
     def test_properties_data_stored_encrypted_decrypted_on_load(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', True)
 

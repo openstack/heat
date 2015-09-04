@@ -1491,6 +1491,19 @@ class Resource(object):
 
         return attributes.select_from_attribute(attribute, path)
 
+    def FnGetAtts(self):
+        """For the intrinsic function get_attr which returns all attributes.
+
+        :returns: dict of all resource's attributes exclude "show" attribute.
+        """
+        if self.stack.has_cache_data(self.name):
+            attrs = self.stack.cache_data_resource_all_attributes(self.name)
+        else:
+            attrs = dict((k, v) for k, v in six.iteritems(self.attributes))
+        attrs = dict((k, v) for k, v in six.iteritems(attrs)
+                     if k != self.SHOW)
+        return attrs
+
     def FnBase64(self, data):
         '''
         For the instrinsic function Fn::Base64.

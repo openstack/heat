@@ -140,8 +140,7 @@ class GetAttThenSelect(cfn_funcs.GetAtt):
 
 
 class GetAtt(GetAttThenSelect):
-    '''
-    A function for resolving resource attributes.
+    """A function for resolving resource attributes.
 
     Takes the form::
 
@@ -150,7 +149,7 @@ class GetAtt(GetAttThenSelect):
           - <attribute_name>
           - <path1>
           - ...
-    '''
+    """
 
     def result(self):
         path_components = function.resolve(self._path_components)
@@ -163,6 +162,62 @@ class GetAtt(GetAttThenSelect):
             return r.FnGetAtt(attribute, *path_components)
         else:
             return None
+
+
+class GetAttAllAttributes(GetAtt):
+    """A  function for resolving resource attributes.
+
+    Takes the form::
+
+        get_attr:
+          - <resource_name>
+          - <attributes_name>
+          - <path1>
+          - ...
+
+    where <attributes_name> and <path1>, ... are optional arguments. If there
+    is no <attributes_name>, result will be dict of all resource's attributes.
+    Else function returns resolved resource's attribute.
+    """
+
+    def _parse_args(self):
+        if not self.args:
+            raise ValueError(_('Arguments to "%s" can be of the next '
+                               'forms: [resource_name] or '
+                               '[resource_name, attribute, (path), ...]'
+                               ) % self.fn_name)
+        elif isinstance(self.args, collections.Sequence):
+            if len(self.args) > 1:
+                return super(GetAttAllAttributes, self)._parse_args()
+            else:
+                return self.args[0], None
+        else:
+            raise TypeError(_('Argument to "%s" must be a list') %
+                            self.fn_name)
+
+    def dep_attrs(self, resource_name):
+        """Check if there is no attribute_name defined, return empty chain."""
+        if self._attribute is not None:
+            return super(GetAttAllAttributes, self).dep_attrs(resource_name)
+        elif self._resource().name == resource_name:
+            res = self._resource()
+            attrs = six.iterkeys(res.attributes_schema)
+        else:
+            attrs = []
+        return itertools.chain(function.dep_attrs(self.args,
+                                                  resource_name), attrs)
+
+    def result(self):
+        if self._attribute is None:
+            r = self._resource()
+            if (r.status in (r.IN_PROGRESS, r.COMPLETE) and
+                    r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
+                                 r.UPDATE, r.CHECK, r.SNAPSHOT)):
+                return r.FnGetAtts()
+            else:
+                return None
+        else:
+            return super(GetAttAllAttributes, self).result()
 
 
 class Replace(cfn_funcs.Replace):

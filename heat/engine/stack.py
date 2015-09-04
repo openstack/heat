@@ -1635,6 +1635,10 @@ class Stack(collections.Mapping):
         return self.cache_data.get(
             resource_name, {}).get('attrs', {}).get(attribute_key)
 
+    def cache_data_resource_all_attributes(self, resource_name):
+        attrs = self.cache_data.get(resource_name, {}).get('attributes', {})
+        return attrs
+
     def mark_complete(self, traversal_id):
         '''
         Mark the update as complete.
