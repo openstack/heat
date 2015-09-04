@@ -280,15 +280,13 @@ class InstanceGroup(stack_resource.StackResource):
                           policy[self.MAX_BATCH_SIZE],
                           pause_sec)
 
-    def _update_timeout(self, efft_capacity, efft_bat_sz, pause_sec):
-        batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
-        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
+    def _update_timeout(self, batch_cnt, pause_sec):
+        total_pause_time = pause_sec * max(batch_cnt - 1, 0)
+        if total_pause_time >= self.stack.timeout_secs():
             msg = _('The current %s will result in stack update '
                     'timeout.') % rsrc_defn.UPDATE_POLICY
             raise ValueError(msg)
-        update_timeout = self.stack.timeout_secs() - (
-            pause_sec * (batch_cnt - 1))
-        return update_timeout
+        return self.stack.timeout_secs() - total_pause_time
 
     def _replace(self, min_in_service, batch_size, pause_sec):
         """
@@ -312,7 +310,7 @@ class InstanceGroup(stack_resource.StackResource):
         capacity = len(self.nested()) if self.nested() else 0
         batches = list(self._get_batches(capacity, batch_size, min_in_service))
 
-        update_timeout = self._update_timeout(len(batches), 1, pause_sec)
+        update_timeout = self._update_timeout(len(batches), pause_sec)
 
         try:
             for index, (total_capacity, efft_bat_sz) in enumerate(batches):

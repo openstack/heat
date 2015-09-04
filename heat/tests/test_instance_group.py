@@ -46,7 +46,7 @@ class TestInstanceGroup(common.HeatTestCase):
         # there are 3 batches, so we need 2 pauses by 20 sec
         # result timeout should be 100 - 2 * 20 = 60
         self.assertEqual(60, self.instance_group._update_timeout(
-            efft_capacity=9, efft_bat_sz=3, pause_sec=20))
+            batch_cnt=3, pause_sec=20))
 
     def test_child_template(self):
         self.instance_group._create_template = mock.Mock(return_value='tpl')
