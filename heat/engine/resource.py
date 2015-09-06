@@ -61,12 +61,6 @@ class NoActionRequired(Exception):
     pass
 
 
-class UpdateInProgress(Exception):
-    def __init__(self, resource_name='Unknown'):
-        msg = _("The resource %s is already being updated.") % resource_name
-        super(Exception, self).__init__(six.text_type(msg))
-
-
 @six.python_2_unicode_compatible
 class Resource(object):
     ACTIONS = (
@@ -1310,7 +1304,7 @@ class Resource(object):
             raise
 
         if not updated_ok:
-            ex = UpdateInProgress(self.name)
+            ex = exception.UpdateInProgress(self.name)
             LOG.exception('atomic:%s engine_id:%s/%s' % (
                 rs.atomic_key, rs.engine_id, engine_id))
             raise ex

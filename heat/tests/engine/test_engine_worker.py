@@ -183,7 +183,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(worker.WorkerService, '_try_steal_engine_lock')
     def test_is_update_traversal_raise_update_inprogress(
             self, mock_tsl, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
-        mock_cru.side_effect = resource.UpdateInProgress
+        mock_cru.side_effect = exception.UpdateInProgress
         self.worker.engine_id = 'some-thing-else'
         mock_tsl.return_value = True
         self.worker.check_resource(
@@ -501,7 +501,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
 
     def test_is_cleanup_traversal_raise_update_inprogress(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
-        mock_crc.side_effect = resource.UpdateInProgress
+        mock_crc.side_effect = exception.UpdateInProgress
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)
