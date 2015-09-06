@@ -135,7 +135,7 @@ class ManilaShareTest(common.HeatTestCase):
     def test_share_create_unknown_status(self):
         share = self._init_share("stack_share_create_unknown")
         share.client().shares.get.return_value = self.deleting_share
-        exc = self.assertRaises(resource.ResourceUnknownStatus,
+        exc = self.assertRaises(exception.ResourceUnknownStatus,
                                 share.check_create_complete,
                                 self.deleting_share)
         self.assertIn("Unknown status", six.text_type(exc))

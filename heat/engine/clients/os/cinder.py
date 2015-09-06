@@ -22,7 +22,6 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
-from heat.engine import resource
 
 
 LOG = logging.getLogger(__name__)
@@ -160,7 +159,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             LOG.debug("Detachment failed - volume %(vol)s "
                       "is in %(status)s status" % {"vol": vol.id,
                                                    "status": vol.status})
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume detachment failed'))
         else:
@@ -178,7 +177,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             LOG.debug("Attachment failed - volume %(vol)s is "
                       "in %(status)s status" % {"vol": vol_id,
                                                 "status": vol.status})
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume attachment failed'))
 

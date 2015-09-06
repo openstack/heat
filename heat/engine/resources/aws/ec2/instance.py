@@ -869,7 +869,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         if status in list(cp.deferred_server_statuses + ['ACTIVE']):
             return status == 'SUSPENDED'
         else:
-            exc = resource.ResourceUnknownStatus(
+            exc = exception.ResourceUnknownStatus(
                 result=_('Suspend of instance %s failed') % server.name,
                 resource_status=status)
             raise exc

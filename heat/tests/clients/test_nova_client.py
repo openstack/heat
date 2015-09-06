@@ -270,7 +270,7 @@ class NovaClientPluginCheckActiveTests(NovaClientPluginTestCase):
             e_raise=resource.ResourceInError)),
         ('unknown', dict(
             status='VIKINGS!',
-            e_raise=resource.ResourceUnknownStatus))
+            e_raise=exception.ResourceUnknownStatus))
     ]
 
     def setUp(self):

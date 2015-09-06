@@ -257,7 +257,7 @@ class RemoteStack(resource.Resource):
         else:
             # Note: this should never happen, so it really means that
             # the resource/engine is in serious problem if it happens.
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=stack.stack_status,
                 status_reason=stack.stack_status_reason)
 

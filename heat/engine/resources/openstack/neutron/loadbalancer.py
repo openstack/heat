@@ -476,7 +476,7 @@ class Pool(neutron.NeutronResource):
                 raise resource.ResourceInError(
                     resource_status=vip_status,
                     status_reason=_('error in vip'))
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=vip_status,
                 result=_('Pool creation failed due to vip'))
         elif status == 'ERROR':
@@ -484,7 +484,7 @@ class Pool(neutron.NeutronResource):
                 resource_status=status,
                 status_reason=_('error in pool'))
         else:
-            raise resource.ResourceUnknownStatus(
+            raise exception.ResourceUnknownStatus(
                 resource_status=status,
                 result=_('Pool creation failed'))
 

@@ -14,6 +14,7 @@
 from oslo_log import log as logging
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
@@ -257,8 +258,8 @@ class ManilaShare(resource.Resource):
         else:
             reason = _('Unknown share_status during creation of share "{0}"'
                        ).format(self.resource_id)
-            raise resource.ResourceUnknownStatus(status_reason=reason,
-                                                 resource_status=share_status)
+            raise exception.ResourceUnknownStatus(
+                status_reason=reason, resource_status=share_status)
 
     def check_delete_complete(self, *args):
         if not self.resource_id:
@@ -283,7 +284,7 @@ class ManilaShare(resource.Resource):
             else:
                 reason = _('Unknown status during deleting share '
                            '"{0}"').format(self.resource_id)
-                raise resource.ResourceUnknownStatus(
+                raise exception.ResourceUnknownStatus(
                     status_reason=reason, resource_status=share.status)
 
     def handle_check(self):
