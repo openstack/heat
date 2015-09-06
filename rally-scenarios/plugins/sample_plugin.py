@@ -16,7 +16,7 @@
 """Sample plugin for Heat.
 
 For more Heat related benchmarks take a look here:
-http://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/heat/
+http://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios/heat
 
 About plugins: https://rally.readthedocs.org/en/latest/plugins.html
 
