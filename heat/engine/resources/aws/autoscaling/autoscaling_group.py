@@ -312,7 +312,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                      {'name': self.name,
                       'cooldown': self.properties[self.COOLDOWN]})
             if signal:
-                raise resource.NoActionRequired()
+                raise exception.NoActionRequired()
             else:
                 return
 

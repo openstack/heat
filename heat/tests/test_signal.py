@@ -21,7 +21,6 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
@@ -521,7 +520,7 @@ class SignalTest(common.HeatTestCase):
         self.m.StubOutWithMock(generic_resource.SignalResource,
                                'handle_signal')
         generic_resource.SignalResource.handle_signal(test_d).AndRaise(
-            resource.NoActionRequired())
+            exception.NoActionRequired())
 
         # _add_event should not be called.
         self.m.StubOutWithMock(generic_resource.SignalResource,

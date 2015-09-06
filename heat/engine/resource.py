@@ -57,10 +57,6 @@ def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
 
 
-class NoActionRequired(Exception):
-    pass
-
-
 @six.python_2_unicode_compatible
 class Resource(object):
     ACTIONS = (
@@ -1533,7 +1529,7 @@ class Resource(object):
             else:
                 reason_string = get_string_details()
             self._add_event('SIGNAL', self.status, reason_string)
-        except NoActionRequired:
+        except exception.NoActionRequired:
             # Don't log an event as it just spams the user.
             pass
         except Exception as ex:

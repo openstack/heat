@@ -21,7 +21,6 @@ from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine import function
-from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -312,7 +311,7 @@ class TestGroupAdjust(common.HeatTestCase):
     def test_scaling_policy_cooldown_toosoon_with_signal(self):
         with mock.patch.object(self.group, '_cooldown_inprogress',
                                return_value=True):
-            self.assertRaises(resource.NoActionRequired, self.group.adjust, 1,
+            self.assertRaises(exception.NoActionRequired, self.group.adjust, 1,
                               signal=True)
 
     def test_scaling_same_capacity(self):
