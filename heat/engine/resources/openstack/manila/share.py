@@ -249,12 +249,12 @@ class ManilaShare(resource.Resource):
                     'Error during applying access rules to share "{0}". '
                     'The root cause of the problem is the following: {1}.'
                 ).format(self.resource_id, ex.message)
-                raise resource.ResourceInError(status_reason=reason)
+                raise exception.ResourceInError(status_reason=reason)
         elif share_status == self.STATUS_ERROR:
             reason = _('Error during creation of share "{0}"').format(
                 self.resource_id)
-            raise resource.ResourceInError(status_reason=reason,
-                                           resource_status=share_status)
+            raise exception.ResourceInError(status_reason=reason,
+                                            resource_status=share_status)
         else:
             reason = _('Unknown share_status during creation of share "{0}"'
                        ).format(self.resource_id)
@@ -276,7 +276,7 @@ class ManilaShare(resource.Resource):
                 return False
             elif share.status in (self.STATUS_ERROR,
                                   self.STATUS_ERROR_DELETING):
-                raise resource.ResourceInError(
+                raise exception.ResourceInError(
                     status_reason=_(
                         'Error during deleting share "{0}".'
                     ).format(self.resource_id),

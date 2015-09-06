@@ -175,7 +175,7 @@ class SaharaCluster(resource.Resource):
     def check_create_complete(self, cluster_id):
         cluster = self.client().clusters.get(cluster_id)
         if cluster.status == self.CLUSTER_ERROR:
-            raise resource.ResourceInError(resource_status=cluster.status)
+            raise exception.ResourceInError(resource_status=cluster.status)
 
         if cluster.status != self.CLUSTER_ACTIVE:
             return False
@@ -196,7 +196,7 @@ class SaharaCluster(resource.Resource):
             return True
         else:
             if cluster.status == self.CLUSTER_ERROR:
-                raise resource.ResourceInError(resource_status=cluster.status)
+                raise exception.ResourceInError(resource_status=cluster.status)
 
         return False
 

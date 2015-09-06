@@ -13,6 +13,7 @@
 
 from oslo_log import log as logging
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
@@ -183,7 +184,7 @@ class TroveCluster(resource.Resource):
 
         for instance in cluster.instances:
             if instance['status'] in self.BAD_STATUSES:
-                raise resource.ResourceInError(
+                raise exception.ResourceInError(
                     resource_status=instance['status'],
                     status_reason=self.TROVE_STATUS_REASON.get(
                         instance['status'], _("Unknown")))

@@ -405,6 +405,15 @@ class ResourceUnknownStatus(HeatException):
             result=result, status_reason=status_reason, **kwargs)
 
 
+class ResourceInError(HeatException):
+    msg_fmt = _('Went to status %(resource_status)s '
+                'due to "%(status_reason)s"')
+
+    def __init__(self, status_reason=_('Unknown'), **kwargs):
+        super(ResourceInError, self).__init__(status_reason=status_reason,
+                                              **kwargs)
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions so they can be handled by the webob fault
     application in the wsgi pipeline.

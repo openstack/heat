@@ -388,7 +388,7 @@ class OSDBInstance(resource.Resource):
         if instance is None:
             return False
         if instance.status in self.BAD_STATUSES:
-            raise resource.ResourceInError(
+            raise exception.ResourceInError(
                 resource_status=instance.status,
                 status_reason=self.TROVE_STATUS_REASON.get(instance.status,
                                                            _("Unknown")))

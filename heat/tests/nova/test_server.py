@@ -30,7 +30,6 @@ from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine.clients.os import zaqar
 from heat.engine import environment
-from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
 from heat.engine.resources import scheduler_hints as sh
 from heat.engine import scheduler
@@ -536,7 +535,7 @@ class ServersTest(common.HeatTestCase):
         self.fc.servers.get(server.resource_id).AndReturn(return_server)
         self.m.ReplayAll()
 
-        e = self.assertRaises(resource.ResourceInError,
+        e = self.assertRaises(exception.ResourceInError,
                               server.check_create_complete,
                               server.resource_id)
         self.assertEqual(

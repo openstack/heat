@@ -251,7 +251,7 @@ class RemoteStack(resource.Resource):
         elif stack.status == self.COMPLETE:
             return True
         elif stack.status == self.FAILED:
-            raise resource.ResourceInError(
+            raise exception.ResourceInError(
                 resource_status=stack.stack_status,
                 status_reason=stack.stack_status_reason)
         else:
