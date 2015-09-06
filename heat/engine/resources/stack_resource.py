@@ -93,12 +93,12 @@ class StackResource(resource.Resource):
 
         # FIXME (ricolin): seems currently can not call super here
         if self.nested() is None and self.status == self.FAILED:
-            raise resource.UpdateReplace(self)
+            raise exception.UpdateReplace(self)
 
         if (check_init_complete and
                 self.nested() is None and
                 self.action == self.INIT and self.status == self.COMPLETE):
-            raise resource.UpdateReplace(self)
+            raise exception.UpdateReplace(self)
 
         return True
 

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import clients
 from heat.engine import constraints
@@ -186,7 +187,7 @@ class MonascaAlarmDefinition(resource.Resource):
             except Exception as ex:
                 if self.client_plugin().is_un_processable(ex):
                     # Monasca does not allow to update the sub expression
-                    raise resource.UpdateReplace(resource_name=self.name)
+                    raise exception.UpdateReplace(resource_name=self.name)
 
     def handle_delete(self):
         if self.resource_id is not None:

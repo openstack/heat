@@ -24,7 +24,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine import resource
 from heat.engine.resources.openstack.heat import remote_stack
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -619,7 +618,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                       rsrc.type(),
                                                       props)
-        self.assertRaises(resource.UpdateReplace,
+        self.assertRaises(exception.UpdateReplace,
                           scheduler.TaskRunner(rsrc.update, update_snippet))
 
     def test_update_failed(self):

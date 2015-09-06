@@ -57,13 +57,6 @@ def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
 
 
-class UpdateReplace(Exception):
-    '''Raised when resource update requires replacement.'''
-    def __init__(self, resource_name='Unknown'):
-        msg = _("The Resource %s requires replacement.") % resource_name
-        super(Exception, self).__init__(six.text_type(msg))
-
-
 class NoActionRequired(Exception):
     pass
 
@@ -521,7 +514,7 @@ class Resource(object):
             raise exception.NotSupported(feature=mesg)
 
         if not changed_properties_set.issubset(update_allowed_set):
-            raise UpdateReplace(self.name)
+            raise exception.UpdateReplace(self.name)
 
         return dict((k, after_props.get(k)) for k in changed_properties_set)
 
@@ -867,18 +860,18 @@ class Resource(object):
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
         if self.status == self.FAILED:
-            raise UpdateReplace(self)
+            raise exception.UpdateReplace(self)
 
         if check_init_complete and \
                 (self.action == self.INIT and self.status == self.COMPLETE):
-            raise UpdateReplace(self)
+            raise exception.UpdateReplace(self)
 
         if prev_resource is not None:
             cur_class_def, cur_ver = self.implementation_signature()
             prev_class_def, prev_ver = prev_resource.implementation_signature()
 
             if prev_class_def != cur_class_def:
-                raise UpdateReplace(self.name)
+                raise exception.UpdateReplace(self.name)
             if prev_ver != cur_ver:
                 return True
 
@@ -947,7 +940,7 @@ class Resource(object):
         LOG.info(_LI('updating %s'), six.text_type(self))
 
         self.updated_time = datetime.utcnow()
-        with self._action_recorder(action, UpdateReplace):
+        with self._action_recorder(action, exception.UpdateReplace):
             after_props.validate()
             tmpl_diff = self.update_template_diff(function.resolve(after),
                                                   before)
@@ -1576,7 +1569,7 @@ class Resource(object):
 
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         if prop_diff:
-            raise UpdateReplace(self.name)
+            raise exception.UpdateReplace(self.name)
 
     def metadata_update(self, new_metadata=None):
         '''

@@ -156,7 +156,7 @@ class WorkerService(service.Service):
                     check_resource_update(rsrc, tmpl.id, resource_data,
                                           self.engine_id,
                                           stack.time_remaining())
-                except resource.UpdateReplace:
+                except exception.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
                     LOG.info("Replacing resource with new id %s", new_res_id)
                     rpc_data = sync_point.serialize_input_data(resource_data)

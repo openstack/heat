@@ -1118,7 +1118,7 @@ class InstancesTest(common.HeatTestCase):
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['ImageId'] = 'mustreplace'
         updater = scheduler.TaskRunner(instance.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
+        self.assertRaises(exception.UpdateReplace, updater)
 
         self.m.VerifyAll()
 

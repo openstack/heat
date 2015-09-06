@@ -24,7 +24,6 @@ from heat.engine.hot import functions as hot_functions
 from heat.engine.hot import parameters as hot_param
 from heat.engine.hot import template as hot_template
 from heat.engine import parameters
-from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import stack as parser
@@ -1183,7 +1182,7 @@ class HotStackTest(common.HeatTestCase):
              'Properties': {'Foo': 'xyz'}},
             {'Type': 'ResourceWithPropsType',
              'Properties': {'Foo': 'abc'}}
-        ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
+        ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1227,7 +1226,7 @@ class HotStackTest(common.HeatTestCase):
              'Properties': {'Foo': 'xyz'}},
             {'Type': 'ResourceWithPropsType',
              'Properties': {'Foo': 'abc'}}
-        ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
+        ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)

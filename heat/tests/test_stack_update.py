@@ -15,6 +15,7 @@ import copy
 
 import mock
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import resource
@@ -340,7 +341,7 @@ class StackUpdateTest(common.HeatTestCase):
 
         def check_and_raise(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-            raise resource.UpdateReplace
+            raise exception.UpdateReplace
 
         mock_upd = self.patchobject(generic_rsrc.ResourceWithProps,
                                     'update_template_diff',

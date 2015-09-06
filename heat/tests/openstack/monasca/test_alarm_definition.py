@@ -13,6 +13,7 @@
 
 import mock
 
+from heat.common import exception
 from heat.engine.clients.os import monasca as client_plugin
 from heat.engine import resource
 from heat.engine.resources.openstack.monasca import alarm_definition
@@ -219,7 +220,7 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
         prop_diff = {alarm_definition.MonascaAlarmDefinition.EXPRESSION:
                      'expression-updated'}
 
-        self.assertRaises(resource.UpdateReplace,
+        self.assertRaises(exception.UpdateReplace,
                           self.test_resource.handle_update,
                           json_snippet=None,
                           tmpl_diff=None,

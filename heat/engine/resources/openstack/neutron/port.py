@@ -14,12 +14,12 @@
 from oslo_log import log as logging
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import support
@@ -415,7 +415,7 @@ class Port(neutron.NeutronResource):
                       prev_resource, check_init_complete=True):
 
         if after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS':
-            raise resource.UpdateReplace(self.name)
+            raise exception.UpdateReplace(self.name)
 
         return super(Port, self)._needs_update(
             after, before, after_props, before_props, prev_resource,
