@@ -33,7 +33,7 @@ class ResourceTemplatesTest(common.HeatTestCase):
         When creating a template from scratch, an empty list is accepted as
         the "old" resources and new resources are created up to num_resource.
         """
-        templates = template.resource_templates([], {'type': 'Foo'}, 2, 0)
+        templates = template.member_definitions([], {'type': 'Foo'}, 2, 0)
         expected = [
             ('stubbed-id-0', {'type': 'Foo'}),
             ('stubbed-id-1', {'type': 'Foo'})]
@@ -47,7 +47,7 @@ class ResourceTemplatesTest(common.HeatTestCase):
         old_resources = [
             ('old-id-0', {'type': 'Foo'}),
             ('old-id-1', {'type': 'Foo'})]
-        templates = template.resource_templates(old_resources, {'type': 'Bar'},
+        templates = template.member_definitions(old_resources, {'type': 'Bar'},
                                                 1, 2)
         expected = [('old-id-1', {'type': 'Bar'})]
         self.assertEqual(expected, list(templates))
@@ -61,7 +61,7 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', {'type': 'Foo'}),
             ('old-id-1', {'type': 'Foo'})]
         new_spec = {'type': 'Bar'}
-        templates = template.resource_templates(old_resources, new_spec, 2, 1)
+        templates = template.member_definitions(old_resources, new_spec, 2, 1)
         expected = [
             ('old-id-0', {'type': 'Bar'}),
             ('old-id-1', {'type': 'Foo'})]
@@ -78,7 +78,7 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', spec),
             ('old-id-1', spec)]
         new_spec = {'type': 'Bar'}
-        templates = template.resource_templates(old_resources, new_spec, 4, 2)
+        templates = template.member_definitions(old_resources, new_spec, 4, 2)
         expected = [
             ('old-id-0', spec),
             ('old-id-1', spec),
@@ -96,7 +96,7 @@ class ResourceTemplatesTest(common.HeatTestCase):
             ('old-id-0', {'type': 'Bar'}),
             ('old-id-1', {'type': 'Foo'})]
         new_spec = {'type': 'Bar'}
-        templates = template.resource_templates(old_resources, new_spec, 2, 1)
+        templates = template.member_definitions(old_resources, new_spec, 2, 1)
         second_batch_expected = [
             ('old-id-0', {'type': 'Bar'}),
             ('old-id-1', {'type': 'Bar'})]
