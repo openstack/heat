@@ -779,6 +779,23 @@ class ResourceRegistryTest(common.HeatTestCase):
         types = registry.get_types(type_name="r'[^\+]'")
         self.assertEqual([], types)
 
+    def test_list_type_with_version(self):
+        registry = resources.global_env().registry
+        types = registry.get_types(version='5.0.0')
+        self.assertIn('ResourceTypeUnSupportedLiberty', types)
+        self.assertNotIn('ResourceTypeSupportedKilo', types)
+
+    def test_list_type_with_version_none(self):
+        registry = resources.global_env().registry
+        types = registry.get_types(version=None)
+        self.assertIn('ResourceTypeUnSupportedLiberty', types)
+        self.assertIn('ResourceTypeSupportedKilo', types)
+
+    def test_list_type_with_version_invalid(self):
+        registry = resources.global_env().registry
+        types = registry.get_types(version='invalid')
+        self.assertEqual([], types)
+
 
 class HookMatchTest(common.HeatTestCase):
 

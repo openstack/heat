@@ -301,3 +301,8 @@ class ResourceTypeUnSupportedLiberty(GenericResource):
     support_status = support.SupportStatus(
         version='5.0.0',
         status=support.UNSUPPORTED)
+
+
+class ResourceTypeSupportedKilo(GenericResource):
+    support_status = support.SupportStatus(
+        version='2015.1')

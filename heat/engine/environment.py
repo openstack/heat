@@ -442,7 +442,8 @@ class ResourceRegistry(object):
     def get_types(self,
                   cnxt=None,
                   support_status=None,
-                  type_name=None):
+                  type_name=None,
+                  version=None):
         '''Return a list of valid resource types.'''
 
         # validate the support status
@@ -488,13 +489,18 @@ class ResourceRegistry(object):
             except:  # noqa
                 return False
 
+        def version_matches(cls):
+            return (version is None or
+                    cls.get_class().support_status.version == version)
+
         return [name for name, cls in six.iteritems(self._registry)
                 if (is_resource(name) and
                     name_matches(name) and
                     status_matches(cls) and
                     is_available(cls) and
                     is_allowed(enforcer, name) and
-                    not_hidden_matches(cls))]
+                    not_hidden_matches(cls) and
+                    version_matches(cls))]
 
 
 class Environment(object):
