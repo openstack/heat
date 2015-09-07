@@ -178,8 +178,8 @@ def stack_create(context, values):
     return IMPL.stack_create(context, values)
 
 
-def stack_update(context, stack_id, values):
-    return IMPL.stack_update(context, stack_id, values)
+def stack_update(context, stack_id, values, exp_trvsl=None):
+    return IMPL.stack_update(context, stack_id, values, exp_trvsl=exp_trvsl)
 
 
 def stack_delete(context, stack_id):
