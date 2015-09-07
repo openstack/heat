@@ -114,6 +114,8 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.ngt_mgr = sahara_mock.node_group_templates
         self.patchobject(sahara.SaharaClientPlugin,
                          '_create').return_value = sahara_mock
+        self.patchobject(sahara.SaharaClientPlugin, 'validate_hadoop_version'
+                         ).return_value = None
         self.fake_ngt = FakeNodeGroupTemplate()
 
         self.t = template_format.parse(node_group_template)
@@ -256,6 +258,8 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         self.ct_mgr = sahara_mock.cluster_templates
         self.patchobject(sahara.SaharaClientPlugin,
                          '_create').return_value = sahara_mock
+        self.patchobject(sahara.SaharaClientPlugin, 'validate_hadoop_version'
+                         ).return_value = None
         self.fake_ct = FakeClusterTemplate()
 
         self.t = template_format.parse(cluster_template)

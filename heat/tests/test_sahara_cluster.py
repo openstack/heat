@@ -68,6 +68,8 @@ class SaharaClusterTest(common.HeatTestCase):
         self.sahara_mock = mock.MagicMock()
         self.patchobject(sahara.SaharaClientPlugin, '_create'
                          ).return_value = self.sahara_mock
+        self.patchobject(sahara.SaharaClientPlugin, 'validate_hadoop_version'
+                         ).return_value = None
         self.cl_mgr = self.sahara_mock.clusters
         self.fake_cl = FakeCluster()
 

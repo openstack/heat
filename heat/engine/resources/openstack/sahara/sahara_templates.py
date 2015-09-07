@@ -265,6 +265,11 @@ class SaharaNodeGroupTemplate(resource.Resource):
                             message=ex.message)
                     raise
 
+        self.client_plugin().validate_hadoop_version(
+            self.properties[self.PLUGIN_NAME],
+            self.properties[self.HADOOP_VERSION]
+        )
+
 
 class SaharaClusterTemplate(resource.Resource):
 
@@ -421,6 +426,11 @@ class SaharaClusterTemplate(resource.Resource):
             msg = _("%s must be provided"
                     ) % self.MANAGEMENT_NETWORK
             raise exception.StackValidationFailed(message=msg)
+
+        self.client_plugin().validate_hadoop_version(
+            self.properties[self.PLUGIN_NAME],
+            self.properties[self.HADOOP_VERSION]
+        )
 
 
 def resource_mapping():
