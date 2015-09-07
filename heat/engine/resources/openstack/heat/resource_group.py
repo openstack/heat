@@ -16,7 +16,6 @@ import copy
 import itertools
 
 import six
-from six.moves import range
 
 from heat.common import exception
 from heat.common import grouputils
@@ -30,6 +29,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
 from heat.engine import template
+from heat.scaling import rolling_update
 
 template_template = {
     "heat_template_version": "2015-04-30",
@@ -483,30 +483,50 @@ class ResourceGroup(stack_resource.StackResource):
         return self.stack.timeout_secs() - total_pause_time
 
     def _get_batches(self, targ_cap, init_cap, batch_size, min_in_service):
+        max_cap = curr_cap = init_cap
 
-        def get_batched_names(names, batch_size):
-            for i in range(0, len(names), batch_size):
-                yield names[0:i + batch_size]
+        # Total number of members that have been updated
+        total_updated = 0
+        # Total number of members we care about (i.e. index < targ_cap) that
+        # have been updated
+        updated = 0
 
-        efft_bat_sz = min(batch_size, targ_cap)
-        efft_min_sz = min(min_in_service, targ_cap)
+        while updated < targ_cap:
+            new_cap, total_new = rolling_update.next_batch(targ_cap,
+                                                           curr_cap,
+                                                           updated,
+                                                           batch_size,
+                                                           min_in_service)
 
-        # effective capacity taking into account min_in_service and batch_size
-        efft_capacity = max(targ_cap - efft_bat_sz, efft_min_sz) + efft_bat_sz
+            max_cap = max(new_cap, max_cap)
+            if max_cap <= init_cap:
+                # Don't ever update existing nodes that are beyond the size
+                # of our target capacity, but continue to count them toward
+                # the number in service
+                high_water = targ_cap
+            else:
+                high_water = max_cap
+            new_names = list(self._resource_names(high_water))[::-1]
 
-        # Reset effective capacity, if there are enough resources
-        if efft_capacity <= init_cap:
-            efft_capacity = targ_cap
+            # New members created
+            num_created = max(high_water - init_cap, 0)
 
-        remainder = efft_capacity
-        # filtered names for effective capacity
-        new_names = self._resource_names(efft_capacity)
-        # batched names in reverse order, we've to add new
-        # resources if required before modifing existing
-        batched_names = get_batched_names(list(new_names)[::-1], efft_bat_sz)
-        while remainder > 0:
-            yield efft_capacity, next(batched_names)
-            remainder -= efft_bat_sz
+            total_updated += total_new - max(new_cap - curr_cap, 0)
+
+            create_or_update_names = new_names[:num_created + total_updated]
+
+            yield high_water, create_or_update_names
+
+            # Updates to members we don't care about (index < targ_cap)
+            ign_updates = min(max(min(high_water, init_cap) - targ_cap, 0),
+                              total_updated)
+
+            updated = total_updated - ign_updates
+            curr_cap = max_cap
+
+            if not rolling_update.needs_update(targ_cap, curr_cap,
+                                               updated):
+                break
 
     def _replace(self, min_in_service, batch_size, pause_sec):
 
