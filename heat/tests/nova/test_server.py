@@ -19,6 +19,7 @@ import mox
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
+from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
@@ -1924,6 +1925,7 @@ class ServersTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
+        self.patchobject(servers.Server, 'prepare_for_replace')
 
         tmpl['Resources']['WebServer']['Properties'][
             'flavor_update_policy'] = 'REPLACE'
@@ -1944,6 +1946,7 @@ class ServersTest(common.HeatTestCase):
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
+        self.patchobject(servers.Server, 'prepare_for_replace')
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_server_update_flavor_replace',
                                 resource_defns['WebServer'], stack)
@@ -1960,6 +1963,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_update_image_replace(self):
         stack_name = 'update_imgrep'
         (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.patchobject(servers.Server, 'prepare_for_replace')
 
         tmpl.t['Resources']['WebServer']['Properties'][
             'image_update_policy'] = 'REPLACE'
@@ -3822,6 +3826,10 @@ class ServerInternalPortTest(common.HeatTestCase):
                                             'create_port')
         self.port_delete = self.patchobject(neutronclient.Client,
                                             'delete_port')
+        self.port_show = self.patchobject(neutronclient.Client,
+                                          'show_port')
+        self.port_update = self.patchobject(neutronclient.Client,
+                                            'update_port')
 
     def _return_template_stack_and_rsrc_defn(self, stack_name, temp):
         templ = template.Template(template_format.parse(temp),
@@ -4163,3 +4171,121 @@ class ServerInternalPortTest(common.HeatTestCase):
                          update_data.call_args_list[1][0])
         self.assertEqual({'port_type': 'external_ports'},
                          update_data.call_args_list[1][1])
+
+    def test_prepare_ports_for_replace(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+        """
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+        port_ids = [{'id': 1122}, {'id': 3344}]
+        external_port_ids = [{'id': 5566}]
+        server._data = {"internal_ports": jsonutils.dumps(port_ids),
+                        "external_ports": jsonutils.dumps(external_port_ids)}
+        data_set = self.patchobject(server, 'data_set')
+
+        port1_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet1',
+                'ip_address': '41.41.41.41'
+            }
+        }
+        port2_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet2',
+                'ip_address': '42.42.42.42'
+            }
+        }
+        port3_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet3',
+                'ip_address': '43.43.43.43'
+            }
+        }
+        self.port_show.side_effect = [{'port': port1_fixed_ip},
+                                      {'port': port2_fixed_ip},
+                                      {'port': port3_fixed_ip}]
+
+        server.prepare_for_replace()
+
+        # check, that data was updated
+        port_ids[0].update(port1_fixed_ip)
+        port_ids[1].update(port2_fixed_ip)
+        external_port_ids[0].update(port3_fixed_ip)
+
+        expected_data = jsonutils.dumps(port_ids)
+        expected_external_data = jsonutils.dumps(external_port_ids)
+        data_set.has_calls(('internal_ports', expected_data),
+                           ('external_ports', expected_external_data))
+
+        # check, that all ip were removed from ports
+        empty_fixed_ips = {'port': {'fixed_ips': []}}
+        self.port_update.has_calls((1122, empty_fixed_ips),
+                                   (3344, empty_fixed_ips),
+                                   (5566, empty_fixed_ips))
+
+    def test_restore_ports_after_rollback(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+        """
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+        port_ids = [{'id': 1122}, {'id': 3344}]
+        external_port_ids = [{'id': 5566}]
+        server._data = {"internal_ports": jsonutils.dumps(port_ids),
+                        "external_ports": jsonutils.dumps(external_port_ids)}
+        port1_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet1',
+                'ip_address': '41.41.41.41'
+            }
+        }
+        port2_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet2',
+                'ip_address': '42.42.42.42'
+            }
+        }
+        port3_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet3',
+                'ip_address': '43.43.43.43'
+            }
+        }
+        port_ids[0].update(port1_fixed_ip)
+        port_ids[1].update(port2_fixed_ip)
+        external_port_ids[0].update(port3_fixed_ip)
+        # add data to old server in backup stack
+        old_server = mock.Mock()
+        stack._backup_stack = mock.Mock()
+        stack._backup_stack().resources.get.return_value = old_server
+        old_server._data_get_ports.side_effect = [port_ids, []]
+
+        server.restore_after_rollback()
+
+        # check, that all ip were removed from new_ports
+        empty_fixed_ips = {'port': {'fixed_ips': []}}
+        self.port_update.has_calls((1122, empty_fixed_ips),
+                                   (3344, empty_fixed_ips),
+                                   (5566, empty_fixed_ips))
+
+        # check, that all ip were restored for old_ports
+        self.port_update.has_calls((1122, {'port': port1_fixed_ip}),
+                                   (3344, {'port': port2_fixed_ip}),
+                                   (5566, {'port': port3_fixed_ip}))
