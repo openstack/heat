@@ -523,6 +523,39 @@ class StackTest(common.HeatTestCase):
         self.stack.update(newstack)
         self.assertIsNotNone(self.stack.updated_time)
 
+    def test_update_prev_raw_template(self):
+        self.stack = stack.Stack(self.ctx, 'updated_time_test',
+                                 self.tmpl)
+        self.assertIsNone(self.stack.updated_time)
+        self.stack.store()
+        self.stack.create()
+
+        self.assertIsNone(self.stack.prev_raw_template_id)
+
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'R1': {'Type': 'GenericResourceType'}}}
+        newstack = stack.Stack(self.ctx, 'updated_time_test',
+                               template.Template(tmpl))
+        self.stack.update(newstack)
+        self.assertIsNotNone(self.stack.prev_raw_template_id)
+        prev_t = template.Template.load(self.ctx,
+                                        self.stack.prev_raw_template_id)
+        self.assertEqual(tmpl, prev_t.t)
+        prev_id = self.stack.prev_raw_template_id
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'R2': {'Type': 'GenericResourceType'}}}
+        newstack2 = stack.Stack(self.ctx, 'updated_time_test',
+                                template.Template(tmpl2))
+        self.stack.update(newstack2)
+        self.assertIsNotNone(self.stack.prev_raw_template_id)
+        self.assertNotEqual(prev_id, self.stack.prev_raw_template_id)
+        prev_t2 = template.Template.load(self.ctx,
+                                         self.stack.prev_raw_template_id)
+        self.assertEqual(tmpl2, prev_t2.t)
+        self.assertRaises(exception.NotFound,
+                          template.Template.load, self.ctx, prev_id)
+
     def test_access_policy_update(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {

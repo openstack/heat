@@ -23,10 +23,12 @@ from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import template
+from heat.objects import stack as stack_object
 from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
+
 
 empty_template = template_format.parse('''{
   "HeatTemplateFormatVersion" : "2012-12-12",
@@ -854,17 +856,21 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
                                        'handle_create', side_effect=Exception)
 
-        with mock.patch.object(self.stack, 'state_set',
-                               side_effect=self.stack.state_set) as mock_state:
+        with mock.patch.object(stack_object.Stack,
+                               'update_by_id') as mock_db_update:
             self.stack.update(updated_stack)
             self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                              self.stack.state)
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-            self.assertEqual(2, mock_state.call_count)
-            self.assertEqual(('UPDATE', 'IN_PROGRESS'),
-                             mock_state.call_args_list[0][0][:2])
-            self.assertEqual(('ROLLBACK', 'IN_PROGRESS'),
-                             mock_state.call_args_list[1][0][:2])
+            self.assertEqual(5, mock_db_update.call_count)
+            self.assertEqual('UPDATE',
+                             mock_db_update.call_args_list[0][0][2]['action'])
+            self.assertEqual('IN_PROGRESS',
+                             mock_db_update.call_args_list[0][0][2]['status'])
+            self.assertEqual('ROLLBACK',
+                             mock_db_update.call_args_list[1][0][2]['action'])
+            self.assertEqual('IN_PROGRESS',
+                             mock_db_update.call_args_list[1][0][2]['status'])
 
         mock_create.assert_called_once_with()
 
