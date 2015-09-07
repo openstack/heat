@@ -406,7 +406,7 @@ class TestGetBatches(common.HeatTestCase):
         ('3_2_0', dict(curr_cap=3, bat_size=2, min_serv=0,
                        batches=[(3, 2), (3, 1)])),
         ('3_2_4', dict(curr_cap=3, bat_size=2, min_serv=4,
-                       batches=[(5, 2), (5, 1), (3, 0)])),
+                       batches=[(5, 2), (4, 1), (3, 0)])),
         ('4_4_0', dict(curr_cap=4, bat_size=4, min_serv=0,
                        batches=[(4, 4)])),
         ('4_5_0', dict(curr_cap=4, bat_size=5, min_serv=0,
