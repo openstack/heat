@@ -48,9 +48,6 @@ class KeystoneRole(resource.Resource):
     def _create_role(self, role_name):
         return self.client().roles.create(name=role_name)
 
-    def _delete_role(self, role_id):
-        return self.client().roles.delete(role_id)
-
     def _update_role(self, role_id, new_name):
         return self.client().roles.update(
             role=role_id,
@@ -72,13 +69,6 @@ class KeystoneRole(resource.Resource):
                 role_id=self.resource_id,
                 new_name=name
             )
-
-    def handle_delete(self):
-        if self.resource_id is not None:
-            try:
-                self._delete_role(role_id=self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

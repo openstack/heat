@@ -324,25 +324,6 @@ class KeystoneProjectTest(common.HeatTestCase):
             domain='default'
         )
 
-    def test_project_handle_delete(self):
-        self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.projects.delete.return_value = None
-
-        self.assertIsNone(self.test_project.handle_delete())
-        self.projects.delete.assert_called_once_with(
-            self.test_project.resource_id
-        )
-
-    def test_project_handle_delete_resource_id_is_none(self):
-        self.resource_id = None
-        self.assertIsNone(self.test_project.handle_delete())
-
-    def test_project_handle_delete_not_found(self):
-        exc = self.keystoneclient.NotFound
-        self.projects.delete.side_effect = exc
-
-        self.assertIsNone(self.test_project.handle_delete())
-
     def test_show_resource(self):
         project = mock.Mock()
         project.to_dict.return_value = {'attr': 'val'}

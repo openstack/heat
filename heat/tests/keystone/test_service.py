@@ -169,25 +169,6 @@ class KeystoneServiceTest(common.HeatTestCase):
             description=None
         )
 
-    def test_service_handle_delete(self):
-        self.test_service.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.services.delete.return_value = None
-
-        self.assertIsNone(self.test_service.handle_delete())
-        self.services.delete.assert_called_once_with(
-            self.test_service.resource_id
-        )
-
-    def test_service_handle_delete_resource_id_is_none(self):
-        self.test_service.resource_id = None
-        self.assertIsNone(self.test_service.handle_delete())
-
-    def test_service_handle_delete_not_found(self):
-        exc = self.keystoneclient.NotFound
-        self.services.delete.side_effect = exc
-
-        self.assertIsNone(self.test_service.handle_delete())
-
     def test_resource_mapping(self):
         mapping = service.resource_mapping()
         self.assertEqual(1, len(mapping))
