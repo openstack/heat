@@ -372,7 +372,7 @@ class CeilometerAlarm(resource.Resource):
         except exception.WatchRuleNotFound:
             pass
 
-        super(CeilometerAlarm, self).handle_delete()
+        return super(CeilometerAlarm, self).handle_delete()
 
     def handle_check(self):
         watch_name = self.physical_resource_name()
