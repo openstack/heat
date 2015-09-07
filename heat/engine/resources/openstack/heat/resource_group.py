@@ -342,9 +342,9 @@ class ResourceGroup(stack_resource.StackResource):
                 for resource in grouputils.get_members(self)]
 
     def _count_black_listed(self):
-        """Get black list count"""
-        return len(self._name_blacklist()
-                   & set(grouputils.get_member_names(self)))
+        """Return the number of current resource names that are blacklisted"""
+        existing_members = grouputils.get_member_names(self)
+        return len(self._name_blacklist() & set(existing_members))
 
     def handle_create(self):
         names = self._resource_names()
@@ -474,15 +474,39 @@ class ResourceGroup(stack_resource.StackResource):
                                  policy[self.MAX_BATCH_SIZE],
                                  policy[self.PAUSE_TIME])
 
-    def _update_timeout(self, efft_capacity, efft_bat_sz, pause_sec):
-        batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
-        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
+    def _update_timeout(self, batch_cnt, pause_sec):
+        total_pause_time = pause_sec * max(batch_cnt - 1, 0)
+        if total_pause_time >= self.stack.timeout_secs():
             msg = _('The current %s will result in stack update '
                     'timeout.') % rsrc_defn.UPDATE_POLICY
             raise ValueError(msg)
-        update_timeout = self.stack.timeout_secs() - (
-            pause_sec * (batch_cnt - 1))
-        return update_timeout
+        return self.stack.timeout_secs() - total_pause_time
+
+    def _get_batches(self, targ_cap, init_cap, batch_size, min_in_service):
+
+        def get_batched_names(names, batch_size):
+            for i in range(0, len(names), batch_size):
+                yield names[0:i + batch_size]
+
+        efft_bat_sz = min(batch_size, targ_cap)
+        efft_min_sz = min(min_in_service, targ_cap)
+
+        # effective capacity taking into account min_in_service and batch_size
+        efft_capacity = max(targ_cap - efft_bat_sz, efft_min_sz) + efft_bat_sz
+
+        # Reset effective capacity, if there are enough resources
+        if efft_capacity <= init_cap:
+            efft_capacity = targ_cap
+
+        remainder = efft_capacity
+        # filtered names for effective capacity
+        new_names = self._resource_names(efft_capacity)
+        # batched names in reverse order, we've to add new
+        # resources if required before modifing existing
+        batched_names = get_batched_names(list(new_names)[::-1], efft_bat_sz)
+        while remainder > 0:
+            yield efft_capacity, next(batched_names)
+            remainder -= efft_bat_sz
 
     def _replace(self, min_in_service, batch_size, pause_sec):
 
@@ -490,10 +514,6 @@ class ResourceGroup(stack_resource.StackResource):
             duration = timeutils.Duration(pause_sec)
             while not duration.expired():
                 yield
-
-        def get_batched_names(names, batch_size):
-            for i in range(0, len(names), batch_size):
-                yield names[0:i + batch_size]
 
         # blacklisted names exiting and new
         name_blacklist = self._name_blacklist()
@@ -507,38 +527,22 @@ class ResourceGroup(stack_resource.StackResource):
         # final capacity expected after replace
         capacity = min(curr_cap, self.get_size())
 
-        efft_bat_sz = min(batch_size, capacity)
-        efft_min_sz = min(min_in_service, capacity)
+        batches = list(self._get_batches(capacity, curr_cap, batch_size,
+                                         min_in_service))
+        update_timeout = self._update_timeout(len(batches), pause_sec)
 
-        # effective capacity taking into account min_in_service and batch_size
-        efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
+        def tasks():
+            for index, (curr_cap, updated_resources) in enumerate(batches):
+                yield scheduler.TaskRunner(
+                    self._run_to_completion,
+                    self._assemble_for_rolling_update(updated_resources,
+                                                      name_blacklist),
+                    update_timeout)
 
-        # Reset effective capacity, if there are enough resources
-        if efft_capacity <= curr_cap:
-            efft_capacity = capacity
+                if index < (len(batches) - 1) and pause_sec > 0:
+                    yield scheduler.TaskRunner(pause_between_batch, pause_sec)
 
-        if efft_capacity > 0:
-            update_timeout = self._update_timeout(efft_capacity,
-                                                  efft_bat_sz, pause_sec)
-        checkers = []
-        remainder = efft_capacity
-        # filtered names for effective capacity
-        new_names = self._resource_names(efft_capacity)
-        # batched names in reverse order, we've to add new
-        # resources if required before modifing existing
-        batched_names = get_batched_names(list(new_names)[::-1], efft_bat_sz)
-        while remainder > 0:
-            checkers.append(scheduler.TaskRunner(
-                self._run_to_completion,
-                self._assemble_for_rolling_update(next(batched_names),
-                                                  name_blacklist),
-                update_timeout))
-            remainder -= efft_bat_sz
-
-            if remainder > 0 and pause_sec > 0:
-                checkers.append(scheduler.TaskRunner(pause_between_batch,
-                                                     pause_sec))
-        return checkers
+        return list(tasks())
 
     def child_template(self):
         names = self._resource_names()
