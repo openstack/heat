@@ -36,6 +36,7 @@ class EngineClient(object):
         1.13 - Add support for template functions list
         1.14 - Add cancel_with_rollback option to stack_cancel_update
         1.15 - Add preview_update_stack() call
+        1.16 - Adds version, type_name to list_resource_types()
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -348,15 +349,24 @@ class EngineClient(object):
                          self.make_msg('abandon_stack',
                                        stack_identity=stack_identity))
 
-    def list_resource_types(self, ctxt, support_status=None):
+    def list_resource_types(self,
+                            ctxt,
+                            support_status=None,
+                            type_name=None,
+                            heat_version=None):
         """
         Get a list of valid resource types.
 
         :param ctxt: RPC context.
+        :param support_status: Support status of resource type
+        :param type_name: Resource type's name (regular expression allowed)
+        :param version: Heat version
         """
         return self.call(ctxt, self.make_msg('list_resource_types',
-                                             support_status=support_status),
-                         version='1.1')
+                                             support_status=support_status,
+                                             type_name=type_name,
+                                             heat_version=heat_version),
+                         version='1.16')
 
     def list_template_versions(self, ctxt):
         """

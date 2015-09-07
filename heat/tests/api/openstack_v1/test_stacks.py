@@ -2024,8 +2024,14 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context, ('list_resource_types', {'support_status': None}),
-            version="1.1"
+            req.context,
+            ('list_resource_types',
+             {
+                 'support_status': None,
+                 'type_name': None,
+                 'heat_version': None
+             }),
+            version="1.16"
         ).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.list_resource_types(req,
@@ -2042,8 +2048,12 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('list_resource_types',
-             {'support_status': None},
-             ), version="1.1"
+             {
+                 'support_status': None,
+                 'type_name': None,
+                 'heat_version': None
+             }),
+            version="1.16"
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 

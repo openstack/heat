@@ -524,9 +524,14 @@ class StackController(object):
         Returns a list of valid resource types that may be used in a template.
         """
         support_status = req.params.get('support_status')
+        type_name = req.params.get('name')
+        version = req.params.get('version')
         return {
             'resource_types':
-            self.rpc_client.list_resource_types(req.context, support_status)}
+            self.rpc_client.list_resource_types(req.context,
+                                                support_status=support_status,
+                                                type_name=type_name,
+                                                heat_version=version)}
 
     @util.policy_enforce
     def list_template_versions(self, req):
