@@ -108,27 +108,6 @@ class KeystoneRoleTest(common.HeatTestCase):
             name=prop_diff[role.KeystoneRole.NAME]
         )
 
-    def test_role_handle_delete(self):
-        self.test_role.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.roles.delete.return_value = None
-
-        self.assertIsNone(self.test_role.handle_delete())
-        self.roles.delete.assert_called_once_with(
-            self.test_role.resource_id
-        )
-
-    def test_role_handle_delete_resource_id_is_none(self):
-        self.resource_id = None
-        self.assertIsNone(self.test_role.handle_delete())
-
-        assert not self.roles.delete.called
-
-    def test_role_handle_delete_not_found(self):
-        exc = self.keystoneclient.NotFound
-        self.roles.delete.side_effect = exc
-
-        self.assertIsNone(self.test_role.handle_delete())
-
     def test_show_resource(self):
         role = mock.Mock()
         role.to_dict.return_value = {'attr': 'val'}

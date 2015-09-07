@@ -65,9 +65,6 @@ class KeystoneService(resource.Resource):
             description=description,
             type=type)
 
-    def _delete_service(self, service_id):
-        return self.client().services.delete(service_id)
-
     def _update_service(self,
                         service_id,
                         new_name=None,
@@ -107,13 +104,6 @@ class KeystoneService(resource.Resource):
             new_description=description,
             new_type=type
         )
-
-    def handle_delete(self):
-        if self.resource_id is not None:
-            try:
-                self._delete_service(service_id=self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

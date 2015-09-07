@@ -78,9 +78,6 @@ class KeystoneProject(resource.Resource):
             description=description,
             enabled=enabled)
 
-    def _delete_project(self, project_id):
-        return self.client().projects.delete(project_id)
-
     def _update_project(self,
                         project_id,
                         domain,
@@ -133,13 +130,6 @@ class KeystoneProject(resource.Resource):
             new_description=description,
             enabled=enabled
         )
-
-    def handle_delete(self):
-        if self.resource_id is not None:
-            try:
-                self._delete_project(project_id=self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

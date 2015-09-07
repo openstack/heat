@@ -155,25 +155,6 @@ class KeystoneEndpointTest(common.HeatTestCase):
             name='foo'
         )
 
-    def test_endpoint_handle_delete(self):
-        self.test_endpoint.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.endpoints.delete.return_value = None
-
-        self.assertIsNone(self.test_endpoint.handle_delete())
-        self.endpoints.delete.assert_called_once_with(
-            self.test_endpoint.resource_id
-        )
-
-    def test_endpoint_handle_delete_resource_id_is_none(self):
-        self.test_endpoint.resource_id = None
-        self.assertIsNone(self.test_endpoint.handle_delete())
-
-    def test_endpoint_handle_delete_not_found(self):
-        exc = self.keystoneclient.NotFound
-        self.endpoints.delete.side_effect = exc
-
-        self.assertIsNone(self.test_endpoint.handle_delete())
-
     def test_resource_mapping(self):
         mapping = endpoint.resource_mapping()
         self.assertEqual(1, len(mapping))
