@@ -270,15 +270,6 @@ class ResourceGroup(stack_resource.StackResource):
     def get_size(self):
         return self.properties.get(self.COUNT)
 
-    def validate(self):
-        """
-        Validation for update_policy
-        """
-        super(ResourceGroup, self).validate()
-
-        if self.update_policy is not None:
-            self.update_policy.validate()
-
     def validate_nested_stack(self):
         # Only validate the resource definition (which may be a
         # nested template) if count is non-zero, to enable folks

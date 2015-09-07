@@ -139,7 +139,6 @@ class InstanceGroup(stack_resource.StackResource):
         super(InstanceGroup, self).validate()
 
         if self.update_policy is not None:
-            self.update_policy.validate()
             policy_name = self.ROLLING_UPDATE
             if (policy_name in self.update_policy and
                     self.update_policy[policy_name] is not None):
