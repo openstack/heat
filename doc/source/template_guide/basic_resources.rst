@@ -54,9 +54,9 @@ YAML map, containing one of the following keys:
 
 ``network``
     The name or ID of an existing network. You don't need to create an
-    :ref:`OS::Neutron::Port` resource if you use this property, but you will
-    not be able to associate a floating IP with the instance interface in the
-    template.
+    :ref:`OS::Neutron::Port` resource if you use this property. But you will
+    not be able to use neutron floating IP association for this instance
+    because there will be no specified port for server.
 
 The following example demonstrates the use of the ``port`` and ``network``
 properties:
