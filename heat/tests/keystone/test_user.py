@@ -59,7 +59,7 @@ class KeystoneUserTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_user.client = mock.MagicMock()
         self.test_user.client.return_value = self.keystoneclient
-        self.users = self.keystoneclient.client.users
+        self.users = self.keystoneclient.users
 
         # Mock client plugin
         def _side_effect(value):
@@ -263,3 +263,10 @@ class KeystoneUserTest(common.HeatTestCase):
         self.users.delete.side_effect = exc
 
         self.assertIsNone(self.test_user.handle_delete())
+
+    def test_show_resource(self):
+        user = mock.Mock()
+        user.to_dict.return_value = {'attr': 'val'}
+        self.users.get.return_value = user
+        res = self.test_user._show_resource()
+        self.assertEqual({'attr': 'val'}, res)

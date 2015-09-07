@@ -57,7 +57,7 @@ class KeystoneEndpointTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_endpoint.client = mock.MagicMock()
         self.test_endpoint.client.return_value = self.keystoneclient
-        self.endpoints = self.keystoneclient.client.endpoints
+        self.endpoints = self.keystoneclient.endpoints
 
         # Mock client plugin
         keystone_client_plugin = mock.MagicMock()
@@ -316,3 +316,10 @@ class KeystoneEndpointTest(common.HeatTestCase):
                          schema.description,
                          'description for property %s is modified' %
                          endpoint.KeystoneEndpoint.NAME)
+
+    def test_show_resource(self):
+        endpoint = mock.Mock()
+        endpoint.to_dict.return_value = {'attr': 'val'}
+        self.endpoints.get.return_value = endpoint
+        res = self.test_endpoint._show_resource()
+        self.assertEqual({'attr': 'val'}, res)

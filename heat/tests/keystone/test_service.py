@@ -54,7 +54,7 @@ class KeystoneServiceTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_service.client = mock.MagicMock()
         self.test_service.client.return_value = self.keystoneclient
-        self.services = self.keystoneclient.client.services
+        self.services = self.keystoneclient.services
 
         # Mock client plugin
         keystone_client_plugin = mock.MagicMock()
@@ -266,3 +266,10 @@ class KeystoneServiceTest(common.HeatTestCase):
                          schema.description,
                          'description for property %s is modified' %
                          service.KeystoneService.TYPE)
+
+    def test_show_resource(self):
+        service = mock.Mock()
+        service.to_dict.return_value = {'attr': 'val'}
+        self.services.get.return_value = service
+        res = self.test_service._show_resource()
+        self.assertEqual({'attr': 'val'}, res)
