@@ -1720,6 +1720,8 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         # assert that backup stack has been updated correctly
         self.assertIn('Bres', self.stack._backup_stack())
+        # set data for Bres in main stack
+        self.stack['Bres'].data_set('test', '42')
 
         # update the stack with resource that updated in-place
         tmpl_update['resources']['Bres']['properties']['an_int'] = 1
@@ -1732,3 +1734,8 @@ class StackUpdateTest(common.HeatTestCase):
         # assert that resource in backup stack also has been updated
         backup = self.stack._backup_stack()
         self.assertEqual(1, backup['Bres'].properties['an_int'])
+
+        # check, that updated Bres in new stack has copied data.
+        # Bres in backup stack should have empty data.
+        self.assertEqual({}, backup['Bres'].data())
+        self.assertEqual({'test': '42'}, self.stack['Bres'].data())
