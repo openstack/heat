@@ -40,7 +40,7 @@ class SignalResponder(stack_user.StackUser):
 
     def handle_delete(self):
         self._delete_signals()
-        super(SignalResponder, self).handle_delete()
+        return super(SignalResponder, self).handle_delete()
 
     def _delete_signals(self):
         self._delete_ec2_signed_url()
