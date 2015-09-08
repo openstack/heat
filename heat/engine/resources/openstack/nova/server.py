@@ -551,15 +551,15 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     def _populate_deployments_metadata(self, meta):
         meta['deployments'] = meta.get('deployments', [])
+        meta['os-collect-config'] = meta.get('os-collect-config', {})
         if self.transport_poll_server_heat():
-            meta['os-collect-config'] = {'heat': {
+            meta['os-collect-config'].update({'heat': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
                 'stack_id': self.stack.identifier().stack_path(),
-                'resource_name': self.name}
-            }
+                'resource_name': self.name}})
         if self.transport_zaqar_message():
             queue_id = self.physical_resource_name()
             self.data_set('metadata_queue_id', queue_id)
@@ -568,21 +568,19 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 self.stack.stack_user_project_id)
             queue = zaqar.queue(queue_id)
             queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
-            meta['os-collect-config'] = {'zaqar': {
+            meta['os-collect-config'].update({'zaqar': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
-                'queue_id': queue_id}
-            }
+                'queue_id': queue_id}})
         elif self.transport_poll_server_cfn():
-            meta['os-collect-config'] = {'cfn': {
+            meta['os-collect-config'].update({'cfn': {
                 'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
                 'access_key_id': self.access_key,
                 'secret_access_key': self.secret_key,
                 'stack_name': self.stack.name,
-                'path': '%s.Metadata' % self.name}
-            }
+                'path': '%s.Metadata' % self.name}})
         elif self.transport_poll_temp_url():
             container = self.physical_resource_name()
             object_name = str(uuid.uuid4())
@@ -596,9 +594,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self.data_set('metadata_put_url', put_url)
             self.data_set('metadata_object_name', object_name)
 
-            meta['os-collect-config'] = {'request': {
-                'metadata_url': url}
-            }
+            meta['os-collect-config'].update({'request': {
+                'metadata_url': url}})
             self.client('swift').put_object(
                 container, object_name, jsonutils.dumps(meta))
         self.metadata_set(meta)

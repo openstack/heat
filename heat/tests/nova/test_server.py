@@ -655,19 +655,20 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
-    def test_server_create_software_config(self):
+    def _server_create_software_config(self, md=None):
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
         tmpl['Resources']['WebServer']['Properties'][
             'user_data_format'] = 'SOFTWARE_CONFIG'
+        if md is not None:
+            tmpl['Resources']['WebServer']['Metadata'] = md
 
         stack.stack_user_project_id = '8888'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
-
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(server, 'heat')
 
@@ -698,6 +699,11 @@ class ServersTest(common.HeatTestCase):
         self.assertTrue(stack.access_allowed('4567', 'WebServer'))
         self.assertFalse(stack.access_allowed('45678', 'WebServer'))
         self.assertFalse(stack.access_allowed('4567', 'wWebServer'))
+        self.m.VerifyAll()
+        return server
+
+    def test_server_create_software_config(self):
+        server = self._server_create_software_config()
 
         self.assertEqual({
             'os-collect-config': {
@@ -712,15 +718,25 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
-        resource_defns = tmpl.resource_definitions(stack)
-        created_server = servers.Server('WebServer',
-                                        resource_defns['WebServer'], stack)
-        self.assertEqual('4567', created_server.access_key)
-        self.assertTrue(stack.access_allowed('4567', 'WebServer'))
+    def test_server_create_software_config_metadata(self):
+        md = {'os-collect-config': {'polling_interval': 10}}
+        server = self._server_create_software_config(md=md)
 
-        self.m.VerifyAll()
+        self.assertEqual({
+            'os-collect-config': {
+                'cfn': {
+                    'access_key_id': '4567',
+                    'metadata_url': '/v1/',
+                    'path': 'WebServer.Metadata',
+                    'secret_access_key': '8901',
+                    'stack_name': 'software_config_s'
+                },
+                'polling_interval': 10
+            },
+            'deployments': []
+        }, server.metadata_get())
 
-    def test_server_create_software_config_poll_heat(self):
+    def _server_create_software_config_poll_heat(self, md=None):
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -728,6 +744,8 @@ class ServersTest(common.HeatTestCase):
         props = tmpl.t['Resources']['WebServer']['Properties']
         props['user_data_format'] = 'SOFTWARE_CONFIG'
         props['software_config_transport'] = 'POLL_SERVER_HEAT'
+        if md is not None:
+            tmpl.t['Resources']['WebServer']['Metadata'] = md
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -753,13 +771,16 @@ class ServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
 
-        # self.assertEqual('4567', server.access_key)
-        # self.assertEqual('8901', server.secret_key)
         self.assertEqual('1234', server._get_user_id())
 
         self.assertTrue(stack.access_allowed('1234', 'WebServer'))
         self.assertFalse(stack.access_allowed('45678', 'WebServer'))
         self.assertFalse(stack.access_allowed('4567', 'wWebServer'))
+        self.m.VerifyAll()
+        return stack, server
+
+    def test_server_create_software_config_poll_heat(self):
+        stack, server = self._server_create_software_config_poll_heat()
 
         self.assertEqual({
             'os-collect-config': {
@@ -775,15 +796,26 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
-        resource_defns = tmpl.resource_definitions(stack)
-        created_server = servers.Server('WebServer',
-                                        resource_defns['WebServer'], stack)
-        self.assertEqual('1234', created_server._get_user_id())
-        self.assertTrue(stack.access_allowed('1234', 'WebServer'))
+    def test_server_create_software_config_poll_heat_metadata(self):
+        md = {'os-collect-config': {'polling_interval': 10}}
+        stack, server = self._server_create_software_config_poll_heat(md=md)
 
-        self.m.VerifyAll()
+        self.assertEqual({
+            'os-collect-config': {
+                'heat': {
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'password': server.password,
+                    'project_id': '8888',
+                    'resource_name': 'WebServer',
+                    'stack_id': 'software_config_s/%s' % stack.id,
+                    'user_id': '1234'
+                },
+                'polling_interval': 10
+            },
+            'deployments': []
+        }, server.metadata_get())
 
-    def test_server_create_software_config_poll_temp_url(self):
+    def _server_create_software_config_poll_temp_url(self, md=None):
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -791,6 +823,8 @@ class ServersTest(common.HeatTestCase):
         props = tmpl.t['Resources']['WebServer']['Properties']
         props['user_data_format'] = 'SOFTWARE_CONFIG'
         props['software_config_transport'] = 'POLL_TEMP_URL'
+        if md is not None:
+            tmpl.t['Resources']['WebServer']['Metadata'] = md
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -837,6 +871,19 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
         self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
 
+        sc.head_container.return_value = {'x-container-object-count': '0'}
+        server._delete_temp_url()
+        sc.delete_object.assert_called_once_with(container_name, object_name)
+        sc.head_container.assert_called_once_with(container_name)
+        sc.delete_container.assert_called_once_with(container_name)
+
+        self.m.VerifyAll()
+        return metadata_url, server
+
+    def test_server_create_software_config_poll_temp_url(self):
+        metadata_url, server = \
+            self._server_create_software_config_poll_temp_url()
+
         self.assertEqual({
             'os-collect-config': {
                 'request': {
@@ -846,15 +893,22 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
-        sc.head_container.return_value = {'x-container-object-count': '0'}
-        server._delete_temp_url()
-        sc.delete_object.assert_called_once_with(container_name, object_name)
-        sc.head_container.assert_called_once_with(container_name)
-        sc.delete_container.assert_called_once_with(container_name)
+    def test_server_create_software_config_poll_temp_url_metadata(self):
+        md = {'os-collect-config': {'polling_interval': 10}}
+        metadata_url, server = \
+            self._server_create_software_config_poll_temp_url(md=md)
 
-        self.m.VerifyAll()
+        self.assertEqual({
+            'os-collect-config': {
+                'request': {
+                    'metadata_url': metadata_url
+                },
+                'polling_interval': 10
+            },
+            'deployments': []
+        }, server.metadata_get())
 
-    def test_server_create_software_config_zaqar(self):
+    def _server_create_software_config_zaqar(self, md=None):
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -862,6 +916,8 @@ class ServersTest(common.HeatTestCase):
         props = tmpl.t['Resources']['WebServer']['Properties']
         props['user_data_format'] = 'SOFTWARE_CONFIG'
         props['software_config_transport'] = 'ZAQAR_MESSAGE'
+        if md is not None:
+            tmpl.t['Resources']['WebServer']['Metadata'] = md
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -897,6 +953,22 @@ class ServersTest(common.HeatTestCase):
         queue_id = md['os-collect-config']['zaqar']['queue_id']
         self.assertEqual(queue_id, metadata_queue_id)
 
+        zc.queue.assert_called_once_with(queue_id)
+        queue.post.assert_called_once_with(
+            {'body': server.metadata_get(), 'ttl': 3600})
+
+        zc.queue.reset_mock()
+
+        server._delete_queue()
+
+        zc.queue.assert_called_once_with(queue_id)
+        zc.queue(queue_id).delete.assert_called_once_with()
+
+        self.m.VerifyAll()
+        return queue_id, server
+
+    def test_server_create_software_config_zaqar(self):
+        queue_id, server = self._server_create_software_config_zaqar()
         self.assertEqual({
             'os-collect-config': {
                 'zaqar': {
@@ -910,18 +982,22 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
-        zc.queue.assert_called_once_with(queue_id)
-        queue.post.assert_called_once_with(
-            {'body': server.metadata_get(), 'ttl': 3600})
-
-        zc.queue.reset_mock()
-
-        server._delete_queue()
-
-        zc.queue.assert_called_once_with(queue_id)
-        zc.queue(queue_id).delete.assert_called_once_with()
-
-        self.m.VerifyAll()
+    def test_server_create_software_config_zaqar_metadata(self):
+        md = {'os-collect-config': {'polling_interval': 10}}
+        queue_id, server = self._server_create_software_config_zaqar(md=md)
+        self.assertEqual({
+            'os-collect-config': {
+                'zaqar': {
+                    'user_id': '1234',
+                    'password': server.password,
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'project_id': '8888',
+                    'queue_id': queue_id
+                },
+                'polling_interval': 10
+            },
+            'deployments': []
+        }, server.metadata_get())
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_server_create_default_admin_pass(self, mock_client):
