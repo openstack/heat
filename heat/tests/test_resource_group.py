@@ -762,16 +762,16 @@ class ReplaceTest(common.HeatTestCase):
                    batch_size=1, pause_sec=0, tasks=2)),
         ('2', dict(min_in_service=3, count=2,
                    existing=['0', '1'], black_listed=[],
-                   batch_size=2, pause_sec=0, tasks=2)),
+                   batch_size=2, pause_sec=0, tasks=3)),
         ('3', dict(min_in_service=3, count=2,
                    existing=['0', '1'], black_listed=['0'],
-                   batch_size=2, pause_sec=0, tasks=2)),
+                   batch_size=2, pause_sec=0, tasks=3)),
         ('4', dict(min_in_service=3, count=2,
                    existing=['0', '1', '2', '3'], black_listed=['2', '3'],
-                   batch_size=1, pause_sec=0, tasks=3)),
+                   batch_size=1, pause_sec=0, tasks=4)),
         ('5', dict(min_in_service=2, count=2,
                    existing=['0', '1', '2', '3'], black_listed=[],
-                   batch_size=2, pause_sec=0, tasks=1)),
+                   batch_size=2, pause_sec=0, tasks=2)),
         ('6', dict(min_in_service=2, count=3,
                    existing=['0', '1'], black_listed=['0', '1'],
                    batch_size=2, pause_sec=0, tasks=2)),
@@ -1082,6 +1082,7 @@ class TestGetBatches(common.HeatTestCase):
                              (5, 1, ['3']),
                              (5, 1, ['2']),
                              (5, 1, ['1']),
+                             (4, 0, []),
                          ])),
         ('4_4_1_5', dict(targ_cap=4, init_cap=4, bat_size=1, min_serv=5,
                          batches=[
@@ -1090,6 +1091,7 @@ class TestGetBatches(common.HeatTestCase):
                              (5, 1, ['3']),
                              (5, 1, ['2']),
                              (5, 1, ['1']),
+                             (4, 0, []),
                          ])),
         ('4_4_2_0', dict(targ_cap=4, init_cap=4, bat_size=2, min_serv=0,
                          batches=[
@@ -1101,6 +1103,7 @@ class TestGetBatches(common.HeatTestCase):
                              (6, 2, ['6', '5']),
                              (6, 2, ['4', '3']),
                              (6, 2, ['2', '1']),
+                             (4, 0, []),
                          ])),
         ('5_5_2_0', dict(targ_cap=5, init_cap=5, bat_size=2, min_serv=0,
                          batches=[
@@ -1113,6 +1116,7 @@ class TestGetBatches(common.HeatTestCase):
                              (6, 2, ['6', '5']),
                              (6, 2, ['4', '3']),
                              (6, 2, ['2', '1']),
+                             (5, 0, []),
                          ])),
         ('3_3_2_0', dict(targ_cap=3, init_cap=3, bat_size=2, min_serv=0,
                          batches=[
@@ -1124,6 +1128,7 @@ class TestGetBatches(common.HeatTestCase):
                              (5, 2, ['5', '4']),
                              (5, 2, ['3', '2']),
                              (4, 1, ['1']),
+                             (3, 0, []),
                          ])),
         ('4_4_4_0', dict(targ_cap=4, init_cap=4, bat_size=4, min_serv=0,
                          batches=[
@@ -1152,11 +1157,13 @@ class TestGetBatches(common.HeatTestCase):
                          batches=[
                              (8, 4, ['8', '7', '6', '5']),
                              (8, 4, ['4', '3', '2', '1']),
+                             (4, 0, []),
                          ])),
         ('4_4_5_6', dict(targ_cap=4, init_cap=4, bat_size=5, min_serv=6,
                          batches=[
                              (8, 4, ['8', '7', '6', '5']),
                              (8, 4, ['4', '3', '2', '1']),
+                             (4, 0, []),
                          ])),
 
         ('4_7_1_0', dict(targ_cap=4, init_cap=7, bat_size=1, min_serv=0,
@@ -1172,6 +1179,7 @@ class TestGetBatches(common.HeatTestCase):
                              (5, 1, ['3']),
                              (5, 1, ['2']),
                              (5, 1, ['1']),
+                             (4, 0, []),
                          ])),
         ('4_7_1_5', dict(targ_cap=4, init_cap=7, bat_size=1, min_serv=5,
                          batches=[
@@ -1179,6 +1187,7 @@ class TestGetBatches(common.HeatTestCase):
                              (5, 1, ['3']),
                              (5, 1, ['2']),
                              (5, 1, ['1']),
+                             (4, 0, []),
                          ])),
         ('4_7_2_0', dict(targ_cap=4, init_cap=7, bat_size=2, min_serv=0,
                          batches=[
@@ -1189,6 +1198,7 @@ class TestGetBatches(common.HeatTestCase):
                          batches=[
                              (6, 2, ['4', '3']),
                              (6, 2, ['2', '1']),
+                             (4, 0, []),
                          ])),
         ('5_7_2_0', dict(targ_cap=5, init_cap=7, bat_size=2, min_serv=0,
                          batches=[
@@ -1206,11 +1216,13 @@ class TestGetBatches(common.HeatTestCase):
                          batches=[
                              (8, 4, ['8', '4', '3', '2']),
                              (5, 1, ['1']),
+                             (4, 0, []),
                          ])),
         ('4_7_5_6', dict(targ_cap=4, init_cap=7, bat_size=5, min_serv=6,
                          batches=[
                              (8, 4, ['8', '4', '3', '2']),
                              (5, 1, ['1']),
+                             (4, 0, []),
                          ])),
 
         ('6_4_1_0', dict(targ_cap=6, init_cap=4, bat_size=1, min_serv=0,
@@ -1305,12 +1317,14 @@ class TestGetBatches(common.HeatTestCase):
                          batches=[
                              (8, 4, ['8', '7', '6', '5']),
                              (8, 4, ['4', '3', '2', '1']),
+                             (6, 0, []),
                          ])),
         ('6_4_5_6', dict(targ_cap=6, init_cap=4, bat_size=5, min_serv=6,
                          batches=[
                              (9, 5, ['9', '8', '7', '6', '5']),
                              (10, 4, ['10', '4', '3', '2']),
                              (7, 1, ['1']),
+                             (6, 0, []),
                          ])),
     ]
 
