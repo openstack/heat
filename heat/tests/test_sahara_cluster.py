@@ -102,18 +102,6 @@ class SaharaClusterTest(common.HeatTestCase):
                                                    **expected_kwargs)
         self.cl_mgr.get.assert_called_once_with(self.fake_cl.id)
 
-    def test_cluster_delete(self):
-        cluster = self._create_cluster(self.t)
-        self.cl_mgr.get.side_effect = [
-            self.fake_cl,
-            sahara.sahara_base.APIException(error_code=404)]
-        self.cl_mgr.get.reset_mock()
-        scheduler.TaskRunner(cluster.delete)()
-        self.assertEqual((cluster.DELETE, cluster.COMPLETE),
-                         cluster.state)
-        self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
-        self.assertEqual(2, self.cl_mgr.get.call_count)
-
     def test_cluster_create_fails(self):
         cfg.CONF.set_override('action_retry_limit', 0)
         cluster = self._init_cluster(self.t)
@@ -124,22 +112,6 @@ class SaharaClusterTest(common.HeatTestCase):
         expected = ('ResourceInError: resources.super-cluster: '
                     'Went to status Error due to "Unknown"')
         self.assertEqual(expected, six.text_type(ex))
-
-    def test_cluster_delete_fails(self):
-        cluster = self._create_cluster(self.t)
-        self.cl_mgr.delete.side_effect = sahara.sahara_base.APIException()
-        delete_task = scheduler.TaskRunner(cluster.delete)
-        ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: resources.super-cluster: None"
-        self.assertEqual(expected, six.text_type(ex))
-        self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
-
-    def test_cluster_not_found_in_delete(self):
-        cluster = self._create_cluster(self.t)
-        self.cl_mgr.delete.side_effect = sahara.sahara_base.APIException(
-            error_code=404)
-        scheduler.TaskRunner(cluster.delete)()
-        self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
 
     def test_cluster_check_delete_complete_error(self):
         cluster = self._create_cluster(self.t)

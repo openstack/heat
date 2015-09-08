@@ -163,28 +163,6 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.ngt_mgr.create.assert_called_once_with(*expected_args,
                                                     **expected_kwargs)
 
-    def test_ngt_delete(self):
-        ngt = self._create_ngt(self.t)
-        scheduler.TaskRunner(ngt.delete)()
-        self.ngt_mgr.delete.assert_called_once_with(self.fake_ngt.id)
-        self.assertEqual((ngt.DELETE, ngt.COMPLETE), ngt.state)
-
-    def test_ngt_delete_ignores_not_found(self):
-        ngt = self._create_ngt(self.t)
-        self.ngt_mgr.delete.side_effect = sahara.sahara_base.APIException(
-            error_code=404)
-        scheduler.TaskRunner(ngt.delete)()
-        self.ngt_mgr.delete.assert_called_once_with(self.fake_ngt.id)
-
-    def test_ngt_delete_fails(self):
-        ngt = self._create_ngt(self.t)
-        self.ngt_mgr.delete.side_effect = sahara.sahara_base.APIException()
-        delete_task = scheduler.TaskRunner(ngt.delete)
-        ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: resources.node-group: None"
-        self.assertEqual(expected, six.text_type(ex))
-        self.ngt_mgr.delete.assert_called_once_with(self.fake_ngt.id)
-
     def test_validate_floatingippool_on_neutron_fails(self):
         ngt = self._init_ngt(self.t)
         self.patchobject(ngt, 'is_using_neutron').return_value = True
@@ -299,28 +277,6 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
             'use_autoconfig': None
         }
         self.ct_mgr.create.assert_called_once_with(**args)
-
-    def test_ct_delete(self):
-        ct = self._create_ct(self.t)
-        scheduler.TaskRunner(ct.delete)()
-        self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
-        self.assertEqual((ct.DELETE, ct.COMPLETE), ct.state)
-
-    def test_ngt_delete_ignores_not_found(self):
-        ct = self._create_ct(self.t)
-        self.ct_mgr.delete.side_effect = sahara.sahara_base.APIException(
-            error_code=404)
-        scheduler.TaskRunner(ct.delete)()
-        self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
-
-    def test_ngt_delete_fails(self):
-        ct = self._create_ct(self.t)
-        self.ct_mgr.delete.side_effect = sahara.sahara_base.APIException()
-        delete_task = scheduler.TaskRunner(ct.delete)
-        ex = self.assertRaises(exception.ResourceFailure, delete_task)
-        expected = "APIException: resources.cluster-template: None"
-        self.assertEqual(expected, six.text_type(ex))
-        self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
 
     def test_ct_validate_no_network_on_neutron_fails(self):
         self.t['resources']['cluster-template']['properties'].pop(
