@@ -30,7 +30,7 @@ Heat Db version
 
 ``heat-manage db_version``
 
-    Print out the db schema revision.
+    Print out the db schema version.
 
 ``heat-manage db_sync``
 
