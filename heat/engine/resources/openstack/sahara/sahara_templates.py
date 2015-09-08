@@ -299,11 +299,13 @@ class SaharaClusterTemplate(resource.Resource):
                 constraints.Length(min=1, max=50),
                 constraints.AllowedPattern(SAHARA_NAME_REGEX),
             ],
+            update_allowed=True
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
             _('Description of the Sahara Group Template.'),
             default="",
+            update_allowed=True
         ),
         PLUGIN_NAME: properties.Schema(
             properties.Schema.STRING,
@@ -311,12 +313,14 @@ class SaharaClusterTemplate(resource.Resource):
             required=True,
             constraints=[
                 constraints.CustomConstraint('sahara.plugin')
-            ]
+            ],
+            update_allowed=True
         ),
         HADOOP_VERSION: properties.Schema(
             properties.Schema.STRING,
             _('Version of Hadoop running on instances.'),
             required=True,
+            update_allowed=True
         ),
         IMAGE_ID: properties.Schema(
             properties.Schema.STRING,
@@ -324,6 +328,7 @@ class SaharaClusterTemplate(resource.Resource):
             constraints=[
                 constraints.CustomConstraint('sahara.image'),
             ],
+            update_allowed=True
         ),
         MANAGEMENT_NETWORK: properties.Schema(
             properties.Schema.STRING,
@@ -331,6 +336,7 @@ class SaharaClusterTemplate(resource.Resource):
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
+            update_allowed=True
         ),
         ANTI_AFFINITY: properties.Schema(
             properties.Schema.LIST,
@@ -338,10 +344,12 @@ class SaharaClusterTemplate(resource.Resource):
             schema=properties.Schema(
                 properties.Schema.STRING,
             ),
+            update_allowed=True
         ),
         CLUSTER_CONFIGS: properties.Schema(
             properties.Schema.MAP,
             _('Cluster configs dictionary.'),
+            update_allowed=True
         ),
         NODE_GROUPS: properties.Schema(
             properties.Schema.LIST,
@@ -369,7 +377,7 @@ class SaharaClusterTemplate(resource.Resource):
                     ),
                 }
             ),
-
+            update_allowed=True
         ),
         USE_AUTOCONFIG: properties.Schema(
             properties.Schema.BOOLEAN,
@@ -390,38 +398,44 @@ class SaharaClusterTemplate(resource.Resource):
             return name
         return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
-    def handle_create(self):
-        plugin_name = self.properties[self.PLUGIN_NAME]
-        hadoop_version = self.properties[self.HADOOP_VERSION]
-        description = self.properties[self.DESCRIPTION]
-        image_id = self.properties[self.IMAGE_ID]
-        net_id = self.properties[self.MANAGEMENT_NETWORK]
-        use_autoconfig = self.properties[self.USE_AUTOCONFIG]
-        if net_id:
+    def _prepare_properties(self):
+        props = {
+            'name': self._cluster_template_name(),
+            'plugin_name': self.properties[self.PLUGIN_NAME],
+            'hadoop_version': self.properties[self.HADOOP_VERSION],
+            'description': self.properties[self.DESCRIPTION],
+            'cluster_configs': self.properties[self.CLUSTER_CONFIGS],
+            'node_groups': self.properties[self.NODE_GROUPS],
+            'anti_affinity': self.properties[self.ANTI_AFFINITY],
+            'net_id': self.properties[self.MANAGEMENT_NETWORK],
+            'default_image_id': self.properties[self.IMAGE_ID],
+            'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
+        }
+        if props['net_id']:
             if self.is_using_neutron():
-                net_id = self.client_plugin('neutron').find_neutron_resource(
+                props['net_id'] = self.client_plugin(
+                    'neutron').find_neutron_resource(
                     self.properties, self.MANAGEMENT_NETWORK, 'network')
             else:
-                net_id = self.client_plugin('nova').get_nova_network_id(
-                    net_id)
-        anti_affinity = self.properties[self.ANTI_AFFINITY]
-        cluster_configs = self.properties[self.CLUSTER_CONFIGS]
-        node_groups = self.properties[self.NODE_GROUPS]
-        cluster_template = self.client().cluster_templates.create(
-            self._cluster_template_name(),
-            plugin_name, hadoop_version,
-            description=description,
-            default_image_id=image_id,
-            anti_affinity=anti_affinity,
-            net_id=net_id,
-            cluster_configs=cluster_configs,
-            node_groups=node_groups,
-            use_autoconfig=use_autoconfig
-        )
+                props['net_id'] = self.client_plugin(
+                    'nova').get_nova_network_id(props['net_id'])
+        return props
+
+    def handle_create(self):
+        args = self._prepare_properties()
+        cluster_template = self.client().cluster_templates.create(**args)
         LOG.info(_LI("Cluster Template '%s' has been created"),
                  cluster_template.name)
         self.resource_id_set(cluster_template.id)
         return self.resource_id
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.properties = json_snippet.properties(
+                self.properties_schema,
+                self.context)
+            args = self._prepare_properties()
+            self.client().cluster_templates.update(self.resource_id, **args)
 
     def validate(self):
         res = super(SaharaClusterTemplate, self).validate()
