@@ -235,11 +235,14 @@ class SwiftSignal(resource.Resource):
             container = self.client().get_container(self.stack.id)
         except Exception as exc:
             self.client_plugin().ignore_not_found(exc)
-            return
+            LOG.debug("Swift container %s was not found" % self.stack.id)
+            return []
 
         index = container[1]
-        if not index:  # Swift objects were deleted by user
-            return None
+        if not index:
+            LOG.debug("Swift objects in container %s were not found" %
+                      self.stack.id)
+            return []
 
         # Remove objects in that are for other handle resources, since
         # multiple SwiftSignalHandle resources in the same stack share
@@ -313,6 +316,8 @@ class SwiftSignal(resource.Resource):
             raise SwiftSignalTimeout(self)
 
         statuses = self.get_status()
+        if not statuses:
+            return False
 
         for status in statuses:
             if status == self.STATUS_FAILURE:
