@@ -15,6 +15,7 @@
 Utilities for handling ISO 8601 duration format.
 """
 
+import datetime
 import random
 import re
 import time
@@ -80,3 +81,12 @@ def retry_backoff_delay(attempt, scale_factor=1.0, jitter_max=0.0):
     if jitter_max == 0.0:
         return exp
     return exp + random.random() * jitter_max
+
+
+def round_to_seconds(dt):
+    """Round a datetime to the nearest second."""
+    rounding = 0
+    if dt.microsecond >= 500000:
+        rounding = 1
+    return dt + datetime.timedelta(0, rounding,
+                                   -dt.microsecond)
