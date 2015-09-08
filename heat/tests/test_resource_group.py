@@ -221,14 +221,14 @@ class ResourceGroupTest(common.HeatTestCase):
                     "depends_on": [],
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
-                        "foo": "baz"
+                        "foo": "bar"
                     }
                 },
                 "1": {
                     "depends_on": [],
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
-                        "foo": "bar"
+                        "foo": "baz"
                     }
                 }
             }
@@ -245,8 +245,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         resg._nested = get_fake_nested_stack(['0', '1'])
         resg._build_resource_definition = mock.Mock(return_value=resource_def)
-        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1,
-                                                                   ['0']))
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1))
 
     def test_assemble_nested_rolling_update_none(self):
         expect = {
@@ -280,7 +279,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         resg._nested = get_fake_nested_stack(['0', '1'])
         resg._build_resource_definition = mock.Mock(return_value=resource_def)
-        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 0, []))
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 0))
 
     def test_index_var(self):
         stack = utils.parse_stack(template_repl)
@@ -1227,11 +1226,12 @@ class TestGetBatches(common.HeatTestCase):
                                              self.init_cap,
                                              self.bat_size,
                                              self.min_serv))
-        self.assertEqual(self.batches, batches)
+        self.assertEqual([(s, u) for s, u, n in self.batches], batches)
 
     def test_assemble(self):
         resources = [(str(i), False) for i in range(self.init_cap + 1)]
 
+        self.grp.get_size = mock.Mock(return_value=self.targ_cap)
         self.grp._build_resource_definition = mock.Mock(return_value=True)
         self.grp._get_resources = mock.Mock(return_value=resources)
         self.grp._do_prop_replace = mock.Mock(side_effect=lambda g, d: d)
