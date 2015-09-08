@@ -36,13 +36,13 @@ def next_batch(targ_capacity, curr_capacity, num_up_to_date, batch_size,
     update.
     """
 
-    efft_min_sz = min(min_in_service, targ_capacity)
+    assert num_up_to_date <= curr_capacity
+
+    efft_min_sz = min(min_in_service, targ_capacity, curr_capacity)
     efft_bat_sz = min(batch_size, max(targ_capacity - num_up_to_date, 0))
 
-    if num_up_to_date >= efft_min_sz:
-        new_capacity = targ_capacity
-    else:
-        new_capacity = max(targ_capacity - efft_bat_sz,
-                           efft_min_sz) + efft_bat_sz
+    new_capacity = efft_bat_sz + max(min(curr_capacity,
+                                         targ_capacity - efft_bat_sz),
+                                     efft_min_sz)
 
     return new_capacity, efft_bat_sz
