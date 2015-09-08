@@ -152,22 +152,6 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         run = scheduler.TaskRunner(net.update, update_template)
         self.assertRaises(exception.ResourceFailure, run)
 
-    def test_delete(self):
-        net = self._create_network('share_network', self.rsrc_defn, self.stack)
-        scheduler.TaskRunner(net.delete)()
-        self.assertEqual((net.DELETE, net.COMPLETE), net.state)
-        self.client.share_networks.delete.assert_called_once_with(
-            net.resource_id)
-
-    def test_delete_not_found(self):
-        net = self._create_network('share_network', self.rsrc_defn, self.stack)
-        self.client.share_networks.delete.side_effect = (
-            self.client.exceptions.NotFound())
-        scheduler.TaskRunner(net.delete)()
-        self.assertEqual((net.DELETE, net.COMPLETE), net.state)
-        self.client.share_networks.delete.assert_called_once_with(
-            net.resource_id)
-
     def test_nova_net_neutron_net_conflict(self):
         t = template_format.parse(stack_template)
         t['resources']['share_network']['properties']['nova_network'] = 1

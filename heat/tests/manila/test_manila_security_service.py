@@ -122,24 +122,6 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
         self.assertEqual(security_service.SecurityService,
                          mapping['OS::Manila::SecurityService'])
 
-    def test_delete(self):
-        ss = self._create_resource('security_service', self.rsrc_defn,
-                                   self.stack)
-        scheduler.TaskRunner(ss.delete)()
-        self.assertEqual((ss.DELETE, ss.COMPLETE), ss.state)
-        self.client.security_services.delete.assert_called_once_with(
-            ss.resource_id)
-
-    def test_delete_not_found(self):
-        ss = self._create_resource('security_service', self.rsrc_defn,
-                                   self.stack)
-        self.client.security_services.delete.side_effect = (
-            self.client.exceptions.NotFound())
-        scheduler.TaskRunner(ss.delete)()
-        self.assertEqual((ss.DELETE, ss.COMPLETE), ss.state)
-        self.client.security_services.delete.assert_called_once_with(
-            ss.resource_id)
-
     def test_update(self):
         ss = self._create_resource('security_service', self.rsrc_defn,
                                    self.stack)
