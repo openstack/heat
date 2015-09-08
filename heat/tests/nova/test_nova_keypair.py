@@ -128,17 +128,6 @@ class NovaKeyPairTest(common.HeatTestCase):
                       "range (min: 1, max: 255)", six.text_type(error))
         self.m.VerifyAll()
 
-    def test_delete_key(self):
-        """Test basic delete."""
-        test_res = self._get_test_resource(self.kp_template)
-        test_res.resource_id = "key_name"
-        test_res.state_set(test_res.CREATE, test_res.COMPLETE)
-        self.fake_keypairs.delete("key_name").AndReturn(None)
-        self.m.ReplayAll()
-        scheduler.TaskRunner(test_res.delete)()
-        self.assertEqual((test_res.DELETE, test_res.COMPLETE), test_res.state)
-        self.m.VerifyAll()
-
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)
         res.client = mock.Mock()
