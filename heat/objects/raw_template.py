@@ -24,11 +24,12 @@ from oslo_versionedobjects import fields
 from heat.common import crypt
 from heat.common import environment_format as env_fmt
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 
 
 class RawTemplate(
-    base.VersionedObject,
+    heat_base.HeatObject,
     base.VersionedObjectDictCompat,
     base.ComparableVersionedObject,
 ):

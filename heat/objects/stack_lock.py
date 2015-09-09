@@ -18,11 +18,14 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 
 
-class StackLock(base.VersionedObject,
-                base.VersionedObjectDictCompat,
-                base.ComparableVersionedObject):
+class StackLock(
+        heat_base.HeatObject,
+        base.VersionedObjectDictCompat,
+        base.ComparableVersionedObject,
+):
     fields = {
         'engine_id': fields.StringField(nullable=True),
         'stack_id': fields.StringField(),

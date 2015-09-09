@@ -23,13 +23,14 @@ from oslo_versionedobjects import fields
 from heat.common import exception
 from heat.common.i18n import _
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 from heat.objects import raw_template
 from heat.objects import stack_tag
 
 
 class Stack(
-    base.VersionedObject,
+    heat_base.HeatObject,
     base.VersionedObjectDictCompat,
     base.ComparableVersionedObject,
 ):
