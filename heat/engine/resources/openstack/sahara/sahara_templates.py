@@ -273,11 +273,11 @@ class SaharaClusterTemplate(resource.Resource):
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, DESCRIPTION,
         ANTI_AFFINITY, MANAGEMENT_NETWORK,
-        CLUSTER_CONFIGS, NODE_GROUPS, IMAGE_ID,
+        CLUSTER_CONFIGS, NODE_GROUPS, IMAGE_ID, USE_AUTOCONFIG
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'description',
         'anti_affinity', 'neutron_management_network',
-        'cluster_configs', 'node_groups', 'default_image_id',
+        'cluster_configs', 'node_groups', 'default_image_id', 'use_autoconfig'
     )
 
     _NODE_GROUP_KEYS = (
@@ -366,6 +366,11 @@ class SaharaClusterTemplate(resource.Resource):
             ),
 
         ),
+        USE_AUTOCONFIG: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _("Configure most important configs automatically."),
+            support_status=support.SupportStatus(version='5.0.0')
+        )
     }
 
     default_client_name = 'sahara'
@@ -386,6 +391,7 @@ class SaharaClusterTemplate(resource.Resource):
         description = self.properties[self.DESCRIPTION]
         image_id = self.properties[self.IMAGE_ID]
         net_id = self.properties[self.MANAGEMENT_NETWORK]
+        use_autoconfig = self.properties[self.USE_AUTOCONFIG]
         if net_id:
             if self.is_using_neutron():
                 net_id = self.client_plugin('neutron').find_neutron_resource(
@@ -404,7 +410,8 @@ class SaharaClusterTemplate(resource.Resource):
             anti_affinity=anti_affinity,
             net_id=net_id,
             cluster_configs=cluster_configs,
-            node_groups=node_groups
+            node_groups=node_groups,
+            use_autoconfig=use_autoconfig
         )
         LOG.info(_LI("Cluster Template '%s' has been created"),
                  cluster_template.name)

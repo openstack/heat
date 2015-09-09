@@ -289,7 +289,8 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
                            'net_id': 'some_network_id',
                            'anti_affinity': None,
                            'node_groups': None,
-                           'cluster_configs': None
+                           'cluster_configs': None,
+                           'use_autoconfig': None
                            }
         self.ct_mgr.create.assert_called_once_with(*expected_args,
                                                    **expected_kwargs)
