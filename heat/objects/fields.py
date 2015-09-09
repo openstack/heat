@@ -33,8 +33,8 @@ class Json(fields.FieldType):
 
 
 class JsonField(fields.AutoTypedField):
-    pass
+    AUTO_TYPE = Json()
 
 
 class ListField(fields.AutoTypedField):
-    pass
+    AUTO_TYPE = fields.List(fields.FieldType())
