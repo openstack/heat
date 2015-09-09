@@ -59,6 +59,9 @@ class SaharaCluster(resource.Resource):
             properties.Schema.STRING,
             _('Plugin name.'),
             required=True,
+            constraints=[
+                constraints.CustomConstraint('sahara.plugin')
+            ]
         ),
         HADOOP_VERSION: properties.Schema(
             properties.Schema.STRING,

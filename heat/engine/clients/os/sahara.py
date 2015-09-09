@@ -118,6 +118,20 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
         else:
             return image_list[0].id
 
+    def get_plugin_id(self, plugin_name):
+        """Get the id for the specified plugin name.
+
+        :param plugin_name: the name of the plugin to find
+        :returns: the id of :plugin:
+        :raises: exception.EntityNotFound
+        """
+        try:
+            self.client().plugins.get(plugin_name)
+        except sahara_base.APIException:
+            LOG.info(_LI("Plugin %s was not found in sahara"), plugin_name)
+            raise exception.EntityNotFound(entity='Plugin',
+                                           name=plugin_name)
+
 
 class ImageConstraint(constraints.BaseCustomConstraint):
 
@@ -126,3 +140,11 @@ class ImageConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, value):
         client.client_plugin('sahara').get_image_id(value)
+
+
+class PluginConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.EntityNotFound,)
+
+    def validate_with_client(self, client, value):
+        client.client_plugin('sahara').get_plugin_id(value)

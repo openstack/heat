@@ -37,6 +37,7 @@ class SaharaUtilsTests(common.HeatTestCase):
         self.sahara_plugin = c.client_plugin('sahara')
         self.sahara_plugin._client = self.sahara_client
         self.my_image = mock.MagicMock()
+        self.my_plugin = mock.MagicMock()
 
     def test_get_image_id(self):
         """Tests the get_image_id function."""
@@ -114,6 +115,26 @@ class SaharaUtilsTests(common.HeatTestCase):
                           self.sahara_plugin.get_image_id, img_name)
         self.sahara_client.images.find.assert_called_once_with(name=img_name)
 
+    def test_get_plugin_id(self):
+        """Tests the get_plugin_id function."""
+        plugin_name = 'myfakeplugin'
+        self.my_plugin.name = plugin_name
+
+        def side_effect(name):
+            if name == plugin_name:
+                return self.my_plugin
+            else:
+                raise sahara_base.APIException(error_code=404,
+                                               error_name='NOT_FOUND')
+
+        self.sahara_client.plugins.get.side_effect = side_effect
+        self.assertEqual(None, self.sahara_plugin.get_plugin_id(plugin_name))
+        self.assertRaises(exception.EntityNotFound,
+                          self.sahara_plugin.get_plugin_id, 'noplugin')
+
+        calls = [mock.call(plugin_name), mock.call('noplugin')]
+        self.sahara_client.plugins.get.assert_has_calls(calls)
+
 
 class ImageConstraintTest(common.HeatTestCase):
 
@@ -132,4 +153,24 @@ class ImageConstraintTest(common.HeatTestCase):
     def test_validation_error(self):
         self.mock_get_image.side_effect = exception.EntityNotFound(
             entity='Image', name='bar')
+        self.assertFalse(self.constraint.validate("bar", self.ctx))
+
+
+class PluginConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(PluginConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_plugin = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'sahara').get_plugin_id = self.mock_get_plugin
+        self.constraint = sahara.PluginConstraint()
+
+    def test_validation(self):
+        self.mock_get_plugin.return_value = "id1"
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        self.mock_get_plugin.side_effect = exception.EntityNotFound(
+            entity='Plugin', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))

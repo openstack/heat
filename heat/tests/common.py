@@ -31,6 +31,7 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
+from heat.engine.clients.os import sahara
 from heat.engine.clients.os import trove
 from heat.engine import environment
 from heat.engine import resource
@@ -267,4 +268,8 @@ class HeatTestCase(testscenarios.WithScenarios,
     def stub_KeystoneProjectConstraint(self):
         validate = self.patchobject(keystone.KeystoneProjectConstraint,
                                     'validate')
+        validate.return_value = True
+
+    def stub_SaharaPluginConstraint(self):
+        validate = self.patchobject(sahara.PluginConstraint, 'validate')
         validate.return_value = True
