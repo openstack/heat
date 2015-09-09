@@ -78,9 +78,9 @@ class ResourceGroup(stack_resource.StackResource):
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
-        COUNT, INDEX_VAR, RESOURCE_DEF, REMOVAL_POLICIES
+        COUNT, INDEX_VAR, RESOURCE_DEF, REMOVAL_POLICIES,
     ) = (
-        'count', 'index_var', 'resource_def', 'removal_policies'
+        'count', 'index_var', 'resource_def', 'removal_policies',
     )
 
     _RESOURCE_DEF_KEYS = (
@@ -101,7 +101,17 @@ class ResourceGroup(stack_resource.StackResource):
         'min_in_service', 'max_batch_size', 'pause_time',
     )
 
-    _UPDATE_POLICY_SCHEMA_KEYS = (ROLLING_UPDATE,) = ('rolling_update',)
+    _BATCH_CREATE_SCHEMA_KEYS = (
+        MAX_BATCH_SIZE, PAUSE_TIME,
+    ) = (
+        'max_batch_size', 'pause_time',
+    )
+
+    _UPDATE_POLICY_SCHEMA_KEYS = (
+        ROLLING_UPDATE, BATCH_CREATE,
+    ) = (
+        'rolling_update', 'batch_create',
+    )
 
     ATTRIBUTES = (
         REFS, ATTR_ATTRIBUTES,
@@ -224,10 +234,30 @@ class ResourceGroup(stack_resource.StackResource):
             default=0),
     }
 
+    batch_create_schema = {
+        MAX_BATCH_SIZE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('The maximum number of resources to create at once.'),
+            constraints=[constraints.Range(min=1)],
+            default=1
+        ),
+        PAUSE_TIME: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of seconds to wait between batches.'),
+            constraints=[constraints.Range(min=0)],
+            default=0
+        ),
+    }
+
     update_policy_schema = {
         ROLLING_UPDATE: properties.Schema(
             properties.Schema.MAP,
             schema=rolling_update_schema,
+            support_status=support.SupportStatus(version='5.0.0')
+        ),
+        BATCH_CREATE: properties.Schema(
+            properties.Schema.MAP,
+            schema=batch_create_schema,
             support_status=support.SupportStatus(version='5.0.0')
         )
     }
@@ -348,10 +378,29 @@ class ResourceGroup(stack_resource.StackResource):
         return len(self._name_blacklist() & set(existing_members))
 
     def handle_create(self):
-        names = self._resource_names()
-        self.create_with_template(self._assemble_nested(names),
-                                  {},
-                                  self.stack.timeout_mins)
+        if self.update_policy.get(self.BATCH_CREATE):
+            batch_create = self.update_policy[self.BATCH_CREATE]
+            max_batch_size = batch_create[self.MAX_BATCH_SIZE]
+            pause_sec = batch_create[self.PAUSE_TIME]
+            checkers = self._replace(0, max_batch_size, pause_sec)
+        else:
+            names = self._resource_names()
+            checkers = [(scheduler.TaskRunner(
+                self._run_to_completion,
+                self._assemble_nested(names),
+                self.stack.timeout_secs()))]
+        checkers[0].start()
+        return checkers
+
+    def check_create_complete(self, checkers):
+        if checkers is None:
+            return super(ResourceGroup, self).check_create_complete()
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        return True
 
     def _run_to_completion(self, template, timeout):
         updater = self.update_with_template(template, {},
