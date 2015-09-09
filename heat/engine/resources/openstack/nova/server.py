@@ -1006,6 +1006,18 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
+            # If SOFTWARE_CONFIG user_data_format is enabled we require
+            # the "deployments" and "os-collect-config" keys for Deployment
+            # polling.  We can attempt to merge the occ data, but any
+            # metadata update containing deployments will be discarded.
+            if self.user_data_software_config():
+                metadata = self.metadata_get(True) or {}
+                new_occ_md = tmpl_diff['Metadata'].get('os-collect-config', {})
+                occ_md = metadata.get('os-collect-config', {})
+                occ_md.update(new_occ_md)
+                tmpl_diff['Metadata']['os-collect-config'] = occ_md
+                deployment_md = metadata.get('deployments', [])
+                tmpl_diff['Metadata']['deployments'] = deployment_md
             self.metadata_set(tmpl_diff['Metadata'])
 
         updaters = []
