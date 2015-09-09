@@ -341,11 +341,6 @@ class ResourceGroup(stack_resource.StackResource):
                                                       candidates),
                                 size)
 
-    def _get_resources(self):
-        """Get definitions for resources."""
-        return [(resource.name, resource.t)
-                for resource in grouputils.get_members(self)]
-
     def _count_black_listed(self):
         """Return the number of current resource names that are blacklisted"""
         existing_members = grouputils.get_member_names(self)
@@ -497,7 +492,8 @@ class ResourceGroup(stack_resource.StackResource):
         names = list(self._resource_names(total_capacity))
         name_blacklist = self._name_blacklist()
 
-        valid_resources = [(n, d) for n, d in self._get_resources()
+        valid_resources = [(n, d) for n, d in
+                           grouputils.get_member_definitions(self)
                            if n not in name_blacklist]
 
         targ_cap = self.get_size()

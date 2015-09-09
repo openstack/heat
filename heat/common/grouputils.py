@@ -98,3 +98,12 @@ def get_nested_attrs(stack, key, use_indices, *path):
         return get_rsrc_attr(stack, key, use_indices, *path)
     else:
         return get_rsrc_id(stack, key, use_indices, *path)
+
+
+def get_member_definitions(group):
+    """Get member definitions in (name, ResourceDefinition) pair for group.
+
+        The List is sorted first by created_time then by name.
+    """
+    return [(resource.name, resource.t)
+            for resource in get_members(group)]

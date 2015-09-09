@@ -246,11 +246,6 @@ class InstanceGroup(stack_resource.StackResource):
                                             props,
                                             conf.t.metadata())
 
-    def _get_instance_templates(self):
-        """Get templates for resource instances."""
-        return [(instance.name, instance.t)
-                for instance in grouputils.get_members(self)]
-
     def _create_template(self, num_instances, num_replace=0,
                          template_version=('HeatTemplateFormatVersion',
                                            '2012-12-12')):
@@ -259,7 +254,7 @@ class InstanceGroup(stack_resource.StackResource):
         Also see heat.scaling.template.member_definitions.
         """
         instance_definition = self._get_resource_definition()
-        old_resources = self._get_instance_templates()
+        old_resources = grouputils.get_member_definitions(self)
         definitions = template.member_definitions(
             old_resources, instance_definition, num_instances, num_replace,
             short_id.generate_id)
