@@ -116,23 +116,15 @@ class Stack(
     @classmethod
     def get_all(cls, context, *args, **kwargs):
         db_stacks = db_api.stack_get_all(context, *args, **kwargs)
-        stacks = map(
-            lambda db_stack: cls._from_db_object(
-                context,
-                cls(context),
-                db_stack),
-            db_stacks)
+        stacks = [cls._from_db_object(context, cls(context), db_stack)
+                  for db_stack in db_stacks]
         return stacks
 
     @classmethod
     def get_all_by_owner_id(cls, context, owner_id):
         db_stacks = db_api.stack_get_all_by_owner_id(context, owner_id)
-        stacks = map(
-            lambda db_stack: cls._from_db_object(
-                context,
-                cls(context),
-                db_stack),
-            db_stacks)
+        stacks = [cls._from_db_object(context, cls(context), db_stack)
+                  for db_stack in db_stacks]
         return stacks
 
     @classmethod
