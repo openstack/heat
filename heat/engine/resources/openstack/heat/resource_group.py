@@ -442,16 +442,12 @@ class ResourceGroup(stack_resource.StackResource):
         if not checkers:
             resizer = scheduler.TaskRunner(
                 self._run_to_completion,
-                self._assemble_nested_for_size(self.get_size()),
+                self._assemble_nested(self._resource_names()),
                 self.stack.timeout_mins)
             checkers.append(resizer)
 
         checkers[0].start()
         return checkers
-
-    def _assemble_nested_for_size(self, new_capacity):
-        new_names = self._resource_names(new_capacity)
-        return self._assemble_nested(new_names)
 
     def FnGetAtt(self, key, *path):
         if key.startswith("resource."):
