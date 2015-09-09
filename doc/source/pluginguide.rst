@@ -181,6 +181,10 @@ reference nested schema definitions.  Following are the parameters to the
   ``True`` if an existing resource can be updated, ``False`` means
   update is accomplished by delete and re-create.  Default is ``False``.
 
+*immutable*:
+  ``True`` means updates are not supported, resource update will fail on
+  every change of this property. ``False`` otherwise. Default is ``False``.
+
 Accessing property values of the plug-in at runtime is then a simple call to:
 
 .. code-block:: python
