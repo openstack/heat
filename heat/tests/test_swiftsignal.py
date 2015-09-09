@@ -830,6 +830,36 @@ class SwiftSignalTest(common.HeatTestCase):
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
+    def test_swift_objects_invisible(self, mock_name, mock_swift):
+        st = create_stack(swiftsignal_template)
+        handle = st['test_wait_condition_handle']
+
+        mock_swift_object = mock.Mock()
+        mock_swift.return_value = mock_swift_object
+        mock_swift_object.url = "http://fake-host.com:8080/v1/AUTH_1234"
+        mock_swift_object.head_account.return_value = {
+            'x-account-meta-temp-url-key': '123456'
+        }
+        obj_name = "%s-%s-abcdefghijkl" % (st.name, handle.name)
+        mock_name.return_value = obj_name
+
+        mock_swift_object.get_container.side_effect = (
+            (container_header, []),   # Just-created objects aren't visible yet
+            (container_header, []),
+            (container_header, []),
+            (container_header, []),
+            cont_index(obj_name, 1),
+        )
+        mock_swift_object.get_object.side_effect = (
+            (obj_header, json.dumps({'id': 1})),
+            (obj_header, json.dumps({'id': 2})),
+        )
+
+        st.create()
+        self.assertEqual(('CREATE', 'COMPLETE'), st.state)
+
+    @mock.patch.object(swift.SwiftClientPlugin, '_create')
+    @mock.patch.object(resource.Resource, 'physical_resource_name')
     def test_swift_container_deleted(self, mock_name, mock_swift):
         st = create_stack(swiftsignal_template)
         handle = st['test_wait_condition_handle']
