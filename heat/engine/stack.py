@@ -248,16 +248,7 @@ class Stack(collections.Mapping):
     def root_stack_id(self):
         if not self.owner_id:
             return self.id
-        return stack_object.Stack.get_root_id(self.context, self.id)
-
-    @property
-    def root_stack(self):
-        '''
-        Return the root stack if this is nested (otherwise return self).
-        '''
-        if (self.parent_resource and self.parent_resource.stack):
-            return self.parent_resource.stack.root_stack
-        return self
+        return stack_object.Stack.get_root_id(self.context, self.owner_id)
 
     def object_path_in_stack(self):
         '''
@@ -285,25 +276,14 @@ class Stack(collections.Mapping):
         return [(stckres.name if stckres else None,
                  stck.name if stck else None) for stckres, stck in opis]
 
-    def total_resources(self):
+    def total_resources(self, stack_id=None):
         '''
         Return the total number of resources in a stack, including nested
         stacks below.
         '''
-        def total_nested(res):
-            get_nested = getattr(res, 'nested', None)
-            if callable(get_nested):
-                try:
-                    nested_stack = get_nested()
-                except exception.NotFound:
-                    # when an delete is underway, a nested stack can
-                    # disapear at any moment.
-                    return 0
-                if nested_stack is not None:
-                    return nested_stack.total_resources()
-            return 0
-
-        return len(self) + sum(total_nested(res) for res in self.itervalues())
+        if not stack_id:
+            stack_id = self.id
+        return stack_object.Stack.count_total_resources(self.context, stack_id)
 
     def _set_param_stackid(self):
         '''

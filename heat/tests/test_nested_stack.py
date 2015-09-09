@@ -83,7 +83,9 @@ Outputs:
         stack.store()
         return stack
 
-    def test_nested_stack_three_deep(self):
+    @mock.patch.object(parser.Stack, 'root_stack_id')
+    @mock.patch.object(parser.Stack, 'total_resources')
+    def test_nested_stack_three_deep(self, tr, rsi):
         root_template = '''
 HeatTemplateFormatVersion: 2012-12-12
 Resources:
@@ -115,13 +117,19 @@ Resources:
             depth2_template,
             self.nested_template]
 
+        rsi.return_value = '1234'
+        tr.return_value = 2
+
         self.validate_stack(root_template)
         calls = [mock.call('https://server.test/depth1.template'),
                  mock.call('https://server.test/depth2.template'),
                  mock.call('https://server.test/depth3.template')]
         urlfetch.get.assert_has_calls(calls)
+        tr.assert_called_with('1234')
 
-    def test_nested_stack_six_deep(self):
+    @mock.patch.object(parser.Stack, 'root_stack_id')
+    @mock.patch.object(parser.Stack, 'total_resources')
+    def test_nested_stack_six_deep(self, tr, rsi):
         template = '''
 HeatTemplateFormatVersion: 2012-12-12
 Resources:
@@ -148,6 +156,9 @@ Resources:
             depth4_template,
             depth5_template,
             self.nested_template]
+
+        rsi.return_value = '1234'
+        tr.return_value = 5
 
         t = template_format.parse(root_template)
         stack = self.parse_stack(t)
@@ -201,7 +212,9 @@ Resources:
                  mock.call('https://server.test/depth4.template')]
         urlfetch.get.assert_has_calls(calls, any_order=True)
 
-    def test_nested_stack_infinite_recursion(self):
+    @mock.patch.object(parser.Stack, 'root_stack_id')
+    @mock.patch.object(parser.Stack, 'total_resources')
+    def test_nested_stack_infinite_recursion(self, tr, rsi):
         template = '''
 HeatTemplateFormatVersion: 2012-12-12
 Resources:
@@ -213,6 +226,8 @@ Resources:
         urlfetch.get.return_value = template
         t = template_format.parse(template)
         stack = self.parse_stack(t)
+        rsi.return_value = '1234'
+        tr.return_value = 2
         res = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('Recursion depth exceeds', six.text_type(res))

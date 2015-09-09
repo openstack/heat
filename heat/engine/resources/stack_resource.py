@@ -204,8 +204,9 @@ class StackResource(resource.Resource):
         return parsed_template
 
     def _validate_nested_resources(self, templ):
+        root_stack_id = self.stack.root_stack_id()
         total_resources = (len(templ[templ.RESOURCES]) +
-                           self.stack.root_stack.total_resources())
+                           self.stack.total_resources(root_stack_id))
 
         if self.nested():
             # It's an update and these resources will be deleted

@@ -422,7 +422,7 @@ class StackResourceTest(common.HeatTestCase):
                 'Resources': [1]}
         template = stack_resource.template.Template(tmpl)
         root_resources = mock.Mock(return_value=2)
-        self.parent_resource.stack.root_stack.total_resources = root_resources
+        self.parent_resource.stack.total_resources = root_resources
 
         self.assertRaises(exception.RequestLimitExceeded,
                           self.parent_resource._validate_nested_resources,
@@ -527,10 +527,12 @@ class StackResourceTest(common.HeatTestCase):
 
 class StackResourceLimitTest(common.HeatTestCase):
     scenarios = [
-        ('1', dict(root=3, templ=4, nested=0, max=10, error=False)),
-        ('2', dict(root=3, templ=8, nested=0, max=10, error=True)),
-        ('3', dict(root=3, templ=8, nested=2, max=10, error=False)),
-        ('4', dict(root=3, templ=12, nested=2, max=10, error=True))]
+        ('3_4_0', dict(root=3, templ=4, nested=0, max=10, error=False)),
+        ('3_8_0', dict(root=3, templ=8, nested=0, max=10, error=True)),
+        ('3_8_2', dict(root=3, templ=8, nested=2, max=10, error=True)),
+        ('3_5_2', dict(root=3, templ=5, nested=2, max=10, error=False)),
+        ('3_6_2', dict(root=3, templ=6, nested=2, max=10, error=True)),
+        ('3_12_2', dict(root=3, templ=12, nested=2, max=10, error=True))]
 
     def setUp(self):
         super(StackResourceLimitTest, self).setUp()
@@ -551,14 +553,9 @@ class StackResourceLimitTest(common.HeatTestCase):
                                    self.parent_stack)
 
     def test_resource_limit(self):
-        # mock nested resources
-        nested = mock.MagicMock()
-        nested.resources = range(self.nested)
-        self.res.nested = mock.MagicMock(return_value=nested)
-
         # mock root total_resources
-        self.res.stack.root_stack.total_resources = mock.Mock(
-            return_value=self.root)
+        total_resources = self.root + self.nested
+        parser.Stack.total_resources = mock.Mock(return_value=total_resources)
 
         # setup the config max
         cfg.CONF.set_default('max_resources_per_stack', self.max)
