@@ -14,8 +14,9 @@
 import collections
 import hashlib
 import itertools
-
 import six
+
+from oslo_serialization import jsonutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -308,7 +309,7 @@ class Join(cfn_funcs.Join):
     '''
 
 
-class JoinMultiple(cfn_funcs.Join):
+class JoinMultiple(function.Function):
     '''
     A function for joining strings.
 
@@ -324,6 +325,7 @@ class JoinMultiple(cfn_funcs.Join):
     '''
 
     def __init__(self, stack, fn_name, args):
+        super(JoinMultiple, self).__init__(stack, fn_name, args)
         example = '"%s" : [ " ", [ "str1", "str2"] ...]' % fn_name
         fmt_data = {'fn_name': fn_name,
                     'example': example}
@@ -333,20 +335,52 @@ class JoinMultiple(cfn_funcs.Join):
                               'should be: %(example)s') % fmt_data)
 
         try:
-            delim = args.pop(0)
-            joinlist = args.pop(0)
+            self._delim = args.pop(0)
+            self._joinlist = args.pop(0)
         except IndexError:
             raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
                                'should be: %(example)s') % fmt_data)
         # Optionally allow additional lists, which are appended
         for l in args:
             try:
-                joinlist += l
+                self._joinlist += l
             except (AttributeError, TypeError):
                 raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                                 'should be: %(example)s') % fmt_data)
-        super(JoinMultiple, self).__init__(stack, fn_name,
-                                           args=[delim, joinlist])
+
+    def result(self):
+        strings = function.resolve(self._joinlist)
+        if strings is None:
+            strings = []
+        if (isinstance(strings, six.string_types) or
+                not isinstance(strings, collections.Sequence)):
+            raise TypeError(_('"%s" must operate on a list') % self.fn_name)
+
+        delim = function.resolve(self._delim)
+        if not isinstance(delim, six.string_types):
+            raise TypeError(_('"%s" delimiter must be a string') %
+                            self.fn_name)
+
+        def ensure_string(s):
+            msg = _('Items to join must be string, map or list not %s'
+                    ) % (repr(s)[:200])
+            if s is None:
+                return ''
+            elif isinstance(s, six.string_types):
+                return s
+            elif isinstance(s, (collections.Mapping, collections.Sequence)):
+                try:
+                    return jsonutils.dumps(s, default=None)
+                except TypeError:
+                    msg = _('Items to join must be string, map or list. '
+                            '%s failed json serialization'
+                            ) % (repr(s)[:200])
+            else:
+                msg = _('Items to join must be string, map or list not %s'
+                        ) % (repr(s)[:200])
+            raise TypeError(msg)
+
+        return delim.join(ensure_string(s) for s in strings)
 
 
 class ResourceFacade(cfn_funcs.ResourceFacade):

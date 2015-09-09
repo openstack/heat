@@ -634,6 +634,30 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_liberty_tpl_empty)
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
+    def test_join_json(self):
+        snippet = {'list_join': [',', [{'foo': 'json'}, {'foo2': 'json2'}]]}
+        snippet_resolved = '{"foo": "json"},{"foo2": "json2"}'
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_join_type_fail(self):
+        not_serializable = object
+        snippet = {'list_join': [',', [not_serializable]]}
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('Items to join must be string, map or list not',
+                      six.text_type(exc))
+
+    def test_join_json_fail(self):
+        not_serializable = object
+        snippet = {'list_join': [',', [{'foo': not_serializable}]]}
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('Items to join must be string, map or list',
+                      six.text_type(exc))
+        self.assertIn("failed json serialization",
+                      six.text_type(exc))
+
     def test_join_invalid(self):
         snippet = {'list_join': 'bad'}
         tmpl = template.Template(hot_liberty_tpl_empty)
