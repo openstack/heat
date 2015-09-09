@@ -83,7 +83,7 @@ properties:
             2,
             5,
             deploy_count)
-        deploy_count = self.deploy_many_configs(
+        self.deploy_many_configs(
             stack_identifier,
             server,
             config_stacks,
@@ -95,24 +95,15 @@ properties:
         for config_stack in config_stacks:
             self._wait_for_stack_status(config_stack, 'CREATE_COMPLETE')
 
-    def deploy_many_configs(self, stack_identifier, server, config_stacks,
+    def deploy_many_configs(self, stack, server, config_stacks,
                             stack_count, deploys_per_stack,
                             deploy_count_start):
         for a in range(stack_count):
             config_stacks.append(
                 self.deploy_config(server, deploys_per_stack))
 
-        for config_stack in config_stacks:
-            self.wait_for_deploy_physical_id(config_stack)
-
         new_count = deploy_count_start + stack_count * deploys_per_stack
-        server_metadata = self.client.resources.metadata(
-            stack_identifier, 'server')
-        self.assertEqual(
-            new_count,
-            len(server_metadata['deployments']),
-            '%s stacks with %s deployments' % (stack_count, deploys_per_stack)
-        )
+        self.wait_for_deploy_metadata_set(stack, new_count)
         return new_count
 
     def deploy_config(self, server, deploy_count):
@@ -128,19 +119,16 @@ properties:
             enable_cleanup=self.enable_cleanup,
             expected_status=None)
 
-    def wait_for_deploy_physical_id(self, stack):
+    def wait_for_deploy_metadata_set(self, stack, deploy_count):
         build_timeout = self.conf.build_timeout
         build_interval = self.conf.build_interval
 
         start = timeutils.utcnow()
         while timeutils.delta_seconds(start,
                                       timeutils.utcnow()) < build_timeout:
-            created = True
-            for res in self.client.resources.list(stack, nested_depth='2'):
-                if not res.physical_resource_id:
-                    created = False
-                    break
-            if created:
+            server_metadata = self.client.resources.metadata(
+                stack, 'server')
+            if len(server_metadata['deployments']) == deploy_count:
                 return
             time.sleep(build_interval)
 
