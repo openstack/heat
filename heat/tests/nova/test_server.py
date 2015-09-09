@@ -1237,6 +1237,30 @@ class ServersTest(common.HeatTestCase):
             "be found.", six.text_type(error))
         self.m.VerifyAll()
 
+    def test_server_validate_software_config_invalid_meta(self):
+        stack_name = 'srv_val_test'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        web_server = tmpl['Resources']['WebServer']
+        web_server['Properties']['user_data_format'] = 'SOFTWARE_CONFIG'
+        web_server['Metadata'] = {'deployments': 'notallowed'}
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('WebServer',
+                                resource_defns['WebServer'], stack)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  server.validate)
+        self.assertEqual(
+            "deployments key not allowed in resource metadata "
+            "with user_data_format of SOFTWARE_CONFIG", six.text_type(error))
+        self.m.VerifyAll()
+
     def test_server_validate_with_networks(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)
