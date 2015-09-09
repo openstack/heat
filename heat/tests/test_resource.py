@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import itertools
 import json
 import os
@@ -2789,3 +2790,119 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
             # Make sure is_service_available is called on the right class
             mock_method.assert_called_once_with(mock_stack.context)
+
+    def test_handle_delete_successful(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'OS::Heat::None')
+        res = resource.Resource('aresource', snippet, self.stack)
+
+        FakeClient = collections.namedtuple('Client',
+                                            ['entity'])
+        client = FakeClient(collections.namedtuple('entity', ['delete']))
+        self.patchobject(resource.Resource, 'client', return_value=client)
+        delete = mock.Mock()
+        res.client().entity.delete = delete
+        res.entity = 'entity'
+        res.resource_id = '12345'
+
+        self.assertEqual('12345', res.handle_delete())
+        delete.assert_called_once_with('12345')
+
+    def test_handle_delete_not_found(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'OS::Heat::None')
+        res = resource.Resource('aresource', snippet, self.stack)
+
+        FakeClient = collections.namedtuple('Client', ['entity'])
+        client = FakeClient(collections.namedtuple('entity', ['delete']))
+
+        class FakeClientPlugin(object):
+            def ignore_not_found(self, ex):
+                if not isinstance(ex, exception.NotFound):
+                    raise ex
+
+        self.patchobject(resource.Resource, 'client', return_value=client)
+        self.patchobject(resource.Resource, 'client_plugin',
+                         return_value=FakeClientPlugin())
+        delete = mock.Mock()
+        delete.side_effect = [exception.NotFound()]
+        res.client().entity.delete = delete
+        res.entity = 'entity'
+        res.resource_id = '12345'
+
+        self.assertIsNone(res.handle_delete())
+        delete.assert_called_once_with('12345')
+
+    def test_handle_delete_raise_error(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'OS::Heat::None')
+        res = resource.Resource('aresource', snippet, self.stack)
+
+        FakeClient = collections.namedtuple('Client', ['entity'])
+        client = FakeClient(collections.namedtuple('entity', ['delete']))
+
+        class FakeClientPlugin(object):
+            def ignore_not_found(self, ex):
+                if not isinstance(ex, exception.NotFound):
+                    raise ex
+
+        self.patchobject(resource.Resource, 'client', return_value=client)
+        self.patchobject(resource.Resource, 'client_plugin',
+                         return_value=FakeClientPlugin())
+        delete = mock.Mock()
+        delete.side_effect = [exception.Error('boom!')]
+        res.client().entity.delete = delete
+        res.entity = 'entity'
+        res.resource_id = '12345'
+
+        ex = self.assertRaises(exception.Error, res.handle_delete)
+        self.assertEqual('boom!', six.text_type(ex))
+        delete.assert_called_once_with('12345')
+
+    def test_handle_delete_no_entity(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'OS::Heat::None')
+        res = resource.Resource('aresource', snippet, self.stack)
+
+        FakeClient = collections.namedtuple('Client',
+                                            ['entity'])
+        client = FakeClient(collections.namedtuple('entity', ['delete']))
+        self.patchobject(resource.Resource, 'client', return_value=client)
+        delete = mock.Mock()
+        res.client().entity.delete = delete
+        res.resource_id = '12345'
+
+        self.assertIsNone(res.handle_delete())
+        self.assertEqual(0, delete.call_count)
+
+    def test_handle_delete_no_resource_id(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'OS::Heat::None')
+        res = resource.Resource('aresource', snippet, self.stack)
+
+        FakeClient = collections.namedtuple('Client',
+                                            ['entity'])
+        client = FakeClient(collections.namedtuple('entity', ['delete']))
+        self.patchobject(resource.Resource, 'client', return_value=client)
+        delete = mock.Mock()
+        res.client().entity.delete = delete
+        res.entity = 'entity'
+        res.resource_id = None
+
+        self.assertIsNone(res.handle_delete())
+        self.assertEqual(0, delete.call_count)
