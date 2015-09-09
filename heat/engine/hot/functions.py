@@ -262,6 +262,57 @@ class Replace(cfn_funcs.Replace):
             return mapping, string
 
 
+class ReplaceJson(Replace):
+    '''
+    A function for performing string substitutions.
+
+    Behaves the same as Replace, but tolerates non-string parameter
+    values, e.g map/list - these are serialized as json before doing
+    the string substitution.
+    '''
+
+    def result(self):
+        template = function.resolve(self._string)
+        mapping = function.resolve(self._mapping)
+
+        if not isinstance(template, six.string_types):
+            raise TypeError(_('"%s" template must be a string') % self.fn_name)
+
+        if not isinstance(mapping, collections.Mapping):
+            raise TypeError(_('"%s" params must be a map') % self.fn_name)
+
+        def replace(string, change):
+            placeholder, value = change
+
+            if not isinstance(placeholder, six.string_types):
+                raise TypeError(_('"%s" param placeholders must be strings') %
+                                self.fn_name)
+
+            if value is None:
+                value = ''
+
+            if not isinstance(value,
+                              (six.string_types, six.integer_types,
+                               float, bool)):
+                if isinstance(value,
+                              (collections.Mapping, collections.Sequence)):
+                    try:
+                        value = jsonutils.dumps(value, default=None)
+                    except TypeError:
+                        raise TypeError(_('"%(name)s" params must be strings, '
+                                          'numbers, list or map. '
+                                          'Failed to json serialize %(value)s'
+                                          ) % {'name': self.fn_name,
+                                               'value': value})
+                else:
+                    raise TypeError(_('"%s" params must be strings, numbers, '
+                                      'list or map. ') % self.fn_name)
+
+            return string.replace(placeholder, six.text_type(value))
+
+        return six.moves.reduce(replace, six.iteritems(mapping), template)
+
+
 class GetFile(function.Function):
     """
     A function for including a file inline.

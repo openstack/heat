@@ -1099,7 +1099,11 @@ template
 
 params
     Provides parameter mappings in the form of dictionary. Each key refers to a
-    placeholder used in the ``template`` attribute.
+    placeholder used in the ``template`` attribute. From HOT version
+    ``2015-10-15`` you may optionally pass non-string parameter values
+    (e.g json/map/list parameters or attributes) and they will be serialized
+    as json before replacing, prior heat/HOT versions require string values.
+
 
 The following example shows a simple use of the ``str_replace`` function in the
 outputs section of a template to build a URL for logging into a deployed
