@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import re
+import six
 
 from oslo_log import log as logging
 
@@ -269,6 +270,30 @@ class SaharaNodeGroupTemplate(resource.Resource):
             self.properties[self.PLUGIN_NAME],
             self.properties[self.HADOOP_VERSION]
         )
+
+        # validate node processes
+        plugin = self.client().plugins.get_version_details(
+            self.properties[self.PLUGIN_NAME],
+            self.properties[self.HADOOP_VERSION])
+        allowed_processes = [item for sublist in
+                             list(six.itervalues(plugin.node_processes))
+                             for item in sublist]
+        unsupported_processes = []
+        for process in self.properties[self.NODE_PROCESSES]:
+            if process not in allowed_processes:
+                unsupported_processes.append(process)
+        if unsupported_processes:
+            msg = (_("Plugin %(plugin)s doesn't support the following "
+                     "node processes: %(unsupported)s. Allowed processes are: "
+                     "%(allowed)s") %
+                   {'plugin': self.properties[self.PLUGIN_NAME],
+                    'unsupported': ', '.join(unsupported_processes),
+                    'allowed': ', '.join(allowed_processes)})
+            raise exception.StackValidationFailed(
+                path=[self.stack.t.get_section_name('resources'),
+                      self.name,
+                      self.stack.t.get_section_name('properties')],
+                message=msg)
 
 
 class SaharaClusterTemplate(resource.Resource):
