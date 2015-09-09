@@ -798,7 +798,10 @@ def software_config_delete(context, config_id):
 def software_deployment_create(context, values):
     obj_ref = models.SoftwareDeployment()
     obj_ref.update(values)
-    obj_ref.save(_session(context))
+    session = _session(context)
+    session.begin()
+    obj_ref.save(session)
+    session.commit()
     return obj_ref
 
 
@@ -830,16 +833,13 @@ def software_deployment_get_all(context, server_id=None):
 
 def software_deployment_update(context, deployment_id, values):
     deployment = software_deployment_get(context, deployment_id)
-    deployment.update(values)
-    deployment.save(_session(context))
+    deployment.update_and_save(values)
     return deployment
 
 
 def software_deployment_delete(context, deployment_id):
     deployment = software_deployment_get(context, deployment_id)
-    session = orm_session.Session.object_session(deployment)
-    session.delete(deployment)
-    session.flush()
+    deployment.delete()
 
 
 def snapshot_create(context, values):
