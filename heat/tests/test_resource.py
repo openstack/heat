@@ -1824,14 +1824,13 @@ class ResourceTest(common.HeatTestCase):
             self.assertEqual(1, show_attr.call_count)
 
             # clean resolved_values
-            with mock.patch.object(res.attributes, '_resolved_values') as r_v:
-                with mock.patch.object(res, 'client_plugin') as client_plug:
-                    r_v.return_value = {}
-                    # generate error during calling _show_resource
-                    show_attr.side_effect = [Exception]
-                    self.assertIsNone(res.FnGetAtt('show'))
-                    self.assertEqual(2, show_attr.call_count)
-                    self.assertEqual(1, client_plug.call_count)
+            res.attributes.reset_resolved_values()
+            with mock.patch.object(res, 'client_plugin') as client_plugin:
+                # generate error during calling _show_resource
+                show_attr.side_effect = [Exception]
+                self.assertIsNone(res.FnGetAtt('show'))
+                self.assertEqual(2, show_attr.call_count)
+                self.assertEqual(1, client_plugin.call_count)
 
     def test_resolve_attributes_stuff_custom_attribute(self):
         # check path with resolve_attribute
@@ -1839,8 +1838,15 @@ class ResourceTest(common.HeatTestCase):
         res = stack['res']
 
         with mock.patch.object(res, '_resolve_attribute') as res_attr:
-            res.FnGetAtt('Foo')
+            res_attr.side_effect = ['Works', Exception]
+            self.assertEqual('Works', res.FnGetAtt('Foo'))
             res_attr.assert_called_once_with('Foo')
+
+            # clean resolved_values
+            res.attributes.reset_resolved_values()
+            with mock.patch.object(res, 'client_plugin') as client_plugin:
+                self.assertIsNone(res.FnGetAtt('Foo'))
+                self.assertEqual(1, client_plugin.call_count)
 
     def test_show_resource(self):
         # check default function _show_resource

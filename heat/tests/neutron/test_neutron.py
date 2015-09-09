@@ -126,19 +126,18 @@ class NeutronTest(common.HeatTestCase):
 
         self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
                          res.FnGetAtt('show'))
-        self.assertEqual('val2', res._resolve_attribute('attr2'))
-        self.assertRaises(KeyError, res._resolve_attribute, 'attr3')
-        self.assertIsNone(res._resolve_attribute('attr2'))
+        self.assertEqual('val2', res._resolve_all_attributes('attr2'))
+        self.assertRaises(KeyError, res._resolve_all_attributes, 'attr3')
+        self.assertIsNone(res._resolve_all_attributes('attr2'))
 
         res.resource_id = None
         # use local cached object
         self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
                          res.FnGetAtt('show'))
-        # reset cache and call 'show' again, so resolver should be used again
+        # reset cache, so resolver should be used again
         # and return None due to resource_id is None
-        with mock.patch.object(res.attributes, '_resolved_values') as res_vals:
-            res_vals.return_value = {}
-            self.assertIsNone(res.FnGetAtt('show'))
+        res.attributes.reset_resolved_values()
+        self.assertIsNone(res.FnGetAtt('show'))
 
 
 class GetSecGroupUuidTest(common.HeatTestCase):

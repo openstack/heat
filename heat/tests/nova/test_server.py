@@ -2894,7 +2894,7 @@ class ServersTest(common.HeatTestCase):
             fakes_nova.fake_exception())
         self.m.ReplayAll()
 
-        self.assertEqual('', server._resolve_attribute("accessIPv4"))
+        self.assertEqual('', server._resolve_all_attributes("accessIPv4"))
         self.m.VerifyAll()
 
     def test_resolve_attribute_console_url(self):
@@ -2909,7 +2909,7 @@ class ServersTest(common.HeatTestCase):
         self.fc.servers.get(server.id).AndReturn(server)
         self.m.ReplayAll()
 
-        console_urls = ws._resolve_attribute('console_urls')
+        console_urls = ws._resolve_all_attributes('console_urls')
         self.assertIsInstance(console_urls, collections.Mapping)
         supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5',
                               'serial')
@@ -2933,7 +2933,7 @@ class ServersTest(common.HeatTestCase):
         expect_networks = {"fake_uuid": ["10.0.0.3"],
                            "fake_net": ["10.0.0.3"]}
         self.assertEqual(expect_networks,
-                         server._resolve_attribute("networks"))
+                         server._resolve_all_attributes("networks"))
         self.m.VerifyAll()
 
     def test_empty_instance_user(self):

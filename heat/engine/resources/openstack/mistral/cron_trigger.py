@@ -111,11 +111,7 @@ class CronTrigger(resource.Resource):
         self.resource_id_set(cron_trigger.name)
 
     def _resolve_attribute(self, name):
-        try:
-            trigger = self.client().cron_triggers.get(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-            return ''
+        trigger = self.client().cron_triggers.get(self.resource_id)
         if name == self.NEXT_EXECUTION_TIME:
             return trigger.next_execution_time
         elif name == self.REMAINING_EXECUTIONS:

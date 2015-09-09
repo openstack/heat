@@ -1346,7 +1346,11 @@ class Resource(object):
                 self.client_plugin().ignore_not_found(ex)
                 return None
         else:
-            return self._resolve_attribute(attr)
+            try:
+                return self._resolve_attribute(attr)
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
+                return None
 
     def _show_resource(self):
         """Default implementation; should be overridden by resources
