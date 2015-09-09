@@ -367,6 +367,25 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         self._wait_for_stack_status(**kwargs)
 
+    def preview_update_stack(self, stack_identifier, template,
+                             environment=None, files=None, parameters=None,
+                             tags=None, disable_rollback=True):
+        env = environment or {}
+        env_files = files or {}
+        parameters = parameters or {}
+        stack_name = stack_identifier.split('/')[0]
+
+        return self.client.stacks.preview_update(
+            stack_id=stack_identifier,
+            stack_name=stack_name,
+            template=template,
+            files=env_files,
+            disable_rollback=disable_rollback,
+            parameters=parameters,
+            environment=env,
+            tags=tags
+        )
+
     def assert_resource_is_a_stack(self, stack_identifier, res_name,
                                    wait=False):
         build_timeout = self.conf.build_timeout
