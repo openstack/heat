@@ -33,6 +33,7 @@ from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
+from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import event
@@ -1688,8 +1689,10 @@ class Stack(collections.Mapping):
         '''
         Time elapsed in seconds since the stack operation started.
         '''
-        start_time = self.updated_time or self.created_time
-        return (datetime.datetime.utcnow() - start_time).seconds
+        start_time = timeutils.round_to_seconds(self.updated_time or
+                                                self.created_time)
+        nowish = timeutils.round_to_seconds(datetime.datetime.utcnow())
+        return (nowish - start_time).seconds
 
     def time_remaining(self):
         '''

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 from testtools import matchers
 
 from heat.common import timeutils as util
@@ -157,3 +158,17 @@ class RetryBackoffJitterTest(common.HeatTestCase):
                 self.attempt, self.scale_factor, self.jitter_max)
             self.assertThat(delay, matchers.GreaterThan(self.delay_from))
             self.assertThat(delay, matchers.LessThan(self.delay_to))
+
+
+class RoundToSecondsTest(common.HeatTestCase):
+
+    scenarios = [('down', dict(in_secs=5, in_ms=12345, out_secs=5)),
+                 ('up', dict(in_secs=5, in_ms=501000, out_secs=6)),
+                 ('same', dict(in_secs=5, in_ms=0, out_secs=5))]
+
+    def test_rounding(self):
+        inp = datetime.datetime(2015, 7, 27, 4,
+                                34, self.in_secs, self.in_ms)
+        exp = datetime.datetime(2015, 7, 27, 4,
+                                34, self.out_secs, 0)
+        self.assertEqual(exp, util.round_to_seconds(inp))
