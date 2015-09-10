@@ -11,7 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from oslo_config import cfg
+import oslo_db.exception
 
 from heat.engine import event
 from heat.engine import parser
@@ -37,11 +40,25 @@ tmpl = {
     }
 }
 
+tmpl_multiple = {
+    'HeatTemplateFormatVersion': '2012-12-12',
+    'Resources': {
+        'EventTestResource': {
+            'Type': 'ResourceWithMultipleRequiredProps',
+            'Properties': {'Foo1': 'zoo',
+                           'Foo2': 'A0000000000',
+                           'Foo3': '99999'}
+        }
+    }
+}
 
-class EventTest(common.HeatTestCase):
+
+class EventCommon(common.HeatTestCase):
 
     def setUp(self):
-        super(EventTest, self).setUp()
+        super(EventCommon, self).setUp()
+
+    def _setup_stack(self, the_tmpl):
         self.username = 'event_test_user'
 
         self.ctx = utils.dummy_context()
@@ -50,14 +67,24 @@ class EventTest(common.HeatTestCase):
 
         resource._register_class('ResourceWithRequiredProps',
                                  generic_rsrc.ResourceWithRequiredProps)
+        resource._register_class(
+            'ResourceWithMultipleRequiredProps',
+            generic_rsrc.ResourceWithMultipleRequiredProps)
 
         self.stack = parser.Stack(self.ctx, 'event_load_test_stack',
-                                  template.Template(tmpl))
+                                  template.Template(the_tmpl))
         self.stack.store()
 
         self.resource = self.stack['EventTestResource']
         self.resource._store()
         self.addCleanup(stack_object.Stack.delete, self.ctx, self.stack.id)
+
+
+class EventTest(EventCommon):
+
+    def setUp(self):
+        super(EventTest, self).setUp()
+        self._setup_stack(tmpl)
 
     def test_load(self):
         self.resource.resource_id_set('resource_physical_id')
@@ -157,3 +184,63 @@ class EventTest(common.HeatTestCase):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', res.properties, res.name, res.type())
         self.assertIn('Error', e.resource_properties)
+
+
+class EventTestProps(EventCommon):
+
+    def setUp(self):
+        super(EventTestProps, self).setUp()
+        self._setup_stack(tmpl_multiple)
+
+    def test_store_fail_all_props(self):
+        self.resource.resource_id_set('resource_physical_id')
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'alabama', self.resource.properties,
+                        self.resource.name, self.resource.type())
+        e.store()
+        self.assertIsNotNone(e.id)
+        ev = event_object.Event.get_by_id(self.ctx, e.id)
+
+        errors = [oslo_db.exception.DBError, oslo_db.exception.DBError]
+
+        def side_effect(*args):
+            try:
+                raise errors.pop()
+            except IndexError:
+                self.assertEqual(
+                    {'Error': 'Resource properties are too large to store'},
+                    args[1]['resource_properties'])
+                return ev
+
+        with mock.patch("heat.objects.event.Event") as mock_event:
+            mock_event.create.side_effect = side_effect
+            e.store()
+
+    def test_store_fail_one_prop(self):
+        self.resource.resource_id_set('resource_physical_id')
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'alabama', self.resource.properties,
+                        self.resource.name, self.resource.type())
+        e.store()
+        self.assertIsNotNone(e.id)
+        ev = event_object.Event.get_by_id(self.ctx, e.id)
+
+        errors = [oslo_db.exception.DBError]
+
+        def side_effect(*args):
+            try:
+                raise errors.pop()
+            except IndexError:
+                self.assertEqual(
+                    {'Foo1': 'zoo',
+                     'Foo2': '<Deleted, too large>',
+                     'Foo3': '99999',
+                     'Error': 'Resource properties are too large to store'},
+                    args[1]['resource_properties'])
+                return ev
+
+        with mock.patch("heat.objects.event.Event") as mock_event:
+            mock_event.create.side_effect = side_effect
+            e.store()
