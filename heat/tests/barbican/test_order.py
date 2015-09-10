@@ -158,33 +158,6 @@ class TestOrder(common.HeatTestCase):
         args = self.barbican.orders.create.call_args[1]
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
-    def test_delete_order(self):
-        self.barbican.orders.create.return_value = 'foo'
-        res = self._create_resource('foo', self.res_template, self.stack)
-        self.assertEqual('foo', res.resource_id)
-
-        scheduler.TaskRunner(res.delete)()
-        self.barbican.orders.delete.assert_called_once_with('foo')
-
-    def test_handle_delete_ignores_not_found_errors(self):
-        res = self._create_resource('foo', self.res_template, self.stack)
-
-        self.barbican.barbican_client.HTTPClientError = Exception
-        exc = self.barbican.barbican_client.HTTPClientError('Not Found. Nope.')
-        self.barbican.orders.delete.side_effect = exc
-        scheduler.TaskRunner(res.delete)()
-        self.assertTrue(self.barbican.orders.delete.called)
-
-    def test_handle_delete_raises_resource_failure_on_error(self):
-        res = self._create_resource('foo', self.res_template, self.stack)
-
-        self.barbican.barbican_client.HTTPClientError = Exception
-        exc = self.barbican.barbican_client.HTTPClientError('Boom.')
-        self.barbican.orders.delete.side_effect = exc
-        exc = self.assertRaises(exception.ResourceFailure,
-                                scheduler.TaskRunner(res.delete))
-        self.assertIn('Boom.', six.text_type(exc))
-
     def test_check_create_complete(self):
         res = order.Order('foo', self.res_template, self.stack)
 

@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -140,26 +139,3 @@ class TestSecret(common.HeatTestCase):
         self.assertRaises(exception.ResourceFailure,
                           self._create_resource, defn.name, defn,
                           self.stack)
-
-    def test_delete_secret(self):
-        self.assertEqual('foo_id', self.res.resource_id)
-
-        mock_delete = self.barbican.secrets.delete
-        scheduler.TaskRunner(self.res.delete)()
-
-        mock_delete.assert_called_once_with('foo_id')
-
-    def test_handle_delete_ignores_not_found_errors(self):
-        self.barbican.barbican_client.HTTPClientError = Exception
-        exc = self.barbican.barbican_client.HTTPClientError('Not Found.')
-        self.barbican.secrets.delete.side_effect = exc
-        scheduler.TaskRunner(self.res.delete)()
-        self.assertTrue(self.barbican.secrets.delete.called)
-
-    def test_handle_delete_raises_resource_failure_on_error(self):
-        self.barbican.barbican_client.HTTPClientError = Exception
-        exc = self.barbican.barbican_client.HTTPClientError('Boom.')
-        self.barbican.secrets.delete.side_effect = exc
-        exc = self.assertRaises(exception.ResourceFailure,
-                                scheduler.TaskRunner(self.res.delete))
-        self.assertIn('Boom.', six.text_type(exc))
