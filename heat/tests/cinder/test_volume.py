@@ -302,6 +302,40 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.m.VerifyAll()
 
+    def test_cinder_attachment_no_mountpoint(self):
+        stack_name = 'test_cvolume_attach_stack'
+
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
+                                               device=None)
+        self.stub_VolumeConstraint_validate()
+
+        # delete script
+        fva = vt_base.FakeVolume('in-use')
+        self.fc.volumes.get_server_volume(u'WikiDatabase',
+                                          'vol-123').AndReturn(fva)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
+        self.fc.volumes.delete_server_volume(
+            'WikiDatabase', 'vol-123').MultipleTimes().AndReturn(None)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(
+            vt_base.FakeVolume('available'))
+        self.fc.volumes.get_server_volume(u'WikiDatabase',
+                                          'vol-123').AndReturn(fva)
+        self.fc.volumes.get_server_volume(
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
+
+        self.m.ReplayAll()
+
+        self.t['resources']['attachment']['properties']['mountpoint'] = ''
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        self.create_volume(self.t, stack, 'volume')
+        rsrc = self.create_attachment(self.t, stack, 'attachment')
+
+        scheduler.TaskRunner(rsrc.delete)()
+
+        self.m.VerifyAll()
+
     def test_cinder_volume_shrink_fails(self):
         stack_name = 'test_cvolume_shrink_fail_stack'
 
@@ -715,7 +749,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
         self._mock_create_server_volume_script(
-            vt_base.FakeVolume('attaching'))
+            vt_base.FakeVolume('attaching'),
+            device=u'/dev/vdc')
         self.stub_VolumeConstraint_validate()
 
         # delete script
@@ -734,7 +769,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         # attach script
         self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
-                                               device=u'/dev/vdd',
+                                               device=None,
                                                update=True)
 
         self.m.ReplayAll()
@@ -745,7 +780,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         rsrc = self.create_attachment(self.t, stack, 'attachment')
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['mountpoint'] = '/dev/vdd'
+        props['mountpoint'] = ''
         props['volume_id'] = 'vol-123'
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
         scheduler.TaskRunner(rsrc.update, after)()
