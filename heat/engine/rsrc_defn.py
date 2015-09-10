@@ -54,7 +54,6 @@ class ResourceDefinitionCore(object):
         :param update_policy: A dictionary of supplied update policies
         :param description: A string describing the resource
         """
-        depends = depends or []
         self.name = name
         self.resource_type = resource_type
         self.description = description or ''
@@ -79,10 +78,11 @@ class ResourceDefinitionCore(object):
                                          function.Function))
             self._hash ^= _hash_data(metadata)
 
-        assert isinstance(depends, (collections.Sequence,
-                                    function.Function))
-        assert not isinstance(depends, six.string_types)
-        self._hash ^= _hash_data(depends)
+        if depends is not None:
+            assert isinstance(depends, (collections.Sequence,
+                                        function.Function))
+            assert not isinstance(depends, six.string_types)
+            self._hash ^= _hash_data(depends)
 
         if deletion_policy is not None:
             assert deletion_policy in self.DELETION_POLICIES
@@ -169,7 +169,8 @@ class ResourceDefinitionCore(object):
                                                        True),
                                      function.dependencies(data, datapath))
 
-        return itertools.chain((get_resource(dep) for dep in self._depends),
+        explicit_depends = [] if self._depends is None else self._depends
+        return itertools.chain((get_resource(dep) for dep in explicit_depends),
                                strict_func_deps(self._properties,
                                                 path(PROPERTIES)),
                                strict_func_deps(self._metadata,

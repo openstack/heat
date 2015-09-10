@@ -143,6 +143,15 @@ class ResourceDefinitionTest(common.HeatTestCase):
 
         self.assertEqual(expected_hot, rd.render_hot())
 
+    def test_render_hot_empty(self):
+        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType')
+
+        expected_hot = {
+            'type': 'SomeType',
+        }
+
+        self.assertEqual(expected_hot, rd.render_hot())
+
     def test_template_equality(self):
         class FakeStack(object):
             def __init__(self, params):

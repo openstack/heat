@@ -868,6 +868,8 @@ Mappings:
             DeletionPolicy: Retain
             UpdatePolicy:
               foo: bar
+          resource2:
+            Type: AWS::EC2::Instance
         ''')
         source = template.Template(cfn_tpl)
         empty = template.Template(copy.deepcopy(empty_template))
