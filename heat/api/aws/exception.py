@@ -302,6 +302,8 @@ def map_remote_error(ex):
         'MissingCredentialError',
         'ResourcePropertyConflict',
         'PropertyUnspecifiedError',
+        'NotSupported',
+        'InvalidBreakPointHook',
     )
     denied_errors = ('Forbidden', 'NotAuthorized')
     already_exists_errors = ('StackExists')

@@ -1482,17 +1482,40 @@ class Resource(object):
         '''
         return base64.b64encode(data)
 
-    def signal(self, details=None):
-        '''
-        signal the resource. Subclasses should provide a handle_signal() method
-        to implement the signal, the base-class raise an exception if no
-        handler is implemented.
-        '''
+    def _signal_check_action(self):
         if self.action in self.no_signal_actions:
             self._add_event(self.action, self.status,
                             'Cannot signal resource during %s' % self.action)
-            ex = Exception(_('Cannot signal resource during %s') % self.action)
-            raise exception.ResourceFailure(ex, self)
+            msg = _('Signal resource during %s') % self.action
+            raise exception.NotSupported(feature=msg)
+
+    def _signal_check_hook(self, details):
+        if details and 'unset_hook' in details:
+            hook = details['unset_hook']
+            if not environment.valid_hook_type(hook):
+                msg = (_('Invalid hook type "%(hook)s" for %(resource)s') %
+                       {'hook': hook, 'resource': six.text_type(self)})
+                raise exception.InvalidBreakPointHook(message=msg)
+
+            if not self.has_hook(hook):
+                msg = (_('The "%(hook)s" hook is not defined '
+                         'on %(resource)s') %
+                       {'hook': hook, 'resource': six.text_type(self)})
+                raise exception.InvalidBreakPointHook(message=msg)
+
+    def _unset_hook(self, details):
+        # Clear the hook without interfering with resources'
+        # `handle_signal` callbacks:
+        hook = details['unset_hook']
+        self.clear_hook(hook)
+        LOG.info(_LI('Clearing %(hook)s hook on %(resource)s'),
+                 {'hook': hook, 'resource': six.text_type(self)})
+        self._add_event(self.action, self.status,
+                        "Hook %s is cleared" % hook)
+
+    def _handle_signal(self, details):
+        if not callable(getattr(self, 'handle_signal', None)):
+            raise exception.ResourceActionNotSupported(action='signal')
 
         def get_string_details():
             if details is None:
@@ -1511,22 +1534,6 @@ class Resource(object):
 
             return 'Unknown'
 
-        # Clear the hook without interfering with resources'
-        # `handle_signal` callbacks:
-        if (details and 'unset_hook' in details and
-                environment.valid_hook_type(details.get('unset_hook'))):
-            hook = details['unset_hook']
-            if self.has_hook(hook):
-                self.clear_hook(hook)
-                LOG.info(_LI('Clearing %(hook)s hook on %(resource)s'),
-                         {'hook': hook, 'resource': six.text_type(self)})
-                self._add_event(self.action, self.status,
-                                "Hook %s is cleared" % hook)
-                return
-
-        if not callable(getattr(self, 'handle_signal', None)):
-            raise exception.ResourceActionNotSupported(action='signal')
-
         try:
             signal_result = self.handle_signal(details)
             if signal_result:
@@ -1542,6 +1549,20 @@ class Resource(object):
                           % {'name': six.text_type(self), 'msg': ex})
             failure = exception.ResourceFailure(ex, self)
             raise failure
+
+    def signal(self, details=None, need_check=True):
+        '''
+        signal the resource. Subclasses should provide a handle_signal() method
+        to implement the signal, the base-class raise an exception if no
+        handler is implemented.
+        '''
+        if need_check:
+            self._signal_check_action()
+            self._signal_check_hook(details)
+        if details and 'unset_hook' in details:
+            self._unset_hook(details)
+            return
+        self._handle_signal(details)
 
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         if prop_diff:

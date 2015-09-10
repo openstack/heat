@@ -618,9 +618,7 @@ class SignalTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_signal_reception_wrong_state(self):
-        # assert that we get the correct exception when calling a
-        # resource.signal() that is in having a destructive action.
+    def _test_signal_not_supported_action(self, action='DELETE'):
         self.stack = self.create_stack()
 
         self.m.ReplayAll()
@@ -629,13 +627,24 @@ class SignalTest(common.HeatTestCase):
         rsrc = self.stack['signal_handler']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         # manually override the action to DELETE
-        rsrc.action = rsrc.DELETE
+        rsrc.action = action
 
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
-        self.assertRaises(exception.ResourceFailure, rsrc.signal,
-                          details=err_metadata)
-
+        msg = 'Signal resource during %s is not supported.' % action
+        exc = self.assertRaises(exception.NotSupported, rsrc.signal,
+                                details=err_metadata)
+        self.assertEqual(msg, six.text_type(exc))
         self.m.VerifyAll()
+
+    def test_signal_in_delete_state(self):
+        # assert that we get the correct exception when calling a
+        # resource.signal() that is in delete action.
+        self._test_signal_not_supported_action()
+
+    def test_signal_in_suspend_state(self):
+        # assert that we get the correct exception when calling a
+        # resource.signal() that is in suspend action.
+        self._test_signal_not_supported_action(action='SUSPEND')
 
     def test_signal_reception_failed_call(self):
         # assert that we get the correct exception from resource.signal()

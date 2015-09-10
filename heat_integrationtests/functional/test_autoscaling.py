@@ -13,7 +13,9 @@
 import copy
 import json
 
+from heatclient import exc
 from oslo_log import log as logging
+import six
 from testtools import matchers
 
 from heat_integrationtests.common import test
@@ -728,8 +730,13 @@ outputs:
         self._wait_for_resource_status(
             stack_identifier, 'JobServerGroup', 'SUSPEND_COMPLETE')
 
-        # Send a signal and confirm nothing happened.
-        self.client.resources.signal(stack_identifier, 'ScaleUpPolicy')
+        # Send a signal and a exception will raise
+        ex = self.assertRaises(exc.BadRequest,
+                               self.client.resources.signal,
+                               stack_identifier, 'ScaleUpPolicy')
+
+        error_msg = 'Signal resource during SUSPEND is not supported'
+        self.assertIn(error_msg, six.text_type(ex))
         ev = self.wait_for_event_with_reason(
             stack_identifier,
             reason='Cannot signal resource during SUSPEND',

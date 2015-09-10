@@ -1240,21 +1240,24 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_signal_reception_async(self):
-        self.eng.thread_group_mgr = tools.DummyThreadGroupMgrLogStart()
-        stack_name = 'signal_reception_async'
+    def _stack_create(self, stack_name):
         stack = tools.get_stack(stack_name, self.ctx, policy_template)
-        self.stack = stack
         tools.setup_keystone_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
-        test_data = {'food': 'yum'}
-
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
+        s = stack_object.Stack.get_by_id(self.ctx, stack.id)
         service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
+                                         stack.identifier()).AndReturn(s)
+        self.m.ReplayAll()
+        return stack
+
+    def test_signal_reception_async(self):
+        self.eng.thread_group_mgr = tools.DummyThreadGroupMgrLogStart()
+        stack_name = 'signal_reception_async'
+        self.stack = self._stack_create(stack_name)
+        test_data = {'food': 'yum'}
 
         self.m.ReplayAll()
 
@@ -1269,21 +1272,11 @@ class StackServiceTest(common.HeatTestCase):
 
     def test_signal_reception_sync(self):
         stack_name = 'signal_reception_sync'
-        stack = tools.get_stack(stack_name, self.ctx, policy_template)
-        self.stack = stack
-        tools.setup_keystone_mocks(self.m, stack)
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
+        self.stack = self._stack_create(stack_name)
         test_data = {'food': 'yum'}
 
-        self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
-        service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
-
         self.m.StubOutWithMock(res.Resource, 'signal')
-        res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(None)
         self.m.ReplayAll()
 
         self.eng.resource_signal(self.ctx,
@@ -1295,19 +1288,8 @@ class StackServiceTest(common.HeatTestCase):
 
     def test_signal_reception_no_resource(self):
         stack_name = 'signal_reception_no_resource'
-        stack = tools.get_stack(stack_name, self.ctx, policy_template)
-        tools.setup_keystone_mocks(self.m, stack)
-        self.stack = stack
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
+        self.stack = self._stack_create(stack_name)
         test_data = {'food': 'yum'}
-
-        self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
-        service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
-        self.m.ReplayAll()
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.resource_signal, self.ctx,
@@ -1345,23 +1327,13 @@ class StackServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_signal_returns_metadata(self):
-        stack = tools.get_stack('signal_reception', self.ctx, policy_template)
-        self.stack = stack
-        tools.setup_keystone_mocks(self.m, stack)
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
+        self.stack = self._stack_create('signal_reception')
+        rsrc = self.stack['WebServerScaleDownPolicy']
         test_metadata = {'food': 'yum'}
-        rsrc = stack['WebServerScaleDownPolicy']
         rsrc.metadata_set(test_metadata)
 
-        self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
-        service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
-
         self.m.StubOutWithMock(res.Resource, 'signal')
-        res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(None)
         self.m.ReplayAll()
 
         md = self.eng.resource_signal(self.ctx,
@@ -1369,6 +1341,40 @@ class StackServiceTest(common.HeatTestCase):
                                       'WebServerScaleDownPolicy', None,
                                       sync_call=True)
         self.assertEqual(test_metadata, md)
+
+        self.m.VerifyAll()
+
+    def test_signal_unset_invalid_hook(self):
+        self.stack = self._stack_create('signal_unset_invalid_hook')
+        details = {'unset_hook': 'invalid_hook'}
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_signal,
+                               self.ctx,
+                               dict(self.stack.identifier()),
+                               'WebServerScaleDownPolicy',
+                               details)
+        msg = 'Invalid hook type "invalid_hook"'
+        self.assertIn(msg, six.text_type(ex.exc_info[1]))
+        self.assertEqual(exception.InvalidBreakPointHook,
+                         ex.exc_info[0])
+        self.m.VerifyAll()
+
+    def test_signal_unset_not_defined_hook(self):
+        self.stack = self._stack_create('signal_unset_not_defined_hook')
+        details = {'unset_hook': 'pre-update'}
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_signal,
+                               self.ctx,
+                               dict(self.stack.identifier()),
+                               'WebServerScaleDownPolicy',
+                               details)
+        msg = ('The "pre-update" hook is not defined on '
+               'AWSScalingPolicy "WebServerScaleDownPolicy"')
+        self.assertIn(msg, six.text_type(ex.exc_info[1]))
+        self.assertEqual(exception.InvalidBreakPointHook,
+                         ex.exc_info[0])
+
         self.m.VerifyAll()
 
     def test_signal_calls_metadata_update(self):
@@ -1385,7 +1391,7 @@ class StackServiceTest(common.HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
 
         self.m.StubOutWithMock(res.Resource, 'signal')
-        res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(None)
         self.m.StubOutWithMock(res.Resource, 'metadata_update')
         # this will be called once for the Random resource
         res.Resource.metadata_update().AndReturn(None)
@@ -1413,7 +1419,7 @@ class StackServiceTest(common.HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
 
         self.m.StubOutWithMock(res.Resource, 'signal')
-        res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(None)
         # this will never be called
         self.m.StubOutWithMock(res.Resource, 'metadata_update')
         self.m.ReplayAll()
