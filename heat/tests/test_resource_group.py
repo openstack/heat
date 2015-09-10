@@ -914,17 +914,6 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
             exception.StackValidationFailed, stack.validate)
         self.assertIn("foo", six.text_type(error))
 
-    def test_parse_with_max_pausetime_in_update_policy(self):
-        tmpl = tmpl_with_default_updt_policy()
-        group = tmpl['resources']['group1']
-        policy = group['update_policy']['rolling_update']
-        policy['pause_time'] = '7200'
-        stack = utils.parse_stack(tmpl)
-        error = self.assertRaises(
-            exception.StackValidationFailed, stack.validate)
-        self.assertIn("Maximum pause_time allowed is 1hr(3600s), "
-                      "provided 7200 seconds.", six.text_type(error))
-
 
 class RollingUpdatePolicyDiffTest(common.HeatTestCase):
     def setUp(self):

@@ -278,16 +278,6 @@ class ResourceGroup(stack_resource.StackResource):
 
         if self.update_policy is not None:
             self.update_policy.validate()
-            policy_name = self.ROLLING_UPDATE
-            if (policy_name in self.update_policy and
-                    self.update_policy[policy_name] is not None):
-                pause_time = self.update_policy[policy_name][self.PAUSE_TIME]
-                if pause_time > 3600:
-                    msg = _('Maximum %(arg1)s allowed is 1hr(3600s),'
-                            ' provided %(arg2)s seconds.') % dict(
-                        arg1=self.PAUSE_TIME,
-                        arg2=pause_time)
-                    raise ValueError(msg)
 
     def validate_nested_stack(self):
         # Only validate the resource definition (which may be a
