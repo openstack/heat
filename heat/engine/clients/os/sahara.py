@@ -52,6 +52,17 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
         client = sahara_client.Client('1.1', **args)
         return client
 
+    def validate_hadoop_version(self, plugin_name, hadoop_version):
+        plugin = self.client().plugins.get(plugin_name)
+        allowed_versions = plugin.versions
+        if hadoop_version not in allowed_versions:
+            msg = (_("Requested plugin '%(plugin)s' doesn\'t support version "
+                     "'%(version)s'. Allowed versions are %(allowed)s") %
+                   {'plugin': plugin_name,
+                    'version': hadoop_version,
+                    'allowed': ', '.join(allowed_versions)})
+            raise exception.StackValidationFailed(message=msg)
+
     def is_not_found(self, ex):
         return (isinstance(ex, sahara_base.APIException) and
                 ex.error_code == 404)

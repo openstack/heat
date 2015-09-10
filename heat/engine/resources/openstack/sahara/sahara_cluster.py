@@ -230,6 +230,11 @@ class SaharaCluster(resource.Resource):
                     ) % self.MANAGEMENT_NETWORK
             raise exception.StackValidationFailed(message=msg)
 
+        self.client_plugin().validate_hadoop_version(
+            self.properties[self.PLUGIN_NAME],
+            self.properties[self.HADOOP_VERSION]
+        )
+
 
 def resource_mapping():
     return {
