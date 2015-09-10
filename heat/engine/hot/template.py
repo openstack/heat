@@ -247,9 +247,7 @@ class HOTemplate20130523(template.Template):
             data = self.parse(stack, snippet)
 
             depends = data.get(RES_DEPENDS_ON)
-            if not depends:
-                depends = []
-            elif isinstance(depends, six.string_types):
+            if isinstance(depends, six.string_types):
                 depends = [depends]
 
             kwargs = {

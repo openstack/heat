@@ -218,14 +218,12 @@ class ResourceGroupTest(common.HeatTestCase):
             "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
-                    "depends_on": [],
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "foo": "bar"
                     }
                 },
                 "1": {
-                    "depends_on": [],
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "foo": "baz"
@@ -234,7 +232,6 @@ class ResourceGroupTest(common.HeatTestCase):
             }
         }
         resource_def = {
-            "depends_on": [],
             "type": "OverwrittenFnGetRefIdType",
             "properties": {
                 "foo": "baz"
@@ -252,14 +249,12 @@ class ResourceGroupTest(common.HeatTestCase):
             "heat_template_version": "2015-04-30",
             "resources": {
                 "0": {
-                    "depends_on": [],
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "foo": "bar"
                     }
                 },
                 "1": {
-                    "depends_on": [],
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "foo": "bar"
@@ -268,7 +263,6 @@ class ResourceGroupTest(common.HeatTestCase):
             }
         }
         resource_def = {
-            "depends_on": [],
             "type": "OverwrittenFnGetRefIdType",
             "properties": {
                 "foo": "baz"
