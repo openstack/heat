@@ -836,8 +836,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                         cls.BLOCK_DEVICE_MAPPING_SWAP_SIZE),
                 }
 
-            update_props = (cls.BLOCK_DEVICE_MAPPING_DEVICE_NAME,
-                            cls.BLOCK_DEVICE_MAPPING_DEVICE_TYPE,
+            # NOTE(prazumovsky): In case of server doesn't take empty value of
+            # device name, need to escape from such situation.
+            device_name = mapping.get(cls.BLOCK_DEVICE_MAPPING_DEVICE_NAME)
+            if device_name:
+                bmd_dict[cls.BLOCK_DEVICE_MAPPING_DEVICE_NAME] = device_name
+
+            update_props = (cls.BLOCK_DEVICE_MAPPING_DEVICE_TYPE,
                             cls.BLOCK_DEVICE_MAPPING_DISK_BUS,
                             cls.BLOCK_DEVICE_MAPPING_BOOT_INDEX,
                             cls.BLOCK_DEVICE_MAPPING_VOLUME_SIZE,
