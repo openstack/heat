@@ -211,7 +211,7 @@ class HOTemplate20130523(template.Template):
             depends = get_check_type(RES_DEPENDS_ON,
                                      collections.Sequence,
                                      'list or string',
-                                     default=[])
+                                     default=None)
             if isinstance(depends, basestring):
                 depends = [depends]
 
