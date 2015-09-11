@@ -400,7 +400,7 @@ class ResourceGroup(stack_resource.StackResource):
                         self).check_update_complete(updater):
             yield
 
-    def _run_update(self, total_capacity, max_updates, names, timeout):
+    def _run_update(self, total_capacity, max_updates, timeout):
         template = self._assemble_for_rolling_update(total_capacity,
                                                      max_updates)
         return self._run_to_completion(template, timeout)
