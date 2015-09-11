@@ -891,10 +891,11 @@ class EngineService(service.Service):
 
         actions = update_task.preview()
 
-        fmt_updated_res = lambda k: api.format_stack_resource(
-            updated_stack.resources.get(k))
-        fmt_current_res = lambda k: api.format_stack_resource(
-            current_stack.resources.get(k))
+        def fmt_updated_res(k):
+            return api.format_stack_resource(updated_stack.resources.get(k))
+
+        def fmt_current_res(k):
+            return api.format_stack_resource(current_stack.resources.get(k))
 
         return {
             'unchanged': map(fmt_updated_res, actions['unchanged']),

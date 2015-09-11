@@ -56,8 +56,13 @@ def get_facade():
 
     return _facade
 
-get_engine = lambda: get_facade().get_engine()
-get_session = lambda: get_facade().get_session()
+
+def get_engine():
+    return get_facade().get_engine()
+
+
+def get_session():
+    return get_facade().get_session()
 
 
 def get_backend():

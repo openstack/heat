@@ -140,7 +140,10 @@ class ResourcePages(compat.Directive):
         if not prop:
             return 'Value'
         if prop.type == properties.Schema.LIST:
-            schema = lambda i: prop.schema[i] if prop.schema else None
+
+            def schema(i):
+                return prop.schema[i] if prop.schema else None
+
             sub_type = [self._prop_syntax_example(schema(i))
                         for i in range(2)]
             return '[%s, %s, ...]' % tuple(sub_type)

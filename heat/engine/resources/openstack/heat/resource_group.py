@@ -464,7 +464,10 @@ class ResourceGroup(stack_resource.StackResource):
 
     def _handle_repl_val(self, res_name, val):
         repl_var = self.properties[self.INDEX_VAR]
-        recurse = lambda x: self._handle_repl_val(res_name, x)
+
+        def recurse(x):
+            return self._handle_repl_val(res_name, x)
+
         if isinstance(val, six.string_types):
             return val.replace(repl_var, res_name)
         elif isinstance(val, collections.Mapping):

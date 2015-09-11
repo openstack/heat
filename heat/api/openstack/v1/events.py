@@ -37,7 +37,9 @@ summary_keys = [
 
 
 def format_event(req, event, keys=None):
-    include_key = lambda k: k in keys if keys else True
+
+    def include_key(k):
+        return k in keys if keys else True
 
     def transform(key, value):
         if not include_key(key):
@@ -132,7 +134,9 @@ class EventController(object):
             events = self._event_list(req, identity,
                                       filters=filter_params, **params)
         else:
-            res_match = lambda e: e[rpc_api.EVENT_RES_NAME] == resource_name
+
+            def res_match(e):
+                return e[rpc_api.EVENT_RES_NAME] == resource_name
 
             events = self._event_list(req, identity, res_match,
                                       filters=filter_params, **params)

@@ -79,7 +79,9 @@ def extract_param_list(params, prefix=''):
                     yield (index, (key, value))
 
     # Sort and group by index
-    key_func = lambda d: d[0]
+    def key_func(d):
+        return d[0]
+
     data = sorted(get_param_data(params), key=key_func)
     members = itertools.groupby(data, key_func)
 

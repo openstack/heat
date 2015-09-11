@@ -38,8 +38,7 @@ class UUIDStub(object):
 
     def __enter__(self):
         self.uuid4 = uuid.uuid4
-        uuid_stub = lambda: self.value
-        uuid.uuid4 = uuid_stub
+        uuid.uuid4 = lambda: self.value
 
     def __exit__(self, *exc_info):
         uuid.uuid4 = self.uuid4
