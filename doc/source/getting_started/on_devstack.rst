@@ -34,7 +34,7 @@ It would also be useful to automatically download and register
 a VM image that Heat can launch. To do that add the following to your
 devstack `localrc`::
 
-    IMAGE_URLS+=",http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2"
+    IMAGE_URLS+=",http://download.fedoraproject.org/pub/fedora/linux/releases/21/Cloud/Images/x86_64/Fedora-Cloud-Base-20141203-21.x86_64.qcow2"
 
 URLs for any cloud image may be specified, but fedora images from F20 contain the heat-cfntools package which is required for some heat functionality.
 
