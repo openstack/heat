@@ -163,8 +163,10 @@ For example, Heat currently supports the following values for the
     ``get_attr``/``get_param`` references should be used instead. Moreover
     ``get_attr`` since this version returns dict of all attributes for the
     given resource excluding *show* attribute, if there's no <attribute name>
-    specified, e.g. :code:`{ get_attr: [<resource name>]}`. The complete list
-    of supported functions is::
+    specified, e.g. :code:`{ get_attr: [<resource name>]}`. This version
+    also adds the str_split function and support for passing multiple lists to
+    the existing list_join function. The complete list of supported functions
+    is::
 
   get_attr
   get_file
@@ -919,6 +921,15 @@ For example
    list_join: [', ', ['one', 'two', 'and three']]
 
 This resolve to the string ``one, two, and three``.
+
+From HOT version ``2015-10-15`` you may optionally pass additional lists, which
+will be appended to the previous lists to join.
+
+For example::
+
+   list_join: [', ', ['one', 'two'], ['three', 'four']]]
+
+This resolve to the string ``one, two, three, four``.
 
 
 digest
