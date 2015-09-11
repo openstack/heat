@@ -147,7 +147,13 @@ class TemplateResource(stack_resource.StackResource):
                                 flattened.append(mem_str)
                         params[pname] = ','.join(flattened)
                     else:
-                        params[pname] = ','.join(val)
+                        # When None is returned from get_attr, creating a
+                        # delimited list with it fails during validation.
+                        # we should sanitize the None values to empty strings.
+                        # FIXME(rabi) this needs a permanent solution
+                        # to sanitize attributes and outputs in the future.
+                        params[pname] = ','.join(
+                            (x if x is not None else '') for x in val)
                 else:
                     # for MAP, the JSON param takes either a collection or
                     # string, so just pass it on and let the param validate
