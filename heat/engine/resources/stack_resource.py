@@ -225,6 +225,7 @@ class StackResource(resource.Resource):
                               stack_user_project_id=stack_user_project_id,
                               adopt_stack_data=adopt_data,
                               nested_depth=new_nested_depth)
+        nested.set_parent_stack(self.stack)
         return nested
 
     def _child_nested_depth(self):

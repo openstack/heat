@@ -205,6 +205,9 @@ class Stack(collections.Mapping):
 
         return self._parent_stack[self.parent_resource_name]
 
+    def set_parent_stack(self, parent_stack):
+        self._parent_stack = parent_stack
+
     def stored_context(self):
         if self.user_creds_id:
             creds_obj = ucreds_object.UserCreds.get_by_id(self.user_creds_id)
