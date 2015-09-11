@@ -1625,7 +1625,7 @@ class StackServiceTest(common.HeatTestCase):
         fake_stack.action = 'CREATE'
         fake_stack.id = 'foo'
         fake_stack.status = 'IN_PROGRESS'
-        fake_stack.state_set.return_value = None
+
         mock_stack_load.return_value = fake_stack
 
         fake_lock = mock.MagicMock()
@@ -1646,6 +1646,54 @@ class StackServiceTest(common.HeatTestCase):
                                                 stack=db_stack,
                                                 use_stored_context=True)
         mock_thread.start_with_acquired_lock.assert_called_once_with(
-            fake_stack, fake_lock, fake_stack.state_set, fake_stack.action,
-            fake_stack.FAILED, 'Engine went down during stack CREATE'
+            fake_stack, fake_lock,
+            self.eng.set_stack_and_resource_to_failed, fake_stack
         )
+
+    def test_set_stack_and_resource_to_failed(self):
+
+        def fake_stack():
+            stk = mock.MagicMock()
+            stk.action = 'CREATE'
+            stk.id = 'foo'
+            stk.status = 'IN_PROGRESS'
+            stk.FAILED = 'FAILED'
+
+            def mock_stack_state_set(a, s, reason):
+                stk.status = s
+                stk.action = a
+                stk.status_reason = reason
+
+            stk.state_set = mock_stack_state_set
+
+            return stk
+
+        def fake_stack_resource(name, action, status):
+            rs = mock.MagicMock()
+            rs.name = name
+            rs.action = action
+            rs.status = status
+            rs.IN_PROGRESS = 'IN_PROGRESS'
+            rs.FAILED = 'FAILED'
+
+            def mock_resource_state_set(a, s, reason='engine_down'):
+                rs.status = s
+                rs.action = a
+                rs.status_reason = reason
+
+            rs.state_set = mock_resource_state_set
+
+            return rs
+
+        test_stack = fake_stack()
+
+        test_stack.resources = {
+            'r1': fake_stack_resource('r1', 'UPDATE', 'COMPLETE'),
+            'r2': fake_stack_resource('r2', 'UPDATE', 'IN_PROGRESS'),
+            'r3': fake_stack_resource('r3', 'UPDATE', 'FAILED')}
+
+        self.eng.set_stack_and_resource_to_failed(test_stack)
+        self.assertEqual('FAILED', test_stack.status)
+        self.assertEqual('COMPLETE', test_stack.resources.get('r1').status)
+        self.assertEqual('FAILED', test_stack.resources.get('r2').status)
+        self.assertEqual('FAILED', test_stack.resources.get('r3').status)
