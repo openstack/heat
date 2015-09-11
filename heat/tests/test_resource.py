@@ -367,11 +367,33 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'TestResource')
         res = TestResource('test_resource', tmpl, self.stack)
+        res.prepare_for_replace = mock.Mock()
 
         utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
                                              {'a_string': 'foo'})
         self.assertRaises(
             exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+        self.assertTrue(res.prepare_for_replace.called)
+
+    def test_update_replace_rollback(self):
+        class TestResource(resource.Resource):
+            properties_schema = {'a_string': {'Type': 'String'}}
+            update_allowed_properties = ('a_string',)
+
+        resource._register_class('TestResource', TestResource)
+
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'TestResource')
+        self.stack.state_set('ROLLBACK', 'IN_PROGRESS', 'Simulate rollback')
+        res = TestResource('test_resource', tmpl, self.stack)
+
+        res.restore_after_rollback = mock.Mock()
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
+                                             {'a_string': 'foo'})
+        self.assertRaises(
+            exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+        self.assertTrue(res.restore_after_rollback.called)
 
     def test_update_replace_in_failed_without_nested(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
