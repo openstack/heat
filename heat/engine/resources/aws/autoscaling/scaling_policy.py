@@ -14,11 +14,13 @@
 from oslo_log import log as logging
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.heat import scaling_policy as heat_sp
+from heat.scaling import scalingutil as sc_util
 
 LOG = logging.getLogger(__name__)
 
@@ -31,9 +33,6 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
         'AutoScalingGroupName', 'ScalingAdjustment', 'AdjustmentType',
         'Cooldown', 'MinAdjustmentStep',
     )
-
-    EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
-        'ExactCapacity', 'ChangeInCapacity', 'PercentChangeInCapacity')
 
     ATTRIBUTES = (
         ALARM_URL,
@@ -58,9 +57,10 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
             _('Type of adjustment (absolute or percentage).'),
             required=True,
             constraints=[
-                constraints.AllowedValues([CHANGE_IN_CAPACITY,
-                                           EXACT_CAPACITY,
-                                           PERCENT_CHANGE_IN_CAPACITY]),
+                constraints.AllowedValues(
+                    [sc_util.CFN_CHANGE_IN_CAPACITY,
+                     sc_util.CFN_EXACT_CAPACITY,
+                     sc_util.CFN_PERCENT_CHANGE_IN_CAPACITY]),
             ],
             update_allowed=True
         ),
@@ -92,8 +92,15 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
         ),
     }
 
-    def _get_adjustement_type(self):
-        return self.properties[self.ADJUSTMENT_TYPE]
+    def _validate_min_adjustment_step(self):
+        adjustment_type = self.properties.get(self.ADJUSTMENT_TYPE)
+        adjustment_step = self.properties.get(self.MIN_ADJUSTMENT_STEP)
+        if (adjustment_type != sc_util.CFN_PERCENT_CHANGE_IN_CAPACITY
+                and adjustment_step is not None):
+            raise exception.ResourcePropertyValueDependency(
+                prop1=self.MIN_ADJUSTMENT_STEP,
+                prop2=self.ADJUSTMENT_TYPE,
+                value=sc_util.CFN_PERCENT_CHANGE_IN_CAPACITY)
 
     def FnGetRefId(self):
         if self.resource_id is not None:

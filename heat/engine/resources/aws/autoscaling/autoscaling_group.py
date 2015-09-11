@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import math
-
 from oslo_log import log as logging
 from oslo_utils import excutils
 import six
@@ -32,52 +30,9 @@ from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import support
 from heat.scaling import cooldown
+from heat.scaling import scalingutil as sc_util
 
 LOG = logging.getLogger(__name__)
-
-
-(EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY) = (
-    'ExactCapacity', 'ChangeInCapacity', 'PercentChangeInCapacity')
-
-
-def _calculate_new_capacity(current, adjustment, adjustment_type,
-                            min_adjustment_step, minimum, maximum):
-    """
-    Given the current capacity, calculates the new capacity which results
-    from applying the given adjustment of the given adjustment-type.  The
-    new capacity will be kept within the maximum and minimum bounds.
-    """
-    def _get_minimum_adjustment(adjustment, min_adjustment_step):
-        if min_adjustment_step and min_adjustment_step > abs(adjustment):
-            adjustment = (min_adjustment_step if adjustment > 0
-                          else -min_adjustment_step)
-        return adjustment
-
-    if adjustment_type == CHANGE_IN_CAPACITY:
-        new_capacity = current + adjustment
-    elif adjustment_type == EXACT_CAPACITY:
-        new_capacity = adjustment
-    else:
-        # PercentChangeInCapacity
-        delta = current * adjustment / 100.0
-        if math.fabs(delta) < 1.0:
-            rounded = int(math.ceil(delta) if delta > 0.0
-                          else math.floor(delta))
-        else:
-            rounded = int(math.floor(delta) if delta > 0.0
-                          else math.ceil(delta))
-        adjustment = _get_minimum_adjustment(rounded, min_adjustment_step)
-        new_capacity = current + adjustment
-
-    if new_capacity > maximum:
-        LOG.debug('truncating growth to %s' % maximum)
-        return maximum
-
-    if new_capacity < minimum:
-        LOG.debug('truncating shrinkage to %s' % minimum)
-        return minimum
-
-    return new_capacity
 
 
 class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
@@ -273,7 +228,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         done = super(AutoScalingGroup, self).check_create_complete(task)
         if done:
             self._cooldown_timestamp(
-                "%s : %s" % (EXACT_CAPACITY, grouputils.get_size(self)))
+                "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
+                             grouputils.get_size(self)))
         return done
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -296,12 +252,14 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
 
         if self.properties[self.DESIRED_CAPACITY] is not None:
             self.adjust(self.properties[self.DESIRED_CAPACITY],
-                        adjustment_type=EXACT_CAPACITY)
+                        adjustment_type=sc_util.CFN_EXACT_CAPACITY)
         else:
             current_capacity = grouputils.get_size(self)
-            self.adjust(current_capacity, adjustment_type=EXACT_CAPACITY)
+            self.adjust(current_capacity,
+                        adjustment_type=sc_util.CFN_EXACT_CAPACITY)
 
-    def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY,
+    def adjust(self, adjustment,
+               adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
                min_adjustment_step=None, signal=False):
         """
         Adjust the size of the scaling group if the cooldown permits.
@@ -320,10 +278,10 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         lower = self.properties[self.MIN_SIZE]
         upper = self.properties[self.MAX_SIZE]
 
-        new_capacity = _calculate_new_capacity(capacity, adjustment,
-                                               adjustment_type,
-                                               min_adjustment_step,
-                                               lower, upper)
+        new_capacity = sc_util.calculate_new_capacity(capacity, adjustment,
+                                                      adjustment_type,
+                                                      min_adjustment_step,
+                                                      lower, upper)
 
         # send a notification before, on-error and on-success.
         notif = {

@@ -24,6 +24,7 @@ from heat.engine import resource
 from heat.engine.resources import signal_responder
 from heat.engine import support
 from heat.scaling import cooldown
+from heat.scaling import scalingutil as sc_util
 
 LOG = logging.getLogger(__name__)
 
@@ -43,9 +44,6 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         'auto_scaling_group_id', 'scaling_adjustment', 'adjustment_type',
         'cooldown', 'min_adjustment_step',
     )
-
-    EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
-        'exact_capacity', 'change_in_capacity', 'percent_change_in_capacity')
 
     ATTRIBUTES = (
         ALARM_URL, SIGNAL_URL
@@ -71,9 +69,10 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
             _('Type of adjustment (absolute or percentage).'),
             required=True,
             constraints=[
-                constraints.AllowedValues([CHANGE_IN_CAPACITY,
-                                           EXACT_CAPACITY,
-                                           PERCENT_CHANGE_IN_CAPACITY]),
+                constraints.AllowedValues(
+                    [sc_util.CHANGE_IN_CAPACITY,
+                     sc_util.EXACT_CAPACITY,
+                     sc_util.PERCENT_CHANGE_IN_CAPACITY]),
             ],
             update_allowed=True
         ),
@@ -115,14 +114,17 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         Add validation for min_adjustment_step
         """
         super(AutoScalingPolicy, self).validate()
+        self._validate_min_adjustment_step()
+
+    def _validate_min_adjustment_step(self):
         adjustment_type = self.properties.get(self.ADJUSTMENT_TYPE)
         adjustment_step = self.properties.get(self.MIN_ADJUSTMENT_STEP)
-        if (adjustment_type != self.PERCENT_CHANGE_IN_CAPACITY
+        if (adjustment_type != sc_util.PERCENT_CHANGE_IN_CAPACITY
                 and adjustment_step is not None):
             raise exception.ResourcePropertyValueDependency(
                 prop1=self.MIN_ADJUSTMENT_STEP,
                 prop2=self.ADJUSTMENT_TYPE,
-                value=self.PERCENT_CHANGE_IN_CAPACITY)
+                value=sc_util.PERCENT_CHANGE_IN_CAPACITY)
 
     def handle_create(self):
         super(AutoScalingPolicy, self).handle_create()
@@ -136,10 +138,6 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         if prop_diff:
             self.properties = json_snippet.properties(self.properties_schema,
                                                       self.context)
-
-    def _get_adjustement_type(self):
-        adjustment_type = self.properties[self.ADJUSTMENT_TYPE]
-        return ''.join([t.capitalize() for t in adjustment_type.split('_')])
 
     def handle_signal(self, details=None):
         # ceilometer sends details like this:
@@ -182,9 +180,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                      {'name': self.name, 'group': group.name,
                       'asgn_id': asgn_id,
                       'filter': self.properties[self.SCALING_ADJUSTMENT]})
-            adjustment_type = self._get_adjustement_type()
             group.adjust(self.properties[self.SCALING_ADJUSTMENT],
-                         adjustment_type,
+                         self.properties[self.ADJUSTMENT_TYPE],
                          self.properties[self.MIN_ADJUSTMENT_STEP],
                          signal=True)
 
