@@ -65,4 +65,4 @@ class SyncPointTestCase(common.HeatTestCase):
 
     def test_serialize_input_data(self):
         res = sync_point.serialize_input_data({(3, 8): None})
-        self.assertEqual({'input_data': [[[3, 8], None]]}, res)
+        self.assertEqual({'input_data': {u'tuple:(3, 8)': None}}, res)
