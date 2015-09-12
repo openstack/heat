@@ -26,7 +26,7 @@ from heat.tests import fakes
 
 NOVACLIENT_VERSION = "2"
 
-Client = base_client.get_client_class(NOVACLIENT_VERSION)
+Client = base_client.Client(NOVACLIENT_VERSION).__class__
 
 
 def fake_exception(status_code=404, message=None, details=None):
