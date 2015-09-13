@@ -168,16 +168,16 @@ For example, Heat currently supports the following values for the
     the existing list_join function. The complete list of supported functions
     is::
 
-  get_attr
-  get_file
-  get_param
-  get_resource
-  list_join
-  repeat
-  digest
-  resource_facade
-  str_replace
-  str_split
+      get_attr
+      get_file
+      get_param
+      get_resource
+      list_join
+      repeat
+      digest
+      resource_facade
+      str_replace
+      str_split
 
 .. _hot_spec_parameter_groups:
 
