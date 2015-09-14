@@ -18,8 +18,10 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints as constr
 from heat.engine import function
+from heat.engine.hot import functions as hot_funcs
 from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import support
@@ -659,17 +661,20 @@ class TranslationRule(object):
             raise ValueError(_('value must be list type when rule is Add.'))
 
     def execute_rule(self):
-        (source_key, source_data) = self.get_data_from_source_path(
-            self.source_path)
-        if self.value_path:
-            (value_key, value_data) = self.get_data_from_source_path(
-                self.value_path)
-            value = (value_data[value_key]
-                     if value_data and value_data.get(value_key)
-                     else self.value)
-        else:
-            (value_key, value_data) = None, None
-            value = self.value
+        try:
+            (source_key, source_data) = self.get_data_from_source_path(
+                self.source_path)
+            if self.value_path:
+                (value_key, value_data) = self.get_data_from_source_path(
+                    self.value_path)
+                value = (value_data[value_key]
+                         if value_data and value_data.get(value_key)
+                         else self.value)
+            else:
+                (value_key, value_data) = None, None
+                value = self.value
+        except AttributeError:
+            return
 
         if (source_data is None or (self.rule != self.DELETE and
                                     (value is None and
@@ -728,16 +733,37 @@ class TranslationRule(object):
                              for k, s in schemata.items())
             return props
 
+        def resolve_param(param):
+            """Check whether if given item is param and resolve, if it is."""
+            # NOTE(prazumovsky): If property uses removed in HOT function,
+            # we should not translate it for correct validating and raising
+            # validation error.
+            if isinstance(param, hot_funcs.Removed):
+                raise AttributeError(_('Property uses removed function.'))
+            if isinstance(param, (hot_funcs.GetParam, cfn_funcs.ParamRef)):
+                return function.resolve(param)
+            elif isinstance(param, list):
+                return [resolve_param(param_item) for param_item in param]
+            else:
+                return param
+
         source_key = path[0]
         data = self.properties.data
         props = self.properties.props
         for key in path:
             if isinstance(data, list):
                 source_key = key
-            elif data.get(key) is not None and isinstance(data.get(key),
-                                                          (list, dict)):
-                data = data.get(key)
-                props = get_props(props, key)
+            elif data.get(key) is not None:
+                # NOTE(prazumovsky): There's no need to resolve other functions
+                # because we can translate all function to another path. But if
+                # list or map type property equals to get_param function, need
+                # to resolve it for correct translating.
+                data[key] = resolve_param(data[key])
+                if isinstance(data[key], (dict, list)):
+                    data = data[key]
+                    props = get_props(props, key)
+                else:
+                    source_key = key
             elif data.get(key) is None:
                 if (self.rule == TranslationRule.DELETE or
                         (self.rule == TranslationRule.REPLACE and
@@ -752,6 +778,4 @@ class TranslationRule(object):
                     continue
                 data = data.get(key)
                 props = get_props(props, key)
-            else:
-                source_key = key
         return source_key, data
