@@ -1078,6 +1078,8 @@ class Resource(object):
 
         function.validate(self.t)
         self.validate_deletion_policy(self.t.deletion_policy())
+        self.t.update_policy(self.update_policy_schema,
+                             self.context).validate()
         try:
             validate = self.properties.validate(
                 with_value=self.stack.strict_validate)
