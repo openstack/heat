@@ -167,7 +167,8 @@ class BaseVolumeAttachment(resource.Resource):
     def handle_create(self):
         server_id = self.properties[self.INSTANCE_ID]
         volume_id = self.properties[self.VOLUME_ID]
-        dev = self.properties[self.DEVICE]
+        dev = (self.properties[self.DEVICE] if self.properties[self.DEVICE]
+               else None)
 
         attach_id = self.client_plugin('nova').attach_volume(
             server_id, volume_id, dev)

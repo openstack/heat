@@ -639,9 +639,11 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             if self.VOLUME_ID in prop_diff:
                 volume_id = prop_diff.get(self.VOLUME_ID)
 
-            device = self.properties[self.DEVICE]
+            device = (self.properties[self.DEVICE]
+                      if self.properties[self.DEVICE] else None)
             if self.DEVICE in prop_diff:
-                device = prop_diff.get(self.DEVICE)
+                device = (prop_diff[self.DEVICE]
+                          if prop_diff[self.DEVICE] else None)
 
             if self.INSTANCE_ID in prop_diff:
                 server_id = prop_diff.get(self.INSTANCE_ID)
