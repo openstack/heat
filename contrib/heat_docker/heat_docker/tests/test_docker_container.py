@@ -123,6 +123,7 @@ class DockerContainerTest(common.HeatTestCase):
         mock_client.logs.return_value = "Container startup failed"
         test_client.return_value = mock_client
         mock_stack = mock.Mock()
+        mock_stack.has_cache_data.return_value = False
         mock_stack.db_resource_get.return_value = None
         res_def = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         docker_res = docker_container.DockerContainer("test", res_def,

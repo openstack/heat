@@ -444,6 +444,7 @@ class LoadBalancerTest(common.HeatTestCase):
         }
         stack = mock.Mock()
         stack.db_resource_get.return_value = None
+        stack.has_cache_data.return_value = False
         # happy path
         resdef = rsrc_defn.ResourceDefinition("testvip",
                                               lb.CloudLoadBalancer,
@@ -652,6 +653,7 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_check(self):
         stack = mock.Mock()
         stack.db_resource_get.return_value = None
+        stack.has_cache_data.return_value = False
         resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         loadbalancer = lb.CloudLoadBalancer("test", resdef, stack)
         loadbalancer._add_event = mock.Mock()
@@ -730,6 +732,7 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_resolve_attr_noid(self):
         stack = mock.Mock()
         stack.db_resource_get.return_value = None
+        stack.has_cache_data.return_value = False
         resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         lbres = lb.CloudLoadBalancer("test", resdef, stack)
         self.assertIsNone(lbres._resolve_attribute("PublicIp"))
@@ -1551,6 +1554,7 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_check_delete_complete(self):
         mock_stack = mock.Mock()
         mock_stack.db_resource_get.return_value = None
+        mock_stack.has_cache_data.return_value = False
         mock_resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         mock_loadbalancer = lb.CloudLoadBalancer("test", mock_resdef,
                                                  mock_stack)
@@ -1569,6 +1573,7 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_redir(self):
         mock_stack = mock.Mock()
         mock_stack.db_resource_get.return_value = None
+        mock_stack.has_cache_data.return_value = False
         props = {'httpsRedirect': True,
                  'protocol': 'HTTPS',
                  'port': 443,
@@ -1595,6 +1600,7 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_invalid_redir_proto(self):
         mock_stack = mock.Mock()
         mock_stack.db_resource_get.return_value = None
+        mock_stack.has_cache_data.return_value = False
         props = {'httpsRedirect': True,
                  'protocol': 'TCP',
                  'port': 1234,
@@ -1611,6 +1617,7 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_invalid_redir_ssl(self):
         mock_stack = mock.Mock()
         mock_stack.db_resource_get.return_value = None
+        mock_stack.has_cache_data.return_value = False
         props = {'httpsRedirect': True,
                  'protocol': 'HTTP',
                  'port': 1234,

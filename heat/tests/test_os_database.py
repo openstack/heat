@@ -182,6 +182,7 @@ class OSDBInstanceTest(common.HeatTestCase):
     def test_create_failed(self):
         mock_stack = mock.Mock()
         mock_stack.db_resource_get.return_value = None
+        mock_stack.has_cache_data.return_value = False
         res_def = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         osdb_res = os_database.OSDBInstance("test", res_def, mock_stack)
 

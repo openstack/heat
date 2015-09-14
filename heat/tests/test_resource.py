@@ -1460,7 +1460,11 @@ class ResourceTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
                              cache_data={
                                  'res': {'attributes': {'Foo': 'res',
-                                                        'foo': 'res'}}})
+                                                        'foo': 'res'},
+                                         'uuid': mock.ANY,
+                                         'id': mock.ANY,
+                                         'action': 'CREATE',
+                                         'status': 'COMPLETE'}})
         res = stack['res']
         self.assertEqual({'foo': 'res', 'Foo': 'res'}, res.FnGetAtts())
 
