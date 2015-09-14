@@ -45,7 +45,6 @@ class DummyShareNetwork(object):
         self.cidr = '3'
         self.ip_version = '5'
         self.network_type = '6'
-        self.to_dict = lambda: {'attr': 'val'}
 
 
 class ManilaShareNetworkTest(common.HeatTestCase):
@@ -98,6 +97,7 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         calls = [mock.call('42', '6'), mock.call('42', '7')]
         net.client().share_networks.add_security_service.assert_has_calls(
             calls, any_order=True)
+        self.assertEqual('share_networks', net.entity)
 
     def test_create_fail(self):
         self.client.share_networks.add_security_service.side_effect = (
@@ -193,7 +193,6 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.assertEqual('3', net.FnGetAtt('cidr'))
         self.assertEqual('5', net.FnGetAtt('ip_version'))
         self.assertEqual('6', net.FnGetAtt('network_type'))
-        self.assertEqual({'attr': 'val'}, net.FnGetAtt('show'))
 
     def test_resource_mapping(self):
         mapping = share_network.resource_mapping()
