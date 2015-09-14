@@ -992,6 +992,8 @@ class HOTemplateTest(common.HeatTestCase):
             deletion_policy: Retain
             update_policy:
               foo: bar
+          resource2:
+            type: AWS::EC2::Instance
         ''')
         source = template.Template(hot_tpl)
         empty = template.Template(copy.deepcopy(hot_tpl_empty))
