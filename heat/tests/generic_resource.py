@@ -145,6 +145,15 @@ class ResourceWithRequiredProps(GenericResource):
                                                   required=True)}
 
 
+class ResourceWithMultipleRequiredProps(GenericResource):
+    properties_schema = {'Foo1': properties.Schema(properties.Schema.STRING,
+                                                   required=True),
+                         'Foo2': properties.Schema(properties.Schema.STRING,
+                                                   required=True),
+                         'Foo3': properties.Schema(properties.Schema.STRING,
+                                                   required=True)}
+
+
 class ResourceWithRequiredPropsAndEmptyAttrs(GenericResource):
     properties_schema = {'Foo': properties.Schema(properties.Schema.STRING,
                                                   required=True)}
