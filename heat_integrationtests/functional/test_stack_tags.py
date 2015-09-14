@@ -19,10 +19,17 @@ class StackTagTest(functional_base.FunctionalTestsBase):
 heat_template_version: 2014-10-16
 description:
   foo
+parameters:
+  input:
+    type: string
+    default: test
+resources:
+  not-used:
+    type: OS::Heat::TestResource
+    properties:
+      wait_secs: 1
+      value: {get_param: input}
 '''
-
-    def setUp(self):
-        super(StackTagTest, self).setUp()
 
     def test_stack_tag(self):
         # Stack create with stack tags
@@ -41,7 +48,8 @@ description:
         self.update_stack(
             stack_identifier,
             template=self.template,
-            tags=updated_tags)
+            tags=updated_tags,
+            parameters={'input': 'next'})
 
         # Ensure property tag is populated and matches updated tags
         updated_stack = self.client.stacks.get(stack_identifier)
@@ -50,7 +58,8 @@ description:
         # Delete tags
         self.update_stack(
             stack_identifier,
-            template=self.template
+            template=self.template,
+            parameters={'input': 'none'}
         )
 
         # Ensure property tag is not populated
