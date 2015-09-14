@@ -122,17 +122,6 @@ class InstanceGroup(stack_resource.StackResource):
                                           schema=rolling_update_schema)
     }
 
-    def __init__(self, name, json_snippet, stack):
-        """Initialisation of the resource.
-
-        UpdatePolicy is currently only specific to InstanceGroup and
-        AutoScalingGroup. Therefore, init is overridden to parse for the
-        UpdatePolicy.
-        """
-        super(InstanceGroup, self).__init__(name, json_snippet, stack)
-        self.update_policy = self.t.update_policy(self.update_policy_schema,
-                                                  self.context)
-
     def validate(self):
         """Add validation for update_policy."""
         super(InstanceGroup, self).validate()
