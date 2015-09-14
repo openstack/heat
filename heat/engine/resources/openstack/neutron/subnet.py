@@ -284,7 +284,7 @@ class Subnet(neutron.NeutronResource):
         gateway_ip = self.properties.get(self.GATEWAY_IP)
         if (gateway_ip and gateway_ip not in ['~', ''] and
                 not netutils.is_valid_ip(gateway_ip)):
-            msg = (_('Gateway IP address "%(gateway)" is in '
+            msg = (_('Gateway IP address "%(gateway)s" is in '
                      'invalid format.'), gateway_ip)
             raise exception.StackValidationFailed(message=msg)
 

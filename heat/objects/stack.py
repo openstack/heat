@@ -178,7 +178,7 @@ class Stack(
                                                   self.id, values)
         if not has_updated:
             raise exception.NotFound(_('Attempt to update a stack with id: '
-                                       '%(id)s %(traversal) %(msg)s') % {
+                                       '%(id)s %(traversal)s %(msg)s') % {
                                            'id': self.id,
                                            'traversal': self.current_traversal,
                                            'msg': 'that does not exist'})
