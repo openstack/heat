@@ -150,21 +150,33 @@ class TestResource(resource.Resource):
 
         return timeutils.utcnow(), self._wait_secs()
 
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource, check_init_complete=True):
+        result = super(TestResource, self)._needs_update(
+            after, before, after_props, before_props, prev_resource,
+            check_init_complete=check_init_complete)
+
+        prop_diff = self.update_template_diff_properties(after_props,
+                                                         before_props)
+
+        if self.UPDATE_REPLACE in prop_diff:
+            update_replace = prop_diff.get(self.UPDATE_REPLACE)
+            if update_replace:
+                raise exception.UpdateReplace(self.name)
+
+        return result
+
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
         value = prop_diff.get(self.VALUE)
         if value:
-            update_replace = self.properties[self.UPDATE_REPLACE]
-            if update_replace:
-                raise exception.UpdateReplace(self.name)
-            else:
-                # emulate failure
-                fail_prop = self.properties[self.FAIL]
-                if not fail_prop:
-                    # update in place
-                    self.data_set('value', value, redact=False)
-                return timeutils.utcnow(), self._wait_secs()
+            # emulate failure
+            fail_prop = self.properties[self.FAIL]
+            if not fail_prop:
+                # update in place
+                self.data_set('value', value, redact=False)
+            return timeutils.utcnow(), self._wait_secs()
         return timeutils.utcnow(), 0
 
     def handle_delete(self):
