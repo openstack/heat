@@ -10,12 +10,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from barbicanclient import client as barbican_client
+from barbicanclient import containers
 import six
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
-
-
-from barbicanclient import client as barbican_client
+from heat.engine import constraints
 
 CLIENT_NAME = 'barbican'
 
@@ -38,3 +39,32 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
         # This is the only exception the client raises
         # Inspecting the message to see if it's a 'Not Found'
         return 'Not Found' in six.text_type(ex)
+
+    def create_generic_container(self, **props):
+        return containers.Container(
+            self.client().containers._api, **props)
+
+    def create_certificate(self, **props):
+        return containers.CertificateContainer(
+            self.client().containers._api, **props)
+
+    def create_rsa(self, **props):
+        return containers.RSAContainer(
+            self.client().containers._api, **props)
+
+    def get_secret_by_ref(self, secret_ref):
+        try:
+            return self.client().secrets.get(
+                secret_ref)._get_formatted_entity()
+        except Exception as ex:
+            if self.is_not_found(ex):
+                raise exception.EntityNotFound(
+                    entity="Secret",
+                    name=secret_ref)
+            raise ex
+
+
+class SecretConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_secret_by_ref'
+    expected_exceptions = (exception.EntityNotFound,)
