@@ -18,6 +18,7 @@ import six
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
+from heat.engine.hot import functions as hot_funcs
 from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import plugin_manager
@@ -2289,3 +2290,168 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertIsNone(props.get('far'))
+
+    def test_property_json_param_correct_translation(self):
+        """Test case when property with sub-schema takes json param."""
+        schema = {
+            'far': properties.Schema(properties.Schema.MAP,
+                                     schema={
+                                         'bar': properties.Schema(
+                                             properties.Schema.STRING,
+                                         ),
+                                         'dar': properties.Schema(
+                                             properties.Schema.STRING
+                                         )
+                                     })
+        }
+
+        class DummyStack(dict):
+            @property
+            def parameters(self):
+                return mock.Mock()
+
+        param = hot_funcs.GetParam(DummyStack(json_far='json_far'),
+                                   'get_param',
+                                   'json_far')
+        param.parameters = {
+            'json_far': parameters.JsonParam(
+                'json_far',
+                {'Type': 'Json'},
+                '{"dar": "rad"}').value()}
+        data = {'far': param}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'bar'],
+                                          value_path=['far', 'dar'])
+
+        rule.execute_rule()
+
+        self.assertEqual('rad', props.get('far').get('bar'))
+
+    def test_property_json_param_to_list_correct_translation(self):
+        """Test case when list property with sub-schema takes json param."""
+        schema = {
+            'far': properties.Schema(properties.Schema.LIST,
+                                     schema=properties.Schema(
+                                         properties.Schema.MAP,
+                                         schema={
+                                             'bar': properties.Schema(
+                                                 properties.Schema.STRING,
+                                             ),
+                                             'dar': properties.Schema(
+                                                 properties.Schema.STRING
+                                             )
+                                         }
+                                     ))
+        }
+
+        class DummyStack(dict):
+            @property
+            def parameters(self):
+                return mock.Mock()
+
+        param = hot_funcs.GetParam(DummyStack(json_far='json_far'),
+                                   'get_param',
+                                   'json_far')
+        param.parameters = {
+            'json_far': parameters.JsonParam(
+                'json_far',
+                {'Type': 'Json'},
+                '{"dar": "rad"}').value()}
+        data = {'far': [param]}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'bar'],
+                                          value_name='dar')
+
+        rule.execute_rule()
+
+        self.assertEqual([{'dar': None, 'bar': 'rad'}], props.get('far'))
+
+    def test_property_commadelimitedlist_param_correct_translation(self):
+        """Test when property with sub-schema takes comma_delimited_list."""
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.STRING,
+                )
+            ),
+            'boo': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        class DummyStack(dict):
+            @property
+            def parameters(self):
+                return mock.Mock()
+
+        param = hot_funcs.GetParam(DummyStack(list_far='list_far'),
+                                   'get_param',
+                                   'list_far')
+        param.parameters = {
+            'list_far': parameters.CommaDelimitedListParam(
+                'list_far',
+                {'Type': 'CommaDelimitedList'},
+                "white,roses").value()}
+        data = {'far': param, 'boo': 'chrysanthemums'}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.ADD,
+                                          ['far'],
+                                          [props.get('boo')])
+        rule.execute_rule()
+
+        self.assertEqual(['white', 'roses', 'chrysanthemums'],
+                         props.get('far'))
+
+    def test_property_no_translation_removed_function(self):
+        """Test case when list property with sub-schema takes json param."""
+        schema = {
+            'far': properties.Schema(properties.Schema.LIST,
+                                     schema=properties.Schema(
+                                         properties.Schema.MAP,
+                                         schema={
+                                             'bar': properties.Schema(
+                                                 properties.Schema.STRING,
+                                             ),
+                                             'dar': properties.Schema(
+                                                 properties.Schema.STRING
+                                             )
+                                         }
+                                     ))
+        }
+
+        class DummyStack(dict):
+            @property
+            def parameters(self):
+                return mock.Mock()
+
+        param = hot_funcs.Removed(DummyStack(json_far='json_far'),
+                                  'Ref',
+                                  'json_far')
+        param.parameters = {
+            'json_far': parameters.JsonParam(
+                'json_far',
+                {'Type': 'Json'},
+                '{"dar": "rad"}').value()}
+        data = {'far': [param]}
+
+        props = properties.Properties(schema, data)
+
+        rule = properties.TranslationRule(props,
+                                          properties.TranslationRule.REPLACE,
+                                          ['far', 'bar'],
+                                          value_name='dar')
+
+        rule.execute_rule()
+
+        self.assertEqual([param], props.data.get('far'))
