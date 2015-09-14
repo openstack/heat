@@ -1695,13 +1695,15 @@ class StackUpdateTest(common.HeatTestCase):
 
         tmpl_update = {
             'heat_template_version': '2013-05-23',
+            'parameters': {'aparam': {'type': 'number', 'default': 1}},
             'resources': {
                 'Ares': {'type': 'GenericResourceType'},
                 'Bres': {'type': 'GenericResourceType'},
                 'Cres': {
-                    'type': 'ResourceWithPropsType',
+                    'type': 'ResourceWithPropsRefPropOnDelete',
                     'properties': {
                         'Foo': {'get_resource': 'Bres'},
+                        'FooInt': {'get_param': 'aparam'},
                     }
                 }
             }
