@@ -1893,7 +1893,12 @@ class ResourceTest(common.HeatTestCase):
 
         self.assertEqual({'test': 'info'}, res._show_resource())
 
+        # check the case where resource entity isn't defined
+        res.entity = None
+        self.assertIsNone(res._show_resource())
+
         # check handling AttributeError exception
+        res.entity = 'test'
         test_obj.get.side_effect = AttributeError
         self.assertIsNone(res._show_resource())
 
