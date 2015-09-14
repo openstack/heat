@@ -2622,6 +2622,10 @@ class ServersTest(common.HeatTestCase):
             {'swap_size': 1}
         ]))
 
+        self.assertEqual([], servers.Server._build_block_device_mapping_v2([
+            {'device_name': ''}
+        ]))
+
     def test_validate_with_both_blk_dev_map_and_blk_dev_map_v2(self):
         stack_name = 'invalid_stack'
         tmpl, stack = self._setup_test_stack(stack_name)
