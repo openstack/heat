@@ -940,14 +940,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                         break
 
     def _update_flavor(self, prop_diff):
-        flavor_update_policy = (
-            prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
-            self.properties[self.FLAVOR_UPDATE_POLICY])
         flavor = prop_diff[self.FLAVOR]
-
-        if flavor_update_policy == 'REPLACE':
-            raise exception.UpdateReplace(self.name)
-
         flavor_id = self.client_plugin().get_flavor_id(flavor)
         handler_args = {'args': (flavor_id,)}
         checker_args = {'args': (flavor_id, flavor)}
@@ -964,8 +957,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         image_update_policy = (
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
             self.properties[self.IMAGE_UPDATE_POLICY])
-        if image_update_policy == 'REPLACE':
-            raise exception.UpdateReplace(self.name)
         image = prop_diff[self.IMAGE]
         image_id = self.client_plugin('glance').get_image_id(image)
         preserve_ephemeral = (
@@ -1008,6 +999,31 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             )
 
         return updaters
+
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource, check_init_complete=True):
+        result = super(Server, self)._needs_update(
+            after, before, after_props, before_props, prev_resource,
+            check_init_complete=check_init_complete)
+
+        prop_diff = self.update_template_diff_properties(after_props,
+                                                         before_props)
+
+        if self.FLAVOR in prop_diff:
+            flavor_update_policy = (
+                prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
+                self.properties[self.FLAVOR_UPDATE_POLICY])
+            if flavor_update_policy == 'REPLACE':
+                raise exception.UpdateReplace(self.name)
+
+        if self.IMAGE in prop_diff:
+            image_update_policy = (
+                prop_diff.get(self.IMAGE_UPDATE_POLICY) or
+                self.properties[self.IMAGE_UPDATE_POLICY])
+            if image_update_policy == 'REPLACE':
+                raise exception.UpdateReplace(self.name)
+
+        return result
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
