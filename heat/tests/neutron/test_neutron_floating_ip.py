@@ -13,6 +13,7 @@
 
 import copy
 
+import mock
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
@@ -23,6 +24,8 @@ from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import utils
 
@@ -236,6 +239,28 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         scheduler.TaskRunner(fip.delete)()
 
         self.m.VerifyAll()
+
+    def test_FnGetRefId(self):
+        t = template_format.parse(neutron_floating_template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['floating_ip']
+        rsrc.resource_id = 'xyz'
+        self.assertEqual('xyz', rsrc.FnGetRefId())
+
+    def test_FnGetRefId_convergence_cache_data(self):
+        t = template_format.parse(neutron_floating_template)
+        template = tmpl.Template(t)
+        stack = parser.Stack(utils.dummy_context(), 'test', template,
+                             cache_data={
+                                 'floating_ip': {
+                                     'uuid': mock.ANY,
+                                     'id': mock.ANY,
+                                     'action': 'CREATE',
+                                     'status': 'COMPLETE',
+                                     'reference_id': 'abc'}})
+
+        rsrc = stack['floating_ip']
+        self.assertEqual('abc', rsrc.FnGetRefId())
 
     def test_port(self):
         self.stub_NetworkConstraint_validate()

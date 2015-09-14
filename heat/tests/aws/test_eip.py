@@ -13,6 +13,7 @@
 
 import copy
 
+import mock
 import mox
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
@@ -371,6 +372,37 @@ class EIPTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
+
+    @mock.patch.object(eip.ElasticIp, '_ipaddress')
+    def test_FnGetRefId_resource_name(self, mock_ipaddr):
+        t = template_format.parse(ipassoc_template_validate)
+        stack = utils.parse_stack(t)
+        rsrc = stack['eip']
+        mock_ipaddr.return_value = None
+        self.assertEqual('eip', rsrc.FnGetRefId())
+
+    @mock.patch.object(eip.ElasticIp, '_ipaddress')
+    def test_FnGetRefId_resource_ip(self, mock_ipaddr):
+        t = template_format.parse(ipassoc_template_validate)
+        stack = utils.parse_stack(t)
+        rsrc = stack['eip']
+        mock_ipaddr.return_value = 'x.x.x.x'
+        self.assertEqual('x.x.x.x', rsrc.FnGetRefId())
+
+    def test_FnGetRefId_convergence_cache_data(self):
+        t = template_format.parse(ipassoc_template_validate)
+        template = tmpl.Template(t)
+        stack = parser.Stack(utils.dummy_context(), 'test', template,
+                             cache_data={
+                                 'eip': {
+                                     'uuid': mock.ANY,
+                                     'id': mock.ANY,
+                                     'action': 'CREATE',
+                                     'status': 'COMPLETE',
+                                     'reference_id': '1.1.1.1'}})
+
+        rsrc = stack['eip']
+        self.assertEqual('1.1.1.1', rsrc.FnGetRefId())
 
 
 class AllocTest(common.HeatTestCase):

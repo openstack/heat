@@ -16,6 +16,7 @@ import datetime
 import json
 import uuid
 
+import mock
 from oslo_utils import timeutils
 import six
 from six.moves.urllib import parse
@@ -254,6 +255,35 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertEqual({"123": "foo", "456": "dog"}, json.loads(wc_att))
         self.assertEqual('status:SUCCESS reason:cat', ret)
         self.m.VerifyAll()
+
+    def test_FnGetRefId_resource_name(self):
+        self.stack = self.create_stack()
+        rsrc = self.stack['WaitHandle']
+        self.assertEqual('WaitHandle', rsrc.FnGetRefId())
+
+    @mock.patch.object(aws_wch.WaitConditionHandle, '_get_ec2_signed_url')
+    def test_FnGetRefId_signed_url(self, mock_get_signed_url):
+        self.stack = self.create_stack()
+        rsrc = self.stack['WaitHandle']
+        rsrc.resource_id = '123'
+        mock_get_signed_url.return_value = 'http://signed_url'
+        self.assertEqual('http://signed_url', rsrc.FnGetRefId())
+
+    def test_FnGetRefId_convergence_cache_data(self):
+        t = template_format.parse(test_template_waitcondition)
+        template = tmpl.Template(t)
+        stack = parser.Stack(utils.dummy_context(), 'test', template,
+                             cache_data={
+                                 'WaitHandle': {
+                                     'uuid': mock.ANY,
+                                     'id': mock.ANY,
+                                     'action': 'CREATE',
+                                     'status': 'COMPLETE',
+                                     'reference_id': 'http://convg_signed_url'
+                                 }})
+
+        rsrc = stack['WaitHandle']
+        self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())
 
     def test_validate_handle_url_bad_stackid(self):
         self.m.ReplayAll()
