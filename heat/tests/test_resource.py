@@ -1428,6 +1428,64 @@ class ResourceTest(common.HeatTestCase):
         res.FnGetAtt('attr2')
         self.assertIn("Attribute attr2 is not of type Map", self.LOG.output)
 
+    def test_getatt_with_path(self):
+
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'ResourceWithComplexAttributesType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+        res = stack['res']
+        self.assertEqual('abc', res.FnGetAtt('nested_dict', 'string'))
+
+    def test_getatt_with_cache_data(self):
+
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'ResourceWithAttributeType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
+                             cache_data={
+                                 'res': {'attrs': {'Foo': 'Res',
+                                                   'foo': 'res'},
+                                         'uuid': mock.ANY,
+                                         'id': mock.ANY,
+                                         'action': 'CREATE',
+                                         'status': 'COMPLETE'}})
+
+        res = stack['res']
+        self.assertEqual('Res', res.FnGetAtt('Foo'))
+
+    def test_getatt_with_path_cache_data(self):
+
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'ResourceWithComplexAttributesType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
+                             cache_data={
+                                 'res': {
+                                     'attrs': {('nested', 'string'): 'abc'},
+                                     'uuid': mock.ANY,
+                                     'id': mock.ANY,
+                                     'action': 'CREATE',
+                                     'status': 'COMPLETE'}})
+
+        res = stack['res']
+        self.assertEqual('abc', res.FnGetAtt('nested', 'string'))
+
     def test_getatts(self):
         tmpl = template.Template({
             'heat_template_version': '2013-05-23',

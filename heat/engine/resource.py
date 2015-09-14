@@ -1488,6 +1488,7 @@ class Resource(object):
                 complex_key = tuple([key] + list(path))
             attribute = self.stack.cache_data_resource_attribute(
                 self.name, complex_key)
+            return attribute
         else:
             try:
                 attribute = self.attributes[key]
@@ -1495,7 +1496,7 @@ class Resource(object):
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=key)
 
-        return attributes.select_from_attribute(attribute, path)
+            return attributes.select_from_attribute(attribute, path)
 
     def FnGetAtts(self):
         """For the intrinsic function get_attr which returns all attributes.
