@@ -3508,12 +3508,6 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'my_server')
 
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        # verify that validate gets invoked exactly once for update
-        glance.ImageConstraint.validate(
-            'Update Image', mox.IgnoreArg()).AndReturn(True)
-        self.m.ReplayAll()
-
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'Update Image'
         update_template['Properties']['image_update_policy'] = 'REPLACE'
