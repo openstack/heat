@@ -559,21 +559,23 @@ class EngineService(service.Service):
             raise exception.MissingCredentialError(required='X-Auth-Key')
 
     def _validate_new_stack(self, cnxt, stack_name, parsed_template):
+        if stack_object.Stack.get_by_name(cnxt, stack_name):
+            raise exception.StackExists(stack_name=stack_name)
+
+        tenant_limit = cfg.CONF.max_stacks_per_tenant
+        if stack_object.Stack.count_all(cnxt) >= tenant_limit:
+            message = _("You have reached the maximum stacks per tenant, "
+                        "%d. Please delete some stacks.") % tenant_limit
+            raise exception.RequestLimitExceeded(message=message)
+        self._validate_template(cnxt, parsed_template)
+
+    def _validate_template(self, cnxt, parsed_template):
         try:
             parsed_template.validate()
         except AssertionError:
             raise
         except Exception as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-
-        if stack_object.Stack.get_by_name(cnxt, stack_name):
-            raise exception.StackExists(stack_name=stack_name)
-
-        tenant_limit = cfg.CONF.max_stacks_per_tenant
-        if stack_object.Stack.count_all(cnxt) >= tenant_limit:
-            message = _("You have reached the maximum stacks per tenant, %d."
-                        " Please delete some stacks.") % tenant_limit
-            raise exception.RequestLimitExceeded(message=message)
 
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources == -1:
@@ -973,58 +975,33 @@ class EngineService(service.Service):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        tmpl = templatem.Template(template, files=files)
-
-        # validate overall template
+        env = environment.Environment(params)
+        tmpl = templatem.Template(template, files=files, env=env)
         try:
-            tmpl.validate()
+            self._validate_template(cnxt, tmpl)
         except Exception as ex:
             return {'Error': six.text_type(ex)}
 
-        # validate resource classes
-        tmpl_resources = tmpl[tmpl.RESOURCES]
+        stack_name = 'dummy'
+        stack = parser.Stack(cnxt, stack_name, tmpl, strict_validate=False)
+        stack.resource_validate = False
+        try:
+            stack.validate()
+        except exception.StackValidationFailed as ex:
+            return {'Error': six.text_type(ex)}
 
-        env = environment.Environment(params)
+        def filter_parameter(p):
+            return p.name not in stack.parameters.PSEUDO_PARAMETERS
 
-        for name, res in six.iteritems(tmpl_resources):
-            ResourceClass = env.get_class(res['Type'])
-            if ResourceClass == resources.template_resource.TemplateResource:
-                # we can't validate a TemplateResource unless we instantiate
-                # it as we need to download the template and convert the
-                # parameters into properties_schema.
-                continue
-
-            if not ResourceClass.is_service_available(cnxt):
-                raise exception.ResourceTypeUnavailable(
-                    service_name=ResourceClass.default_client_name,
-                    resource_type=res['Type']
-                )
-
-            props = properties.Properties(
-                ResourceClass.properties_schema,
-                res.get('Properties', {}),
-                parent_name=six.text_type(name),
-                context=cnxt,
-                section='Properties')
-            deletion_policy = res.get('DeletionPolicy', 'Delete')
-            try:
-                ResourceClass.validate_deletion_policy(deletion_policy)
-                props.validate(with_value=False)
-            except Exception as ex:
-                return {'Error': six.text_type(ex)}
-
-        # validate parameters
-        tmpl_params = tmpl.parameters(None, user_params=env.params)
-        tmpl_params.validate(validate_value=False, context=cnxt)
-        is_real_param = lambda p: p.name not in tmpl_params.PSEUDO_PARAMETERS
-        params = tmpl_params.map(api.format_validate_parameter, is_real_param)
-        param_groups = parameter_groups.ParameterGroups(tmpl)
+        params = stack.parameters.map(api.format_validate_parameter,
+                                      filter_func=filter_parameter)
 
         result = {
             'Description': tmpl.get('Description', ''),
-            'Parameters': params,
+            'Parameters': params
         }
 
+        param_groups = parameter_groups.ParameterGroups(tmpl)
         if param_groups.parameter_groups:
             result['ParameterGroups'] = param_groups.parameter_groups
 

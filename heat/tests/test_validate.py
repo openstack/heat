@@ -940,7 +940,7 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_ref_valid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_with_environment(self):
@@ -950,7 +950,7 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template)
         engine = service.EngineService('a', 't')
         params = {'resource_registry': {'My::Instance': 'AWS::EC2::Instance'}}
-        res = dict(engine.validate_template(None, t, params))
+        res = dict(engine.validate_template(self.ctx, t, params))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_hot_valid(self):
@@ -963,31 +963,31 @@ class ValidateTest(common.HeatTestCase):
                 type: AWS::EC2::Instance
             """)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_ref_invalid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabasez')
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
         t = template_format.parse(test_template_findinmap_valid)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_findinmap_invalid(self):
         t = template_format.parse(test_template_findinmap_invalid)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_parameters(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         # Note: the assertion below does not expect a CFN dict of the parameter
         # but a dict of the parameters.Schema object.
         # For API CFN backward compatibility, formating to CFN is done in the
@@ -1003,7 +1003,7 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_default_override)
         env_params = {'net_name': 'betternetname'}
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, env_params))
+        res = dict(engine.validate_template(self.ctx, t, env_params))
         self.assertEqual('defaultnet',
                          res['Parameters']['net_name']['Default'])
         self.assertEqual('betternetname',
@@ -1013,7 +1013,7 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_no_default)
         env_params = {'net_name': 'betternetname'}
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, env_params))
+        res = dict(engine.validate_template(self.ctx, t, env_params))
         self.assertEqual('betternetname',
                          res['Parameters']['net_name']['Value'])
         self.assertNotIn('Default', res['Parameters']['net_name'])
@@ -1029,13 +1029,13 @@ class ValidateTest(common.HeatTestCase):
                 type: AWS::EC2::Instance
             """)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual({}, res['Parameters'])
 
     def test_validate_hot_parameter_label(self):
         t = template_format.parse(test_template_hot_parameter_label)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         parameters = res['Parameters']
 
         expected = {'KeyName': {
@@ -1049,7 +1049,7 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_hot_no_parameter_label(self):
         t = template_format.parse(test_template_hot_no_parameter_label)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         parameters = res['Parameters']
 
         expected = {'KeyName': {
@@ -1063,7 +1063,7 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_cfn_parameter_label(self):
         t = template_format.parse(test_template_cfn_parameter_label)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         parameters = res['Parameters']
 
         expected = {'KeyName': {
@@ -1090,7 +1090,7 @@ class ValidateTest(common.HeatTestCase):
                 type: boolean
             """)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         parameters = res['Parameters']
         # make sure all the types are reported correctly
         self.assertEqual('String', parameters["param1"]["Type"])
@@ -1107,7 +1107,7 @@ class ValidateTest(common.HeatTestCase):
             resources:
             """)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         expected = {"Description": "test.",
                     "Parameters": {}}
         self.assertEqual(expected, res)
@@ -1120,7 +1120,7 @@ class ValidateTest(common.HeatTestCase):
             outputs:
             """)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         expected = {"Description": "test.",
                     "Parameters": {}}
         self.assertEqual(expected, res)
@@ -1128,14 +1128,15 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
-        self.assertEqual({'Error': 'Property error: WikiDatabase.Properties: '
-                                   'Unknown Property UnknownProperty'}, res)
+        res = dict(engine.validate_template(self.ctx, t, {}))
+        self.assertEqual(
+            {'Error': 'Property error: Resources.WikiDatabase.Properties: '
+             'Unknown Property UnknownProperty'}, res)
 
     def test_invalid_resources(self):
         t = template_format.parse(test_template_invalid_resources)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual({'Error': 'Resources must contain Resource. '
                           'Found a [%s] instead' % six.text_type},
                          res)
@@ -1155,7 +1156,7 @@ class ValidateTest(common.HeatTestCase):
             """)
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(self.ctx, t))
         self.assertEqual({'Error': 'The template section is invalid: Output'},
                          res)
 
@@ -1170,36 +1171,36 @@ class ValidateTest(common.HeatTestCase):
             """)
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(self.ctx, t))
         self.assertEqual({'Error': 'The template section is invalid: output'},
                          res)
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual(
-            {'Error': 'Property error: WikiDatabase.Properties: '
+            {'Error': 'Property error: Resources.WikiDatabase.Properties: '
                       'Property SourceDestCheck not implemented yet'},
             res)
 
     def test_invalid_deletion_policy(self):
         t = template_format.parse(test_template_invalid_deletion_policy)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual({'Error': 'Invalid deletion policy "Destroy"'}, res)
 
     def test_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_snapshot_deletion_policy)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual(
             {'Error': '"Snapshot" deletion policy not supported'}, res)
 
     def test_volume_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_volume_snapshot)
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t, {}))
+        res = dict(engine.validate_template(self.ctx, t, {}))
         self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
 
     def test_validate_template_without_resources(self):
@@ -1208,7 +1209,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         expected = {'Description': 'No description', 'Parameters': {}}
         self.assertEqual(expected, res)
 
@@ -1229,7 +1230,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         self.assertEqual({'Error': '"Type" is not a valid keyword '
                                    'inside a resource definition'}, res)
 
@@ -1250,7 +1251,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         self.assertEqual({'Error': '"Properties" is not a valid keyword '
                                    'inside a resource definition'}, res)
 
@@ -1271,7 +1272,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         self.assertEqual({'Error': '"Metadata" is not a valid keyword '
                                    'inside a resource definition'}, res)
 
@@ -1292,7 +1293,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         self.assertEqual({'Error': '"DependsOn" is not a valid keyword '
                                    'inside a resource definition'}, res)
 
@@ -1313,7 +1314,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         self.assertEqual({'Error': '"DeletionPolicy" is not a valid '
                                    'keyword inside a resource definition'},
                          res)
@@ -1335,7 +1336,7 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl, {}))
+        res = dict(engine.validate_template(self.ctx, hot_tpl, {}))
         self.assertEqual({'Error': '"UpdatePolicy" is not a valid '
                                    'keyword inside a resource definition'},
                          res)
@@ -1678,7 +1679,7 @@ class ValidateTest(common.HeatTestCase):
         self.mock_is_service_available.return_value = False
         ex = self.assertRaises(dispatcher.ExpectedException,
                                engine.validate_template,
-                               None,
+                               self.ctx,
                                t,
                                {})
         self.assertEqual(exception.ResourceTypeUnavailable, ex.exc_info[0])
