@@ -2000,7 +2000,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
-                         'resource_registry': {}}})
+                         'resource_registry': {}},
+              'files': {}}),
+            version='1.17'
         ).AndReturn(engine_response)
         self.m.ReplayAll()
 
@@ -2025,7 +2027,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
-                         'resource_registry': {}}})
+                         'resource_registry': {}},
+              'files': {}}),
+            version='1.17'
         ).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()
 

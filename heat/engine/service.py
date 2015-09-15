@@ -273,7 +273,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.16'
+    RPC_API_VERSION = '1.17'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -927,7 +927,7 @@ class EngineService(service.Service):
                                                 engine_id=engine_id)
 
     @context.request_context
-    def validate_template(self, cnxt, template, params=None):
+    def validate_template(self, cnxt, template, params=None, files=None):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
@@ -935,13 +935,14 @@ class EngineService(service.Service):
         :param cnxt: RPC context.
         :param template: Template of stack you want to create.
         :param params: Stack Input Params
+        :param files: Files referenced from the template
         """
         LOG.info(_LI('validate_template'))
         if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        tmpl = templatem.Template(template)
+        tmpl = templatem.Template(template, files=files)
 
         # validate overall template
         try:

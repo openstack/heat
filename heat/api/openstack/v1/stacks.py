@@ -511,7 +511,8 @@ class StackController(object):
 
         result = self.rpc_client.validate_template(req.context,
                                                    data.template(),
-                                                   data.environment())
+                                                   data.environment(),
+                                                   files=data.files())
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])

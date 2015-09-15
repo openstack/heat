@@ -37,6 +37,7 @@ class EngineClient(object):
         1.14 - Add cancel_with_rollback option to stack_cancel_update
         1.15 - Add preview_update_stack() call
         1.16 - Adds version, type_name to list_resource_types()
+        1.17 - Add files to validate_template
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -292,7 +293,7 @@ class EngineClient(object):
                                        ),
                          version='1.15')
 
-    def validate_template(self, ctxt, template, params=None):
+    def validate_template(self, ctxt, template, params=None, files=None):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
@@ -300,10 +301,13 @@ class EngineClient(object):
         :param ctxt: RPC context.
         :param template: Template of stack you want to create.
         :param params: Stack Input Params/Environment
+        :param files: files referenced from the environment/template.
         """
         return self.call(ctxt, self.make_msg('validate_template',
                                              template=template,
-                                             params=params))
+                                             params=params,
+                                             files=files),
+                         version='1.17')
 
     def authenticated_to_backend(self, ctxt):
         """
