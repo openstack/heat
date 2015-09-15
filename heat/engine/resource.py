@@ -1191,6 +1191,12 @@ class Resource(object):
 
         LOG.info(_LI('deleting %s'), six.text_type(self))
 
+        if self._stored_properties_data is not None:
+            # On delete we can't rely on re-resolving the properties
+            # so use the stored frozen_definition instead
+            self.properties = self.frozen_definition().properties(
+                self.properties_schema, self.context)
+
         with self._action_recorder(action):
             if self.abandon_in_progress:
                 deletion_policy = self.t.RETAIN

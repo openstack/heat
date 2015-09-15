@@ -97,6 +97,11 @@ class ResourceWithProps(GenericResource):
         'FooInt': properties.Schema(properties.Schema.INTEGER)}
 
 
+class ResourceWithPropsRefPropOnDelete(ResourceWithProps):
+    def check_delete_complete(self, cookie):
+        return self.properties['FooInt'] is not None
+
+
 class ResourceWithPropsAndAttrs(ResourceWithProps):
     attributes_schema = {'Bar': attributes.Schema('Something.')}
 
