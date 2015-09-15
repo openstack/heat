@@ -1803,6 +1803,68 @@ class StackTest(common.HeatTestCase):
         self.stack.strict_validate = False
         self.assertIsNone(self.stack.validate())
 
+    def test_disable_validate_required_param(self):
+        tmpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        parameters:
+          aparam:
+            type: number
+        resources:
+          AResource:
+            type: ResourceWithPropsRefPropOnValidate
+            properties:
+              FooInt: {get_param: aparam}
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_with_reqd_param',
+                                 template.Template(tmpl))
+
+        ex = self.assertRaises(exception.UserParameterMissing,
+                               self.stack.validate)
+        self.assertIn("The Parameter (aparam) was not provided",
+                      six.text_type(ex))
+
+        self.stack.strict_validate = False
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+        self.assertIn("The Parameter (aparam) was not provided",
+                      six.text_type(ex))
+
+        self.stack.resource_validate = False
+        self.assertIsNone(self.stack.validate())
+
+    def test_nodisable_validate_tmpl_err(self):
+        tmpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        resources:
+          AResource:
+            type: ResourceWithPropsRefPropOnValidate
+            depends_on: noexist
+            properties:
+              FooInt: 123
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_with_tmpl_err',
+                                 template.Template(tmpl))
+
+        ex = self.assertRaises(exception.InvalidTemplateReference,
+                               self.stack.validate)
+        self.assertIn(
+            "The specified reference \"noexist\" (in AResource) is incorrect",
+            six.text_type(ex))
+
+        self.stack.strict_validate = False
+        ex = self.assertRaises(exception.InvalidTemplateReference,
+                               self.stack.validate)
+        self.assertIn(
+            "The specified reference \"noexist\" (in AResource) is incorrect",
+            six.text_type(ex))
+
+        self.stack.resource_validate = False
+        ex = self.assertRaises(exception.InvalidTemplateReference,
+                               self.stack.validate)
+        self.assertIn(
+            "The specified reference \"noexist\" (in AResource) is incorrect",
+            six.text_type(ex))
+
     def test_validate_property_getatt(self):
         tmpl = {
             'HeatTemplateFormatVersion': '2012-12-12',

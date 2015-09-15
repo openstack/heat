@@ -96,7 +96,7 @@ class Stack(collections.Mapping):
                  use_stored_context=False, username=None,
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
-                 current_deps=None, cache_data=None):
+                 current_deps=None, cache_data=None, resource_validate=True):
 
         '''
         Initialise from a context, name, Template object and (optionally)
@@ -141,7 +141,6 @@ class Stack(collections.Mapping):
         self.updated_time = updated_time
         self.user_creds_id = user_creds_id
         self.nested_depth = nested_depth
-        self.strict_validate = strict_validate
         self.convergence = convergence
         self.current_traversal = current_traversal
         self.tags = tags
@@ -150,6 +149,19 @@ class Stack(collections.Mapping):
         self.cache_data = cache_data
         self._worker_client = None
         self._convg_deps = None
+
+        # strict_validate can be used to disable value validation
+        # in the resource properties schema, this is useful when
+        # performing validation when properties reference attributes
+        # for not-yet-created resources (which return None)
+        self.strict_validate = strict_validate
+
+        # resource_validate can be used to disable resource plugin subclass
+        # validate methods, which is useful when you want to validate
+        # template integrity but some parameters may not be provided
+        # at all, thus we can't yet reference property values such as is
+        # commonly done in plugin validate() methods
+        self.resource_validate = resource_validate
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -605,7 +617,7 @@ class Stack(collections.Mapping):
     @profiler.trace('Stack.validate', hide_args=False)
     def validate(self):
         '''
-        Validates the template.
+        Validates the stack.
         '''
         # TODO(sdake) Should return line number of invalid reference
 
@@ -634,7 +646,10 @@ class Stack(collections.Mapping):
 
         for res in self.dependencies:
             try:
-                result = res.validate()
+                if self.resource_validate:
+                    result = res.validate()
+                else:
+                    result = res.validate_template()
             except exception.HeatException as ex:
                 LOG.debug('%s', ex)
                 raise ex
