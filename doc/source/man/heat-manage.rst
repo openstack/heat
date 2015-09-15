@@ -44,6 +44,10 @@ Heat Db version
 
     Shows details for all currently running heat-engines.
 
+``heat-manage service clean``
+
+    Clean dead engine records.
+
 ``heat-manage --version``
 
   Shows program's version number and exit. The output could be empty if

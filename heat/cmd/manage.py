@@ -71,6 +71,14 @@ class ServiceManageCommand(object):
                                   svc['status'],
                                   svc['updated_at']))
 
+    def service_clean(self):
+        ctxt = context.get_admin_context()
+        for service in service_objects.Service.get_all(ctxt):
+            svc = service_utils.format_service(service)
+            if svc['status'] == 'down':
+                service_objects.Service.delete(ctxt, svc['id'])
+        print(_('Dead engines are removed.'))
+
     @staticmethod
     def add_service_parsers(subparsers):
         service_parser = subparsers.add_parser('service')
@@ -78,6 +86,8 @@ class ServiceManageCommand(object):
         service_subparsers = service_parser.add_subparsers(dest='action')
         list_parser = service_subparsers.add_parser('list')
         list_parser.set_defaults(func=ServiceManageCommand().service_list)
+        remove_parser = service_subparsers.add_parser('clean')
+        remove_parser.set_defaults(func=ServiceManageCommand().service_clean)
 
 
 def purge_deleted():
