@@ -570,16 +570,15 @@ class Stack(collections.Mapping):
         refid, or None if not found
         '''
         for r in six.itervalues(self):
-            if r.FnGetRefId() == refid:
-                if self.has_cache_data(r.name) or r.state in (
-                        (r.INIT, r.COMPLETE),
-                        (r.CREATE, r.IN_PROGRESS),
-                        (r.CREATE, r.COMPLETE),
-                        (r.RESUME, r.IN_PROGRESS),
-                        (r.RESUME, r.COMPLETE),
-                        (r.UPDATE, r.IN_PROGRESS),
-                        (r.UPDATE, r.COMPLETE)):
-                    return r
+            if r.state in (
+                    (r.INIT, r.COMPLETE),
+                    (r.CREATE, r.IN_PROGRESS),
+                    (r.CREATE, r.COMPLETE),
+                    (r.RESUME, r.IN_PROGRESS),
+                    (r.RESUME, r.COMPLETE),
+                    (r.UPDATE, r.IN_PROGRESS),
+                    (r.UPDATE, r.COMPLETE)) and r.FnGetRefId() == refid:
+                return r
 
     def register_access_allowed_handler(self, credential_id, handler):
         '''

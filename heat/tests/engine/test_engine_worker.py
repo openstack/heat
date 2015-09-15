@@ -531,7 +531,10 @@ class MiscMethodsTest(common.HeatTestCase):
                                          (u'nested_dict', u'dict', u'b'): 2},
                                'id': mock.ANY,
                                'reference_id': 'A',
-                               'name': 'A'}
+                               'name': 'A',
+                               'uuid': mock.ANY,
+                               'action': mock.ANY,
+                               'status': mock.ANY}
         actual_input_data = worker.construct_input_data(self.resource)
         self.assertEqual(expected_input_data, actual_input_data)
 
@@ -539,7 +542,10 @@ class MiscMethodsTest(common.HeatTestCase):
         expected_input_data = {'attrs': {},
                                'id': mock.ANY,
                                'reference_id': 'A',
-                               'name': 'A'}
+                               'name': 'A',
+                               'uuid': mock.ANY,
+                               'action': mock.ANY,
+                               'status': mock.ANY}
         self.resource.FnGetAtt = mock.Mock(
             side_effect=exception.InvalidTemplateAttribute(resource='A',
                                                            key='value'))

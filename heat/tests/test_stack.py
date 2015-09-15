@@ -290,8 +290,12 @@ class StackTest(common.HeatTestCase):
                {'A': {'Type': 'StackResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
 
-        cache_data = {'A': {'reference_id': 'A-id'},
-                      'B': {'reference_id': 'B-id'}}
+        cache_data = {'A': {'reference_id': 'A-id', 'uuid': mock.ANY,
+                            'id': mock.ANY, 'action': 'CREATE',
+                            'status': 'COMPLETE'},
+                      'B': {'reference_id': 'B-id', 'uuid': mock.ANY,
+                            'id': mock.ANY, 'action': 'CREATE',
+                            'status': 'COMPLETE'}}
 
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
@@ -930,9 +934,6 @@ class StackTest(common.HeatTestCase):
         try:
             self.assertIsNone(self.stack.resource_by_refid('aaaa'))
             self.assertIsNone(self.stack.resource_by_refid('bbbb'))
-            # if there is cached data, we should ignore the state
-            self.stack.cache_data = {'AResource': {'reference_id': 'aaaa'}}
-            self.assertEqual(rsrc, self.stack.resource_by_refid('aaaa'))
         finally:
             rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
 
@@ -1969,8 +1970,12 @@ class StackTest(common.HeatTestCase):
         })
 
         cache_data = {'foo': {'reference_id': 'foo-id',
-                              'attrs': {'bar': 'baz'}},
-                      'bar': {'reference_id': 'bar-id'}}
+                              'attrs': {'bar': 'baz'}, 'uuid': mock.ANY,
+                              'id': mock.ANY, 'action': 'CREATE',
+                              'status': 'COMPLETE'},
+                      'bar': {'reference_id': 'bar-id', 'uuid': mock.ANY,
+                              'id': mock.ANY, 'action': 'CREATE',
+                              'status': 'COMPLETE'}}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
         lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,
@@ -2003,8 +2008,12 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        cache_data = {'foo': {'reference_id': 'physical-resource-id'},
-                      'bar': {'reference_id': 'bar-id'}}
+        cache_data = {'foo': {'reference_id': 'physical-resource-id',
+                              'uuid': mock.ANY, 'id': mock.ANY,
+                              'action': 'CREATE', 'status': 'COMPLETE'},
+                      'bar': {'reference_id': 'bar-id', 'uuid': mock.ANY,
+                              'id': mock.ANY, 'action': 'CREATE',
+                              'status': 'COMPLETE'}}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
         lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,

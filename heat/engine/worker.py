@@ -325,7 +325,10 @@ def construct_input_data(rsrc):
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
                   'reference_id': rsrc.FnGetRefId(),
-                  'attrs': resolved_attributes}
+                  'attrs': resolved_attributes,
+                  'status': rsrc.status,
+                  'action': rsrc.action,
+                  'uuid': rsrc.uuid}
     return input_data
 
 

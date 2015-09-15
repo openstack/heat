@@ -192,7 +192,7 @@ class Resource(object):
         self.status_reason = ''
         self.id = None
         self.uuid = None
-        self._data = {}
+        self._data = None
         self._rsrc_metadata = None
         self._stored_properties_data = None
         self.created_time = stack.created_time
@@ -208,6 +208,11 @@ class Resource(object):
             resource = stack.db_resource_get(name)
             if resource:
                 self._load_data(resource)
+        else:
+            self.action = stack.cache_data[name]['action']
+            self.status = stack.cache_data[name]['status']
+            self.id = stack.cache_data[name]['id']
+            self.uuid = stack.cache_data[name]['uuid']
 
     def rpc_client(self):
         '''Return a client for making engine RPC calls.'''
