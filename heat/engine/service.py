@@ -271,7 +271,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.17'
+    RPC_API_VERSION = '1.18'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -953,13 +953,17 @@ class EngineService(service.Service):
                                                 engine_id=engine_id)
 
     @context.request_context
-    def validate_template(self, cnxt, template, params=None, files=None):
-        """Uses the stack parser to check the validity of a template.
+    def validate_template(self, cnxt, template, params=None, files=None,
+                          show_nested=False):
+        """
+        The validate_template method uses the stack parser to check
+        the validity of a template.
 
         :param cnxt: RPC context.
         :param template: Template of stack you want to create.
         :param params: Stack Input Params
         :param files: Files referenced from the template
+        :param show_nested: if True, any nested templates will be checked
         """
         LOG.info(_LI('validate_template'))
         if template is None:
@@ -995,6 +999,30 @@ class EngineService(service.Service):
         param_groups = parameter_groups.ParameterGroups(tmpl)
         if param_groups.parameter_groups:
             result['ParameterGroups'] = param_groups.parameter_groups
+
+        if show_nested:
+            # Note preview_resources is needed here to build the tree
+            # of nested resources/stacks in memory, otherwise the
+            # nested/has_nested() tests below won't work
+            stack.preview_resources()
+
+            def nested_params(stk):
+                n_result = {}
+                for r in stk:
+                    if stk[r].has_nested():
+                        n_params = stk[r].nested().parameters.map(
+                            api.format_validate_parameter,
+                            filter_func=filter_parameter)
+                        n_result[r] = {
+                            'Type': stk[r].type(),
+                            'Description': stk[r].nested().t.get(
+                                'Description', ''),
+                            'Parameters': n_params
+                        }
+                        n_result[r].update(nested_params(stk[r].nested()))
+                return {'NestedParameters': n_result} if n_result else {}
+
+            result.update(nested_params(stack))
 
         return result
 

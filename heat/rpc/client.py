@@ -38,6 +38,7 @@ class EngineClient(object):
         1.15 - Add preview_update_stack() call
         1.16 - Adds version, type_name to list_resource_types()
         1.17 - Add files to validate_template
+        1.18 - Add show_nested to validate_template
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -293,7 +294,8 @@ class EngineClient(object):
                                        ),
                          version='1.15')
 
-    def validate_template(self, ctxt, template, params=None, files=None):
+    def validate_template(self, ctxt, template, params=None, files=None,
+                          show_nested=False):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
@@ -302,12 +304,14 @@ class EngineClient(object):
         :param template: Template of stack you want to create.
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment/template.
+        :param show_nested: if True nested templates will be validated
         """
         return self.call(ctxt, self.make_msg('validate_template',
                                              template=template,
                                              params=params,
-                                             files=files),
-                         version='1.17')
+                                             files=files,
+                                             show_nested=show_nested),
+                         version='1.18')
 
     def authenticated_to_backend(self, ctxt):
         """

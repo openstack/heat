@@ -535,10 +535,20 @@ class StackController(object):
 
         data = InstantiationData(body)
 
+        whitelist = {'show_nested': 'single'}
+        params = util.get_allowed_params(req.params, whitelist)
+
+        show_nested = False
+        p_name = rpc_api.PARAM_SHOW_NESTED
+        if p_name in params:
+            params[p_name] = self._extract_bool_param(p_name, params[p_name])
+            show_nested = params[p_name]
+
         result = self.rpc_client.validate_template(req.context,
                                                    data.template(),
                                                    data.environment(),
-                                                   files=data.files())
+                                                   files=data.files(),
+                                                   show_nested=show_nested)
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])
