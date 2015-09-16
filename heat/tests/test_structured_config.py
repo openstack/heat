@@ -15,6 +15,7 @@ import mock
 
 from heat.common import exception
 from heat.engine.resources.openstack.heat import structured_config as sc
+from heat.engine import rsrc_defn
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
@@ -288,22 +289,24 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
         resg = sc.StructuredDeploymentGroup('test', snip, stack)
-        expect = {
-            'type': 'OS::Heat::StructuredDeployment',
-            'properties': {
-                'actions': ['CREATE', 'UPDATE'],
-                'config': 'config_uuid',
-                'input_key': 'get_input',
-                'input_values': None,
-                'name': None,
-                'signal_transport': 'CFN_SIGNAL',
-                'input_values_validate': 'LAX'
-            }
-        }
+        expect = rsrc_defn.ResourceDefinition(
+            None,
+            'OS::Heat::StructuredDeployment',
+            {'actions': ['CREATE', 'UPDATE'],
+             'config': 'config_uuid',
+             'input_values': None,
+             'name': None,
+             'server': 'uuid1',
+             'input_key': 'get_input',
+             'signal_transport': 'CFN_SIGNAL',
+             'input_values_validate': 'LAX'})
+
+        rdef = resg.get_resource_def()
         self.assertEqual(
-            expect, resg._build_resource_definition())
+            expect, resg.build_resource_definition('server1', rdef))
+        rdef = resg.get_resource_def(include_all=True)
         self.assertEqual(
-            expect, resg._build_resource_definition(include_all=True))
+            expect, resg.build_resource_definition('server1', rdef))
 
     def test_resource_names(self):
         stack = utils.parse_stack(self.template)
@@ -360,7 +363,8 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
             }
         }
 
-        self.assertEqual(templ, resg._assemble_nested(['server1', 'server2']))
+        self.assertEqual(templ, resg._assemble_nested(['server1',
+                                                       'server2']).t)
 
 
 class StructuredDeploymentWithStrictInputParseTest(common.HeatTestCase):

@@ -27,6 +27,7 @@ from heat.engine import resource
 from heat.engine.resources.openstack.heat import resource_group
 from heat.engine.resources.openstack.heat import software_config as sc
 from heat.engine.resources import signal_responder
+from heat.engine import rsrc_defn
 from heat.engine import support
 from heat.rpc import api as rpc_api
 
@@ -620,25 +621,16 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     def _resource_names(self):
         return six.iterkeys(self.properties.get(self.SERVERS, {}))
 
-    def _do_prop_replace(self, res_name, res_def_template):
-        res_def = copy.deepcopy(res_def_template)
-        props = res_def[self.RESOURCE_DEF_PROPERTIES]
-        servers = self.properties.get(self.SERVERS, {})
-        props[SoftwareDeployment.SERVER] = servers.get(res_name)
-        return res_def
+    def get_resource_def(self, include_all=False):
+        return dict(self.properties)
 
-    def _build_resource_definition(self, include_all=False):
-        p = self.properties
-        return {
-            self.RESOURCE_DEF_TYPE: 'OS::Heat::SoftwareDeployment',
-            self.RESOURCE_DEF_PROPERTIES: {
-                self.CONFIG: p[self.CONFIG],
-                self.INPUT_VALUES: p[self.INPUT_VALUES],
-                self.DEPLOY_ACTIONS: p[self.DEPLOY_ACTIONS],
-                self.SIGNAL_TRANSPORT: p[self.SIGNAL_TRANSPORT],
-                self.NAME: p[self.NAME],
-            }
-        }
+    def build_resource_definition(self, res_name, res_defn):
+        props = copy.deepcopy(res_defn)
+        servers = props.pop(self.SERVERS)
+        props[SoftwareDeployment.SERVER] = servers.get(res_name)
+        return rsrc_defn.ResourceDefinition(res_name,
+                                            'OS::Heat::SoftwareDeployment',
+                                            props, None)
 
     def FnGetAtt(self, key, *path):
         rg = super(SoftwareDeploymentGroup, self)

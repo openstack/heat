@@ -26,6 +26,7 @@ from heat.engine import stack as stackm
 from heat.tests import common
 from heat.tests import utils
 
+
 template = {
     "heat_template_version": "2013-05-23",
     "resources": {
@@ -153,7 +154,7 @@ class ResourceGroupTest(common.HeatTestCase):
             }
         }
 
-        self.assertEqual(templ, resg._assemble_nested(['0', '1', '2']))
+        self.assertEqual(templ, resg._assemble_nested(['0', '1', '2']).t)
 
     def test_assemble_nested_include(self):
         templ = copy.deepcopy(template)
@@ -171,12 +172,12 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        self.assertEqual(expect, resg._assemble_nested(['0']))
+        self.assertEqual(expect, resg._assemble_nested(['0']).t)
         expect['resources']["0"]['properties'] = {"Foo": None}
         self.assertEqual(
-            expect, resg._assemble_nested(['0'], include_all=True))
+            expect, resg._assemble_nested(['0'], include_all=True).t)
 
-    def test_assemble_nested_zero(self):
+    def test_assemble_nested_include_zero(self):
         templ = copy.deepcopy(template)
         templ['resources']['group1']['properties']['count'] = 0
         stack = utils.parse_stack(templ)
@@ -184,9 +185,8 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
             "heat_template_version": "2015-04-30",
-            "resources": {}
         }
-        self.assertEqual(expect, resg._assemble_nested([]))
+        self.assertEqual(expect, resg._assemble_nested([]).t)
 
     def test_assemble_nested_with_metadata(self):
         templ = copy.deepcopy(template)
@@ -212,7 +212,7 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        self.assertEqual(expect, resg._assemble_nested(['0']))
+        self.assertEqual(expect, resg._assemble_nested(['0']).t)
 
     def test_assemble_nested_rolling_update(self):
         expect = {
@@ -232,18 +232,17 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        resource_def = {
-            "type": "OverwrittenFnGetRefIdType",
-            "properties": {
-                "foo": "baz"
-            }
-        }
+        resource_def = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            {"foo": "baz"})
+
         stack = utils.parse_stack(template)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         resg._nested = get_fake_nested_stack(['0', '1'])
-        resg._build_resource_definition = mock.Mock(return_value=resource_def)
-        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1))
+        resg.build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
 
     def test_assemble_nested_rolling_update_none(self):
         expect = {
@@ -263,18 +262,18 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        resource_def = {
-            "type": "OverwrittenFnGetRefIdType",
-            "properties": {
-                "foo": "baz"
-            }
-        }
+
+        resource_def = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            {"foo": "baz"})
+
         stack = utils.parse_stack(template)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         resg._nested = get_fake_nested_stack(['0', '1'])
-        resg._build_resource_definition = mock.Mock(return_value=resource_def)
-        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 0))
+        resg.build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 0).t)
 
     def test_assemble_nested_rolling_update_failed_resource(self):
         expect = {
@@ -294,20 +293,19 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        resource_def = {
-            "type": "OverwrittenFnGetRefIdType",
-            "properties": {
-                "foo": "baz"
-            }
-        }
+        resource_def = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            {"foo": "baz"})
+
         stack = utils.parse_stack(template)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
         resg._nested = get_fake_nested_stack(['0', '1'])
         res0 = resg._nested['0']
         res0.status = res0.FAILED
-        resg._build_resource_definition = mock.Mock(return_value=resource_def)
-        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1))
+        resg.build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
 
     def test_index_var(self):
         stack = utils.parse_stack(template_repl)
@@ -334,6 +332,7 @@ class ResourceGroupTest(common.HeatTestCase):
                         ]
                     }
                 },
+
                 "2": {
                     "type": "ResourceWithListProp%index%",
                     "properties": {
@@ -345,7 +344,7 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        nested = resg._assemble_nested(['0', '1', '2'])
+        nested = resg._assemble_nested(['0', '1', '2']).t
         for res in nested['resources']:
             nested['resources'][res]['properties']['listprop'] = \
                 list(nested['resources'][res]['properties']['listprop'])
@@ -371,7 +370,7 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        nested = resg._assemble_nested(['0'])
+        nested = resg._assemble_nested(['0']).t
         nested['resources']['0']['properties']['listprop'] = \
             list(nested['resources']['0']['properties']['listprop'])
         self.assertEqual(expect, nested)
@@ -396,7 +395,7 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             }
         }
-        nested = resg._assemble_nested(['0'])
+        nested = resg._assemble_nested(['0']).t
         nested['resources']['0']['properties']['listprop'] = \
             list(nested['resources']['0']['properties']['listprop'])
         self.assertEqual(expect, nested)
@@ -600,7 +599,7 @@ class ResourceGroupBlackList(common.HeatTestCase):
 
 
 class ResourceGroupEmptyParams(common.HeatTestCase):
-    """This class tests ResourceGroup._build_resource_definition()."""
+    """This class tests ResourceGroup.build_resource_definition()."""
 
     scenarios = [
         ('non_empty', dict(value='Bar', expected={'Foo': 'Bar'},
@@ -626,17 +625,21 @@ class ResourceGroupEmptyParams(common.HeatTestCase):
         stack = utils.parse_stack(templ)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
-        exp1 = {
-            "type": "OverwrittenFnGetRefIdType",
-            "properties": self.expected,
-        }
-        exp2 = {
-            "type": "OverwrittenFnGetRefIdType",
-            "properties": self.expected_include,
-        }
-        self.assertEqual(exp1, resg._build_resource_definition())
+        exp1 = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            self.expected)
+
+        exp2 = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            self.expected_include)
+
+        rdef = resg.get_resource_def()
+        self.assertEqual(exp1, resg.build_resource_definition('0', rdef))
+        rdef = resg.get_resource_def(include_all=True)
         self.assertEqual(
-            exp2, resg._build_resource_definition(include_all=True))
+            exp2, resg.build_resource_definition('0', rdef))
 
 
 class ResourceGroupNameListTest(common.HeatTestCase):
@@ -1368,12 +1371,20 @@ class TestGetBatches(common.HeatTestCase):
         self.assertEqual([(s, u) for s, u, n in self.batches], batches)
 
     def test_assemble(self):
-        resources = [(str(i), False) for i in range(self.init_cap + 1)]
+        old_def = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            {"foo": "baz"})
 
+        new_def = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            {"foo": "bar"})
+
+        resources = [(str(i), old_def) for i in range(self.init_cap + 1)]
         self.grp.get_size = mock.Mock(return_value=self.targ_cap)
-        self.grp._build_resource_definition = mock.Mock(return_value=True)
+        self.grp.build_resource_definition = mock.Mock(return_value=new_def)
         self.grp._get_resources = mock.Mock(return_value=resources)
-        self.grp._do_prop_replace = mock.Mock(side_effect=lambda g, d: d)
 
         all_updated_names = set()
 
@@ -1382,14 +1393,14 @@ class TestGetBatches(common.HeatTestCase):
             template = self.grp._assemble_for_rolling_update(size,
                                                              max_upd,
                                                              names)
-            res_dict = template['resources']
+            res_dict = template.resource_definitions(self.stack)
 
             expected_names = set(map(str, range(1, size + 1)))
             self.assertEqual(expected_names, set(res_dict))
 
             all_updated_names &= expected_names
             all_updated_names |= set(names)
-            updated = set(n for n, v in res_dict.items() if v is True)
+            updated = set(n for n, v in res_dict.items() if v != old_def)
             self.assertEqual(all_updated_names, updated)
 
             resources[:] = sorted(res_dict.items(), key=lambda i: int(i[0]))

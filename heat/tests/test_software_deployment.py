@@ -1174,20 +1174,23 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
         resg = sd.SoftwareDeploymentGroup('test', snip, stack)
-        expect = {
-            'type': 'OS::Heat::SoftwareDeployment',
-            'properties': {
-                'actions': ['CREATE', 'UPDATE'],
+
+        expect = rsrc_defn.ResourceDefinition(
+            None,
+            "OS::Heat::SoftwareDeployment",
+            {'actions': ['CREATE', 'UPDATE'],
                 'config': 'config_uuid',
                 'input_values': {'foo': 'bar'},
                 'name': '10_config',
-                'signal_transport': 'CFN_SIGNAL'
-            }
-        }
+                'server': 'uuid1',
+                'signal_transport': 'CFN_SIGNAL'})
+
+        rdef = resg.get_resource_def()
         self.assertEqual(
-            expect, resg._build_resource_definition())
+            expect, resg.build_resource_definition('server1', rdef))
+        rdef = resg.get_resource_def(include_all=True)
         self.assertEqual(
-            expect, resg._build_resource_definition(include_all=True))
+            expect, resg.build_resource_definition('server1', rdef))
 
     def test_resource_names(self):
         stack = utils.parse_stack(self.template)
@@ -1240,7 +1243,8 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
             }
         }
 
-        self.assertEqual(templ, resg._assemble_nested(['server1', 'server2']))
+        self.assertEqual(templ, resg._assemble_nested(['server1',
+                                                       'server2']).t)
 
     def test_attributes(self):
         stack = utils.parse_stack(self.template)
