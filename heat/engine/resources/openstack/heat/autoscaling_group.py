@@ -18,8 +18,8 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
-from heat.engine import rsrc_defn
 from heat.engine import support
+from heat.engine import template
 
 
 class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
@@ -133,12 +133,12 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     }
     update_policy_schema = {}
 
-    def _get_instance_definition(self):
-        rsrc = self.properties[self.RESOURCE]
-        return rsrc_defn.ResourceDefinition(
-            None, rsrc['type'],
-            properties=rsrc.get('properties'),
-            metadata=rsrc.get('metadata'))
+    def _get_resource_definition(self,
+                                 template_version=('heat_template_version',
+                                                   '2015-04-30')):
+        tmpl = template.Template(dict([template_version]))
+        return tmpl.rsrc_defn_from_snippet(None,
+                                           self.properties[self.RESOURCE])
 
     def _try_rolling_update(self, prop_diff):
         if self.RESOURCE in prop_diff:
