@@ -892,6 +892,7 @@ class Stack(collections.Mapping):
         elif create_if_missing:
             kwargs = self.get_kwargs_for_cloning()
             kwargs['owner_id'] = self.id
+            del(kwargs['prev_raw_template_id'])
             prev = type(self)(self.context, self.name, copy.deepcopy(self.t),
                               **kwargs)
             prev.store(backup=True)
@@ -1125,8 +1126,19 @@ class Stack(collections.Mapping):
                                'State invalid for %s' % action)
                 return
 
-        self.state_set(action, self.IN_PROGRESS,
-                       'Stack %s started' % action)
+        # Save a copy of the new template.  To avoid two DB writes
+        # we store the ID at the same time as the action/status
+        prev_tmpl_id = self.prev_raw_template_id
+        bu_tmpl = copy.deepcopy(newstack.t)
+        self.prev_raw_template_id = bu_tmpl.store()
+        self.action = action
+        self.status = self.IN_PROGRESS
+        self.status_reason = 'Stack %s started' % action
+        notification.send(self)
+        self._add_event(self.action, self.status, self.status_reason)
+        self.store()
+        if prev_tmpl_id is not None:
+            raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
 
         if action == self.UPDATE:
             # Oldstack is useless when the action is not UPDATE , so we don't

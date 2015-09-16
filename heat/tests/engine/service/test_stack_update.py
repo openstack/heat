@@ -114,6 +114,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.assertEqual({'KeyName': 'test'}, stk.t.env.params)
 
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            stk.update = mock.Mock()
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -148,6 +149,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                          stk.t.env.params)
 
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            stk.update = mock.Mock()
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -209,6 +211,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                           'newfoo2.yaml': 'newfoo',
                           'myother.yaml': 'myother'}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            stk.update = mock.Mock()
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -250,6 +253,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                         'parameters': {},
                         'resource_registry': {'resources': {}}}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            stk.update = mock.Mock()
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
