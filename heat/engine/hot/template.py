@@ -248,37 +248,35 @@ class HOTemplate20130523(template.Template):
 
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
+        parsed_resources = self.parse(stack, resources)
+        return dict((name, self.rsrc_defn_from_snippet(name, data))
+                    for name, data in parsed_resources.items())
 
-        def rsrc_defn_item(name, snippet):
-            data = self.parse(stack, snippet)
+    @staticmethod
+    def rsrc_defn_from_snippet(name, data):
+        depends = data.get(RES_DEPENDS_ON)
+        if isinstance(depends, six.string_types):
+            depends = [depends]
 
-            depends = data.get(RES_DEPENDS_ON)
-            if isinstance(depends, six.string_types):
-                depends = [depends]
+        deletion_policy = data.get(RES_DELETION_POLICY)
+        if deletion_policy is not None:
+            if deletion_policy not in HOTemplate20130523.deletion_policies:
+                msg = _('Invalid deletion policy "%s"') % deletion_policy
+                raise exception.StackValidationFailed(message=msg)
+            else:
+                deletion_policy = HOTemplate20130523.deletion_policies[
+                    deletion_policy]
+        kwargs = {
+            'resource_type': data.get(RES_TYPE),
+            'properties': data.get(RES_PROPERTIES),
+            'metadata': data.get(RES_METADATA),
+            'depends': depends,
+            'deletion_policy': deletion_policy,
+            'update_policy': data.get(RES_UPDATE_POLICY),
+            'description': None
+        }
 
-            deletion_policy = data.get(RES_DELETION_POLICY)
-            if deletion_policy is not None:
-                if deletion_policy not in self.deletion_policies:
-                    msg = _('Invalid deletion policy "%s"') % deletion_policy
-                    raise exception.StackValidationFailed(message=msg)
-                else:
-                    deletion_policy = self.deletion_policies[deletion_policy]
-
-            kwargs = {
-                'resource_type': data.get(RES_TYPE),
-                'properties': data.get(RES_PROPERTIES),
-                'metadata': data.get(RES_METADATA),
-                'depends': depends,
-                'deletion_policy': deletion_policy,
-                'update_policy': data.get(RES_UPDATE_POLICY),
-                'description': None
-            }
-
-            defn = rsrc_defn.ResourceDefinition(name, **kwargs)
-            return name, defn
-
-        return dict(rsrc_defn_item(name, data)
-                    for name, data in resources.items())
+        return rsrc_defn.ResourceDefinition(name, **kwargs)
 
     def add_resource(self, definition, name=None):
         if name is None:
