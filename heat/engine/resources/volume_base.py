@@ -181,16 +181,23 @@ class BaseVolumeAttachment(resource.Resource):
         return self.client_plugin().check_attach_volume_complete(volume_id)
 
     def handle_delete(self):
-        server_id = self.properties[self.INSTANCE_ID]
-        vol_id = self.properties[self.VOLUME_ID]
-        self.client_plugin('nova').detach_volume(server_id,
-                                                 self.resource_id)
-        prg = progress.VolumeDetachProgress(
-            server_id, vol_id, self.resource_id)
-        prg.called = True
+        prg = None
+
+        if self.resource_id:
+            server_id = self.properties[self.INSTANCE_ID]
+            vol_id = self.properties[self.VOLUME_ID]
+            self.client_plugin('nova').detach_volume(server_id,
+                                                     self.resource_id)
+            prg = progress.VolumeDetachProgress(
+                server_id, vol_id, self.resource_id)
+            prg.called = True
+
         return prg
 
     def check_delete_complete(self, prg):
+        if prg is None:
+            return True
+
         if not prg.cinder_complete:
             prg.cinder_complete = self.client_plugin(
             ).check_detach_volume_complete(prg.vol_id)
