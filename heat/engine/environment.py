@@ -128,7 +128,7 @@ class ClassResourceInfo(ResourceInfo):
     """Store the mapping of resource name to python class implementation."""
     description = 'Plugin'
 
-    def get_class(self):
+    def get_class(self, files=None):
         return self.value
 
 
@@ -144,12 +144,12 @@ class TemplateResourceInfo(ResourceInfo):
             self.template_name = value
         self.value = self.template_name
 
-    def get_class(self):
+    def get_class(self, files=None):
         from heat.engine.resources import template_resource
         env = self.registry.environment
         return template_resource.generate_class(str(self.name),
                                                 self.template_name,
-                                                env)
+                                                env, files=files)
 
 
 class MapResourceInfo(ResourceInfo):
@@ -159,7 +159,7 @@ class MapResourceInfo(ResourceInfo):
     """
     description = 'Mapping'
 
-    def get_class(self):
+    def get_class(self, files=None):
         return None
 
     def get_resource_info(self, resource_type=None, resource_name=None):
@@ -363,7 +363,7 @@ class ResourceRegistry(object):
                 yield self._registry[pattern]
 
     def get_resource_info(self, resource_type, resource_name=None,
-                          registry_type=None):
+                          registry_type=None, ignore=None):
         """Find possible matches to the resource type and name.
         chain the results from the global and user registry to find
         a match.
@@ -395,6 +395,8 @@ class ResourceRegistry(object):
             match = info.get_resource_info(resource_type,
                                            resource_name)
             if registry_type is None or isinstance(match, registry_type):
+                if ignore is not None and match == ignore:
+                    continue
                 # NOTE(prazumovsky): if resource_type defined in outer env
                 # there is a risk to lose it due to h-eng restarting, so
                 # store it to local env (exclude ClassResourceInfo because it
@@ -403,10 +405,10 @@ class ResourceRegistry(object):
                 if (match and not match.user_resource and
                     not isinstance(info, (TemplateResourceInfo,
                                           ClassResourceInfo))):
-                        self._register_info([resource_type], info)
+                    self._register_info([resource_type], info)
                 return match
 
-    def get_class(self, resource_type, resource_name=None):
+    def get_class(self, resource_type, resource_name=None, files=None):
         if resource_type == "":
             msg = _('Resource "%s" has no type') % resource_name
             raise exception.InvalidResourceType(message=msg)
@@ -422,7 +424,7 @@ class ResourceRegistry(object):
                                       resource_name=resource_name)
         if info is None:
             raise exception.ResourceTypeNotFound(type_name=resource_type)
-        return info.get_class()
+        return info.get_class(files=files)
 
     def as_dict(self):
         """Return user resources in a dict format."""
@@ -564,8 +566,9 @@ class Environment(object):
         self.stack_lifecycle_plugins.append((stack_lifecycle_name,
                                              stack_lifecycle_class))
 
-    def get_class(self, resource_type, resource_name=None):
-        return self.registry.get_class(resource_type, resource_name)
+    def get_class(self, resource_type, resource_name=None, files=None):
+        return self.registry.get_class(resource_type, resource_name,
+                                       files=files)
 
     def get_types(self,
                   cnxt=None,
@@ -578,9 +581,9 @@ class Environment(object):
                                        version=version)
 
     def get_resource_info(self, resource_type, resource_name=None,
-                          registry_type=None):
+                          registry_type=None, ignore=None):
         return self.registry.get_resource_info(resource_type, resource_name,
-                                               registry_type)
+                                               registry_type, ignore=ignore)
 
     def get_constraint(self, name):
         return self.constraints.get(name)

@@ -12,6 +12,8 @@
 
 import json
 
+from heatclient import exc as heat_exceptions
+import six
 import yaml
 
 from heat_integrationtests.common import test
@@ -713,3 +715,91 @@ resources:
 
         self.stack_suspend(stack_identifier=stack_identifier)
         self.stack_resume(stack_identifier=stack_identifier)
+
+
+class ValidateFacadeTest(test.HeatIntegrationTest):
+    """Prove that nested stack errors don't suck."""
+    template = '''
+heat_template_version: 2015-10-15
+resources:
+  thisone:
+    type: OS::Thingy
+    properties:
+      one: pre
+      two: post
+outputs:
+  one:
+    value: {get_attr: [thisone, here-it-is]}
+'''
+    templ_facade = '''
+heat_template_version: 2015-04-30
+parameters:
+  one:
+    type: string
+  two:
+    type: string
+outputs:
+  here-it-is:
+    value: noop
+'''
+    env = '''
+resource_registry:
+  OS::Thingy: facade.yaml
+  resources:
+    thisone:
+      OS::Thingy: concrete.yaml
+'''
+
+    def setUp(self):
+        super(ValidateFacadeTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_missing_param(self):
+        templ_missing_parameter = '''
+heat_template_version: 2015-04-30
+parameters:
+  one:
+    type: string
+resources:
+  str:
+    type: OS::Heat::RandomString
+outputs:
+  here-it-is:
+    value:
+      not-important
+'''
+        try:
+            self.stack_create(
+                template=self.template,
+                environment=self.env,
+                files={'facade.yaml': self.templ_facade,
+                       'concrete.yaml': templ_missing_parameter},
+                expected_status='CREATE_FAILED')
+        except heat_exceptions.HTTPBadRequest as exc:
+            exp = ('ERROR: Required property two for facade '
+                   'OS::Thingy missing in provider')
+            self.assertEqual(exp, six.text_type(exc))
+
+    def test_missing_output(self):
+        templ_missing_output = '''
+heat_template_version: 2015-04-30
+parameters:
+  one:
+    type: string
+  two:
+    type: string
+resources:
+  str:
+    type: OS::Heat::RandomString
+'''
+        try:
+            self.stack_create(
+                template=self.template,
+                environment=self.env,
+                files={'facade.yaml': self.templ_facade,
+                       'concrete.yaml': templ_missing_output},
+                expected_status='CREATE_FAILED')
+        except heat_exceptions.HTTPBadRequest as exc:
+            exp = ('ERROR: Attribute here-it-is for facade '
+                   'OS::Thingy missing in provider')
+            self.assertEqual(exp, six.text_type(exc))

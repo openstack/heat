@@ -133,7 +133,8 @@ class Resource(object):
             registry = stack.env.registry
             try:
                 ResourceClass = registry.get_class(definition.resource_type,
-                                                   resource_name=name)
+                                                   resource_name=name,
+                                                   files=stack.t.files)
             except exception.TemplateNotFound:
                 ResourceClass = template_resource.TemplateResource
 

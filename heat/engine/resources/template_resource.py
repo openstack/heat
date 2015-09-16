@@ -27,8 +27,12 @@ from heat.engine.resources import stack_resource
 from heat.engine import template
 
 
-def generate_class(name, template_name, env):
-    data = TemplateResource.get_template_file(template_name, ('file',))
+def generate_class(name, template_name, env, files=None):
+    data = None
+    if files is not None:
+        data = files.get(template_name)
+    if data is None:
+        data = TemplateResource.get_template_file(template_name, ('file',))
     tmpl = template.Template(template_format.parse(data))
     props, attrs = TemplateResource.get_schemas(tmpl, env.param_defaults)
     cls = type(name, (TemplateResource,),
@@ -255,15 +259,15 @@ class TemplateResource(stack_resource.StackResource):
         except ValueError as ex:
             msg = _("Failed to retrieve template data: %s") % ex
             raise exception.StackValidationFailed(message=msg)
-        cri = self.stack.env.get_resource_info(
+        fri = self.stack.env.get_resource_info(
             self.type(),
             resource_name=self.name,
-            registry_type=environment.ClassResourceInfo)
+            ignore=self.resource_info)
 
         # If we're using an existing resource type as a facade for this
         # template, check for compatibility between the interfaces.
-        if cri is not None and not isinstance(self, cri.get_class()):
-            facade_cls = cri.get_class()
+        if fri is not None:
+            facade_cls = fri.get_class(files=self.stack.t.files)
             self._validate_against_facade(facade_cls)
 
         return super(TemplateResource, self).validate()
