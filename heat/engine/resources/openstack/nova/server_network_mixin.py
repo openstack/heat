@@ -120,6 +120,7 @@ class ServerNetworkMixin(object):
         return port['id']
 
     def _delete_internal_port(self, port_id):
+        """Delete physical port by id."""
         try:
             self.client('neutron').delete_port(port_id)
         except Exception as ex:
@@ -133,8 +134,8 @@ class ServerNetworkMixin(object):
 
         self.data_delete('internal_ports')
 
-    def _data_update_ports(self, port_id, action):
-        data = self._data_get_ports()
+    def _data_update_ports(self, port_id, action, port_type='internal_ports'):
+        data = self._data_get_ports(port_type)
 
         if action == 'add':
             data.append({'id': port_id})
@@ -144,11 +145,38 @@ class ServerNetworkMixin(object):
                     data.remove(port)
                     break
 
-        self.data_set('internal_ports', jsonutils.dumps(data))
+        self.data_set(port_type, jsonutils.dumps(data))
 
-    def _data_get_ports(self):
-        data = self.data().get('internal_ports')
+    def _data_get_ports(self, port_type='internal_ports'):
+        data = self.data().get(port_type)
         return jsonutils.loads(data) if data else []
+
+    def store_external_ports(self):
+        """Store in resource's data IDs of ports created by nova for server.
+
+        If no port property is specified and no internal port has been created,
+        nova client takes no port-id and calls port creating into server
+        creating. We need to store information about that ports, so store
+        their IDs to data with key `external_ports`.
+        """
+        server = self.client().servers.get(self.resource_id)
+        ifaces = server.interface_list()
+        external_port_ids = set(iface.port_id for iface in ifaces)
+        # need to make sure external_ports data doesn't store ids of non-exist
+        # ports. Delete such port_id if it's needed.
+        data_external_port_ids = set(
+            port['id'] for port in self._data_get_ports('external_ports'))
+        for port_id in data_external_port_ids - external_port_ids:
+            self._data_update_ports(port_id, 'delete',
+                                    port_type='external_ports')
+
+        internal_port_ids = set(port['id'] for port in self._data_get_ports())
+        # add ids of new external ports which not contains in external_ports
+        # data yet. Also, exclude ids of internal ports.
+        new_ports = ((external_port_ids - internal_port_ids) -
+                     data_external_port_ids)
+        for port_id in new_ports:
+            self._data_update_ports(port_id, 'add', port_type='external_ports')
 
     def _build_nics(self, networks):
         if not networks:

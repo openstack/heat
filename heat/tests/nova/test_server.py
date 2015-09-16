@@ -150,6 +150,7 @@ class ServersTest(common.HeatTestCase):
         res = self.stack['WebServer']
         res.client = mock.Mock()
         res.client().servers.get.return_value = server
+        self.patchobject(res, 'store_external_ports')
         return res
 
     def test_check(self):
@@ -196,6 +197,8 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(self.stack)
         server = servers.Server(str(name), resource_defns['WebServer'],
                                 self.stack)
+
+        self.patchobject(server, 'store_external_ports')
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
@@ -351,6 +354,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('create_metadata_test_server',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         instance_meta = {'a': "1"}
         image_id = mox.IgnoreArg()
@@ -558,6 +562,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -592,6 +597,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         self.rpc_client = mock.MagicMock()
         server._rpc_client = self.rpc_client
@@ -632,6 +638,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         self.rpc_client = mock.MagicMock()
         server._rpc_client = self.rpc_client
@@ -674,6 +681,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(server, 'heat')
 
@@ -758,6 +766,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
 
@@ -837,6 +846,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(swift.SwiftClientPlugin, '_create')
@@ -930,6 +940,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         ncp = self.patchobject(nova.NovaClientPlugin, '_create')
         zcc = self.patchobject(zaqar.ZaqarClientPlugin, 'create_for_tenant')
@@ -1017,6 +1028,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         mock_client.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -1044,6 +1056,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         mock_client.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -1073,6 +1086,7 @@ class ServersTest(common.HeatTestCase):
         resource_defns = t.resource_definitions(stack)
         server = servers.Server(server_name,
                                 resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         # server.uuid is only available once the resource has been added.
         stack.add_resource(server)
@@ -3642,6 +3656,8 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
+        self.patchobject(stack['server'], 'store_external_ports')
+
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
 
@@ -3702,6 +3718,8 @@ class ServersTest(common.HeatTestCase):
             utils.dummy_context(), 'snapshot_policy', tmpl)
         stack.store()
 
+        self.patchobject(stack['WebServer'], 'store_external_ports')
+
         mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
         mock_plugin.return_value = self.fc
 
@@ -3744,6 +3762,8 @@ class ServersTest(common.HeatTestCase):
         stack = parser.Stack(
             utils.dummy_context(), 'snapshot_policy', tmpl)
         stack.store()
+
+        self.patchobject(stack['WebServer'], 'store_external_ports')
 
         mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
         mock_plugin.return_value = self.fc
@@ -4101,3 +4121,45 @@ class ServerInternalPortTest(common.HeatTestCase):
         server._data = {"internal_ports": ''}
         data = server._data_get_ports()
         self.assertEqual([], data)
+
+    def test_store_external_ports(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+        """
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+
+        class Fake(object):
+            def interface_list(self):
+                return [iface('1122'),
+                        iface('1122'),
+                        iface('2233'),
+                        iface('3344')]
+
+        server.client = mock.Mock()
+        server.client().servers.get.return_value = Fake()
+
+        server._data = {"internal_ports": '[{"id": "1122"}]',
+                        "external_ports": '[{"id": "3344"},{"id": "5566"}]'}
+
+        iface = collections.namedtuple('iface', ['port_id'])
+        update_data = self.patchobject(server, '_data_update_ports')
+
+        server.store_external_ports()
+        self.assertEqual(2, update_data.call_count)
+        self.assertEqual(('5566', 'delete',),
+                         update_data.call_args_list[0][0])
+        self.assertEqual({'port_type': 'external_ports'},
+                         update_data.call_args_list[0][1])
+        self.assertEqual(('2233', 'add',),
+                         update_data.call_args_list[1][0])
+        self.assertEqual({'port_type': 'external_ports'},
+                         update_data.call_args_list[1][1])
