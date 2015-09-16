@@ -931,6 +931,10 @@ For example::
 
 This resolve to the string ``one, two, three, four``.
 
+From HOT version ``2015-10-15`` you may optionally also pass non-string list
+items (e.g json/map/list parameters or attributes) and they will be serialized
+as json before joining.
+
 
 digest
 ------
