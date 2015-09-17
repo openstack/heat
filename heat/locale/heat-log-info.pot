@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b4.dev19\n"
+"Project-Id-Version: heat 5.0.0.0b4.dev190\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-05 06:03+0000\n"
+"POT-Creation-Date: 2015-09-17 06:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,69 +117,69 @@ msgstr ""
 msgid "Registering %(path)s -> %(value)s"
 msgstr ""
 
-#: heat/engine/environment.py:638
+#: heat/engine/environment.py:654
 #, python-format
 msgid "Loading %s"
 msgstr ""
 
-#: heat/engine/resource.py:403
+#: heat/engine/resource.py:374
 #, python-format
 msgid "Reached hook on %s"
 msgstr ""
 
-#: heat/engine/resource.py:641
+#: heat/engine/resource.py:612
 #, python-format
 msgid "%(action)s: %(info)s"
 msgstr ""
 
-#: heat/engine/resource.py:758
+#: heat/engine/resource.py:729
 #, python-format
 msgid "creating %s"
 msgstr ""
 
-#: heat/engine/resource.py:947
+#: heat/engine/resource.py:919
 #, python-format
 msgid "updating %s"
 msgstr ""
 
-#: heat/engine/resource.py:972
+#: heat/engine/resource.py:973
 #, python-format
 msgid "Checking %s"
 msgstr ""
 
-#: heat/engine/resource.py:1012
+#: heat/engine/resource.py:1013
 #, python-format
 msgid "suspending %s"
 msgstr ""
 
-#: heat/engine/resource.py:1031
+#: heat/engine/resource.py:1032
 #, python-format
 msgid "resuming %s"
 msgstr ""
 
-#: heat/engine/resource.py:1036
+#: heat/engine/resource.py:1037
 #, python-format
 msgid "snapshotting %s"
 msgstr ""
 
-#: heat/engine/resource.py:1082
+#: heat/engine/resource.py:1083
 #, python-format
 msgid "Validating %s"
 msgstr ""
 
-#: heat/engine/resource.py:1121
+#: heat/engine/resource.py:1124
 #, python-format
 msgid ""
 "Could not find replacement of resource %(name)s with id %(id)s while "
 "updating needed_by."
 msgstr ""
 
-#: heat/engine/resource.py:1190
+#: heat/engine/resource.py:1193
 #, python-format
 msgid "deleting %s"
 msgstr ""
 
-#: heat/engine/resource.py:1552
+#: heat/engine/resource.py:1556
 #, python-format
 msgid "Clearing %(hook)s hook on %(resource)s"
 msgstr ""
@@ -252,32 +252,32 @@ msgstr ""
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1449
+#: heat/engine/service.py:1462
 #, python-format
 msgid "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1499
+#: heat/engine/service.py:1512
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1731
+#: heat/engine/service.py:1744
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/service.py:1738
+#: heat/engine/service.py:1751
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1759
+#: heat/engine/service.py:1772
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:1781
+#: heat/engine/service.py:1805
 #, python-format
 msgid ""
 "Engine %(engine)s went down when stack %(stack_id)s was in action "
@@ -295,44 +295,44 @@ msgstr ""
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:987
+#: heat/engine/stack.py:992
 #, python-format
 msgid "convergence_dependencies: %s"
 msgstr ""
 
-#: heat/engine/stack.py:1004
+#: heat/engine/stack.py:1009
 #, python-format
 msgid "Triggering resource %(rsrc_id)s for %(is_update)s update"
 msgstr ""
 
-#: heat/engine/stack.py:1320
+#: heat/engine/stack.py:1336
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s "
 "user_creds_id=%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:1328
+#: heat/engine/stack.py:1344
 #, python-format
 msgid "Tried to store a stack that does not exist %s"
 msgstr ""
 
-#: heat/engine/stack.py:1419 heat/engine/stack.py:1431
+#: heat/engine/stack.py:1435 heat/engine/stack.py:1447
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1447
+#: heat/engine/stack.py:1463
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:1470
+#: heat/engine/stack.py:1486
 #, python-format
 msgid "%s is already resumed"
 msgstr ""
 
-#: heat/engine/stack.py:1653
+#: heat/engine/stack.py:1669
 #, python-format
 msgid "[%(name)s(%(id)s)] update traversal %(tid)s complete"
 msgstr ""
@@ -393,27 +393,27 @@ msgstr ""
 msgid "Triggering rollback of %(stack_name)s %(action)s "
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:66
+#: heat/engine/clients/os/cinder.py:65
 #, python-format
 msgid "Creating Cinder client with volume API version %d."
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:97
+#: heat/engine/clients/os/cinder.py:96
 #, python-format
 msgid "Volume (%(volume)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:105
+#: heat/engine/clients/os/cinder.py:104
 #, python-format
 msgid "VolumeSnapshot (%(snapshot)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:114
+#: heat/engine/clients/os/cinder.py:113
 #, python-format
 msgid "Volume backup (%(backup)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/clients/os/cinder.py:185
+#: heat/engine/clients/os/cinder.py:184
 #, python-format
 msgid "Attaching volume %(id)s complete"
 msgstr ""
@@ -428,22 +428,27 @@ msgstr ""
 msgid "Multiple images %s were found in glance with name"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:643
+#: heat/engine/clients/os/nova.py:642
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
 
-#: heat/engine/clients/os/sahara.py:109
+#: heat/engine/clients/os/sahara.py:120
 #, python-format
 msgid "Image %s was not found in sahara images"
 msgstr ""
 
-#: heat/engine/clients/os/sahara.py:114
+#: heat/engine/clients/os/sahara.py:125
 #, python-format
 msgid "Multiple images %s were found in sahara with name"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:310
+#: heat/engine/clients/os/sahara.py:142
+#, python-format
+msgid "Plugin %s was not found in sahara"
+msgstr ""
+
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:268
 #, python-format
 msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
 msgstr ""
@@ -470,27 +475,27 @@ msgstr ""
 msgid "Using custom loadbalancer template %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:305
+#: heat/engine/resources/openstack/cinder/volume.py:304
 #, python-format
 msgid "Resize failed: Volume %(vol)s is in %(status)s state."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:312
+#: heat/engine/resources/openstack/cinder/volume.py:311
 #, python-format
 msgid "Volume %(id)s resize complete"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:336
+#: heat/engine/resources/openstack/cinder/volume.py:335
 #, python-format
 msgid "Restore failed: Volume %(vol)s is in %(status)s state."
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:342
+#: heat/engine/resources/openstack/cinder/volume.py:341
 #, python-format
 msgid "Volume %(id)s backup restore complete"
 msgstr ""
 
-#: heat/engine/resources/openstack/cinder/volume.py:371
+#: heat/engine/resources/openstack/cinder/volume.py:370
 msgid "Volume type update not supported by Cinder API V1."
 msgstr ""
 
@@ -509,30 +514,30 @@ msgstr ""
 msgid "%(name)s Alarm, restarting resource: %(victim)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/scaling_policy.py:159
+#: heat/engine/resources/openstack/heat/scaling_policy.py:157
 #, python-format
 msgid "Alarm %(name)s, new state %(state)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/scaling_policy.py:165
+#: heat/engine/resources/openstack/heat/scaling_policy.py:163
 #, python-format
 msgid "%(name)s NOT performing scaling action, cooldown %(cooldown)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/scaling_policy.py:180
+#: heat/engine/resources/openstack/heat/scaling_policy.py:178
 #, python-format
 msgid ""
 "%(name)s Alarm, adjusting Group %(group)s with id %(asgn_id)s by "
 "%(filter)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/swiftsignal.py:320
+#: heat/engine/resources/openstack/heat/swiftsignal.py:325
 #: heat/engine/resources/openstack/heat/wait_condition.py:101
 #, python-format
 msgid "%(name)s Failed (%(failure)s)"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/swiftsignal.py:327
+#: heat/engine/resources/openstack/heat/swiftsignal.py:332
 #: heat/engine/resources/openstack/heat/wait_condition.py:106
 #, python-format
 msgid "%s Succeeded"
@@ -543,11 +548,11 @@ msgstr ""
 msgid "%(name)s Timed out (%(timeout)s)"
 msgstr ""
 
-#: heat/engine/resources/openstack/manila/share.py:233
+#: heat/engine/resources/openstack/manila/share.py:234
 msgid "Applying access rules to created Share."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1161
+#: heat/engine/resources/openstack/nova/server.py:1190
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network"
@@ -555,28 +560,28 @@ msgid ""
 "property instead."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:171
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:183
 #, python-format
 msgid "Cluster \"%s\" is being started."
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:183
-#: heat/engine/resources/openstack/trove/trove_cluster.py:194
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:195
+#: heat/engine/resources/openstack/trove/trove_cluster.py:195
 #, python-format
 msgid "Cluster '%s' has been created"
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_cluster.py:194
+#: heat/engine/resources/openstack/sahara/sahara_cluster.py:206
 #, python-format
 msgid "Cluster '%s' has been deleted"
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_templates.py:235
+#: heat/engine/resources/openstack/sahara/sahara_templates.py:238
 #, python-format
 msgid "Node Group Template '%s' has been created"
 msgstr ""
 
-#: heat/engine/resources/openstack/sahara/sahara_templates.py:403
+#: heat/engine/resources/openstack/sahara/sahara_templates.py:421
 #, python-format
 msgid "Cluster Template '%s' has been created"
 msgstr ""
