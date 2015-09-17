@@ -791,7 +791,8 @@ class EngineService(service.Service):
 
         # Now parse the template and any parameters for the updated
         # stack definition.  If PARAM_EXISTING is specified, we merge
-        # any environment provided into the existing one.
+        # any environment provided into the existing one and attempt
+        # to use the existing stack template, if one is not provided.
         if args.get(rpc_api.PARAM_EXISTING, None):
             existing_env = current_stack.env.user_env_as_dict()
             existing_params = existing_env[env_fmt.PARAMETERS]
@@ -804,15 +805,42 @@ class EngineService(service.Service):
 
             new_files = current_stack.t.files.copy()
             new_files.update(files or {})
+
+            if template is not None:
+                new_template = template
+            elif (current_stack.convergence or
+                  current_stack.status == current_stack.COMPLETE):
+                # If convergence is enabled, or the stack is complete, we can
+                # just use the current template...
+                new_template = current_stack.t.t
+            else:
+                # ..but if it's FAILED without convergence things may be in an
+                # inconsistent state, so we try to fall back on a stored copy
+                # of the previous template
+                if current_stack.prev_raw_template_id is not None:
+                    # Use the stored previous template
+                    prev_t = templatem.Template.load(
+                        cnxt, current_stack.prev_raw_template_id)
+                    new_template = prev_t.t
+                else:
+                    # Nothing we can do, the failed update happened before
+                    # we started storing prev_raw_template_id
+                    LOG.error("PATCH update to FAILED stack only possible if "
+                              "convergence enabled or previous template "
+                              "stored")
+                    msg = _('PATCH update to non-COMPLETE stack')
+                    raise exception.NotSupported(feature=msg)
         else:
             new_env = environment.Environment(params)
             new_files = files
-        tmpl = templatem.Template(template, files=new_files, env=new_env)
+            new_template = template
+
+        tmpl = templatem.Template(new_template, files=new_files, env=new_env)
 
         current_stack, updated_stack = self._prepare_stack_updates(
             cnxt, current_stack, tmpl, params, files, args)
 
-        if current_stack.get_kwargs_for_cloning()['convergence']:
+        if current_stack.convergence:
             current_stack.converge_stack(template=tmpl,
                                          new_stack=updated_stack)
         else:

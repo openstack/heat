@@ -66,6 +66,7 @@ class InstantiationData(object):
         to distinguish.
         """
         self.data = data
+        self.patch = patch
         if patch:
             self.data[rpc_api.PARAM_EXISTING] = True
 
@@ -92,6 +93,7 @@ class InstantiationData(object):
         Get template file contents, either inline, from stack adopt data or
         from a URL, in JSON or YAML format.
         """
+        template_data = None
         if rpc_api.PARAM_ADOPT_STACK_DATA in self.data:
             adopt_data = self.data[rpc_api.PARAM_ADOPT_STACK_DATA]
             try:
@@ -112,8 +114,12 @@ class InstantiationData(object):
             except IOError as ex:
                 err_reason = _('Could not retrieve template: %s') % ex
                 raise exc.HTTPBadRequest(err_reason)
-        else:
-            raise exc.HTTPBadRequest(_("No template specified"))
+
+        if template_data is None:
+            if self.patch:
+                return None
+            else:
+                raise exc.HTTPBadRequest(_("No template specified"))
 
         with self.parse_error_check('Template'):
             return template_format.parse(template_data)
