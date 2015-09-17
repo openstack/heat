@@ -13,7 +13,6 @@
 
 import mock
 
-from heat.common import exception
 from heat.engine.clients.os import monasca as client_plugin
 from heat.engine import resource
 from heat.engine.resources.openstack.monasca import alarm_definition
@@ -165,8 +164,6 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
                 'name-updated',
             alarm_definition.MonascaAlarmDefinition.DESCRIPTION:
                 'description-updated',
-            alarm_definition.MonascaAlarmDefinition.EXPRESSION:
-                'expression-updated',
             alarm_definition.MonascaAlarmDefinition.ACTIONS_ENABLED:
                 True,
             alarm_definition.MonascaAlarmDefinition.SEVERITY:
@@ -186,7 +183,6 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
             alarm_id=self.test_resource.resource_id,
             name='name-updated',
             description='description-updated',
-            expression='expression-updated',
             actions_enabled=True,
             severity='medium',
             ok_actions=['sample_notification'],
@@ -195,36 +191,6 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
         )
 
         mock_alarm_patch.assert_called_once_with(**args)
-
-    def test_resource_handle_update_sub_expression(self):
-        '''
-        Monasca does not allow to update the metrics in the expression though
-        it allows to update the metrics measurement condition range. Monasca
-        client raises HTTPUnProcessable in this case
-
-        so UpdateReplace is raised to re-create the alarm-definition with
-        updated new expression.
-        '''
-        # TODO(skraynev): remove it when monasca client will be
-        #                 merged in global requirements
-        class HTTPUnProcessable(Exception):
-            pass
-
-        client_plugin.monasca_exc = mock.Mock()
-        client_plugin.monasca_exc.HTTPUnProcessable = HTTPUnProcessable
-        mock_alarm_patch = self.test_client.alarm_definitions.patch
-        mock_alarm_patch.side_effect = (
-            client_plugin.monasca_exc.HTTPUnProcessable)
-        self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-
-        prop_diff = {alarm_definition.MonascaAlarmDefinition.EXPRESSION:
-                     'expression-updated'}
-
-        self.assertRaises(exception.UpdateReplace,
-                          self.test_resource.handle_update,
-                          json_snippet=None,
-                          tmpl_diff=None,
-                          prop_diff=prop_diff)
 
     def test_resource_handle_delete(self):
         mock_alarm_delete = self.test_client.alarm_definitions.delete
