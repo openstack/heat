@@ -13,7 +13,6 @@
 
 import copy
 
-from ceilometerclient import exc as ceilometerclient_exc
 import mock
 import mox
 
@@ -188,29 +187,6 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def test_delete(self):
-        rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarms, 'delete')
-        self.fc.alarms.delete('foo')
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def test_delete_not_found(self):
-        rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarms, 'delete')
-        self.fc.alarms.delete('foo').AndRaise(
-            ceilometerclient_exc.HTTPNotFound())
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
 
