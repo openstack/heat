@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient import exc as glance_exceptions
 import mock
 import six
 
@@ -185,17 +184,6 @@ class GlanceImageTest(common.HeatTestCase):
         self.images.create.return_value = value
         self.my_image.handle_create()
         self.assertEqual(image_id, self.my_image.resource_id)
-
-    def test_image_handle_delete(self):
-        self.resource_id = None
-        self.assertIsNone(self.my_image.handle_delete())
-        image_id = '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
-        self.my_image.resource_id = image_id
-        self.images.delete.return_value = None
-        self.assertEqual('41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
-                         self.my_image.handle_delete())
-        self.images.delete.side_effect = glance_exceptions.HTTPNotFound(404)
-        self.assertIsNone(self.my_image.handle_delete())
 
     def test_image_show_resourse_v1(self):
         self.glanceclient.version = 1.0
