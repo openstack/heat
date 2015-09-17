@@ -915,11 +915,13 @@ class Resource(object):
                                       prev_resource):
                 return
 
-            if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
-                                              (self.UPDATE, self.IN_PROGRESS),
-                                              (self.ADOPT, self.IN_PROGRESS)):
-                exc = Exception(_('Resource update already requested'))
-                raise exception.ResourceFailure(exc, self, action)
+            if not cfg.CONF.convergence_engine:
+                if (self.action, self.status) in (
+                        (self.CREATE, self.IN_PROGRESS),
+                        (self.UPDATE, self.IN_PROGRESS),
+                        (self.ADOPT, self.IN_PROGRESS)):
+                    exc = Exception(_('Resource update already requested'))
+                    raise exception.ResourceFailure(exc, self, action)
 
             LOG.info(_LI('updating %s'), six.text_type(self))
 
