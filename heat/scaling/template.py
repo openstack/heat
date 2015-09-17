@@ -21,8 +21,7 @@ def _identity(resource_name, definition):
 def member_definitions(old_resources, new_definition,
                        num_resources, num_new,
                        get_new_id, customise=_identity):
-    """
-    Iterate over resource definitions for a scaling group
+    """Iterate over resource definitions for a scaling group
 
     Generates the definitions for the next change to the scaling group. Each
     item is a (name, definition) tuple.
@@ -60,8 +59,7 @@ def member_definitions(old_resources, new_definition,
 def make_template(resource_definitions,
                   version=('heat_template_version', '2015-04-30'),
                   child_env=None):
-    """
-    Return a Template object containing the given resource definitions.
+    """Return a Template object containing the given resource definitions.
 
     By default, the template will be in the HOT format. A different format
     can be specified by passing a (version_type, version_string) tuple matching

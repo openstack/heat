@@ -16,11 +16,12 @@ import six
 
 
 class CooldownMixin(object):
-    '''
-    Utility class to encapsulate Cooldown related logic which is shared
-    between AutoScalingGroup and ScalingPolicy. This logic includes both
-    cooldown timestamp comparing and scaling in progress checking.
-    '''
+    """Utility class to encapsulate Cooldown related logic.
+
+    This class is shared between AutoScalingGroup and ScalingPolicy.
+    This logic includes both cooldown timestamp comparing and scaling in
+    progress checking.
+    """
     def _cooldown_inprogress(self):
         inprogress = False
         try:
