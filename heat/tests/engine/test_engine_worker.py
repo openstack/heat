@@ -165,34 +165,40 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             mock.ANY, True)
 
     @mock.patch.object(resource.Resource, 'make_replacement')
+    @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_update_traversal_raise_update_replace(
-            self, mock_mr, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, tr, mock_mr, mock_cru, mock_crc, mock_pcr, mock_csc,
+            mock_cid):
         mock_cru.side_effect = exception.UpdateReplace
+        tr.return_value = 317
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         self.stack.time_remaining())
+                                         tr())
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
 
     @mock.patch.object(worker.WorkerService, '_try_steal_engine_lock')
+    @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_update_traversal_raise_update_inprogress(
-            self, mock_tsl, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, tr, mock_tsl, mock_cru, mock_crc, mock_pcr, mock_csc,
+            mock_cid):
         mock_cru.side_effect = exception.UpdateInProgress
         self.worker.engine_id = 'some-thing-else'
         mock_tsl.return_value = True
+        tr.return_value = 317
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         self.stack.time_remaining())
+                                         tr())
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -488,8 +494,10 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         self.is_update = False
         self.graph_key = (self.resource.id, self.is_update)
 
+    @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_cleanup_traversal(
-            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, tr, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        tr.return_value = 317
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)
@@ -497,18 +505,20 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
             {}, self.worker.engine_id,
-            self.stack.time_remaining())
+            tr())
 
+    @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_cleanup_traversal_raise_update_inprogress(
-            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, tr, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
         mock_crc.side_effect = exception.UpdateInProgress
+        tr.return_value = 317
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         self.stack.time_remaining())
+                                         tr())
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
