@@ -53,7 +53,6 @@ class FakeTroveCluster(object):
             {'id': '416b0b16-ba55-4302-bbd3-ff566032e1c1', 'status': status},
             {'id': '965ef811-7c1d-47fc-89f2-a89dfdd23ef2', 'status': status},
             {'id': '3642f41c-e8ad-4164-a089-3891bf7f2d2b', 'status': status}]
-        self.to_dict = lambda: {'attr': 'val'}
 
     def delete(self):
         pass
@@ -116,6 +115,7 @@ class TroveClusterTest(common.HeatTestCase):
         self.assertEqual('2.6.1', args['datastore_version'])
         self.assertEqual('1189aa64-a471-4aa3-876a-9eb7d84089da',
                          tc.resource_id)
+        self.assertEqual('clusters', tc.entity)
 
     def test_resource_mapping(self):
         mapping = trove_cluster.resource_mapping()
@@ -130,7 +130,6 @@ class TroveClusterTest(common.HeatTestCase):
                           '965ef811-7c1d-47fc-89f2-a89dfdd23ef2',
                           '3642f41c-e8ad-4164-a089-3891bf7f2d2b'],
                          tc.FnGetAtt('instances'))
-        self.assertEqual({'attr': 'val'}, tc.FnGetAtt('show'))
 
     def test_delete(self):
         tc = self._create_resource('cluster', self.rsrc_defn, self.stack)
