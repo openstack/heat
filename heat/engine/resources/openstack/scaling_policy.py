@@ -136,22 +136,26 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)
-        if group is None:
-            raise exception.NotFound(_('Alarm %(alarm)s could not find '
-                                       'scaling group named "%(group)s"') % {
-                                           'alarm': self.name,
-                                           'group': asgn_id})
+        try:
+            if group is None:
+                raise exception.NotFound(
+                    _('Alarm %(alarm)s could not find '
+                      'scaling group named "%(group)s"') % {
+                          'alarm': self.name, 'group': asgn_id})
 
-        LOG.info(_('%(name)s Alarm, adjusting Group %(group)s with id '
-                   '%(asgn_id)s by %(filter)s')
-                 % {'name': self.name, 'group': group.name, 'asgn_id': asgn_id,
-                    'filter': self.properties[self.SCALING_ADJUSTMENT]})
-        adjustment_type = self._get_adjustement_type()
-        group.adjust(self.properties[self.SCALING_ADJUSTMENT], adjustment_type)
-
-        self._cooldown_timestamp("%s : %s" %
-                                 (self.properties[self.ADJUSTMENT_TYPE],
-                                  self.properties[self.SCALING_ADJUSTMENT]))
+            LOG.info(_('%(name)s Alarm, adjusting Group %(group)s with id '
+                       '%(asgn_id)s by %(filter)s')
+                     % {'name': self.name, 'group': group.name,
+                        'asgn_id': asgn_id,
+                        'filter': self.properties[self.SCALING_ADJUSTMENT]})
+            adjustment_type = self._get_adjustement_type()
+            group.adjust(self.properties[self.SCALING_ADJUSTMENT],
+                         adjustment_type)
+        finally:
+            self._cooldown_timestamp(
+                "%s : %s" %
+                (self.properties[self.ADJUSTMENT_TYPE],
+                 self.properties[self.SCALING_ADJUSTMENT]))
 
     def _resolve_attribute(self, name):
         if name == self.ALARM_URL and self.resource_id is not None:

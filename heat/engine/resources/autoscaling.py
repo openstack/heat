@@ -627,6 +627,7 @@ class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
                                                adjustment_type, lower, upper)
 
         if new_capacity == capacity:
+            self._cooldown_timestamp(None)
             LOG.debug('no change in capacity %d' % capacity)
             return
 
@@ -661,8 +662,8 @@ class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
                     'group': notif['groupname']},
             })
             notification.send(**notif)
-
-        self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
+        finally:
+            self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
 
     def _tags(self):
         """Add Identifing Tags to all servers in the group.
