@@ -44,12 +44,6 @@ class FakeCronTrigger(object):
         self._data = {'trigger': 'info'}
 
 
-class MistralCronTriggerTestResource(cron_trigger.CronTrigger):
-    @classmethod
-    def is_service_available(cls, context):
-        return True
-
-
 class MistralCronTriggerTest(common.HeatTestCase):
 
     def setUp(self):
@@ -64,11 +58,11 @@ class MistralCronTriggerTest(common.HeatTestCase):
         self.rsrc_defn = resource_defns['cron_trigger']
 
         self.client = mock.Mock()
-        self.patchobject(MistralCronTriggerTestResource, 'client',
+        self.patchobject(cron_trigger.CronTrigger, 'client',
                          return_value=self.client)
 
     def _create_resource(self, name, snippet, stack):
-        ct = MistralCronTriggerTestResource(name, snippet, stack)
+        ct = cron_trigger.CronTrigger(name, snippet, stack)
         self.client.cron_triggers.create.return_value = FakeCronTrigger(
             'my_cron_trigger')
         self.client.cron_triggers.get.return_value = FakeCronTrigger(
