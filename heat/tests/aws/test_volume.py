@@ -449,12 +449,41 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         self.cinder_fc.volumes.get(fv.id).AndReturn(
             vt_base.FakeVolume('deleting'))
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('deleting'))
+        self.cinder_fc.volumes.get(fv.id).AndRaise(
+            cinder_exp.NotFound('NotFound'))
 
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         rsrc = self.create_volume(self.t, stack, 'DataVolume')
         scheduler.TaskRunner(rsrc.destroy)()
+
+        self.m.VerifyAll()
+
+    def test_volume_delete_error(self):
+        fv = vt_base.FakeVolume('creating')
+        stack_name = 'test_volume_deleting_stack'
+
+        fv = self._mock_create_volume(vt_base.FakeVolume('creating'),
+                                      stack_name)
+
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        self.cinder_fc.volumes.delete(fv.id).AndReturn(True)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('deleting'))
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('error_deleting'))
+
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        rsrc = self.create_volume(self.t, stack, 'DataVolume')
+        deleter = scheduler.TaskRunner(rsrc.destroy)
+        self.assertRaisesRegexp(exception.ResourceFailure,
+                                ".*ResourceInError.*error_deleting.*delete",
+                                deleter)
 
         self.m.VerifyAll()
 

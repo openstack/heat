@@ -113,6 +113,12 @@ class BaseVolume(resource.Resource):
                 result=_('Volume backup failed'))
 
     def _delete_volume(self):
+        """Call the volume delete API
+
+        Returns False if further checking of volume status is required,
+        True otherwise.
+
+        """
         try:
             cinder = self.client()
             vol = cinder.volumes.get(self.resource_id)
@@ -122,13 +128,10 @@ class BaseVolume(resource.Resource):
             # just wait for the deletion to complete
             if vol.status != 'deleting':
                 cinder.volumes.delete(self.resource_id)
-            else:
-                return True
+            return False
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
             return True
-        else:
-            return False
 
     def check_delete_complete(self, prg):
         if not prg.backup['called']:
@@ -147,11 +150,14 @@ class BaseVolume(resource.Resource):
 
         if not prg.delete['complete']:
             try:
-                self.client().volumes.get(self.resource_id)
+                vol = self.client().volumes.get(self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
                 prg.delete['complete'] = True
                 return True
+            if 'error' in vol.status.lower():
+                raise exception.ResourceInError(status_reason='delete',
+                                                resource_status=vol.status)
             else:
                 return False
         return True
