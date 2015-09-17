@@ -182,6 +182,7 @@ class TemplateResource(stack_resource.StackResource):
         # 3. look in the db
         reported_excp = None
         t_data = self.stack.t.files.get(self.template_name)
+        stored_t_data = t_data
         if not t_data and self.template_name.endswith((".yaml", ".template")):
             try:
                 t_data = self.get_template_file(self.template_name,
@@ -196,7 +197,8 @@ class TemplateResource(stack_resource.StackResource):
                 t_data = jsonutils.dumps(self.nested().t.t)
 
         if t_data is not None:
-            self.stack.t.files[self.template_name] = t_data
+            if t_data != stored_t_data:
+                self.stack.t.files[self.template_name] = t_data
             self.stack.t.env.register_class(self.resource_type,
                                             self.template_name)
             return t_data
