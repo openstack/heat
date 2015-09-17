@@ -28,11 +28,12 @@ LOG = logging.getLogger(__name__)
 
 
 def extract_args(params):
-    '''
+    """Extract arguments passed as parameters and return them as a dictionary.
+
     Extract any arguments passed as parameters through the API and return them
     as a dictionary. This allows us to filter the passed args and do type
     conversion where appropriate
-    '''
+    """
     kwargs = {}
     timeout_mins = params.get(rpc_api.PARAM_TIMEOUT)
     if timeout_mins not in ('0', 0, None):
@@ -170,10 +171,11 @@ def translate_filters(params):
 
 
 def format_stack_outputs(stack, outputs):
-    '''
+    """Return a representation of the given output template.
+
     Return a representation of the given output template for the given stack
     that matches the API output expectations.
-    '''
+    """
     def format_stack_output(k):
         output = {
             rpc_api.OUTPUT_DESCRIPTION: outputs[k].get('Description',
@@ -189,10 +191,11 @@ def format_stack_outputs(stack, outputs):
 
 
 def format_stack(stack, preview=False):
-    '''
+    """Return a representation of the given stack.
+
     Return a representation of the given stack that matches the API output
     expectations.
-    '''
+    """
     updated_time = stack.updated_time and stack.updated_time.isoformat()
     created_time = stack.created_time or timeutils.utcnow()
     info = {
@@ -222,7 +225,7 @@ def format_stack(stack, preview=False):
         info.update(update_info)
 
     # allow users to view the outputs of stacks
-    if (stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS):
+    if stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS:
         info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack,
                                                            stack.outputs)
 
@@ -273,10 +276,11 @@ def format_resource_properties(resource):
 
 def format_stack_resource(resource, detail=True, with_props=False,
                           with_attr=None):
-    '''
+    """Return a representation of the given resource.
+
     Return a representation of the given resource that matches the API output
     expectations.
-    '''
+    """
     created_time = resource.created_time and resource.created_time.isoformat()
     last_updated_time = (resource.updated_time and
                          resource.updated_time.isoformat()) or created_time
@@ -432,8 +436,7 @@ def format_watch_data(wd):
 
 
 def format_validate_parameter(param):
-    """
-    Format a template parameter for validate template API call
+    """Format a template parameter for validate template API call.
 
     Formats a template parameter and its schema information from the engine's
     internal representation (i.e. a Parameter object and its associated

@@ -63,7 +63,7 @@ class ResourceInfo(object):
     """Base mapping of resource type to implementation."""
 
     def __new__(cls, registry, path, value, **kwargs):
-        '''Create a new ResourceInfo of the appropriate class.'''
+        """Create a new ResourceInfo of the appropriate class."""
 
         if cls != ResourceInfo:
             # Call is already for a subclass, so pass it through
@@ -221,8 +221,10 @@ class ResourceRegistry(object):
         registry[name] = hook
 
     def _register_info(self, path, info):
-        """place the new info in the correct location in the registry.
-        path: a list of keys ['resources', 'my_server', 'OS::Nova::Server']
+        """Place the new info in the correct location in the registry.
+
+        :param path: a list of keys ['resources', 'my_server',
+         'OS::Nova::Server']
         """
         descriptive_path = '/'.join(path)
         name = path[-1]
@@ -285,7 +287,7 @@ class ResourceRegistry(object):
             registry.pop(info.path[-1])
 
     def matches_hook(self, resource_name, hook):
-        '''Return whether a resource have a hook set in the environment.
+        """Return whether a resource have a hook set in the environment.
 
         For a given resource and a hook type, we check to see if the the passed
         group of resources has the right hook associated with the name.
@@ -307,7 +309,7 @@ class ResourceRegistry(object):
         A hook value is either `pre-create`, `pre-update` or a list of those
         values. Resources support wildcard matching. The asterisk sign matches
         everything.
-        '''
+        """
         ress = self._registry['resources']
         for name_pattern, resource in six.iteritems(ress):
             if fnmatch.fnmatchcase(resource_name, name_pattern):
@@ -365,7 +367,8 @@ class ResourceRegistry(object):
     def get_resource_info(self, resource_type, resource_name=None,
                           registry_type=None, ignore=None):
         """Find possible matches to the resource type and name.
-        chain the results from the global and user registry to find
+
+        Chain the results from the global and user registry to find
         a match.
         """
         # use cases
@@ -381,6 +384,7 @@ class ResourceRegistry(object):
         #    - filter_by(is_user=False)
         # 4) as_dict() to write to the db
         #    - filter_by(is_user=True)
+
         if self.global_registry is not None:
             giter = self.global_registry.iterable_by(resource_type,
                                                      resource_name)
@@ -446,7 +450,7 @@ class ResourceRegistry(object):
                   support_status=None,
                   type_name=None,
                   version=None):
-        '''Return a list of valid resource types.'''
+        """Return a list of valid resource types."""
 
         # validate the support status
         if support_status is not None and not support.is_valid_status(
@@ -509,8 +513,10 @@ class Environment(object):
 
     def __init__(self, env=None, user_env=True):
         """Create an Environment from a dict of varying format.
-        1) old-school flat parameters
-        2) or newer {resource_registry: bla, parameters: foo}
+
+        Next formats are available:
+          1) old-school flat parameters
+          2) or newer {resource_registry: bla, parameters: foo}
 
         :param env: the json environment
         :param user_env: boolean, if false then we manage python resources too.
@@ -601,7 +607,7 @@ def get_child_environment(parent_env, child_params, item_to_remove=None,
     environment.
 
     1. resource_registry must be merged (child env should be loaded after the
-       parent env to take presdence).
+       parent env to take presence).
     2. child parameters must overwrite the parent's as they won't be relevant
        in the child template.
 

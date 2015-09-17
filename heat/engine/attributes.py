@@ -27,10 +27,9 @@ LOG = logging.getLogger(__name__)
 
 
 class Schema(constr.Schema):
-    """
-    Simple schema class for attributes.
+    """Simple schema class for attributes.
 
-    Schema objects are serialisable to dictionaries following a superset of
+    Schema objects are serializable to dictionaries following a superset of
     the HOT input Parameter schema using dict().
     """
 
@@ -76,29 +75,22 @@ class Schema(constr.Schema):
 
     @classmethod
     def from_attribute(cls, schema_dict):
-        """
-        Return a Property Schema corresponding to a Attribute Schema.
-        """
+        """Return a Property Schema corresponding to a Attribute Schema."""
         msg = 'Old attribute schema is not supported'
         assert isinstance(schema_dict, cls), msg
         return schema_dict
 
 
 def schemata(schema):
-    """
-    Return dictionary of Schema objects for given dictionary of schemata.
-    """
+    """Return dictionary of Schema objects for given dictionary of schemata."""
     return dict((n, Schema.from_attribute(s)) for n, s in schema.items())
 
 
 class Attribute(object):
-    """
-    An Attribute schema.
-    """
+    """An Attribute schema."""
 
     def __init__(self, attr_name, schema):
-        """
-        Initialise with a name and description.
+        """Initialise with a name and schema.
 
         :param attr_name: the name of the attribute
         :param schema: attribute schema
@@ -110,9 +102,7 @@ class Attribute(object):
         return self.schema.support_status
 
     def as_output(self, resource_name, template_type='cfn'):
-        """
-        Return an Output schema entry for a provider template with the given
-        resource name.
+        """Output entry for a provider template with the given resource name.
 
         :param resource_name: the logical name of the provider resource
         :param template_type: the template type to generate
@@ -151,7 +141,8 @@ class Attributes(collections.Mapping):
 
     @staticmethod
     def as_outputs(resource_name, resource_class, template_type='cfn'):
-        """
+        """Dict of Output entries for a provider template with resource name.
+
         :param resource_name: logical name of the resource
         :param resource_class: resource implementation class
         :returns: The attributes of the specified resource_class as a template
@@ -266,13 +257,12 @@ class DynamicSchemeAttributes(Attributes):
 
 
 def select_from_attribute(attribute_value, path):
-    '''
-    Select an element from an attribute value.
+    """Select an element from an attribute value.
 
     :param attribute_value: the attribute value.
     :param path: a list of path components to select from the attribute.
     :returns: the selected attribute component value.
-    '''
+    """
     def get_path_component(collection, key):
         if not isinstance(collection, (collections.Mapping,
                                        collections.Sequence)):

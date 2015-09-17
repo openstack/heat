@@ -27,8 +27,9 @@ __all__ = ['ResourceDefinition']
 
 
 class ResourceDefinitionCore(object):
-    """
-    A definition of a resource, independent of any particular template format.
+    """A definition of a resource.
+
+    Independent of any particular template format.
     """
 
     DELETION_POLICIES = (
@@ -40,8 +41,7 @@ class ResourceDefinitionCore(object):
     def __init__(self, name, resource_type, properties=None, metadata=None,
                  depends=None, deletion_policy=None, update_policy=None,
                  description=None):
-        """
-        Initialise with the parsed definition of a resource.
+        """Initialise with the parsed definition of a resource.
 
         Any intrinsic functions present in any of the sections should have been
         parsed into Function objects before constructing the definition.
@@ -95,8 +95,7 @@ class ResourceDefinitionCore(object):
             self._hash ^= _hash_data(update_policy)
 
     def freeze(self, **overrides):
-        """
-        Return a frozen resource definition, with all functions resolved.
+        """Return a frozen resource definition, with all functions resolved.
 
         This return a new resource definition with fixed data (containing no
         intrinsic functions). Named arguments passed to this method override
@@ -122,8 +121,7 @@ class ResourceDefinitionCore(object):
         return defn
 
     def reparse(self, stack, template):
-        """
-        Reinterpret the resource definition in the context of a new stack.
+        """Reinterpret the resource definition in the context of a new stack.
 
         This returns a new resource definition, with all of the functions
         parsed in the context of the specified stack and template.
@@ -143,7 +141,8 @@ class ResourceDefinitionCore(object):
             update_policy=reparse_snippet(self._update_policy))
 
     def dep_attrs(self, resource_name):
-        """
+        """Return an iterator over dependent attributes for resource_name.
+
         Return an iterator over dependent attributes for specified
         resource_name in resources' properties and metadata fields.
         """
@@ -153,9 +152,7 @@ class ResourceDefinitionCore(object):
                                                   resource_name))
 
     def dependencies(self, stack):
-        """
-        Return the Resource objects in the given stack on which this depends.
-        """
+        """Return the Resource objects in given stack on which this depends."""
         def path(section):
             return '.'.join([self.name, section])
 
@@ -178,8 +175,7 @@ class ResourceDefinitionCore(object):
                                                 path(METADATA)))
 
     def properties(self, schema, context=None):
-        """
-        Return a Properties object representing the resource properties.
+        """Return a Properties object representing the resource properties.
 
         The Properties object is constructed from the given schema, and may
         require a context to validate constraints.
@@ -189,16 +185,14 @@ class ResourceDefinitionCore(object):
                                      section=PROPERTIES)
 
     def deletion_policy(self):
-        """
-        Return the deletion policy for the resource.
+        """Return the deletion policy for the resource.
 
         The policy will be one of those listed in DELETION_POLICIES.
         """
         return function.resolve(self._deletion_policy) or self.DELETE
 
     def update_policy(self, schema, context=None):
-        """
-        Return a Properties object representing the resource update policy.
+        """Return a Properties object representing the resource update policy.
 
         The Properties object is constructed from the given schema, and may
         require a context to validate constraints.
@@ -208,15 +202,11 @@ class ResourceDefinitionCore(object):
                                      section=UPDATE_POLICY)
 
     def metadata(self):
-        """
-        Return the resource metadata.
-        """
+        """Return the resource metadata."""
         return function.resolve(self._metadata) or {}
 
     def render_hot(self):
-        """
-        Return a HOT snippet for the resource definition.
-        """
+        """Return a HOT snippet for the resource definition."""
         if self._rendering is None:
             attrs = {
                 'type': 'resource_type',
@@ -239,8 +229,7 @@ class ResourceDefinitionCore(object):
         return self._rendering
 
     def __eq__(self, other):
-        """
-        Compare this resource definition for equality with another.
+        """Compare this resource definition for equality with another.
 
         Two resource definitions are considered to be equal if they can be
         generated from the same template snippet. The name of the resource is
@@ -253,8 +242,7 @@ class ResourceDefinitionCore(object):
         return self.render_hot() == other.render_hot()
 
     def __ne__(self, other):
-        """
-        Compare this resource definition for inequality with another.
+        """Compare this resource definition for inequality with another.
 
         See __eq__() for the definition of equality.
         """
@@ -265,8 +253,7 @@ class ResourceDefinitionCore(object):
         return not equal
 
     def __hash__(self):
-        """
-        Return a hash value for this resource definition.
+        """Return a hash value for this resource definition.
 
         Resource definitions that compare equal will have the same hash. (In
         particular, the resource name is *not* taken into account.) See
@@ -275,9 +262,7 @@ class ResourceDefinitionCore(object):
         return self._hash
 
     def __repr__(self):
-        """
-        Return a string representation of the resource definition.
-        """
+        """Return a string representation of the resource definition."""
 
         def arg_repr(arg_name):
             return '='.join([arg_name, repr(getattr(self, '_%s' % arg_name))])
@@ -303,8 +288,7 @@ _KEYS = (
 
 
 class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
-    """
-    A resource definition that also acts like a cfn template snippet.
+    """A resource definition that also acts like a cfn template snippet.
 
     This class exists only for backwards compatibility with existing resource
     plugins and unit tests; it is deprecated and then could be replaced with
@@ -319,8 +303,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         'resource instance.')
 
     def __eq__(self, other):
-        """
-        Compare this resource definition for equality with another.
+        """Compare this resource definition for equality with another.
 
         Two resource definitions are considered to be equal if they can be
         generated from the same template snippet. The name of the resource is
@@ -340,8 +323,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         return super(ResourceDefinition, self).__eq__(other)
 
     def __iter__(self):
-        """
-        Iterate over the available CFN template keys.
+        """Iterate over the available CFN template keys.
 
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
@@ -363,8 +345,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
             yield DESCRIPTION
 
     def __getitem__(self, key):
-        """
-        Get the specified item from a CFN template snippet.
+        """Get the specified item from a CFN template snippet.
 
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
@@ -397,15 +378,12 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         raise KeyError(key)
 
     def __hash__(self):
-        """
-        Return a hash of the ResourceDefinition object.
-        """
+        """Return a hash of the ResourceDefinition object."""
         warnings.warn(self._deprecation_msg, DeprecationWarning)
         return super(ResourceDefinition, self).__hash__()
 
     def __len__(self):
-        """
-        Return the number of available CFN template keys.
+        """Return the number of available CFN template keys.
 
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
@@ -415,16 +393,12 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         return len(list(iter(self)))
 
     def __repr__(self):
-        """
-        Return a string representation of the resource definition.
-        """
+        """Return a string representation of the resource definition."""
         return 'ResourceDefinition %s' % repr(dict(self))
 
 
 def _hash_data(data):
-    """
-    Return a stable hash value for an arbitrary parsed-JSON data snippet.
-    """
+    """Return a stable hash value for an arbitrary parsed-JSON data snippet."""
     if isinstance(data, function.Function):
         data = copy.deepcopy(data)
 

@@ -22,16 +22,17 @@ from heat.objects import event as event_object
 
 
 class Event(object):
-    '''Class representing a Resource state change.'''
+    """Class representing a Resource state change."""
 
     def __init__(self, context, stack, action, status, reason,
                  physical_resource_id, resource_properties, resource_name,
                  resource_type, uuid=None, timestamp=None, id=None):
-        '''
+        """Initialisation of the event.
+
         Initialise from a context, stack, and event information. The timestamp
         and database ID may also be initialised if the event is already in the
         database.
-        '''
+        """
         self.context = context
         self.stack = stack
         self.action = action
@@ -50,7 +51,7 @@ class Event(object):
 
     @classmethod
     def load(cls, context, event_id, event=None, stack=None):
-        '''Retrieve an Event from the database.'''
+        """Retrieve an Event from the database."""
         from heat.engine import stack as parser
 
         ev = (event if event is not None else
@@ -68,7 +69,7 @@ class Event(object):
                    ev.resource_type, ev.uuid, ev.created_at, ev.id)
 
     def store(self):
-        '''Store the Event in the database.'''
+        """Store the Event in the database."""
         ev = {
             'resource_name': self.resource_name,
             'physical_resource_id': self.physical_resource_id,
@@ -106,7 +107,7 @@ class Event(object):
         return self.id
 
     def identifier(self):
-        '''Return a unique identifier for the event.'''
+        """Return a unique identifier for the event."""
         if self.uuid is None:
             return None
 
