@@ -335,7 +335,7 @@ class HOTemplate20151015(HOTemplate20150430):
         'list_join': hot_funcs.JoinMultiple,
         'repeat': hot_funcs.Repeat,
         'resource_facade': hot_funcs.ResourceFacade,
-        'str_replace': hot_funcs.Replace,
+        'str_replace': hot_funcs.ReplaceJson,
 
         # functions added since 20150430
         'str_split': hot_funcs.StrSplit,

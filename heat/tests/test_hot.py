@@ -490,6 +490,26 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
+    def test_str_replace_map_param(self):
+        """Test str_replace function with non-string params."""
+
+        snippet = {'str_replace': {'template': 'jsonvar1',
+                                   'params': {'jsonvar1': {'foo': 123}}}}
+        snippet_resolved = '{"foo": 123}'
+
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_str_replace_list_param(self):
+        """Test str_replace function with non-string params."""
+
+        snippet = {'str_replace': {'template': 'listvar1',
+                                   'params': {'listvar1': ['foo', 123]}}}
+        snippet_resolved = '["foo", 123]'
+
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
     def test_str_replace_number(self):
         """Test str_replace function with numbers."""
 
