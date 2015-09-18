@@ -13,9 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-  CLI interface for heat management.
-"""
+"""CLI interface for heat management."""
 
 import sys
 
@@ -40,9 +38,9 @@ def do_db_version():
 
 
 def do_db_sync():
-    """
-    Place a database under migration control and upgrade,
-    creating first if necessary.
+    """Place a database under migration control and upgrade.
+
+    Creating first if necessary.
     """
     db_api.db_sync(db_api.get_engine(), CONF.command.version)
 
@@ -91,16 +89,12 @@ class ServiceManageCommand(object):
 
 
 def purge_deleted():
-    """
-    Remove database records that have been previously soft deleted
-    """
+    """Remove database records that have been previously soft deleted."""
     utils.purge_deleted(CONF.command.age, CONF.command.granularity)
 
 
 def do_crypt_parameters_and_properties():
-    """
-    Encrypt or decrypt template hidden parameters and resource properties data.
-    """
+    """Encrypt/decrypt hidden parameters and resource properties data."""
     ctxt = context.get_admin_context()
     prev_encryption_key = CONF.command.previous_encryption_key
     if CONF.command.crypt_operation == "encrypt":
