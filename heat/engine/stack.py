@@ -1270,6 +1270,11 @@ class Stack(collections.Mapping):
             return (child.action == child.CREATE and
                     child.status in (child.FAILED, child.IN_PROGRESS))
 
+        def copy_data(source_res, destination_res):
+            if source_res.data():
+                for key, val in six.iteritems(source_res.data()):
+                    destination_res.data_set(key, val)
+
         for key, backup_res in stack.resources.items():
             # If UpdateReplace is failed, we must restore backup_res
             # to existing_stack in case of it may have dependencies in
@@ -1293,8 +1298,11 @@ class Stack(collections.Mapping):
                     # needed to delete it.
                     self.resources[key].resource_id = backup_res_id
                     self.resources[key].properties = backup_res.properties
+                    copy_data(backup_res, self.resources[key])
+
                     stack.resources[key].resource_id = curr_res_id
                     stack.resources[key].properties = curr_res.properties
+                    copy_data(curr_res, stack.resources[key])
 
         stack.delete(backup=True)
 
