@@ -510,6 +510,16 @@ For example
        constraints:
          - custom_constraint: nova.keypair
 
+The following section lists the custom constraints and the plug-ins
+that support them.
+
+.. table_from_text:: ../../setup.cfg
+   :header: Name,Plug-in
+   :regex: (.*)=(.*)
+   :start-after: heat.constraints =
+   :end-before: heat.stack_lifecycle_plugins =
+   :sort:
+
 .. _hot_spec_pseudo_parameters:
 
 Pseudo parameters
