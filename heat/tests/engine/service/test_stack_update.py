@@ -628,27 +628,6 @@ resources:
       length: 8
     """
 
-    test_res_tmpl = """
-heat_template_version: 2014-10-16
-resources:
-  web_server:
-    type: OS::Heat::TestResource
-    properties:
-      value: Test1
-      fail: False
-      update_replace: False
-      wait_secs: 0
-    """
-
-    test_res_tmpl_update_not_allowed = """
-heat_template_version: 2014-10-16
-resources:
-  web_server:
-    type: OS::Heat::TestResource
-    properties:
-      update_not_allowed: True
-    """
-
     def setUp(self):
         super(ServiceStackUpdatePreviewTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -711,35 +690,11 @@ resources:
             section_contents = [x for x in result[section]]
             self.assertEqual(section_contents, [])
 
-    def test_stack_update_preview_replaced_new_resource(self):
-        # new template with a different resource name
+    def test_stack_update_preview_replaced(self):
+        # new template with a different key_name
         new_tmpl = self.old_tmpl.replace('test', 'test2')
 
         result = self._test_stack_update_preview(self.old_tmpl, new_tmpl)
-
-        replaced = [x for x in result['replaced']][0]
-        self.assertEqual(replaced['resource_name'], 'web_server')
-        empty_sections = ('added', 'deleted', 'unchanged', 'updated')
-        for section in empty_sections:
-            section_contents = [x for x in result[section]]
-            self.assertEqual(section_contents, [])
-
-    def test_stack_update_preview_replaced_handle_update(self):
-        new_tmpl = self.test_res_tmpl.replace('update_replace: False',
-                                              'update_replace: True')
-        result = self._test_stack_update_preview(self.test_res_tmpl, new_tmpl)
-
-        replaced = [x for x in result['replaced']][0]
-        self.assertEqual(replaced['resource_name'], 'web_server')
-        empty_sections = ('added', 'deleted', 'unchanged', 'updated')
-        for section in empty_sections:
-            section_contents = [x for x in result[section]]
-            self.assertEqual(section_contents, [])
-
-    def test_stack_update_preview_replaced_update_not_allowed_prop(self):
-        # new template with a different "value" and "update_replace"
-        result = self._test_stack_update_preview(
-            self.test_res_tmpl, self.test_res_tmpl_update_not_allowed)
 
         replaced = [x for x in result['replaced']][0]
         self.assertEqual(replaced['resource_name'], 'web_server')
