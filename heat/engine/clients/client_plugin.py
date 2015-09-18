@@ -66,7 +66,7 @@ class ClientPlugin(object):
 
     @abc.abstractmethod
     def _create(self):
-        '''Return a newly created client.'''
+        """Return a newly created client."""
         pass
 
     @property
@@ -148,7 +148,7 @@ class ClientPlugin(object):
         return getattr(cfg.CONF.clients, option)
 
     def is_client_exception(self, ex):
-        '''Returns True if the current exception comes from the client.'''
+        """Returns True if the current exception comes from the client."""
         if self.exceptions_module:
             if isinstance(self.exceptions_module, list):
                 for m in self.exceptions_module:
@@ -160,11 +160,11 @@ class ClientPlugin(object):
         return False
 
     def is_not_found(self, ex):
-        '''Returns True if the exception is a not-found.'''
+        """Returns True if the exception is a not-found."""
         return False
 
     def is_over_limit(self, ex):
-        '''Returns True if the exception is an over-limit.'''
+        """Returns True if the exception is an over-limit."""
         return False
 
     def is_conflict(self, ex):
@@ -172,7 +172,7 @@ class ClientPlugin(object):
         return False
 
     def ignore_not_found(self, ex):
-        '''Raises the exception unless it is a not-found.'''
+        """Raises the exception unless it is a not-found."""
         if not self.is_not_found(ex):
             exc_info = sys.exc_info()
             six.reraise(*exc_info)

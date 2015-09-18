@@ -61,14 +61,13 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         return isinstance(ex, exc.HTTPConflict)
 
     def get_image_id(self, image_identifier):
-        '''
-        Return an id for the specified image name or identifier.
+        """Return the ID for the specified image name or identifier.
 
         :param image_identifier: image name or a UUID-like identifier
         :returns: the id of the requested :image_identifier:
         :raises: exception.EntityNotFound,
                  exception.PhysicalResourceNameAmbiguity
-        '''
+        """
         if uuidutils.is_uuid_like(image_identifier):
             try:
                 image_id = self.client().images.get(image_identifier).id
@@ -79,14 +78,13 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         return image_id
 
     def get_image_id_by_name(self, image_identifier):
-        '''
-        Return an id for the specified image name.
+        """Return the ID for the specified image name.
 
         :param image_identifier: image name
         :returns: the id of the requested :image_identifier:
         :raises: exception.EntityNotFound,
                  exception.PhysicalResourceNameAmbiguity
-        '''
+        """
         try:
             filters = {'name': image_identifier}
             image_list = list(self.client().images.list(filters=filters))

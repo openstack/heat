@@ -28,7 +28,7 @@ class ServerCreateProgress(object):
 
 
 class ServerUpdateProgress(ServerCreateProgress):
-    """Keeps track on particular server update task
+    """Keeps track on particular server update task.
 
     ``handler`` is a method of client plugin performing
     required update operation.
@@ -36,13 +36,13 @@ class ServerUpdateProgress(ServerCreateProgress):
     and this method must be resilent to intermittent failures,
     returning ``True`` if API was successfully called, ``False`` otherwise.
 
-    If result of API call is asyncronous, client plugin must have
+    If result of API call is asynchronous, client plugin must have
     corresponding ``check_<handler>`` method.
     Its first positional argument must be ``server_id``
     and it must return ``True`` or ``False`` indicating completeness
     of the update operation.
 
-    For syncronous API calls,
+    For synchronous API calls,
     set ``complete`` attribute of this object to ``True``.
 
     ``[handler|checker]_extra`` arguments, if passed to constructor,
@@ -56,8 +56,6 @@ class ServerUpdateProgress(ServerCreateProgress):
     Missing ``args`` or ``kwargs`` are interpreted
     as empty tuple/dict respectively.
     Defaults are interpreted as both ``args`` and ``kwargs`` being empty.
-
-
     """
     def __init__(self, server_id, handler, complete=False, called=False,
                  handler_extra=None, checker_extra=None):
