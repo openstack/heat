@@ -12,10 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""WSGI script for heat-api-cloudwatch
+"""WSGI script for heat-api-cloudwatch.
 
-Script for running heat-api-cloudwatch under Apache2
-
+Script for running heat-api-cloudwatch under Apache2.
 """
 
 
