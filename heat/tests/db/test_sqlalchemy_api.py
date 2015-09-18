@@ -1578,6 +1578,19 @@ class DBAPIStackTest(common.HeatTestCase):
         for s in deleted:
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
                                                show_deleted=True))
+            rt_id = stacks[s].raw_template_id
+            self.assertRaises(exception.NotFound,
+                              db_api.raw_template_get, ctx, rt_id)
+            self.assertRaises(exception.NotFound,
+                              db_api.resource_get_all_by_stack,
+                              ctx, stacks[s].id)
+            for r in stacks[s].resources:
+                self.assertRaises(exception.NotFound,
+                                  db_api.resource_data_get_all(r))
+            self.assertEqual([],
+                             db_api.event_get_all_by_stack(ctx,
+                                                           stacks[s].id))
+            self.assertIsNone(db_api.user_creds_get(stacks[s].user_creds_id))
 
     def test_stack_get_root_id(self):
         root = create_stack(self.ctx, self.template, self.user_creds,
