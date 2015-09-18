@@ -1073,7 +1073,9 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context,
-            ('validate_template', {'template': json_template, 'params': None})
+            ('validate_template', {'template': json_template, 'params': None,
+                                   'files': None}),
+            version='1.17'
         ).AndReturn(response)
         self.m.ReplayAll()
 
