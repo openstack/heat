@@ -1459,6 +1459,12 @@ class Resource(object):
         '''Returns state, tuple of action, status.'''
         return (self.action, self.status)
 
+    def get_reference_id(self):
+        if self.resource_id is not None:
+            return six.text_type(self.resource_id)
+        else:
+            return six.text_type(self.name)
+
     def FnGetRefId(self):
         '''
         For the intrinsic function Ref.
@@ -1467,11 +1473,7 @@ class Resource(object):
         '''
         if self.stack.has_cache_data(self.name):
             return self.stack.cache_data_reference_id(self.name)
-
-        if self.resource_id is not None:
-            return six.text_type(self.resource_id)
-        else:
-            return six.text_type(self.name)
+        return self.get_reference_id()
 
     def physical_resource_name_or_FnGetRefId(self):
         res_name = self.physical_resource_name()

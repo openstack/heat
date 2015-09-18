@@ -122,11 +122,7 @@ class NeutronResource(resource.Resource):
         attributes = self._show_resource()
         return attributes[name]
 
-    def FnGetRefId(self):
-        # convergence: try some luck with cached data first
-        if self.stack.has_cache_data(self.name):
-            return self.stack.cache_data_reference_id(self.name)
-
+    def get_reference_id(self):
         return six.text_type(self.resource_id)
 
     @staticmethod

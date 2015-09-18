@@ -177,7 +177,7 @@ class ElasticIp(resource.Resource):
                         server = self.client().servers.get(instance_id_old)
                         server.remove_floating_ip(self._ipaddress())
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         eip = self._ipaddress()
         if eip:
             return six.text_type(eip)

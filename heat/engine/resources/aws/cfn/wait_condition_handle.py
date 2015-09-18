@@ -35,10 +35,7 @@ class WaitConditionHandle(wc_base.BaseWaitConditionHandle):
         'Data', 'Reason', 'Status', 'UniqueId'
     )
 
-    def FnGetRefId(self):
-        '''
-        Override the default resource FnGetRefId so we return the signed URL
-        '''
+    def get_reference_id(self):
         if self.resource_id:
             wc = signal_responder.WAITCONDITION
             return six.text_type(self._get_ec2_signed_url(signal_type=wc))
