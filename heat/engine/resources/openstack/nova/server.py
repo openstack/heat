@@ -412,7 +412,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
               'the provided keypair. POLL_SERVER_HEAT will allow calls to '
               'the Heat API resource-show using the provided keystone '
               'credentials. POLL_TEMP_URL will create and populate a '
-              'Swift TempURL with metadata for polling.'),
+              'Swift TempURL with metadata for polling. ZAQAR_MESSAGE will '
+              'create a dedicated zaqar queue and post the metadata '
+              'for polling.'),
             default=cfg.CONF.default_software_config_transport,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
