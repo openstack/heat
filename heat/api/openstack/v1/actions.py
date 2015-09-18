@@ -22,8 +22,8 @@ from heat.rpc import client as rpc_client
 
 
 class ActionController(object):
-    """
-    WSGI controller for Actions in Heat v1 API
+    """WSGI controller for Actions in Heat v1 API.
+
     Implements the API for stack actions
     """
     # Define request scope (must match what is in policy.json)
@@ -41,9 +41,10 @@ class ActionController(object):
 
     @util.identified_stack
     def action(self, req, identity, body=None):
-        """
-        Performs a specified action on a stack, the body is expecting to
-        contain exactly one item whose key specifies the action
+        """Performs a specified action on a stack.
+
+        The body is expecting to contain exactly one item whose key specifies
+        the action.
         """
         body = body or {}
         if len(body) < 1:
@@ -69,9 +70,7 @@ class ActionController(object):
 
 
 def create_resource(options):
-    """
-    Actions action factory method.
-    """
+    """Actions action factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(ActionController(options), deserializer, serializer)

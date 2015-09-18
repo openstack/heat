@@ -20,9 +20,9 @@ from heat.rpc import client as rpc_client
 
 
 class BuildInfoController(object):
-    """
-    WSGI controller for BuildInfo in Heat v1 API
-    Returns build information for current app
+    """WSGI controller for BuildInfo in Heat v1 API.
+
+    Returns build information for current app.
     """
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'build_info'
@@ -43,9 +43,7 @@ class BuildInfoController(object):
 
 
 def create_resource(options):
-    """
-    BuildInfo factory method.
-    """
+    """BuildInfo factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(BuildInfoController(options), deserializer,

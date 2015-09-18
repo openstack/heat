@@ -51,8 +51,6 @@ class SignalController(object):
 
 
 def create_resource(options):
-    """
-    Signal resource factory method.
-    """
+    """Signal resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     return wsgi.Resource(SignalController(options), deserializer)

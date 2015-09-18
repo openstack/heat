@@ -20,9 +20,9 @@ from heat.rpc import client as rpc_client
 
 
 class SoftwareDeploymentController(object):
-    """
-    WSGI controller for Software deployments in Heat v1 API
-    Implements the API actions
+    """WSGI controller for Software deployments in Heat v1 API.
+
+    Implements the API actions.
     """
 
     REQUEST_SCOPE = 'software_deployments'
@@ -36,9 +36,7 @@ class SoftwareDeploymentController(object):
 
     @util.policy_enforce
     def index(self, req):
-        """
-        List software deployments.
-        """
+        """List software deployments."""
         whitelist = {
             'server_id': 'single',
         }
@@ -48,9 +46,9 @@ class SoftwareDeploymentController(object):
 
     @util.policy_enforce
     def metadata(self, req, server_id):
-        """
-        List software deployments grouped by the group name for the requested
-        server.
+        """List software deployments grouped by the group name.
+
+        This is done for the requested server.
         """
         sds = self.rpc_client.metadata_software_deployments(
             req.context, server_id=server_id)
@@ -58,18 +56,14 @@ class SoftwareDeploymentController(object):
 
     @util.policy_enforce
     def show(self, req, deployment_id):
-        """
-        Gets detailed information for a software deployment
-        """
+        """Gets detailed information for a software deployment."""
         sd = self.rpc_client.show_software_deployment(req.context,
                                                       deployment_id)
         return {'software_deployment': sd}
 
     @util.policy_enforce
     def create(self, req, body):
-        """
-        Create a new software deployment
-        """
+        """Create a new software deployment."""
         create_data = dict((k, body.get(k)) for k in (
             'config_id', 'server_id', 'input_values',
             'action', 'status', 'status_reason', 'stack_user_project_id'))
@@ -80,9 +74,7 @@ class SoftwareDeploymentController(object):
 
     @util.policy_enforce
     def update(self, req, deployment_id, body):
-        """
-        Update an existing software deployment
-        """
+        """Update an existing software deployment."""
         update_data = dict((k, body.get(k)) for k in (
             'config_id', 'input_values', 'output_values', 'action',
             'status', 'status_reason')
@@ -94,9 +86,7 @@ class SoftwareDeploymentController(object):
 
     @util.policy_enforce
     def delete(self, req, deployment_id):
-        """
-        Delete an existing software deployment
-        """
+        """Delete an existing software deployment."""
         res = self.rpc_client.delete_software_deployment(req.context,
                                                          deployment_id)
 
@@ -107,9 +97,7 @@ class SoftwareDeploymentController(object):
 
 
 def create_resource(options):
-    """
-    Software deployments resource factory method.
-    """
+    """Software deployments resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(

@@ -14,8 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""A middleware that turns exceptions into parsable string. Inspired by
-Cinder's faultwrapper
+"""A middleware that turns exceptions into parsable string.
+
+Inspired by Cinder's faultwrapper.
 """
 import six
 
