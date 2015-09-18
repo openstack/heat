@@ -44,13 +44,11 @@ class TestResource(resource.Resource):
     PROPERTIES = (
         VALUE, UPDATE_REPLACE, FAIL,
         CLIENT_NAME, ENTITY_NAME,
-        WAIT_SECS, ACTION_WAIT_SECS,
-        UPDATE_NOT_ALLOWED
+        WAIT_SECS, ACTION_WAIT_SECS
     ) = (
         'value', 'update_replace', 'fail',
         'client_name', 'entity_name',
-        'wait_secs', 'action_wait_secs',
-        'update_not_allowed'
+        'wait_secs', 'action_wait_secs'
     )
 
     ATTRIBUTES = (
@@ -78,12 +76,6 @@ class TestResource(resource.Resource):
             _('Value which can be set to trigger update replace for '
               'the particular resource'),
             update_allowed=True,
-            default=False
-        ),
-        UPDATE_NOT_ALLOWED: properties.Schema(
-            properties.Schema.BOOLEAN,
-            _('Property for which updates are not allowed'),
-            update_allowed=False,
             default=False
         ),
         WAIT_SECS: properties.Schema(
