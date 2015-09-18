@@ -35,9 +35,7 @@ _RESOURCE_KEYS = (
 
 
 class HOTemplate20130523(template.Template):
-    """
-    A Heat Orchestration Template format stack template.
-    """
+    """A Heat Orchestration Template format stack template."""
 
     SECTIONS = (
         VERSION, DESCRIPTION, PARAMETER_GROUPS,

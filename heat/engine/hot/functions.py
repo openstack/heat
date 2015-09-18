@@ -26,8 +26,7 @@ from heat.engine import function
 
 
 class GetParam(function.Function):
-    '''
-    A function for resolving parameter references.
+    """A function for resolving parameter references.
 
     Takes the form::
 
@@ -39,7 +38,7 @@ class GetParam(function.Function):
           - <param_name>
           - <path1>
           - ...
-    '''
+    """
 
     def __init__(self, stack, fn_name, args):
         super(GetParam, self).__init__(stack, fn_name, args)
@@ -91,8 +90,7 @@ class GetParam(function.Function):
 
 
 class GetAttThenSelect(cfn_funcs.GetAtt):
-    '''
-    A function for resolving resource attributes.
+    """A function for resolving resource attributes.
 
     Takes the form::
 
@@ -101,7 +99,7 @@ class GetAttThenSelect(cfn_funcs.GetAtt):
           - <attribute_name>
           - <path1>
           - ...
-    '''
+    """
 
     def _parse_args(self):
         if (not isinstance(self.args, collections.Sequence) or
@@ -222,8 +220,7 @@ class GetAttAllAttributes(GetAtt):
 
 
 class Replace(cfn_funcs.Replace):
-    '''
-    A function for performing string substitutions.
+    """A function for performing string substitutions.
 
     Takes the form::
 
@@ -240,7 +237,7 @@ class Replace(cfn_funcs.Replace):
 
     This is implemented using Python's str.replace on each key. The order in
     which replacements are performed is undefined.
-    '''
+    """
 
     def _parse_args(self):
         if not isinstance(self.args, collections.Mapping):
@@ -314,8 +311,7 @@ class ReplaceJson(Replace):
 
 
 class GetFile(function.Function):
-    """
-    A function for including a file inline.
+    """A function for including a file inline.
 
     Takes the form::
 
@@ -346,8 +342,7 @@ class GetFile(function.Function):
 
 
 class Join(cfn_funcs.Join):
-    '''
-    A function for joining strings.
+    """A function for joining strings.
 
     Takes the form::
 
@@ -356,13 +351,11 @@ class Join(cfn_funcs.Join):
     And resolves to::
 
         "<string_1><delim><string_2><delim>..."
-
-    '''
+    """
 
 
 class JoinMultiple(function.Function):
-    '''
-    A function for joining strings.
+    """A function for joining strings.
 
     Takes the form::
 
@@ -373,7 +366,7 @@ class JoinMultiple(function.Function):
         "<string_1><delim><string_2><delim>..."
 
     Optionally multiple lists may be specified, which will also be joined.
-    '''
+    """
 
     def __init__(self, stack, fn_name, args):
         super(JoinMultiple, self).__init__(stack, fn_name, args)
@@ -435,7 +428,8 @@ class JoinMultiple(function.Function):
 
 
 class ResourceFacade(cfn_funcs.ResourceFacade):
-    '''
+    """A function for retrieving data in a parent provider template.
+
     A function for obtaining data from the facade resource from within the
     corresponding provider template.
 
@@ -445,7 +439,7 @@ class ResourceFacade(cfn_funcs.ResourceFacade):
 
     where the valid attribute types are "metadata", "deletion_policy" and
     "update_policy".
-    '''
+    """
 
     _RESOURCE_ATTRIBUTES = (
         METADATA, DELETION_POLICY, UPDATE_POLICY,
@@ -455,10 +449,10 @@ class ResourceFacade(cfn_funcs.ResourceFacade):
 
 
 class Removed(function.Function):
-    '''
-    This function existed in previous versions of HOT, but has been removed.
+    """This function existed in previous versions of HOT, but has been removed.
+
     Check the HOT guide for an equivalent native function.
-    '''
+    """
 
     def validate(self):
         exp = (_("The function %s is not supported in this version of HOT.") %
@@ -470,8 +464,7 @@ class Removed(function.Function):
 
 
 class Repeat(function.Function):
-    '''
-    A function for iterating over a list of items.
+    """A function for iterating over a list of items.
 
     Takes the form::
 
@@ -484,7 +477,7 @@ class Repeat(function.Function):
     The result is a new list of the same size as <list>, where each element
     is a copy of <body> with any occurrences of <var> replaced with the
     corresponding item of <list>.
-    '''
+    """
     def __init__(self, stack, fn_name, args):
         super(Repeat, self).__init__(stack, fn_name, args)
 
@@ -538,8 +531,7 @@ class Repeat(function.Function):
 
 
 class Digest(function.Function):
-    '''
-    A function for performing digest operations.
+    """A function for performing digest operations.
 
     Takes the form::
 
@@ -549,7 +541,7 @@ class Digest(function.Function):
 
     Valid algorithms are the ones provided by natively by hashlib (md5, sha1,
     sha224, sha256, sha384, and sha512) or any one provided by OpenSSL.
-    '''
+    """
 
     def validate_usage(self, args):
         if not (isinstance(args, list) and
@@ -584,9 +576,9 @@ class Digest(function.Function):
 
 
 class StrSplit(function.Function):
-    '''
-    A function for splitting delimited strings into a list
-    and optionally extracting a specific list member by index.
+    """A function for splitting delimited strings into a list.
+
+    Optionally extracting a specific list member by index.
 
     Takes the form::
 
@@ -601,7 +593,7 @@ class StrSplit(function.Function):
     If <index> is specified, the specified list item will be returned
     otherwise, the whole list is returned, similar to get_attr with
     path based attributes accessing lists.
-    '''
+    """
 
     def __init__(self, stack, fn_name, args):
         super(StrSplit, self).__init__(stack, fn_name, args)

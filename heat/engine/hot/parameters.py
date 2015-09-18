@@ -51,8 +51,7 @@ class HOTParamSchema(parameters.Schema):
 
     @classmethod
     def from_dict(cls, param_name, schema_dict):
-        """
-        Return a Parameter Schema object from a legacy schema dictionary.
+        """Return a Parameter Schema object from a legacy schema dictionary.
 
         :param param_name: name of the parameter owning the schema; used
                for more verbose logging
@@ -117,9 +116,7 @@ class HOTParameters(parameters.Parameters):
     )
 
     def set_stack_id(self, stack_identifier):
-        '''
-        Set the StackId pseudo parameter value
-        '''
+        """Set the StackId pseudo parameter value."""
         if stack_identifier is not None:
             self.params[self.PARAM_STACK_ID].schema.set_default(
                 stack_identifier.stack_id)
