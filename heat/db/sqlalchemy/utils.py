@@ -18,9 +18,7 @@ import sqlalchemy
 
 def clone_table(name, parent, meta, newcols=[], ignorecols=[], swapcols={},
                 ignorecons=[]):
-    """
-    helper function that clones parent table schema onto
-    new table.
+    """Helper function that clones parent table schema onto new table.
 
     :param name: new table name
     :param parent: parent table to copy schema from

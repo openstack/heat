@@ -10,9 +10,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-"""
-SQLAlchemy models for heat data.
-"""
+
+"""SQLAlchemy models for heat data."""
 
 import uuid
 
@@ -119,6 +118,7 @@ class StackTag(BASE, HeatBase):
 
 class SyncPoint(BASE, HeatBase):
     """Represents an syncpoint for an stack that is being worked on."""
+
     __tablename__ = 'sync_point'
     __table_args__ = (
         sqlalchemy.PrimaryKeyConstraint('entity_id',
@@ -198,9 +198,9 @@ class StackLock(BASE, HeatBase):
 
 
 class UserCreds(BASE, HeatBase):
-    """
-    Represents user credentials and mirrors the 'context'
-    handed in by wsgi.
+    """Represents user credentials.
+
+    Also, mirrors the 'context' handed in by wsgi.
     """
 
     __tablename__ = 'user_creds'
@@ -347,9 +347,10 @@ class WatchData(BASE, HeatBase):
 
 
 class SoftwareConfig(BASE, HeatBase):
-    """
-    Represents a software configuration resource to be applied to
-    one or more servers.
+    """Represents a software configuration resource.
+
+    Represents a software configuration resource to be applied to one or more
+    servers.
     """
 
     __tablename__ = 'software_config'
@@ -364,9 +365,10 @@ class SoftwareConfig(BASE, HeatBase):
 
 
 class SoftwareDeployment(BASE, HeatBase, StateAware):
-    """
-    Represents applying a software configuration resource to a
-    single server resource.
+    """Represents a software deployment resource.
+
+    Represents applying a software configuration resource to a single server
+    resource.
     """
 
     __tablename__ = 'software_deployment'
