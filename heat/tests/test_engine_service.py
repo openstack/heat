@@ -564,6 +564,27 @@ class StackServiceTest(common.HeatTestCase):
                                                    )
 
     @mock.patch.object(stack_object.Stack, 'get_all')
+    def test_stack_list_passes_filter_translated(self, mock_stack_get_all):
+        filters = {'stack_name': 'bar'}
+        self.eng.list_stacks(self.ctx, filters=filters)
+        translated = {'name': 'bar'}
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   translated,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   )
+
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_tenant_safe_defaults_to_true(self, mock_stack_get_all):
         self.eng.list_stacks(self.ctx)
         mock_stack_get_all.assert_called_once_with(mock.ANY,

@@ -85,6 +85,90 @@ def extract_args(params):
     return kwargs
 
 
+def _parse_object_status(status):
+    """Parse input status into action and status if possible.
+
+    This function parses a given string (or list of strings) and see if it
+    contains the action part. The action part is exacted if found.
+
+    :param status: A string or a list of strings where each string contains
+                   a status to be checked.
+    :returns: (actions, statuses) tuple, where actions is a set of actions
+              extracted from the input status and statuses is a set of pure
+              object status.
+    """
+
+    if not isinstance(status, list):
+        status = [status]
+
+    status_set = set()
+    action_set = set()
+    for val in status:
+        # Note: cannot reference Stack.STATUSES due to circular reference issue
+        for s in ('COMPLETE', 'FAILED', 'IN_PROGRESS'):
+            index = val.rfind(s)
+            if index != -1:
+                status_set.add(val[index:])
+                if index > 1:
+                    action_set.add(val[:index - 1])
+                break
+
+    return action_set, status_set
+
+
+def translate_filters(params):
+    """Translate filter names to their corresponding DB field names.
+
+    :param params: A dictionary containing keys from engine.api.STACK_KEYS
+                    and other keys previously leaked to users.
+    :returns: A dict containing only valid DB filed names.
+    """
+    key_map = {
+        rpc_api.STACK_NAME: 'name',
+        rpc_api.STACK_ACTION: 'action',
+        rpc_api.STACK_STATUS: 'status',
+        rpc_api.STACK_STATUS_DATA: 'status_reason',
+        rpc_api.STACK_DISABLE_ROLLBACK: 'disable_rollback',
+        rpc_api.STACK_TIMEOUT: 'timeout',
+        rpc_api.STACK_OWNER: 'username',
+        rpc_api.STACK_PARENT: 'owner_id',
+        rpc_api.STACK_USER_PROJECT_ID: 'stack_user_project_id',
+    }
+
+    for key, field in key_map.items():
+        value = params.pop(key, None)
+        if not value:
+            continue
+
+        fld_value = params.get(field, None)
+        if fld_value:
+            if not isinstance(fld_value, list):
+                fld_value = [fld_value]
+            if not isinstance(value, list):
+                value = [value]
+
+            value.extend(fld_value)
+
+        params[field] = value
+
+    # Deal with status which might be of form <ACTION>_<STATUS>, e.g.
+    # "CREATE_FAILED". Note this logic is still not ideal due to the fact
+    # that action and status are stored separately.
+    if 'status' in params:
+        a_set, s_set = _parse_object_status(params['status'])
+        statuses = sorted(s_set)
+        params['status'] = statuses[0] if len(statuses) == 1 else statuses
+
+        if a_set:
+            a = params.get('action', [])
+            action_set = set(a) if isinstance(a, list) else set([a])
+            actions = sorted(action_set.union(a_set))
+
+            params['action'] = actions[0] if len(actions) == 1 else actions
+
+    return params
+
+
 def format_stack_outputs(stack, outputs):
     '''
     Return a representation of the given output template for the given stack

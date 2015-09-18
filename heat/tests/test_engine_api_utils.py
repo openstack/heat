@@ -1138,3 +1138,126 @@ class TestExtractArgs(common.HeatTestCase):
         exc = self.assertRaises(ValueError, api.extract_args, p)
         self.assertIn('Invalid tag, "tag2," contains a comma',
                       six.text_type(exc))
+
+
+class TranslateFilterTest(common.HeatTestCase):
+    scenarios = [
+        (
+            'single+single',
+            dict(inputs={'stack_status': 'COMPLETE', 'status': 'FAILED'},
+                 expected={'status': ['COMPLETE', 'FAILED']})
+        ), (
+            'none+single',
+            dict(inputs={'name': 'n1'},
+                 expected={'name': 'n1'})
+        ), (
+            'single+none',
+            dict(inputs={'stack_name': 'n1'},
+                 expected={'name': 'n1'})
+        ), (
+            'none+list',
+            dict(inputs={'action': ['a1', 'a2']},
+                 expected={'action': ['a1', 'a2']})
+        ), (
+            'list+none',
+            dict(inputs={'stack_action': ['a1', 'a2']},
+                 expected={'action': ['a1', 'a2']})
+        ), (
+            'single+list',
+            dict(inputs={'stack_owner': 'u1', 'username': ['u2', 'u3']},
+                 expected={'username': ['u1', 'u2', 'u3']})
+        ), (
+            'list+single',
+            dict(inputs={'parent': ['s1', 's2'], 'owner_id': 's3'},
+                 expected={'owner_id': ['s1', 's2', 's3']})
+        ), (
+            'list+list',
+            dict(inputs={'stack_name': ['n1', 'n2'], 'name': ['n3', 'n4']},
+                 expected={'name': ['n1', 'n2', 'n3', 'n4']})
+        ), (
+            'full_status_split',
+            dict(inputs={'stack_status': 'CREATE_COMPLETE'},
+                 expected={'action': 'CREATE', 'status': 'COMPLETE'})
+        ), (
+            'full_status_split_merge',
+            dict(inputs={'stack_status': 'CREATE_COMPLETE',
+                         'status': 'CREATE_FAILED'},
+                 expected={'action': 'CREATE',
+                           'status': ['COMPLETE', 'FAILED']})
+        ), (
+            'action_status_merge',
+            dict(inputs={'action': ['UPDATE', 'CREATE'],
+                         'status': 'CREATE_FAILED'},
+                 expected={'action': ['CREATE', 'UPDATE'],
+                           'status': 'FAILED'})
+        )
+    ]
+
+    def test_stack_filter_translate(self):
+        actual = api.translate_filters(self.inputs)
+        self.assertEqual(self.expected, actual)
+
+
+class ParseStatusTest(common.HeatTestCase):
+    scenarios = [
+        (
+            'single_bogus',
+            dict(inputs='bogus status',
+                 expected=(set(), set()))
+        ), (
+            'list_bogus',
+            dict(inputs=['foo', 'bar'],
+                 expected=(set(), set()))
+        ), (
+            'single_partial',
+            dict(inputs='COMPLETE',
+                 expected=(set(), set(['COMPLETE'])))
+        ), (
+            'multi_partial',
+            dict(inputs=['FAILED', 'COMPLETE'],
+                 expected=(set(), set(['FAILED', 'COMPLETE'])))
+        ), (
+            'multi_partial_dup',
+            dict(inputs=['FAILED', 'FAILED'],
+                 expected=(set(), set(['FAILED'])))
+        ), (
+            'single_full',
+            dict(inputs=['DELETE_FAILED'],
+                 expected=(set(['DELETE']), set(['FAILED'])))
+        ), (
+            'multi_full',
+            dict(inputs=['DELETE_FAILED', 'CREATE_COMPLETE'],
+                 expected=(set(['CREATE', 'DELETE']),
+                           set(['COMPLETE', 'FAILED'])))
+        ), (
+            'mix_bogus_partial',
+            dict(inputs=['delete_failed', 'COMPLETE'],
+                 expected=(set(), set(['COMPLETE'])))
+        ), (
+            'mix_bogus_full',
+            dict(inputs=['delete_failed', 'action_COMPLETE'],
+                 expected=(set(['action']), set(['COMPLETE'])))
+        ), (
+            'mix_bogus_full_incomplete',
+            dict(inputs=['delete_failed', '_COMPLETE'],
+                 expected=(set(), set(['COMPLETE'])))
+        ), (
+            'mix_partial_full',
+            dict(inputs=['FAILED', 'b_COMPLETE'],
+                 expected=(set(['b']),
+                           set(['COMPLETE', 'FAILED'])))
+        ), (
+            'mix_full_dup',
+            dict(inputs=['a_FAILED', 'a_COMPLETE'],
+                 expected=(set(['a']),
+                           set(['COMPLETE', 'FAILED'])))
+        ), (
+            'mix_full_dup_2',
+            dict(inputs=['a_FAILED', 'b_FAILED'],
+                 expected=(set(['a', 'b']), set(['FAILED'])))
+        )
+    ]
+
+    def test_stack_parse_status(self):
+        actual = api._parse_object_status(self.inputs)
+        self.assertEqual(self.expected, actual)
