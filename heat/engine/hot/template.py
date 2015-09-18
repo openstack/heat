@@ -83,6 +83,12 @@ class HOTemplate20130523(template.Template):
         'get_file': hot_funcs.GetFile,
     }
 
+    deletion_policies = {
+        'Delete': rsrc_defn.ResourceDefinition.DELETE,
+        'Retain': rsrc_defn.ResourceDefinition.RETAIN,
+        'Snapshot': rsrc_defn.ResourceDefinition.SNAPSHOT
+    }
+
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
         # first translate from CFN into HOT terminology if necessary
@@ -250,12 +256,20 @@ class HOTemplate20130523(template.Template):
             if isinstance(depends, six.string_types):
                 depends = [depends]
 
+            deletion_policy = data.get(RES_DELETION_POLICY)
+            if deletion_policy is not None:
+                if deletion_policy not in self.deletion_policies:
+                    msg = _('Invalid deletion policy "%s"') % deletion_policy
+                    raise exception.StackValidationFailed(message=msg)
+                else:
+                    deletion_policy = self.deletion_policies[deletion_policy]
+
             kwargs = {
                 'resource_type': data.get(RES_TYPE),
                 'properties': data.get(RES_PROPERTIES),
                 'metadata': data.get(RES_METADATA),
                 'depends': depends,
-                'deletion_policy': data.get(RES_DELETION_POLICY),
+                'deletion_policy': deletion_policy,
                 'update_policy': data.get(RES_UPDATE_POLICY),
                 'description': None
             }

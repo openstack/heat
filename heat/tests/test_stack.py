@@ -1920,6 +1920,44 @@ class StackTest(common.HeatTestCase):
         self.assertIn('Outputs must contain Output. '
                       'Found a [%s] instead' % type([]), six.text_type(ex))
 
+    def test_incorrect_deletion_policy(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            DeletionPolicy: wibble
+            Properties:
+              Foo: abc
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_bad_delpol',
+                                 template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn('Invalid deletion policy "wibble"',
+                      six.text_type(ex))
+
+    def test_incorrect_deletion_policy_hot(self):
+        tmpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        resources:
+          AResource:
+            type: ResourceWithPropsType
+            deletion_policy: wibble
+            properties:
+              Foo: abc
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_bad_delpol',
+                                 template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn('Invalid deletion policy "wibble"',
+                      six.text_type(ex))
+
     def test_incorrect_outputs_hot_get_attr(self):
         tmpl = {'heat_template_version': '2013-05-23',
                 'resources': {
