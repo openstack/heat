@@ -158,7 +158,8 @@ engine_opts = [
     cfg.StrOpt('default_software_config_transport',
                choices=['POLL_SERVER_CFN',
                         'POLL_SERVER_HEAT',
-                        'POLL_TEMP_URL'],
+                        'POLL_TEMP_URL',
+                        'ZAQAR_MESSAGE'],
                default='POLL_SERVER_CFN',
                help=_('Template default for how the server should receive the '
                       'metadata required for software configuration. '
@@ -171,11 +172,14 @@ engine_opts = [
                       'stack_user_* config options). '
                       'POLL_TEMP_URL will create and populate a '
                       'Swift TempURL with metadata for polling (requires '
-                      'object-store endpoint which supports TempURL).')),
+                      'object-store endpoint which supports TempURL).'
+                      'ZAQAR_MESSAGE will create a dedicated zaqar queue and '
+                      'post the metadata for polling.')),
     cfg.StrOpt('default_deployment_signal_transport',
                choices=['CFN_SIGNAL',
                         'TEMP_URL_SIGNAL',
-                        'HEAT_SIGNAL'],
+                        'HEAT_SIGNAL',
+                        'ZAQAR_SIGNAL'],
                default='CFN_SIGNAL',
                help=_('Template default for how the server should signal to '
                       'heat with the deployment output values. CFN_SIGNAL '
@@ -186,7 +190,9 @@ engine_opts = [
                       'which supports TempURL). '
                       'HEAT_SIGNAL will allow calls to the Heat API '
                       'resource-signal using the provided keystone '
-                      'credentials')),
+                      'credentials. ZAQAR_SIGNAL will create a dedicated '
+                      'zaqar queue to be signaled using the provided keystone '
+                      'credentials.')),
     cfg.ListOpt('hidden_stack_tags',
                 default=[],
                 help=_('Stacks containing these tag names will be hidden. '

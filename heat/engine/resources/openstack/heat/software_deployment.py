@@ -156,7 +156,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
               'keypair signed URL. TEMP_URL_SIGNAL will create a '
               'Swift TempURL to be signaled via HTTP PUT. HEAT_SIGNAL '
               'will allow calls to the Heat API resource-signal using the '
-              'provided keystone credentials. ZAQAR_SIGNAL will create a'
+              'provided keystone credentials. ZAQAR_SIGNAL will create a '
               'dedicated zaqar queue to be signaled using the provided '
               'keystone credentials. NO_SIGNAL will result in the resource '
               'going to the COMPLETE state without waiting for any signal.'),
