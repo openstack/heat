@@ -458,8 +458,11 @@ def format_validate_parameter(param):
         rpc_api.PARAM_LABEL: param.label()
     }
 
-    if param.has_value():
-        res[rpc_api.PARAM_DEFAULT] = param.value()
+    if param.has_default():
+        res[rpc_api.PARAM_DEFAULT] = param.default()
+
+    if param.user_value:
+        res[rpc_api.PARAM_VALUE] = param.user_value
 
     constraint_description = []
 

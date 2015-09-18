@@ -74,6 +74,20 @@ resources:
                                    'Type': 'Number'}}}
         self.assertEqual(expected, ret)
 
+    def test_template_validate_override_default(self):
+        env = {'parameters': {'aparam': 5}}
+        ret = self.client.stacks.validate(template=self.random_template,
+                                          environment=env)
+        expected = {'Description': 'the stack description',
+                    'Parameters': {
+                        'aparam': {'Default': 10,
+                                   'Value': 5,
+                                   'Description': 'the param description',
+                                   'Label': 'aparam',
+                                   'NoEcho': 'false',
+                                   'Type': 'Number'}}}
+        self.assertEqual(expected, ret)
+
     def test_template_validate_basic_required_param(self):
         tmpl = self.random_template.replace('default: 10', '')
         ret = self.client.stacks.validate(template=tmpl)
