@@ -102,6 +102,12 @@ class ResourceWithPropsRefPropOnDelete(ResourceWithProps):
         return self.properties['FooInt'] is not None
 
 
+class ResourceWithPropsRefPropOnValidate(ResourceWithProps):
+    def validate(self):
+        super(ResourceWithPropsRefPropOnValidate, self).validate()
+        self.properties['FooInt'] is not None
+
+
 class ResourceWithPropsAndAttrs(ResourceWithProps):
     attributes_schema = {'Bar': attributes.Schema('Something.')}
 
