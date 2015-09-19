@@ -32,11 +32,17 @@ class SaharaCluster(resource.Resource):
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, CLUSTER_TEMPLATE_ID,
         KEY_NAME, IMAGE, MANAGEMENT_NETWORK, IMAGE_ID,
-        USE_AUTOCONFIG
+        USE_AUTOCONFIG, SHARES
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'cluster_template_id',
         'key_name', 'image', 'neutron_management_network', 'default_image_id',
-        'use_autoconfig'
+        'use_autoconfig', 'shares'
+    )
+
+    _SHARE_KEYS = (
+        SHARE_ID, PATH, ACCESS_LEVEL
+    ) = (
+        'id', 'path', 'access_level'
     )
 
     ATTRIBUTES = (
@@ -116,6 +122,35 @@ class SaharaCluster(resource.Resource):
             properties.Schema.BOOLEAN,
             _("Configure most important configs automatically."),
             support_status=support.SupportStatus(version='5.0.0')
+        ),
+        SHARES: properties.Schema(
+            properties.Schema.LIST,
+            _("List of manila shares to be mounted."),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    SHARE_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Id of the manila share."),
+                        required=True
+                    ),
+                    PATH: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Local path on each cluster node on which to mount "
+                          "the share. Defaults to '/mnt/{share_id}'.")
+                    ),
+                    ACCESS_LEVEL: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Governs permissions set in manila for the cluster "
+                          "ips."),
+                        constraints=[
+                            constraints.AllowedValues(['rw', 'ro']),
+                        ],
+                        default='rw'
+                    )
+                }
+            ),
+            support_status=support.SupportStatus(version='6.0.0')
         )
     }
 
@@ -183,6 +218,7 @@ class SaharaCluster(resource.Resource):
                 net_id = self.client_plugin('nova').get_nova_network_id(
                     net_id)
         use_autoconfig = self.properties[self.USE_AUTOCONFIG]
+        shares = self.properties[self.SHARES]
 
         cluster = self.client().clusters.create(
             self._cluster_name(),
@@ -191,7 +227,8 @@ class SaharaCluster(resource.Resource):
             user_keypair_id=key_name,
             default_image_id=image_id,
             net_id=net_id,
-            use_autoconfig=use_autoconfig)
+            use_autoconfig=use_autoconfig,
+            shares=shares)
         LOG.info(_LI('Cluster "%s" is being started.'), cluster.name)
         self.resource_id_set(cluster.id)
         return self.resource_id
