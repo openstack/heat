@@ -43,6 +43,9 @@ resources:
           - namenode
           - jobtracker
         is_proxy_gateway: True
+        shares:
+          - id: e45eaabf-9300-42e2-b6eb-9ebc92081f46
+            access_level: ro
 """
 
 cluster_template = """
@@ -162,7 +165,10 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
             'image_id': None,
             'is_proxy_gateway': True,
             'volume_local_to_instance': None,
-            'use_autoconfig': None
+            'use_autoconfig': None,
+            'shares': [{'id': 'e45eaabf-9300-42e2-b6eb-9ebc92081f46',
+                        'access_level': 'ro',
+                        'path': None}]
         }
         self.ngt_mgr.create.assert_called_once_with(**args)
 
@@ -269,7 +275,10 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
             'image_id': None,
             'is_proxy_gateway': True,
             'volume_local_to_instance': None,
-            'use_autoconfig': None
+            'use_autoconfig': None,
+            'shares': [{'id': 'e45eaabf-9300-42e2-b6eb-9ebc92081f46',
+                        'access_level': 'ro',
+                        'path': None}]
         }
         self.ngt_mgr.update.assert_called_once_with('some_ng_id', **args)
         self.assertEqual((ngt.UPDATE, ngt.COMPLETE), ngt.state)
