@@ -358,17 +358,25 @@ class SaharaClusterTemplate(resource.Resource):
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, DESCRIPTION,
         ANTI_AFFINITY, MANAGEMENT_NETWORK,
-        CLUSTER_CONFIGS, NODE_GROUPS, IMAGE_ID, USE_AUTOCONFIG
+        CLUSTER_CONFIGS, NODE_GROUPS, IMAGE_ID, USE_AUTOCONFIG,
+        SHARES
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'description',
         'anti_affinity', 'neutron_management_network',
-        'cluster_configs', 'node_groups', 'default_image_id', 'use_autoconfig'
+        'cluster_configs', 'node_groups', 'default_image_id', 'use_autoconfig',
+        'shares'
     )
 
     _NODE_GROUP_KEYS = (
         NG_NAME, COUNT, NG_TEMPLATE_ID,
     ) = (
         'name', 'count', 'node_group_template_id',
+    )
+
+    _SHARE_KEYS = (
+        SHARE_ID, PATH, ACCESS_LEVEL
+    ) = (
+        'id', 'path', 'access_level'
     )
 
     properties_schema = {
@@ -463,6 +471,36 @@ class SaharaClusterTemplate(resource.Resource):
             properties.Schema.BOOLEAN,
             _("Configure most important configs automatically."),
             support_status=support.SupportStatus(version='5.0.0')
+        ),
+        SHARES: properties.Schema(
+            properties.Schema.LIST,
+            _("List of manila shares to be mounted."),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    SHARE_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Id of the manila share."),
+                        required=True
+                    ),
+                    PATH: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Local path on each cluster node on which to mount "
+                          "the share. Defaults to '/mnt/{share_id}'.")
+                    ),
+                    ACCESS_LEVEL: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Governs permissions set in manila for the cluster "
+                          "ips."),
+                        constraints=[
+                            constraints.AllowedValues(['rw', 'ro']),
+                        ],
+                        default='rw'
+                    )
+                }
+            ),
+            support_status=support.SupportStatus(version='6.0.0'),
+            update_allowed=True
         )
     }
 
@@ -490,6 +528,7 @@ class SaharaClusterTemplate(resource.Resource):
             'net_id': self.properties[self.MANAGEMENT_NETWORK],
             'default_image_id': self.properties[self.IMAGE_ID],
             'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
+            'shares': self.properties[self.SHARES]
         }
         if props['net_id']:
             if self.is_using_neutron():

@@ -59,6 +59,9 @@ resources:
       plugin_name: vanilla
       hadoop_version: 2.3.0
       neutron_management_network: some_network
+      shares:
+        - id: e45eaabf-9300-42e2-b6eb-9ebc92081f46
+          access_level: ro
 """
 
 cluster_template_without_name = """
@@ -334,7 +337,10 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
             'anti_affinity': None,
             'node_groups': None,
             'cluster_configs': None,
-            'use_autoconfig': None
+            'use_autoconfig': None,
+            'shares': [{'id': 'e45eaabf-9300-42e2-b6eb-9ebc92081f46',
+                        'access_level': 'ro',
+                        'path': None}]
         }
         self.ct_mgr.create.assert_called_once_with(**args)
 
@@ -382,7 +388,10 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
             'anti_affinity': None,
             'node_groups': None,
             'cluster_configs': None,
-            'use_autoconfig': None
+            'use_autoconfig': None,
+            'shares': [{'id': 'e45eaabf-9300-42e2-b6eb-9ebc92081f46',
+                        'access_level': 'ro',
+                        'path': None}]
         }
         self.ct_mgr.update.assert_called_once_with('some_ct_id', **args)
         self.assertEqual((ct.UPDATE, ct.COMPLETE), ct.state)
