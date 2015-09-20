@@ -375,6 +375,25 @@ class ResourceTest(common.HeatTestCase):
             exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
         self.assertTrue(res.prepare_for_replace.called)
 
+    def test_update_rsrc_in_progress_raises_exception(self):
+        class TestResource(resource.Resource):
+            properties_schema = {'a_string': {'Type': 'String'}}
+            update_allowed_properties = ('a_string',)
+
+        cfg.CONF.set_override('convergence_engine', False)
+        resource._register_class('TestResource', TestResource)
+
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'TestResource')
+        res = TestResource('test_resource', tmpl, self.stack)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
+                                             {'a_string': 'foo'})
+        res.action = res.UPDATE
+        res.status = res.IN_PROGRESS
+        self.assertRaises(
+            exception.ResourceFailure, scheduler.TaskRunner(res.update, utmpl))
+
     def test_update_replace_rollback(self):
         class TestResource(resource.Resource):
             properties_schema = {'a_string': {'Type': 'String'}}
