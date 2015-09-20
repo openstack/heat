@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
+from heat.engine.resources import scheduler_hints as sh
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.objects import resource_data as resource_data_object
@@ -829,6 +830,42 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
                                self.create_volume, self.t, stack, 'volume3')
         self.assertIn('Scheduler hints are not supported by the current '
                       'volume API.', six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_cinder_create_with_stack_scheduler_hints(self):
+        fv = vt_base.FakeVolume('creating')
+        sh.cfg.CONF.set_override('stack_scheduler_hints', True)
+
+        stack_name = 'test_cvolume_stack_scheduler_hints_stack'
+        t = template_format.parse(single_cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
+        rsrc = stack['volume']
+
+        # rsrc.uuid is only available once the resource has been added.
+        stack.add_resource(rsrc)
+        self.assertIsNotNone(rsrc.uuid)
+
+        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
+        shm = sh.SchedulerHintsMixin
+        self.cinder_fc.volumes.create(
+            size=1, name='test_name', description='test_description',
+            availability_zone=None,
+            scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
+                             shm.HEAT_STACK_ID: stack.id,
+                             shm.HEAT_STACK_NAME: stack.name,
+                             shm.HEAT_PATH_IN_STACK: [(None, stack.name)],
+                             shm.HEAT_RESOURCE_NAME: rsrc.name,
+                             shm.HEAT_RESOURCE_UUID: rsrc.uuid}).AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        # this makes sure the auto increment worked on volume creation
+        self.assertTrue(rsrc.id > 0)
+
         self.m.VerifyAll()
 
     def test_volume_restore(self):

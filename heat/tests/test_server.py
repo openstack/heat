@@ -31,6 +31,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
+from heat.engine.resources import scheduler_hints as sh
 from heat.engine import scheduler
 from heat.engine import template
 from heat.objects import resource_data as resource_data_object
@@ -893,7 +894,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_create_with_stack_scheduler_hints(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        servers.cfg.CONF.set_override('stack_scheduler_hints', True)
+        sh.cfg.CONF.set_override('stack_scheduler_hints', True)
         # Unroll _create_test_server, to enable check
         # for addition of heat ids (stack id, resource name)
         stack_name = 'test_server_w_stack_sched_hints_s'
@@ -904,6 +905,10 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server(server_name,
                                 resource_defns['WebServer'], stack)
 
+        # server.uuid is only available once the resource has been added.
+        stack.add_resource(server)
+        self.assertIsNotNone(server.uuid)
+
         self._mock_get_image_id_success('CentOS 5.2', 1,
                                         server_rebuild=False)
 
@@ -911,16 +916,18 @@ class ServersTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
+        shm = sh.SchedulerHintsMixin
         self.fc.servers.create(
             image=1, flavor=1, key_name='test',
             name=server_name,
             security_groups=[],
             userdata=mox.IgnoreArg(),
-            scheduler_hints={'heat_root_stack_id': stack.root_stack_id(),
-                             'heat_stack_id': stack.id,
-                             'heat_stack_name': stack.name,
-                             'heat_path_in_stack': [(None, stack.name)],
-                             'heat_resource_name': server.name},
+            scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
+                             shm.HEAT_STACK_ID: stack.id,
+                             shm.HEAT_STACK_NAME: stack.name,
+                             shm.HEAT_PATH_IN_STACK: [(None, stack.name)],
+                             shm.HEAT_RESOURCE_NAME: server.name,
+                             shm.HEAT_RESOURCE_UUID: server.uuid},
             meta=None, nics=None, availability_zone=None,
             block_device_mapping=None, block_device_mapping_v2=None,
             config_drive=None, disk_config=None, reservation_id=None,

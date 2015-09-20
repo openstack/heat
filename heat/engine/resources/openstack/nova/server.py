@@ -29,6 +29,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
+from heat.engine.resources import scheduler_hints as sh
 from heat.engine.resources import stack_user
 from heat.engine import scheduler
 from heat.engine import support
@@ -36,12 +37,11 @@ from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
-cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
 
-class Server(stack_user.StackUser):
+class Server(stack_user.StackUser, sh.SchedulerHintsMixin):
 
     PROPERTIES = (
         NAME, IMAGE, BLOCK_DEVICE_MAPPING, BLOCK_DEVICE_MAPPING_V2,
@@ -652,15 +652,9 @@ class Server(stack_user.StackUser):
             instance_meta = self.client_plugin().meta_serialize(
                 instance_meta)
 
-        scheduler_hints = self.properties.get(self.SCHEDULER_HINTS)
-        if cfg.CONF.stack_scheduler_hints:
-            if scheduler_hints is None:
-                scheduler_hints = {}
-            scheduler_hints['heat_root_stack_id'] = self.stack.root_stack_id()
-            scheduler_hints['heat_stack_id'] = self.stack.id
-            scheduler_hints['heat_stack_name'] = self.stack.name
-            scheduler_hints['heat_path_in_stack'] = self.stack.path_in_stack()
-            scheduler_hints['heat_resource_name'] = self.name
+        scheduler_hints = self._scheduler_hints(
+            self.properties.get(self.SCHEDULER_HINTS))
+
         nics = self._build_nics(self.properties.get(self.NETWORKS))
         block_device_mapping = self._build_block_device_mapping(
             self.properties.get(self.BLOCK_DEVICE_MAPPING))

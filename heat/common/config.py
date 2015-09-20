@@ -200,19 +200,20 @@ engine_opts = [
                 default=False,
                 help=_('When this feature is enabled, scheduler hints'
                        ' identifying the heat stack context of a server'
-                       ' resource are passed to the configured schedulers in'
-                       ' nova, for server creates done using heat resource'
-                       ' types OS::Nova::Server and AWS::EC2::Instance.'
-                       ' heat_root_stack_id will be set to the id of the root'
-                       ' stack of the resource, heat_stack_id will be set to'
-                       ' the id of the resource\'s parent stack,'
+                       ' or volume resource are passed to the configured'
+                       ' schedulers in nova and cinder, for creates done'
+                       ' using heat resource types OS::Cinder::Volume,'
+                       ' OS::Nova::Server, and AWS::EC2::Instance.'
+                       ' heat_root_stack_id will be set to the id of the'
+                       ' root stack of the resource, heat_stack_id will be'
+                       ' set to the id of the resource\'s parent stack,'
                        ' heat_stack_name will be set to the name of the'
-                       ' resource\'s parent stack, heat_path_in_stack will be'
-                       ' set to a list of tuples,'
-                       ' (stackresourcename, stackname) with list[0] being'
-                       ' (None, rootstackname), and heat_resource_name will'
-                       ' be set to the resource\'s name.'))]
-
+                       ' resource\'s parent stack, heat_path_in_stack will'
+                       ' be set to a list of tuples, (stackresourcename,'
+                       ' stackname) with list[0] being (None, rootstackname),'
+                       ' heat_resource_name will be set to the resource\'s'
+                       ' name, and heat_resource_uuid will be set to the'
+                       ' resource\'s orchestration id.'))]
 
 rpc_opts = [
     cfg.StrOpt('host',
