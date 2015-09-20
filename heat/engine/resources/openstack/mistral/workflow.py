@@ -35,18 +35,28 @@ class Workflow(signal_responder.SignalResponder,
     entity = 'workflows'
 
     PROPERTIES = (
-        NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS
+        NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS, TASK_DEFAULTS
     ) = (
-        'name', 'type', 'description', 'input', 'output', 'tasks', 'params'
+        'name', 'type', 'description', 'input', 'output', 'tasks', 'params',
+        'task_defaults'
     )
 
     _TASKS_KEYS = (
         TASK_NAME, TASK_DESCRIPTION, ON_ERROR, ON_COMPLETE, ON_SUCCESS,
-        POLICIES, ACTION, WORKFLOW, PUBLISH, TASK_INPUT, REQUIRES
+        POLICIES, ACTION, WORKFLOW, PUBLISH, TASK_INPUT, REQUIRES,
+        RETRY, WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT,
+        WITH_ITEMS, KEEP_RESULT, TARGET
     ) = (
         'name', 'description', 'on_error', 'on_complete', 'on_success',
-        'policies', 'action', 'workflow', 'publish', 'input', 'requires'
+        'policies', 'action', 'workflow', 'publish', 'input', 'requires',
+        'retry', 'wait_before', 'wait_after', 'pause_before', 'timeout',
+        'with_items', 'keep_result', 'target'
     )
+
+    _TASKS_TASK_DEFAULTS = [
+        ON_ERROR, ON_COMPLETE, ON_SUCCESS,
+        REQUIRES, RETRY, WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT
+    ]
 
     _SIGNAL_DATA_KEYS = (
         SIGNAL_DATA_INPUT, SIGNAL_DATA_PARAMS
@@ -95,6 +105,65 @@ class Workflow(signal_responder.SignalResponder,
             properties.Schema.MAP,
             _("Workflow additional parameters. If Workflow is reverse typed, "
               "params requires 'task_name', which defines initial task."),
+            update_allowed=True
+        ),
+        TASK_DEFAULTS: properties.Schema(
+            properties.Schema.MAP,
+            _("Default settings for some of task "
+              "attributes defined "
+              "at workflow level."),
+            support_status=support.SupportStatus(version='5.0.0'),
+            schema={
+                ON_SUCCESS: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which will run after '
+                      'the task has completed successfully.')
+                ),
+                ON_ERROR: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which will run after '
+                      'the task has completed with an error.')
+                ),
+                ON_COMPLETE: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which will run after '
+                      'the task has completed regardless of whether '
+                      'it is successful or not.')
+                ),
+                REQUIRES: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which should be executed before '
+                      'this task. Used only in reverse workflows.')
+                ),
+                RETRY: properties.Schema(
+                    properties.Schema.MAP,
+                    _('Defines a pattern how task should be repeated in '
+                      'case of an error.')
+                ),
+                WAIT_BEFORE: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a delay in seconds that Mistral Engine'
+                      ' should wait before starting a task.')
+                ),
+                WAIT_AFTER: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a delay in seconds that Mistral Engine'
+                      ' should wait after a task has completed before'
+                      ' starting next tasks defined in '
+                      'on-success, on-error or on-complete.')
+                ),
+                PAUSE_BEFORE: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _('Defines whether Mistral Engine should put the '
+                      'workflow on hold or not before starting a task')
+                ),
+                TIMEOUT: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a period of time in seconds after which '
+                      'a task will be failed automatically '
+                      'by engine if hasn\'t completed.')
+                ),
+            },
             update_allowed=True
         ),
         TASKS: properties.Schema(
@@ -156,12 +225,73 @@ class Workflow(signal_responder.SignalResponder,
                         properties.Schema.MAP,
                         _('Dictionary-like section defining task policies '
                           'that influence how Mistral Engine runs tasks. Must '
-                          'satisfy Mistral DSL v2.')
+                          'satisfy Mistral DSL v2.'),
+                        support_status=support.SupportStatus(
+                            status=support.DEPRECATED,
+                            version='5.0.0',
+                            message=_('Add needed policies directly to '
+                                      'the task, Policy keyword is not '
+                                      'needed'),
+                            previous_status=support.SupportStatus(
+                                version='2015.1'))
                     ),
                     REQUIRES: properties.Schema(
                         properties.Schema.LIST,
                         _('List of tasks which should be executed before '
                           'this task. Used only in reverse workflows.')
+                    ),
+                    RETRY: properties.Schema(
+                        properties.Schema.MAP,
+                        _('Defines a pattern how task should be repeated in '
+                          'case of an error.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    WAIT_BEFORE: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Defines a delay in seconds that Mistral Engine '
+                          'should wait before starting a task.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    WAIT_AFTER: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Defines a delay in seconds that Mistral '
+                          'Engine should wait after '
+                          'a task has completed before starting next tasks '
+                          'defined in on-success, on-error or on-complete.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    PAUSE_BEFORE: properties.Schema(
+                        properties.Schema.BOOLEAN,
+                        _('Defines whether Mistral Engine should '
+                          'put the workflow on hold '
+                          'or not before starting a task.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    TIMEOUT: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Defines a period of time in seconds after which a '
+                          'task will be failed automatically by engine '
+                          'if hasn\'t completed.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    WITH_ITEMS: properties.Schema(
+                        properties.Schema.STRING,
+                        _('If configured, it allows to run action or workflow '
+                          'associated with a task multiple times '
+                          'on a provided list of items.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    KEEP_RESULT: properties.Schema(
+                        properties.Schema.BOOLEAN,
+                        _('Allowing not to store action results '
+                          'after task completion.'),
+                        support_status=support.SupportStatus(version='5.0.0')
+                    ),
+                    TARGET: properties.Schema(
+                        properties.Schema.STRING,
+                        _('It defines an executor to which task action '
+                          'should be sent to.'),
+                        support_status=support.SupportStatus(version='5.0.0')
                     ),
                 },
             ),
@@ -260,6 +390,16 @@ class Workflow(signal_responder.SignalResponder,
                           self.REQUIRES],
                     message=msg)
 
+            if task.get(self.POLICIES) is not None:
+                for task_item in task.get(self.POLICIES):
+                    if task.get(task_item) is not None:
+                        msg = _('Property %(policies)s and %(item)s cannot be '
+                                'used both at one time.') % {
+                            'policies': self.POLICIES,
+                            'item': task_item
+                        }
+                        raise exception.StackValidationFailed(message=msg)
+
     def _workflow_name(self):
         return self.properties.get(self.NAME) or self.physical_resource_name()
 
@@ -275,8 +415,16 @@ class Workflow(signal_responder.SignalResponder,
                     msg = _("No such workflow %s") % wf_value
                     raise ValueError(msg)
 
+            # backward support for kilo.
+            if task.get(self.POLICIES) is not None:
+                task.update(task.get(self.POLICIES))
+
             task_keys = [key for key in self._TASKS_KEYS
-                         if key not in [self.WORKFLOW, self.TASK_NAME]]
+                         if key not in [
+                             self.WORKFLOW,
+                             self.TASK_NAME,
+                             self.POLICIES
+                         ]]
             for task_prop in task_keys:
                 if task.get(task_prop) is not None:
                     current_task.update(
@@ -301,6 +449,11 @@ class Workflow(signal_responder.SignalResponder,
         definition[defn_name][self.TASKS] = {}
         for task in self.build_tasks(props):
             definition.get(defn_name).get(self.TASKS).update(task)
+
+        if props.get(self.TASK_DEFAULTS) is not None:
+            definition[defn_name][self.TASK_DEFAULTS.replace('_', '-')] = {
+                k.replace('_', '-'): v for k, v in
+                six.iteritems(props.get(self.TASK_DEFAULTS)) if v}
 
         return yaml.dump(definition, Dumper=yaml.CSafeDumper
                          if hasattr(yaml, 'CSafeDumper')
