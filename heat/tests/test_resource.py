@@ -1768,6 +1768,72 @@ class ResourceTest(common.HeatTestCase):
         # ensure requirements are not updated for failed resource
         self.assertEqual([1, 2], res.requires)
 
+    @mock.patch.object(resource.Resource, 'update')
+    def test_update_resource_convergence_failed(self, mock_update):
+        tmpl = rsrc_defn.ResourceDefinition('test_res',
+                                            'ResourceWithPropsType')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.requires = [2]
+        res._store()
+        self._assert_resource_lock(res.id, None, None)
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_temp.store()
+
+        res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
+                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        exc = Exception(_('Resource update failed'))
+        dummy_ex = exception.ResourceFailure(exc, res, action=res.UPDATE)
+        mock_update.side_effect = dummy_ex
+        self.assertRaises(exception.ResourceFailure,
+                          res.update_convergence, new_temp.id, res_data,
+                          'engine-007', 120)
+
+        expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
+        mock_update.assert_called_once_with(expected_rsrc_def)
+        # check if current_template_id was updated
+        self.assertEqual(new_temp.id, res.current_template_id)
+        # check if requires was updated
+        self.assertItemsEqual([3, 4], res.requires)
+        self._assert_resource_lock(res.id, None, 2)
+
+    @mock.patch.object(resource.Resource, 'update')
+    def test_update_resource_convergence_update_replace(self, mock_update):
+        tmpl = rsrc_defn.ResourceDefinition('test_res',
+                                            'ResourceWithPropsType')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.requires = [2]
+        res._store()
+        self._assert_resource_lock(res.id, None, None)
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_temp.store()
+
+        res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
+                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        mock_update.side_effect = exception.UpdateReplace
+        self.assertRaises(exception.UpdateReplace,
+                          res.update_convergence, new_temp.id, res_data,
+                          'engine-007', 120)
+
+        expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
+        mock_update.assert_called_once_with(expected_rsrc_def)
+        # ensure that current_template_id was not updated
+        self.assertEqual(None, res.current_template_id)
+        # ensure that requires was not updated
+        self.assertItemsEqual([2], res.requires)
+        self._assert_resource_lock(res.id, None, 2)
+
     @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
                        return_value=None)
     @mock.patch.object(resource.scheduler.TaskRunner, '__call__')

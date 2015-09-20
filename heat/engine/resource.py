@@ -869,18 +869,23 @@ class Resource(object):
         resource's requires to list of the required resource id from the
         given resource_data and existing resource's requires.
         '''
-        with self.lock(engine_id):
-            new_temp = template.Template.load(self.context, template_id)
-            new_res_def = new_temp.resource_definitions(self.stack)[self.name]
-            runner = scheduler.TaskRunner(self.update, new_res_def)
-            runner(timeout=timeout)
-
-            # update the resource db record (stored in unlock)
+        def update_tmpl_id_and_requires():
             self.current_template_id = template_id
             self.requires = list(
                 set(data[u'id'] for data in resource_data.values()
                     if data is not None)
             )
+
+        with self.lock(engine_id):
+            new_temp = template.Template.load(self.context, template_id)
+            new_res_def = new_temp.resource_definitions(self.stack)[self.name]
+            runner = scheduler.TaskRunner(self.update, new_res_def)
+            try:
+                runner(timeout=timeout)
+                update_tmpl_id_and_requires()
+            except exception.ResourceFailure:
+                update_tmpl_id_and_requires()
+                raise
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
