@@ -198,6 +198,11 @@ class StackResourceTest(common.HeatTestCase):
         nest.return_value.prepare_abandon.assert_called_once_with()
         self.assertEqual({'X': 'Y'}, ret)
 
+    def test_nested_abandon_stack_not_found(self):
+        self.parent_resource.nested = mock.MagicMock(return_value=None)
+        ret = self.parent_resource.prepare_abandon()
+        self.assertEqual({}, ret)
+
     def test_implementation_signature(self):
         self.parent_resource.child_template = mock.Mock(
             return_value=self.simple_template)
@@ -460,10 +465,11 @@ class StackResourceTest(common.HeatTestCase):
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
                           show_deleted=False,
-                          force_reload=False).AndReturn(None)
+                          force_reload=False).AndRaise(
+            exception.NotFound)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.NotFound, self.parent_resource.nested)
+        self.assertIsNone(self.parent_resource.nested())
         self.m.VerifyAll()
 
     def test_load_nested_cached(self):
@@ -490,10 +496,10 @@ class StackResourceTest(common.HeatTestCase):
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
                           show_deleted=False,
-                          force_reload=True).AndReturn(None)
+                          force_reload=True).AndRaise(
+            exception.NotFound)
         self.m.ReplayAll()
-        self.assertRaises(exception.NotFound, self.parent_resource.nested,
-                          force_reload=True)
+        self.assertIsNone(self.parent_resource.nested(force_reload=True))
         self.m.VerifyAll()
 
     def test_delete_nested_none_nested_stack(self):

@@ -362,6 +362,7 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
 
     def test_index_dotted_attribute(self):
         mock_members = self.patchobject(grouputils, 'get_members')
+        self.group.nested = mock.Mock()
         members = []
         output = []
         for ip_ex in six.moves.range(0, 2):

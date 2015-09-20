@@ -212,14 +212,10 @@ class Stack(collections.Mapping):
         for res in self.values():
             yield res
 
-            get_nested = getattr(res, 'nested', None)
-            if not callable(get_nested) or nested_depth == 0:
+            if not res.has_nested() or nested_depth == 0:
                 continue
 
-            nested_stack = get_nested()
-            if nested_stack is None:
-                continue
-
+            nested_stack = res.nested()
             for nested_res in nested_stack.iter_resources(nested_depth - 1):
                 yield nested_res
 
@@ -791,7 +787,7 @@ class Stack(collections.Mapping):
 
     def supports_check_action(self):
         def is_supported(stack, res):
-            if hasattr(res, 'nested'):
+            if res.has_nested():
                 return res.nested().supports_check_action()
             else:
                 return hasattr(res, 'handle_%s' % self.CHECK.lower())

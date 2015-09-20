@@ -19,6 +19,7 @@ import mock
 from oslo_utils import timeutils
 import six
 
+from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import api
@@ -44,11 +45,14 @@ class FormatTest(common.HeatTestCase):
                 'generic1': {'Type': 'GenericResourceType'},
                 'generic2': {
                     'Type': 'GenericResourceType',
-                    'DependsOn': 'generic1'}
+                    'DependsOn': 'generic1'},
+                'generic4': {'Type': 'StackResourceType'}
             }
         })
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
+        resource._register_class('StackResourceType',
+                                 generic_rsrc.StackResourceType)
         resource._register_class('ResWithComplexPropsAndAttrs',
                                  generic_rsrc.ResWithComplexPropsAndAttrs)
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
@@ -179,7 +183,7 @@ class FormatTest(common.HeatTestCase):
         self.assertEqual('', props['a_string'])
 
     def test_format_stack_resource_with_nested_stack(self):
-        res = self.stack['generic1']
+        res = self.stack['generic4']
         nested_id = {'foo': 'bar'}
         res.nested = mock.Mock()
         res.nested.return_value.identifier.return_value = nested_id
@@ -188,7 +192,7 @@ class FormatTest(common.HeatTestCase):
         self.assertEqual(nested_id, formatted[rpc_api.RES_NESTED_STACK_ID])
 
     def test_format_stack_resource_with_nested_stack_none(self):
-        res = self.stack['generic1']
+        res = self.stack['generic4']
         res.nested = mock.Mock()
         res.nested.return_value = None
 
@@ -206,10 +210,32 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
-        self.assertEqual(resource_keys, set(formatted.keys()))
+        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
+
+    def test_format_stack_resource_with_nested_stack_not_found(self):
+        res = self.stack['generic4']
+        self.patchobject(parser.Stack, 'load',
+                         side_effect=exception.NotFound())
+
+        resource_keys = set((
+            rpc_api.RES_UPDATED_TIME,
+            rpc_api.RES_NAME,
+            rpc_api.RES_PHYSICAL_ID,
+            rpc_api.RES_ACTION,
+            rpc_api.RES_STATUS,
+            rpc_api.RES_STATUS_DATA,
+            rpc_api.RES_TYPE,
+            rpc_api.RES_ID,
+            rpc_api.RES_STACK_ID,
+            rpc_api.RES_STACK_NAME,
+            rpc_api.RES_REQUIRED_BY))
+
+        formatted = api.format_stack_resource(res, False)
+        # 'nested_stack_id' is not in formatted
+        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
 
     def test_format_stack_resource_with_nested_stack_empty(self):
-        res = self.stack['generic1']
+        res = self.stack['generic4']
         nested_id = {'foo': 'bar'}
 
         res.nested = mock.MagicMock()
