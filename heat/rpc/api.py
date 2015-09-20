@@ -180,13 +180,13 @@ VALIDATE_PARAM_KEYS = (
     PARAM_ALLOWED_VALUES, PARAM_ALLOWED_PATTERN, PARAM_MAX_LENGTH,
     PARAM_MIN_LENGTH, PARAM_MAX_VALUE, PARAM_MIN_VALUE,
     PARAM_DESCRIPTION, PARAM_CONSTRAINT_DESCRIPTION, PARAM_LABEL,
-    PARAM_CUSTOM_CONSTRAINT
+    PARAM_CUSTOM_CONSTRAINT, PARAM_VALUE
 ) = (
     'Type', 'Default', 'NoEcho',
     'AllowedValues', 'AllowedPattern', 'MaxLength',
     'MinLength', 'MaxValue', 'MinValue',
     'Description', 'ConstraintDescription', 'Label',
-    'CustomConstraint'
+    'CustomConstraint', 'Value'
 )
 
 VALIDATE_PARAM_TYPES = (

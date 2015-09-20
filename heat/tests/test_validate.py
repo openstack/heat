@@ -1004,8 +1004,10 @@ class ValidateTest(common.HeatTestCase):
         env_params = {'net_name': 'betternetname'}
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, env_params))
-        self.assertEqual('betternetname',
+        self.assertEqual('defaultnet',
                          res['Parameters']['net_name']['Default'])
+        self.assertEqual('betternetname',
+                         res['Parameters']['net_name']['Value'])
 
     def test_validate_parameters_env_provided(self):
         t = template_format.parse(test_template_no_default)
@@ -1013,7 +1015,8 @@ class ValidateTest(common.HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, env_params))
         self.assertEqual('betternetname',
-                         res['Parameters']['net_name']['Default'])
+                         res['Parameters']['net_name']['Value'])
+        self.assertNotIn('Default', res['Parameters']['net_name'])
 
     def test_validate_hot_empty_parameters_valid(self):
         t = template_format.parse(
