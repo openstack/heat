@@ -605,18 +605,20 @@ class Stack(collections.Mapping):
             if result:
                 raise exception.StackValidationFailed(message=result)
 
-        for val in self.outputs.values():
+        for key, val in self.outputs.items():
+            if not isinstance(val, collections.Mapping):
+                message = _('Outputs must contain Output. '
+                            'Found a [%s] instead') % type(val)
+                raise exception.StackValidationFailed(
+                    error='Output validation error',
+                    path=[self.t.OUTPUTS],
+                    message=message)
             try:
-                if not val or not val.get('Value'):
+                if not val or 'Value' not in val:
                     message = _('Each Output must contain '
                                 'a Value key.')
                     raise exception.StackValidationFailed(message=message)
                 function.validate(val.get('Value'))
-            except AttributeError:
-                message = _('Output validation error: '
-                            'Outputs must contain Output. '
-                            'Found a [%s] instead') % type(val)
-                raise exception.StackValidationFailed(message=message)
             except Exception as ex:
                 reason = _('Output validation error: '
                            '%s') % six.text_type(ex)
