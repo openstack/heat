@@ -16,9 +16,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Utility methods for serializing responses
-"""
+"""Utility methods for serializing responses."""
 
 import datetime
 

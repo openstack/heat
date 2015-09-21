@@ -14,17 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""The code related to integration between oslo.cache module and heat."""
+
 from oslo_cache import core
 from oslo_config import cfg
 
 from heat.common.i18n import _
 
-"""The module contains the code related to integration between oslo.cache
-module and heat."""
-
 
 def register_cache_configurations(conf):
-    """Register all configurations required for oslo.cache
+    """Register all configurations required for oslo.cache.
 
     The procedure registers all configurations required for oslo.cache.
     It should be called before configuring of cache region

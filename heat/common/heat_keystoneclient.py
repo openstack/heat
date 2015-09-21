@@ -46,7 +46,6 @@ cfg.CONF.register_opts(keystone_opts)
 
 
 class KeystoneClientV3(object):
-
     """Wrap keystone client so we can encapsulate logic used in resources.
 
     Note this is intended to be initialized from a resource on a per-session
@@ -100,7 +99,7 @@ class KeystoneClientV3(object):
     def stack_domain(self):
         """Domain scope data.
 
-        This is only used for checking for scoping data, not using the value
+        This is only used for checking for scoping data, not using the value.
         """
         return self._stack_domain_id or self.stack_domain_name
 
@@ -557,7 +556,6 @@ class KeystoneClientV3(object):
 
 
 class KeystoneClient(object):
-
     """Keystone Auth Client.
 
     Delay choosing the backend client module until the client's class

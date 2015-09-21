@@ -23,7 +23,8 @@ from heat.common import context
 
 
 class KeystonePasswordAuthProtocol(object):
-    """
+    """Middleware uses username and password to authenticate against Keystone.
+
     Alternative authentication middleware that uses username and password
     to authenticate against Keystone instead of validating existing auth token.
     The benefit being that you no longer require admin/service token to

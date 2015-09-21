@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Middleware for authenticating against custom backends.
-"""
+"""Middleware for authenticating against custom backends."""
 
 from oslo_context import context
 from oslo_log import log as logging
@@ -35,8 +33,7 @@ class AuthProtocol(object):
         self.rpc_client = rpc_client.EngineClient()
 
     def __call__(self, env, start_response):
-        """
-        Handle incoming request.
+        """Handle incoming request.
 
         Authenticate send downstream on success. Reject request if
         we can't authenticate.
@@ -50,8 +47,7 @@ class AuthProtocol(object):
             return self._reject_request(env, start_response)
 
     def _reject_request(self, env, start_response):
-        """
-        Redirect client to auth server.
+        """Redirect client to auth server.
 
         :param env: wsgi request environment
         :param start_response: wsgi response callback

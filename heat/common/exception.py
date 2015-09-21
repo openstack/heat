@@ -48,12 +48,11 @@ class KeystoneError(Exception):
 
 @six.python_2_unicode_compatible
 class HeatException(Exception):
-    """Base Heat Exception
+    """Base Heat Exception.
 
-    To correctly use this class, inherit from it and define
-    a 'msg_fmt' property. That msg_fmt will get printf'd
-    with the keyword arguments provided to the constructor.
-
+    To correctly use this class, inherit from it and define a 'msg_fmt'
+    property. That msg_fmt will get printf'd with the keyword arguments
+    provided to the constructor.
     """
     message = _("An unknown exception occurred.")
 
@@ -389,7 +388,7 @@ class PropertyUnspecifiedError(HeatException):
 
 
 class UpdateReplace(Exception):
-    '''Raised when resource update requires replacement.'''
+    """Raised when resource update requires replacement."""
     def __init__(self, resource_name='Unknown'):
         msg = _("The Resource %s requires replacement.") % resource_name
         super(Exception, self).__init__(six.text_type(msg))
@@ -421,8 +420,9 @@ class UpdateInProgress(Exception):
 
 
 class HTTPExceptionDisguise(Exception):
-    """Disguises HTTP exceptions so they can be handled by the webob fault
-    application in the wsgi pipeline.
+    """Disguises HTTP exceptions.
+
+    They can be handled by the webob fault application in the wsgi pipeline.
     """
 
     def __init__(self, exception):

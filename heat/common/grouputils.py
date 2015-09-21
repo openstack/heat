@@ -60,6 +60,7 @@ def get_member_refids(group, exclude=None):
 
 def get_member_names(group):
     """Get a list of resource names of the resources in the specified group.
+
     Failed resources will be ignored.
     """
     return [r.name for r in get_members(group)]

@@ -39,9 +39,10 @@ auth.register_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
 
 
 class RequestContext(context.RequestContext):
-    """
-    Stores information about the security context under which the user
-    accesses the system, as well as additional request information.
+    """Stores information about the security context.
+
+    Under the security context the user accesses the system, as well as
+    additional request information.
     """
 
     def __init__(self, auth_token=None, username=None, password=None,
@@ -51,7 +52,8 @@ class RequestContext(context.RequestContext):
                  overwrite=True, trust_id=None, trustor_user_id=None,
                  request_id=None, auth_token_info=None, region_name=None,
                  auth_plugin=None, trusts_auth_plugin=None, **kwargs):
-        """
+        """Initialisation of the request context.
+
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
 
@@ -220,15 +222,14 @@ class ContextMiddleware(wsgi.Middleware):
         super(ContextMiddleware, self).__init__(app)
 
     def make_context(self, *args, **kwargs):
-        """
-        Create a context with the given arguments.
-        """
+        """Create a context with the given arguments."""
         return self.ctxcls(*args, **kwargs)
 
     def process_request(self, req):
-        """
-        Extract any authentication information in the request and
-        construct an appropriate context from it.
+        """Constructs an appropriate context from extracted auth information.
+
+        Extract any authentication information in the request and construct an
+        appropriate context from it.
         """
         headers = req.headers
         environ = req.environ
@@ -275,9 +276,7 @@ class ContextMiddleware(wsgi.Middleware):
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
-    """
-    Factory method for paste.deploy
-    """
+    """Factory method for paste.deploy."""
     conf = global_conf.copy()
     conf.update(local_conf)
 

@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Routines for configuring Heat
-"""
+"""Routines for configuring Heat."""
 import logging as sys_logging
 import os
 
@@ -373,18 +371,18 @@ for group, opts in list_opts():
 
 
 def _get_deployment_flavor():
-    """
-    Retrieve the paste_deploy.flavor config item, formatted appropriately
-    for appending to the application name.
+    """Retrieves the paste_deploy.flavor config item.
+
+    Item formatted appropriately for appending to the application name.
     """
     flavor = cfg.CONF.paste_deploy.flavor
     return '' if not flavor else ('-' + flavor)
 
 
 def _get_deployment_config_file():
-    """
-    Retrieve the deployment_config_file config item, formatted as an
-    absolute pathname.
+    """Retrieves the deployment_config_file config item.
+
+    Item formatted as an absolute pathname.
     """
     config_path = cfg.CONF.find_file(
         cfg.CONF.paste_deploy['api_paste_config'])
@@ -395,8 +393,7 @@ def _get_deployment_config_file():
 
 
 def load_paste_app(app_name=None):
-    """
-    Builds and returns a WSGI app from a paste config file.
+    """Builds and returns a WSGI app from a paste config file.
 
     We assume the last config file specified in the supplied ConfigOpts
     object is the paste config file.

@@ -17,10 +17,10 @@ from heat.common.i18n import _
 
 
 def extract_bool(name, value):
-    '''
-    Convert any true/false string to its corresponding boolean value,
-    regardless of case.
-    '''
+    """Convert any true/false string to its corresponding boolean value.
+
+    Value is case insensitive.
+    """
     if str(value).lower() not in ('true', 'false'):
         raise ValueError(_('Unrecognized value "%(value)s" for "%(name)s", '
                            'acceptable values are: true, false.')

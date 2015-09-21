@@ -15,7 +15,7 @@
 #    under the License.
 
 # Based on glance/api/policy.py
-"""Policy Engine For Heat"""
+"""Policy Engine For Heat."""
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -80,7 +80,7 @@ class Enforcer(object):
         return self._check(context, _action, _target, self.exc, action=action)
 
     def check_is_admin(self, context):
-        """Whether or not roles contains 'admin' role according to policy.json
+        """Whether or not roles contains 'admin' role according to policy.json.
 
            :param context: Heat request context
            :returns: A non-False value if the user is admin according to policy
