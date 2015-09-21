@@ -204,6 +204,7 @@ class Resource(object):
         self.replaces = None
         self.replaced_by = None
         self.current_template_id = None
+        self.root_stack_id = None
 
         if not stack.has_cache_data(name):
             resource = stack.db_resource_get(name)
@@ -243,6 +244,7 @@ class Resource(object):
         self.replaces = resource.replaces
         self.replaced_by = resource.replaced_by
         self.current_template_id = resource.current_template_id
+        self.root_stack_id = resource.root_stack_id
 
     @property
     def stack(self):
@@ -295,7 +297,8 @@ class Resource(object):
               'action': self.INIT,
               'status': self.COMPLETE,
               'current_template_id': new_tmpl_id,
-              'stack_name': self.stack.name}
+              'stack_name': self.stack.name,
+              'root_stack_id': self.root_stack_id}
         new_rs = resource_objects.Resource.create(self.context, rs)
 
         # 2. update the current resource to be replaced_by the one above.
@@ -1268,6 +1271,8 @@ class Resource(object):
         properties_data_encrypted, properties_data = \
             resource_objects.Resource.encrypt_properties_data(
                 self._stored_properties_data)
+        if not self.root_stack_id:
+            self.root_stack_id = self.stack.root_stack_id()
         try:
             rs = {'action': self.action,
                   'status': self.status,
@@ -1283,7 +1288,8 @@ class Resource(object):
                   'replaces': self.replaces,
                   'replaced_by': self.replaced_by,
                   'current_template_id': self.current_template_id,
-                  'stack_name': self.stack.name}
+                  'stack_name': self.stack.name,
+                  'root_stack_id': self.root_stack_id}
 
             new_rs = resource_objects.Resource.create(self.context, rs)
             self.id = new_rs.id
@@ -1323,7 +1329,8 @@ class Resource(object):
             'replaces': self.replaces,
             'replaced_by': self.replaced_by,
             'current_template_id': self.current_template_id,
-            'nova_instance': self.resource_id
+            'nova_instance': self.resource_id,
+            'root_stack_id': self.root_stack_id
         }
         if prev_action == self.INIT:
             metadata = self.t.metadata()

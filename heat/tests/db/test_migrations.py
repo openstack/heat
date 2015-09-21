@@ -619,6 +619,60 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertColumnNotExists(engine, 'raw_template',
                                    'predecessor')
 
+    def _pre_upgrade_065(self, engine):
+        raw_template = utils.get_table(engine, 'raw_template')
+        templ = []
+        for i in range(960, 963, 1):
+            t = dict(id=i, template='{}', files='{}')
+            engine.execute(raw_template.insert(), [t])
+            templ.append(t)
+
+        user_creds = utils.get_table(engine, 'user_creds')
+        user = [dict(id=uid, username='test_user', password='password',
+                     tenant='test_project', auth_url='bla',
+                     tenant_id=str(uuid.uuid4()),
+                     trust_id='',
+                     trustor_user_id='') for uid in range(960, 963)]
+        engine.execute(user_creds.insert(), user)
+
+        stack = utils.get_table(engine, 'stack')
+        root_sid = '9a6a3ddb-2219-452c-8fec-a4977f8fe474'
+        stack_ids = [(root_sid, 0, None),
+                     ('b6a23bc2-cd4e-496f-be2e-c11d06124ea2', 1, root_sid),
+                     ('7a927947-e004-4afa-8d11-62c1e049ecbd', 2, root_sid)]
+        data = [dict(id=ll_id, name=ll_id,
+                     owner_id=owner_id,
+                     raw_template_id=templ[templ_id]['id'],
+                     user_creds_id=user[templ_id]['id'],
+                     username='test_user',
+                     disable_rollback=True,
+                     parameters='test_params',
+                     created_at=datetime.datetime.utcnow(),
+                     deleted_at=None)
+                for ll_id, templ_id, owner_id in stack_ids]
+
+        engine.execute(stack.insert(), data)
+
+        res_table = utils.get_table(engine, 'resource')
+        resource_ids = [(960, root_sid),
+                        (961, 'b6a23bc2-cd4e-496f-be2e-c11d06124ea2'),
+                        (962, '7a927947-e004-4afa-8d11-62c1e049ecbd')]
+        resources = [dict(id=rid, stack_id=sid)
+                     for rid, sid in resource_ids]
+        engine.execute(res_table.insert(), resources)
+
+    def _check_065(self, engine, data):
+        self.assertColumnExists(engine, 'resource', 'root_stack_id')
+        res_table = utils.get_table(engine, 'resource')
+        res_in_db = list(res_table.select().execute())
+        self.assertTrue(len(res_in_db) >= 3)
+        # confirm the resource.root_stack_id is set for all resources
+        for r in res_in_db:
+            self.assertTrue(r.root_stack_id is not None)
+            if r.id >= 960 and r.id <= 962:
+                root_stack_id = '9a6a3ddb-2219-452c-8fec-a4977f8fe474'
+                self.assertEqual(root_stack_id, r.root_stack_id)
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
