@@ -194,7 +194,7 @@ engine_opts = [
                       'zaqar queue to be signaled using the provided keystone '
                       'credentials.')),
     cfg.ListOpt('hidden_stack_tags',
-                default=[],
+                default=['data-processing-cluster'],
                 help=_('Stacks containing these tag names will be hidden. '
                        'Multiple tags should be given in a comma-delimited '
                        'list (eg. hidden_stack_tags=hide_me,me_too).')),
