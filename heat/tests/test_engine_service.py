@@ -796,6 +796,19 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
                       six.text_type(ex.exc_info[1]))
 
+    @mock.patch.object(instances.Instance, 'validate')
+    @mock.patch.object(parser.Stack, 'total_resources')
+    def test_stack_create_max_unlimited(self, total_res_mock, validate_mock):
+        total_res_mock.return_value = 9999
+        validate_mock.return_value = None
+        cfg.CONF.set_override('max_resources_per_stack', -1)
+        stack_name = 'service_create_test_max_unlimited'
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources': {}}
+        tmpl = templatem.Template(tpl)
+        stack = parser.Stack(self.ctx, stack_name, tmpl)
+        self.man.create_stack(self.ctx, stack_name, stack.t.t, {}, None, {})
+
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
         stack = get_wordpress_stack(stack_name, self.ctx)
