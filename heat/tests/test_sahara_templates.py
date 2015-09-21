@@ -286,18 +286,19 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
 
     def test_ct_create(self):
         self._create_ct(self.t)
-        expected_args = ('test-cluster-template', 'vanilla',
-                         '2.3.0')
-        expected_kwargs = {'description': '',
-                           'default_image_id': None,
-                           'net_id': 'some_network_id',
-                           'anti_affinity': None,
-                           'node_groups': None,
-                           'cluster_configs': None,
-                           'use_autoconfig': None
-                           }
-        self.ct_mgr.create.assert_called_once_with(*expected_args,
-                                                   **expected_kwargs)
+        args = {
+            'name': 'test-cluster-template',
+            'plugin_name': 'vanilla',
+            'hadoop_version': '2.3.0',
+            'description': '',
+            'default_image_id': None,
+            'net_id': 'some_network_id',
+            'anti_affinity': None,
+            'node_groups': None,
+            'cluster_configs': None,
+            'use_autoconfig': None
+        }
+        self.ct_mgr.create.assert_called_once_with(**args)
 
     def test_ct_delete(self):
         ct = self._create_ct(self.t)
@@ -339,7 +340,7 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         scheduler.TaskRunner(ct.create)()
         self.assertEqual((ct.CREATE, ct.COMPLETE), ct.state)
         self.assertEqual(self.fake_ct.id, ct.resource_id)
-        name = self.ct_mgr.create.call_args[0][0]
+        name = self.ct_mgr.create.call_args[1]['name']
         self.assertIn('-clustertemplate-', name)
 
     def test_ct_show_resource(self):
@@ -347,3 +348,25 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         self.ct_mgr.get.return_value = self.fake_ct
         self.assertEqual({"cluster-template": "info"}, ct.FnGetAtt('show'))
         self.ct_mgr.get.assert_called_once_with('some_ct_id')
+
+    def test_update(self):
+        ct = self._create_ct(self.t)
+        rsrc_defn = self.stack.t.resource_definitions(self.stack)[
+            'cluster-template']
+        rsrc_defn['Properties']['plugin_name'] = 'hdp'
+        rsrc_defn['Properties']['hadoop_version'] = '1.3.2'
+        scheduler.TaskRunner(ct.update, rsrc_defn)()
+        args = {
+            'name': 'test-cluster-template',
+            'plugin_name': 'hdp',
+            'hadoop_version': '1.3.2',
+            'description': '',
+            'default_image_id': None,
+            'net_id': 'some_network_id',
+            'anti_affinity': None,
+            'node_groups': None,
+            'cluster_configs': None,
+            'use_autoconfig': None
+        }
+        self.ct_mgr.update.assert_called_once_with('some_ct_id', **args)
+        self.assertEqual((ct.UPDATE, ct.COMPLETE), ct.state)
