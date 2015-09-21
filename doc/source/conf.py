@@ -78,6 +78,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'oslosphinx',
               'ext.resources',
+              'ext.tablefromtext',
               'stevedore.sphinxext']
 
 todo_include_todos = True
