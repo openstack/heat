@@ -12,9 +12,7 @@
 # under the License.
 
 
-"""
-StackLock object
-"""
+"""StackLock object."""
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields

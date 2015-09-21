@@ -13,9 +13,7 @@
 # under the License.
 
 
-"""
-RawTemplate object
-"""
+"""RawTemplate object."""
 
 import copy
 

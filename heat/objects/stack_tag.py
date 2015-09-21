@@ -12,9 +12,7 @@
 # under the License.
 
 
-"""
-StackTag object
-"""
+"""StackTag object."""
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields

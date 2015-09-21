@@ -13,10 +13,7 @@
 # under the License.
 
 
-"""
-UserCreds object
-"""
-
+"""UserCreds object."""
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields

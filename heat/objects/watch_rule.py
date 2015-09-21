@@ -12,9 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""
-WatchRule object
-"""
+"""WatchRule object."""
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields

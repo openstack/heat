@@ -13,9 +13,7 @@
 # under the License.
 
 
-"""
-ResourceData object
-"""
+"""ResourceData object."""
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
