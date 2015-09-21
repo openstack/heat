@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Client side of the heat worker RPC API.
-"""
+"""Client side of the heat worker RPC API."""
 
 from oslo_config import cfg
 import oslo_messaging as messaging
@@ -26,12 +24,12 @@ cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
 
 class EngineListenerClient(object):
-    '''Client side of the heat listener RPC API.
+    """Client side of the heat listener RPC API.
 
     API version history::
 
         1.0 - Initial version.
-    '''
+    """
 
     BASE_RPC_API_VERSION = '1.0'
 
