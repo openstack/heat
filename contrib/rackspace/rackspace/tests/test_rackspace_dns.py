@@ -159,9 +159,7 @@ class RackspaceDnsTest(common.HeatTestCase):
         return create_args
 
     def test_create_domain_only(self):
-        """
-        Test domain create only without any records.
-        """
+        """Test domain create only without any records."""
         fake_dns_instance = FakeDnsInstance()
         t = template_format.parse(domain_only_template)
         instance = self._setup_test_cloud_dns_instance('dnsinstance_create', t)
@@ -172,9 +170,9 @@ class RackspaceDnsTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_domain_with_a_record(self):
-        """
-        Test domain create with an A record.  This should not have a
-        priority field.
+        """Test domain create with an A record.
+
+        This should not have a priority field.
         """
         fake_dns_instance = FakeDnsInstance()
         t = template_format.parse(domain_only_template)
@@ -193,9 +191,9 @@ class RackspaceDnsTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_domain_with_mx_record(self):
-        """
-        Test domain create with an MX record.  This should have a
-        priority field.
+        """Test domain create with an MX record.
+
+        This should have a priority field.
         """
         fake_dns_instance = FakeDnsInstance()
         t = template_format.parse(domain_only_template)
@@ -233,9 +231,7 @@ class RackspaceDnsTest(common.HeatTestCase):
         self.assertIn('boom', str(exc))
 
     def test_update(self, updateRecords=None):
-        """
-        Helper function for testing domain updates.
-        """
+        """Helper function for testing domain updates."""
         fake_dns_instance = FakeDnsInstance()
         t = template_format.parse(domain_only_template)
         instance = self._setup_test_cloud_dns_instance('dnsinstance_update', t)
@@ -264,15 +260,11 @@ class RackspaceDnsTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_domain_only(self):
-        """
-        Test domain update without any records.
-        """
+        """Test domain update without any records."""
         self.test_update()
 
     def test_update_domain_with_a_record(self):
-        """
-        Test domain update with an A record.
-        """
+        """Test domain update with an A record."""
         a_record = [{'type': 'A',
                      'name': 'ftp.example.com',
                      'data': '192.0.2.8',

@@ -71,7 +71,6 @@ class LoadbalancerBuildError(exception.HeatException):
 
 
 class CloudLoadBalancer(resource.Resource):
-
     """Represents a Rackspace Cloud Loadbalancer."""
 
     support_status = support.SupportStatus(
@@ -875,7 +874,7 @@ class CloudLoadBalancer(resource.Resource):
             return scheduler.TaskRunner(disable_content_caching)
 
     def check_update_complete(self, checkers):
-        '''Push all checkers to completion in list order.'''
+        """Push all checkers to completion in list order."""
         for checker in checkers:
             if not checker.started():
                 checker.start()

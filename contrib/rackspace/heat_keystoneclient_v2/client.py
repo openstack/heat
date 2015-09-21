@@ -28,7 +28,6 @@ LOG.info(_LI("Keystone V2 loaded"))
 
 
 class KeystoneClientV2(object):
-
     """Wrap keystone client so we can encapsulate logic used in resources.
 
     Note: This is intended to be initialized from a resource on a per-session
@@ -37,6 +36,7 @@ class KeystoneClientV2(object):
     via the code in engine/client.py, so there should not be any need to
     directly instantiate instances of this class inside resources themselves.
     """
+
     def __init__(self, context):
         # If a trust_id is specified in the context, we immediately
         # authenticate so we can populate the context with a trust token
@@ -148,13 +148,14 @@ class KeystoneClientV2(object):
         return getattr(cfg.CONF.clients, option)
 
     def create_stack_user(self, username, password=''):
-        """
-        Create a user defined as part of a stack, either via template
+        """Create a user.
+
+        User can be defined as part of a stack, either via template
         or created internally by a resource.  This user will be added to
         the heat_stack_user_role as defined in the config
         Returns the keystone ID of the resulting user
         """
-        if(len(username) > 64):
+        if len(username) > 64:
             LOG.warn(_LW("Truncating the username %s to the last 64 "
                          "characters."), username)
             # get the last 64 characters of the username
@@ -224,11 +225,11 @@ class KeystoneClientV2(object):
         return self.delete_stack_user(user_id)
 
     def create_stack_domain_project(self, project_id):
-        '''Use the tenant ID as domain project.'''
+        """Use the tenant ID as domain project."""
         return self.context.tenant_id
 
     def delete_stack_domain_project(self, project_id):
-        '''Pass through method since no project was created.'''
+        """Pass through method since no project was created."""
         pass
 
     def create_stack_domain_user_keypair(self, user_id, project_id):

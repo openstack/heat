@@ -216,9 +216,9 @@ class ScalingGroupTest(common.HeatTestCase):
             self.stack.status_reason)
 
     def test_group_create(self):
-        """
-        Creating a group passes all the correct arguments to pyrax and saves
-        the group ID as the resource ID.
+        """Creating a group passes all the correct arguments to pyrax.
+
+        Also saves the group ID as the resource ID.
         """
         self._setup_test_stack()
         self.assertEqual(1, len(self.fake_auto_scale.groups))
@@ -330,8 +330,9 @@ Resources:
         self.assertIn('boom', str(exc))
 
     def test_update_group_config(self):
-        """
-        Updating the groupConfiguration section in a template results in a
+        """Updates the groupConfiguration section.
+
+        Updates the groupConfiguration section in a template results in a
         pyrax call to update the group configuration.
         """
         self._setup_test_stack()
@@ -349,8 +350,9 @@ Resources:
             5, self.fake_auto_scale.groups['0'].kwargs['min_entities'])
 
     def test_update_launch_config(self):
-        """
-        Updating the launchConfigresults section in a template results in a
+        """Updates the launchConfigresults section.
+
+        Updates the launchConfigresults section in a template results in a
         pyrax call to update the launch configuration.
         """
         self._setup_test_stack()
@@ -371,19 +373,14 @@ Resources:
             self.fake_auto_scale.groups['0'].kwargs['load_balancers'])
 
     def test_delete(self):
-        """
-        Deleting a ScalingGroup resource invokes the pyrax API to delete it.
-        """
+        """Deleting a ScalingGroup resource invokes pyrax API to delete it."""
         self._setup_test_stack()
         resource = self.stack['my_group']
         scheduler.TaskRunner(resource.delete)()
         self.assertEqual({}, self.fake_auto_scale.groups)
 
     def test_delete_without_backing_group(self):
-        """
-        If no backing scaling group exists, resource deletion silently
-        succeeds.
-        """
+        """Resource deletion succeeds, if no backing scaling group exists."""
         self._setup_test_stack()
         resource = self.stack['my_group']
         del self.fake_auto_scale.groups['0']
@@ -391,7 +388,8 @@ Resources:
         self.assertEqual({}, self.fake_auto_scale.groups)
 
     def test_delete_waits_for_server_deletion(self):
-        """
+        """Test case for waiting for successful resource deletion.
+
         The delete operation may fail until the servers are really gone; the
         resource retries until success.
         """
@@ -410,7 +408,8 @@ Resources:
         self.assertEqual(4, next(delete_counter))
 
     def test_delete_blows_up_on_other_errors(self):
-        """
+        """Test case for correct error handling during deletion.
+
         Only the Forbidden (403) error is honored as an indicator of pending
         deletion; other errors cause deletion to fail.
         """
@@ -458,9 +457,9 @@ class PolicyTest(common.HeatTestCase):
             self.stack.status_reason)
 
     def test_create_webhook_change(self):
-        """
-        Creating the resource creates the scaling policy with pyrax,
-        and sets the resource's ID to {group_id}:{policy_id}
+        """Creating the resource creates the scaling policy with pyrax.
+
+        Also sets the resource's ID to {group_id}:{policy_id}.
         """
         self._setup_test_stack(self.policy_template)
         resource = self.stack['my_policy']
@@ -475,7 +474,8 @@ class PolicyTest(common.HeatTestCase):
             self.fake_auto_scale.policies['0'].kwargs)
 
     def test_webhook_change_percent(self):
-        """
+        """Test case for specified changePercent.
+
         When changePercent is specified, it translates to pyrax arguments
         'change' and 'is_percent'.
         """
@@ -494,7 +494,8 @@ class PolicyTest(common.HeatTestCase):
             self.fake_auto_scale.policies['0'].kwargs)
 
     def test_webhook_desired_capacity(self):
-        """
+        """Test case for desiredCapacity property.
+
         The desiredCapacity property translates to the desired_capacity pyrax
         argument.
         """
@@ -529,9 +530,7 @@ class PolicyTest(common.HeatTestCase):
             self.fake_auto_scale.policies['0'].kwargs)
 
     def test_update(self):
-        """
-        Updating the resource calls the appropriate update method with pyrax.
-        """
+        """Updating the resource calls appropriate update method with pyrax."""
         self._setup_test_stack(self.policy_template)
         resource = self.stack['my_policy']
         uprops = copy.deepcopy(dict(resource.properties.data))
@@ -560,7 +559,8 @@ class PolicyTest(common.HeatTestCase):
         self.assertEqual({}, self.fake_auto_scale.policies)
 
     def test_delete_policy_non_existent(self):
-        """
+        """Test case for deleting resource without backing policy.
+
         Deleting a resource for which there is no backing policy succeeds
         silently.
         """
@@ -651,7 +651,8 @@ class WebHookTest(common.HeatTestCase):
         self.assertEqual({}, self.fake_auto_scale.webhooks)
 
     def test_delete_without_backing_webhook(self):
-        """
+        """Test case for deleting resource without backing webhook.
+
         Deleting a resource for which there is no backing webhook succeeds
         silently.
         """

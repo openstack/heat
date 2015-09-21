@@ -106,8 +106,7 @@ class RackspaceNovaClient(nova.NovaClientPlugin,
 class RackspaceCloudNetworksClient(RackspaceClientPlugin):
 
     def _create(self):
-        """
-        Rackspace cloud networks client.
+        """Rackspace cloud networks client.
 
         Though pyrax "fixed" the network client bugs that were introduced
         in 1.8, it still doesn't work for contexts because of caching of the
@@ -128,8 +127,7 @@ class RackspaceCloudNetworksClient(RackspaceClientPlugin):
 
 
 class RackspaceTroveClient(trove.TroveClientPlugin):
-    """
-    Rackspace trove client.
+    """Rackspace trove client.
 
     Since the pyrax module uses its own client implementation for Cloud
     Databases, we have to skip pyrax on this one and override the super
@@ -178,7 +176,7 @@ class RackspaceCinderClient(cinder.CinderClientPlugin):
 class RackspaceSwiftClient(swift.SwiftClientPlugin):
 
     def is_valid_temp_url_path(self, path):
-        '''Return True if path is a valid Swift TempURL path, False otherwise.
+        """Return True if path is a valid Swift TempURL path, False otherwise.
 
         A Swift TempURL path must:
         - Be five parts, ['', 'v1', 'account', 'container', 'object']
@@ -188,7 +186,7 @@ class RackspaceSwiftClient(swift.SwiftClientPlugin):
 
         :param path: The TempURL path
         :type path: string
-        '''
+        """
         parts = path.split('/', 4)
         return bool(len(parts) == 5 and
                     not parts[0] and
@@ -199,9 +197,7 @@ class RackspaceSwiftClient(swift.SwiftClientPlugin):
 
     def get_temp_url(self, container_name, obj_name, timeout=None,
                      method='PUT'):
-        '''
-        Return a Swift TempURL.
-        '''
+        """Return a Swift TempURL."""
         def tenant_uuid():
             access = self.context.auth_token_info['access']
             for role in access['user']['roles']:

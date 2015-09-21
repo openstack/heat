@@ -37,7 +37,6 @@ except ImportError:
 
 
 class Group(resource.Resource):
-
     """Represents a scaling group."""
 
     # pyrax differs drastically from the actual Auto Scale API. We'll prefer
@@ -387,7 +386,6 @@ class Group(resource.Resource):
 
 
 class ScalingPolicy(resource.Resource):
-
     """Represents a Rackspace Auto Scale scaling policy."""
 
     support_status = support.SupportStatus(
@@ -512,7 +510,6 @@ class ScalingPolicy(resource.Resource):
 
 
 class WebHook(resource.Resource):
-
     """Represents a Rackspace AutoScale webhook.
 
     Exposes the URLs of the webhook as attributes.

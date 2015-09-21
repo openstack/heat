@@ -36,7 +36,6 @@ LOG = logging.getLogger(__name__)
 
 
 class CloudDns(resource.Resource):
-
     """Represents a DNS resource."""
 
     support_status = support.SupportStatus(
