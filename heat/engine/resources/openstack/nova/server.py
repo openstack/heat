@@ -1411,6 +1411,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         props[self.IMAGE] = image_id
         return defn.freeze(properties=props)
 
+    def prepare_for_replace(self):
+        self.prepare_ports_for_replace()
+
+    def restore_after_rollback(self):
+        self.restore_ports_after_rollback()
+
 
 def resource_mapping():
     return {

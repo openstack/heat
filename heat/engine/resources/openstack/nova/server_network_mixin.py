@@ -329,3 +329,45 @@ class ServerNetworkMixin(object):
             add_nets.append(handler_kwargs)
 
         return remove_ports, add_nets
+
+    def prepare_ports_for_replace(self):
+        data = {'external_ports': [],
+                'internal_ports': []}
+        port_data = itertools.chain(
+            [('internal_ports', port) for port in self._data_get_ports()],
+            [('external_ports', port)
+             for port in self._data_get_ports('external_ports')])
+        for port_type, port in port_data:
+            # store port fixed_ips for restoring after failed update
+            port_details = self.client('neutron').show_port(port['id'])['port']
+            fixed_ips = port_details.get('fixed_ips', [])
+            data[port_type].append({'id': port['id'], 'fixed_ips': fixed_ips})
+
+        if data.get('internal_ports'):
+            self.data_set('internal_ports',
+                          jsonutils.dumps(data['internal_ports']))
+        if data.get('external_ports'):
+            self.data_set('external_ports',
+                          jsonutils.dumps(data['external_ports']))
+        # reset fixed_ips for these ports by setting for each of them
+        # fixed_ips to []
+        for port_type, port in port_data:
+            self.client('neutron').update_port(
+                port['id'], {'port': {'fixed_ips': []}})
+
+    def restore_ports_after_rollback(self):
+        old_server = self.stack._backup_stack().resources.get(self.name)
+
+        port_data = itertools.chain(self._data_get_ports(),
+                                    self._data_get_ports('external_ports'))
+        for port in port_data:
+            self.client('neutron').update_port(port['id'],
+                                               {'port': {'fixed_ips': []}})
+
+        old_port_data = itertools.chain(
+            old_server._data_get_ports(),
+            old_server._data_get_ports('external_ports'))
+        for port in old_port_data:
+            fixed_ips = port['fixed_ips']
+            self.client('neutron').update_port(
+                port['id'], {'port': {'fixed_ips': fixed_ips}})
