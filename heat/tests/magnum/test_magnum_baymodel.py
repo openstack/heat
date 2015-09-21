@@ -80,11 +80,6 @@ class TestMagnumBayModel(common.HeatTestCase):
         self.assertEqual(self.resource_id, bm.resource_id)
         self.assertEqual((bm.CREATE, bm.COMPLETE), bm.state)
 
-    def test_bay_model_delete(self):
-        bm = self._create_resource('bm', self.rsrc_defn, self.stack)
-        scheduler.TaskRunner(bm.delete)()
-        self.assertEqual((bm.DELETE, bm.COMPLETE), bm.state)
-
     def test_resource_mapping(self):
         mapping = baymodel.resource_mapping()
         self.assertEqual(1, len(mapping))
