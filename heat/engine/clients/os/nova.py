@@ -66,7 +66,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         extensions = computeshell._discover_extensions(NOVACLIENT_VERSION)
 
         args = {
-            'project_id': self.context.tenant,
+            'project_id': self.context.tenant_id,
             'auth_url': self.context.auth_url,
             'service_type': 'compute',
             'username': None,

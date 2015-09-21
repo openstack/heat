@@ -38,7 +38,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         args = {
             'auth_url': con.auth_url,
             'service_type': 'image',
-            'project_id': con.tenant,
+            'project_id': con.tenant_id,
             'token': self.auth_token,
             'endpoint_type': endpoint_type,
             'cacert': self._get_client_option('glance', 'ca_file'),
