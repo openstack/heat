@@ -115,6 +115,7 @@ class CloudServersTest(common.HeatTestCase):
         server = cloud_server.CloudServer(server_name,
                                           resource_defns['WebServer'],
                                           stack)
+        self.patchobject(server, 'store_external_ports')
 
         self._stub_server_validate(server, image_id or 'CentOS 5.2', 1)
         if stub_create:
@@ -322,6 +323,7 @@ class CloudServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
                                           resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
 
         class Interface(object):
             def __init__(self, id, addresses):
@@ -453,6 +455,7 @@ class CloudServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
                                           resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
         mock_servers_create = mock.Mock(return_value=return_server)
         self.fc.servers.create = mock_servers_create
         image_id = mock.ANY

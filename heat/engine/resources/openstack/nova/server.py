@@ -757,7 +757,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return server.id
 
     def check_create_complete(self, server_id):
-        return self.client_plugin()._check_active(server_id)
+        check = self.client_plugin()._check_active(server_id)
+        if check:
+            self.store_external_ports()
+        return check
 
     def handle_check(self):
         server = self.client().servers.get(self.resource_id)
@@ -1086,7 +1089,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 prg.complete = check_complete(*prg.checker_args,
                                               **prg.checker_kwargs)
                 break
-        return all(prg.complete for prg in updaters)
+        status = all(prg.complete for prg in updaters)
+        if status:
+            self.store_external_ports()
+        return status
 
     def metadata_update(self, new_metadata=None):
         '''
@@ -1278,8 +1284,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self._delete_temp_url()
             self._delete_queue()
 
-        if self.data().get('internal_ports'):
-            self._delete_internal_ports()
+        # remove internal and external ports
+        self._delete_internal_ports()
+        self.data_delete('external_ports')
 
         try:
             self.client().servers.delete(self.resource_id)
