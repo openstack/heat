@@ -432,6 +432,27 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.assertEqual(parent_id, nested_stack.parent)
         return nested_identifier
 
+    def group_nested_identifier(self, stack_identifier,
+                                group_name):
+        # Get the nested stack identifier from a group resource
+        rsrc = self.client.resources.get(stack_identifier, group_name)
+        physical_resource_id = rsrc.physical_resource_id
+
+        nested_stack = self.client.stacks.get(physical_resource_id)
+        nested_identifier = '%s/%s' % (nested_stack.stack_name,
+                                       nested_stack.id)
+        parent_id = stack_identifier.split("/")[-1]
+        self.assertEqual(parent_id, nested_stack.parent)
+        return nested_identifier
+
+    def list_group_resources(self, stack_identifier,
+                             group_name, minimal=True):
+        nested_identifier = self.group_nested_identifier(stack_identifier,
+                                                         group_name)
+        if minimal:
+            return self.list_resources(nested_identifier)
+        return self.client.resources.list(nested_identifier)
+
     def list_resources(self, stack_identifier):
         resources = self.client.resources.list(stack_identifier)
         return dict((r.resource_name, r.resource_type) for r in resources)
