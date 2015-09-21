@@ -1871,10 +1871,14 @@ class DBAPIStackTest(common.HeatTestCase):
 
     def test_stack_count_total_resources(self):
 
-        def add_resources(stack, count):
+        def add_resources(stack, count, root_stack_id):
             for i in range(count):
                 create_resource(
-                    self.ctx, stack, name='%s-%s' % (stack.name, i))
+                    self.ctx,
+                    stack,
+                    name='%s-%s' % (stack.name, i),
+                    root_stack_id=root_stack_id
+                )
 
         root = create_stack(self.ctx, self.template, self.user_creds,
                             name='root stack')
@@ -1904,38 +1908,19 @@ class DBAPIStackTest(common.HeatTestCase):
         s_4 = create_stack(self.ctx, self.template, self.user_creds,
                            name='s_4', owner_id=root.id)
 
-        add_resources(root, 3)
-        add_resources(s_1, 2)
-        add_resources(s_1_1, 4)
-        add_resources(s_1_2, 5)
-        add_resources(s_1_3, 6)
+        add_resources(root, 3, root.id)
+        add_resources(s_1, 2, root.id)
+        add_resources(s_1_1, 4, root.id)
+        add_resources(s_1_2, 5, root.id)
+        add_resources(s_1_3, 6, root.id)
 
-        add_resources(s_2, 1)
-        add_resources(s_2_1_1_1, 1)
-        add_resources(s_3, 4)
+        add_resources(s_2, 1, root.id)
+        add_resources(s_2_1_1_1, 1, root.id)
+        add_resources(s_3, 4, root.id)
 
         self.assertEqual(26, db_api.stack_count_total_resources(
             self.ctx, root.id))
 
-        self.assertEqual(17, db_api.stack_count_total_resources(
-            self.ctx, s_1.id))
-        self.assertEqual(4, db_api.stack_count_total_resources(
-            self.ctx, s_1_1.id))
-        self.assertEqual(5, db_api.stack_count_total_resources(
-            self.ctx, s_1_2.id))
-        self.assertEqual(6, db_api.stack_count_total_resources(
-            self.ctx, s_1_3.id))
-
-        self.assertEqual(2, db_api.stack_count_total_resources(
-            self.ctx, s_2.id))
-        self.assertEqual(1, db_api.stack_count_total_resources(
-            self.ctx, s_2_1.id))
-        self.assertEqual(1, db_api.stack_count_total_resources(
-            self.ctx, s_2_1_1.id))
-        self.assertEqual(1, db_api.stack_count_total_resources(
-            self.ctx, s_2_1_1_1.id))
-        self.assertEqual(4, db_api.stack_count_total_resources(
-            self.ctx, s_3.id))
         self.assertEqual(0, db_api.stack_count_total_resources(
             self.ctx, s_4.id))
         self.assertEqual(0, db_api.stack_count_total_resources(
