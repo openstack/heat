@@ -86,10 +86,11 @@ class ProviderNet(net.Net):
     }
 
     def validate(self):
-        '''
+        """Resource's validation.
+
         Validates to ensure that segmentation_id is not there for flat
         network type.
-        '''
+        """
         super(ProviderNet, self).validate()
 
         if (self.properties[self.PROVIDER_SEGMENTATION_ID] and
@@ -111,9 +112,10 @@ class ProviderNet(net.Net):
             self.add_provider_extension(props, self.PROVIDER_SEGMENTATION_ID)
 
     def handle_create(self):
-        '''
+        """Creates the resource with provided properties.
+
         Adds 'provider:' extension to the required properties during create.
-        '''
+        """
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
@@ -124,9 +126,10 @@ class ProviderNet(net.Net):
         self.resource_id_set(prov_net['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        '''
+        """Updates the resource with provided properties.
+
         Adds 'provider:' extension to the required properties during update.
-        '''
+        """
         props = self.prepare_update_properties(json_snippet)
 
         self.prepare_provider_properties(self, props)

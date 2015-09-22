@@ -39,9 +39,7 @@ template_template = {
 
 
 class ResourceGroup(stack_resource.StackResource):
-    """
-    A resource that creates one or more identically configured nested
-    resources.
+    """Creates one or more identically configured nested resources.
 
     In addition to the `refs` attribute, this resource implements synthetic
     attributes that mirror those of the resources in the group.  When

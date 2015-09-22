@@ -26,14 +26,15 @@ from heat.engine import support
 
 
 class StructuredConfig(sc.SoftwareConfig):
-    '''
+    """A resource which has same logic with OS::Heat::SoftwareConfig.
+
     This resource is like OS::Heat::SoftwareConfig except that the config
     property is represented by a Map rather than a String.
 
     This is useful for configuration tools which use YAML or JSON as their
     configuration syntax. The resulting configuration is transferred,
     stored and returned by the software_configs API as parsed JSON.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -65,7 +66,8 @@ class StructuredConfig(sc.SoftwareConfig):
 
 
 class StructuredDeployment(sd.SoftwareDeployment):
-    '''
+    """A resource which has same logic with OS::Heat::SoftwareDeployment.
+
     A deployment resource like OS::Heat::SoftwareDeployment, but which
     performs input value substitution on the config defined by a
     OS::Heat::StructuredConfig resource.
@@ -78,7 +80,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
     with the value of input_name in this resource's input_values. If get_input
     needs to be passed through to the substituted configuration then a
     different input_key property value can be specified.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

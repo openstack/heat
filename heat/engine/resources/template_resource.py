@@ -42,13 +42,12 @@ def generate_class(name, template_name, env, files=None):
 
 
 class TemplateResource(stack_resource.StackResource):
-    '''
-    A resource implemented by a nested stack.
+    """A resource implemented by a nested stack.
 
     This implementation passes resource properties as parameters to the nested
     stack. Outputs of the nested stack are exposed as attributes of this
     resource.
-    '''
+    """
 
     def __init__(self, name, json_snippet, stack):
         self._parsed_nested = None
@@ -124,9 +123,10 @@ class TemplateResource(stack_resource.StackResource):
                                                 self._resolve_all_attributes)
 
     def child_params(self):
-        '''
+        """Override method of child_params for the resource.
+
         :return: parameter values for our nested stack based on our properties
-        '''
+        """
         params = {}
         for pname, pval in iter(self.properties.props.items()):
             if not pval.implemented():
@@ -284,9 +284,7 @@ class TemplateResource(stack_resource.StackResource):
                                          self.child_params())
 
     def metadata_update(self, new_metadata=None):
-        '''
-        Refresh the metadata if new_metadata is None
-        '''
+        """Refresh the metadata if new_metadata is None."""
         if new_metadata is None:
             self.metadata_set(self.t.metadata())
 

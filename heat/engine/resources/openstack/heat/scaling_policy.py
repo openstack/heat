@@ -110,9 +110,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
     }
 
     def validate(self):
-        """
-        Add validation for min_adjustment_step
-        """
+        """Add validation for min_adjustment_step."""
         super(AutoScalingPolicy, self).validate()
         self._validate_min_adjustment_step()
 
@@ -131,7 +129,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         self.resource_id_set(self._get_user_id())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """
+        """Updates self.properties, if Properties has changed.
+
         If Properties has changed, update self.properties, so we get the new
         values during any subsequent adjustment.
         """

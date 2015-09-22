@@ -234,9 +234,7 @@ class LaunchConfiguration(resource.Resource):
         return self.physical_resource_name_or_FnGetRefId()
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         super(LaunchConfiguration, self).validate()
         # now we don't support without snapshot_id in bdm
         bdm = self.properties.get(self.BLOCK_DEVICE_MAPPINGS)

@@ -19,13 +19,14 @@ from heat.engine import support
 
 
 class WaitConditionHandle(wc_base.BaseWaitConditionHandle):
-    '''
+    """AWS WaitConditionHandle resource.
+
     the main point of this class is to :
     have no dependencies (so the instance can reference it)
     generate a unique url (to be returned in the reference)
     then the cfn-signal will use this url to post to and
     WaitCondition will poll it to see if has been written to.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -47,8 +48,8 @@ class WaitConditionHandle(wc_base.BaseWaitConditionHandle):
         self.handle_signal(details=new_metadata)
 
     def handle_signal(self, details=None):
-        '''
-        Validate and update the resource metadata
+        """Validate and update the resource metadata.
+
         metadata must use the following format:
         {
             "Status" : "Status (must be SUCCESS or FAILURE)",
@@ -56,7 +57,7 @@ class WaitConditionHandle(wc_base.BaseWaitConditionHandle):
             "Data" : "Arbitrary Data",
             "Reason" : "Reason String"
         }
-        '''
+        """
         if details is None:
             return
         return super(WaitConditionHandle, self).handle_signal(details)

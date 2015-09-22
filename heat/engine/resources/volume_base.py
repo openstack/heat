@@ -18,9 +18,7 @@ from heat.engine import resource
 
 
 class BaseVolume(resource.Resource):
-    '''
-    Base Volume Manager.
-    '''
+    """Base Volume Manager."""
 
     default_client_name = 'cinder'
 
@@ -113,11 +111,10 @@ class BaseVolume(resource.Resource):
                 result=_('Volume backup failed'))
 
     def _delete_volume(self):
-        """Call the volume delete API
+        """Call the volume delete API.
 
         Returns False if further checking of volume status is required,
         True otherwise.
-
         """
         try:
             cinder = self.client()
@@ -164,9 +161,7 @@ class BaseVolume(resource.Resource):
 
 
 class BaseVolumeAttachment(resource.Resource):
-    '''
-    Base Volume Attachment Manager.
-    '''
+    """Base Volume Attachment Manager."""
 
     default_client_name = 'cinder'
 

@@ -98,10 +98,11 @@ class Restarter(signal_responder.SignalResponder):
         self.stack.restart_resource(victim.name)
 
     def _resolve_attribute(self, name):
-        '''
+        """Resolves the resource's attributes.
+
         heat extension: "AlarmUrl" returns the url to post to the policy
         when there is an alarm.
-        '''
+        """
         if name == self.ALARM_URL and self.resource_id is not None:
             return six.text_type(self._get_ec2_signed_url())
 

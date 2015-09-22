@@ -26,9 +26,7 @@ from heat.rpc import api as rpc_api
 
 
 class MultipartMime(software_config.SoftwareConfig):
-    '''
-    A resource which assembles a collection of software configurations
-    as a multi-part mime message.
+    """Assembles a collection of software configurations as a multi-part mime.
 
     Parts in the message can be populated with inline configuration or
     references to other config resources. If the referenced resource is itself
@@ -42,7 +40,7 @@ class MultipartMime(software_config.SoftwareConfig):
     configuration elements including scripts and cloud-config. Since
     cloud-init is boot-only configuration, any changes to the definition
     will result in the replacement of all servers which reference it.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

@@ -17,10 +17,7 @@ cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
 
 
 class SchedulerHintsMixin(object):
-    '''
-    Utility class to encapsulate Scheduler Hint related logic shared
-    between resources.
-    '''
+    """Utility class to encapsulate Scheduler Hint related logic."""
 
     HEAT_ROOT_STACK_ID = 'heat_root_stack_id'
     HEAT_STACK_ID = 'heat_stack_id'
@@ -30,7 +27,7 @@ class SchedulerHintsMixin(object):
     HEAT_RESOURCE_UUID = 'heat_resource_uuid'
 
     def _scheduler_hints(self, scheduler_hints):
-        '''Augment scheduler hints with supplemental content.'''
+        """Augment scheduler hints with supplemental content."""
         if cfg.CONF.stack_scheduler_hints:
             if scheduler_hints is None:
                 scheduler_hints = {}

@@ -26,9 +26,7 @@ from heat.engine import support
 
 
 class NetworkGateway(neutron.NeutronResource):
-    '''
-    A resource for the Network Gateway resource in Neutron Network Gateway.
-    '''
+    """Network Gateway resource in Neutron Network Gateway."""
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -163,9 +161,7 @@ class NetworkGateway(neutron.NeutronResource):
             self.resource_id)['network_gateway']
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         super(NetworkGateway, self).validate()
         connections = self.properties[self.CONNECTIONS]
 

@@ -123,7 +123,8 @@ class InstanceGroup(stack_resource.StackResource):
     }
 
     def __init__(self, name, json_snippet, stack):
-        """
+        """Initialisation of the resource.
+
         UpdatePolicy is currently only specific to InstanceGroup and
         AutoScalingGroup. Therefore, init is overridden to parse for the
         UpdatePolicy.
@@ -133,9 +134,7 @@ class InstanceGroup(stack_resource.StackResource):
                                                   self.context)
 
     def validate(self):
-        """
-        Add validation for update_policy
-        """
+        """Add validation for update_policy."""
         super(InstanceGroup, self).validate()
 
         if self.update_policy is not None:
@@ -177,8 +176,7 @@ class InstanceGroup(stack_resource.StackResource):
         return self.create_with_template(initial_template)
 
     def check_create_complete(self, task):
-        """
-        When stack creation is done, update the load balancer.
+        """When stack creation is done, update the loadbalancer.
 
         If any instances failed to be created, delete them.
         """
@@ -188,7 +186,8 @@ class InstanceGroup(stack_resource.StackResource):
         return done
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """
+        """Updates self.properties, if Properties has changed.
+
         If Properties has changed, update self.properties, so we
         get the new values during any subsequent adjustment.
         """
@@ -214,8 +213,8 @@ class InstanceGroup(stack_resource.StackResource):
             self.resize(curr_size)
 
     def _tags(self):
-        """
-        Make sure that we add a tag that Ceilometer can pick up.
+        """Make sure that we add a tag that Ceilometer can pick up.
+
         These need to be prepended with 'metering.'.
         """
         tags = self.properties.get(self.TAGS) or []
@@ -255,8 +254,7 @@ class InstanceGroup(stack_resource.StackResource):
     def _create_template(self, num_instances, num_replace=0,
                          template_version=('HeatTemplateFormatVersion',
                                            '2012-12-12')):
-        """
-        Create a template to represent autoscaled instances.
+        """Create a template to represent autoscaled instances.
 
         Also see heat.scaling.template.member_definitions.
         """
@@ -291,8 +289,9 @@ class InstanceGroup(stack_resource.StackResource):
         return self.stack.timeout_secs() - total_pause_time
 
     def _replace(self, min_in_service, batch_size, pause_sec):
-        """
-        Replace the instances in the group using updated launch configuration
+        """Replace the instances in the group.
+
+        Replace the instances in the group using updated launch configuration.
         """
         def changing_instances(tmpl):
             instances = grouputils.get_members(self)
@@ -331,8 +330,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     @staticmethod
     def _get_batches(capacity, batch_size, min_in_service):
-        """
-        Return an iterator over the batches in a batched update.
+        """Return an iterator over the batches in a batched update.
 
         Each batch is a tuple comprising the total size of the group after
         processing the batch, and the number of members that can receive the
@@ -380,10 +378,11 @@ class InstanceGroup(stack_resource.StackResource):
         return self.physical_resource_name_or_FnGetRefId()
 
     def _resolve_attribute(self, name):
-        '''
+        """Resolves the resource's attributes.
+
         heat extension: "InstanceList" returns comma delimited list of server
         ip addresses.
-        '''
+        """
         if name == self.INSTANCE_LIST:
             return u','.join(inst.FnGetAtt('PublicIp')
                              for inst in grouputils.get_members(self)) or None

@@ -26,11 +26,10 @@ from heat.engine import support
 
 
 class RandomString(resource.Resource):
-    '''
-    A resource which generates a random string.
+    """A resource which generates a random string.
 
     This is useful for configuring passwords and secrets on services.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

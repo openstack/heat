@@ -233,7 +233,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         return done
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """
+        """Updates self.properties, if Properties has changed.
+
         If Properties has changed, update self.properties, so we get the new
         values during any subsequent adjustment.
         """
@@ -261,9 +262,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
     def adjust(self, adjustment,
                adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
                min_adjustment_step=None, signal=False):
-        """
-        Adjust the size of the scaling group if the cooldown permits.
-        """
+        """Adjust the size of the scaling group if the cooldown permits."""
         if self._cooldown_inprogress():
             LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
                          "cooldown %(cooldown)s"),
@@ -320,7 +319,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                                   adjustment))
 
     def _tags(self):
-        """Add Identifing Tags to all servers in the group.
+        """Add Identifying Tags to all servers in the group.
 
         This is so the Dimensions received from cfn-push-stats all include
         the groupname and stack id.
@@ -372,10 +371,11 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         super(AutoScalingGroup, self).validate()
 
     def _resolve_attribute(self, name):
-        '''
+        """Resolves the resource's attributes.
+
         heat extension: "InstanceList" returns comma delimited list of server
         ip addresses.
-        '''
+        """
         if name == self.INSTANCE_LIST:
             return u','.join(inst.FnGetAtt('PublicIp')
                              for inst in grouputils.get_members(self)) or None

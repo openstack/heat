@@ -602,9 +602,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         self.metadata_set(meta)
 
     def _register_access_key(self):
-        '''
-        Access is limited to this resource, which created the keypair
-        '''
+        """Access is limited to this resource, which created the keypair."""
         def access_allowed(resource_name):
             return resource_name == self.name
 
@@ -1077,7 +1075,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return updaters
 
     def check_update_complete(self, updaters):
-        '''Push all updaters to completion in list order.'''
+        """Push all updaters to completion in list order."""
         for prg in updaters:
             if not prg.called:
                 handler = getattr(self.client_plugin(), prg.handler)
@@ -1095,9 +1093,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return status
 
     def metadata_update(self, new_metadata=None):
-        '''
-        Refresh the metadata if new_metadata is None
-        '''
+        """Refresh the metadata if new_metadata is None."""
         if new_metadata is None:
             # Re-resolve the template metadata and merge it with the
             # current resource metadata.  This is necessary because the
@@ -1111,10 +1107,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     @staticmethod
     def _check_maximum(count, maximum, msg):
-        '''
-        Check a count against a maximum, unless maximum is -1 which indicates
-        that there is no limit
-        '''
+        """Check a count against a maximum.
+
+        Unless maximum is -1 which indicates that there is no limit.
+        """
         if maximum != -1 and count > maximum:
             raise exception.StackValidationFailed(message=msg)
 
@@ -1312,11 +1308,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             prg.server_id)
 
     def handle_suspend(self):
-        '''
-        Suspend a server - note we do not wait for the SUSPENDED state,
-        this is polled for by check_suspend_complete in a similar way to the
-        create logic so we can take advantage of coroutines
-        '''
+        """Suspend a server.
+
+        Note we do not wait for the SUSPENDED state, this is polled for by
+        check_suspend_complete in a similar way to the create logic so we can
+        take advantage of coroutines.
+        """
         if self.resource_id is None:
             raise exception.Error(_('Cannot suspend %s, resource_id not set') %
                                   self.name)
@@ -1354,11 +1351,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             raise exc
 
     def handle_resume(self):
-        '''
-        Resume a server - note we do not wait for the ACTIVE state,
-        this is polled for by check_resume_complete in a similar way to the
-        create logic so we can take advantage of coroutines
-        '''
+        """Resume a server.
+
+        Note we do not wait for the ACTIVE state, this is polled for by
+        check_resume_complete in a similar way to the create logic so we can
+        take advantage of coroutines.
+        """
         if self.resource_id is None:
             raise exception.Error(_('Cannot resume %s, resource_id not set') %
                                   self.name)

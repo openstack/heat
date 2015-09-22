@@ -21,8 +21,7 @@ from heat.engine import support
 
 
 class KeyPair(resource.Resource):
-    """
-    A resource for creating Nova key pairs.
+    """A resource for creating Nova key pairs.
 
     **Note** that if a new key is generated setting `save_private_key` to
     `True` results in the system saving the private key which can then be

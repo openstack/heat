@@ -20,9 +20,7 @@ from heat.engine import support
 
 
 class VPNService(neutron.NeutronResource):
-    """
-    A resource for VPN service in Neutron.
-    """
+    """A resource for VPN service in Neutron."""
 
     PROPERTIES = (
         NAME, DESCRIPTION, ADMIN_STATE_UP,
@@ -181,9 +179,7 @@ class VPNService(neutron.NeutronResource):
 
 
 class IPsecSiteConnection(neutron.NeutronResource):
-    """
-    A resource for IPsec site connection in Neutron.
-    """
+    """A resource for IPsec site connection in Neutron."""
 
     PROPERTIES = (
         NAME, DESCRIPTION, PEER_ADDRESS, PEER_ID, PEER_CIDRS, MTU,
@@ -425,9 +421,7 @@ class IPsecSiteConnection(neutron.NeutronResource):
 
 
 class IKEPolicy(neutron.NeutronResource):
-    """
-    A resource for IKE policy in Neutron.
-    """
+    """A resource for IKE policy in Neutron."""
 
     PROPERTIES = (
         NAME, DESCRIPTION, AUTH_ALGORITHM, ENCRYPTION_ALGORITHM,
@@ -593,9 +587,7 @@ class IKEPolicy(neutron.NeutronResource):
 
 
 class IPsecPolicy(neutron.NeutronResource):
-    """
-    A resource for IPsec policy in Neutron.
-    """
+    """A resource for IPsec policy in Neutron."""
 
     PROPERTIES = (
         NAME, DESCRIPTION, TRANSFORM_PROTOCOL, ENCAPSULATION_MODE,

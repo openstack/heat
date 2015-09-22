@@ -24,9 +24,7 @@ from heat.engine.resources import stack_resource
 
 
 class NestedStack(stack_resource.StackResource):
-    '''
-    A Resource representing a child stack to allow composition of templates.
-    '''
+    """Represents a child stack to allow composition of templates."""
 
     PROPERTIES = (
         TEMPLATE_URL, TIMEOUT_IN_MINS, PARAMETERS,

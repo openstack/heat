@@ -20,9 +20,10 @@ from heat.engine import support
 
 
 class MonascaAlarmDefinition(resource.Resource):
-    """Heat Template Resource for Monasca Alarm definition. This plug-in
-    requires python-monascaclient>=1.0.22 .So to enable this plug-in, install
-    this client library and restart the heat-engine.
+    """Heat Template Resource for Monasca Alarm definition.
+
+    This plug-in requires python-monascaclient>=1.0.22. So to enable this
+    plug-in, install this client library and restart the heat-engine.
     """
 
     support_status = support.SupportStatus(

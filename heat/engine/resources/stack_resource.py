@@ -38,10 +38,11 @@ LOG = logging.getLogger(__name__)
 
 
 class StackResource(resource.Resource):
-    '''
+    """Allows entire stack to be managed as a resource in a parent stack.
+
     An abstract Resource subclass that allows the management of an entire Stack
     as a resource in a parent stack.
-    '''
+    """
 
     # Assume True as this is evaluated before the stack is created
     # so there is no way to know for sure without subclass-specific
@@ -125,13 +126,14 @@ class StackResource(resource.Resource):
         return False
 
     def nested(self, force_reload=False, show_deleted=False):
-        '''Return a Stack object representing the nested (child) stack.
-        if we catch NotFound exception when loading, return None.
+        """Return a Stack object representing the nested (child) stack.
+
+        If we catch NotFound exception when loading, return None.
 
         :param force_reload: Forces reloading from the DB instead of returning
                              the locally cached Stack object
         :param show_deleted: Returns the stack even if it's been deleted
-        '''
+        """
         if force_reload:
             self._nested = None
 
@@ -147,26 +149,23 @@ class StackResource(resource.Resource):
         return self._nested
 
     def child_template(self):
-        '''
-        Default implementation to get the child template.
+        """Default implementation to get the child template.
 
         Resources that inherit from StackResource should override this method
         with specific details about the template used by them.
-        '''
+        """
         raise NotImplementedError()
 
     def child_params(self):
-        '''
-        Default implementation to get the child params.
+        """Default implementation to get the child params.
 
         Resources that inherit from StackResource should override this method
         with specific details about the parameters used by them.
-        '''
+        """
         raise NotImplementedError()
 
     def preview(self):
-        '''
-        Preview a StackResource as resources within a Stack.
+        """Preview a StackResource as resources within a Stack.
 
         This method overrides the original Resource.preview to return a preview
         of all the resources contained in this Stack.  For this to be possible,
@@ -174,7 +173,7 @@ class StackResource(resource.Resource):
         ``child_params`` with specific information to allow the stack to be
         parsed correctly. If any of these methods is missing, the entire
         StackResource will be returned as if it were a regular Resource.
-        '''
+        """
         try:
             child_template = self.child_template()
             params = self.child_params()
@@ -438,9 +437,7 @@ class StackResource(resource.Resource):
                                            cookie=cookie)
 
     def delete_nested(self):
-        '''
-        Delete the nested stack.
-        '''
+        """Delete the nested stack."""
         stack = self.nested()
         if stack is None:
             return
@@ -510,12 +507,11 @@ class StackResource(resource.Resource):
         return {}
 
     def get_output(self, op):
-        '''
-        Return the specified Output value from the nested stack.
+        """Return the specified Output value from the nested stack.
 
         If the output key does not exist, raise an InvalidTemplateAttribute
         exception.
-        '''
+        """
         stack = self.nested()
         if stack is None:
             return None

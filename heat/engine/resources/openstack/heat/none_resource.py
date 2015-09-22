@@ -20,14 +20,13 @@ from heat.engine import support
 
 
 class NoneResource(resource.Resource):
-    '''
-    A resource which enables easily disabling certain resources via the
-    resource_registry.  It does nothing, but can effectively stub out
-    any other resource because it will accept any properties and return
-    any attribute (as None).  Note this resource always does nothing
-    on update (e.g it is not replaced even if a change to the stubbed
-    resource properties would cause replacement).
-    '''
+    """Enables easily disabling certain resources via the resource_registry.
+
+    It does nothing, but can effectively stub out any other resource because it
+    will accept any properties and return any attribute (as None). Note this
+    resource always does nothing on update (e.g it is not replaced even if a
+    change to the stubbed resource properties would cause replacement).
+    """
 
     support_status = support.SupportStatus(version='5.0.0')
     properties_schema = {}

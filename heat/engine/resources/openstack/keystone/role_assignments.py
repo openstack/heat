@@ -20,9 +20,7 @@ from heat.engine import support
 
 
 class KeystoneRoleAssignmentMixin(object):
-    '''
-    Keystone Role assignment class implements role assignments between
-    user/groups and project/domain.
+    """Implements role assignments between user/groups and project/domain.
 
     heat_template_version: 2013-05-23
 
@@ -48,7 +46,7 @@ class KeystoneRoleAssignmentMixin(object):
               domain: {get_param: group_role_domain}
             - role: {get_param: group_role}
               project: {get_param: group_role_project}
-    '''
+    """
 
     PROPERTIES = (
         ROLES
@@ -312,7 +310,7 @@ class KeystoneRoleAssignmentMixin(object):
 
 class KeystoneUserRoleAssignment(resource.Resource,
                                  KeystoneRoleAssignmentMixin):
-    '''Resource for granting roles to a user.'''
+    """Resource for granting roles to a user."""
 
     support_status = support.SupportStatus(
         version='5.0.0',
@@ -363,7 +361,7 @@ class KeystoneUserRoleAssignment(resource.Resource,
 
 class KeystoneGroupRoleAssignment(resource.Resource,
                                   KeystoneRoleAssignmentMixin):
-    '''Resource for granting roles to a group.'''
+    """Resource for granting roles to a group."""
 
     support_status = support.SupportStatus(
         version='5.0.0',

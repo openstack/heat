@@ -19,9 +19,7 @@ from heat.engine import support
 
 
 class BayModel(resource.Resource):
-    """
-    A resource for the BayModel in Magnum.
-    """
+    """A resource for the BayModel in Magnum."""
 
     support_status = support.SupportStatus(version='5.0.0')
 
