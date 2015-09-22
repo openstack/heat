@@ -155,7 +155,7 @@ class BaseVolume(resource.Resource):
                 self.client_plugin().ignore_not_found(ex)
                 prg.delete['complete'] = True
                 return True
-            if 'error' in vol.status.lower():
+            if vol.status.lower() == 'error_deleting':
                 raise exception.ResourceInError(status_reason='delete',
                                                 resource_status=vol.status)
             else:
