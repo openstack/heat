@@ -88,6 +88,20 @@ resources:
                                    'Type': 'Number'}}}
         self.assertEqual(expected, ret)
 
+    def test_template_validate_override_none(self):
+        env = {'resource_registry': {
+               'OS::Heat::RandomString': 'OS::Heat::None'}}
+        ret = self.client.stacks.validate(template=self.random_template,
+                                          environment=env)
+        expected = {'Description': 'the stack description',
+                    'Parameters': {
+                        'aparam': {'Default': 10,
+                                   'Description': 'the param description',
+                                   'Label': 'aparam',
+                                   'NoEcho': 'false',
+                                   'Type': 'Number'}}}
+        self.assertEqual(expected, ret)
+
     def test_template_validate_basic_required_param(self):
         tmpl = self.random_template.replace('default: 10', '')
         ret = self.client.stacks.validate(template=tmpl)
