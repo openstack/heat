@@ -294,7 +294,7 @@ class TemplateResource(stack_resource.StackResource):
         return self.update_with_template(self.child_template(),
                                          self.child_params())
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         if self.nested() is None:
             return six.text_type(self.name)
 
