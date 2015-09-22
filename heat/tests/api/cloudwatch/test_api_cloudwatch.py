@@ -74,12 +74,12 @@ class WatchControllerTest(common.HeatTestCase):
         dims = [{'StackId': u'21617058-781e-4262-97ab-5f9df371ee52',
                  'Foo': 'bar'}]
         self.assertEqual(
-            utils.recursive_sort(
-                [{'Name': 'StackId',
-                  'Value': u'21617058-781e-4262-97ab-5f9df371ee52'},
-                 {'Name': 'Foo',
-                  'Value': 'bar'}]),
-            utils.recursive_sort(self.controller._reformat_dimensions(dims)))
+            [{'Name': 'Foo',
+              'Value': 'bar'},
+             {'Name': 'StackId',
+              'Value': u'21617058-781e-4262-97ab-5f9df371ee52'}],
+            sorted((self.controller._reformat_dimensions(dims)),
+                   key=lambda k: k['Name']))
 
     def test_enforce_default(self):
         self.m.ReplayAll()
@@ -302,10 +302,20 @@ class WatchControllerTest(common.HeatTestCase):
                                      'Value': 1}],
                                    'MetricName': u'ServiceFailure3'}]}}}
 
+        response = self.controller.list_metrics(dummy_req)
+        metrics = (response['ListMetricsResponse']['ListMetricsResult']
+                   ['Metrics'])
+        metrics[0]['Dimensions'] = sorted(
+            metrics[0]['Dimensions'], key=lambda k: k['Name'])
+        metrics[1]['Dimensions'] = sorted(
+            metrics[1]['Dimensions'], key=lambda k: k['Name'])
+        metrics[2]['Dimensions'] = sorted(
+            metrics[2]['Dimensions'], key=lambda k: k['Name'])
+        metrics = sorted(metrics, key=lambda k: k['MetricName'])
+        response['ListMetricsResponse']['ListMetricsResult'] = (
+            {'Metrics': metrics})
         # First pass no query paramters filtering, should get all three
-        self.assertEqual(
-            utils.recursive_sort(expected),
-            utils.recursive_sort(self.controller.list_metrics(dummy_req)))
+        self.assertEqual(expected, response)
 
     def test_list_metrics_filter_name(self):
 
@@ -361,10 +371,15 @@ class WatchControllerTest(common.HeatTestCase):
                          {'Name': u'Value',
                           'Value': 1}],
                         'MetricName': u'ServiceFailure'}]}}}
+        response = self.controller.list_metrics(dummy_req)
+        metrics = (response['ListMetricsResponse']['ListMetricsResult']
+                   ['Metrics'])
+        metrics[0]['Dimensions'] = sorted(
+            metrics[0]['Dimensions'], key=lambda k: k['Name'])
+        response['ListMetricsResponse']['ListMetricsResult'] = (
+            {'Metrics': metrics})
         # First pass no query paramters filtering, should get all three
-        self.assertEqual(
-            utils.recursive_sort(expected),
-            utils.recursive_sort(self.controller.list_metrics(dummy_req)))
+        self.assertEqual(expected, response)
 
     def test_list_metrics_filter_namespace(self):
 
@@ -432,9 +447,17 @@ class WatchControllerTest(common.HeatTestCase):
                          {'Name': u'Value',
                           'Value': 1}],
                         'MetricName': u'ServiceFailure2'}]}}}
-        self.assertEqual(
-            utils.recursive_sort(expected),
-            utils.recursive_sort(self.controller.list_metrics(dummy_req)))
+        response = self.controller.list_metrics(dummy_req)
+        metrics = (response['ListMetricsResponse']['ListMetricsResult']
+                   ['Metrics'])
+        metrics[0]['Dimensions'] = sorted(
+            metrics[0]['Dimensions'], key=lambda k: k['Name'])
+        metrics[1]['Dimensions'] = sorted(
+            metrics[1]['Dimensions'], key=lambda k: k['Name'])
+        response['ListMetricsResponse']['ListMetricsResult'] = (
+            {'Metrics': metrics})
+        # First pass no query paramters filtering, should get all three
+        self.assertEqual(expected, response)
 
     def test_put_metric_alarm(self):
         # Not yet implemented, should raise HeatAPINotImplementedError
