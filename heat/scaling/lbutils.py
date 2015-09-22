@@ -23,12 +23,11 @@ from heat.engine import scheduler
 
 
 def reload_loadbalancers(group, load_balancers, exclude=None):
-    '''
-    Notify the LoadBalancer to reload its config.
+    """Notify the LoadBalancer to reload its config.
 
     This must be done after activation (instance in ACTIVE state), otherwise
     the instances' IP addresses may not be available.
-    '''
+    """
     exclude = exclude or []
     id_list = grouputils.get_member_refids(group, exclude=exclude)
     for name, lb in six.iteritems(load_balancers):
