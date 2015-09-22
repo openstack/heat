@@ -2059,8 +2059,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
                          'resource_registry': {}},
-              'files': {}}),
-            version='1.17'
+              'files': {},
+              'show_nested': False}),
+            version='1.18'
         ).AndReturn(engine_response)
         self.m.ReplayAll()
 
@@ -2086,8 +2087,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
                          'resource_registry': {}},
-              'files': {}}),
-            version='1.17'
+              'files': {},
+              'show_nested': False}),
+            version='1.18'
         ).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()
 
