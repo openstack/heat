@@ -1,6 +1,7 @@
 rackspace.tests
 heat_docker.tests
 heat.tests.api.aws.test_api_aws
+heat.tests.api.aws.test_api_ec2token
 heat.tests.api.middleware.test_ssl_middleware
 heat.tests.api.middleware.test_version_negotiation_middleware
 heat.tests.api.openstack_v1.test_stacks_view
@@ -124,6 +125,7 @@ heat.tests.test_instance_group
 heat.tests.test_instance_group_update_policy
 heat.tests.test_iso_8601
 heat.tests.test_lifecycle_plugin_utils
+heat.tests.test_loguserdata
 heat.tests.test_magnum_baymodel
 heat.tests.test_metadata_refresh
 heat.tests.test_multi_part

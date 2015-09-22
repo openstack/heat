@@ -214,7 +214,7 @@ class EC2Token(wsgi.Middleware):
                                     'verb': req.method,
                                     'path': req.path,
                                     'params': auth_params,
-                                    'headers': req.headers,
+                                    'headers': dict(req.headers),
                                     'body_hash': body_hash
                                     }}
         creds_json = json.dumps(creds)

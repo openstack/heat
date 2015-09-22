@@ -17,6 +17,7 @@ import subprocess
 
 import mox
 import pkg_resources
+import six
 
 from heat.cloudinit import loguserdata
 from heat.tests import common
@@ -144,7 +145,10 @@ class LoguserdataTest(common.HeatTestCase):
             stdout=mox.IgnoreArg()).AndRaise(IOError("read failed"))
 
         self.m.ReplayAll()
-        self.assertEqual(os.EX_SOFTWARE, loguserdata.main())
+        if six.PY3:
+            self.assertEqual(os.EX_OSERR, loguserdata.main())
+        else:
+            self.assertEqual(os.EX_SOFTWARE, loguserdata.main())
         self.m.VerifyAll()
 
     def test_main_fails(self):
