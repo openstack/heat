@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
-Interface for database access.
+"""Interface for database access.
 
 Usage:
 
@@ -22,7 +21,7 @@ Usage:
 
 The underlying driver is loaded . SQLAlchemy is currently the only
 supported backend.
-'''
+"""
 
 from oslo_config import cfg
 from oslo_db import api

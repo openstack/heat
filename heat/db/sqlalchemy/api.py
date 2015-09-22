@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''Implementation of SQLAlchemy backend.'''
+"""Implementation of SQLAlchemy backend."""
 import datetime
 import sys
 
@@ -178,9 +178,9 @@ def resource_update(context, resource_id, values, atomic_key,
 
 
 def resource_data_get_all(resource, data=None):
-    """
-    Looks up resource_data by resource.id.  If data is encrypted,
-    this method will decrypt the results.
+    """Looks up resource_data by resource.id.
+
+    If data is encrypted, this method will decrypt the results.
     """
     if data is None:
         data = (model_query(resource.context, models.ResourceData)
@@ -200,8 +200,9 @@ def resource_data_get_all(resource, data=None):
 
 
 def resource_data_get(resource, key):
-    """Lookup value of resource's data by key. Decrypts resource data if
-    necessary.
+    """Lookup value of resource's data by key.
+
+    Decrypts resource data if necessary.
     """
     result = resource_data_get_by_key(resource.context,
                                       resource.id,
@@ -242,8 +243,9 @@ def stack_tags_get(context, stack_id):
 
 
 def resource_data_get_by_key(context, resource_id, key):
-    """Looks up resource_data by resource_id and key. Does not unencrypt
-    resource_data.
+    """Looks up resource_data by resource_id and key.
+
+    Does not decrypt resource_data.
     """
     result = (model_query(context, models.ResourceData)
               .filter_by(resource_id=resource_id)
@@ -361,12 +363,12 @@ def stack_get_all_by_owner_id(context, owner_id):
 
 
 def _get_sort_keys(sort_keys, mapping):
-    '''Returns an array containing only whitelisted keys
+    """Returns an array containing only whitelisted keys
 
     :param sort_keys: an array of strings
     :param mapping: a mapping from keys to DB column names
     :returns: filtered list of sort keys
-    '''
+    """
     if isinstance(sort_keys, six.string_types):
         sort_keys = [sort_keys]
     return [mapping[key] for key in sort_keys or [] if key in mapping]
