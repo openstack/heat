@@ -2,6 +2,7 @@ rackspace.tests
 heat_docker.tests
 heat.tests.api.aws.test_api_aws
 heat.tests.api.aws.test_api_ec2token
+heat.tests.api.cfn.test_api_v1
 heat.tests.api.middleware.test_ssl_middleware
 heat.tests.api.middleware.test_version_negotiation_middleware
 heat.tests.api.openstack_v1.test_stacks_view

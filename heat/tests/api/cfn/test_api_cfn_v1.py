@@ -312,18 +312,18 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'StackStatusReason': u'Stack successfully created',
                         'Description': u'blah',
                         'Parameters':
-                        [{'ParameterValue': u'admin',
-                          'ParameterKey': u'DBUsername'},
-                         {'ParameterValue': u'F17',
-                          'ParameterKey': u'LinuxDistribution'},
-                         {'ParameterValue': u'm1.large',
-                          'ParameterKey': u'InstanceType'},
+                        [{'ParameterValue': u'wordpress',
+                          'ParameterKey': u'DBName'},
+                         {'ParameterValue': u'admin',
+                          'ParameterKey': u'DBPassword'},
                          {'ParameterValue': u'admin',
                           'ParameterKey': u'DBRootPassword'},
                          {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBPassword'},
-                         {'ParameterValue': u'wordpress',
-                          'ParameterKey': u'DBName'}],
+                          'ParameterKey': u'DBUsername'},
+                         {'ParameterValue': u'm1.large',
+                          'ParameterKey': u'InstanceType'},
+                         {'ParameterValue': u'F17',
+                          'ParameterKey': u'LinuxDistribution'}],
                         'Outputs':
                         [{'OutputKey': u'WebsiteURL',
                           'OutputValue': u'http://10.0.0.8/wordpress',
@@ -336,9 +336,13 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'StackStatus': u'CREATE_COMPLETE',
                         'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
-
-        self.assertEqual(utils.recursive_sort(expected),
-                         utils.recursive_sort(response))
+        stacks = (response['DescribeStacksResponse']['DescribeStacksResult']
+                  ['Stacks'])
+        stacks[0]['Parameters'] = sorted(
+            stacks[0]['Parameters'], key=lambda k: k['ParameterKey'])
+        response['DescribeStacksResponse']['DescribeStacksResult'] = (
+            {'Stacks': stacks})
+        self.assertEqual(expected, response)
 
     def test_describe_arn(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -397,18 +401,18 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'StackStatusReason': u'Stack successfully created',
                         'Description': u'blah',
                         'Parameters':
-                        [{'ParameterValue': u'admin',
-                          'ParameterKey': u'DBUsername'},
-                         {'ParameterValue': u'F17',
-                          'ParameterKey': u'LinuxDistribution'},
-                         {'ParameterValue': u'm1.large',
-                          'ParameterKey': u'InstanceType'},
+                        [{'ParameterValue': u'wordpress',
+                          'ParameterKey': u'DBName'},
+                         {'ParameterValue': u'admin',
+                          'ParameterKey': u'DBPassword'},
                          {'ParameterValue': u'admin',
                           'ParameterKey': u'DBRootPassword'},
                          {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBPassword'},
-                         {'ParameterValue': u'wordpress',
-                          'ParameterKey': u'DBName'}],
+                          'ParameterKey': u'DBUsername'},
+                         {'ParameterValue': u'm1.large',
+                          'ParameterKey': u'InstanceType'},
+                         {'ParameterValue': u'F17',
+                          'ParameterKey': u'LinuxDistribution'}],
                         'Outputs':
                         [{'OutputKey': u'WebsiteURL',
                           'OutputValue': u'http://10.0.0.8/wordpress',
@@ -421,9 +425,13 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'StackStatus': u'CREATE_COMPLETE',
                         'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
-
-        self.assertEqual(utils.recursive_sort(expected),
-                         utils.recursive_sort(response))
+        stacks = (response['DescribeStacksResponse']['DescribeStacksResult']
+                  ['Stacks'])
+        stacks[0]['Parameters'] = sorted(
+            stacks[0]['Parameters'], key=lambda k: k['ParameterKey'])
+        response['DescribeStacksResponse']['DescribeStacksResult'] = (
+            {'Stacks': stacks})
+        self.assertEqual(expected, response)
 
     def test_describe_arn_invalidtenant(self):
         # Format a dummy GET request to pass into the WSGI handler
