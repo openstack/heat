@@ -24,9 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class StackUpdate(object):
-    """
-    A Task to perform the update of an existing stack to a new template.
-    """
+    """A Task to perform the update of an existing stack to a new template."""
 
     def __init__(self, existing_stack, new_stack, previous_stack,
                  rollback=False, error_wait_time=None):
@@ -198,11 +196,11 @@ class StackUpdate(object):
             self.existing_stack.remove_resource(res_name)
 
     def dependencies(self):
-        '''
-        Return a Dependencies object representing the dependencies between
-        update operations to move from an existing stack definition to a new
-        one.
-        '''
+        """Return a Dependencies object.
+
+        Dependencies object representing the dependencies between update
+        operations to move from an existing stack definition to a new one.
+        """
         existing_deps = self.existing_stack.dependencies
         new_deps = self.new_stack.dependencies
 

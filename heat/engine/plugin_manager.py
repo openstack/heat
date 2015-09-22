@@ -26,10 +26,10 @@ LOG = log.getLogger(__name__)
 
 
 class PluginManager(object):
-    '''A class for managing plugin modules.'''
+    """A class for managing plugin modules."""
 
     def __init__(self, *extra_packages):
-        '''Initialise the Heat Engine plugin package, and any others.
+        """Initialise the Heat Engine plugin package, and any others.
 
         The heat.engine.plugins package is always created, if it does not
         exist, from the plugin directories specified in the config file, and
@@ -40,8 +40,7 @@ class PluginManager(object):
 
         will load all modules in the heat.engine.resources package as well as
         any user-supplied plugin modules.
-
-        '''
+        """
         def packages():
             for package_name in extra_packages:
                 yield sys.modules[package_name]
@@ -58,23 +57,22 @@ class PluginManager(object):
         self.modules = list(modules())
 
     def map_to_modules(self, function):
-        '''Iterate over the results of calling a function on every module.'''
+        """Iterate over the results of calling a function on every module."""
         return six.moves.map(function, self.modules)
 
 
 class PluginMapping(object):
-    '''A class for managing plugin mappings.'''
+    """A class for managing plugin mappings."""
 
     def __init__(self, names, *args, **kwargs):
-        '''Initialise with the mapping name(s) and arguments.
+        """Initialise with the mapping name(s) and arguments.
 
         `names` can be a single name or a list of names. The first name found
         in a given module is the one used. Each module is searched for a
         function called <name>_mapping() which is called to retrieve the
         mappings provided by that module. Any other arguments passed will be
         passed to the mapping functions.
-
-        '''
+        """
         if isinstance(names, six.string_types):
             names = [names]
 
@@ -83,10 +81,10 @@ class PluginMapping(object):
         self.kwargs = kwargs
 
     def load_from_module(self, module):
-        '''Return the mapping specified in the given module.
+        """Return the mapping specified in the given module.
 
         If no such mapping is specified, an empty dictionary is returned.
-        '''
+        """
         for mapping_name in self.names:
             mapping_func = getattr(module, mapping_name, None)
             if callable(mapping_func):
@@ -107,10 +105,10 @@ class PluginMapping(object):
         return {}
 
     def load_all(self, plugin_manager):
-        '''Iterate over the mappings from all modules in the plugin manager.
+        """Iterate over the mappings from all modules in the plugin manager.
 
         Mappings are returned as a list of (key, value) tuples.
-        '''
+        """
         mod_dicts = plugin_manager.map_to_modules(self.load_from_module)
         return itertools.chain.from_iterable(six.iteritems(d) for d
                                              in mod_dicts)

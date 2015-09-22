@@ -90,10 +90,10 @@ def get_template_class(template_data):
 
 
 class Template(collections.Mapping):
-    '''A stack template.'''
+    """A stack template."""
 
     def __new__(cls, template, *args, **kwargs):
-        '''Create a new Template of the appropriate class.'''
+        """Create a new Template of the appropriate class."""
         global _template_classes
 
         if _template_classes is None:
@@ -109,9 +109,7 @@ class Template(collections.Mapping):
         return super(Template, cls).__new__(TemplateClass)
 
     def __init__(self, template, template_id=None, files=None, env=None):
-        '''
-        Initialise the template with a JSON object and a set of Parameters
-        '''
+        """Initialise the template with JSON object and set of Parameters."""
         self.id = template_id
         self.t = template
         self.files = files or {}
@@ -128,14 +126,14 @@ class Template(collections.Mapping):
 
     @classmethod
     def load(cls, context, template_id, t=None):
-        '''Retrieve a Template with the given ID from the database.'''
+        """Retrieve a Template with the given ID from the database."""
         if t is None:
             t = template_object.RawTemplate.get_by_id(context, template_id)
         env = environment.Environment(t.environment)
         return cls(t.template, template_id=template_id, files=t.files, env=env)
 
     def store(self, context=None):
-        '''Store the Template in the database and return its ID.'''
+        """Store the Template in the database and return its ID."""
         rt = {
             'template': self.t,
             'files': self.files,
@@ -149,17 +147,17 @@ class Template(collections.Mapping):
         return self.id
 
     def __iter__(self):
-        '''Return an iterator over the section names.'''
+        """Return an iterator over the section names."""
         return (s for s in self.SECTIONS
                 if s not in self.SECTIONS_NO_DIRECT_ACCESS)
 
     def __len__(self):
-        '''Return the number of sections.'''
+        """Return the number of sections."""
         return len(self.SECTIONS) - len(self.SECTIONS_NO_DIRECT_ACCESS)
 
     @abc.abstractmethod
     def param_schemata(self, param_defaults=None):
-        '''Return a dict of parameters.Schema objects for the parameters.'''
+        """Return a dict of parameters.Schema objects for the parameters."""
         pass
 
     @abc.abstractmethod
@@ -169,7 +167,7 @@ class Template(collections.Mapping):
 
     @abc.abstractmethod
     def parameters(self, stack_identifier, user_params, param_defaults=None):
-        '''Return a parameters.Parameters object for the stack.'''
+        """Return a parameters.Parameters object for the stack."""
         pass
 
     @classmethod
@@ -202,34 +200,33 @@ class Template(collections.Mapping):
 
     @abc.abstractmethod
     def resource_definitions(self, stack):
-        '''Return a dictionary of ResourceDefinition objects.'''
+        """Return a dictionary of ResourceDefinition objects."""
         pass
 
     @abc.abstractmethod
     def add_resource(self, definition, name=None):
-        '''Add a resource to the template.
+        """Add a resource to the template.
 
         The resource is passed as a ResourceDefinition object. If no name is
         specified, the name from the ResourceDefinition should be used.
-        '''
+        """
         pass
 
     def remove_resource(self, name):
-        '''Remove a resource from the template.'''
+        """Remove a resource from the template."""
         self.t.get(self.RESOURCES, {}).pop(name)
 
     def parse(self, stack, snippet):
         return parse(self.functions, stack, snippet)
 
     def validate(self):
-        '''Validate the template.
+        """Validate the template.
 
         Validates the top-level sections of the template as well as syntax
         inside select sections. Some sections are not checked here but in
         code parts that are responsible for working with the respective
         sections (e.g. parameters are check by parameters schema class).
-
-        '''
+        """
         t_digest = hashlib.sha256(
             six.text_type(self.t).encode('utf-8')).hexdigest()
 
@@ -265,7 +262,7 @@ class Template(collections.Mapping):
     @classmethod
     def create_empty_template(cls,
                               version=('heat_template_version', '2015-04-30')):
-        '''Creates an empty template.
+        """Creates an empty template.
 
         Creates a new empty template with given version. If version is
         not provided, a new empty HOT template of version "2015-04-30"
@@ -275,7 +272,7 @@ class Template(collections.Mapping):
         template: version key and value. E.g. ("heat_template_version",
         "2015-04-30")
         :returns: A new empty template.
-        '''
+        """
         tmpl = {version[0]: version[1]}
         return cls(tmpl)
 

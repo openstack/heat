@@ -23,9 +23,7 @@ PARAMETERS = 'parameters'
 
 
 class ParameterGroups(object):
-    '''
-    The ParameterGroups specified by the stack's template.
-    '''
+    """The ParameterGroups specified by the stack's template."""
     def __init__(self, tmpl):
         self.tmpl = tmpl
         self.parameters = tmpl.parameters(None, {}, param_defaults={})
@@ -37,10 +35,11 @@ class ParameterGroups(object):
         self.parameter_groups = tmpl.get(PARAMETER_GROUPS)
 
     def validate(self):
-        '''
+        """Validate parameters in current parameter group.
+
         Validate that a parameter belongs to only one Parameter Group
         and that each parameter name references a valid parameter.
-        '''
+        """
         LOG.debug('Validating Parameter Groups.')
         LOG.debug(self.parameter_names)
         if self.parameter_groups:

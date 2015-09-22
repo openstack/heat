@@ -36,7 +36,7 @@ PARAMETER_KEYS = (
 
 
 class Schema(constr.Schema):
-    '''Parameter schema.'''
+    """Parameter schema."""
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN, LABEL
@@ -127,8 +127,7 @@ class Schema(constr.Schema):
 
     @classmethod
     def from_dict(cls, param_name, schema_dict):
-        """
-        Return a Parameter Schema object from a legacy schema dictionary.
+        """Return a Parameter Schema object from a legacy schema dictionary.
 
         :param param_name: name of the parameter owning the schema; used
                for more verbose logging
@@ -176,10 +175,10 @@ class Schema(constr.Schema):
 
 @six.python_2_unicode_compatible
 class Parameter(object):
-    '''A template parameter.'''
+    """A template parameter."""
 
     def __new__(cls, name, schema, value=None):
-        '''Create a new Parameter of the appropriate type.'''
+        """Create a new Parameter of the appropriate type."""
         if cls is not Parameter:
             return super(Parameter, cls).__new__(cls)
 
@@ -203,10 +202,11 @@ class Parameter(object):
         return ParamClass(name, schema, value)
 
     def __init__(self, name, schema, value=None):
-        '''
+        """Initialisation of the parameter.
+
         Initialise the Parameter with a name, schema and optional user-supplied
         value.
-        '''
+        """
         self.name = name
         self.schema = schema
         self.user_value = value
@@ -241,7 +241,7 @@ class Parameter(object):
             raise exception.InvalidSchemaError(message=msg)
 
     def value(self):
-        '''Get the parameter value, optionally sanitising it for output.'''
+        """Get the parameter value, optionally sanitising it for output."""
         if self.user_value is not None:
             return self.user_value
 
@@ -251,31 +251,32 @@ class Parameter(object):
         raise exception.UserParameterMissing(key=self.name)
 
     def has_value(self):
-        '''Parameter has a user or default value.'''
+        """Parameter has a user or default value."""
         return self.user_value is not None or self.has_default()
 
     def hidden(self):
-        '''
+        """Return if parameter is hidden.
+
         Return whether the parameter should be sanitised in any output to
         the user.
-        '''
+        """
         return self.schema.hidden
 
     def description(self):
-        '''Return the description of the parameter.'''
+        """Return the description of the parameter."""
         return self.schema.description or ''
 
     def label(self):
-        '''Return the label or param name.'''
+        """Return the label or param name."""
         return self.schema.label or self.name
 
     def has_default(self):
-        '''Return whether the parameter has a default value.'''
+        """Return whether the parameter has a default value."""
         return (self.schema.default is not None or
                 self.user_default is not None)
 
     def default(self):
-        '''Return the default value of the parameter.'''
+        """Return the default value of the parameter."""
         if self.user_default is not None:
             return self.user_default
         return self.schema.default
@@ -284,7 +285,7 @@ class Parameter(object):
         self.user_default = value
 
     def __str__(self):
-        '''Return a string representation of the parameter.'''
+        """Return a string representation of the parameter."""
         value = self.value()
         if self.hidden():
             return six.text_type('******')
@@ -293,14 +294,14 @@ class Parameter(object):
 
 
 class NumberParam(Parameter):
-    '''A template parameter of type "Number".'''
+    """A template parameter of type "Number"."""
 
     def __int__(self):
-        '''Return an integer representation of the parameter.'''
+        """Return an integer representation of the parameter."""
         return int(super(NumberParam, self).value())
 
     def __float__(self):
-        '''Return a float representation of the parameter.'''
+        """Return a float representation of the parameter."""
         return float(super(NumberParam, self).value())
 
     def _validate(self, val, context):
@@ -315,7 +316,7 @@ class NumberParam(Parameter):
 
 
 class BooleanParam(Parameter):
-    '''A template parameter of type "Boolean".'''
+    """A template parameter of type "Boolean"."""
 
     def _validate(self, val, context):
         try:
@@ -333,14 +334,14 @@ class BooleanParam(Parameter):
 
 
 class StringParam(Parameter):
-    '''A template parameter of type "String".'''
+    """A template parameter of type "String"."""
 
     def _validate(self, val, context):
         self.schema.validate_value(val, context)
 
 
 class CommaDelimitedListParam(Parameter, collections.Sequence):
-    '''A template parameter of type "CommaDelimitedList".'''
+    """A template parameter of type "CommaDelimitedList"."""
 
     def __init__(self, name, schema, value=None):
         super(CommaDelimitedListParam, self).__init__(name, schema, value)
@@ -373,11 +374,11 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         raise exception.UserParameterMissing(key=self.name)
 
     def __len__(self):
-        '''Return the length of the list.'''
+        """Return the length of the list."""
         return len(self.parsed)
 
     def __getitem__(self, index):
-        '''Return an item from the list.'''
+        """Return an item from the list."""
         return self.parsed[index]
 
     def __str__(self):
@@ -442,10 +443,11 @@ class JsonParam(Parameter):
 
 
 class Parameters(collections.Mapping):
-    '''
-    The parameters of a stack, with type checking, defaults &c. specified by
+    """Parameters of a stack.
+
+    The parameters of a stack, with type checking, defaults etc., specified by
     the stack's template.
-    '''
+    """
 
     PSEUDO_PARAMETERS = (
         PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
@@ -455,10 +457,11 @@ class Parameters(collections.Mapping):
 
     def __init__(self, stack_identifier, tmpl, user_params=None,
                  param_defaults=None):
-        '''
+        """Initialisation of the parameter.
+
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
-        '''
+        """
         user_params = user_params or {}
         param_defaults = param_defaults or {}
 
@@ -484,12 +487,11 @@ class Parameters(collections.Mapping):
                 self.params[pd].set_default(param_defaults[pd])
 
     def validate(self, validate_value=True, context=None):
-        '''
-        Validates all parameters.
+        """Validates all parameters.
 
         This method validates if all user-provided parameters are actually
         defined in the template, and if all parameters are valid.
-        '''
+        """
         self._validate_tmpl_parameters()
         self._validate_user_parameters()
 
@@ -497,33 +499,32 @@ class Parameters(collections.Mapping):
             param.validate(validate_value, context)
 
     def __contains__(self, key):
-        '''Return whether the specified parameter exists.'''
+        """Return whether the specified parameter exists."""
         return key in self.params
 
     def __iter__(self):
-        '''Return an iterator over the parameter names.'''
+        """Return an iterator over the parameter names."""
         return iter(self.params)
 
     def __len__(self):
-        '''Return the number of parameters defined.'''
+        """Return the number of parameters defined."""
         return len(self.params)
 
     def __getitem__(self, key):
-        '''Get a parameter value.'''
+        """Get a parameter value."""
         return self.params[key].value()
 
     def map(self, func, filter_func=lambda p: True):
-        '''
+        """Map the supplied filter function onto each Parameter.
+
         Map the supplied filter function onto each Parameter (with an
         optional filter function) and return the resulting dictionary.
-        '''
+        """
         return dict((n, func(p))
                     for n, p in six.iteritems(self.params) if filter_func(p))
 
     def set_stack_id(self, stack_identifier):
-        '''
-        Set the StackId pseudo parameter value
-        '''
+        """Set the StackId pseudo parameter value."""
         if stack_identifier is not None:
             self.params[self.PARAM_STACK_ID].schema.set_default(
                 stack_identifier.arn())

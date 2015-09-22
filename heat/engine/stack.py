@@ -98,7 +98,8 @@ class Stack(collections.Mapping):
                  current_traversal=None, tags=None, prev_raw_template_id=None,
                  current_deps=None, cache_data=None, resource_validate=True):
 
-        '''
+        """Initialisation of stack.
+
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
         stack is already in the database.
@@ -106,7 +107,7 @@ class Stack(collections.Mapping):
         Creating a stack with cache_data creates a lightweight stack which
         will not load any resources from the database and resolve the
         functions from the cache_data specified.
-        '''
+        """
 
         def _validate_stack_name(name):
             if not re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", name):
@@ -188,7 +189,7 @@ class Stack(collections.Mapping):
 
     @property
     def worker_client(self):
-        '''Return a client for making engine RPC calls.'''
+        """Return a client for making engine RPC calls."""
         if not self._worker_client:
             self._worker_client = rpc_worker_client.WorkerClient()
         return self._worker_client
@@ -245,10 +246,10 @@ class Stack(collections.Mapping):
         return self._resources
 
     def iter_resources(self, nested_depth=0):
-        '''
-        Iterates over all the resources in a stack, including nested stacks up
-        to `nested_depth` levels below.
-        '''
+        """Iterates over all the resources in a stack.
+
+        Iterating includes nested stacks up to `nested_depth` levels below.
+        """
         for res in six.itervalues(self):
             yield res
 
@@ -290,12 +291,13 @@ class Stack(collections.Mapping):
         return stack_object.Stack.get_root_id(self.context, self.owner_id)
 
     def object_path_in_stack(self):
-        '''
-        If this is not nested return (None, self), else return stack resources
-        and stacks in path from the root stack and including this stack
+        """Return stack resources and stacks in path from the root stack.
 
-        :returns: a list of (stack_resource, stack) tuples
-        '''
+        If this is not nested return (None, self), else return stack resources
+        and stacks in path from the root stack and including this stack.
+
+        :returns: a list of (stack_resource, stack) tuples.
+        """
         if self.parent_resource and self.parent_resource.stack:
             path = self.parent_resource.stack.object_path_in_stack()
             path.extend([(self.parent_resource, self)])
@@ -303,41 +305,44 @@ class Stack(collections.Mapping):
         return [(None, self)]
 
     def path_in_stack(self):
-        '''
+        """Return tuples of names in path from the root stack.
+
         If this is not nested return (None, self.name), else return tuples of
         names (stack_resource.name, stack.name) in path from the root stack and
         including this stack.
 
         :returns: a list of (string, string) tuples.
 
-        '''
+        """
         opis = self.object_path_in_stack()
         return [(stckres.name if stckres else None,
                  stck.name if stck else None) for stckres, stck in opis]
 
     def total_resources(self, stack_id=None):
-        '''
-        Return the total number of resources in a stack, including nested
-        stacks below.
-        '''
+        """Return the total number of resources in a stack.
+
+        Includes nested stacks below.
+        """
         if not stack_id:
             stack_id = self.id
         return stack_object.Stack.count_total_resources(self.context, stack_id)
 
     def _set_param_stackid(self):
-        '''
-        Update self.parameters with the current ARN which is then provided
-        via the Parameters class as the StackId pseudo parameter
-        '''
+        """Update self.parameters with the current ARN.
+
+        self.parameters is then provided via the Parameters class as
+        the StackId pseudo parameter.
+        """
         if not self.parameters.set_stack_id(self.identifier()):
             LOG.warn(_LW("Unable to set parameters StackId identifier"))
 
     @staticmethod
     def get_dep_attrs(resources, outputs, resource_name):
-        '''
+        """Return the set of dependent attributes for specified resource name.
+
         Return the set of dependent attributes for specified resource name by
         inspecting all resources and outputs in template.
-        '''
+        """
         attr_lists = itertools.chain((res.dep_attrs(resource_name)
                                       for res in resources),
                                      (function.dep_attrs(out.get('Value', ''),
@@ -347,7 +352,7 @@ class Stack(collections.Mapping):
 
     @staticmethod
     def _get_dependencies(resources):
-        '''Return the dependency graph for a list of resources.'''
+        """Return the dependency graph for a list of resources."""
         deps = dependencies.Dependencies()
         for res in resources:
             res.add_dependencies(deps)
@@ -357,7 +362,7 @@ class Stack(collections.Mapping):
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
              use_stored_context=False, force_reload=False, cache_data=None):
-        '''Retrieve a Stack from the database.'''
+        """Retrieve a Stack from the database."""
         if stack is None:
             stack = stack_object.Stack.get_by_id(
                 context,
@@ -472,10 +477,10 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.store', hide_args=False)
     def store(self, backup=False):
-        '''
-        Store the stack in the database and return its ID
+        """Store the stack in the database and return its ID.
+
         If self.id is set, we update the existing stack.
-        '''
+        """
         s = self.get_kwargs_for_cloning(keep_status=True, only_db=True)
         s['name'] = self._backup_name() if backup else self.name
         s['backup'] = backup
@@ -516,27 +521,23 @@ class Stack(collections.Mapping):
         return '%s*' % self.name
 
     def identifier(self):
-        '''
-        Return an identifier for this stack.
-        '''
+        """Return an identifier for this stack."""
         return identifier.HeatIdentifier(self.tenant_id, self.name, self.id)
 
     def __iter__(self):
-        '''
-        Return an iterator over the resource names.
-        '''
+        """Return an iterator over the resource names."""
         return iter(self.resources)
 
     def __len__(self):
-        '''Return the number of resources.'''
+        """Return the number of resources."""
         return len(self.resources)
 
     def __getitem__(self, key):
-        '''Get the resource with the specified name.'''
+        """Get the resource with the specified name."""
         return self.resources[key]
 
     def add_resource(self, resource):
-        '''Insert the given resource into the stack.'''
+        """Insert the given resource into the stack."""
         template = resource.stack.t
         resource.stack = self
         definition = resource.t.reparse(self, template)
@@ -550,37 +551,37 @@ class Stack(collections.Mapping):
             resource._store()
 
     def remove_resource(self, resource_name):
-        '''Remove the resource with the specified name.'''
+        """Remove the resource with the specified name."""
         del self.resources[resource_name]
         self.t.remove_resource(resource_name)
         if self.t.id is not None:
             self.t.store(self.context)
 
     def __contains__(self, key):
-        '''Determine whether the stack contains the specified resource.'''
+        """Determine whether the stack contains the specified resource."""
         if self._resources is not None:
             return key in self.resources
         else:
             return key in self.t[self.t.RESOURCES]
 
     def __eq__(self, other):
-        '''
-        Compare two Stacks for equality.
+        """Compare two Stacks for equality.
 
         Stacks are considered equal only if they are identical.
-        '''
+        """
         return self is other
 
     def __str__(self):
-        '''Return a human-readable string representation of the stack.'''
+        """Return a human-readable string representation of the stack."""
         text = 'Stack "%s" [%s]' % (self.name, self.id)
         return six.text_type(text)
 
     def resource_by_refid(self, refid):
-        '''
-        Return the resource in this stack with the specified
-        refid, or None if not found
-        '''
+        """Return the resource in this stack with the specified refid.
+
+        :returns: resource in this stack with the specified refid, or None if
+                  not found.
+        """
         for r in six.itervalues(self):
             if r.state in (
                     (r.INIT, r.COMPLETE),
@@ -593,18 +594,16 @@ class Stack(collections.Mapping):
                 return r
 
     def register_access_allowed_handler(self, credential_id, handler):
-        '''
-        Register a function which determines whether the credentials with
-        a give ID can have access to a named resource.
-        '''
+        """Register a specific function.
+
+        Register a function which determines whether the credentials with a
+        given ID can have access to a named resource.
+        """
         assert callable(handler), 'Handler is not callable'
         self._access_allowed_handlers[credential_id] = handler
 
     def access_allowed(self, credential_id, resource_name):
-        '''
-        Returns True if the credential_id is authorised to access the
-        resource with the specified resource_name.
-        '''
+        """Is credential_id authorised to access resource by resource_name."""
         if not self.resources:
             # this also triggers lazy-loading of resources
             # so is required for register_access_allowed_handler
@@ -616,9 +615,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.validate', hide_args=False)
     def validate(self):
-        '''
-        Validates the stack.
-        '''
+        """Validates the stack."""
         # TODO(sdake) Should return line number of invalid reference
 
         # validate overall template (top-level structure)
@@ -691,15 +688,16 @@ class Stack(collections.Mapping):
                     message=six.text_type(ex))
 
     def requires_deferred_auth(self):
-        '''
+        """Determine whether to perform API requests with deferred auth.
+
         Returns whether this stack may need to perform API requests
         during its lifecycle using the configured deferred authentication
         method.
-        '''
+        """
         return any(res.requires_deferred_auth for res in six.itervalues(self))
 
     def _add_event(self, action, status, reason):
-        '''Add a state change event to the database.'''
+        """Add a state change event to the database."""
         ev = event.Event(self.context, self, action, status, reason,
                          self.id, {},
                          self.name, 'OS::Heat::Stack')
@@ -708,7 +706,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):
-        '''Update the stack state in the database.'''
+        """Update the stack state in the database."""
         if action not in self.ACTIONS:
             raise ValueError(_("Invalid action %s") % action)
 
@@ -738,22 +736,18 @@ class Stack(collections.Mapping):
 
     @property
     def state(self):
-        '''Returns state, tuple of action, status.'''
+        """Returns state, tuple of action, status."""
         return (self.action, self.status)
 
     def timeout_secs(self):
-        '''
-        Return the stack action timeout in seconds.
-        '''
+        """Return the stack action timeout in seconds."""
         if self.timeout_mins is None:
             return cfg.CONF.stack_action_timeout
 
         return self.timeout_mins * 60
 
     def preview_resources(self):
-        '''
-        Preview the stack with all of the resources.
-        '''
+        """Preview the stack with all of the resources."""
         return [resource.preview()
                 for resource in six.itervalues(self.resources)]
 
@@ -764,9 +758,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.create', hide_args=False)
     def create(self):
-        '''
-        Create the stack and all of the resources.
-        '''
+        """Create the stack and all of the resources."""
         def rollback():
             if not self.disable_rollback and self.state == (self.CREATE,
                                                             self.FAILED):
@@ -791,9 +783,10 @@ class Stack(collections.Mapping):
     def stack_task(self, action, reverse=False, post_func=None,
                    error_wait_time=None,
                    aggregate_exceptions=False, pre_completion_func=None):
-        '''
-        A task to perform an action on the stack and all of the resources
-        in forward or reverse dependency order as specified by reverse
+        """A task to perform an action on the stack.
+
+        All of the resources in forward or reverse dependency order as
+        specified by reverse.
 
         :param action action that should be executed with stack resources
         :param reverse defines if action on the resources need to be executed
@@ -806,7 +799,7 @@ class Stack(collections.Mapping):
         :param pre_completion_func function that need to be executed right
         before action completion. Uses stack ,action, status and reason as
         input parameters
-        '''
+        """
         try:
             lifecycle_plugin_utils.do_pre_ops(self.context, self,
                                               None, action)
@@ -893,10 +886,11 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack._backup_stack', hide_args=False)
     def _backup_stack(self, create_if_missing=True):
-        '''
+        """Backup the stack.
+
         Get a Stack containing any in-progress resources from the previous
         stack state prior to an update.
-        '''
+        """
         s = stack_object.Stack.get_by_name_and_owner_id(
             self.context,
             self._backup_name(),
@@ -918,9 +912,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.adopt', hide_args=False)
     def adopt(self):
-        '''
-        Adopt a stack (create stack with all the existing resources).
-        '''
+        """Adopt the stack (create stack with all the existing resources)."""
         def rollback():
             if not self.disable_rollback and self.state == (self.ADOPT,
                                                             self.FAILED):
@@ -939,7 +931,8 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.update', hide_args=False)
     def update(self, newstack, event=None):
-        '''
+        """Update the stack.
+
         Compare the current stack with newstack,
         and where necessary create/update/delete the resources until
         this stack aligns with newstack.
@@ -949,7 +942,7 @@ class Stack(collections.Mapping):
 
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
-        '''
+        """
         self.updated_time = datetime.datetime.utcnow()
         updater = scheduler.TaskRunner(self.update_task, newstack,
                                        event=event)
@@ -957,9 +950,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
     def converge_stack(self, template, action=UPDATE, new_stack=None):
-        """
-        Updates the stack and triggers convergence for resources
-        """
+        """Updates the stack and triggers convergence for resources."""
         if action not in [self.CREATE, self.ADOPT]:
             # no back-up template for create action
             self.prev_raw_template_id = getattr(self.t, 'id', None)
@@ -1241,12 +1232,14 @@ class Stack(collections.Mapping):
                                            (self.status == self.FAILED))
 
     def _update_exception_handler(self, exc, action, update_task):
-        '''
-        Handle exceptions in update_task. Decide if we should cancel tasks or
-        not. Also decide if we should rollback or not, depend on disable
-        rollback flag if force rollback flag not trigered.
-        :returns: a boolean for require rollback flag
-        '''
+        """Handle exceptions in update_task.
+
+        Decide if we should cancel tasks or not. Also decide if we should
+        rollback or not, depend on disable rollback flag if force rollback flag
+        not triggered.
+
+        :returns: a boolean for require rollback flag.
+        """
         self.status_reason = six.text_type(exc)
         self.status = self.FAILED
         if action != self.UPDATE:
@@ -1382,8 +1375,8 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.delete', hide_args=False)
     def delete(self, action=DELETE, backup=False, abandon=False):
-        '''
-        Delete all of the resources, and then the stack itself.
+        """Delete all of the resources, and then the stack itself.
+
         The action parameter is used to differentiate between a user
         initiated delete and an automatic stack rollback after a failed
         create, which amount to the same thing, but the states are recorded
@@ -1392,7 +1385,7 @@ class Stack(collections.Mapping):
         Note abandon is a delete where all resources have been set to a
         RETAIN deletion policy, but we also don't want to delete anything
         required for those resources, e.g the stack_user_project.
-        '''
+        """
         if action not in (self.DELETE, self.ROLLBACK):
             LOG.error(_LE("Unexpected action %s passed to delete!"), action)
             self.state_set(self.DELETE, self.FAILED,
@@ -1473,14 +1466,16 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.suspend', hide_args=False)
     def suspend(self):
-        '''
-        Suspend the stack, which invokes handle_suspend for all stack resources
-        waits for all resources to become SUSPEND_COMPLETE then declares the
+        """Suspend the stack.
+
+        Invokes handle_suspend for all stack resources.
+
+        Waits for all resources to become SUSPEND_COMPLETE then declares the
         stack SUSPEND_COMPLETE.
         Note the default implementation for all resources is to do nothing
         other than move to SUSPEND_COMPLETE, so the resources must implement
         handle_suspend for this to have any effect.
-        '''
+        """
         # No need to suspend if the stack has been suspended
         if self.state == (self.SUSPEND, self.COMPLETE):
             LOG.info(_LI('%s is already suspended'), six.text_type(self))
@@ -1496,14 +1491,16 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.resume', hide_args=False)
     def resume(self):
-        '''
-        Resume the stack, which invokes handle_resume for all stack resources
-        waits for all resources to become RESUME_COMPLETE then declares the
+        """Resume the stack.
+
+        Invokes handle_resume for all stack resources.
+
+        Waits for all resources to become RESUME_COMPLETE then declares the
         stack RESUME_COMPLETE.
         Note the default implementation for all resources is to do nothing
         other than move to RESUME_COMPLETE, so the resources must implement
         handle_resume for this to have any effect.
-        '''
+        """
         # No need to resume if the stack has been resumed
         if self.state == (self.RESUME, self.COMPLETE):
             LOG.info(_LI('%s is already resumed'), six.text_type(self))
@@ -1519,7 +1516,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.snapshot', hide_args=False)
     def snapshot(self, save_snapshot_func):
-        '''Snapshot the stack, invoking handle_snapshot on all resources.'''
+        """Snapshot the stack, invoking handle_snapshot on all resources."""
         self.updated_time = datetime.datetime.utcnow()
         sus_task = scheduler.TaskRunner(
             self.stack_task,
@@ -1531,7 +1528,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
     def delete_snapshot(self, snapshot):
-        '''Remove a snapshot from the backends.'''
+        """Remove a snapshot from the backends."""
         for name, rsrc in six.iteritems(self.resources):
             snapshot_data = snapshot.data
             if snapshot_data:
@@ -1540,9 +1537,10 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.restore', hide_args=False)
     def restore(self, snapshot):
-        '''
-        Restore the given snapshot, invoking handle_restore on all resources.
-        '''
+        """Restore the given snapshot.
+
+        Invokes handle_restore on all resources.
+        """
         self.updated_time = datetime.datetime.utcnow()
         env = environment.Environment(snapshot.data['environment'])
         files = snapshot.data['files']
@@ -1569,9 +1567,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.output', hide_args=False)
     def output(self, key):
-        '''
-        Get the value of the specified stack output.
-        '''
+        """Get the value of the specified stack output."""
         value = self.outputs[key].get('Value', '')
         try:
             return function.resolve(value)
@@ -1580,10 +1576,11 @@ class Stack(collections.Mapping):
             return None
 
     def restart_resource(self, resource_name):
-        '''
+        """Restart the resource specified by resource_name.
+
         stop resource_name and all that depend on it
         start resource_name and all that depend on it
-        '''
+        """
         deps = self.dependencies[self[resource_name]]
         failed = False
 
@@ -1679,13 +1676,12 @@ class Stack(collections.Mapping):
         return attrs
 
     def mark_complete(self, traversal_id):
-        '''
-        Mark the update as complete.
+        """Mark the update as complete.
 
         This currently occurs when all resources have been updated; there may
         still be resources being cleaned up, but the Stack should now be in
         service.
-        '''
+        """
         if traversal_id != self.current_traversal:
             return
 
@@ -1697,13 +1693,13 @@ class Stack(collections.Mapping):
         self.purge_db()
 
     def purge_db(self):
-        '''Cleanup database after stack has completed/failed.
+        """Cleanup database after stack has completed/failed.
 
         1. Delete previous raw template if stack completes successfully.
         2. Deletes all sync points. They are no longer needed after stack
            has completed/failed.
         3. Delete the stack if the action is DELETE.
-       '''
+       """
         if (self.prev_raw_template_id is not None and
                 self.status != self.FAILED):
             prev_tmpl_id = self.prev_raw_template_id
@@ -1720,24 +1716,18 @@ class Stack(collections.Mapping):
                 pass
 
     def time_elapsed(self):
-        '''
-        Time elapsed in seconds since the stack operation started.
-        '''
+        """Time elapsed in seconds since the stack operation started."""
         start_time = timeutils.round_to_seconds(self.updated_time or
                                                 self.created_time)
         nowish = timeutils.round_to_seconds(datetime.datetime.utcnow())
         return (nowish - start_time).seconds
 
     def time_remaining(self):
-        '''
-        Time left before stack times out.
-        '''
+        """Time left before stack times out."""
         return self.timeout_secs() - self.time_elapsed()
 
     def has_timed_out(self):
-        '''
-        Returns True if this stack has timed-out.
-        '''
+        """Returns True if this stack has timed-out."""
         if self.status == self.IN_PROGRESS:
             return self.time_elapsed() > self.timeout_secs()
 

@@ -21,13 +21,10 @@ import six
 
 @six.add_metaclass(abc.ABCMeta)
 class Function(object):
-    """
-    Abstract base class for template functions.
-    """
+    """Abstract base class for template functions."""
 
     def __init__(self, stack, fn_name, args):
-        """
-        Initialise with a Stack, the function name and the arguments.
+        """Initialise with a Stack, the function name and the arguments.
 
         All functions take the form of a single-item map in JSON::
 
@@ -49,8 +46,7 @@ class Function(object):
         return stack
 
     def validate(self):
-        """
-        Validate arguments without resolving the function.
+        """Validate arguments without resolving the function.
 
         Function subclasses must override this method to validate their
         args.
@@ -59,8 +55,7 @@ class Function(object):
 
     @abc.abstractmethod
     def result(self):
-        """
-        Return the result of resolving the function.
+        """Return the result of resolving the function.
 
         Function subclasses must override this method to calculate their
         results.
@@ -74,8 +69,7 @@ class Function(object):
         return dep_attrs(self.args, resource_name)
 
     def __reduce__(self):
-        """
-        Return a representation of the function suitable for pickling.
+        """Return a representation of the function suitable for pickling.
 
         This allows the copy module (which works by pickling and then
         unpickling objects) to copy a template. Functions in the copy will
@@ -84,8 +78,7 @@ class Function(object):
         return dict, ([(self.fn_name, self.args)],)
 
     def __repr__(self):
-        """
-        Return a string representation of the function.
+        """Return a string representation of the function.
 
         The representation includes the function name, arguments and result
         (if available), as well as the name of the function class.
@@ -155,8 +148,7 @@ def validate(snippet):
 
 
 def dependencies(snippet, path=''):
-    """
-    Return an iterator over Resource dependencies in a template snippet.
+    """Return an iterator over Resource dependencies in a template snippet.
 
     The snippet should be already parsed to insert Function objects where
     appropriate.
@@ -187,12 +179,12 @@ def dependencies(snippet, path=''):
 
 
 def dep_attrs(snippet, resource_name):
-    """
-    Return an iterator over dependent attributes for specified resource_name
-    in a template snippet.
+    """Iterator over dependent attrs for resource_name in a template snippet.
 
     The snippet should be already parsed to insert Function objects where
     appropriate.
+    :returns: an iterator over dependent attributes for specified resource_name
+        in a template snippet.
     """
 
     if isinstance(snippet, Function):

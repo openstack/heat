@@ -37,7 +37,8 @@ LOG = logging.getLogger(__name__)
 
 @profiler.trace_cls("rpc")
 class WorkerService(service.Service):
-    """
+    """Service that has 'worker' actor in convergence.
+
     This service is dedicated to handle internal messages to the 'worker'
     (a.k.a. 'converger') actor in convergence. Messages on this bus will
     use the 'cast' rather than 'call' method to anycast the message to
@@ -265,12 +266,11 @@ class WorkerService(service.Service):
     @context.request_context
     def check_resource(self, cnxt, resource_id, current_traversal, data,
                        is_update, adopt_stack_data):
-        '''
-        Process a node in the dependency graph.
+        """Process a node in the dependency graph.
 
         The node may be associated with either an update or a cleanup of its
         associated resource.
-        '''
+        """
         resource_data = dict(sync_point.deserialize_input_data(data))
         rsrc, stack = self._load_resource(cnxt, resource_id, resource_data,
                                           is_update)
@@ -334,12 +334,11 @@ def construct_input_data(rsrc):
 
 def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
                          is_update):
-    '''
-    Mark the stack complete if the update is complete.
+    """Mark the stack complete if the update is complete.
 
     Complete is currently in the sense that all desired resources are in
     service, not that superfluous ones have been cleaned up.
-    '''
+    """
     roots = set(deps.roots())
 
     if (sender_id, is_update) not in roots:
@@ -356,9 +355,7 @@ def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
 def propagate_check_resource(cnxt, rpc_client, next_res_id,
                              current_traversal, predecessors, sender_key,
                              sender_data, is_update, adopt_stack_data):
-    '''
-    Trigger processing of a node if all of its dependencies are satisfied.
-    '''
+    """Trigger processing of node if all of its dependencies are satisfied."""
     def do_check(entity_id, data):
         rpc_client.check_resource(cnxt, entity_id, current_traversal,
                                   data, is_update, adopt_stack_data)
@@ -370,9 +367,7 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
 
 def check_resource_update(rsrc, template_id, resource_data, engine_id,
                           timeout):
-    '''
-    Create or update the Resource if appropriate.
-    '''
+    """Create or update the Resource if appropriate."""
     if rsrc.action == resource.Resource.INIT:
         rsrc.create_convergence(template_id, resource_data, engine_id, timeout)
     else:
@@ -381,7 +376,5 @@ def check_resource_update(rsrc, template_id, resource_data, engine_id,
 
 def check_resource_cleanup(rsrc, template_id, resource_data, engine_id,
                            timeout):
-    '''
-    Delete the Resource if appropriate.
-    '''
+    """Delete the Resource if appropriate."""
     rsrc.delete_convergence(template_id, resource_data, engine_id, timeout)

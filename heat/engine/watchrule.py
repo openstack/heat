@@ -75,9 +75,10 @@ class WatchRule(object):
 
     @classmethod
     def load(cls, context, watch_name=None, watch=None):
-        '''
-        Load the watchrule object, either by name or via an existing DB object
-        '''
+        """Load the watchrule object.
+
+        Loading object either by name or via an existing DB object.
+        """
         if watch is None:
             try:
                 watch = watch_rule_objects.WatchRule.get_by_name(context,
@@ -98,10 +99,10 @@ class WatchRule(object):
                        last_evaluated=watch.last_evaluated)
 
     def store(self):
-        '''
-        Store the watchrule in the database and return its ID
-        If self.id is set, we update the existing rule
-        '''
+        """Store the watchrule in the database and return its ID.
+
+        If self.id is set, we update the existing rule.
+        """
 
         wr_values = {
             'name': self.name,
@@ -118,9 +119,7 @@ class WatchRule(object):
                                                       wr_values)
 
     def destroy(self):
-        '''
-        Delete the watchrule from the database.
-        '''
+        """Delete the watchrule from the database."""
         if self.id:
             watch_rule_objects.WatchRule.delete(self.context, self.id)
 
@@ -180,9 +179,7 @@ class WatchRule(object):
             return self.NORMAL
 
     def do_SampleCount(self):
-        '''
-        count all samples within the specified period
-        '''
+        """Count all samples within the specified period."""
         data = 0
         for d in self.watch_data:
             if d.created_at < self.now - self.timeperiod:
@@ -330,9 +327,7 @@ class WatchRule(object):
                   % {'name': self.name, 'data': str(wd.data)})
 
     def state_set(self, state):
-        '''
-        Persistently store the watch state
-        '''
+        """Persistently store the watch state."""
         if state not in self.WATCH_STATES:
             raise ValueError(_("Invalid watch state %s") % state)
 
@@ -340,10 +335,11 @@ class WatchRule(object):
         self.store()
 
     def set_watch_state(self, state):
-        '''
-        Temporarily set the watch state, returns list of functions to be
-        scheduled in the stack ThreadGroup for the specified state
-        '''
+        """Temporarily set the watch state.
+
+        :returns: list of functions to be scheduled in the stack ThreadGroup
+                  for the specified state.
+        """
 
         if state not in self.WATCH_STATES:
             raise ValueError(_('Unknown watch state %s') % state)

@@ -15,23 +15,20 @@ from heat.common import exception
 
 
 class Timestamp(object):
-    '''
-    A descriptor for writing a timestamp to the database.
-    '''
+    """A descriptor for writing a timestamp to the database."""
 
     def __init__(self, db_fetch, attribute):
-        '''
+        """Initialisation of timestamp.
+
         Initialise with a function to fetch the database representation of an
         object (given a context and ID) and the name of the attribute to
         retrieve.
-        '''
+        """
         self.db_fetch = db_fetch
         self.attribute = attribute
 
     def __get__(self, obj, obj_class):
-        '''
-        Get timestamp for the given object and class.
-        '''
+        """Get timestamp for the given object and class."""
         if obj is None or obj.id is None:
             return None
 
@@ -39,7 +36,7 @@ class Timestamp(object):
         return getattr(o, self.attribute)
 
     def __set__(self, obj, timestamp):
-        '''Update the timestamp for the given object.'''
+        """Update the timestamp for the given object."""
         if obj.id is None:
             raise exception.ResourceNotAvailable(resource_name=obj.name)
         o = self.db_fetch(obj.context, obj.id)

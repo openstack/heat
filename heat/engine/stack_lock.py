@@ -47,16 +47,15 @@ class StackLock(object):
         return stack_lock_object.StackLock.get_engine_id(self.stack_id)
 
     def try_acquire(self):
-        """
-        Try to acquire a stack lock, but don't raise an ActionInProgress
-        exception or try to steal lock.
+        """Try to acquire a stack lock.
+
+        Don't raise an ActionInProgress exception or try to steal lock.
         """
         return stack_lock_object.StackLock.create(self.stack_id,
                                                   self.engine_id)
 
     def acquire(self, retry=True):
-        """
-        Acquire a lock on the stack.
+        """Acquire a lock on the stack.
 
         :param retry: When True, retry if lock was released while stealing.
         :type retry: boolean
@@ -112,6 +111,7 @@ class StackLock(object):
 
     def release(self):
         """Release a stack lock."""
+
         # Only the engine that owns the lock will be releasing it.
         result = stack_lock_object.StackLock.release(self.stack_id,
                                                      self.engine_id)
@@ -125,9 +125,9 @@ class StackLock(object):
 
     @contextlib.contextmanager
     def thread_lock(self):
-        """
-        Acquire a lock and release it only if there is an exception.  The
-        release method still needs to be scheduled to be run at the
+        """Acquire a lock and release it only if there is an exception.
+
+        The release method still needs to be scheduled to be run at the
         end of the thread using the Thread.link method.
         """
         try:
@@ -141,10 +141,9 @@ class StackLock(object):
 
     @contextlib.contextmanager
     def try_thread_lock(self):
-        """
-        Similar to thread_lock, but acquire the lock using try_acquire
-        and only release it upon any exception after a successful
-        acquisition.
+        """Similar to thread_lock, but acquire the lock using try_acquire.
+
+        Only release it upon any exception after a successful acquisition.
         """
         result = None
         try:

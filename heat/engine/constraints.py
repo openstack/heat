@@ -34,10 +34,9 @@ MEMOIZE = core.get_memoization_decorator(conf=cfg.CONF,
 
 
 class Schema(collections.Mapping):
-    """
-    Schema base class for validating properties or parameters.
+    """Schema base class for validating properties or parameters.
 
-    Schema objects are serialisable to dictionaries following a superset of
+    Schema objects are serializable to dictionaries following a superset of
     the HOT input Parameter schema using dict().
 
     Serialises to JSON in the form::
@@ -245,8 +244,7 @@ class Schema(collections.Mapping):
 
 
 class AnyIndexDict(collections.Mapping):
-    """
-    A Mapping that returns the same value for any integer index.
+    """A Mapping that returns the same value for any integer index.
 
     Used for storing the schema for a list. When converted to a dictionary,
     it contains a single item with the key '*'.
@@ -271,10 +269,9 @@ class AnyIndexDict(collections.Mapping):
 
 
 class Constraint(collections.Mapping):
-    """
-    Parent class for constraints on allowable values for a Property.
+    """Parent class for constraints on allowable values for a Property.
 
-    Constraints are serialisable to dictionaries following the HOT input
+    Constraints are serializable to dictionaries following the HOT input
     Parameter constraints schema using dict().
     """
 
@@ -326,10 +323,9 @@ class Constraint(collections.Mapping):
 
 
 class Range(Constraint):
-    """
-    Constrain values within a range.
+    """Constrain values within a range.
 
-    Serialises to JSON as::
+    Serializes to JSON as::
 
         {
             'range': {'min': <min>, 'max': <max>},
@@ -394,10 +390,9 @@ class Range(Constraint):
 
 
 class Length(Range):
-    """
-    Constrain the length of values within a range.
+    """Constrain the length of values within a range.
 
-    Serialises to JSON as::
+    Serializes to JSON as::
 
         {
             'length': {'min': <min>, 'max': <max>},
@@ -439,10 +434,9 @@ class Length(Range):
 
 
 class AllowedValues(Constraint):
-    """
-    Constrain values to a predefined set.
+    """Constrain values to a predefined set.
 
-    Serialises to JSON as::
+    Serializes to JSON as::
 
         {
             'allowed_values': [<allowed1>, <allowed2>, ...],
@@ -486,10 +480,9 @@ class AllowedValues(Constraint):
 
 
 class AllowedPattern(Constraint):
-    """
-    Constrain values to a predefined regular expression pattern.
+    """Constrain values to a predefined regular expression pattern.
 
-    Serialises to JSON as::
+    Serializes to JSON as::
 
         {
             'allowed_pattern': <pattern>,
@@ -522,9 +515,7 @@ class AllowedPattern(Constraint):
 
 
 class CustomConstraint(Constraint):
-    """
-    A constraint delegating validation to an external class.
-    """
+    """A constraint delegating validation to an external class."""
     valid_types = (Schema.STRING_TYPE, Schema.INTEGER_TYPE, Schema.NUMBER_TYPE,
                    Schema.BOOLEAN_TYPE, Schema.LIST_TYPE)
 

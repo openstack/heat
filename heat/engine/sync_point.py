@@ -35,9 +35,7 @@ def make_key(*components):
 
 
 def create(context, entity_id, traversal_id, is_update, stack_id):
-    """
-    Creates an sync point entry in DB.
-    """
+    """Creates an sync point entry in DB."""
     values = {'entity_id': entity_id, 'traversal_id': traversal_id,
               'is_update': is_update, 'atomic_key': 0,
               'stack_id': stack_id, 'input_data': {}}
@@ -45,9 +43,7 @@ def create(context, entity_id, traversal_id, is_update, stack_id):
 
 
 def get(context, entity_id, traversal_id, is_update):
-    """
-    Retrieves a sync point entry from DB.
-    """
+    """Retrieves a sync point entry from DB."""
     sync_point = sync_point_object.SyncPoint.get_by_key(context, entity_id,
                                                         traversal_id,
                                                         is_update)
@@ -59,9 +55,7 @@ def get(context, entity_id, traversal_id, is_update):
 
 
 def delete_all(context, stack_id, traversal_id):
-    """
-    Deletes all sync points of a stack associated with a particular traversal.
-    """
+    """Deletes all sync points of a stack associated with a traversal_id."""
     return sync_point_object.SyncPoint.delete_all_by_stack_and_traversal(
         context, stack_id, traversal_id
     )
@@ -145,7 +139,7 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
 
 
 class SyncPointNotFound(Exception):
-    '''Raised when resource update requires replacement.'''
+    """Raised when resource update requires replacement."""
     def __init__(self, sync_point):
         msg = _("Sync Point %s not found") % (sync_point, )
         super(Exception, self).__init__(six.text_type(msg))

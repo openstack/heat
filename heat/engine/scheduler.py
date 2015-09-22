@@ -32,9 +32,9 @@ ENABLE_SLEEP = True
 
 
 def task_description(task):
-    """
-    Return a human-readable string description of a task suitable for logging
-    the status of the task.
+    """Return a human-readable string description of a task suitable.
+
+    Description is used for logging the status of the task.
     """
     name = task.__name__ if hasattr(task, '__name__') else None
     if isinstance(task, types.MethodType):
@@ -47,9 +47,7 @@ def task_description(task):
 
 
 class Timeout(BaseException):
-    """
-    Timeout exception, raised within a task when it has exceeded its allotted
-    (wallclock) running time.
+    """Raised when task has exceeded its allotted (wallclock) running time.
 
     This allows the task to perform any necessary cleanup, as well as use a
     different exception to notify the controlling task if appropriate. If the
@@ -58,9 +56,7 @@ class Timeout(BaseException):
     """
 
     def __init__(self, task_runner, timeout):
-        """
-        Initialise with the TaskRunner and a timeout period in seconds.
-        """
+        """Initialise with the TaskRunner and a timeout period in seconds."""
         message = _('%s Timed out') % six.text_type(task_runner)
         super(Timeout, self).__init__(message)
 
@@ -113,14 +109,13 @@ class TimedCancel(Timeout):
 
 @six.python_2_unicode_compatible
 class ExceptionGroup(Exception):
-    '''
-    Container for multiple exceptions.
+    """Container for multiple exceptions.
 
     This exception is used by DependencyTaskGroup when the flag
     aggregate_exceptions is set to True and it's re-raised again when all tasks
     are finished.  This way it can be caught later on so that the individual
     exceptions can be acted upon.
-    '''
+    """
 
     def __init__(self, exceptions=None):
         if exceptions is None:
@@ -134,14 +129,12 @@ class ExceptionGroup(Exception):
 
 @six.python_2_unicode_compatible
 class TaskRunner(object):
-    """
-    Wrapper for a resumable task (co-routine).
-    """
+    """Wrapper for a resumable task (co-routine)."""
 
     def __init__(self, task, *args, **kwargs):
-        """
-        Initialise with a task function, and arguments to be passed to it when
-        it is started.
+        """Initialise with a task function.
+
+        Arguments to be passed to task when it is started.
 
         The task function may be a co-routine that yields control flow between
         steps.
@@ -168,8 +161,7 @@ class TaskRunner(object):
             eventlet.sleep(wait_time)
 
     def __call__(self, wait_time=1, timeout=None):
-        """
-        Start and run the task to completion.
+        """Start and run the task to completion.
 
         The task will first sleep for zero seconds, then sleep for `wait_time`
         seconds between steps. To avoid sleeping, pass `None` for `wait_time`.
@@ -182,8 +174,7 @@ class TaskRunner(object):
         self.run_to_completion(wait_time=wait_time)
 
     def start(self, timeout=None):
-        """
-        Initialise the task and run its first step.
+        """Initialise the task and run its first step.
 
         If a timeout is specified, any attempt to step the task after that
         number of seconds has elapsed will result in a Timeout being
@@ -207,9 +198,9 @@ class TaskRunner(object):
             LOG.debug('%s done (not resumable)' % six.text_type(self))
 
     def step(self):
-        """
-        Run another step of the task, and return True if the task is complete;
-        False otherwise.
+        """Run another step of the task.
+
+        :returns: True if the task is complete; False otherwise.
         """
         if not self.done():
             assert self._runner is not None, "Task not started"
@@ -231,8 +222,7 @@ class TaskRunner(object):
         return self._done
 
     def run_to_completion(self, wait_time=1):
-        """
-        Run the task to completion.
+        """Run the task to completion.
 
         The task will sleep for `wait_time` seconds between steps. To avoid
         sleeping, pass `None` for `wait_time`.
@@ -273,8 +263,7 @@ class TaskRunner(object):
 
 
 def wrappertask(task):
-    """
-    Decorator for a task that needs to drive a subtask.
+    """Decorator for a task that needs to drive a subtask.
 
     This is essentially a replacement for the Python 3-only "yield from"
     keyword (PEP 380), using the "yield" keyword that is supported in
@@ -334,16 +323,14 @@ def wrappertask(task):
 
 
 class DependencyTaskGroup(object):
-    """
-    A task which manages a group of subtasks that have ordering dependencies.
-    """
+    """Task which manages group of subtasks that have ordering dependencies."""
 
     def __init__(self, dependencies, task=lambda o: o(),
                  reverse=False, name=None, error_wait_time=None,
                  aggregate_exceptions=False):
-        """
-        Initialise with the task dependencies and (optionally) a task to run on
-        each.
+        """Initialise with the task dependencies.
+
+        Optionally initialise with a task to run on each.
 
         If no task is supplied, it is assumed that the tasks are stored
         directly in the dependency tree. If a task is supplied, the object
@@ -420,9 +407,10 @@ class DependencyTaskGroup(object):
         del self._graph[key]
 
     def _ready(self):
-        """
-        Iterate over all subtasks that are ready to start - i.e. all their
-        dependencies have been satisfied but they have not yet been started.
+        """Iterate over all subtasks that are ready to start.
+
+        All subtasks' dependencies have been satisfied but they have not yet
+        been started.
         """
         for k, n in six.iteritems(self._graph):
             if not n:
@@ -431,9 +419,9 @@ class DependencyTaskGroup(object):
                     yield k, runner
 
     def _running(self):
-        """
-        Iterate over all subtasks that are currently running - i.e. they have
-        been started but have not yet completed.
+        """Iterate over all subtasks that are currently running.
+
+        Subtasks have been started but have not yet completed.
         """
         running = lambda k_r: k_r[0] in self._graph and k_r[1].started()
         return six.moves.filter(running, six.iteritems(self._runners))
