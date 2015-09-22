@@ -124,7 +124,7 @@ class ExceptionGroup(Exception):
         self.exceptions = list(exceptions)
 
     def __str__(self):
-        return six.text_type([six.text_type(ex) for ex in self.exceptions])
+        return str([str(ex) for ex in self.exceptions])
 
 
 @six.python_2_unicode_compatible
