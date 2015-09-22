@@ -91,14 +91,14 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         return isinstance(ex, exceptions.Conflict)
 
     def get_flavor_id(self, flavor):
-        '''
-        Get the id for the specified flavor name.
+        """Get the ID for the specified flavor name.
+
         If the specified value is flavor id, just return it.
 
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
         :raises: exception.FlavorMissing
-        '''
+        """
         flavor_id = None
         flavor_list = self.client().flavors.list()
         for o in flavor_list:

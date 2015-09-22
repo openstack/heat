@@ -35,9 +35,7 @@ cfg.CONF.register_opts(cloud_opts)
 
 
 class OpenStackClients(object):
-    '''
-    Convenience class to create and cache client instances.
-    '''
+    """Convenience class to create and cache client instances."""
 
     def __init__(self, context):
         self.context = context
@@ -79,9 +77,11 @@ class OpenStackClients(object):
 
 
 class ClientBackend(object):
-    '''Delay choosing the backend client module until the client's class needs
+    """Class for delaying choosing the backend client module.
+
+    Delay choosing the backend client module until the client's class needs
     to be initialized.
-    '''
+    """
     def __new__(cls, context):
         if cfg.CONF.cloud_backend == _default_backend:
             return OpenStackClients(context)

@@ -71,7 +71,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
                 ex.http_status == 409)
 
     def is_valid_temp_url_path(self, path):
-        '''Return True if path is a valid Swift TempURL path, False otherwise.
+        """Return True if path is a valid Swift TempURL path, False otherwise.
 
         A Swift TempURL path must:
         - Be five parts, ['', 'v1', 'account', 'container', 'object']
@@ -81,7 +81,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
 
         :param path: The TempURL path
         :type path: string
-        '''
+        """
         parts = path.split('/', 4)
         return bool(len(parts) == 5 and
                     not parts[0] and
@@ -92,9 +92,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
 
     def get_temp_url(self, container_name, obj_name, timeout=None,
                      method='PUT'):
-        '''
-        Return a Swift TempURL.
-        '''
+        """Return a Swift TempURL."""
         key_header = 'x-account-meta-temp-url-key'
         if key_header not in self.client().head_account():
             self.client().post_account({
@@ -114,10 +112,11 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         return '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
 
     def get_signal_url(self, container_name, obj_name, timeout=None):
-        '''
-        Turn on object versioning so we can use a single TempURL for
-        multiple signals and return a Swift TempURL.
-        '''
+        """Turn on object versioning.
+
+        We can use a single TempURL for multiple signals and return a Swift
+        TempURL.
+        """
         self.client().put_container(
             container_name, headers={'x-versions-location': container_name})
         self.client().put_object(container_name, obj_name, IN_PROGRESS)
@@ -125,14 +124,15 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         return self.get_temp_url(container_name, obj_name, timeout)
 
     def parse_last_modified(self, lm):
-        '''
-        Parses the last-modified value, such as from a swift object header,
-        and returns the datetime.datetime of that value.
+        """Parses the last-modified value.
+
+        For example, last-modified values from a swift object header.
+        Returns the datetime.datetime of that value.
 
         :param lm: The last-modified value (or None)
         :type lm: string
         :returns: An offset-naive UTC datetime of the value (or None)
-        '''
+        """
         if not lm:
             return None
         pd = email.utils.parsedate(lm)[:6]
