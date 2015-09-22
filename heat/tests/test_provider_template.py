@@ -178,7 +178,8 @@ class ProviderTemplateTest(common.HeatTestCase):
         # verify Map conversion
         self.assertEqual(map_prop_val, converted_params.get("AMap"))
 
-        with mock.patch.object(properties.Properties, '__getitem__') as m_get:
+        with mock.patch.object(properties.Properties,
+                               'get_user_value') as m_get:
             m_get.side_effect = ValueError('boom')
 
             # If the property doesn't exist on INIT, return default value
@@ -984,7 +985,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res.handle_create()
 
         self.res.create_with_template.assert_called_once_with(
-            self.provider, {'Foo': 'bar', 'Blarg': 'wibble'})
+            self.provider, {'Foo': 'bar'})
 
     def test_handle_adopt(self):
         self.res.create_with_template = mock.Mock(return_value=None)
@@ -992,7 +993,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res.handle_adopt(resource_data={'resource_id': 'fred'})
 
         self.res.create_with_template.assert_called_once_with(
-            self.provider, {'Foo': 'bar', 'Blarg': 'wibble'},
+            self.provider, {'Foo': 'bar'},
             adopt_data={'resource_id': 'fred'})
 
     def test_handle_update(self):
@@ -1001,7 +1002,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res.handle_update(self.defn, None, None)
 
         self.res.update_with_template.assert_called_once_with(
-            self.provider, {'Foo': 'bar', 'Blarg': 'wibble'})
+            self.provider, {'Foo': 'bar'})
 
     def test_handle_delete(self):
         self.res.rpc_client = mock.MagicMock()

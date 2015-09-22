@@ -133,7 +133,7 @@ class TemplateResource(stack_resource.StackResource):
                 continue
 
             try:
-                val = self.properties[pname]
+                val = self.properties.get_user_value(pname)
             except ValueError:
                 if self.action == self.INIT:
                     prop = self.properties.props[pname]

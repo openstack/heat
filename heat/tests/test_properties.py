@@ -1038,8 +1038,24 @@ class PropertiesTest(common.HeatTestCase):
     def test_default_override(self):
         self.assertEqual(42, self.props['default_override'])
 
+    def test_get_user_value(self):
+        self.assertIsNone(self.props.get_user_value('defaulted'))
+        self.assertEqual(42, self.props.get_user_value('default_override'))
+
+    def test_get_user_value_key_error(self):
+        ex = self.assertRaises(KeyError, self.props.get_user_value, 'foo')
+        # Note we have to use args here: https://bugs.python.org/issue2651
+        self.assertEqual('Invalid Property foo',
+                         six.text_type(ex.args[0]))
+
     def test_bad_key(self):
         self.assertEqual('wibble', self.props.get('foo', 'wibble'))
+
+    def test_key_error(self):
+        ex = self.assertRaises(KeyError, self.props.__getitem__, 'foo')
+        # Note we have to use args here: https://bugs.python.org/issue2651
+        self.assertEqual('Invalid Property foo',
+                         six.text_type(ex.args[0]))
 
     def test_none_string(self):
         schema = {'foo': {'Type': 'String'}}

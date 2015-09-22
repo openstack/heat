@@ -413,12 +413,11 @@ class Properties(collections.Mapping):
         if any(res.action == res.INIT for res in deps):
             return True
 
-    def _get_property_value(self, key, validate=False):
+    def get_user_value(self, key, validate=False):
         if key not in self:
             raise KeyError(_('Invalid Property %s') % key)
 
         prop = self.props[key]
-
         if key in self.data:
             try:
                 unresolved_value = self.data[key]
@@ -438,12 +437,18 @@ class Properties(collections.Mapping):
             # so handle this generically
             except Exception as e:
                 raise ValueError(six.text_type(e))
+
+    def _get_property_value(self, key, validate=False):
+        if key not in self:
+            raise KeyError(_('Invalid Property %s') % key)
+
+        prop = self.props[key]
+        if key in self.data:
+            return self.get_user_value(key, validate)
         elif prop.has_default():
             return prop.get_value(None, validate)
         elif prop.required():
             raise ValueError(_('Property %s not assigned') % key)
-        else:
-            return None
 
     def __getitem__(self, key):
         return self._get_property_value(key)
