@@ -134,6 +134,8 @@ class FaultMiddlewareTest(common.HeatTestCase):
         self.assertEqual(expected, msg)
 
     def remote_exception_helper(self, name, error):
+        if six.PY3:
+            error.args = ()
         exc_info = (type(error), error, None)
 
         serialized = rpc_common.serialize_remote_exception(exc_info)

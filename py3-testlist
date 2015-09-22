@@ -110,6 +110,7 @@ heat.tests.test_environment
 heat.tests.test_environment_format
 heat.tests.test_event
 heat.tests.test_exception
+heat.tests.test_fault_middleware
 heat.tests.test_function
 heat.tests.test_glance_image
 heat.tests.test_grouputils

@@ -19,6 +19,7 @@ Cinder's faultwrapper
 """
 import six
 
+import sys
 import traceback
 
 from oslo_config import cfg
@@ -131,7 +132,9 @@ class FaultWrapper(wsgi.Middleware):
             message = message.rstrip('\n')
             msg_trace = traceback_marker + msg_trace
         else:
-            msg_trace = traceback.format_exc()
+            msg_trace = 'None\n'
+            if sys.exc_info() != (None, None, None):
+                msg_trace = traceback.format_exc()
             message = full_message
 
         if isinstance(ex, exception.HeatException):
