@@ -1,3 +1,5 @@
+rackspace.tests
+heat_docker.tests
 heat.tests.api.aws.test_api_aws
 heat.tests.api.middleware.test_ssl_middleware
 heat.tests.api.middleware.test_version_negotiation_middleware

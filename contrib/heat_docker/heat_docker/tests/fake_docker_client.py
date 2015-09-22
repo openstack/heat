@@ -33,7 +33,7 @@ class FakeDockerClient(object):
         self.version_info = {}
 
     def _generate_string(self, n=32):
-        return ''.join(random.choice(string.lowercase) for i in range(n))
+        return ''.join(random.choice(string.ascii_lowercase) for i in range(n))
 
     def _check_exists(self, container_id):
         if container_id not in self._containers:

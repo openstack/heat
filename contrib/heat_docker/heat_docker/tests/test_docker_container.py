@@ -29,8 +29,8 @@ from heat.tests import utils
 
 import testtools
 
-from ..resources import docker_container  # noqa
-import fake_docker_client as fakeclient  # noqa
+from heat_docker.resources import docker_container
+from heat_docker.tests import fake_docker_client as fakeclient
 
 docker = importutils.try_import('docker')
 
