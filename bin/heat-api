@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Heat API Server.
+
+An OpenStack REST API to Heat.
+"""
+
 import warnings
 warnings.warn("DEPRECATED: This script is deprecated. Please use the "
               "system level heat binaries installed to start "
               "any of the heat services.", DeprecationWarning)
-
-"""
-Heat API Server. An OpenStack REST API to Heat.
-"""
 
 import os
 import sys

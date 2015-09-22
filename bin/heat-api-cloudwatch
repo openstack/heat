@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Heat cloudwatch API Server.
+
+This implements an approximation of the Amazon CloudWatch API and translates it
+into a native representation. It then calls the heat-engine via AMQP RPC to
+implement them.
+"""
+
 import warnings
 warnings.warn("DEPRECATED: This script is deprecated. Please use the "
               "system level heat binaries installed to start "
               "any of the heat services.", DeprecationWarning)
-
-"""
-Heat API Server.  This implements an approximation of the Amazon
-CloudWatch API and translates it into a native representation.  It then
-calls the heat-engine via AMQP RPC to implement them.
-"""
 
 import os
 import sys
