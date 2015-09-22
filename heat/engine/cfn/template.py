@@ -34,7 +34,7 @@ _RESOURCE_KEYS = (
 
 
 class CfnTemplate(template.Template):
-    '''A stack template.'''
+    """A stack template."""
 
     SECTIONS = (
         VERSION, ALTERNATE_VERSION,
@@ -63,7 +63,7 @@ class CfnTemplate(template.Template):
     }
 
     def __getitem__(self, section):
-        '''Get the relevant section in the template.'''
+        """Get the relevant section in the template."""
         if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
         if section in self.SECTIONS_NO_DIRECT_ACCESS:
