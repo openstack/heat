@@ -64,6 +64,7 @@ class Resource(
         'requires': heat_fields.ListField(nullable=True, default=None),
         'replaces': fields.IntegerField(nullable=True),
         'replaced_by': fields.IntegerField(nullable=True),
+        'root_stack_id': fields.StringField(nullable=True),
     }
 
     @staticmethod

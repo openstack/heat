@@ -287,6 +287,7 @@ class Resource(BASE, HeatBase, StateAware):
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
+    root_stack_id = sqlalchemy.Column(sqlalchemy.String(36), index=True)
     data = relationship(ResourceData,
                         cascade="all,delete",
                         backref=backref('resource'))
