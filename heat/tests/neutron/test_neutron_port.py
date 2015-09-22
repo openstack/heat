@@ -12,10 +12,12 @@
 #    under the License.
 
 import copy
+import mock
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
+from oslo_serialization import jsonutils
 
 from heat.common import exception
 from heat.common import template_format
@@ -717,3 +719,61 @@ class NeutronPortTest(common.HeatTestCase):
         self.assertEqual('direct', port.properties['binding:vnic_type'])
 
         self.m.VerifyAll()
+
+    def test_prepare_for_replace_port(self):
+        t = template_format.parse(neutron_port_template)
+        stack = utils.parse_stack(t)
+        port = stack['port']
+        port.resource_id = 'test_res_id'
+        _value = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet',
+                'ip_address': '42.42.42.42'
+            }
+        }
+        port._show_resource = mock.Mock(return_value=_value)
+        port.data_set = mock.Mock()
+        n_client = mock.Mock()
+        port.client = mock.Mock(return_value=n_client)
+
+        # execute prepare_for_replace
+        port.prepare_for_replace()
+
+        # check, that data was stored
+        port.data_set.assert_called_once_with(
+            'port_fip', jsonutils.dumps(_value.get('fixed_ips')))
+
+        # check, that port was updated and ip was removed
+        expected_props = {'port': {'fixed_ips': []}}
+        n_client.update_port.assert_called_once_with('test_res_id',
+                                                     expected_props)
+
+    def test_restore_after_rollback_port(self):
+        t = template_format.parse(neutron_port_template)
+        stack = utils.parse_stack(t)
+        new_port = stack['port']
+        new_port.resource_id = 'new_res_id'
+        # mock backup stack to return only one mocked old_port
+        old_port = mock.Mock()
+        new_port.stack._backup_stack = mock.Mock()
+        new_port.stack._backup_stack().resources.get.return_value = old_port
+        old_port.resource_id = 'old_res_id'
+        _value = {
+            'subnet_id': 'test_subnet',
+            'ip_address': '42.42.42.42'
+        }
+        old_port.data = mock.Mock(
+            return_value={'port_fip': jsonutils.dumps(_value)})
+
+        n_client = mock.Mock()
+        new_port.client = mock.Mock(return_value=n_client)
+
+        # execute prepare_for_replace
+        new_port.restore_after_rollback()
+
+        # check, that ports were updated: old port get ip and
+        # same ip was removed from old port
+        expected_new_props = {'port': {'fixed_ips': []}}
+        expected_old_props = {'port': {'fixed_ips': _value}}
+        n_client.update_port.has_calls(('new_res_id', expected_new_props),
+                                       ('old_res_id', expected_old_props))
