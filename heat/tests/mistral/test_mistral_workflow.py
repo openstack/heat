@@ -507,16 +507,21 @@ class TestMistralWorkflow(common.HeatTestCase):
         details = {'input': '3'}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
+        if six.PY3:
+            entity = 'class'
+        else:
+            entity = 'type'
         error_message = ("StackValidationFailed: resources.create_vm: "
                          "Signal data error: Input in"
-                         " signal data must be a map, find a <type 'str'>")
+                         " signal data must be a map, find a <%s 'str'>" %
+                         entity)
         self.assertEqual(error_message, six.text_type(err))
         details = {'params': '3'}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
         error_message = ("StackValidationFailed: resources.create_vm: "
                          "Signal data error: Params "
-                         "must be a map, find a <type 'str'>")
+                         "must be a map, find a <%s 'str'>" % entity)
         self.assertEqual(error_message, six.text_type(err))
 
     def test_signal_wrong_input_key(self):

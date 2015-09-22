@@ -67,6 +67,7 @@ heat.tests.manila.test_manila_share
 heat.tests.manila.test_manila_share_type
 heat.tests.manila.test_share_network
 heat.tests.mistral.test_mistral_cron_trigger
+heat.tests.mistral.test_mistral_workflow
 heat.tests.neutron
 heat.tests.neutron.test_extraroute
 heat.tests.neutron.test_neutron
@@ -99,6 +100,7 @@ heat.tests.test_common_policy
 heat.tests.test_common_serializers
 heat.tests.test_common_service_utils
 heat.tests.test_constraints
+heat.tests.test_convg_stack
 heat.tests.test_crypt
 heat.tests.test_cw_alarm
 heat.tests.test_dbinstance
