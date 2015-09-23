@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.db import api as db_api
 from heat.engine import service
 from heat.engine import stack
@@ -37,7 +39,7 @@ class Engine(message_processor.MessageProcessor):
         '''
         hot_tmpl = {"heat_template_version": "2013-05-23"}
         resources = {}
-        for res_name, res_def in scenario_tmpl.resources.iteritems():
+        for res_name, res_def in six.iteritems(scenario_tmpl.resources):
             props = getattr(res_def, 'properties')
             depends = getattr(res_def, 'depends_on')
             res_defn = {"type": "OS::Heat::TestResource"}
