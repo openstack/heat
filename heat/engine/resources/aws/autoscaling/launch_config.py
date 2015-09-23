@@ -230,7 +230,7 @@ class LaunchConfiguration(resource.Resource):
 
         return result
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()
 
     def validate(self):

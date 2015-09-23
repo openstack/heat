@@ -114,7 +114,7 @@ class User(stack_user.StackUser):
         super(User, self).handle_create()
         self.resource_id_set(self._get_user_id())
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()
 
     def access_allowed(self, resource_name):

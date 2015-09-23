@@ -20,6 +20,7 @@ from novaclient import exceptions as nova_exceptions
 import six
 
 from heat.common import exception
+from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.resources.aws.ec2 import eip
@@ -918,3 +919,35 @@ class AllocTest(common.HeatTestCase):
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
 
         self.m.VerifyAll()
+
+    def test_eip_allocation_refid_resource_name(self):
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        rsrc = stack['IPAssoc']
+        rsrc.id = '123'
+        rsrc.uuid = '9bfb9456-3fe8-41f4-b318-9dba18eeef74'
+        rsrc.action = 'CREATE'
+        expected = '%s-%s-%s' % (rsrc.stack.name,
+                                 rsrc.name,
+                                 short_id.get_id(rsrc.uuid))
+        self.assertEqual(expected, rsrc.FnGetRefId())
+
+    def test_eip_allocation_refid_resource_id(self):
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        rsrc = stack['IPAssoc']
+        rsrc.resource_id = 'phy-rsrc-id'
+        self.assertEqual('phy-rsrc-id', rsrc.FnGetRefId())
+
+    def test_eip_allocation_refid_convergence_cache_data(self):
+        t = template_format.parse(eip_template_ipassoc)
+        cache_data = {'IPAssoc': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['IPAssoc']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())

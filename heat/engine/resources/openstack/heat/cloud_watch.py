@@ -194,7 +194,7 @@ class CloudWatchAlarm(resource.Resource):
         watch_name = self.physical_resource_name()
         watchrule.WatchRule.load(self.context, watch_name=watch_name)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()
 
     def physical_resource_name(self):

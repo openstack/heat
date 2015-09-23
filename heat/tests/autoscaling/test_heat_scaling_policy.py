@@ -118,6 +118,26 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         group.adjust.assert_called_once_with(1, 'change_in_capacity', None,
                                              signal=True)
 
+    def test_scaling_policy_refid(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['my-policy']
+        rsrc.resource_id = 'xyz'
+        self.assertEqual('xyz', rsrc.FnGetRefId())
+
+    def test_scaling_policy_refid_convg_cache_data(self):
+        t = template_format.parse(as_template)
+        cache_data = {'my-policy': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['my-policy']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
+
 
 class TestCooldownMixin(common.HeatTestCase):
     def setUp(self):

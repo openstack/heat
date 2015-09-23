@@ -18,6 +18,7 @@ import six
 
 from heat.common import exception
 from heat.common import grouputils
+from heat.common import short_id
 from heat.common import template_format
 from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
@@ -142,6 +143,20 @@ class TestInstanceGroup(common.HeatTestCase):
         mock_members.return_value = instances
         res = self.instance_group._resolve_attribute('InstanceList')
         self.assertEqual('2.1.3.1,2.1.3.2,2.1.3.3', res)
+
+    def test_instance_group_refid_rsrc_name(self):
+        self.instance_group.id = '123'
+
+        self.instance_group.uuid = '9bfb9456-3fe8-41f4-b318-9dba18eeef74'
+        self.instance_group.action = 'CREATE'
+        expected = '%s-%s-%s' % (self.instance_group.stack.name,
+                                 self.instance_group.name,
+                                 short_id.get_id(self.instance_group.uuid))
+        self.assertEqual(expected, self.instance_group.FnGetRefId())
+
+    def test_instance_group_refid_rsrc_id(self):
+        self.instance_group.resource_id = 'phy-rsrc-id'
+        self.assertEqual('phy-rsrc-id', self.instance_group.FnGetRefId())
 
 
 class TestLaunchConfig(common.HeatTestCase):

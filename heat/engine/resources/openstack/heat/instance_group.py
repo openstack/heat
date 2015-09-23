@@ -376,7 +376,7 @@ class InstanceGroup(stack_resource.StackResource):
             lb_dict = dict((name, self.stack[name]) for name in lb_names)
             lbutils.reload_loadbalancers(self, lb_dict, exclude)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()
 
     def _resolve_attribute(self, name):

@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import mock
 
 from keystoneclient import exceptions as keystone_exc
 from neutronclient.common import exceptions as neutron_exc
@@ -21,8 +22,10 @@ from novaclient.v2 import security_group_rules as nova_sgr
 from novaclient.v2 import security_groups as nova_sg
 
 from heat.common import exception
+from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine.resources.aws.ec2 import security_group
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -1075,3 +1078,39 @@ Resources:
         self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
 
         self.m.VerifyAll()
+
+    @mock.patch.object(security_group.SecurityGroup, 'is_using_neutron')
+    def test_security_group_refid_rsrc_name(self, mock_using_neutron):
+        mock_using_neutron.return_value = False
+        t = template_format.parse(self.test_template_nova)
+        stack = utils.parse_stack(t)
+        rsrc = stack['the_sg']
+        rsrc.id = '123'
+        rsrc.uuid = '9bfb9456-3fe8-41f4-b318-9dba18eeef74'
+        rsrc.action = 'CREATE'
+        expected = '%s-%s-%s' % (rsrc.stack.name,
+                                 rsrc.name,
+                                 short_id.get_id(rsrc.uuid))
+        self.assertEqual(expected, rsrc.FnGetRefId())
+
+    @mock.patch.object(security_group.SecurityGroup, 'is_using_neutron')
+    def test_security_group_refid_rsrc_id(self, mock_using_neutron):
+        mock_using_neutron.return_value = True
+        t = template_format.parse(self.test_template_nova)
+        stack = utils.parse_stack(t)
+        rsrc = stack['the_sg']
+        rsrc.resource_id = 'phy-rsrc-id'
+        self.assertEqual('phy-rsrc-id', rsrc.FnGetRefId())
+
+    def test_security_group_refid_convg_cache_data(self):
+        t = template_format.parse(self.test_template_nova)
+        cache_data = {'the_sg': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['the_sg']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
