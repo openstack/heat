@@ -117,6 +117,9 @@ class Resource(object):
     # Default name to use for calls to self.client()
     default_client_name = None
 
+    # no signal actions
+    no_signal_actions = (SUSPEND, DELETE)
+
     def __new__(cls, name, definition, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -1145,7 +1148,7 @@ class Resource(object):
         to implement the signal, the base-class raise an exception if no
         handler is implemented.
         '''
-        if self.action in (self.SUSPEND, self.DELETE):
+        if self.action in self.no_signal_actions:
             self._add_event(self.action, self.status,
                             'Cannot signal resource during %s' % self.action)
             ex = Exception(_('Cannot signal resource during %s') % self.action)

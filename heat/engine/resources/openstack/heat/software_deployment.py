@@ -177,6 +177,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     default_client_name = 'heat'
 
+    no_signal_actions = ()
+
     def _signal_transport_cfn(self):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.CFN_SIGNAL
