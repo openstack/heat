@@ -36,6 +36,10 @@ resources:
       firewall_policy_id: policy-id
       admin_state_up: True
       shared: True
+      value_specs:
+         router_ids:
+           - router_1
+           - router_2
 '''
 
 firewall_policy_template = '''
@@ -82,6 +86,7 @@ class FirewallTest(common.HeatTestCase):
         neutronclient.Client.create_firewall({
             'firewall': {
                 'name': 'test-firewall', 'admin_state_up': True,
+                'router_ids': ['router_1', 'router_2'],
                 'firewall_policy_id': 'policy-id', 'shared': True}}
         ).AndReturn({'firewall': {'id': '5678'}})
 
@@ -102,6 +107,7 @@ class FirewallTest(common.HeatTestCase):
         neutronclient.Client.create_firewall({
             'firewall': {
                 'name': 'test-firewall', 'admin_state_up': True,
+                'router_ids': ['router_1', 'router_2'],
                 'firewall_policy_id': 'policy-id', 'shared': True}}
         ).AndRaise(exceptions.NeutronClientException())
         self.m.ReplayAll()
