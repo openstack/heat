@@ -89,7 +89,7 @@ class NestedStack(stack_resource.StackResource):
         attribute = self.get_output(key.partition('.')[-1])
         return attributes.select_from_attribute(attribute, path)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         if self.nested() is None:
             return six.text_type(self.name)
 

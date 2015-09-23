@@ -265,6 +265,27 @@ Resources:
         nested_stack = stack['the_nested']
         self.assertRaises(ValueError, nested_stack.child_template)
 
+    def test_refid(self):
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        nested_stack = stack['the_nested']
+        self.assertEqual('the_nested', nested_stack.FnGetRefId())
+
+    def test_refid_convergence_cache_data(self):
+        t = template_format.parse(self.test_template)
+        tmpl = template.Template(t)
+        ctx = utils.dummy_context()
+        cache_data = {'the_nested': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'the_nested_convg_mock'
+        }}
+        stack = parser.Stack(ctx, 'test_stack', tmpl, cache_data=cache_data)
+        nested_stack = stack['the_nested']
+        self.assertEqual('the_nested_convg_mock', nested_stack.FnGetRefId())
+
 
 class ResDataResource(generic_rsrc.GenericResource):
     def handle_create(self):

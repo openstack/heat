@@ -220,7 +220,7 @@ class SwiftContainer(resource.Resource):
     def handle_check(self):
         self.client().get_container(self.resource_id)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return six.text_type(self.resource_id)
 
     def _resolve_attribute(self, key):

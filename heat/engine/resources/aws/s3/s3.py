@@ -164,7 +164,7 @@ class S3Bucket(resource.Resource):
                     raise exception.ResourceActionNotSupported(action=msg)
             self.client_plugin().ignore_not_found(ex)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return six.text_type(self.resource_id)
 
     def _resolve_attribute(self, name):

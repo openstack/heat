@@ -419,3 +419,23 @@ class swiftTest(common.HeatTestCase):
         self.m.VerifyAll()
 
         self.assertEqual({}, rsrc.metadata_get())
+
+    def test_refid(self):
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['SwiftContainer']
+        rsrc.resource_id = 'xyz'
+        self.assertEqual('xyz', rsrc.FnGetRefId())
+
+    def test_refid_convergence_cache_data(self):
+        t = template_format.parse(swift_template)
+        cache_data = {'SwiftContainer': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'xyz_convg'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['SwiftContainer']
+        self.assertEqual('xyz_convg', rsrc.FnGetRefId())
