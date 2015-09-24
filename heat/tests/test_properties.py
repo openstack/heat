@@ -743,9 +743,11 @@ class PropertyTest(common.HeatTestCase):
     def test_int_bad(self):
         schema = {'Type': 'Integer'}
         p = properties.Property(schema)
-        ex = self.assertRaises(TypeError, p.get_value, [1])
-        self.assertEqual("int() argument must be a string or a number, "
-                         "not 'list'", six.text_type(ex))
+        # python 3.4.3 returns another error message
+        # try to handle this by regexp
+        self.assertRaisesRegexp(
+            TypeError, "int\(\) argument must be a string(, a bytes-like "
+                       "object)? or a number, not 'list'", p.get_value, [1])
 
     def test_str_from_int(self):
         schema = {'Type': 'String'}
