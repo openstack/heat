@@ -120,7 +120,7 @@ class Resource(object):
     signal_needs_metadata_updates = True
 
     def __new__(cls, name, definition, stack):
-        '''Create a new Resource of the appropriate class for its type.'''
+        """Create a new Resource of the appropriate class for its type."""
 
         assert isinstance(definition, rsrc_defn.ResourceDefinition)
 
@@ -1092,24 +1092,22 @@ class Resource(object):
         return name[0:2] + '-' + name[-postfix_length:]
 
     def validate(self):
-        '''
-        Validate the resource.
+        """Validate the resource.
 
         This may be overridden by resource plugins to add extra
         validation logic specific to the resource implementation.
-        '''
+        """
         LOG.info(_LI('Validating %s'), six.text_type(self))
         return self.validate_template()
 
     def validate_template(self):
-        '''
-        Validate strucural/syntax aspects of the resource definition.
+        """Validate structural/syntax aspects of the resource definition.
 
         Resource plugins should not override this, because this interface
         is expected to be called pre-create so things normally valid
         in an overridden validate() such as accessing properties
         may not work.
-        '''
+        """
         function.validate(self.t)
         self.validate_deletion_policy(self.t.deletion_policy())
         self.t.update_policy(self.update_policy_schema,

@@ -28,8 +28,7 @@ from heat.common.i18n import _
 
 
 class ExceptionFilter(object):
-    """
-    A context manager that prevents some exceptions from being raised.
+    """A context manager that prevents some exceptions from being raised.
 
     For backwards compatibility, these objects can also be called with the
     exception value as an argument - any non-matching exception will be
@@ -55,7 +54,6 @@ class ExceptionFilter(object):
     ...     assert False
     ... except Exception as ex:
     ...     ignore_assertions(ex)
-
     """
 
     def __init__(self, should_ignore_ex):
@@ -73,8 +71,7 @@ class ExceptionFilter(object):
             return self._should_ignore_ex(exc_val)
 
     def __call__(self, ex):
-        """
-        Re-raise any exception value not being filtered out.
+        """Re-raise any exception value not being filtered out.
 
         If the exception was the last to be raised, it will be re-raised with
         its original traceback.

@@ -958,9 +958,7 @@ class EngineService(service.Service):
     @context.request_context
     def validate_template(self, cnxt, template, params=None, files=None,
                           show_nested=False):
-        """
-        The validate_template method uses the stack parser to check
-        the validity of a template.
+        """Uses the stack parser to check the validity of a template.
 
         :param cnxt: RPC context.
         :param template: Template of stack you want to create.

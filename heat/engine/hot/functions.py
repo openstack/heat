@@ -260,13 +260,12 @@ class Replace(cfn_funcs.Replace):
 
 
 class ReplaceJson(Replace):
-    '''
-    A function for performing string substitutions.
+    """A function for performing string substitutions.
 
     Behaves the same as Replace, but tolerates non-string parameter
     values, e.g map/list - these are serialized as json before doing
     the string substitution.
-    '''
+    """
 
     def result(self):
         template = function.resolve(self._string)
