@@ -196,17 +196,10 @@ class StackTest(common.HeatTestCase):
                                  status=stack.Stack.IN_PROGRESS)
         self.stack.id = '1234'
 
-        # Simulate a deleted stack
-        self.m.StubOutWithMock(stack_object.Stack, 'get_by_id')
-        stack_object.Stack.get_by_id(self.stack.context,
-                                     self.stack.id).AndReturn(None)
-
-        self.m.ReplayAll()
-
+        self.stack.delete()
         self.assertIsNone(self.stack.state_set(stack.Stack.CREATE,
                                                stack.Stack.COMPLETE,
                                                'test'))
-        self.m.VerifyAll()
 
     def test_state_bad(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,

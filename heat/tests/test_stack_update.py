@@ -269,6 +269,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.store()
         stack_id = self.stack.id
         self.stack.create()
+        self.stack._persist_state()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
 
@@ -292,6 +293,7 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         self.stack.update(updated_stack)
+        self.stack._persist_state()
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         mock_upd.assert_called_once_with(mock.ANY, mock.ANY, prop_diff1)
@@ -309,6 +311,7 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl3))
 
         self.stack.update(updated_stack)
+        self.stack._persist_state()
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
 

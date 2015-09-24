@@ -92,7 +92,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
                                        {'adopt_stack_data': str(adopt_data)})
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
-        self.assertEqual((parser.Stack.ADOPT, parser.Stack.COMPLETE),
+        self.assertEqual((parser.Stack.ADOPT, parser.Stack.IN_PROGRESS),
                          (stack.action, stack.status))
 
     def test_stack_adopt_disabled(self):

@@ -229,6 +229,7 @@ def setup_stack(stack_name, ctx, create_res=True):
         setup_mocks(m, stack)
         m.ReplayAll()
         stack.create()
+        stack._persist_state()
         m.UnsetStubs()
     return stack
 

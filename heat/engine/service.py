@@ -160,8 +160,16 @@ class ThreadGroupManager(object):
 
         """
         def release(gt):
-            """Callback function that will be passed to GreenThread.link()."""
-            lock.release()
+            """Callback function that will be passed to GreenThread.link().
+
+            Persist the stack state to COMPLETE and FAILED close to
+            releasing the lock to avoid race condtitions.
+            """
+            if stack is not None and stack.action not in (
+                    stack.DELETE, stack.ROLLBACK):
+                stack.persist_state_and_release_lock(lock.engine_id)
+            else:
+                lock.release()
 
         th = self.start(stack.id, func, *args, **kwargs)
         th.link(release)
