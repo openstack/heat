@@ -438,42 +438,40 @@ class TestMistralWorkflow(common.HeatTestCase):
                           scheduler.TaskRunner(wf.update, new_wf))
         self.assertEqual((wf.UPDATE, wf.FAILED), wf.state)
 
-    def test_delete(self):
+    def test_delete_super_call_successful(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
 
         scheduler.TaskRunner(wf.delete)()
         self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
 
-    def test_delete_no_data(self):
+        self.assertEqual(1, self.mistral.workflows.delete.call_count)
+
+    def test_delete_executions_successful(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
 
-        wf.data_delete('executions')
-        self.assertEqual([], wf.FnGetAtt('executions'))
-        scheduler.TaskRunner(wf.delete)()
-        self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
+        self.mistral.executuions.delete.return_value = None
+        wf._data = {'executions': '1234,5678'}
+        data_delete = self.patchobject(resource.Resource, 'data_delete')
 
-    def test_delete_not_found(self):
+        wf._delete_executions()
+
+        self.assertEqual(2, self.mistral.executions.delete.call_count)
+        data_delete.assert_called_once_with('executions')
+
+    def test_delete_executions_not_found(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
 
-        self.mistral.workflows.delete.side_effect = (
-            self.mistral.mistral_base.APIException(error_code=404))
+        self.mistral.executuions.delete.side_effect = [
+            self.mistral.mistral_base.APIException(error_code=404),
+            None
+        ]
+        wf._data = {'executions': '1234,5678'}
+        data_delete = self.patchobject(resource.Resource, 'data_delete')
 
-        scheduler.TaskRunner(wf.delete)()
-        self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
+        wf._delete_executions()
 
-    @mock.patch.object(resource.Resource, 'client_plugin')
-    def test_delete_other_errors(self, mock_plugin):
-        """We mock client_plugin for returning correct mistral client."""
-        mock_plugin.return_value = self.client
-        client.mistral_base.APIException = exception.Error
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
-
-        self.mistral.workflows.delete.side_effect = (Exception('boom!'))
-
-        exc = self.assertRaises(exception.ResourceFailure,
-                                scheduler.TaskRunner(wf.delete))
-        self.assertEqual((wf.DELETE, wf.FAILED), wf.state)
-        self.assertIn('boom!', six.text_type(exc))
+        self.assertEqual(2, self.mistral.executions.delete.call_count)
+        data_delete.assert_called_once_with('executions')
 
     def test_resource_mapping(self):
         mapping = workflow.resource_mapping()

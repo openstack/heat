@@ -85,6 +85,8 @@ class StackUser(resource.Resource):
     def handle_delete(self):
         self._delete_user()
 
+        return super(StackUser, self).handle_delete()
+
     def _delete_user(self):
         user_id = self._get_user_id()
         if user_id is None:

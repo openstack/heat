@@ -94,19 +94,3 @@ class MistralCronTriggerTest(common.HeatTestCase):
                          ct.FnGetAtt('next_execution_time'))
         self.assertEqual(3, ct.FnGetAtt('remaining_executions'))
         self.assertEqual({'trigger': 'info'}, ct.FnGetAtt('show'))
-
-    def test_delete(self):
-        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
-        scheduler.TaskRunner(ct.delete)()
-        self.assertEqual((ct.DELETE, ct.COMPLETE), ct.state)
-        self.client.cron_triggers.delete.assert_called_once_with(
-            ct.resource_id)
-
-    def test_delete_not_found(self):
-        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
-        self.client.cron_triggers.delete.side_effect = (
-            self.client.mistral_base.APIException(error_code=404))
-        scheduler.TaskRunner(ct.delete)()
-        self.assertEqual((ct.DELETE, ct.COMPLETE), ct.state)
-        self.client.cron_triggers.delete.assert_called_once_with(
-            ct.resource_id)
