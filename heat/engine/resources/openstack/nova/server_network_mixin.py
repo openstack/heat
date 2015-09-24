@@ -159,6 +159,9 @@ class ServerNetworkMixin(object):
         creating. We need to store information about that ports, so store
         their IDs to data with key `external_ports`.
         """
+        if not self.is_using_neutron():
+            return
+
         server = self.client().servers.get(self.resource_id)
         ifaces = server.interface_list()
         external_port_ids = set(iface.port_id for iface in ifaces)
@@ -331,6 +334,9 @@ class ServerNetworkMixin(object):
         return remove_ports, add_nets
 
     def prepare_ports_for_replace(self):
+        if not self.is_using_neutron():
+            return
+
         data = {'external_ports': [],
                 'internal_ports': []}
         port_data = itertools.chain(
@@ -356,6 +362,9 @@ class ServerNetworkMixin(object):
                 port['id'], {'port': {'fixed_ips': []}})
 
     def restore_ports_after_rollback(self):
+        if not self.is_using_neutron():
+            return
+
         old_server = self.stack._backup_stack().resources.get(self.name)
 
         port_data = itertools.chain(self._data_get_ports(),
