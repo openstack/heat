@@ -616,6 +616,9 @@ class EngineService(service.Service):
 
         self._validate_deferred_auth_context(cnxt, stack)
         stack.validate()
+        # For the root stack print a summary of the TemplateResources loaded
+        if nested_depth == 0:
+            env.registry.log_resource_info(prefix=stack_name)
         return stack
 
     @context.request_context
