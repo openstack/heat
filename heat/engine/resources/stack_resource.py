@@ -390,19 +390,15 @@ class StackResource(resource.Resource):
             # if the create failed for some reason and the nested
             # stack was not created, we need to create an empty stack
             # here so that the update will work.
-            def _check_for_completion(creator_fn):
-                while not self.check_create_complete(creator_fn):
+            def _check_for_completion():
+                while not self.check_create_complete():
                     yield
 
             empty_temp = template_format.parse(
                 "heat_template_version: '2013-05-23'")
-            stack_creator = self.create_with_template(empty_temp, {})
-            checker = scheduler.TaskRunner(_check_for_completion,
-                                           stack_creator)
+            self.create_with_template(empty_temp, {})
+            checker = scheduler.TaskRunner(_check_for_completion)
             checker(timeout=self.stack.timeout_secs())
-
-            if stack_creator is not None:
-                stack_creator.run_to_completion()
             nested_stack = self.nested()
 
         if timeout_mins is None:
