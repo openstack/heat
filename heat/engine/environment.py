@@ -262,10 +262,6 @@ class ResourceRegistry(object):
                 'now': str(info.value)}
             LOG.warn(_LW('Changing %(path)s from %(was)s to %(now)s'),
                      details)
-        else:
-            LOG.info(_LI('Registering %(path)s -> %(value)s'), {
-                'path': descriptive_path,
-                'value': str(info.value)})
 
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:
@@ -275,6 +271,15 @@ class ResourceRegistry(object):
 
         info.user_resource = (self.global_registry is not None)
         registry[name] = info
+
+    def log_resource_info(self, show_all=False, prefix=None):
+        registry = self._registry
+        for name in registry:
+            if show_all or isinstance(registry[name], TemplateResourceInfo):
+                msg = (_('%(p)s Registered: %(t)s') %
+                       {'p': prefix or '',
+                        't': six.text_type(registry[name])})
+                LOG.info(msg)
 
     def remove_item(self, info):
         if not isinstance(info, TemplateResourceInfo):

@@ -60,6 +60,7 @@ def initialise():
     global_env = environment.Environment({}, user_env=False)
     _load_global_environment(global_env)
     _environment = global_env
+    global_env.registry.log_resource_info(show_all=True)
 
 
 def _load_global_environment(env):
