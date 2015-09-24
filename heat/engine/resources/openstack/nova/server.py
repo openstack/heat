@@ -1275,7 +1275,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return self.handle_delete()
 
     def handle_delete(self):
-
         if self.resource_id is None:
             return
 

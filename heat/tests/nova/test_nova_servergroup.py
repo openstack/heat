@@ -18,7 +18,6 @@ import mock
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
 
 sg_template = {
@@ -91,22 +90,7 @@ class NovaServerGroupTest(common.HeatTestCase):
     def test_sg_create_no_name(self):
         self._create_sg(None)
 
-    def test_sg_delete(self):
-        self._create_sg('test')
-        scheduler.TaskRunner(self.sg.delete)()
-        self.sg_mgr.delete.assert_called_once_with('test')
-        self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),
-                         self.sg.state)
-
-    def test_sg_delete_not_found(self):
-        self._create_sg('test')
-        self.sg_mgr.delete.side_effect = fakes_nova.fake_exception()
-        scheduler.TaskRunner(self.sg.delete)()
-        self.sg_mgr.delete.assert_called_once_with('test')
-        self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),
-                         self.sg.state)
-
-    def test_sg_show_resourse(self):
+    def test_sg_show_resource(self):
         self._create_sg('test')
         self.sg.client = mock.MagicMock()
         s_groups = mock.MagicMock()

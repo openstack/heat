@@ -17,7 +17,6 @@ from heat.engine.resources.openstack.nova import nova_flavor
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
-from heat.tests.nova import fakes
 from heat.tests import utils
 
 flavor_template = {
@@ -83,17 +82,6 @@ class NovaFlavorTest(common.HeatTestCase):
                                      tmpl_diff=None, prop_diff=prop_diff)
         value.unset_keys.assert_called_once_with({})
         value.set_keys.assert_called_once_with(new_keys)
-
-    def test_flavor_handle_delete(self):
-        self.resource_id = None
-        self.assertIsNone(self.my_flavor.handle_delete())
-        flavor_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
-        self.my_flavor.resource_id = flavor_id
-        self.flavors.delete.return_value = None
-        self.assertEqual('927202df-1afb-497f-8368-9c2d2f26e5db',
-                         self.my_flavor.handle_delete())
-        self.flavors.delete.side_effect = fakes.fake_exception()
-        self.assertIsNone(self.my_flavor.handle_delete())
 
     def test_flavor_show_resourse(self):
         self.my_flavor.resource_id = 'flavor_test_id'
