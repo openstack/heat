@@ -195,9 +195,12 @@ outputs:
         self.assertIn('arn:openstack:heat:', test_ref)
 
     def test_transparent_ref(self):
-        """With the addition of OS::stack_id we can now use the nested resource
+        """Test using nested resource more transparently.
+
+        With the addition of OS::stack_id we can now use the nested resource
         more transparently.
         """
+
         nested_templ = '''
 heat_template_version: 2014-10-16
 resources:
@@ -520,6 +523,7 @@ Outputs:
 
 class TemplateResourceUpdateFailedTest(functional_base.FunctionalTestsBase):
     """Prove that we can do updates on a nested stack to fix a stack."""
+
     main_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
@@ -688,6 +692,7 @@ Outputs:
 
 class TemplateResourceErrorMessageTest(functional_base.FunctionalTestsBase):
     """Prove that nested stack errors don't suck."""
+
     template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
@@ -743,7 +748,7 @@ resources:
         super(TemplateResourceSuspendResumeTest, self).setUp()
 
     def test_suspend_resume(self):
-        """Basic test for template resource suspend resume"""
+        """Basic test for template resource suspend resume."""
         stack_identifier = self.stack_create(
             template=self.main_template,
             files={'the.yaml': self.nested_templ}
@@ -755,6 +760,7 @@ resources:
 
 class ValidateFacadeTest(test.HeatIntegrationTest):
     """Prove that nested stack errors don't suck."""
+
     template = '''
 heat_template_version: 2015-10-15
 resources:

@@ -35,7 +35,8 @@ _LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
 
 
 def call_until_true(duration, sleep_for, func, *args, **kwargs):
-    """
+    """Call the function until it returns True or the duration elapsed.
+
     Call the given function until it returns True (and return True) or
     until the specified duration (in seconds) elapses (and return
     False).
@@ -281,8 +282,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def _wait_for_stack_status(self, stack_identifier, status,
                                failure_pattern=None,
                                success_on_not_found=False):
-        """
-        Waits for a Stack to reach a given status.
+        """Waits for a Stack to reach a given status.
 
         Note this compares the full $action_$status, e.g
         CREATE_COMPLETE, not just COMPLETE which is exposed

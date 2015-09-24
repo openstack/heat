@@ -332,7 +332,8 @@ resources:
                          self.list_resources(nested_identifier))
 
     def test_stack_update_provider_group(self):
-        '''Test two-level nested update.'''
+        """Test two-level nested update."""
+
         # Create a ResourceGroup (which creates a nested stack),
         # containing provider resources (which create a nested
         # stack), thus exercising an update which traverses
@@ -403,10 +404,12 @@ resources:
                              self.list_resources(provider_identifier))
 
     def test_stack_update_with_replacing_userdata(self):
-        """Confirm that we can update userdata of instance during updating
-        stack by the user of member role.
+        """Test case for updating userdata of instance.
 
-        Make sure that a resource that inherites from StackUser can be deleted
+        Confirm that we can update userdata of instance during updating stack
+        by the user of member role.
+
+        Make sure that a resource that inherits from StackUser can be deleted
         during updating stack.
         """
         if not self.conf.minimal_image_ref:

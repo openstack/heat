@@ -22,9 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
-    """
-    Class is responsible for testing of volume backup.
-    """
+    """Class is responsible for testing of volume backup."""
 
     def setUp(self):
         super(VolumeBackupRestoreIntegrationTest, self).setUp()
@@ -101,8 +99,7 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
                           volume_id2)
 
     def test_cinder_volume_create_backup_restore(self):
-        """
-        Ensure the 'Snapshot' deletion policy works.
+        """Ensure the 'Snapshot' deletion policy works.
 
         This requires a more complex test, but it tests several aspects
         of the heat cinder resources:

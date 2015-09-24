@@ -82,7 +82,7 @@ resources:
 """
 
     def test_non_admin_forbidden_create_flavors(self):
-        """Fail to create Flavor resource w/o admin role
+        """Fail to create Flavor resource w/o admin role.
 
         Integration tests job runs as normal OpenStack user,
         and OS::Nova:Flavor is configured to require
