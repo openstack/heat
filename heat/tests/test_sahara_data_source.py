@@ -17,7 +17,6 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import sahara
 from heat.engine.resources.openstack.sahara import data_source
 from heat.engine import scheduler
 from heat.tests import common
@@ -79,13 +78,6 @@ class SaharaDataSourceTest(common.HeatTestCase):
         self.assertEqual(data_source.DataSource,
                          mapping['OS::Sahara::DataSource'])
 
-    def test_delete(self):
-        ds = self._create_resource('data-source', self.rsrc_defn, self.stack)
-        scheduler.TaskRunner(ds.delete)()
-        self.assertEqual((ds.DELETE, ds.COMPLETE), ds.state)
-        self.client.data_sources.delete.assert_called_once_with(
-            ds.resource_id)
-
     def test_update(self):
         ds = self._create_resource('data-source', self.rsrc_defn,
                                    self.stack)
@@ -105,15 +97,6 @@ class SaharaDataSourceTest(common.HeatTestCase):
         self.client.data_sources.update.assert_called_once_with(
             '12345', data)
         self.assertEqual((ds.UPDATE, ds.COMPLETE), ds.state)
-
-    def test_delete_not_found(self):
-        ds = self._create_resource('data-source', self.rsrc_defn, self.stack)
-        self.client.data_sources.delete.side_effect = (
-            sahara.sahara_base.APIException(error_code=404))
-        scheduler.TaskRunner(ds.delete)()
-        self.assertEqual((ds.DELETE, ds.COMPLETE), ds.state)
-        self.client.data_sources.delete.assert_called_once_with(
-            ds.resource_id)
 
     def test_show_attribute(self):
         ds = self._create_resource('data-source', self.rsrc_defn, self.stack)
