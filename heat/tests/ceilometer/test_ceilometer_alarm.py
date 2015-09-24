@@ -420,12 +420,13 @@ class CeilometerAlarmTest(common.HeatTestCase):
             resource_defns = stack.t.resource_definitions(stack)
             rsrc = alarm.CeilometerAlarm(
                 'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
-            error = self.assertRaises(exception.StackValidationFailed,
-                                      rsrc.validate)
-            self.assertEqual(
-                "Property error: Resources.MEMAlarmHigh.Properties.%s: "
-                "int() argument must be a string or a number, not "
-                "'list'" % p, six.text_type(error))
+            # python 3.4.3 returns another error message
+            # so try to handle this by regexp
+            msg = ("Property error: Resources.MEMAlarmHigh.Properties.%s: "
+                   "int\(\) argument must be a string(, a bytes-like "
+                   "object)? or a number, not 'list'" % p)
+            self.assertRaisesRegexp(exception.StackValidationFailed,
+                                    msg, rsrc.validate)
 
     def test_mem_alarm_high_check_not_required_parameters(self):
         snippet = template_format.parse(not_string_alarm_template)
