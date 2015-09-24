@@ -423,5 +423,8 @@ class DependencyTaskGroup(object):
 
         Subtasks have been started but have not yet completed.
         """
-        running = lambda k_r: k_r[0] in self._graph and k_r[1].started()
+
+        def running(k_r):
+            return k_r[0] in self._graph and k_r[1].started()
+
         return six.moves.filter(running, six.iteritems(self._runners))

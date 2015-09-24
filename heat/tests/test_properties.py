@@ -1011,7 +1011,10 @@ class PropertiesTest(common.HeatTestCase):
             'bad_int': 'foo',
             'default_override': 21,
         }
-        double = lambda d: d * 2
+
+        def double(d):
+            return d * 2
+
         self.props = properties.Properties(schema, data, double, 'wibble')
 
     def test_integer_good(self):

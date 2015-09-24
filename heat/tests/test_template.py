@@ -1083,7 +1083,10 @@ class TemplateFnErrorTest(common.HeatTestCase):
 
     def test_bad_input(self):
         tmpl = template.Template(empty_template)
-        resolve = lambda s: TemplateTest.resolve(s, tmpl)
+
+        def resolve(s):
+            return TemplateTest.resolve(s, tmpl)
+
         error = self.assertRaises(self.expect,
                                   resolve,
                                   self.snippet)

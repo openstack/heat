@@ -162,7 +162,9 @@ class dependenciesTest(common.HeatTestCase):
 
     def test_noexist_partial(self):
         d = dependencies.Dependencies([('foo', 'bar')])
-        get = lambda i: d[i]
+
+        def get(i):
+            return d[i]
         self.assertRaises(KeyError, get, 'baz')
 
     def test_single_partial(self):
