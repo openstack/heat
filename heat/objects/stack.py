@@ -170,6 +170,12 @@ class Stack(
                                    exp_trvsl=exp_trvsl)
 
     @classmethod
+    def persist_state_and_release_lock(cls, context, stack_id,
+                                       engine_id, values):
+        return db_api.persist_state_and_release_lock(context, stack_id,
+                                                     engine_id, values)
+
+    @classmethod
     def delete(cls, context, stack_id):
         db_api.stack_delete(context, stack_id)
 

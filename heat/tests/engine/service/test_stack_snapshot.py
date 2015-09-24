@@ -57,12 +57,14 @@ class SnapshotServiceTest(common.HeatTestCase):
 
     def test_show_snapshot_not_belong_to_stack(self):
         stk1 = self._create_stack('stack_snaphot_not_belong_to_stack_1')
+        stk1._persist_state()
         snapshot1 = self.engine.stack_snapshot(
             self.ctx, stk1.identifier(), 'snap1')
         self.engine.thread_group_mgr.groups[stk1.id].wait()
         snapshot_id = snapshot1['id']
 
         stk2 = self._create_stack('stack_snaphot_not_belong_to_stack_2')
+        stk2._persist_state()
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.engine.show_snapshot,
                                self.ctx, stk2.identifier(),

@@ -439,13 +439,12 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             }
         }
         template = templatem.Template(tpl)
-
         create_stack = stack.Stack(self.ctx, stack_name, template)
         sid = create_stack.store()
         create_stack.create()
         self.assertEqual((create_stack.CREATE, create_stack.COMPLETE),
                          create_stack.state)
-
+        create_stack._persist_state()
         s = stack_object.Stack.get_by_id(self.ctx, sid)
         old_stack = stack.Stack.load(self.ctx, stack=s)
 
@@ -460,6 +459,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         result = self.man.update_stack(self.ctx, create_stack.identifier(),
                                        tpl, {}, None, {})
 
+        old_stack._persist_state()
         self.assertEqual((old_stack.UPDATE, old_stack.COMPLETE),
                          old_stack.state)
         self.assertEqual(create_stack.identifier(), result)

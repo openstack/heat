@@ -201,6 +201,11 @@ def stack_lock_release(stack_id, engine_id):
     return IMPL.stack_lock_release(stack_id, engine_id)
 
 
+def persist_state_and_release_lock(context, stack_id, engine_id, values):
+    return IMPL.persist_state_and_release_lock(context, stack_id,
+                                               engine_id, values)
+
+
 def stack_get_root_id(context, stack_id):
     return IMPL.stack_get_root_id(context, stack_id)
 

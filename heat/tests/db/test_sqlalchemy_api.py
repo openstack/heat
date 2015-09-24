@@ -778,6 +778,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self._mock_create(self.m)
         self.m.ReplayAll()
         stack.create()
+        stack._persist_state()
         self.m.UnsetStubs()
 
         events = db_api.event_get_all_by_stack(self.ctx, UUID1)
@@ -869,6 +870,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self._mock_create(self.m)
         self.m.ReplayAll()
         stack.create()
+        stack._persist_state()
         self.m.UnsetStubs()
 
         num_events = db_api.event_count_all_by_stack(self.ctx, UUID1)
@@ -889,6 +891,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self._mock_create(self.m)
         self.m.ReplayAll()
         [s.create() for s in stacks]
+        [s._persist_state() for s in stacks]
         self.m.UnsetStubs()
 
         events = db_api.event_get_all_by_tenant(self.ctx)
@@ -909,6 +912,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self._mock_create(self.m)
         self.m.ReplayAll()
         [s.create() for s in stacks]
+        [s._persist_state() for s in stacks]
         self.m.UnsetStubs()
 
         events = db_api.event_get_all(self.ctx)
@@ -1656,6 +1660,58 @@ class DBAPIStackTest(common.HeatTestCase):
         updated = db_api.stack_update(self.ctx, stack.id, values,
                                       exp_trvsl=diff_uuid)
         self.assertFalse(updated)
+
+    def test_stack_set_status_release_lock(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        values = {
+            'name': 'db_test_stack_name2',
+            'action': 'update',
+            'status': 'failed',
+            'status_reason': "update_failed",
+            'timeout': '90',
+            'current_traversal': 'another-dummy-uuid',
+        }
+        db_api.stack_lock_create(stack.id, UUID1)
+        observed = db_api.persist_state_and_release_lock(self.ctx, stack.id,
+                                                         UUID1, values)
+        self.assertIsNone(observed)
+        stack = db_api.stack_get(self.ctx, stack.id)
+        self.assertEqual('db_test_stack_name2', stack.name)
+        self.assertEqual('update', stack.action)
+        self.assertEqual('failed', stack.status)
+        self.assertEqual('update_failed', stack.status_reason)
+        self.assertEqual(90, stack.timeout)
+        self.assertEqual('another-dummy-uuid', stack.current_traversal)
+
+    def test_stack_set_status_release_lock_failed(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        values = {
+            'name': 'db_test_stack_name2',
+            'action': 'update',
+            'status': 'failed',
+            'status_reason': "update_failed",
+            'timeout': '90',
+            'current_traversal': 'another-dummy-uuid',
+        }
+        db_api.stack_lock_create(stack.id, UUID2)
+        observed = db_api.persist_state_and_release_lock(self.ctx, stack.id,
+                                                         UUID1, values)
+        self.assertTrue(observed)
+
+    def test_stack_set_status_failed_release_lock(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        values = {
+            'name': 'db_test_stack_name2',
+            'action': 'update',
+            'status': 'failed',
+            'status_reason': "update_failed",
+            'timeout': '90',
+            'current_traversal': 'another-dummy-uuid',
+        }
+        db_api.stack_lock_create(stack.id, UUID1)
+        observed = db_api.persist_state_and_release_lock(self.ctx, UUID2,
+                                                         UUID1, values)
+        self.assertTrue(observed)
 
     def test_stack_get_returns_a_stack(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)

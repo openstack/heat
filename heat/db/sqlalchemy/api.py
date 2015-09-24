@@ -562,6 +562,22 @@ def stack_lock_get_engine_id(stack_id):
             return lock.engine_id
 
 
+def persist_state_and_release_lock(context, stack_id, engine_id, values):
+    session = _session(context)
+    with session.begin():
+        rows_updated = (session.query(models.Stack)
+                        .filter(models.Stack.id == stack_id)
+                        .update(values, synchronize_session=False))
+        rows_affected = None
+        if rows_updated is not None and rows_updated > 0:
+            rows_affected = session.query(
+                models.StackLock
+            ).filter_by(stack_id=stack_id, engine_id=engine_id).delete()
+    session.expire_all()
+    if not rows_affected:
+        return True
+
+
 def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
     session = get_session()
     with session.begin():
