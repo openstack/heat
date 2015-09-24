@@ -133,6 +133,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def _mock_convg_db_update_requires(self, key_id=False):
         """Updates requires column of resources.
+
         Required for testing the generation of convergence dependency graph
         on an update.
         """

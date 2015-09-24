@@ -41,8 +41,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self.rpcapi = rpc_client.EngineClient()
 
     def _to_remote_error(self, error):
-        """Converts the given exception to the one with the _Remote suffix.
-        """
+        """Converts the given exception to the one with the _Remote suffix."""
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(

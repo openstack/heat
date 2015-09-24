@@ -40,10 +40,7 @@ class NovaClientPluginTestCase(common.HeatTestCase):
 
 
 class NovaClientPluginTests(NovaClientPluginTestCase):
-    """
-    Basic tests for the helper methods in
-    :module:'heat.engine.clients.os.nova'.
-    """
+    """Basic tests for :module:'heat.engine.clients.os.nova'."""
 
     def test_create(self):
         context = utils.dummy_context()
@@ -393,9 +390,7 @@ class NovaClientPluginMetadataTests(NovaClientPluginTestCase):
         self.assertEqual(expected, self.nova_plugin.meta_serialize(original))
 
     def test_serialize_no_value(self):
-        """This test is to prove that the user can only pass in a dict to nova
-        metadata.
-        """
+        """Prove that the user can only pass in a dict to nova metadata."""
         excp = self.assertRaises(exception.StackValidationFailed,
                                  self.nova_plugin.meta_serialize, "foo")
         self.assertIn('metadata needs to be a Map', six.text_type(excp))

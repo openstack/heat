@@ -46,10 +46,11 @@ RESOURCE_TYPE = 'OS::Monasca::AlarmDefinition'
 
 
 class MonascaAlarmDefinition(alarm_definition.MonascaAlarmDefinition):
-    '''
+    """This class overrides the is_service_available to return True.
+
     Monasca service is not available by default. So, this class overrides
-    the is_service_available to return True
-    '''
+    the is_service_available to return True.
+    """
     @classmethod
     def is_service_available(cls, context):
         return True

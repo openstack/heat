@@ -674,8 +674,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_template_as_resource(self):
-        """
-        Test that the resulting resource has the right prop and attrib schema.
+        """Test that resulting resource has the right prop and attrib schema.
 
         Note that this test requires the Wordpress_Single_Instance.yaml
         template in the templates directory since we want to test using a
@@ -734,7 +733,8 @@ class ProviderTemplateTest(common.HeatTestCase):
                          resources.global_env().registry._registry)
 
     def test_persisted_unregistered_provider_templates(self):
-        """
+        """Test that templates are registered correctly.
+
         Test that templates persisted in the database prior to
         https://review.openstack.org/#/c/79953/1 are registered correctly.
         """

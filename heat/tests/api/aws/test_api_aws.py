@@ -18,9 +18,8 @@ from heat.tests import common
 
 
 class AWSCommonTest(common.HeatTestCase):
-    '''
-    Tests the api/aws common components
-    '''
+    """Tests the api/aws common components."""
+
     # The tests
     def test_format_response(self):
         response = api_utils.format_response("Foo", "Bar")

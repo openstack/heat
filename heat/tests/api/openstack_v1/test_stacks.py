@@ -201,10 +201,11 @@ blarg: wibble
 
 @mock.patch.object(policy.Enforcer, 'enforce')
 class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
-    '''
+    """Tests the API class StackController.
+
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
-    '''
+    """
 
     def setUp(self):
         super(StackControllerTest, self).setUp()

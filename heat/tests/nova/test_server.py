@@ -1646,9 +1646,10 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_update_nova_metadata_complex(self):
-        """
-        Test that complex metadata values are correctly serialized
-        to JSON when sent to Nova.
+        """Test that complex metadata values are correctly serialized to JSON.
+
+        Test that complex metadata values are correctly serialized to JSON when
+        sent to Nova.
         """
 
         return_server = self.fc.servers.list()[1]
@@ -1720,9 +1721,7 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_update_server_name(self):
-        """
-        Server.handle_update supports changing the name.
-        """
+        """Server.handle_update supports changing the name."""
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
         server = self._create_test_server(return_server,
@@ -1743,9 +1742,7 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_update_server_admin_password(self):
-        """
-        Server.handle_update supports changing the admin password.
-        """
+        """Server.handle_update supports changing the admin password."""
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
         server = self._create_test_server(return_server,
@@ -1764,7 +1761,8 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(1, return_server.change_password.call_count)
 
     def test_server_update_server_flavor(self):
-        """
+        """Tests update server changing the flavor.
+
         Server.handle_update supports changing the flavor, and makes
         the change making a resize API call against Nova.
         """
@@ -1811,7 +1809,8 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_update_server_flavor_failed(self):
-        """
+        """Check raising exception due to resize call failing.
+
         If the status after a resize is not VERIFY_RESIZE, it means the resize
         call failed, so we raise an explicit error.
         """

@@ -714,7 +714,8 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual({'test': 123}, instance.metadata_get())
 
     def test_instance_update_instance_type(self):
-        """
+        """Test case for updating InstanceType.
+
         Instance.handle_update supports changing the InstanceType, and makes
         the change making a resize API call against Nova.
         """
@@ -761,7 +762,8 @@ class InstancesTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_instance_update_instance_type_failed(self):
-        """
+        """Test case for raising exception due to resize call failed.
+
         If the status after a resize is not VERIFY_RESIZE, it means the resize
         call failed, so we raise an explicit error.
         """
@@ -812,7 +814,8 @@ class InstancesTest(common.HeatTestCase):
         return fake_interface(port, net, ip)
 
     def test_instance_update_network_interfaces(self):
-        """
+        """Test case for updating NetworkInterfaces.
+
         Instance.handle_update supports changing the NetworkInterfaces,
         and makes the change making a resize API call against Nova.
         """
@@ -853,7 +856,8 @@ class InstancesTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_instance_update_network_interfaces_old_include_new(self):
-        """
+        """Test case for updating NetworkInterfaces when old prop includes new.
+
         Instance.handle_update supports changing the NetworkInterfaces,
         and makes the change making a resize API call against Nova.
         """
@@ -888,7 +892,8 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
 
     def test_instance_update_network_interfaces_new_include_old(self):
-        """
+        """Test case for updating NetworkInterfaces when new prop includes old.
+
         Instance.handle_update supports changing the NetworkInterfaces,
         and makes the change making a resize API call against Nova.
         """
@@ -923,7 +928,8 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
 
     def test_instance_update_network_interfaces_new_old_all_different(self):
-        """
+        """Tests updating NetworkInterfaces when new and old are different.
+
         Instance.handle_update supports changing the NetworkInterfaces,
         and makes the change making a resize API call against Nova.
         """
@@ -963,7 +969,8 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
 
     def test_instance_update_network_interfaces_no_old(self):
-        """
+        """Test case for updating NetworkInterfaces when there's no old prop.
+
         Instance.handle_update supports changing the NetworkInterfaces,
         and makes the change making a resize API call against Nova.
         """
@@ -1004,8 +1011,9 @@ class InstancesTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_instance_update_network_interfaces_no_old_empty_new(self):
-        """
-        Instance.handle_update supports changing the NetworkInterfaces
+        """Test case for updating NetworkInterfaces when no old, no new prop.
+
+        Instance.handle_update supports changing the NetworkInterfaces.
         """
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
@@ -1083,9 +1091,7 @@ class InstancesTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_instance_update_network_interfaces_empty_new_with_subnet(self):
-        """
-        Test update NetworkInterfaces to empty, and update with subnet.
-        """
+        """Test update NetworkInterfaces to empty, and update with subnet."""
         stack_name = 'ud_network_interfaces_empty_with_subnet'
         self._test_instance_update_with_subnet(
             stack_name, new_interfaces=[])
@@ -1334,9 +1340,10 @@ class InstancesTest(common.HeatTestCase):
             ))
 
     def test_build_nics_with_security_groups(self):
-        """
-        Test the security groups defined in heat template can be associated
-        to a new created port.
+        """Test the security groups can be associated to a new created port.
+
+        Test the security groups defined in heat template can be associated to
+        a new created port.
         """
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,

@@ -127,10 +127,12 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             self.assertEqual(stk.identifier(), result)
 
     def test_stack_update_existing_parameters_remove(self):
-        '''Use a template with existing parameters, then update with a
+        """Test case for updating stack with changed parameters.
+
+        Use a template with existing parameters, then update with a
         template containing additional parameters and a list of
         parameters to be removed.
-        '''
+        """
         stack_name = 'service_update_test_stack_existing_parameters_remove'
         update_params = {'encrypted_param_names': [],
                          'parameter_defaults': {},
@@ -227,9 +229,11 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             self.assertEqual(stk.identifier(), result)
 
     def test_stack_update_existing_parameter_defaults(self):
-        '''Use a template with existing flag and ensure the
-        environment parameter_defaults are preserved.
-        '''
+        """Ensure the environment parameter_defaults are preserved.
+
+        Use a template with existing flag and ensure the environment
+        parameter_defaults are preserved.
+        """
         stack_name = 'service_update_test_stack_existing_param_defaults'
         intial_params = {'encrypted_param_names': [],
                          'parameter_defaults': {'mydefault': 123},

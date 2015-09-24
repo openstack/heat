@@ -23,10 +23,8 @@ from heat.tests import utils
 
 
 class CinderClientPluginTests(common.HeatTestCase):
-    """
-    Basic tests for the helper methods in
-    :module:'heat.engine.clients.os.cinder'.
-    """
+    """Basic tests for :module:'heat.engine.clients.os.cinder'."""
+
     def setUp(self):
         super(CinderClientPluginTests, self).setUp()
         self.cinder_client = mock.MagicMock()

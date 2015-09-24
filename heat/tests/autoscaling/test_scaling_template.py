@@ -25,7 +25,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
         self.next_id = lambda: next(ids)
 
     def test_create_template(self):
-        """
+        """Test case for creating template.
+
         When creating a template from scratch, an empty list is accepted as
         the "old" resources and new resources are created up to num_resource.
         """
@@ -37,7 +38,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
         self.assertEqual(expected, list(templates))
 
     def test_replace_template(self):
-        """
+        """Test case for replacing template.
+
         If num_replace is the number of old resources, then all of the
         resources will be replaced.
         """
@@ -50,7 +52,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
         self.assertEqual(expected, list(templates))
 
     def test_replace_some_units(self):
-        """
+        """Test case for making only the number of replacements specified.
+
         If the resource definition changes, only the number of replacements
         specified will be made; beyond that, the original templates are used.
         """
@@ -66,7 +69,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
         self.assertEqual(expected, list(templates))
 
     def test_growth_counts_as_replacement(self):
-        """
+        """Test case for growing template.
+
         If we grow the template and replace some elements at the same time, the
         number of replacements to perform is reduced by the number of new
         resources to be created.
@@ -86,7 +90,8 @@ class ResourceTemplatesTest(common.HeatTestCase):
         self.assertEqual(expected, list(templates))
 
     def test_replace_units_some_already_up_to_date(self):
-        """
+        """Test case for up-to-date resources in template.
+
         If some of the old resources already have the new resource definition,
         then they won't be considered for replacement, and the next resource
         that is out-of-date will be replaced.

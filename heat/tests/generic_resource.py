@@ -28,9 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class GenericResource(resource.Resource):
-    '''
-    Dummy resource for use in tests
-    '''
+    """Dummy resource for use in tests."""
     properties_schema = {}
     attributes_schema = collections.OrderedDict([
         ('foo', attributes.Schema('A generic attribute')),

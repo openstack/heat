@@ -65,10 +65,11 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         return rsrc
 
     def test_mem_alarm_high_update_no_replace(self):
-        '''
-        Make sure that we can change the update-able properties
+        """Test case for updating the alarm with updatable properties.
+
+        Make sure that we can change the updatable properties
         without replacing the Alarm rsrc.
-        '''
+        """
         t = template_format.parse(alarm_template)
 
         # short circuit the alarm's references
@@ -101,10 +102,11 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_mem_alarm_high_update_replace(self):
-        '''
+        """Test case for replacing the alarm with non-updatable properties.
+
         Make sure that the Alarm resource IS replaced when non-update-able
         properties are changed.
-        '''
+        """
         t = template_format.parse(alarm_template)
 
         # short circuit the alarm's references

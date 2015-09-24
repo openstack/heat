@@ -1056,11 +1056,11 @@ class StackUpdateTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
     def test_update_replace_by_reference(self):
-        '''
-        assertion:
-        changes in dynamic attributes, due to other resources been updated
+        """Test case for changes in dynamic attributes.
+
+        Changes in dynamic attributes, due to other resources been updated
         are not ignored and can cause dependent resources to be updated.
-        '''
+        """
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
                     'AResource': {'Type': 'ResourceWithPropsType',
@@ -1111,11 +1111,11 @@ class StackUpdateTest(common.HeatTestCase):
         mock_id.assert_called_with()
 
     def test_update_with_new_resources_with_reference(self):
-        '''
-        assertion:
-        check, that during update with new resources which one has
+        """Check correct resolving of references in new resources.
+
+        Check, that during update with new resources which one has
         reference on second, reference will be correct resolved.
-        '''
+        """
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
                     'CResource': {'Type': 'ResourceWithPropsType',
@@ -1157,11 +1157,10 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_with()
 
     def test_update_by_reference_and_rollback_1(self):
-        '''
-        assertion:
-        check that rollback still works with dynamic metadata
-        this test fails the first instance
-        '''
+        """Check that rollback still works with dynamic metadata.
+
+        This test fails the first instance.
+        """
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
                     'AResource': {'Type': 'ResourceWithPropsType',
@@ -1208,11 +1207,10 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_once_with()
 
     def test_update_by_reference_and_rollback_2(self):
-        '''
-        assertion:
-        check that rollback still works with dynamic metadata
-        this test fails the second instance
-        '''
+        """Check that rollback still works with dynamic metadata.
+
+        This test fails the second instance.
+        """
 
         class ResourceTypeA(generic_rsrc.ResourceWithProps):
             count = 0
@@ -1267,11 +1265,10 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_once_with()
 
     def test_update_failure_recovery(self):
-        '''
-        assertion:
-        check that rollback still works with dynamic metadata
-        this test fails the second instance
-        '''
+        """Check that rollback still works with dynamic metadata.
+
+        This test fails the second instance.
+        """
 
         class ResourceTypeA(generic_rsrc.ResourceWithProps):
             count = 0
@@ -1351,11 +1348,10 @@ class StackUpdateTest(common.HeatTestCase):
         mock_delete_A.assert_called_once_with()
 
     def test_update_failure_recovery_new_param(self):
-        '''
-        assertion:
-        check that rollback still works with dynamic metadata
-        this test fails the second instance
-        '''
+        """Check that rollback still works with dynamic metadata.
+
+        This test fails the second instance.
+        """
 
         class ResourceTypeA(generic_rsrc.ResourceWithProps):
             count = 0
@@ -1446,11 +1442,10 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual(2, mock_create.call_count)
 
     def test_update_failure_recovery_new_param_stack_list(self):
-        '''
-        assertion:
-        check that stack-list is not broken if update fails in between.
-        Also ensure that next update passes
-        '''
+        """Check that stack-list is not broken if update fails in between.
+
+        Also ensure that next update passes.
+        """
 
         class ResourceTypeA(generic_rsrc.ResourceWithProps):
             count = 0
@@ -1547,11 +1542,11 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual(2, mock_create.call_count)
 
     def test_update_replace_parameters(self):
-        '''
-        assertion:
-        changes in static environment parameters
-        are not ignored and can cause dependent resources to be updated.
-        '''
+        """Check that changes in static environment parameters are not ignored.
+
+        Changes in static environment parameters are not ignored and can cause
+        dependent resources to be updated.
+        """
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Parameters': {'AParam': {'Type': 'String'}},
                 'Resources': {

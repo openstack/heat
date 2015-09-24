@@ -250,10 +250,11 @@ def clean_up_stack(stack, delete_res=True):
 
 
 def stack_context(stack_name, create_res=True):
-    """
+    """Decorator for creating and deleting stack.
+
     Decorator which creates a stack by using the test case's context and
     deletes it afterwards to ensure tests clean up their stacks regardless
-    of test success/failure
+    of test success/failure.
     """
     def stack_delete(test_fn):
         @six.wraps(test_fn)

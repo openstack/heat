@@ -144,10 +144,11 @@ resources:
 
 
 class MetadataRefreshTest(common.HeatTestCase):
-    '''
+    """Metadata gets updated when FnGetAtt() returns something different.
+
     The point of the test is to confirm that metadata gets updated
     when FnGetAtt() returns something different.
-    '''
+    """
     def setUp(self):
         super(MetadataRefreshTest, self).setUp()
 
@@ -243,13 +244,14 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
     @mock.patch(('heat.engine.resources.aws.ec2.instance.Instance'
                  '.is_service_available'))
     def test_wait_meta(self, mock_is_service_available):
-        '''
+        """Tests valid waitcondition metadata after signal call.
+
         1 create stack
         2 assert empty instance metadata
         3 service.resource_signal()
         4 assert valid waitcond metadata
         5 assert valid instance metadata
-        '''
+        """
         mock_is_service_available.return_value = True
         self.stack = self.create_stack()
 
@@ -299,13 +301,14 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
 
 
 class MetadataRefreshTestServer(common.HeatTestCase):
-    '''
+    """Metadata gets updated when FnGetAtt() returns something different.
+
     The point of the test is to confirm that metadata gets updated
     when FnGetAtt() returns something different when using a native
     OS::Nova::Server resource, and that metadata keys set inside the
     resource (as opposed to in the template), e.g for deployments, don't
     get overwritten on update/refresh.
-    '''
+    """
     def setUp(self):
         super(MetadataRefreshTestServer, self).setUp()
 

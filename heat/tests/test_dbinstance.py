@@ -52,8 +52,9 @@ rds_template = '''
 
 
 class DBInstance(resource.Resource):
-    """This is copied from the old DBInstance
-    to verify the schema of the new TemplateResource.
+    """Verify the schema of the new TemplateResource.
+
+    This is copied from the old DBInstance.
     """
     properties_schema = {
         'DBSnapshotIdentifier': properties.Schema(
@@ -152,9 +153,7 @@ class DBInstanceTest(common.HeatTestCase):
         super(DBInstanceTest, self).setUp()
 
     def test_dbinstance(self):
-        """test that the Template is parsable and
-        publishes the correct properties.
-        """
+        """Test that Template is parsable and publishes correct properties."""
         templ = template.Template(template_format.parse(rds_template))
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              templ)

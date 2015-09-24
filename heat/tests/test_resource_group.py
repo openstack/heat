@@ -121,7 +121,8 @@ class ResourceGroupTest(common.HeatTestCase):
         self.m.StubOutWithMock(stackm.Stack, 'validate')
 
     def test_assemble_nested(self):
-        """
+        """Tests nested stack creation based on props.
+
         Tests that the nested stack that implements the group is created
         appropriately based on properties.
         """
@@ -636,7 +637,8 @@ class ResourceGroupNameListTest(common.HeatTestCase):
 class ResourceGroupAttrTest(common.HeatTestCase):
 
     def test_aggregate_attribs(self):
-        """
+        """Test attribute aggregation.
+
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
@@ -646,7 +648,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertEqual(expected, resg.FnGetAtt('Foo'))
 
     def test_index_dotted_attribs(self):
-        """
+        """Test attribute aggregation.
+
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
@@ -655,7 +658,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertEqual('1', resg.FnGetAtt('resource.1.Foo'))
 
     def test_index_path_attribs(self):
-        """
+        """Test attribute aggregation.
+
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
@@ -664,7 +668,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertEqual('1', resg.FnGetAtt('resource.1', 'Foo'))
 
     def test_index_deep_path_attribs(self):
-        """
+        """Test attribute aggregation.
+
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
@@ -676,7 +681,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
                                           'nested_dict', 'dict', 'b'))
 
     def test_aggregate_deep_path_attribs(self):
-        """
+        """Test attribute aggregation.
+
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
@@ -686,17 +692,13 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertEqual(expected, resg.FnGetAtt('nested_dict', 'list', 2))
 
     def test_aggregate_refs(self):
-        """
-        Test resource id aggregation
-        """
+        """Test resource id aggregation."""
         resg = self._create_dummy_stack()
         expected = ['ID-0', 'ID-1']
         self.assertEqual(expected, resg.FnGetAtt("refs"))
 
     def test_aggregate_refs_with_index(self):
-        """
-        Test resource id aggregation with index
-        """
+        """Test resource id aggregation with index."""
         resg = self._create_dummy_stack()
         expected = ['ID-0', 'ID-1']
         self.assertEqual(expected[0], resg.FnGetAtt("refs", 0))
@@ -704,17 +706,13 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertIsNone(resg.FnGetAtt("refs", 2))
 
     def test_aggregate_outputs(self):
-        """
-        Test outputs aggregation
-        """
+        """Test outputs aggregation."""
         expected = {'0': ['foo', 'bar'], '1': ['foo', 'bar']}
         resg = self._create_dummy_stack(template_attr, expect_attrs=expected)
         self.assertEqual(expected, resg.FnGetAtt('attributes', 'list'))
 
     def test_aggregate_outputs_no_path(self):
-        """
-        Test outputs aggregation with missing path
-        """
+        """Test outputs aggregation with missing path."""
         resg = self._create_dummy_stack(template_attr)
         self.assertRaises(exception.InvalidTemplateAttribute,
                           resg.FnGetAtt, 'attributes')

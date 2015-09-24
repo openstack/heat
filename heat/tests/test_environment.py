@@ -289,8 +289,12 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         m_ldir.assert_called_once_with(env_dir + '/*')
 
     def test_continue_on_ioerror(self):
-        """assert we get all files processed even if there are
-        processing exceptions.
+        """Assert we get all files processed.
+
+        Assert we get all files processed even if there are processing
+        exceptions.
+
+        Test uses IOError as side effect of mock open.
         """
         with mock.patch('glob.glob') as m_ldir:
             m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml',
@@ -312,8 +316,12 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         self.assertEqual(expected, m_open.call_args_list)
 
     def test_continue_on_parse_error(self):
-        """assert we get all files processed even if there are
-        processing exceptions.
+        """Assert we get all files processed.
+
+        Assert we get all files processed even if there are processing
+        exceptions.
+
+        Test checks case when env content is incorrect.
         """
         with mock.patch('glob.glob') as m_ldir:
             m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml',

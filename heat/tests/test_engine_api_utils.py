@@ -954,9 +954,7 @@ class FormatValidateParameterTest(common.HeatTestCase):
     ]
 
     def test_format_validate_parameter(self):
-        """
-        Test format of a parameter.
-        """
+        """Test format of a parameter."""
 
         t = template_format.parse(self.template % self.param)
         tmpl = template.Template(t)

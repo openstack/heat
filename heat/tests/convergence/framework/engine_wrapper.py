@@ -23,10 +23,10 @@ from heat.tests import utils
 
 
 class Engine(message_processor.MessageProcessor):
-    '''
-    Wrapper to the engine service. Methods of this
-    class will be called from the scenario tests.
-    '''
+    """Wrapper to the engine service.
+
+    Methods of this class will be called from the scenario tests.
+    """
 
     queue = message_queue.MessageQueue('engine')
 
@@ -34,9 +34,7 @@ class Engine(message_processor.MessageProcessor):
         super(Engine, self).__init__('engine')
 
     def scenario_template_to_hot(self, scenario_tmpl):
-        '''
-        Converts the scenario template into hot template.
-        '''
+        """Converts the scenario template into hot template."""
         hot_tmpl = {"heat_template_version": "2013-05-23"}
         resources = {}
         for res_name, res_def in six.iteritems(scenario_tmpl.resources):

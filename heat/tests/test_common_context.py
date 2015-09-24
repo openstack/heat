@@ -114,9 +114,7 @@ class TestRequestContext(common.HeatTestCase):
             self.assertFalse(ctx.is_admin)
 
     def test_keystone_v3_endpoint_in_context(self):
-        """Ensure that the context is the preferred source for the
-        auth_uri.
-        """
+        """Ensure that the context is the preferred source for the auth_uri."""
         cfg.CONF.set_override('auth_uri', 'http://xyz',
                               group='clients_keystone')
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
@@ -128,7 +126,9 @@ class TestRequestContext(common.HeatTestCase):
                              'http://example.com:5000/v3')
 
     def test_keystone_v3_endpoint_in_clients_keystone_config(self):
-        """Ensure that the [clients_keystone] section of the configuration is
+        """Ensure that the [clients_keystone] section is the preferred source.
+
+        Ensure that the [clients_keystone] section of the configuration is
         the preferred source when the context does not have the auth_uri.
         """
         cfg.CONF.set_override('auth_uri', 'http://xyz',
@@ -149,7 +149,9 @@ class TestRequestContext(common.HeatTestCase):
                 self.assertEqual(ctx.keystone_v3_endpoint, 'http://xyz/v3')
 
     def test_keystone_v3_endpoint_in_keystone_authtoken_config(self):
-        """Ensure that the [keystone_authtoken] section of the configuration
+        """Ensure that the [keystone_authtoken] section is used.
+
+        Ensure that the [keystone_authtoken] section of the configuration
         is used when the auth_uri is not defined in the context or the
         [clients_keystone] section.
         """
@@ -163,7 +165,9 @@ class TestRequestContext(common.HeatTestCase):
             self.assertEqual(ctx.keystone_v3_endpoint, 'http://abc/v3')
 
     def test_keystone_v3_endpoint_not_set_in_config(self):
-        """Ensure an exception is raised when the auth_uri cannot be obtained
+        """Ensure an exception is raised when the auth_uri cannot be obtained.
+
+        Ensure an exception is raised when the auth_uri cannot be obtained
         from any source.
         """
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'

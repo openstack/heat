@@ -397,7 +397,9 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         self.assertIsNone(self.group.validate())
 
     def test_no_instance_list(self):
-        """The InstanceList attribute is not inherited from
+        """Tests inheritance of InstanceList attribute.
+
+        The InstanceList attribute is not inherited from
         AutoScalingResourceGroup's superclasses.
         """
         self.assertRaises(exception.InvalidTemplateAttribute,

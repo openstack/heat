@@ -963,11 +963,10 @@ class StackTest(common.HeatTestCase):
             rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
 
     def test_create_failure_recovery(self):
-        '''
-        assertion:
-        check that rollback still works with dynamic metadata
-        this test fails the second instance
-        '''
+        """Check that rollback still works with dynamic metadata.
+
+        This test fails the second instance.
+        """
 
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
@@ -1179,9 +1178,7 @@ class StackTest(common.HeatTestCase):
                              self.stack[r].required_by())
 
     def test_store_saves_owner(self):
-        """
-        The owner_id attribute of Store is saved to the database when stored.
-        """
+        """owner_id attribute of Store is saved to the database when stored."""
         self.stack = stack.Stack(self.ctx, 'owner_stack', self.tmpl)
         stack_ownee = stack.Stack(self.ctx, 'ownee_stack', self.tmpl,
                                   owner_id=self.stack.id)
@@ -1232,9 +1229,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('tag2', db_tags[1].tag)
 
     def test_store_saves_creds(self):
-        """
-        A user_creds entry is created on first stack store
-        """
+        """A user_creds entry is created on first stack store."""
         cfg.CONF.set_default('deferred_auth_method', 'password')
         self.stack = stack.Stack(self.ctx, 'creds_stack', self.tmpl)
         self.stack.store()
@@ -1262,9 +1257,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
 
     def test_store_saves_creds_trust(self):
-        """
-        A user_creds entry is created on first stack store
-        """
+        """A user_creds entry is created on first stack store."""
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
@@ -1313,9 +1306,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(creds.id, backup.user_creds_id)
 
     def test_stored_context_err(self):
-        """
-        Test stored_context error path.
-        """
+        """Test stored_context error path."""
         self.stack = stack.Stack(self.ctx, 'creds_stack', self.tmpl)
         ex = self.assertRaises(exception.Error, self.stack.stored_context)
         expected_err = 'Attempt to use stored_context with no user_creds'
@@ -1401,7 +1392,8 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(ctx_expected, load_stack.context.to_dict())
 
     def test_load_honors_owner(self):
-        """
+        """Loading a stack from the database will set the owner_id.
+
         Loading a stack from the database will set the owner_id of the
         resultant stack appropriately.
         """
@@ -1559,9 +1551,7 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_stack_load_no_param_value_validation(self):
-        '''
-        Test stack loading with disabled parameter value validation.
-        '''
+        """Test stack loading with disabled parameter value validation."""
         tmpl = template_format.parse('''
         heat_template_version: 2013-05-23
         parameters:
@@ -2156,9 +2146,7 @@ class StackTest(common.HeatTestCase):
         self.assertFalse(mock_drg.called)
 
     def test_encrypt_parameters_false_parameters_stored_plaintext(self):
-        '''
-        Test stack loading with disabled parameter value validation.
-        '''
+        """Test stack loading with disabled parameter value validation."""
         tmpl = template_format.parse('''
         heat_template_version: 2013-05-23
         parameters:
@@ -2186,9 +2174,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('bar', params['param2'])
 
     def test_parameters_stored_encrypted_decrypted_on_load(self):
-        '''
-        Test stack loading with disabled parameter value validation.
-        '''
+        """Test stack loading with disabled parameter value validation."""
         tmpl = template_format.parse('''
         heat_template_version: 2013-05-23
         parameters:
@@ -2223,9 +2209,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('bar', params.get('param2'))
 
     def test_parameters_stored_decrypted_successful_load(self):
-        '''
-        Test stack loading with disabled parameter value validation.
-        '''
+        """Test stack loading with disabled parameter value validation."""
         tmpl = template_format.parse('''
         heat_template_version: 2013-05-23
         parameters:

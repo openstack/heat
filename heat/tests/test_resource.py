@@ -1665,10 +1665,11 @@ class ResourceTest(common.HeatTestCase):
                           0)
 
     def test_create_convergence_sets_requires_for_failure(self):
-        '''
+        """Ensure that requires are computed correctly.
+
         Ensure that requires are computed correctly even if resource
-        create fails,
-        '''
+        create fails.
+        """
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res._store()
@@ -2851,9 +2852,10 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         return mock_service_types, mock_client_plugin
 
     def test_default_true_with_default_client_name_none(self):
-        '''
+        """Test availability of resource when default_client_name is None.
+
         When default_client_name is None, resource is considered as available.
-        '''
+        """
         with mock.patch(('heat.tests.generic_resource'
                         '.ResourceWithDefaultClientName.default_client_name'),
                         new_callable=mock.PropertyMock) as mock_client_name:
@@ -2865,9 +2867,10 @@ class ResourceAvailabilityTest(common.HeatTestCase):
     def test_default_true_empty_service_types(
             self,
             mock_client_plugin_method):
-        '''
+        """Test availability of resource when service_types is empty list.
+
         When service_types is empty list, resource is considered as available.
-        '''
+        """
 
         mock_service_types, mock_client_plugin = self._mock_client_plugin()
         mock_client_plugin_method.return_value = mock_client_plugin
@@ -2883,9 +2886,10 @@ class ResourceAvailabilityTest(common.HeatTestCase):
     def test_service_deployed(
             self,
             mock_client_plugin_method):
-        '''
+        """Test availability of resource when the service is deployed.
+
         When the service is deployed, resource is considered as available.
-        '''
+        """
 
         mock_service_types, mock_client_plugin = self._mock_client_plugin(
             ['test_type']
@@ -2908,10 +2912,11 @@ class ResourceAvailabilityTest(common.HeatTestCase):
     def test_service_not_deployed(
             self,
             mock_client_plugin_method):
-        '''
+        """Test availability of resource when the service is not deployed.
+
         When the service is not deployed, resource is considered as
         unavailable.
-        '''
+        """
 
         mock_service_types, mock_client_plugin = self._mock_client_plugin(
             ['test_type_un_deployed'],
@@ -2932,10 +2937,11 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         )
 
     def test_service_not_deployed_throws_exception(self):
-        '''
+        """Test raising exception when the service is not deployed.
+
         When the service is not deployed, make sure resource is throwing
         ResourceTypeUnavailable exception.
-        '''
+        """
         with mock.patch.object(
                 generic_rsrc.ResourceWithDefaultClientName,
                 'is_service_available') as mock_method:

@@ -214,8 +214,10 @@ class StackResourceTest(StackResourceBaseTest):
         self.assertNotEqual(sig2, sig2a)
 
     def test_propagated_files(self):
-        """Makes sure that the files map in the top level stack
-        are passed on to the child stack.
+        """Test passing of the files map in the top level to the child.
+
+        Makes sure that the files map in the top level stack are passed on to
+        the child stack.
         """
         self.parent_stack.t.files["foo"] = "bar"
         parsed_t = self.parent_resource._parse_child_template(self.templ, None)
@@ -520,9 +522,10 @@ class StackResourceTest(StackResourceBaseTest):
             self.parent_resource.context, mock.ANY)
 
     def test_need_update_for_nested_resource(self):
-        """
-        The resource in Create or Update state and has nested stack,
-        should need update.
+        """Test the resource with nested stack should need update.
+
+        The resource in Create or Update state and has nested stack, should
+        need update.
         """
         self.parent_resource.action = self.parent_resource.CREATE
         need_update = self.parent_resource._needs_update(
@@ -535,7 +538,8 @@ class StackResourceTest(StackResourceBaseTest):
         self.assertEqual(True, need_update)
 
     def test_need_update_in_failed_state_for_nested_resource(self):
-        """
+        """Test the resource with no nested stack should need replacement.
+
         The resource in failed state and has no nested stack,
         should need update with UpdateReplace.
         """
@@ -551,7 +555,8 @@ class StackResourceTest(StackResourceBaseTest):
                           self.parent_resource)
 
     def test_need_update_in_init_complete_state_for_nested_resource(self):
-        """
+        """Test the resource with no nested stack should need replacement.
+
         The resource in failed state and has no nested stack,
         should need update with UpdateReplace.
         """
@@ -717,7 +722,8 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         self.nested.COMPLETE = 'COMPLETE'
 
     def test_state_ok(self):
-        """
+        """Test case when check_create_complete should return True.
+
         check_create_complete should return True create task is
         done and the nested stack is in (<action>,COMPLETE) state.
         """
@@ -729,7 +735,8 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
             show_deleted=self.show_deleted, force_reload=True)
 
     def test_state_err(self):
-        """
+        """Test case when check_create_complete should raise error.
+
         check_create_complete should raise error when create task is
         done but the nested stack is not in (<action>,COMPLETE) state
         """
@@ -749,7 +756,8 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
             show_deleted=self.show_deleted, force_reload=True)
 
     def test_state_unknown(self):
-        """
+        """Test case when check_create_complete should raise error.
+
         check_create_complete should raise error when create task is
         done but the nested stack is not in (<action>,COMPLETE) state
         """

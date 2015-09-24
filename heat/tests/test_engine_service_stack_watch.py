@@ -34,8 +34,10 @@ class StackServiceWatcherTest(common.HeatTestCase):
     def test_periodic_watch_task_not_created(self, watch_rule_update,
                                              watch_rule_get_all_by_stack,
                                              stack_get_all_by_owner_id):
-        """If there is no cloud watch lite alarm, then don't create
-        a periodic task for it.
+        """Test case for not creating periodic task for cloud watch lite alarm.
+
+        If there is no cloud watch lite alarm, then don't create a periodic
+        task for it.
         """
         stack_id = 83
         watch_rule_get_all_by_stack.return_value = []
@@ -56,8 +58,10 @@ class StackServiceWatcherTest(common.HeatTestCase):
     def test_periodic_watch_task_created(self, watch_rule_update,
                                          watch_rule_get_all_by_stack,
                                          stack_get_all_by_owner_id):
-        """If there is no cloud watch lite alarm, then DO create
-        a periodic task for it.
+        """Test case for creating periodic task for cloud watch lite alarm.
+
+        If there is no cloud watch lite alarm, then DO create a periodic task
+        for it.
         """
         stack_id = 86
         wr1 = mock.Mock()

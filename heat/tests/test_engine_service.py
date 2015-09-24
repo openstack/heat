@@ -957,16 +957,15 @@ class StackServiceTest(common.HeatTestCase):
     def test_list_template_functions(self, templ_mock):
 
         class DummyFunc1(object):
-            """
-            Dummy Func1
+            """Dummy Func1.
 
-            Dummy Func1 Long Description
+            Dummy Func1 Long Description.
             """
 
         class DummyFunc2(object):
-            """Dummy Func2
+            """Dummy Func2.
 
-            Dummy Func2 Long Description
+            Dummy Func2 Long Description.
             """
 
         plugin_mock = mock.Mock(
@@ -982,9 +981,9 @@ class StackServiceTest(common.HeatTestCase):
         templ_mock.return_value = DummyMgr()
         functions = self.eng.list_template_functions(self.ctx, 'dummytemplate')
         expected = [{'functions': 'dummy1',
-                     'description': 'Dummy Func1'},
+                     'description': 'Dummy Func1.'},
                     {'functions': 'dummy2',
-                     'description': 'Dummy Func2'}]
+                     'description': 'Dummy Func2.'}]
         self.assertEqual(sorted(expected, key=lambda k: k['functions']),
                          sorted(functions, key=lambda k: k['functions']))
 

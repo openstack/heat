@@ -28,10 +28,11 @@ from heat.tests import common
 
 @mock.patch.object(policy.Enforcer, 'enforce')
 class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
-    '''
+    """Tests the API class ActionController.
+
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
-    '''
+    """
 
     def setUp(self):
         super(ActionControllerTest, self).setUp()

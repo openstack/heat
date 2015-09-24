@@ -1372,10 +1372,7 @@ class KeystoneClientTest(common.HeatTestCase):
             project_id='aprojectid'))
 
     def _test_url_for(self, service_url, expected_kwargs, ctx=None, **kwargs):
-        """
-        Helper function for testing url_for depending on different ways to
-        pass region name.
-        """
+        """Testing url_for depending on different ways to pass region name."""
         mock_ks_auth, mock_auth_ref = self._stubs_v3(client=False)
         mock_ks_auth.get_endpoint(mox.IsA(ks_session.Session),
                                   **expected_kwargs).AndReturn(service_url)
@@ -1387,7 +1384,8 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_url_for(self):
-        """
+        """Test that None value is passed as region name.
+
         Test that None value is passed as region name if region name is not
         specified in the config file or as one of the arguments.
         """
@@ -1399,7 +1397,8 @@ class KeystoneClientTest(common.HeatTestCase):
         self._test_url_for(service_url, kwargs)
 
     def test_url_for_with_region(self):
-        """
+        """Test that region name passed as argument.
+
         Test that region name passed as argument is not override by region name
         specified in the config file.
         """
@@ -1411,7 +1410,8 @@ class KeystoneClientTest(common.HeatTestCase):
         self._test_url_for(service_url, kwargs, None, **kwargs)
 
     def test_url_for_with_region_name_from_config(self):
-        """
+        """Test default region name for services from config file is passed.
+
         Test that default region name for services from config file is passed
         if region name is not specified in arguments.
         """
@@ -1425,7 +1425,8 @@ class KeystoneClientTest(common.HeatTestCase):
         self._test_url_for(service_url, kwargs)
 
     def test_url_for_with_region_name_from_context(self):
-        """
+        """Test that default region name for services from context is passed.
+
         Test that default region name for services from context is passed
         if region name is not specified in arguments.
         """

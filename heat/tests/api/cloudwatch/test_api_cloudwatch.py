@@ -27,10 +27,11 @@ from heat.tests import utils
 
 
 class WatchControllerTest(common.HeatTestCase):
-    '''
+    """Tests the API class WatchController.
+
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
-    '''
+    """
 
     def setUp(self):
         super(WatchControllerTest, self).setUp()

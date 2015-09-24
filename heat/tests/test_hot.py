@@ -533,8 +533,7 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
     def test_str_replace_syntax(self):
-        """
-        Test str_replace function syntax.
+        """Test str_replace function syntax.
 
         Pass wrong syntax (array instead of dictionary) to function and
         validate that we get a TypeError.
@@ -548,8 +547,7 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertRaises(TypeError, self.resolve, snippet, tmpl)
 
     def test_str_replace_invalid_param_keys(self):
-        """
-        Test str_replace function parameter keys.
+        """Test str_replace function parameter keys.
 
         Pass wrong parameters to function and verify that we get
         a KeyError.
@@ -568,8 +566,7 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
 
     def test_str_replace_invalid_param_types(self):
-        """
-        Test str_replace function parameter values.
+        """Test str_replace function parameter values.
 
         Pass parameter values of wrong type to function and verify that we get
         a TypeError.
@@ -755,9 +752,10 @@ class HOTemplateTest(common.HeatTestCase):
             self.assertIn(item, snippet_resolved)
 
     def test_repeat_bad_args(self):
-        """
-        Test that the repeat function reports a proper error when missing
-        or invalid arguments.
+        """Tests reporting error by repeat function.
+
+        Test that the repeat function reports a proper error when missing or
+        invalid arguments.
         """
         tmpl = template.Template(hot_kilo_tpl_empty)
 
@@ -871,7 +869,8 @@ class HOTemplateTest(common.HeatTestCase):
                       six.text_type(exc))
 
     def test_prevent_parameters_access(self):
-        """
+        """Check parameters section inaccessible using the template as a dict.
+
         Test that the parameters section can't be accessed using the template
         as a dictionary.
         """
@@ -898,7 +897,8 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertIn(err_str, six.text_type(keyError))
 
     def test_parameters_section_not_iterable(self):
-        """
+        """Check parameters section is not returned using the template as iter.
+
         Test that the parameters section is not returned when the template is
         used as an iterable.
         """
@@ -912,8 +912,7 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertNotIn('parameters', six.iterkeys(tmpl))
 
     def test_invalid_hot_version(self):
-        """
-        Test HOT version check.
+        """Test HOT version check.
 
         Pass an invalid HOT version to template.Template.__new__() and
         validate that we get a ValueError.
@@ -925,8 +924,7 @@ class HOTemplateTest(common.HeatTestCase):
                           template.Template, hot_tmpl)
 
     def test_valid_hot_version(self):
-        """
-        Test HOT version check.
+        """Test HOT version check.
 
         Pass a valid HOT version to template.Template.__new__() and
         validate that we get back a parsed template.
@@ -1283,9 +1281,8 @@ class HotStackTest(common.HeatTestCase):
 
 
 class StackAttributesTest(common.HeatTestCase):
-    """
-    Test stack get_attr function when stack was created from HOT template.
-    """
+    """Test get_attr function when stack was created from HOT template."""
+
     def setUp(self):
         super(StackAttributesTest, self).setUp()
 
@@ -1414,9 +1411,7 @@ class StackGetAttrValidationTest(common.HeatTestCase):
 
 
 class StackParametersTest(common.HeatTestCase):
-    """
-    Test stack get_param function when stack was created from HOT template.
-    """
+    """Test get_param function when stack was created from HOT template."""
 
     scenarios = [
         ('Ref_string',

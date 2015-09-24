@@ -402,10 +402,12 @@ class swiftTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_default_headers_not_none_empty_string(self):
-        '''Test that we are not passing None when we have a default
+        """Test that we are not passing None.
+
+        Test that we are not passing None when we have a default
         empty string or sc will pass them as string None. see
         bug lp:1259571.
-        '''
+        """
         container_name = utils.PhysName('test_stack', 'test_resource')
         sc.Connection.put_container(
             container_name, {}).AndReturn(None)

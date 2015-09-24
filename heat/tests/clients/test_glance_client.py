@@ -24,10 +24,7 @@ from heat.tests import utils
 
 
 class GlanceUtilsTests(common.HeatTestCase):
-    """
-    Basic tests for the helper methods in
-    :module:'heat.engine.resources.clients.os.glance'.
-    """
+    """Basic tests for :module:'heat.engine.resources.clients.os.glance'."""
 
     def setUp(self):
         super(GlanceUtilsTests, self).setUp()

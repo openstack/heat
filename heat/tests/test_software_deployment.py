@@ -1203,7 +1203,8 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
             set(resg._resource_names()))
 
     def test_assemble_nested(self):
-        """
+        """Tests nested stack implements group creation based on properties.
+
         Tests that the nested stack that implements the group is created
         appropriately based on properties.
         """

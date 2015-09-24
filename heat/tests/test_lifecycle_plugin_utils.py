@@ -27,7 +27,8 @@ resources:
 
 
 class LifecyclePluginUtilsTests(common.HeatTestCase):
-    """
+    """Basic tests for :module:'heat.common.lifecycle_plugin_utils'.
+
     Basic tests for the helper methods in
     :module:'heat.common.lifecycle_plugin_utils'.
     """
@@ -180,9 +181,8 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
 
 
 class TestLifecycleCallout1(lifecycle_plugin.LifecyclePlugin):
-    '''
-    Sample test class for testing pre-op and post-op work on a stack
-    '''
+    """Sample test class for testing pre-op and post-op work on a stack."""
+
     def do_pre_op(self, cnxt, stack, current_stack=None, action=None):
         cnxt.pre_counter_for_unit_test += 1
 
@@ -195,10 +195,11 @@ class TestLifecycleCallout1(lifecycle_plugin.LifecyclePlugin):
 
 
 class TestLifecycleCallout2(lifecycle_plugin.LifecyclePlugin):
-    '''
-    Sample test class for testing pre-op and post-op work on a stack,
-    different ordinal, and increment counters by 2
-    '''
+    """Sample test class for testing pre-op and post-op work on a stack.
+
+    Different ordinal and increment counters by 2.
+    """
+
     def do_pre_op(self, cnxt, stack, current_stack=None, action=None):
         cnxt.pre_counter_for_unit_test += 2
 
@@ -211,10 +212,10 @@ class TestLifecycleCallout2(lifecycle_plugin.LifecyclePlugin):
 
 
 class TestLifecycleCallout3(lifecycle_plugin.LifecyclePlugin):
-    '''
-    Sample test class for testing pre-op and post-op work on a stack,
-    methods raise exceptions
-    '''
+    """Sample test class for testing pre-op and post-op work on a stack.
+
+    Methods raise exceptions.
+    """
     def do_pre_op(self, cnxt, stack, current_stack=None, action=None):
         raise Exception()
 
@@ -227,10 +228,10 @@ class TestLifecycleCallout3(lifecycle_plugin.LifecyclePlugin):
 
 
 class TestLifecycleCallout4(lifecycle_plugin.LifecyclePlugin):
-    '''
-    Sample test class for testing pre-op and post-op work on a stack;
-    do_pre_op, do_post_op both throw exception
-    '''
+    """Sample test class for testing pre-op and post-op work on a stack.
+
+    do_pre_op, do_post_op both throw exception.
+    """
     def do_pre_op(self, cnxt, stack, current_stack=None, action=None):
         raise Exception()
 
@@ -243,10 +244,10 @@ class TestLifecycleCallout4(lifecycle_plugin.LifecyclePlugin):
 
 
 class TestLifecycleCallout5(lifecycle_plugin.LifecyclePlugin):
-    '''
-    Sample test class for testing pre-op and post-op work on a stack;
-    do_post_op throws exception
-    '''
+    """Sample test class for testing pre-op and post-op work on a stack.
+
+    do_post_op throws exception.
+    """
     def do_pre_op(self, cnxt, stack, current_stack=None, action=None):
         cnxt.pre_counter_for_unit_test += 1
 

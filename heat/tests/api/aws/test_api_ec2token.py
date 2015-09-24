@@ -28,9 +28,7 @@ from heat.tests import utils
 
 
 class Ec2TokenTest(common.HeatTestCase):
-    """
-    Tests the Ec2Token middleware
-    """
+    """Tests the Ec2Token middleware."""
 
     def setUp(self):
         super(Ec2TokenTest, self).setUp()

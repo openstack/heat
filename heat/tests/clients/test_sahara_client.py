@@ -24,10 +24,7 @@ from heat.tests import utils
 
 
 class SaharaUtilsTests(common.HeatTestCase):
-    """
-    Basic tests for the helper methods in
-    :module:'heat.engine.resources.clients.os.sahara'.
-    """
+    """Basic tests :module:'heat.engine.resources.clients.os.sahara'."""
 
     def setUp(self):
         super(SaharaUtilsTests, self).setUp()

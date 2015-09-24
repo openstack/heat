@@ -21,12 +21,13 @@ LOG = logging.getLogger(__name__)
 
 
 def asynchronous(function):
-    '''Decorator for MessageProcessor methods to make them asynchronous.
+    """Decorator for MessageProcessor methods to make them asynchronous.
 
     To use, simply call the method as usual. Instead of being executed
     immediately, it will be placed on the queue for the MessageProcessor and
     run on a future iteration of the event loop.
-    '''
+    """
+
     arg_names = inspect.getargspec(function).args
     MessageData = collections.namedtuple(function.__name__, arg_names[1:])
 
@@ -76,9 +77,7 @@ class MessageProcessor(object):
 
     @asynchronous
     def noop(self, count=1):
-        '''
-        Insert <count> No-op operations in the message queue.
-        '''
+        """Insert <count> No-op operations in the message queue."""
         assert isinstance(count, int)
         if count > 1:
             self.queue.send_priority('noop',
@@ -86,24 +85,19 @@ class MessageProcessor(object):
 
     @asynchronous
     def _execute(self, func):
-        '''
-        Insert a function call in the message queue.
+        """Insert a function call in the message queue.
 
         The function takes no arguments, so use functools.partial to curry the
         arguments before passing it here.
-        '''
+        """
         func()
 
     def call(self, func, *args, **kwargs):
-        '''
-        Insert a function call in the message queue.
-        '''
+        """Insert a function call in the message queue."""
         self._execute(functools.partial(func, *args, **kwargs))
 
     def clear(self):
-        '''
-        Delete all the messages from the queue.
-        '''
+        """Delete all the messages from the queue."""
         self.queue.clear()
 
 __all__ = ['MessageProcessor', 'asynchronous']

@@ -33,7 +33,8 @@ policy_path = os.path.dirname(os.path.realpath(__file__)) + "/../../policy/"
 
 
 class CfnStackControllerTest(common.HeatTestCase):
-    """
+    """Tests the API class CfnStackController.
+
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
     """

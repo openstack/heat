@@ -278,13 +278,12 @@ class SchemaTest(common.HeatTestCase):
                       six.text_type(err))
 
     def test_allowed_values_numeric_int(self):
-        '''
-        Test AllowedValues constraint for numeric integer values.
+        """Test AllowedValues constraint for numeric integer values.
 
         Test if the AllowedValues constraint works for numeric values in any
         combination of numeric strings or numbers in the constraint and
         numeric strings or numbers as value.
-        '''
+        """
 
         # Allowed values defined as integer numbers
         schema = constraints.Schema(
@@ -321,13 +320,12 @@ class SchemaTest(common.HeatTestCase):
                          six.text_type(err))
 
     def test_allowed_values_numeric_float(self):
-        '''
-        Test AllowedValues constraint for numeric floating point values.
+        """Test AllowedValues constraint for numeric floating point values.
 
         Test if the AllowedValues constraint works for numeric values in any
         combination of numeric strings or numbers in the constraint and
         numeric strings or numbers as value.
-        '''
+        """
 
         # Allowed values defined as numbers
         schema = constraints.Schema(
@@ -364,7 +362,7 @@ class SchemaTest(common.HeatTestCase):
                          six.text_type(err))
 
     def test_to_schema_type_int(self):
-        '''Test Schema.to_schema_type method for type Integer.'''
+        """Test Schema.to_schema_type method for type Integer."""
         schema = constraints.Schema('Integer')
         # test valid values, i.e. integeres as string or number
         res = schema.to_schema_type(1)
@@ -384,7 +382,7 @@ class SchemaTest(common.HeatTestCase):
                          six.text_type(err))
 
     def test_to_schema_type_num(self):
-        '''Test Schema.to_schema_type method for type Number.'''
+        """Test Schema.to_schema_type method for type Number."""
         schema = constraints.Schema('Number')
         res = schema.to_schema_type(1)
         self.assertIsInstance(res, int)
@@ -400,7 +398,7 @@ class SchemaTest(common.HeatTestCase):
                          six.text_type(err))
 
     def test_to_schema_type_string(self):
-        '''Test Schema.to_schema_type method for type String.'''
+        """Test Schema.to_schema_type method for type String."""
         schema = constraints.Schema('String')
         res = schema.to_schema_type('one')
         self.assertIsInstance(res, six.string_types)
@@ -414,7 +412,7 @@ class SchemaTest(common.HeatTestCase):
         self.assertIsInstance(res, six.string_types)
 
     def test_to_schema_type_boolean(self):
-        '''Test Schema.to_schema_type method for type Boolean.'''
+        """Test Schema.to_schema_type method for type Boolean."""
         schema = constraints.Schema('Boolean')
 
         true_values = [1, '1', True, 'true', 'True', 'yes', 'Yes']
@@ -434,14 +432,14 @@ class SchemaTest(common.HeatTestCase):
                          six.text_type(err))
 
     def test_to_schema_type_map(self):
-        '''Test Schema.to_schema_type method for type Map.'''
+        """Test Schema.to_schema_type method for type Map."""
         schema = constraints.Schema('Map')
         res = schema.to_schema_type({'a': 'aa', 'b': 'bb'})
         self.assertIsInstance(res, dict)
         self.assertEqual({'a': 'aa', 'b': 'bb'}, res)
 
     def test_to_schema_type_list(self):
-        '''Test Schema.to_schema_type method for type List.'''
+        """Test Schema.to_schema_type method for type List."""
         schema = constraints.Schema('List')
         res = schema.to_schema_type(['a', 'b'])
         self.assertIsInstance(res, list)

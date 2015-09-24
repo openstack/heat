@@ -205,10 +205,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
         return stack
 
     def test_mem_alarm_high_update_no_replace(self):
-        '''
-        Make sure that we can change the update-able properties
-        without replacing the Alarm rsrc.
-        '''
+        """Tests update updatable properties without replacing the Alarm."""
+
         # short circuit the alarm's references
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
@@ -270,10 +268,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_mem_alarm_high_update_replace(self):
-        '''
-        Make sure that the Alarm resource IS replaced when non-update-able
-        properties are changed.
-        '''
+        """Tests resource replacing when changing non-updatable properties."""
+
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['alarm_actions'] = ['signal_handler']
@@ -297,9 +293,10 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_mem_alarm_suspend_resume(self):
-        """
+        """Tests suspending and resuming of the alarm.
+
         Make sure that the Alarm resource gets disabled on suspend
-        and reenabled on resume.
+        and re-enabled on resume.
         """
         self.stack = self.create_stack()
 
