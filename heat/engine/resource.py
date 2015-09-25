@@ -62,6 +62,10 @@ class UpdateReplace(Exception):
         super(Exception, self).__init__(six.text_type(msg))
 
 
+class NoActionRequired(Exception):
+    pass
+
+
 class ResourceInError(exception.HeatException):
     msg_fmt = _('Went to status %(resource_status)s '
                 'due to "%(status_reason)s"')
@@ -1194,6 +1198,9 @@ class Resource(object):
             else:
                 reason_string = get_string_details()
             self._add_event('SIGNAL', self.status, reason_string)
+        except NoActionRequired:
+            # Don't log an event as it just spams the user.
+            pass
         except Exception as ex:
             LOG.exception(_LE('signal %(name)s : %(msg)s')
                           % {'name': six.text_type(self), 'msg': ex})
