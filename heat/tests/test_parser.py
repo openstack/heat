@@ -4222,6 +4222,14 @@ class StackTest(HeatTestCase):
         self.stack.delete_snapshot(fake_snapshot)
         self.assertEqual([data['resources']['AResource']], snapshots)
 
+    def test_delete_snapshot_without_data(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'R1': {'Type': 'GenericResourceType'}}}
+        self.stack = parser.Stack(self.ctx, 'snapshot_stack',
+                                  template.Template(tmpl))
+        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(None)
+        self.assertIsNone(self.stack.delete_snapshot(fake_snapshot))
+
     def test_incorrect_outputs_cfn_get_attr(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
