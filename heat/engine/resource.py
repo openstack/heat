@@ -120,6 +120,10 @@ class Resource(object):
     # no signal actions
     no_signal_actions = (SUSPEND, DELETE)
 
+    # Whether all other resources need a metadata_update() after
+    # a signal to this resource
+    signal_needs_metadata_updates = True
+
     def __new__(cls, name, definition, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
