@@ -66,6 +66,22 @@ class EnvironmentTest(common.HeatTestCase):
                          env.get_resource_info('OS::Nova::Server',
                                                'my_db_server').name)
 
+    def test_global_registry_many_to_one(self):
+        new_env = {u'parameters': {u'a': u'ff', u'b': u'ss'},
+                   u'resource_registry': {u'OS::Nova::*': 'OS::Heat::None'}}
+        env = environment.Environment(new_env)
+        self.assertEqual('OS::Heat::None',
+                         env.get_resource_info('OS::Nova::Server',
+                                               'my_db_server').name)
+
+    def test_global_registry_many_to_one_no_recurse(self):
+        new_env = {u'parameters': {u'a': u'ff', u'b': u'ss'},
+                   u'resource_registry': {u'OS::*': 'OS::Heat::None'}}
+        env = environment.Environment(new_env)
+        self.assertEqual('OS::Heat::None',
+                         env.get_resource_info('OS::Some::Name',
+                                               'my_db_server').name)
+
     def test_map_one_resource_type(self):
         new_env = {u'parameters': {u'a': u'ff', u'b': u'ss'},
                    u'resource_registry': {u'resources':
