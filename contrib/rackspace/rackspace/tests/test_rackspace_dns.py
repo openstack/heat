@@ -154,7 +154,8 @@ class RackspaceDnsTest(common.HeatTestCase):
         create_record_args = dict()
         create_record_args['records'] = record_with_comment
         create_args = dict(
-            self.create_domain_only_args.items() + create_record_args.items())
+            list(self.create_domain_only_args.items()) +
+            list(create_record_args.items()))
         return create_args
 
     def test_create_domain_only(self):
