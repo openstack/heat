@@ -66,7 +66,7 @@ def get(url, allowed_schemes=('http', 'https')):
         # (eg. it's possible to fetch 1000 bytes greater than
         # max_template_size with a chunk_size of 1000).
         reader = resp.iter_content(chunk_size=1000)
-        result = ""
+        result = b""
         for chunk in reader:
             result += chunk
             if len(result) > cfg.CONF.max_template_size:

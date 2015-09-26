@@ -115,7 +115,7 @@ class StackResource(resource.Resource):
                     self.resource_id)
                 self.rpc_client().stack_cancel_update(
                     self.context,
-                    stack_identity,
+                    dict(stack_identity),
                     cancel_with_rollback=False)
 
     def has_nested(self):
@@ -427,7 +427,7 @@ class StackResource(resource.Resource):
         try:
             self.rpc_client().update_stack(
                 self.context,
-                nested_stack.identifier(),
+                dict(nested_stack.identifier()),
                 parsed_template.t,
                 child_env.user_env_as_dict(),
                 parsed_template.files,
@@ -449,7 +449,7 @@ class StackResource(resource.Resource):
         if stack is None:
             return
 
-        stack_identity = stack.identifier()
+        stack_identity = dict(stack.identifier())
 
         try:
             self.rpc_client().delete_stack(self.context, stack_identity)
@@ -472,7 +472,7 @@ class StackResource(resource.Resource):
             self.context.tenant_id,
             self.physical_resource_name(),
             self.resource_id)
-        self.rpc_client().stack_suspend(self.context, stack_identity)
+        self.rpc_client().stack_suspend(self.context, dict(stack_identity))
 
     def check_suspend_complete(self, cookie=None):
         return self._check_status_complete(resource.Resource.SUSPEND)
@@ -486,7 +486,7 @@ class StackResource(resource.Resource):
             self.context.tenant_id,
             self.physical_resource_name(),
             self.resource_id)
-        self.rpc_client().stack_resume(self.context, stack_identity)
+        self.rpc_client().stack_resume(self.context, dict(stack_identity))
 
     def check_resume_complete(self, cookie=None):
         return self._check_status_complete(resource.Resource.RESUME)
@@ -501,7 +501,7 @@ class StackResource(resource.Resource):
             self.context.tenant_id,
             self.physical_resource_name(),
             self.resource_id)
-        self.rpc_client().stack_check(self.context, stack_identity)
+        self.rpc_client().stack_check(self.context, dict(stack_identity))
 
     def check_check_complete(self, cookie=None):
         return self._check_status_complete(resource.Resource.CHECK)

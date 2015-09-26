@@ -839,7 +839,8 @@ class WithTemplateTest(StackResourceBaseTest):
         nested = mock.MagicMock()
         nested.updated_time = 'now_time'
         nested.state = ('CREATE', 'COMPLETE')
-        nested.identifier.return_value = 'stack_identifier'
+        nested.identifier.return_value = {'stack_identifier':
+                                          'stack-identifier'}
         self.parent_resource.nested = mock.MagicMock(return_value=nested)
         self.parent_resource._nested = nested
 
@@ -856,8 +857,9 @@ class WithTemplateTest(StackResourceBaseTest):
             self.empty_temp, user_params=self.params,
             timeout_mins=self.timeout_mins)
         rpcc.return_value.update_stack.assert_called_once_with(
-            self.ctx, 'stack_identifier', self.empty_temp.t,
-            child_env, {}, {'timeout_mins': self.timeout_mins})
+            self.ctx, {'stack_identifier': 'stack-identifier'},
+            self.empty_temp.t, child_env, {},
+            {'timeout_mins': self.timeout_mins})
 
 
 class RaiseLocalException(StackResourceBaseTest):

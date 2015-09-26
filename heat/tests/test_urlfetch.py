@@ -70,7 +70,7 @@ class UrlFetchTest(common.HeatTestCase):
 
     def test_http_scheme(self):
         url = 'http://example.com/template'
-        data = '{ "foo": "bar" }'
+        data = b'{ "foo": "bar" }'
         response = Response(data)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
@@ -79,7 +79,7 @@ class UrlFetchTest(common.HeatTestCase):
 
     def test_https_scheme(self):
         url = 'https://example.com/template'
-        data = '{ "foo": "bar" }'
+        data = b'{ "foo": "bar" }'
         response = Response(data)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
@@ -111,7 +111,7 @@ class UrlFetchTest(common.HeatTestCase):
 
     def test_max_fetch_size_okay(self):
         url = 'http://example.com/template'
-        data = '{ "foo": "bar" }'
+        data = b'{ "foo": "bar" }'
         response = Response(data)
         cfg.CONF.set_override('max_template_size', 500)
         requests.get(url, stream=True).AndReturn(response)
@@ -121,7 +121,7 @@ class UrlFetchTest(common.HeatTestCase):
 
     def test_max_fetch_size_error(self):
         url = 'http://example.com/template'
-        data = '{ "foo": "bar" }'
+        data = b'{ "foo": "bar" }'
         response = Response(data)
         cfg.CONF.set_override('max_template_size', 5)
         requests.get(url, stream=True).AndReturn(response)
