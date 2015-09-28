@@ -144,14 +144,14 @@ class SqlAlchemyTest(common.HeatTestCase):
         query = mock.Mock()
         db_api._filter_and_page_query(self.ctx, query)
 
-        assert mock_paginate_query.called
+        self.assertTrue(mock_paginate_query.called)
 
     @mock.patch.object(db_api, '_events_paginate_query')
     def test_events_filter_and_page_query(self, mock_events_paginate_query):
         query = mock.Mock()
         db_api._events_filter_and_page_query(self.ctx, query)
 
-        assert mock_events_paginate_query.called
+        self.assertTrue(mock_events_paginate_query.called)
 
     @mock.patch.object(db_api.db_filters, 'exact_filter')
     def test_filter_and_page_query_handles_no_filters(self, mock_db_filter):
@@ -174,7 +174,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         filters = {'foo': 'bar'}
         db_api._filter_and_page_query(self.ctx, query, filters=filters)
 
-        assert mock_db_filter.called
+        self.assertTrue(mock_db_filter.called)
 
     @mock.patch.object(db_api.db_filters, 'exact_filter')
     def test_events_filter_and_page_query_applies_filters(self,
@@ -183,7 +183,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         filters = {'foo': 'bar'}
         db_api._events_filter_and_page_query(self.ctx, query, filters=filters)
 
-        assert mock_db_filter.called
+        self.assertTrue(mock_db_filter.called)
 
     @mock.patch.object(db_api, '_paginate_query')
     def test_filter_and_page_query_whitelists_sort_keys(self,
