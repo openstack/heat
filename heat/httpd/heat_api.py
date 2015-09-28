@@ -26,22 +26,23 @@ from heat.common import config
 from heat.common.i18n import _LI
 from heat.common import messaging
 from heat.common import profiler
-from heat import version
+from heat import version as hversion
 
-i18n.enable_lazy()
 
-LOG = logging.getLogger('heat.api')
+def init_application():
+    i18n.enable_lazy()
 
-logging.register_options(cfg.CONF)
-version = version.version_info.version_string()
-cfg.CONF(project='heat', prog='heat-api', version=version)
-logging.setup(cfg.CONF, 'heat-api')
-messaging.setup()
+    LOG = logging.getLogger('heat.api')
 
-port = cfg.CONF.heat_api.bind_port
-host = cfg.CONF.heat_api.bind_host
-LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
-         {'host': host, 'port': port})
-profiler.setup('heat-api', host)
+    logging.register_options(cfg.CONF)
+    version = hversion.version_info.version_string()
+    cfg.CONF(project='heat', prog='heat-api', version=version)
+    logging.setup(cfg.CONF, 'heat-api')
+    messaging.setup()
 
-application = config.load_paste_app()
+    port = cfg.CONF.heat_api.bind_port
+    host = cfg.CONF.heat_api.bind_host
+    profiler.setup('heat-api', host)
+    LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
+             {'host': host, 'port': port})
+    return config.load_paste_app()

@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""WSGI script for heat-api-cfn.
+"""WSGI script for heat-api-cloudwatch.
 
-Script for running heat-api-cfn under Apache2.
+Script for running heat-api-cloudwatch under Apache2.
 """
 
 
@@ -28,22 +28,24 @@ from heat.common import messaging
 from heat.common import profiler
 from heat import version
 
-i18n.enable_lazy()
 
-LOG = logging.getLogger('heat.api.cfn')
+def init_application():
+    i18n.enable_lazy()
 
-logging.register_options(cfg.CONF)
-cfg.CONF(project='heat',
-         prog='heat-api-cfn',
-         version=version.version_info.version_string())
-logging.setup(cfg.CONF, 'heat-api-cfn')
-logging.set_defaults()
-messaging.setup()
+    LOG = logging.getLogger('heat.api.cloudwatch')
 
-port = cfg.CONF.heat_api_cfn.bind_port
-host = cfg.CONF.heat_api_cfn.bind_host
-LOG.info(_LI('Starting Heat API on %(host)s:%(port)s'),
-         {'host': host, 'port': port})
-profiler.setup('heat-api-cfn', host)
+    logging.register_options(cfg.CONF)
+    cfg.CONF(project='heat',
+             prog='heat-api-cloudwatch',
+             version=version.version_info.version_string())
+    logging.setup(cfg.CONF, 'heat-api-cloudwatch')
+    logging.set_defaults()
+    messaging.setup()
 
-application = config.load_paste_app()
+    port = cfg.CONF.heat_api_cloudwatch.bind_port
+    host = cfg.CONF.heat_api_cloudwatch.bind_host
+    LOG.info(_LI('Starting Heat CloudWatch API on %(host)s:%(port)s'),
+             {'host': host, 'port': port})
+    profiler.setup('heat-api-cloudwatch', host)
+
+    return config.load_paste_app()
