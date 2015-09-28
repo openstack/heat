@@ -391,7 +391,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         result = self.controller.index(req, tenant_id=self.tenant)
         self.assertNotIn('count', result)
-        assert not engine.count_stacks.called
+        self.assertFalse(engine.count_stacks.called)
 
     def test_index_with_count_is_invalid(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
