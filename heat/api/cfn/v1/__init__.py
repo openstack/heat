@@ -21,9 +21,7 @@ from heat.common import wsgi
 
 class API(wsgi.Router):
 
-    """
-    WSGI router for Heat CloudFormation v1 API requests.
-    """
+    """WSGI router for Heat CloudFormation v1 API requests."""
 
     _actions = {
         'list': 'ListStacks',

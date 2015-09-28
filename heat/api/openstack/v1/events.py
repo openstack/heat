@@ -74,9 +74,9 @@ def format_event(req, event, keys=None):
 
 
 class EventController(object):
-    """
-    WSGI controller for Events in Heat v1 API
-    Implements the API actions
+    """WSGI controller for Events in Heat v1 API.
+
+    Implements the API actions.
     """
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'events'
@@ -101,9 +101,7 @@ class EventController(object):
 
     @util.identified_stack
     def index(self, req, identity, resource_name=None):
-        """
-        Lists summary information for all events
-        """
+        """Lists summary information for all events."""
         whitelist = {
             'limit': 'single',
             'marker': 'single',
@@ -148,9 +146,7 @@ class EventController(object):
 
     @util.identified_stack
     def show(self, req, identity, resource_name, event_id):
-        """
-        Gets detailed information for an event
-        """
+        """Gets detailed information for an event."""
 
         def event_match(ev):
             identity = identifier.EventIdentifier(**ev[rpc_api.EVENT_ID])
@@ -165,9 +161,7 @@ class EventController(object):
 
 
 def create_resource(options):
-    """
-    Events resource factory method.
-    """
+    """Events resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(EventController(options), deserializer, serializer)

@@ -11,10 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-A filter middleware that inspects the requested URI for a version string
-and/or Accept headers and attempts to negotiate an API controller to
-return
+"""Inspects the requested URI for a version string and/or Accept headers.
+
+Also attempts to negotiate an API controller to return.
 """
 
 import re
@@ -36,8 +35,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
         super(VersionNegotiationFilter, self).__init__(app)
 
     def process_request(self, req):
-        """
-        If there is a version identifier in the URI, simply
+        """Process Accept header or simply return correct API controller.
+
+        If there is a version identifier in the URI,
         return the correct API controller, otherwise, if we
         find an Accept: header, process it
         """
@@ -103,10 +103,10 @@ class VersionNegotiationFilter(wsgi.Middleware):
         return None
 
     def _match_version_string(self, subject, req):
-        """
-        Given a subject string, tries to match a major and/or
-        minor version number. If found, sets the api.major_version
-        and api.minor_version environ variables.
+        """Given a subject, tries to match a major and/or minor version number.
+
+        If found, sets the api.major_version and api.minor_version environ
+        variables.
 
         Returns True if there was a match, false otherwise.
 

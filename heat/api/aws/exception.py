@@ -30,7 +30,7 @@ class HeatAPIException(webob.exc.HTTPError):
     Subclass webob HTTPError so we can correctly serialize the wsgi response
     into the http response body, using the format specified by the request.
     Note this should not be used directly, instead use the subclasses
-    defined below which map to AWS API errors
+    defined below which map to AWS API errors.
     """
 
     code = 400
@@ -189,7 +189,7 @@ class HeatOptInRequiredError(HeatAPIException):
 
 class HeatRequestExpiredError(HeatAPIException):
 
-    """Request expired or more than 15mins in the future.
+    """Request expired or more than 15 minutes in the future.
 
     Request is past expires date or the request date (either with 15 minute
     padding), or the request date occurs more than 15 minutes in the future.

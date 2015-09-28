@@ -22,9 +22,7 @@ from heat.common import wsgi
 
 class API(wsgi.Router):
 
-    """
-    WSGI router for Heat CloudWatch API
-    """
+    """WSGI router for Heat CloudWatch API."""
 
     _actions = {
         'delete_alarms': 'DeleteAlarms',

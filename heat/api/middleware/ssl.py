@@ -26,7 +26,9 @@ cfg.CONF.register_opts(ssl_middleware_opts)
 
 
 class SSLMiddleware(wsgi.Middleware):
-    """A middleware that replaces the request wsgi.url_scheme environment
+    """Replaces request wsgi.url_scheme env variable with value of HTTP header.
+
+    A middleware that replaces the request wsgi.url_scheme environment
     variable with the value of HTTP header configured in
     secure_proxy_ssl_header if exists in the incoming request.
     This is useful if the server is behind a SSL termination proxy.

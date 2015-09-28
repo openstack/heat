@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Stack endpoint for Heat CloudFormation v1 API.
-"""
+"""Stack endpoint for Heat CloudFormation v1 API."""
 
 import socket
 
@@ -38,9 +36,9 @@ LOG = logging.getLogger(__name__)
 
 class StackController(object):
 
-    """
-    WSGI controller for stacks resource in Heat CloudFormation v1 API
-    Implements the API actions
+    """WSGI controller for stacks resource in Heat CloudFormation v1 API.
+
+    Implements the API actions.
     """
 
     def __init__(self, options):
@@ -68,9 +66,9 @@ class StackController(object):
 
     @staticmethod
     def _id_format(resp):
-        """
-        Format the StackId field in the response as an ARN, and process other
-        IDs into the correct format.
+        """Format the StackId field in the response as an ARN.
+
+        Also, process other IDs into the correct format.
         """
         if 'StackId' in resp:
             identity = identifier.HeatIdentifier(**resp['StackId'])
@@ -82,8 +80,7 @@ class StackController(object):
 
     @staticmethod
     def _extract_user_params(params):
-        """
-        Extract a dictionary of user input parameters for the stack
+        """Extract a dictionary of user input parameters for the stack.
 
         In the AWS API parameters, each user parameter appears as two key-value
         pairs with keys of the form below::
@@ -97,8 +94,7 @@ class StackController(object):
                                              valuename='ParameterValue')
 
     def _get_identity(self, con, stack_name):
-        """
-        Generate a stack identifier from the given stack name or ARN.
+        """Generate a stack identifier from the given stack name or ARN.
 
         In the case of a stack name, the identifier will be looked up in the
         engine over RPC.
@@ -109,16 +105,14 @@ class StackController(object):
             return self.rpc_client.identify_stack(con, stack_name)
 
     def list(self, req):
-        """
-        Implements ListStacks API action
-        Lists summary information for all stacks
+        """Implements ListStacks API action.
+
+        Lists summary information for all stacks.
         """
         self._enforce(req, 'ListStacks')
 
         def format_stack_summary(s):
-            """
-            Reformat engine output into the AWS "StackSummary" format
-            """
+            """Reformat engine output into the AWS "StackSummary" format."""
             # Map the engine-api format to the AWS StackSummary datatype
             keymap = {
                 rpc_api.STACK_CREATION_TIME: 'CreationTime',
@@ -154,9 +148,9 @@ class StackController(object):
         return api_utils.format_response('ListStacks', res)
 
     def describe(self, req):
-        """
-        Implements DescribeStacks API action
-        Gets detailed information for a stack (or all stacks)
+        """Implements DescribeStacks API action.
+
+        Gets detailed information for a stack (or all stacks).
         """
         self._enforce(req, 'DescribeStacks')
 
@@ -172,9 +166,9 @@ class StackController(object):
                                 d.items()))
 
             def transform(attrs):
-                """
-                Recursively replace all : with . in dict keys
-                so that they are not interpreted as xml namespaces.
+                """Recursively replace all : with . in dict keys.
+
+                After that they are not interpreted as xml namespaces.
                 """
                 new = replacecolon(attrs)
                 for key, value in new.items():
@@ -185,9 +179,7 @@ class StackController(object):
             return api_utils.reformat_dict_keys(keymap, transform(o))
 
         def format_stack(s):
-            """
-            Reformat engine output into the AWS "StackSummary" format
-            """
+            """Reformat engine output into the AWS "StackSummary" format."""
             keymap = {
                 rpc_api.STACK_CAPABILITIES: 'Capabilities',
                 rpc_api.STACK_CREATION_TIME: 'CreationTime',
@@ -247,9 +239,7 @@ class StackController(object):
         return api_utils.format_response('DescribeStacks', res)
 
     def _get_template(self, req):
-        """
-        Get template file contents, either from local file or URL
-        """
+        """Get template file contents, either from local file or URL."""
         if 'TemplateBody' in req.params:
             LOG.debug('TemplateBody ...')
             return req.params['TemplateBody']
@@ -279,14 +269,14 @@ class StackController(object):
         return self.create_or_update(req, self.UPDATE_STACK)
 
     def create_or_update(self, req, action=None):
-        """
-        Implements CreateStack and UpdateStack API actions.
+        """Implements CreateStack and UpdateStack API actions.
+
         Create or update stack as defined in template file.
         """
         def extract_args(params):
-            """
-            Extract request parameters/arguments and reformat them to match
-            the engine API.  FIXME: we currently only support a subset of
+            """Extract request params and reformat them to match engine API.
+
+            FIXME: we currently only support a subset of
             the AWS defined parameters (both here and in the engine)
             """
             # TODO(shardy) : Capabilities, NotificationARNs
@@ -384,8 +374,8 @@ class StackController(object):
         return api_utils.format_response(action, {})
 
     def get_template(self, req):
-        """
-        Implements the GetTemplate API action.
+        """Implements the GetTemplate API action.
+
         Get the template body for an existing stack.
         """
         self._enforce(req, 'GetTemplate')
@@ -405,9 +395,9 @@ class StackController(object):
                                          {'TemplateBody': templ})
 
     def estimate_template_cost(self, req):
-        """
-        Implements the EstimateTemplateCost API action
-        Get the estimated monthly cost of a template
+        """Implements the EstimateTemplateCost API action.
+
+        Get the estimated monthly cost of a template.
         """
         self._enforce(req, 'EstimateTemplateCost')
 
@@ -418,8 +408,8 @@ class StackController(object):
                                          )
 
     def validate_template(self, req):
-        """
-        Implements the ValidateTemplate API action.
+        """Implements the ValidateTemplate API action.
+
         Validates the specified template.
         """
         self._enforce(req, 'ValidateTemplate')
@@ -443,9 +433,7 @@ class StackController(object):
         LOG.info(_LI('validate_template'))
 
         def format_validate_parameter(key, value):
-            """
-            Reformat engine output into the AWS "ValidateTemplate" format
-            """
+            """Reformat engine output into AWS "ValidateTemplate" format."""
 
             return {
                 'ParameterKey': key,
@@ -467,8 +455,8 @@ class StackController(object):
             return exception.map_remote_error(ex)
 
     def delete(self, req):
-        """
-        Implements the DeleteStack API action.
+        """Implements the DeleteStack API action.
+
         Deletes the specified stack.
         """
         self._enforce(req, 'DeleteStack')
@@ -487,16 +475,14 @@ class StackController(object):
             return api_utils.format_response('DeleteStack', res['Error'])
 
     def events_list(self, req):
-        """
-        Implements the DescribeStackEvents API action.
+        """Implements the DescribeStackEvents API action.
+
         Returns events related to a specified stack (or all stacks).
         """
         self._enforce(req, 'DescribeStackEvents')
 
         def format_stack_event(e):
-            """
-            Reformat engine output into the AWS "StackEvent" format
-            """
+            """Reformat engine output into AWS "StackEvent" format."""
             keymap = {
                 rpc_api.EVENT_ID: 'EventId',
                 rpc_api.EVENT_RES_NAME: 'LogicalResourceId',
@@ -538,8 +524,8 @@ class StackController(object):
         return '_'.join((action, status))
 
     def describe_stack_resource(self, req):
-        """
-        Implements the DescribeStackResource API action.
+        """Implements the DescribeStackResource API action.
+
         Return the details of the given resource belonging to the given stack.
         """
         self._enforce(req, 'DescribeStackResource')
@@ -582,8 +568,8 @@ class StackController(object):
                                          {'StackResourceDetail': result})
 
     def describe_stack_resources(self, req):
-        """
-        Implements the DescribeStackResources API action
+        """Implements the DescribeStackResources API action.
+
         Return details of resources specified by the parameters.
 
         `StackName`: returns all resources belonging to the stack.
@@ -601,9 +587,7 @@ class StackController(object):
         self._enforce(req, 'DescribeStackResources')
 
         def format_stack_resource(r):
-            """
-            Reformat engine output into the AWS "StackResource" format
-            """
+            """Reformat engine output into AWS "StackResource" format."""
             keymap = {
                 rpc_api.RES_DESCRIPTION: 'Description',
                 rpc_api.RES_NAME: 'LogicalResourceId',
@@ -649,16 +633,14 @@ class StackController(object):
                                          {'StackResources': result})
 
     def list_stack_resources(self, req):
-        """
-        Implements the ListStackResources API action
+        """Implements the ListStackResources API action.
+
         Return summary of the resources belonging to the specified stack.
         """
         self._enforce(req, 'ListStackResources')
 
         def format_resource_summary(r):
-            """
-            Reformat engine output into the AWS "StackResourceSummary" format
-            """
+            """Reformat engine output to AWS "StackResourceSummary" format."""
             keymap = {
                 rpc_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
                 rpc_api.RES_NAME: 'LogicalResourceId',
@@ -690,8 +672,6 @@ class StackController(object):
 
 
 def create_resource(options):
-    """
-    Stacks resource factory method.
-    """
+    """Stacks resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     return wsgi.Resource(StackController(options), deserializer)

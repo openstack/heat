@@ -102,9 +102,11 @@ class EC2Token(wsgi.Middleware):
         return '%s/ec2tokens' % auth_uri
 
     def _get_signature(self, req):
-        """
-        Extract the signature from the request, this can be a get/post
-        variable or for v4 also in a header called 'Authorization'
+        """Extract the signature from the request.
+
+        This can be a get/post variable or for v4 also in a header called
+        'Authorization'.
+
         - params['Signature'] == version 0,1,2,3
         - params['X-Amz-Signature'] == version 4
         - header 'Authorization' == version 4
@@ -117,11 +119,11 @@ class EC2Token(wsgi.Middleware):
         return sig
 
     def _get_access(self, req):
-        """
-        Extract the access key identifier, for v 0/1/2/3 this is passed
-        as the AccessKeyId parameter, for version4 it is either and
-        X-Amz-Credential parameter or a Credential= field in the
-        'Authorization' header string
+        """Extract the access key identifier.
+
+        For v 0/1/2/3 this is passed as the AccessKeyId parameter,
+        for version4 it is either and X-Amz-Credential parameter or a
+        Credential= field in the 'Authorization' header string.
         """
         access = req.params.get('AWSAccessKeyId')
         if access is None:
@@ -266,9 +268,7 @@ class EC2Token(wsgi.Middleware):
 
 
 def EC2Token_filter_factory(global_conf, **local_conf):
-    """
-    Factory method for paste.deploy
-    """
+    """Factory method for paste.deploy."""
     conf = global_conf.copy()
     conf.update(local_conf)
 

@@ -70,9 +70,9 @@ def format_resource(req, res, keys=None):
 
 
 class ResourceController(object):
-    """
-    WSGI controller for Resources in Heat v1 API
-    Implements the API actions
+    """WSGI controller for Resources in Heat v1 API.
+
+    Implements the API actions.
     """
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'resource'
@@ -93,9 +93,7 @@ class ResourceController(object):
 
     @util.identified_stack
     def index(self, req, identity):
-        """
-        Lists information for all resources
-        """
+        """Lists information for all resources."""
         nested_depth = self._extract_to_param(req,
                                               rpc_api.PARAM_NESTED_DEPTH,
                                               param_utils.extract_int,
@@ -114,9 +112,7 @@ class ResourceController(object):
 
     @util.identified_stack
     def show(self, req, identity, resource_name):
-        """
-        Gets detailed information for a resource
-        """
+        """Gets detailed information for a resource."""
 
         whitelist = {'with_attr': 'multi'}
         params = util.get_allowed_params(req.params, whitelist)
@@ -129,9 +125,7 @@ class ResourceController(object):
 
     @util.identified_stack
     def metadata(self, req, identity, resource_name):
-        """
-        Gets metadata information for a resource
-        """
+        """Gets metadata information for a resource."""
 
         res = self.rpc_client.describe_stack_resource(req.context,
                                                       identity,
@@ -148,9 +142,7 @@ class ResourceController(object):
 
 
 def create_resource(options):
-    """
-    Resources resource factory method.
-    """
+    """Resources resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(ResourceController(options), deserializer, serializer)
