@@ -174,16 +174,22 @@ class ClientPlugin(object):
     def ignore_not_found(self, ex):
         """Raises the exception unless it is a not-found."""
         if not self.is_not_found(ex):
-            exc_info = sys.exc_info()
-            six.reraise(*exc_info)
+            exc_type, exc_val, traceback = sys.exc_info()
+            if exc_val is ex:
+                six.reraise(exc_type, exc_val, traceback)
+            else:
+                raise ex
 
     def ignore_conflict_and_not_found(self, ex):
         """Raises the exception unless it is a conflict or not-found."""
         if self.is_conflict(ex) or self.is_not_found(ex):
             return
         else:
-            exc_info = sys.exc_info()
-            six.reraise(*exc_info)
+            exc_type, exc_val, traceback = sys.exc_info()
+            if exc_val is ex:
+                six.reraise(exc_type, exc_val, traceback)
+            else:
+                raise ex
 
     def _get_client_args(self,
                          service_name,
