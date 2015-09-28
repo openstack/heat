@@ -30,7 +30,8 @@ _CODE_NAMES = {'2013.1': 'Grizzly',
                '2014.1': 'Icehouse',
                '2014.2': 'Juno',
                '2015.1': 'Kilo',
-               '5.0.0': 'Liberty'}
+               '5.0.0': 'Liberty',
+               '6.0.0': 'Mitaka'}
 
 all_resources = {}
 
