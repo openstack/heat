@@ -28,7 +28,7 @@ class ClientManager(object):
     calling various OpenStack APIs.
     """
 
-    CINDERCLIENT_VERSION = '1'
+    CINDERCLIENT_VERSION = '2'
     HEATCLIENT_VERSION = '1'
     NOVACLIENT_VERSION = '2'
     CEILOMETER_VERSION = '2'
