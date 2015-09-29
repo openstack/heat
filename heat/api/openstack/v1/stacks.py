@@ -618,7 +618,10 @@ class StackSerializer(serializers.JSONResponseSerializer):
 
     def _populate_response_header(self, response, location, status):
         response.status = status
-        response.headers['Location'] = location
+        if six.PY2:
+            response.headers['Location'] = location.encode('utf-8')
+        else:
+            response.headers['Location'] = location
         response.headers['Content-Type'] = 'application/json'
         return response
 
