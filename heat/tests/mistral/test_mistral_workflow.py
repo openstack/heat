@@ -636,3 +636,26 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual(False, task['keep-result'])
 
         return [FakeWorkflow('create_vm')]
+
+    def test_mistal_workflow_refid(self):
+        tmpl = template_format.parse(workflow_template)
+        stack = utils.parse_stack(tmpl, stack_name='test')
+        rsrc = stack['workflow']
+        rsrc.uuid = '4c885bde-957e-4758-907b-c188a487e908'
+        rsrc.id = 'mockid'
+        rsrc.action = 'CREATE'
+        self.assertEqual('test-workflow-owevpzgiqw66', rsrc.FnGetRefId())
+
+    def test_mistal_workflow_refid_convergence_cache_data(self):
+        tmpl = template_format.parse(workflow_template)
+        cache_data = {'workflow': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(tmpl, stack_name='test',
+                                  cache_data=cache_data)
+        rsrc = stack['workflow']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())

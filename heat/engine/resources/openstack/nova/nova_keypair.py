@@ -129,7 +129,7 @@ class KeyPair(resource.Resource):
                    self.PUBLIC_KEY_ATTR: self.public_key}
         return six.text_type(attr_fn[key])
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.resource_id
 
 

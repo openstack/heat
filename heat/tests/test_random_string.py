@@ -13,6 +13,7 @@
 
 import re
 
+import mock
 import six
 from testtools import matchers
 
@@ -153,6 +154,19 @@ Resources:
         # Prove the name is returned before create sets the ID
         secret6.resource_id = None
         self.assertEqual('secret6', secret6.FnGetRefId())
+
+    def test_random_string_refid_convergence_cache_data(self):
+        t = template_format.parse(self.template_random_string)
+        cache_data = {'secret1': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['secret1']
+        self.assertEqual('xyz', rsrc.FnGetRefId())
 
     def test_invalid_length(self):
         template_random_string = '''

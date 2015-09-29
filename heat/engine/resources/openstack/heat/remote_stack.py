@@ -300,7 +300,7 @@ class RemoteStack(resource.Resource):
             return dict((output['output_key'], output['output_value'])
                         for output in outputs)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.resource_id
 
 

@@ -132,7 +132,7 @@ class SwiftSignalHandle(resource.Resource):
 
         self.data_delete(self.ENDPOINT)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self.data().get(self.ENDPOINT)
 
 

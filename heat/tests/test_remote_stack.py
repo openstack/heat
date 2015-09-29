@@ -140,7 +140,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.old_clients = None
 
         def unset_clients_property():
-            type(self.this_context).clients = self.old_clients
+            if self.this_context is not None:
+                type(self.this_context).clients = self.old_clients
 
         self.addCleanup(unset_clients_property)
 
@@ -659,3 +660,23 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.heat.stacks.get = mock.MagicMock(side_effect=stacks)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+    def test_remote_stack_refid(self):
+        t = template_format.parse(parent_stack_template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['remote_stack']
+        rsrc.resource_id = 'xyz'
+        self.assertEqual('xyz', rsrc.FnGetRefId())
+
+    def test_remote_stack_refid_convergence_cache_data(self):
+        t = template_format.parse(parent_stack_template)
+        cache_data = {'remote_stack': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['remote_stack']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
