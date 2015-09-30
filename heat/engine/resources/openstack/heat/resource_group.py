@@ -373,7 +373,7 @@ class ResourceGroup(stack_resource.StackResource):
         checkers[0].start()
         return checkers
 
-    def check_create_complete(self, checkers):
+    def check_create_complete(self, checkers=None):
         if checkers is None:
             return super(ResourceGroup, self).check_create_complete()
         for checker in checkers:
