@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import clients
 from heat.engine import constraints
@@ -65,7 +64,7 @@ class MonascaAlarmDefinition(resource.Resource):
         EXPRESSION: properties.Schema(
             properties.Schema.STRING,
             _('Expression of the alarm to evaluate.'),
-            update_allowed=True,
+            update_allowed=False,
             required=True
         ),
         MATCH_BY: properties.Schema(
@@ -161,9 +160,6 @@ class MonascaAlarmDefinition(resource.Resource):
         if prop_diff.get(self.DESCRIPTION):
             args['description'] = prop_diff.get(self.DESCRIPTION)
 
-        if prop_diff.get(self.EXPRESSION):
-            args['expression'] = prop_diff.get(self.EXPRESSION)
-
         if prop_diff.get(self.SEVERITY):
             args['severity'] = prop_diff.get(self.SEVERITY)
 
@@ -181,13 +177,7 @@ class MonascaAlarmDefinition(resource.Resource):
         if prop_diff.get(self.ACTIONS_ENABLED):
             args['actions_enabled'] = prop_diff.get(self.ACTIONS_ENABLED)
 
-        if len(args) > 1:
-            try:
-                self.client().alarm_definitions.patch(**args)
-            except Exception as ex:
-                if self.client_plugin().is_un_processable(ex):
-                    # Monasca does not allow to update the sub expression
-                    raise exception.UpdateReplace(resource_name=self.name)
+        self.client().alarm_definitions.patch(**args)
 
     def handle_delete(self):
         if self.resource_id is not None:
