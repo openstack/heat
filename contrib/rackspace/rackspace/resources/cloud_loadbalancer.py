@@ -461,6 +461,10 @@ class CloudLoadBalancer(resource.Resource):
         )
     }
 
+    ACTIVE_STATUS = 'ACTIVE'
+    DELETED_STATUS = 'DELETED'
+    PENDING_DELETE_STATUS = 'PENDING_DELETE'
+
     def __init__(self, name, json_snippet, stack):
         super(CloudLoadBalancer, self).__init__(name, json_snippet, stack)
         self.clb = self.cloud_lb()
@@ -498,10 +502,10 @@ class CloudLoadBalancer(resource.Resource):
 
         return (session_persistence, connection_logging, metadata)
 
-    def _check_status(self, loadbalancer, status_list):
+    def _check_active(self):
         """Update the loadbalancer state, check the status."""
-        loadbalancer.get()
-        if loadbalancer.status in status_list:
+        loadbalancer = self.clb.get(self.resource_id)
+        if loadbalancer.status == self.ACTIVE_STATUS:
             return True
         else:
             return False
@@ -523,17 +527,17 @@ class CloudLoadBalancer(resource.Resource):
         These properties can only be set after the load balancer is created.
         """
         if self.properties[self.ACCESS_LIST]:
-            while not self._check_status(loadbalancer, ['ACTIVE']):
+            while not self._check_active():
                 yield
             loadbalancer.add_access_list(self.properties[self.ACCESS_LIST])
 
         if self.properties[self.ERROR_PAGE]:
-            while not self._check_status(loadbalancer, ['ACTIVE']):
+            while not self._check_active():
                 yield
             loadbalancer.set_error_page(self.properties[self.ERROR_PAGE])
 
         if self.properties[self.SSL_TERMINATION]:
-            while not self._check_status(loadbalancer, ['ACTIVE']):
+            while not self._check_active():
                 yield
             ssl_term = self.properties[self.SSL_TERMINATION]
             loadbalancer.add_ssl_termination(
@@ -547,13 +551,13 @@ class CloudLoadBalancer(resource.Resource):
                     self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY])
 
         if self._valid_HTTPS_redirect_with_HTTP_prot():
-            while not self._check_status(loadbalancer, ['ACTIVE']):
+            while not self._check_active():
                 yield
             loadbalancer.update(httpsRedirect=True)
 
         if self.CONTENT_CACHING in self.properties:
             enabled = self.properties[self.CONTENT_CACHING] == 'ENABLED'
-            while not self._check_status(loadbalancer, ['ACTIVE']):
+            while not self._check_active():
                 yield
             loadbalancer.content_caching = enabled
 
@@ -625,11 +629,11 @@ class CloudLoadBalancer(resource.Resource):
         return loadbalancer
 
     def check_create_complete(self, loadbalancer):
-        return self._check_status(loadbalancer, ['ACTIVE'])
+        return self._check_active()
 
     def handle_check(self):
         loadbalancer = self.clb.get(self.resource_id)
-        if not self._check_status(loadbalancer, ['ACTIVE']):
+        if not self._check_active():
             raise exception.Error(_("Cloud LoadBalancer is not ACTIVE "
                                     "(was: %s)") % loadbalancer.status)
 
@@ -879,28 +883,30 @@ class CloudLoadBalancer(resource.Resource):
                 return False
         return True
 
-    def handle_delete(self):
-        @retry_if_immutable
-        def delete_lb(lb):
-            lb.delete()
-
+    def check_delete_complete(self, *args):
         if self.resource_id is None:
-            return
+            return True
+
         try:
             loadbalancer = self.clb.get(self.resource_id)
         except NotFound:
-            pass
-        else:
-            if loadbalancer.status != 'DELETED':
-                task = scheduler.TaskRunner(delete_lb, loadbalancer)
-                task.start()
-                return task
+            return True
 
-    def check_delete_complete(self, task):
-        if task and not task.step():
+        if loadbalancer.status == self.DELETED_STATUS:
+            return True
+
+        elif loadbalancer.status == self.PENDING_DELETE_STATUS:
             return False
 
-        return True
+        else:
+            try:
+                loadbalancer.delete()
+            except Exception as exc:
+                if lb_immutable(exc):
+                    return False
+                raise
+
+        return False
 
     def _remove_none(self, property_dict):
         """Remove None values that would cause schema validation problems.

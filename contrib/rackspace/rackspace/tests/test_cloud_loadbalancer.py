@@ -117,6 +117,10 @@ LpTt0Xs1OFZxaNpolW5Qis4os7UmmIRV
 -----END PRIVATE KEY-----"""
 
 
+class FakeException(Exception):
+    pass
+
+
 class FakeClient(object):
     user_agent = "Fake"
     USER_AGENT = "Fake"
@@ -349,9 +353,17 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc = LoadBalancerWithFakeClient(resource_name,
                                           resource_defns[resource_name],
                                           stack)
-        self.m.StubOutWithMock(rsrc.clb, 'create')
+
         fake_loadbalancer = FakeLoadBalancer(name=lb_name)
+        fake_loadbalancer.status = 'ACTIVE'
+
+        self.m.StubOutWithMock(rsrc.clb, 'create')
         rsrc.clb.create(lb_name, **lb_body).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            fake_loadbalancer)
+
         return (rsrc, fake_loadbalancer)
 
     def _get_first_resource_name(self, templ):
@@ -367,11 +379,6 @@ class LoadBalancerTest(common.HeatTestCase):
                                                         lb_template),
                                                     expected_name,
                                                     expected_body)
-        self.m.StubOutWithMock(fake_loadbalancer, 'get')
-        fake_loadbalancer.get().MultipleTimes().AndReturn(None)
-
-        fake_loadbalancer.status = 'ACTIVE'
-
         return (rsrc, fake_loadbalancer)
 
     def _set_template(self, templ, **kwargs):
@@ -698,9 +705,6 @@ class LoadBalancerTest(common.HeatTestCase):
              "port": 80,
              "condition": "ENABLED"}]
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
         fake_loadbalancer.add_nodes([
             fake_loadbalancer.Node(address=expected_ip,
@@ -721,9 +725,6 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.m.VerifyAll()
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.ReplayAll()
         self.assertRaises(ValueError, rsrc.handle_update, {}, {}, deleted_node)
@@ -747,8 +748,6 @@ class LoadBalancerTest(common.HeatTestCase):
                                                        id='test-id')]
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
         expected = [{
             'ip_version': 'IPv6',
             'type': 'PUBLIC',
@@ -778,9 +777,6 @@ class LoadBalancerTest(common.HeatTestCase):
             {"addresses": ["2.2.2.2"], "port": 80, "condition": "DISABLED"},
             {"addresses": [expected_ip], "port": 80, "condition": "ENABLED"},
         ]
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         msg = ("Load Balancer is immutable. Status: 'PENDING_UPDATE'")
         exc = Exception(msg)
@@ -817,9 +813,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['name'] = "updated_name"
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         msg = ("Load Balancer '%s' has a status of 'PENDING_UPDATE' and "
                "is considered immutable." % rsrc.resource_id)
@@ -841,9 +834,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['name'] = "updated_name"
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(name="updated_name")
 
@@ -863,9 +853,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template['Properties']['name'] = "updated_name"
         update_template['Properties']['algorithm'] = "RANDOM"
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(name="updated_name", algorithm="RANDOM")
 
@@ -884,9 +871,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['algorithm'] = "RANDOM"
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(algorithm="RANDOM")
 
@@ -904,9 +888,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['protocol'] = "IMAPS"
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(protocol="IMAPS")
@@ -931,9 +912,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['httpsRedirect'] = True
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(httpsRedirect=True)
@@ -991,9 +969,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['halfClosed'] = True
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(halfClosed=True)
 
@@ -1012,9 +987,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['port'] = 1234
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(port=1234)
 
@@ -1032,9 +1004,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['timeout'] = 120
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(timeout=120)
@@ -1057,9 +1026,6 @@ class LoadBalancerTest(common.HeatTestCase):
             'attemptsBeforeDeactivation': 4, 'path': "/",
             'statusRegex': "^[234][0-9][0-9]$", 'bodyRegex': ".* testing .*",
             'hostHeader': "example.com"}
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'add_health_monitor')
         fake_loadbalancer.add_health_monitor(
@@ -1092,9 +1058,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['healthMonitor']
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'delete_health_monitor')
         fake_loadbalancer.delete_health_monitor()
 
@@ -1113,9 +1076,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['sessionPersistence'] = 'SOURCE_IP'
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.ReplayAll()
 
@@ -1141,9 +1101,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['sessionPersistence']
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.update, update_template)()
@@ -1162,9 +1119,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template['Properties']['sslTermination'] = {
             'securePort': 443, 'privatekey': private_key, 'certificate': cert,
             'secureTrafficOnly': False}
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'add_ssl_termination')
         fake_loadbalancer.add_ssl_termination(
@@ -1194,9 +1148,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['sslTermination']
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'delete_ssl_termination')
         fake_loadbalancer.delete_ssl_termination()
 
@@ -1215,9 +1166,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['metadata'] = {'a': 1, 'b': 2}
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'set_metadata')
         fake_loadbalancer.set_metadata({'a': 1, 'b': 2})
@@ -1245,9 +1193,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['metadata']
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'delete_metadata')
         fake_loadbalancer.delete_metadata()
 
@@ -1270,9 +1215,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['errorPage'] = error_page
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'set_error_page')
         fake_loadbalancer.set_error_page(error_page)
@@ -1301,9 +1243,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['errorPage']
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'clear_error_page')
         fake_loadbalancer.clear_error_page()
 
@@ -1322,9 +1261,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['connectionLogging'] = True
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
@@ -1348,9 +1284,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['connectionLogging']
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.ReplayAll()
 
@@ -1376,9 +1309,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['connectionLogging'] = False
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.update, update_template)()
@@ -1396,9 +1326,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['connectionThrottle'] = {
             'maxConnections': 1000}
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'add_connection_throttle')
         fake_loadbalancer.add_connection_throttle(
@@ -1428,9 +1355,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['connectionThrottle']
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.StubOutWithMock(fake_loadbalancer, 'delete_connection_throttle')
         fake_loadbalancer.delete_connection_throttle()
 
@@ -1449,9 +1373,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['contentCaching'] = 'ENABLED'
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.ReplayAll()
 
@@ -1476,9 +1397,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['contentCaching']
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.ReplayAll()
 
@@ -1505,9 +1423,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['contentCaching'] = 'DISABLED'
 
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
         self.m.ReplayAll()
 
         self.assertEqual(True, fake_loadbalancer.content_caching)
@@ -1525,12 +1440,15 @@ class LoadBalancerTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.m.VerifyAll()
 
+        self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_lb)
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb)
+        rsrc.clb.get(mox.IgnoreArg()).AndRaise(lb.NotFound('foo'))
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
 
     def test_delete_immutable(self):
         template = self._set_template(self.lb_template,
@@ -1538,37 +1456,71 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc, fake_lb = self._mock_loadbalancer(template, self.lb_name,
                                                 self.expected_body)
         self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        self.m.VerifyAll()
 
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_lb)
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb)
+        rsrc.clb.get(mox.IgnoreArg()).AndRaise(lb.NotFound('foo'))
+
         self.m.StubOutWithMock(fake_lb, 'delete')
         fake_lb.delete().AndRaise(Exception('immutable'))
-        fake_lb.delete().AndReturn(None)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
 
-    def test_check_delete_complete(self):
-        mock_stack = mock.Mock()
-        mock_stack.db_resource_get.return_value = None
-        mock_stack.has_cache_data.return_value = False
-        mock_resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
-        mock_loadbalancer = lb.CloudLoadBalancer("test", mock_resdef,
-                                                 mock_stack)
+    def test_delete_non_immutable_exc(self):
+        template = self._set_template(self.lb_template,
+                                      contentCaching='ENABLED')
+        rsrc, fake_lb = self._mock_loadbalancer(template, self.lb_name,
+                                                self.expected_body)
+        self.m.ReplayAll()
 
-        mock_task = mock.Mock()
-        mock_task.step.return_value = False
+        scheduler.TaskRunner(rsrc.create)()
 
-        res = mock_loadbalancer.check_delete_complete(mock_task)
-        self.assertFalse(res)
+        self.m.UnsetStubs()
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb)
 
-        mock_task.step.return_value = True
+        self.m.StubOutWithMock(fake_lb, 'delete')
+        fake_lb.delete().AndRaise(FakeException())
+        self.m.ReplayAll()
 
-        res = mock_loadbalancer.check_delete_complete(mock_task)
-        self.assertTrue(res)
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(rsrc.delete))
+        self.assertIn('FakeException', six.text_type(exc))
+        self.m.VerifyAll()
+
+    def test_delete_states(self):
+        template = self._set_template(self.lb_template,
+                                      contentCaching='ENABLED')
+        rsrc, fake_lb = self._mock_loadbalancer(template, self.lb_name,
+                                                self.expected_body)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.m.UnsetStubs()
+        fake_lb1 = copy.deepcopy(fake_lb)
+        fake_lb2 = copy.deepcopy(fake_lb)
+        fake_lb3 = copy.deepcopy(fake_lb)
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+
+        fake_lb1.status = 'ACTIVE'
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb1)
+        fake_lb2.status = 'PENDING_DELETE'
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb2)
+        fake_lb3.status = 'DELETED'
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb3)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
 
     def test_redir(self):
         mock_stack = mock.Mock()
@@ -1668,9 +1620,6 @@ class LoadBalancerTest(common.HeatTestCase):
             {"addresses": [expected_ip],
              "port": 80,
              "condition": "DRAINING"}]
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
 
         self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
         fake_loadbalancer.add_nodes([
