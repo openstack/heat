@@ -720,7 +720,7 @@ class EngineService(service.Service):
 
         return dict(stack.identifier())
 
-    def _prepare_stack_updates(self, cnxt, current_stack, tmpl, params,
+    def _prepare_stack_updates(self, cnxt, current_stack, template, params,
                                files, args):
         """Return the current and updated stack.
 
@@ -729,66 +729,11 @@ class EngineService(service.Service):
 
         :param cnxt: RPC context.
         :param stack: A stack to be updated.
-        :param tmpl: Template object of stack you want to update to.
+        :param template: Template of stack you want to update to.
         :param params: Stack Input Params
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
         """
-        max_resources = cfg.CONF.max_resources_per_stack
-        if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
-            raise exception.RequestLimitExceeded(
-                message=exception.StackResourceLimitExceeded.msg_fmt)
-
-        stack_name = current_stack.name
-        current_kwargs = current_stack.get_kwargs_for_cloning()
-
-        common_params = api.extract_args(args)
-        common_params.setdefault(rpc_api.PARAM_TIMEOUT,
-                                 current_stack.timeout_mins)
-        common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
-                                 current_stack.disable_rollback)
-
-        current_kwargs.update(common_params)
-        updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     **current_kwargs)
-        self.resource_enforcer.enforce_stack(updated_stack)
-        updated_stack.parameters.set_stack_id(current_stack.identifier())
-
-        self._validate_deferred_auth_context(cnxt, updated_stack)
-        updated_stack.validate()
-
-        return current_stack, updated_stack
-
-    @context.request_context
-    def update_stack(self, cnxt, stack_identity, template, params,
-                     files, args):
-        """Updates an existing stack based on the provided template and params.
-
-        Note that at this stage the template has already been fetched from the
-        heat-api process if using a template-url.
-
-        :param cnxt: RPC context.
-        :param stack_identity: Name of the stack you want to create.
-        :param template: Template of stack you want to create.
-        :param params: Stack Input Params
-        :param files: Files referenced from the template
-        :param args: Request parameters/args passed from API
-        """
-        # Get the database representation of the existing stack
-        db_stack = self._get_stack(cnxt, stack_identity)
-        LOG.info(_LI('Updating stack %s'), db_stack.name)
-
-        current_stack = parser.Stack.load(cnxt, stack=db_stack)
-        self.resource_enforcer.enforce_stack(current_stack)
-
-        if current_stack.action == current_stack.SUSPEND:
-            msg = _('Updating a stack when it is suspended')
-            raise exception.NotSupported(feature=msg)
-
-        if current_stack.action == current_stack.DELETE:
-            msg = _('Updating a stack when it is deleting')
-            raise exception.NotSupported(feature=msg)
-
         # Now parse the template and any parameters for the updated
         # stack definition.  If PARAM_EXISTING is specified, we merge
         # any environment provided into the existing one and attempt
@@ -837,8 +782,63 @@ class EngineService(service.Service):
 
         tmpl = templatem.Template(new_template, files=new_files, env=new_env)
 
-        current_stack, updated_stack = self._prepare_stack_updates(
-            cnxt, current_stack, tmpl, params, files, args)
+        max_resources = cfg.CONF.max_resources_per_stack
+        if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
+            raise exception.RequestLimitExceeded(
+                message=exception.StackResourceLimitExceeded.msg_fmt)
+
+        stack_name = current_stack.name
+        current_kwargs = current_stack.get_kwargs_for_cloning()
+
+        common_params = api.extract_args(args)
+        common_params.setdefault(rpc_api.PARAM_TIMEOUT,
+                                 current_stack.timeout_mins)
+        common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
+                                 current_stack.disable_rollback)
+
+        current_kwargs.update(common_params)
+        updated_stack = parser.Stack(cnxt, stack_name, tmpl,
+                                     **current_kwargs)
+        self.resource_enforcer.enforce_stack(updated_stack)
+        updated_stack.parameters.set_stack_id(current_stack.identifier())
+
+        self._validate_deferred_auth_context(cnxt, updated_stack)
+        updated_stack.validate()
+
+        return tmpl, current_stack, updated_stack
+
+    @context.request_context
+    def update_stack(self, cnxt, stack_identity, template, params,
+                     files, args):
+        """Updates an existing stack based on the provided template and params.
+
+        Note that at this stage the template has already been fetched from the
+        heat-api process if using a template-url.
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to create.
+        :param template: Template of stack you want to create.
+        :param params: Stack Input Params
+        :param files: Files referenced from the template
+        :param args: Request parameters/args passed from API
+        """
+        # Get the database representation of the existing stack
+        db_stack = self._get_stack(cnxt, stack_identity)
+        LOG.info(_LI('Updating stack %s'), db_stack.name)
+
+        current_stack = parser.Stack.load(cnxt, stack=db_stack)
+        self.resource_enforcer.enforce_stack(current_stack)
+
+        if current_stack.action == current_stack.SUSPEND:
+            msg = _('Updating a stack when it is suspended')
+            raise exception.NotSupported(feature=msg)
+
+        if current_stack.action == current_stack.DELETE:
+            msg = _('Updating a stack when it is deleting')
+            raise exception.NotSupported(feature=msg)
+
+        tmpl, current_stack, updated_stack = self._prepare_stack_updates(
+            cnxt, current_stack, template, params, files, args)
 
         if current_stack.convergence:
             current_stack.converge_stack(template=tmpl,
@@ -878,17 +878,8 @@ class EngineService(service.Service):
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
-        # Now parse the template and any parameters for the updated
-        # stack definition.
-        env = environment.Environment(params)
-        if args.get(rpc_api.PARAM_EXISTING, None):
-            env.patch_previous_parameters(
-                current_stack.env,
-                args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
-        tmpl = templatem.Template(template, files=files, env=env)
-
-        current_stack, updated_stack = self._prepare_stack_updates(
-            cnxt, current_stack, tmpl, params, files, args)
+        tmpl, current_stack, updated_stack = self._prepare_stack_updates(
+            cnxt, current_stack, template, params, files, args)
 
         update_task = update.StackUpdate(current_stack, updated_stack, None)
 

@@ -214,6 +214,12 @@ class API(wsgi.Router):
                         'method': 'PUT'
                     },
                     {
+                        'name': 'preview_stack_update_patch',
+                        'url': '/stacks/{stack_name}/{stack_id}/preview',
+                        'action': 'preview_update_patch',
+                        'method': 'PATCH'
+                    },
+                    {
                         'name': 'stack_delete',
                         'url': '/stacks/{stack_name}/{stack_id}',
                         'action': 'delete',
