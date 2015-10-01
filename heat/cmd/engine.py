@@ -12,10 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Heat Engine Server.  This does the work of actually implementing the API
-calls made by the user.  Normal communications is done via the heat API
-which then calls into this engine.
+"""Heat Engine Server.
+
+This does the work of actually implementing the API calls made by the user.
+Normal communications is done via the heat API which then calls into this
+engine.
 """
 
 import eventlet

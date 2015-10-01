@@ -12,10 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Heat API Server.  This implements an approximation of the Amazon
-CloudWatch API and translates it into a native representation.  It then
-calls the heat-engine via AMQP RPC to implement them.
+"""Heat API Server.
+
+This implements an approximation of the Amazon CloudWatch API and translates it
+into a native representation. It then calls the heat-engine via AMQP RPC to
+implement them.
 """
 
 import eventlet

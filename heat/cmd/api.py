@@ -12,8 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Heat API Server. An OpenStack ReST API to Heat.
+"""Heat API Server.
+
+An OpenStack ReST API to Heat.
 """
 
 import eventlet
