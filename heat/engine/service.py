@@ -1808,7 +1808,8 @@ class EngineService(service.Service):
         filters = {rpc_api.STACK_STATUS: parser.Stack.IN_PROGRESS}
         stacks = stack_object.Stack.get_all(cnxt,
                                             filters=filters,
-                                            tenant_safe=False) or []
+                                            tenant_safe=False,
+                                            show_nested=True) or []
         for s in stacks:
             lock = stack_lock.StackLock(cnxt, s.id, self.engine_id)
             # If stacklock is released, means stack status may changed.
