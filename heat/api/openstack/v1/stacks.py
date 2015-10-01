@@ -503,6 +503,22 @@ class StackController(object):
         return {'resource_changes': changes}
 
     @util.identified_stack
+    def preview_update_patch(self, req, identity, body):
+        """Preview PATCH update for existing stack."""
+        data = InstantiationData(body, patch=True)
+
+        args = self.prepare_args(data)
+        changes = self.rpc_client.preview_update_stack(
+            req.context,
+            identity,
+            data.template(),
+            data.environment(),
+            data.files(),
+            args)
+
+        return {'resource_changes': changes}
+
+    @util.identified_stack
     def delete(self, req, identity):
         """
         Delete the specified stack

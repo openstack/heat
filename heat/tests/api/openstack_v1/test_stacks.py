@@ -1200,6 +1200,46 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual({'resource_changes': resource_changes}, result)
         self.m.VerifyAll()
 
+    def test_preview_update_stack_patch(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'preview_update_patch', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': None,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': 30}
+
+        req = self._patch('/stacks/%(stack_name)s/%(stack_id)s/preview' %
+                          identity, json.dumps(body))
+        resource_changes = {'updated': [],
+                            'deleted': [],
+                            'unchanged': [],
+                            'added': [],
+                            'replaced': []}
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('preview_update_stack',
+             {'stack_identity': dict(identity),
+              'template': None,
+              'params': {'parameters': parameters,
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'resource_registry': {}},
+              'files': {},
+              'args': {rpc_api.PARAM_EXISTING: True,
+                       'timeout_mins': 30}}),
+            version='1.15'
+        ).AndReturn(resource_changes)
+        self.m.ReplayAll()
+
+        result = self.controller.preview_update_patch(
+            req, tenant_id=identity.tenant, stack_name=identity.stack_name,
+            stack_id=identity.stack_id, body=body)
+        self.assertEqual({'resource_changes': resource_changes}, result)
+        self.m.VerifyAll()
+
     def test_lookup(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'lookup', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
