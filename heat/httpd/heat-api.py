@@ -12,10 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""WSGI script for heat-api
+"""WSGI script for heat-api.
 
-Script for running heat-api under Apache2
-
+Script for running heat-api under Apache2.
 """
 
 
