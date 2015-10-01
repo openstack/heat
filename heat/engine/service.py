@@ -1578,7 +1578,8 @@ class EngineService(service.Service):
         filters = {'status': parser.Stack.IN_PROGRESS}
         stacks = stack_object.Stack.get_all(cnxt,
                                             filters=filters,
-                                            tenant_safe=False) or []
+                                            tenant_safe=False,
+                                            show_nested=True) or []
         for s in stacks:
             stk = parser.Stack.load(cnxt, stack=s,
                                     use_stored_context=True)
