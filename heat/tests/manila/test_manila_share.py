@@ -53,7 +53,6 @@ class DummyShare(object):
         self.created_at = 'ca'
         self.status = 's'
         self.project_id = 'p_id'
-        self.to_dict = lambda: {'attr': 'val'}
 
 
 class ManilaShareTest(common.HeatTestCase):
@@ -122,6 +121,7 @@ class ManilaShareTest(common.HeatTestCase):
                          "Metadata" + message_end)
         self.assertTrue(kwargs["is_public"])
         share.client().shares.get.assert_called_once_with(self.fake_share.id)
+        self.assertEqual('shares', share.entity)
 
     def test_share_create_fail(self):
         share = self._init_share("stack_share_create_fail")
@@ -225,4 +225,3 @@ class ManilaShareTest(common.HeatTestCase):
         self.assertEqual('ca', share.FnGetAtt('created_at'))
         self.assertEqual('s', share.FnGetAtt('status'))
         self.assertEqual('p_id', share.FnGetAtt('project_id'))
-        self.assertEqual({'attr': 'val'}, share.FnGetAtt('show'))
