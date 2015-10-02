@@ -20,8 +20,8 @@ Unit Tests for heat.rpc.client
 import copy
 
 import mock
+from mox import stubout
 from oslo_messaging._drivers import common as rpc_common
-import stubout
 
 from heat.common import exception
 from heat.common import identifier
