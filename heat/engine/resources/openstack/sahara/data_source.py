@@ -42,9 +42,9 @@ class DataSource(resource.Resource):
     )
 
     _DATA_SOURCE_TYPES = (
-        SWIFT, HDFS, MAPRFS
+        SWIFT, HDFS, MAPRFS, MANILA
     ) = (
-        'swift', 'hdfs', 'maprfs'
+        'swift', 'hdfs', 'maprfs', 'manila'
     )
 
     properties_schema = {
