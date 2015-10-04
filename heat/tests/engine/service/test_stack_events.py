@@ -109,6 +109,7 @@ class StackEventTest(common.HeatTestCase):
 
         result = self.eng.update_stack(self.ctx, self.stack.identifier(),
                                        new_tmpl, None, None, {})
+        self.stack._persist_state()
 
         # The self.stack reference needs to be updated. Since the underlying
         # stack is updated in update_stack, the original reference is now
@@ -120,7 +121,7 @@ class StackEventTest(common.HeatTestCase):
         self.assertTrue(result['stack_id'])
         events = self.eng.list_events(self.ctx, self.stack.identifier())
 
-        self.assertEqual(10, len(events))
+        self.assertEqual(11, len(events))
 
         for ev in events:
             self.assertIn('event_identity', ev)

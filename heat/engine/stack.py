@@ -706,7 +706,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):
-        """Update the stack state in the database."""
+        """Update the stack state."""
         if action not in self.ACTIONS:
             raise ValueError(_("Invalid action %s") % action)
 
@@ -717,22 +717,47 @@ class Stack(collections.Mapping):
         self.status = status
         self.status_reason = reason
 
+        # Persist state to db only if status == IN_PROGRESS
+        # or action == self.DELETE/self.ROLLBACK. Else, it would
+        # be done before releasing the stack lock.
+        if status == self.IN_PROGRESS or action in (
+                self.DELETE, self.ROLLBACK):
+            self._persist_state()
+
+    def _persist_state(self):
+        """Persist stack state to database"""
         if self.id is None:
             return
-
         stack = stack_object.Stack.get_by_id(self.context, self.id)
         if stack is not None:
-            notification.send(self)
-            self._add_event(action, status, reason)
-            LOG.info(_LI('Stack %(action)s %(status)s (%(name)s): '
-                         '%(reason)s'),
-                     {'action': action,
-                      'status': status,
-                      'name': self.name,
-                      'reason': reason})
-            stack.update_and_save({'action': action,
-                                   'status': status,
-                                   'status_reason': reason})
+            values = {'action': self.action,
+                      'status': self.status,
+                      'status_reason': self.status_reason}
+            self._send_notification_and_add_event()
+            stack.update_and_save(values)
+
+    def _send_notification_and_add_event(self):
+        notification.send(self)
+        self._add_event(self.action, self.status, self.status_reason)
+        LOG.info(_LI('Stack %(action)s %(status)s (%(name)s): '
+                     '%(reason)s'),
+                 {'action': self.action,
+                  'status': self.status,
+                  'name': self.name,
+                  'reason': self.status_reason})
+
+    def persist_state_and_release_lock(self, engine_id):
+        """Persist stack state to database and release stack lock"""
+        if self.id is None:
+            return
+        stack = stack_object.Stack.get_by_id(self.context, self.id)
+        if stack is not None:
+            values = {'action': self.action,
+                      'status': self.status,
+                      'status_reason': self.status_reason}
+            self._send_notification_and_add_event()
+            stack.persist_state_and_release_lock(self.context, self.id,
+                                                 engine_id, values)
 
     @property
     def state(self):
