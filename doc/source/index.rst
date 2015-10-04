@@ -43,15 +43,15 @@ Heat's purpose and vision
 This documentation offers information aimed at end-users, operators and
 developers of Heat.
 
-Getting Started
-===============
+Using Heat
+==========
 
 .. toctree::
     :maxdepth: 1
 
-    getting_started/index
-    templates/index
+    getting_started/create_a_stack
     template_guide/index
+    templates/index
     glossary
 
 Man Pages
@@ -65,13 +65,14 @@ Man Pages
 Developers Documentation
 ========================
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
 
-   architecture
-   pluginguide
-   schedulerhints
-   gmr
-   supportstatus
+    getting_started/index
+    architecture
+    pluginguide
+    schedulerhints
+    gmr
+    supportstatus
 
 API Documentation
 ========================

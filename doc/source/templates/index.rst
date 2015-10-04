@@ -13,16 +13,16 @@
 
 This page documents the templates at https://github.com/openstack/heat-templates/
 
-HOT Templates
-=============
+Example HOT Templates
+=====================
 
 .. toctree::
   :maxdepth: 1
 
   hot/hello_world
 
-CFN Templates
-=============
+Example CFN Templates
+=====================
 
 .. toctree::
   :maxdepth: 1
