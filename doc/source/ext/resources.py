@@ -314,7 +314,7 @@ resources:
     def contribute_update_policy(self, parent):
         if not self.update_policy_schemata:
             return
-        section = self._section(parent, _('UpdatePolicy'), '%s-updpolicy')
+        section = self._section(parent, _('update_policy'), '%s-updpolicy')
         for prop_key, prop in sorted(self.update_policy_schemata.items(),
                                      self.cmp_prop):
             self.contribute_property(section, prop_key, prop)
