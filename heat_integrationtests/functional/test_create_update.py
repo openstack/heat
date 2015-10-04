@@ -102,11 +102,15 @@ class UpdateStackTest(functional_base.FunctionalTestsBase):
 
     provider_group_template = '''
 heat_template_version: 2013-05-23
+parameters:
+  count:
+    type: number
+    default: 2
 resources:
   test_group:
     type: OS::Heat::ResourceGroup
     properties:
-      count: 2
+      count: {get_param: count}
       resource_def:
         type: My::TestResource
 '''
@@ -132,6 +136,20 @@ resources:
       networks: [{network: {get_param: network} }]
       user_data_format: SOFTWARE_CONFIG
       user_data: {get_param: user_data}
+'''
+
+    fail_param_template = '''
+heat_template_version: 2014-10-16
+parameters:
+  do_fail:
+    type: boolean
+    default: False
+resources:
+  aresource:
+    type: OS::Heat::TestResource
+    properties:
+      value: Test
+      fail: {get_param: do_fail}
 '''
 
     def setUp(self):
@@ -317,7 +335,7 @@ resources:
         '''Test two-level nested update.'''
         # Create a ResourceGroup (which creates a nested stack),
         # containing provider resources (which create a nested
-        # stack), thus excercising an update which traverses
+        # stack), thus exercising an update which traverses
         # two levels of nesting.
         template = _change_rsrc_properties(
             test_template_one_resource, ['test1'],
@@ -414,3 +432,69 @@ resources:
             stack_identifier,
             template=self.update_userdata_template,
             parameters=parms_updated)
+
+    def test_stack_update_provider_group_patch(self):
+        '''Test two-level nested update with PATCH'''
+        template = _change_rsrc_properties(
+            test_template_one_resource, ['test1'],
+            {'value': 'test_provider_group_template'})
+        files = {'provider.template': json.dumps(template)}
+        env = {'resource_registry':
+               {'My::TestResource': 'provider.template'}}
+
+        stack_identifier = self.stack_create(
+            template=self.provider_group_template,
+            files=files,
+            environment=env
+        )
+
+        initial_resources = {'test_group': 'OS::Heat::ResourceGroup'}
+        self.assertEqual(initial_resources,
+                         self.list_resources(stack_identifier))
+
+        # Prove the resource is backed by a nested stack, save the ID
+        nested_identifier = self.assert_resource_is_a_stack(stack_identifier,
+                                                            'test_group')
+
+        # Then check the expected resources are in the nested stack
+        nested_resources = {'0': 'My::TestResource',
+                            '1': 'My::TestResource'}
+        self.assertEqual(nested_resources,
+                         self.list_resources(nested_identifier))
+
+        # increase the count, pass only the paramter, no env or template
+        params = {'count': 3}
+        self.update_stack(stack_identifier, parameters=params, existing=True)
+
+        # Parent resources should be unchanged and the nested stack
+        # should have been updated in-place without replacement
+        self.assertEqual(initial_resources,
+                         self.list_resources(stack_identifier))
+
+        # Resource group stack should also be unchanged (but updated)
+        nested_stack = self.client.stacks.get(nested_identifier)
+        self.assertEqual('UPDATE_COMPLETE', nested_stack.stack_status)
+        # Add a resource, as we should have added one
+        nested_resources['2'] = 'My::TestResource'
+        self.assertEqual(nested_resources,
+                         self.list_resources(nested_identifier))
+
+    def test_stack_update_from_failed_patch(self):
+        '''Test PATCH update from a failed state.'''
+
+        # Start with empty template
+        stack_identifier = self.stack_create(
+            template='heat_template_version: 2014-10-16')
+
+        # Update with a good template, but bad parameter
+        self.update_stack(stack_identifier,
+                          template=self.fail_param_template,
+                          parameters={'do_fail': True},
+                          expected_status='UPDATE_FAILED')
+
+        # PATCH update, only providing the parameter
+        self.update_stack(stack_identifier,
+                          parameters={'do_fail': False},
+                          existing=True)
+        self.assertEqual({u'aresource': u'OS::Heat::TestResource'},
+                         self.list_resources(stack_identifier))

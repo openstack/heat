@@ -329,10 +329,11 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             stack_identifier, 'DELETE_COMPLETE',
             success_on_not_found=True)
 
-    def update_stack(self, stack_identifier, template, environment=None,
+    def update_stack(self, stack_identifier, template=None, environment=None,
                      files=None, parameters=None, tags=None,
                      expected_status='UPDATE_COMPLETE',
-                     disable_rollback=True):
+                     disable_rollback=True,
+                     existing=False):
         env = environment or {}
         env_files = files or {}
         parameters = parameters or {}
@@ -354,7 +355,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                     disable_rollback=disable_rollback,
                     parameters=parameters,
                     environment=env,
-                    tags=tags
+                    tags=tags,
+                    existing=existing
                 )
             except heat_exceptions.HTTPConflict as ex:
                 # FIXME(sirushtim): Wait a little for the stack lock to be
