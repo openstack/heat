@@ -83,9 +83,8 @@ class EventController(object):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
-    def _event_list(self, req, identity, filter_func=lambda e: True,
-                    detail=False, filters=None, limit=None, marker=None,
-                    sort_keys=None, sort_dir=None):
+    def _event_list(self, req, identity, detail=False, filters=None,
+                    limit=None, marker=None, sort_keys=None, sort_dir=None):
         events = self.rpc_client.list_events(req.context,
                                              identity,
                                              filters=filters,
@@ -95,7 +94,7 @@ class EventController(object):
                                              sort_dir=sort_dir)
         keys = None if detail else summary_keys
 
-        return [format_event(req, e, keys) for e in events if filter_func(e)]
+        return [format_event(req, e, keys) for e in events]
 
     @util.identified_stack
     def index(self, req, identity, resource_name=None):
@@ -116,9 +115,6 @@ class EventController(object):
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
-        if not filter_params:
-            filter_params = None
-
         key = rpc_api.PARAM_LIMIT
         if key in params:
             try:
@@ -129,16 +125,17 @@ class EventController(object):
             params[key] = limit
 
         if resource_name is None:
-            events = self._event_list(req, identity,
-                                      filters=filter_params, **params)
+            if not filter_params:
+                filter_params = None
         else:
-            res_match = lambda e: e[rpc_api.EVENT_RES_NAME] == resource_name
+            filter_params['resource_name'] = resource_name
 
-            events = self._event_list(req, identity, res_match,
-                                      filters=filter_params, **params)
-            if not events:
-                msg = _('No events found for resource %s') % resource_name
-                raise exc.HTTPNotFound(msg)
+        events = self._event_list(
+            req, identity, filters=filter_params, **params)
+
+        if not events and resource_name is not None:
+            msg = _('No events found for resource %s') % resource_name
+            raise exc.HTTPNotFound(msg)
 
         return {'events': events}
 
@@ -148,12 +145,8 @@ class EventController(object):
         Gets detailed information for an event
         """
 
-        def event_match(ev):
-            identity = identifier.EventIdentifier(**ev[rpc_api.EVENT_ID])
-            return (ev[rpc_api.EVENT_RES_NAME] == resource_name and
-                    identity.event_id == event_id)
-
-        events = self._event_list(req, identity, event_match, True)
+        filters = {"resource_name": resource_name}
+        events = self._event_list(req, identity, filters=filters, detail=True)
         if not events:
             raise exc.HTTPNotFound(_('No event %s found') % event_id)
 
