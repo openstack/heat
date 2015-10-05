@@ -11,22 +11,21 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Getting Started With Heat on Fedora
-===================================
+Installing OpenStack and Heat on RHEL/Fedora/CentOS
+---------------------------------------------------
 
-Installing OpenStack and Heat on Fedora
----------------------------------------
+Go to the `OpenStack Documentation <http://docs.openstack.org/>`_ for
+the latest version of the Installation Guide for Red Hat Enterprise
+Linux, CentOS and Fedora which includes a chapter on installing the
+Orchestration module (Heat).
 
-Heat requires an OpenStack release of Grizzly or newer, but bear in mind that Grizzly is EOL. The current stable release_ is, of course, recommended.
+There are instructions for `installing the RDO OpenStack distribution
+<https://www.rdoproject.org/Quickstart>`_ on Fedora and CentOS.
 
-.. _release: https://wiki.openstack.org/wiki/Releases
+If installing with packstack, you can install heat by specifying
+``--os-heat-install=y`` in your packstack invocation, or setting
+``CONFIG_HEAT_INSTALL=y`` in your anwsers file.
 
-Instructions for installing the RDO OpenStack distribution on Fedora are available at ``http://openstack.redhat.com/Quickstart``
-
-Instructions for installing Heat on RDO are also available at ``http://openstack.redhat.com/Docs``
-
-Alternatively, if you require a development environment not a package-based install, the suggested method is devstack, see instructions at :doc:`on_devstack`
-
-Example Templates
------------------
-Check out the example templates at ``https://github.com/openstack/heat-templates``.  Here you can view example templates which will work with several Fedora versions.
+If installing with `RDO-Manager
+<https://www.rdoproject.org/RDO-Manager>`_ Heat will be installed by
+default.

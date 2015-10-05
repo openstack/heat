@@ -11,13 +11,13 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Getting Started With Heat on Ubuntu
-===================================
+Installing Heat on Ubuntu
+-------------------------
 
 Heat is packaged for Debian, and Ubuntu (from 13.10)
 
-Alternatively, if you require a development environment not a package-based install, the suggested method is devstack, see instructions at :doc:`on_devstack`
+Go to the `OpenStack Documentation <http://docs.openstack.org/>`_ for
+the latest version of the Installation Guide for Ubuntu which includes a
+chapter on installing the Orchestration module (Heat).
 
-Example Templates
------------------
-Check out the example templates at ``https://github.com/openstack/heat-templates``.
+There is a `Juju Charm for Heat <https://jujucharms.com/heat/>` available.

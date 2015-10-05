@@ -54,20 +54,23 @@ Using Heat
     templates/index
     glossary
 
-Man Pages
-=========
+Operating Heat
+==============
 
-.. toctree::
-    :maxdepth: 2
-
-    man/index
-
-Developers Documentation
-========================
 .. toctree::
     :maxdepth: 1
 
-    getting_started/index
+    getting_started/on_fedora
+    getting_started/on_ubuntu
+    scale_deployment
+    man/index
+
+Developing Heat
+===============
+.. toctree::
+    :maxdepth: 1
+
+    getting_started/on_devstack
     architecture
     pluginguide
     schedulerhints
@@ -81,12 +84,6 @@ API Documentation
 
    .. _`Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`: http://api.openstack.org/api-ref-orchestration-v1.html
 
-Operations Documentation
-========================
-.. toctree::
-   :maxdepth: 1
-
-   scale_deployment
 
 Code Documentation
 ==================
