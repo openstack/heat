@@ -899,6 +899,7 @@ class EngineService(service.Service):
         def fmt_current_res(k):
             return api.format_stack_resource(current_stack.resources.get(k))
 
+        updated_stack.id = current_stack.id
         return {
             'unchanged': map(fmt_updated_res, actions['unchanged']),
             'updated': map(fmt_current_res, actions['updated']),
