@@ -1659,7 +1659,7 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.reset_stack_status()
 
         mock_admin_context.assert_called_once_with()
-        filters = {'stack_status': 'IN_PROGRESS'}
+        filters = {'status': parser.Stack.IN_PROGRESS}
         mock_get_all.assert_called_once_with(self.ctx,
                                              filters=filters,
                                              tenant_safe=False)
