@@ -162,6 +162,13 @@ class ServerNetworkMixin(object):
         if not self.is_using_neutron():
             return
 
+        # check if OSInterface extension is installed on this cloud. If it's
+        # not, then novaclient's interface_list method cannot be used to get
+        # the list of interfaces.
+        if not self.client_plugin()._has_extension(
+                self.client_plugin().OS_INTERFACE_EXTENSION):
+            return
+
         server = self.client().servers.get(self.resource_id)
         ifaces = server.interface_list()
         external_port_ids = set(iface.port_id for iface in ifaces)
