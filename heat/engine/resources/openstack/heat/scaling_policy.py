@@ -196,8 +196,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         elif name == self.SIGNAL_URL:
             return six.text_type(self._get_heat_signal_url())
 
-    def FnGetRefId(self):
-        return resource.Resource.FnGetRefId(self)
+    def get_reference_id(self):
+        return resource.Resource.get_reference_id(self)
 
 
 def resource_mapping():

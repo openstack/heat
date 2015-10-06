@@ -414,9 +414,9 @@ class SecurityGroup(resource.Resource):
             impl = NovaSecurityGroup
         impl(self).delete()
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         if self.is_using_neutron():
-            return super(SecurityGroup, self).FnGetRefId()
+            return super(SecurityGroup, self).get_reference_id()
         else:
             return self.physical_resource_name()
 

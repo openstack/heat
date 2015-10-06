@@ -1510,7 +1510,7 @@ class Resource(object):
         if res_name is not None:
             return six.text_type(res_name)
         else:
-            return Resource.FnGetRefId(self)
+            return Resource.get_reference_id(self)
 
     def FnGetAtt(self, key, *path):
         """For the intrinsic function Fn::GetAtt.

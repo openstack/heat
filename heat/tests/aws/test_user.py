@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from oslo_config import cfg
 import six
 
@@ -272,6 +273,26 @@ class UserTest(common.HeatTestCase):
         self.assertTrue(rsrc.access_allowed('a_resource'))
         self.assertFalse(rsrc.access_allowed('b_resource'))
         self.m.VerifyAll()
+
+    def test_user_refid_rsrc_id(self):
+        t = template_format.parse(user_template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['CfnUser']
+        rsrc.resource_id = 'phy-rsrc-id'
+        self.assertEqual('phy-rsrc-id', rsrc.FnGetRefId())
+
+    def test_user_refid_convg_cache_data(self):
+        t = template_format.parse(user_template)
+        cache_data = {'CfnUser': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['CfnUser']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
 
 class AccessKeyTest(common.HeatTestCase):

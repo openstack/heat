@@ -61,6 +61,20 @@ class LaunchConfigurationTest(common.HeatTestCase):
         self.assertIsNone(rsrc.resource_id)
         self.assertEqual('LaunchConfig', rsrc.FnGetRefId())
 
+    def test_launch_config_refid_convergence_cache_data(self):
+        t = template_format.parse(inline_templates.as_template)
+        cache_data = {'LaunchConfig': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, params=inline_templates.as_params,
+                                  cache_data=cache_data)
+        rsrc = stack['LaunchConfig']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
+
     def test_launch_config_create_with_instanceid(self):
         t = template_format.parse(inline_templates.as_template)
         lcp = t['Resources']['LaunchConfig']['Properties']

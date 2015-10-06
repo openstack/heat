@@ -17,6 +17,7 @@ import mock
 import six
 
 from heat.common import exception as heat_ex
+from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.resources.openstack.nova import nova_floatingip
@@ -356,3 +357,35 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
+
+    def test_floating_ip_assoc_refid_rsrc_name(self):
+        t = template_format.parse(floating_ip_template_with_assoc)
+        stack = utils.parse_stack(t)
+        rsrc = stack['MyFloatingIPAssociation']
+        rsrc.id = '123'
+        rsrc.uuid = '9bfb9456-3fe8-41f4-b318-9dba18eeef74'
+        rsrc.action = 'CREATE'
+        expected = '%s-%s-%s' % (rsrc.stack.name,
+                                 rsrc.name,
+                                 short_id.get_id(rsrc.uuid))
+        self.assertEqual(expected, rsrc.FnGetRefId())
+
+    def test_floating_ip_assoc_refid_rsrc_id(self):
+        t = template_format.parse(floating_ip_template_with_assoc)
+        stack = utils.parse_stack(t)
+        rsrc = stack['MyFloatingIPAssociation']
+        rsrc.resource_id = 'phy-rsrc-id'
+        self.assertEqual('phy-rsrc-id', rsrc.FnGetRefId())
+
+    def test_floating_ip_assoc_refid_convg_cache_data(self):
+        t = template_format.parse(floating_ip_template_with_assoc)
+        cache_data = {'MyFloatingIPAssociation': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['MyFloatingIPAssociation']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
