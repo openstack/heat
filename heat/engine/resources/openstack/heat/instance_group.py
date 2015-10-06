@@ -240,7 +240,7 @@ class InstanceGroup(stack_resource.StackResource):
 
         return conf, props
 
-    def _get_instance_definition(self):
+    def _get_resource_definition(self):
         conf, props = self._get_conf_properties()
         return rsrc_defn.ResourceDefinition(None,
                                             SCALED_RESOURCE_TYPE,
@@ -260,7 +260,7 @@ class InstanceGroup(stack_resource.StackResource):
 
         Also see heat.scaling.template.member_definitions.
         """
-        instance_definition = self._get_instance_definition()
+        instance_definition = self._get_resource_definition()
         old_resources = self._get_instance_templates()
         definitions = template.member_definitions(
             old_resources, instance_definition, num_instances, num_replace,
