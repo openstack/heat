@@ -125,13 +125,13 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                  {'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
-            return
+            raise resource.NoActionRequired()
         if self._cooldown_inprogress():
             LOG.info(_LI("%(name)s NOT performing scaling action, "
                          "cooldown %(cooldown)s"),
                      {'name': self.name,
                       'cooldown': self.properties[self.COOLDOWN]})
-            return
+            raise resource.NoActionRequired()
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)

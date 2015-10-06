@@ -243,6 +243,33 @@ class SignalTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_signal_no_action(self):
+        test_d = {'Data': 'foo', 'Reason': 'bar',
+                  'Status': 'SUCCESS', 'UniqueId': '123'}
+
+        self.stack = self.create_stack()
+        self.stack.create()
+
+        # mock a NoActionRequired from handle_signal()
+        self.m.StubOutWithMock(generic_resource.SignalResource,
+                               'handle_signal')
+        generic_resource.SignalResource.handle_signal(test_d).AndRaise(
+            resource.NoActionRequired())
+
+        # _add_event should not be called.
+        self.m.StubOutWithMock(generic_resource.SignalResource,
+                               '_add_event')
+
+        self.m.ReplayAll()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertTrue(rsrc.requires_deferred_auth)
+
+        rsrc.signal(details=test_d)
+
+        self.m.VerifyAll()
+
     def test_signal_different_reason_types(self):
         self.stack = self.create_stack()
         self.stack.create()

@@ -20,6 +20,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
@@ -62,7 +63,8 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         test = {'current': 'not_an_alarm'}
         with mock.patch.object(pol, '_cooldown_inprogress',
                                side_effect=AssertionError()) as dont_call:
-            pol.handle_signal(details=test)
+            self.assertRaises(resource.NoActionRequired,
+                              pol.handle_signal, details=test)
             self.assertEqual([], dont_call.call_args_list)
 
     def test_scaling_policy_cooldown_toosoon(self):
@@ -76,7 +78,8 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                side_effect=AssertionError) as dont_call:
             with mock.patch.object(pol, '_cooldown_inprogress',
                                    return_value=True) as mock_cip:
-                pol.handle_signal(details=test)
+                self.assertRaises(resource.NoActionRequired,
+                                  pol.handle_signal, details=test)
                 mock_cip.assert_called_once_with()
             self.assertEqual([], dont_call.call_args_list)
 
