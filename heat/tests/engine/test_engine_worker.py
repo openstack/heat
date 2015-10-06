@@ -14,8 +14,10 @@
 # limitations under the License.
 
 import mock
+from oslo_config import cfg
 
 from heat.common import exception
+from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
@@ -579,6 +581,18 @@ class MiscMethodsTest(common.HeatTestCase):
             self.resource.id, self.stack.convergence_dependencies,
             True)
         self.assertFalse(mock_sync.called)
+
+    @mock.patch.object(dependencies.Dependencies, 'roots')
+    @mock.patch.object(stack.Stack, '_persist_state')
+    def test_check_stack_complete_persist_called(self, mock_persist_state,
+                                                 mock_dep_roots):
+        cfg.CONF.set_default('convergence_engine', True)
+        mock_dep_roots.return_value = [(1, True)]
+        worker.check_stack_complete(
+            self.ctx, self.stack, self.stack.current_traversal,
+            1, self.stack.convergence_dependencies,
+            True)
+        self.assertTrue(mock_persist_state.called)
 
     @mock.patch.object(sync_point, 'sync')
     def test_propagate_check_resource(self, mock_sync):
