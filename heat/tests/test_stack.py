@@ -1548,7 +1548,7 @@ class StackTest(common.HeatTestCase):
         self.assertIn('The specified reference "resource" '
                       '(in unknown) is incorrect.', six.text_type(ex))
 
-    def test_incorrect_outputs_cfn_empty_output(self):
+    def test_incorrect_outputs_cfn_missing_value(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'
         Resources:
@@ -1558,6 +1558,7 @@ class StackTest(common.HeatTestCase):
               Foo: abc
         Outputs:
           Resource_attr:
+            Description: the attr
         """)
         self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
                                  template.Template(tmpl))
@@ -1567,6 +1568,40 @@ class StackTest(common.HeatTestCase):
 
         self.assertIn('Each Output must contain a Value key.',
                       six.text_type(ex))
+
+    def test_incorrect_outputs_cfn_empty_value(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            Properties:
+              Foo: abc
+        Outputs:
+          Resource_attr:
+            Value: ''
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
+                                 template.Template(tmpl))
+
+        self.assertIsNone(self.stack.validate())
+
+    def test_incorrect_outputs_cfn_none_value(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            Properties:
+              Foo: abc
+        Outputs:
+          Resource_attr:
+            Value:
+        """)
+        self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
+                                 template.Template(tmpl))
+
+        self.assertIsNone(self.stack.validate())
 
     def test_incorrect_outputs_cfn_string_data(self):
         tmpl = template_format.parse("""
