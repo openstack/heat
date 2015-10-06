@@ -1804,7 +1804,7 @@ class EngineService(service.Service):
 
     def reset_stack_status(self):
         cnxt = context.get_admin_context()
-        filters = {rpc_api.STACK_STATUS: parser.Stack.IN_PROGRESS}
+        filters = {'status': parser.Stack.IN_PROGRESS}
         stacks = stack_object.Stack.get_all(cnxt,
                                             filters=filters,
                                             tenant_safe=False,
