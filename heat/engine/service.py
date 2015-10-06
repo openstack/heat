@@ -1126,6 +1126,9 @@ class EngineService(service.Service):
             LOG.debug("signaling resource %s:%s" % (stack.name, rsrc.name))
             rsrc.signal(details)
 
+            if not rsrc.signal_needs_metadata_updates:
+                return
+
             # Refresh the metadata for all other resources, since signals can
             # update metadata which is used by other resources, e.g
             # when signalling a WaitConditionHandle resource, and other
