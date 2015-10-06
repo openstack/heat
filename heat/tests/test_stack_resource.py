@@ -516,11 +516,12 @@ class StackResourceTest(common.HeatTestCase):
         rpcc.return_value.delete_stack.assert_called_once_with(
             self.parent_resource.context, mock.ANY)
 
-    def test_need_update_in_failed_state_for_nested_resource(self):
+    def test_need_update_for_nested_resource(self):
         """
-        The resource in any state and has nested stack,
+        The resource in Create or Update state and has nested stack,
         should need update.
         """
+        self.parent_resource.action = self.parent_resource.CREATE
         need_update = self.parent_resource._needs_update(
             self.parent_resource.t,
             self.parent_resource.t,
@@ -529,6 +530,38 @@ class StackResourceTest(common.HeatTestCase):
             self.parent_resource)
 
         self.assertEqual(True, need_update)
+
+    def test_need_update_in_failed_state_for_nested_resource(self):
+        """
+        The resource in failed state and has no nested stack,
+        should need update with UpdateReplace.
+        """
+        self.parent_resource.state_set(self.parent_resource.INIT,
+                                       self.parent_resource.FAILED)
+        self.parent_resource._nested = None
+        self.assertRaises(resource.UpdateReplace,
+                          self.parent_resource._needs_update,
+                          self.parent_resource.t,
+                          self.parent_resource.t,
+                          self.parent_resource.properties,
+                          self.parent_resource.properties,
+                          self.parent_resource)
+
+    def test_need_update_in_init_complete_state_for_nested_resource(self):
+        """
+        The resource in failed state and has no nested stack,
+        should need update with UpdateReplace.
+        """
+        self.parent_resource.state_set(self.parent_resource.INIT,
+                                       self.parent_resource.COMPLETE)
+        self.parent_resource._nested = None
+        self.assertRaises(resource.UpdateReplace,
+                          self.parent_resource._needs_update,
+                          self.parent_resource.t,
+                          self.parent_resource.t,
+                          self.parent_resource.properties,
+                          self.parent_resource.properties,
+                          self.parent_resource)
 
 
 class StackResourceLimitTest(common.HeatTestCase):

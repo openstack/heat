@@ -88,7 +88,8 @@ class LBUtilsTest(common.HeatTestCase):
             'LB_1': lb1,
             'LB_2': lb2
         }
-
+        lb1.action = mock.Mock(return_value=lb1.CREATE)
+        lb2.action = mock.Mock(return_value=lb2.CREATE)
         lb1.handle_update = mock.Mock()
         lb2.handle_update = mock.Mock()
         prop_diff = {'Instances': ['ID1', 'ID2', 'ID3']}
@@ -108,6 +109,8 @@ class LBUtilsTest(common.HeatTestCase):
 
         lb1 = self.stack['neutron_lb_1']
         lb2 = self.stack['neutron_lb_2']
+        lb1.action = mock.Mock(return_value=lb1.CREATE)
+        lb2.action = mock.Mock(return_value=lb2.CREATE)
         lbs = {
             'LB_1': lb1,
             'LB_2': lb2
