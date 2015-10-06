@@ -1662,7 +1662,8 @@ class StackServiceTest(common.HeatTestCase):
         filters = {'status': parser.Stack.IN_PROGRESS}
         mock_get_all.assert_called_once_with(self.ctx,
                                              filters=filters,
-                                             tenant_safe=False)
+                                             tenant_safe=False,
+                                             show_nested=True)
         mock_stack_load.assert_called_once_with(self.ctx,
                                                 stack=db_stack,
                                                 use_stored_context=True)
