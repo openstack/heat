@@ -245,6 +245,42 @@ outputs:
         self.assertEqual(old_way, test_attr2)
 
 
+class TemplateResourceFacadeTest(functional_base.FunctionalTestsBase):
+    """Prove that we can use ResourceFacade in a HOT template."""
+
+    main_template = '''
+heat_template_version: 2013-05-23
+resources:
+  the_nested:
+    type: the.yaml
+    metadata:
+      foo: bar
+outputs:
+  value:
+    value: {get_attr: [the_nested, output]}
+'''
+
+    nested_templ = '''
+heat_template_version: 2013-05-23
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value: {"Fn::Select": [foo, {resource_facade: metadata}]}
+outputs:
+  output:
+    value: {get_attr: [test, output]}
+    '''
+
+    def test_metadata(self):
+        stack_identifier = self.stack_create(
+            template=self.main_template,
+            files={'the.yaml': self.nested_templ})
+        stack = self.client.stacks.get(stack_identifier)
+        value = self._stack_output(stack, 'value')
+        self.assertEqual('bar', value)
+
+
 class TemplateResourceUpdateTest(functional_base.FunctionalTestsBase):
     """Prove that we can do template resource updates."""
 
