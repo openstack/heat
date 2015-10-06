@@ -81,12 +81,12 @@ obj_header = {
 }
 
 
-def create_stack(template, stack_id=None):
+def create_stack(template, stack_id=None, cache_data=None):
     tmpl = template_format.parse(template)
     template = templatem.Template(tmpl)
     ctx = utils.dummy_context(tenant_id='test_tenant')
     st = stack.Stack(ctx, 'test_st', template,
-                     disable_rollback=True)
+                     disable_rollback=True, cache_data=cache_data)
 
     # Stub out the stack ID so we have a known value
     if stack_id is None:
@@ -281,6 +281,18 @@ class SwiftSignalHandleTest(common.HeatTestCase):
                                                       handle.properties.data)
         scheduler.TaskRunner(handle.update, update_snippet)()
         self.assertEqual(old_url, rsrc.FnGetRefId())
+
+    def test_swift_handle_refid_convergence_cache_data(self):
+        cache_data = {'test_wait_condition_handle': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        st = create_stack(swiftsignalhandle_template, cache_data=cache_data)
+        rsrc = st['test_wait_condition_handle']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
 
 class SwiftSignalTest(common.HeatTestCase):

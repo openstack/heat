@@ -299,7 +299,7 @@ class RandomString(resource.Resource):
         if name == self.VALUE:
             return self.data().get(self.VALUE)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         if self.resource_id is not None:
             return self.data().get('value')
         else:

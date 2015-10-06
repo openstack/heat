@@ -185,3 +185,21 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.m.VerifyAll()
+
+    def test_nova_keypair_refid(self):
+        stack = utils.parse_stack(self.kp_template)
+        rsrc = stack['kp']
+        rsrc.resource_id = 'xyz'
+        self.assertEqual('xyz', rsrc.FnGetRefId())
+
+    def test_nova_keypair_refid_convergence_cache_data(self):
+        cache_data = {'kp': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'convg_xyz'
+        }}
+        stack = utils.parse_stack(self.kp_template, cache_data=cache_data)
+        rsrc = stack['kp']
+        self.assertEqual('convg_xyz', rsrc.FnGetRefId())

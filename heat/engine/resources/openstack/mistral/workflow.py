@@ -319,7 +319,7 @@ class Workflow(signal_responder.SignalResponder,
         )
     }
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return self._workflow_name()
 
     def _validate_signal_data(self, data):
