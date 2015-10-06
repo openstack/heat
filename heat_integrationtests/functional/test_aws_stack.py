@@ -15,6 +15,7 @@ import json
 import random
 
 from oslo_log import log as logging
+import requests
 from six.moves.urllib import parse
 from swiftclient import utils as swiftclient_utils
 import yaml
@@ -103,7 +104,18 @@ Outputs:
         tempurl = swiftclient_utils.generate_temp_url(path, timeout,
                                                       key, 'GET')
         sw_url = parse.urlparse(oc.url)
-        return '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
+        full_url = '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
+
+        def download():
+            r = requests.get(full_url)
+            LOG.info('GET: %s -> %s' % (full_url, r.status_code))
+            return r.status_code == requests.codes.ok
+
+        # make sure that the object is available.
+        test.call_until_true(self.conf.build_timeout,
+                             self.conf.build_interval, download)
+
+        return full_url
 
     def test_nested_stack_create(self):
         url = self.publish_template(self.nested_name, self.nested_template)
