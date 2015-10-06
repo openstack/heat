@@ -26,10 +26,10 @@ class Firewall(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, DESCRIPTION, ADMIN_STATE_UP, FIREWALL_POLICY_ID,
-        SHARED,
+        VALUE_SPECS, SHARED,
     ) = (
         'name', 'description', 'admin_state_up', 'firewall_policy_id',
-        'shared',
+        'value_specs', 'shared',
     )
 
     ATTRIBUTES = (
@@ -65,6 +65,14 @@ class Firewall(neutron.NeutronResource):
               'associated with.'),
             required=True,
             update_allowed=True
+        ),
+        VALUE_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            _('Extra parameters to include in the "firewall" object in the '
+              'creation request. Parameters are often specific to installed '
+              'hardware or extensions.'),
+            support_status=support.SupportStatus(version='5.0.0'),
+            default={}
         ),
         SHARED: properties.Schema(
             properties.Schema.BOOLEAN,
