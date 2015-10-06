@@ -158,13 +158,13 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc = self.setup_loadbalancer()
         self.assertRaises(exception.StackValidationFailed, rsrc.validate)
 
-    def setup_loadbalancer(self, include_magic=True):
+    def setup_loadbalancer(self, include_magic=True, cache_data=None):
         template = template_format.parse(lb_template)
         if not include_magic:
             del template['Parameters']['KeyName']
             del template['Parameters']['LbFlavor']
             del template['Parameters']['LbImageId']
-        self.stack = utils.parse_stack(template)
+        self.stack = utils.parse_stack(template, cache_data=cache_data)
 
         resource_name = 'LoadBalancer'
         lb_defn = self.stack.t.resource_definitions(self.stack)[resource_name]
@@ -172,8 +172,18 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_loadbalancer_refid(self):
         rsrc = self.setup_loadbalancer()
-        rsrc.resource_id = mock.Mock(return_value='not-this')
         self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
+
+    def test_loadbalancer_refid_convergence_cache_data(self):
+        cache_data = {'LoadBalancer': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'LoadBalancer_convg_mock'
+        }}
+        rsrc = self.setup_loadbalancer(cache_data=cache_data)
+        self.assertEqual('LoadBalancer_convg_mock', rsrc.FnGetRefId())
 
     def test_loadbalancer_attr_dnsname(self):
         rsrc = self.setup_loadbalancer()

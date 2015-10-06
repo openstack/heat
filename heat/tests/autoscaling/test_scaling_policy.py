@@ -19,6 +19,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.resources.aws.autoscaling import scaling_policy as aws_sp
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
@@ -122,6 +123,34 @@ class TestAutoScalingPolicy(common.HeatTestCase):
             mock_cip.assert_called_once_with()
         group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None,
                                              signal=True)
+
+    @mock.patch.object(aws_sp.AWSScalingPolicy, '_get_ec2_signed_url')
+    def test_scaling_policy_refid_signed_url(self, mock_get_ec2_url):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        rsrc = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        mock_get_ec2_url.return_value = 'http://signed_url'
+        self.assertEqual('http://signed_url', rsrc.FnGetRefId())
+
+    def test_scaling_policy_refid_rsrc_name(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        rsrc = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        rsrc.resource_id = None
+        self.assertEqual('WebServerScaleUpPolicy', rsrc.FnGetRefId())
+
+    def test_refid_convergence_cache_data(self):
+        t = template_format.parse(as_template)
+        cache_data = {'WebServerScaleUpPolicy': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'reference_id': 'http://convg_signed_url'
+        }}
+        stack = utils.parse_stack(t, cache_data=cache_data)
+        rsrc = stack['WebServerScaleUpPolicy']
+        self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())
 
 
 class TestCooldownMixin(common.HeatTestCase):

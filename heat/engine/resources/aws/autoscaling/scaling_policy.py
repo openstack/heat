@@ -102,7 +102,7 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
                 prop2=self.ADJUSTMENT_TYPE,
                 value=sc_util.CFN_PERCENT_CHANGE_IN_CAPACITY)
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         if self.resource_id is not None:
             return six.text_type(self._get_ec2_signed_url())
         else:

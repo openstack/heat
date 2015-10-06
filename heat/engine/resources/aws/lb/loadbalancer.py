@@ -626,7 +626,7 @@ backend servers
                 return {'Error':
                         'Interval must be larger than Timeout'}
 
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return six.text_type(self.name)
 
     def _resolve_attribute(self, name):
