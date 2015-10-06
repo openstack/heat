@@ -12,6 +12,7 @@
 #    under the License.
 
 import abc
+import functools
 import sys
 
 from keystoneclient import auth
@@ -24,6 +25,66 @@ import six
 
 from heat.common import context
 from heat.common.i18n import _
+
+
+class ExceptionFilter(object):
+    """
+    A context manager that prevents some exceptions from being raised.
+
+    For backwards compatibility, these objects can also be called with the
+    exception value as an argument - any non-matching exception will be
+    re-raised from this call. We attempt but cannot guarantee to keep the same
+    traceback; the context manager method is preferred for this reason except
+    in cases where the ignored exception affects control flow.
+
+    Use this class as a decorator for a function that returns whether a given
+    exception should be ignored. e.g.
+
+    >>> @ExceptionFilter
+    >>> def ignore_assertions(ex):
+    ...     return isinstance(ex, AssertionError)
+
+    and then use it as a context manager:
+
+    >>> with ignore_assertions:
+    ...     assert False
+
+    or call it:
+
+    >>> try:
+    ...     assert False
+    ... except Exception as ex:
+    ...     ignore_assertions(ex)
+
+    """
+
+    def __init__(self, should_ignore_ex):
+        self._should_ignore_ex = should_ignore_ex
+        functools.update_wrapper(self, should_ignore_ex)
+
+    def __get__(self, obj, owner=None):
+        return type(self)(six.create_bound_method(self._should_ignore_ex, obj))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val is not None:
+            return self._should_ignore_ex(exc_val)
+
+    def __call__(self, ex):
+        """
+        Re-raise any exception value not being filtered out.
+
+        If the exception was the last to be raised, it will be re-raised with
+        its original traceback.
+        """
+        if not self._should_ignore_ex(ex):
+            exc_type, exc_val, traceback = sys.exc_info()
+            if exc_val is ex:
+                six.reraise(exc_type, exc_val, traceback)
+            else:
+                raise ex
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -171,25 +232,15 @@ class ClientPlugin(object):
         """Returns True if the exception is a conflict."""
         return False
 
+    @ExceptionFilter
     def ignore_not_found(self, ex):
         """Raises the exception unless it is a not-found."""
-        if not self.is_not_found(ex):
-            exc_type, exc_val, traceback = sys.exc_info()
-            if exc_val is ex:
-                six.reraise(exc_type, exc_val, traceback)
-            else:
-                raise ex
+        return self.is_not_found(ex)
 
+    @ExceptionFilter
     def ignore_conflict_and_not_found(self, ex):
         """Raises the exception unless it is a conflict or not-found."""
-        if self.is_conflict(ex) or self.is_not_found(ex):
-            return
-        else:
-            exc_type, exc_val, traceback = sys.exc_info()
-            if exc_val is ex:
-                six.reraise(exc_type, exc_val, traceback)
-            else:
-                raise ex
+        return self.is_conflict(ex) or self.is_not_found(ex)
 
     def _get_client_args(self,
                          service_name,
