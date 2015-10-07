@@ -190,3 +190,14 @@ class FakeKeystoneClient(object):
             return self.context.auth_plugin.get_token(self.session)
         else:
             return self.token
+
+
+class FakeEventSink(object):
+
+    def __init__(self, evt):
+        self.events = []
+        self.evt = evt
+
+    def consume(self, stack, event):
+        self.events.append(event)
+        self.evt.send(None)

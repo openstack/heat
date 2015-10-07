@@ -43,6 +43,7 @@ class EnvironmentTest(common.HeatTestCase):
         expected = {u'parameters': old,
                     u'encrypted_param_names': [],
                     u'parameter_defaults': {},
+                    u'event_sinks': [],
                     u'resource_registry': {u'resources': {}}}
         env = environment.Environment(old)
         self.assertEqual(expected, env.user_env_as_dict())
@@ -51,6 +52,7 @@ class EnvironmentTest(common.HeatTestCase):
         new_env = {u'parameters': {u'a': u'ff', u'b': u'ss'},
                    u'encrypted_param_names': [],
                    u'parameter_defaults': {u'ff': 'new_def'},
+                   u'event_sinks': [],
                    u'resource_registry': {u'OS::Food': u'fruity.yaml',
                                           u'resources': {}}}
         env = environment.Environment(new_env)
@@ -211,6 +213,23 @@ def constraint_mapping():
         self.assertEqual("FlavorConstraint",
                          env.get_constraint("nova.flavor").__name__)
         self.assertIs(None, env.get_constraint("no_constraint"))
+
+    def test_event_sinks(self):
+        env = environment.Environment(
+            {"event_sinks": [{"type": "zaqar-queue", "target": "myqueue"}]})
+        self.assertEqual([{"type": "zaqar-queue", "target": "myqueue"}],
+                         env.user_env_as_dict()["event_sinks"])
+        sinks = env.get_event_sinks()
+        self.assertEqual(1, len(sinks))
+        self.assertEqual("myqueue", sinks[0]._target)
+
+    def test_event_sinks_load(self):
+        env = environment.Environment()
+        self.assertEqual([], env.get_event_sinks())
+        env.load(
+            {"event_sinks": [{"type": "zaqar-queue", "target": "myqueue"}]})
+        self.assertEqual([{"type": "zaqar-queue", "target": "myqueue"}],
+                         env.user_env_as_dict()["event_sinks"])
 
 
 class EnvironmentDuplicateTest(common.HeatTestCase):
@@ -491,6 +510,7 @@ class ChildEnvTest(common.HeatTestCase):
         expected = {'parameters': new_params,
                     'encrypted_param_names': [],
                     'parameter_defaults': {},
+                    'event_sinks': [],
                     'resource_registry': {'resources': {}}}
         cenv = environment.get_child_environment(penv, new_params)
         self.assertEqual(expected, cenv.user_env_as_dict())
@@ -500,6 +520,7 @@ class ChildEnvTest(common.HeatTestCase):
         penv = environment.Environment()
         expected = {'parameter_defaults': {},
                     'encrypted_param_names': [],
+                    'event_sinks': [],
                     'resource_registry': {'resources': {}}}
         expected.update(new_params)
         cenv = environment.get_child_environment(penv, new_params)
@@ -511,6 +532,7 @@ class ChildEnvTest(common.HeatTestCase):
         penv = environment.Environment(env=parent_params)
         expected = {'parameter_defaults': {},
                     'encrypted_param_names': [],
+                    'event_sinks': [],
                     'resource_registry': {'resources': {}}}
         expected.update(new_params)
         cenv = environment.get_child_environment(penv, new_params)

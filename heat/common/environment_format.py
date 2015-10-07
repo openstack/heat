@@ -18,10 +18,10 @@ from heat.common import template_format
 
 SECTIONS = (
     PARAMETERS, RESOURCE_REGISTRY, PARAMETER_DEFAULTS,
-    ENCRYPTED_PARAM_NAMES
+    ENCRYPTED_PARAM_NAMES, EVENT_SINKS
 ) = (
     'parameters', 'resource_registry', 'parameter_defaults',
-    'encrypted_param_names'
+    'encrypted_param_names', 'event_sinks'
 )
 
 
@@ -59,7 +59,7 @@ def default_for_missing(env):
     """Checks a parsed environment for missing sections."""
     for param in SECTIONS:
         if param not in env:
-            if param == ENCRYPTED_PARAM_NAMES:
+            if param in (ENCRYPTED_PARAM_NAMES, EVENT_SINKS):
                 env[param] = []
             else:
                 env[param] = {}

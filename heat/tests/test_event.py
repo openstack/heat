@@ -188,8 +188,9 @@ class EventTest(EventCommon):
                         'wibble', self.resource.properties,
                         self.resource.name, self.resource.type())
 
-        e.store()
         self.assertIsNone(e.identifier())
+        e.store()
+        self.assertIsNotNone(e.identifier())
 
     def test_badprop(self):
         rname = 'bad_resource'
@@ -201,6 +202,28 @@ class EventTest(EventCommon):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', res.properties, res.name, res.type())
         self.assertIn('Error', e.resource_properties)
+
+    def test_as_dict(self):
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource.properties,
+                        self.resource.name, self.resource.type())
+
+        e.store()
+        expected = {
+            'id': e.uuid,
+            'timestamp': e.timestamp.isoformat(),
+            'type': 'os.heat.event',
+            'version': '0.1',
+            'payload': {'physical_resource_id': 'wibble',
+                        'resource_action': 'TEST',
+                        'resource_name': 'EventTestResource',
+                        'resource_properties': {'Foo': 'goo'},
+                        'resource_status': 'IN_PROGRESS',
+                        'resource_status_reason': 'Testing',
+                        'resource_type': 'ResourceWithRequiredProps',
+                        'stack_id': self.stack.id,
+                        'version': '0.1'}}
+        self.assertEqual(expected, e.as_dict())
 
 
 class EventTestProps(EventCommon):

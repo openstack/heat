@@ -34,6 +34,11 @@ def _register_stack_lifecycle_plugins(env, type_pairs):
                                             stack_lifecycle_class)
 
 
+def _register_event_sinks(env, type_pairs):
+    for sink_name, sink_class in type_pairs:
+        env.register_event_sink(sink_name, sink_class)
+
+
 def _get_mapping(namespace):
     mgr = extension.ExtensionManager(
         namespace=namespace,
@@ -73,6 +78,9 @@ def _load_global_resources(env):
     _register_stack_lifecycle_plugins(
         env,
         _get_mapping('heat.stack_lifecycle_plugins'))
+    _register_event_sinks(
+        env,
+        _get_mapping('heat.event_sinks'))
 
     manager = plugin_manager.PluginManager(__name__)
     # Sometimes resources should not be available for registration in Heat due

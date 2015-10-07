@@ -819,6 +819,7 @@ class WithTemplateTest(StackResourceBaseTest):
 
     def test_create_with_template(self):
         child_env = {'parameter_defaults': {},
+                     'event_sinks': [],
                      'parameters': self.params,
                      'resource_registry': {'resources': {}},
                      'encrypted_param_names': []}
@@ -855,6 +856,7 @@ class WithTemplateTest(StackResourceBaseTest):
         self.parent_resource._nested = nested
 
         child_env = {'parameter_defaults': {},
+                     'event_sinks': [],
                      'parameters': self.params,
                      'resource_registry': {'resources': {}},
                      'encrypted_param_names': []}

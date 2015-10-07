@@ -183,6 +183,8 @@ class ThreadGroupManager(object):
             else:
                 lock.release()
 
+        # Link to self to allow the stack to run tasks
+        stack.thread_group_mgr = self
         th = self.start(stack.id, func, *args, **kwargs)
         th.link(release)
         return th

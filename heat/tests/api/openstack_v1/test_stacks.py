@@ -135,6 +135,7 @@ blarg: wibble
         body = {'parameters': params,
                 'encrypted_param_names': [],
                 'parameter_defaults': {},
+                'event_sinks': [],
                 'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(body, data.environment())
@@ -152,6 +153,7 @@ blarg: wibble
                                  'foo': 'bar'},
                   'encrypted_param_names': [],
                   'parameter_defaults': {},
+                  'event_sinks': [],
                   'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(expect, data.environment())
@@ -168,6 +170,7 @@ blarg: wibble
                                  'tester': 'Yes'},
                   'encrypted_param_names': [],
                   'parameter_defaults': {},
+                  'event_sinks': [],
                   'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(expect, data.environment())
@@ -183,7 +186,8 @@ blarg: wibble
         body = {'not the environment': env}
         data = stacks.InstantiationData(body)
         self.assertEqual({'parameters': {}, 'encrypted_param_names': [],
-                          'parameter_defaults': {}, 'resource_registry': {}},
+                          'parameter_defaults': {}, 'resource_registry': {},
+                          'event_sinks': []},
                          data.environment())
 
     def test_args(self):
@@ -650,6 +654,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -695,6 +700,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']},
@@ -757,6 +763,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30,
@@ -846,6 +853,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {'my.yaml': 'This is the file contents.'},
               'args': {'timeout_mins': 30},
@@ -891,6 +899,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -909,6 +918,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -927,6 +937,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -985,6 +996,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -1069,6 +1081,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -1153,6 +1166,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']}})
@@ -1187,6 +1201,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30}}),
@@ -1227,6 +1242,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1587,6 +1603,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30}})
@@ -1624,6 +1641,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']}})
@@ -1661,6 +1679,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {u'parameters': parameters,
                          u'encrypted_param_names': [],
                          u'parameter_defaults': {},
+                         u'event_sinks': [],
                          u'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30}})
@@ -1745,6 +1764,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1781,6 +1801,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1818,6 +1839,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1856,6 +1878,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1919,6 +1942,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1960,6 +1984,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': parameters,
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -2099,6 +2124,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'show_nested': False}),
@@ -2127,6 +2153,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'params': {'parameters': {},
                          'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'resource_registry': {}},
               'files': {},
               'show_nested': False}),

@@ -177,3 +177,17 @@ resource name. For example, the following entry pauses while creating
 
 Clear hooks by signaling the resource with ``{unset_hook: pre-create}``
 or ``{unset_hook: pre-update}``.
+
+Retrieving events
+-----------------
+
+By default events are stored in the database and can be retrieved via the API.
+Using the environment, you can register an endpoint which will receive events
+produced by your stack, so that you don't have to poll Heat.
+
+You can specify endpoints using the ``event_sinks`` property::
+
+  event_sinks:
+    - type: zaqar-queue
+      target: myqueue
+      ttl: 1200

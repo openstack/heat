@@ -26,6 +26,7 @@ class YamlEnvironmentTest(common.HeatTestCase):
 parameters: {}
 encrypted_param_names: []
 parameter_defaults: {}
+event_sinks: []
 resource_registry: {}
 '''
         tpl1 = environment_format.parse(yaml1)

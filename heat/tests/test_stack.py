@@ -14,6 +14,7 @@
 import collections
 import copy
 import datetime
+import eventlet
 import json
 import time
 
@@ -33,6 +34,7 @@ from heat.engine import environment
 from heat.engine import function
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import service
 from heat.engine import stack
 from heat.engine import template
 from heat.objects import raw_template as raw_template_object
@@ -2250,6 +2252,37 @@ class StackTest(common.HeatTestCase):
         params = loaded_stack.t.env.params
         self.assertEqual('foo', params.get('param1'))
         self.assertEqual('bar', params.get('param2'))
+
+    def test_event_dispatch(self):
+        env = environment.Environment()
+        evt = eventlet.event.Event()
+        sink = fakes.FakeEventSink(evt)
+        env.register_event_sink('dummy', lambda: sink)
+        env.load({"event_sinks": [{"type": "dummy"}]})
+        stk = stack.Stack(self.ctx, 'test',
+                          template.Template(empty_template, env=env))
+        stk.thread_group_mgr = service.ThreadGroupManager()
+        self.addCleanup(stk.thread_group_mgr.stop, stk.id)
+        stk.store()
+        stk._add_event('CREATE', 'IN_PROGRESS', '')
+        evt.wait()
+        expected = [{
+            'id': mock.ANY,
+            'timestamp': mock.ANY,
+            'type': 'os.heat.event',
+            'version': '0.1',
+            'payload': {
+                'physical_resource_id': stk.id,
+                'resource_action': 'CREATE',
+                'resource_name': 'test',
+                'resource_properties': {},
+                'resource_status': 'IN_PROGRESS',
+                'resource_status_reason': '',
+                'resource_type':
+                'OS::Heat::Stack',
+                'stack_id': stk.id,
+                'version': '0.1'}}]
+        self.assertEqual(expected, sink.events)
 
     @mock.patch.object(stack_object.Stack, 'delete')
     @mock.patch.object(raw_template_object.RawTemplate, 'delete')

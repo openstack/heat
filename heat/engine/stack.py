@@ -174,6 +174,7 @@ class Stack(collections.Mapping):
         self.cache_data = cache_data
         self._worker_client = None
         self._convg_deps = None
+        self.thread_group_mgr = None
 
         # strict_validate can be used to disable value validation
         # in the resource properties schema, this is useful when
@@ -750,6 +751,20 @@ class Stack(collections.Mapping):
                          self.name, 'OS::Heat::Stack')
 
         ev.store()
+        self.dispatch_event(ev)
+
+    def dispatch_event(self, ev):
+        def _dispatch(ctx, sinks, ev):
+            try:
+                for sink in sinks:
+                    sink.consume(ctx, ev)
+            except Exception as e:
+                LOG.debug('Got error sending events %s' % e)
+        if self.thread_group_mgr is not None:
+            self.thread_group_mgr.start(self.id, _dispatch,
+                                        self.context,
+                                        self.env.get_event_sinks(),
+                                        ev.as_dict())
 
     @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):

@@ -571,17 +571,17 @@ class Environment(object):
             env = {}
         if user_env:
             from heat.engine import resources
-            global_registry = resources.global_env().registry
+            global_env = resources.global_env()
+            global_registry = global_env.registry
+            event_sink_classes = global_env.event_sink_classes
         else:
             global_registry = None
+            event_sink_classes = {}
 
         self.registry = ResourceRegistry(global_registry, self)
         self.registry.load(env.get(env_fmt.RESOURCE_REGISTRY, {}))
 
-        if env_fmt.PARAMETER_DEFAULTS in env:
-            self.param_defaults = env[env_fmt.PARAMETER_DEFAULTS]
-        else:
-            self.param_defaults = {}
+        self.param_defaults = env.get(env_fmt.PARAMETER_DEFAULTS, {})
 
         self.encrypted_param_names = env.get(env_fmt.ENCRYPTED_PARAM_NAMES, [])
 
@@ -590,7 +590,13 @@ class Environment(object):
         else:
             self.params = dict((k, v) for (k, v) in six.iteritems(env)
                                if k not in (env_fmt.PARAMETER_DEFAULTS,
+                                            env_fmt.ENCRYPTED_PARAM_NAMES,
+                                            env_fmt.EVENT_SINKS,
                                             env_fmt.RESOURCE_REGISTRY))
+        self.event_sink_classes = event_sink_classes
+        self._event_sinks = []
+        self._built_event_sinks = []
+        self._update_event_sinks(env.get(env_fmt.EVENT_SINKS, []))
         self.constraints = {}
         self.stack_lifecycle_plugins = []
 
@@ -599,13 +605,15 @@ class Environment(object):
         self.params.update(env_snippet.get(env_fmt.PARAMETERS, {}))
         self.param_defaults.update(
             env_snippet.get(env_fmt.PARAMETER_DEFAULTS, {}))
+        self._update_event_sinks(env_snippet.get(env_fmt.EVENT_SINKS, []))
 
     def user_env_as_dict(self):
         """Get the environment as a dict, ready for storing in the db."""
         return {env_fmt.RESOURCE_REGISTRY: self.registry.as_dict(),
                 env_fmt.PARAMETERS: self.params,
                 env_fmt.PARAMETER_DEFAULTS: self.param_defaults,
-                env_fmt.ENCRYPTED_PARAM_NAMES: self.encrypted_param_names}
+                env_fmt.ENCRYPTED_PARAM_NAMES: self.encrypted_param_names,
+                env_fmt.EVENT_SINKS: self._event_sinks}
 
     def register_class(self, resource_type, resource_class, path=None):
         self.registry.register_class(resource_type, resource_class, path=path)
@@ -617,6 +625,9 @@ class Environment(object):
                                         stack_lifecycle_class):
         self.stack_lifecycle_plugins.append((stack_lifecycle_name,
                                              stack_lifecycle_class))
+
+    def register_event_sink(self, event_sink_name, event_sink_class):
+        self.event_sink_classes[event_sink_name] = event_sink_class
 
     def get_class(self, resource_type, resource_name=None, files=None):
         return self.registry.get_class(resource_type, resource_name,
@@ -646,6 +657,17 @@ class Environment(object):
 
     def get_stack_lifecycle_plugins(self):
         return self.stack_lifecycle_plugins
+
+    def _update_event_sinks(self, sinks):
+        self._event_sinks.extend(sinks)
+        for sink in sinks:
+            sink = sink.copy()
+            sink_class = sink.pop('type')
+            sink_class = self.event_sink_classes[sink_class]
+            self._built_event_sinks.append(sink_class(**sink))
+
+    def get_event_sinks(self):
+        return self._built_event_sinks
 
 
 def get_child_environment(parent_env, child_params, item_to_remove=None,

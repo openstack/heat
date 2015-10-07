@@ -103,6 +103,8 @@ class Event(object):
                 ev['resource_properties'] = {'Error': err}
                 new_ev = event_object.Event.create(self.context, ev)
         self.id = new_ev.id
+        self.timestamp = new_ev.created_at
+        self.uuid = new_ev.uuid
         return self.id
 
     def identifier(self):
@@ -114,3 +116,22 @@ class Event(object):
             resource_name=self.resource_name, **self.stack.identifier())
 
         return identifier.EventIdentifier(event_id=str(self.uuid), **res_id)
+
+    def as_dict(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'version': '0.1',
+            'type': 'os.heat.event',
+            'id': self.uuid,
+            'payload': {
+                'resource_name': self.resource_name,
+                'physical_resource_id': self.physical_resource_id,
+                'stack_id': self.stack.id,
+                'resource_action': self.action,
+                'resource_status': self.status,
+                'resource_status_reason': self.reason,
+                'resource_type': self.resource_type,
+                'resource_properties': self.resource_properties,
+                'version': '0.1'
+            }
+        }

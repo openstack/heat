@@ -1338,6 +1338,7 @@ class Resource(object):
                          self.name, self.type())
 
         ev.store()
+        self.stack.dispatch_event(ev)
 
     def _store_or_update(self, action, status, reason):
         prev_action = self.action

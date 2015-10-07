@@ -104,6 +104,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         stack_name = 'service_update_test_stack_existing_parameters'
         update_params = {'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'parameters': {'newparam': 123},
                          'resource_registry': {'resources': {}}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
@@ -138,6 +139,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         stack_name = 'service_update_test_stack_existing_parameters_remove'
         update_params = {'encrypted_param_names': [],
                          'parameter_defaults': {},
+                         'event_sinks': [],
                          'parameters': {'newparam': 123},
                          'resource_registry': {'resources': {}}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
@@ -177,6 +179,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         intial_params = {'encrypted_param_names': [],
                          'parameter_defaults': {},
                          'parameters': {},
+                         'event_sinks': [],
                          'resource_registry': intital_registry}
         initial_files = {'foo.yaml': 'foo',
                          'foo2.yaml': 'foo2',
@@ -207,6 +210,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         expected_env = {'encrypted_param_names': [],
                         'parameter_defaults': {},
                         'parameters': {},
+                        'event_sinks': [],
                         'resource_registry': expected_reg}
         # FIXME(shardy): Currently we don't prune unused old files
         expected_files = {'foo.yaml': 'foo',
@@ -257,6 +261,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                             'mydefault': 123,
                             'default2': 456},
                         'parameters': {},
+                        'event_sinks': [],
                         'resource_registry': {'resources': {}}}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
