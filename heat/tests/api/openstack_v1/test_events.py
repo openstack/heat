@@ -64,7 +64,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
+                  'sort_dir': None, 'filters': {'resource_name': res_name}}
 
         engine_resp = [
             {
@@ -72,20 +72,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'event_time': u'2012-07-23T13:05:39Z',
                 u'stack_identity': dict(stack_identity),
                 u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
-                u'resource_type': u'AWS::EC2::Instance',
-            },
-            {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': 'SomeOtherResource',
-                u'logical_resource_id': 'SomeOtherResource',
                 u'resource_status_reason': u'state changed',
                 u'event_identity': dict(ev_identity),
                 u'resource_action': u'CREATE',
@@ -128,6 +114,99 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(expected, result)
         self.m.VerifyAll()
 
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_multiple_resource_names(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        res_name = 'resource3'
+        event_id = '42'
+        params = {
+            'resource_name': ['resource1', 'resource2']
+        }
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+        req = self._get(stack_identity._tenant_path() + '/events',
+                        params=params)
+
+        mock_call.return_value = [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'resource_name': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_action': u'CREATE',
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]
+
+        self.controller.index(req, tenant_id=self.tenant,
+                              stack_name=stack_identity.stack_name,
+                              stack_id=stack_identity.stack_id,
+                              resource_name=res_name)
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[1][1]
+        self.assertEqual(6, len(engine_args))
+        self.assertIn('filters', engine_args)
+        self.assertIn('resource_name', engine_args['filters'])
+        self.assertEqual(res_name, engine_args['filters']['resource_name'])
+        self.assertNotIn('resource1', engine_args['filters']['resource_name'])
+        self.assertNotIn('resource2', engine_args['filters']['resource_name'])
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_multiple_resource_names_no_resource(self, mock_call,
+                                                       mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        res_name = 'resource3'
+        event_id = '42'
+        params = {
+            'resource_name': ['resource1', 'resource2']
+        }
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+        req = self._get(stack_identity._tenant_path() + '/events',
+                        params=params)
+
+        mock_call.return_value = [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'resource_name': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_action': u'CREATE',
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]
+
+        self.controller.index(req, tenant_id=self.tenant,
+                              stack_name=stack_identity.stack_name,
+                              stack_id=stack_identity.stack_id)
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[1][1]
+        self.assertEqual(6, len(engine_args))
+        self.assertIn('filters', engine_args)
+        self.assertIn('resource_name', engine_args['filters'])
+        self.assertIn('resource1', engine_args['filters']['resource_name'])
+        self.assertIn('resource2', engine_args['filters']['resource_name'])
+
     def test_stack_index_event_id_integer(self, mock_enforce):
         self._test_stack_index('42', mock_enforce)
 
@@ -149,7 +228,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
+                  'sort_dir': None, 'filters': {'resource_name': res_name}}
 
         engine_resp = [
             {
@@ -175,7 +254,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         result = self.controller.index(req, tenant_id=self.tenant,
                                        stack_name=stack_identity.stack_name,
-                                       stack_id=stack_identity.stack_id)
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
 
         expected = {
             'events': [
@@ -248,37 +328,18 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
     def test_index_resource_nonexist(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
-        event_id = '42'
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
-        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
-                                                     **stack_identity)
-        ev_identity = identifier.EventIdentifier(event_id=event_id,
-                                                 **res_identity)
 
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events')
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
+                  'sort_dir': None, 'filters': {'resource_name': res_name}}
 
-        engine_resp = [
-            {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': 'SomeOtherResource',
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
-                u'resource_type': u'AWS::EC2::Instance',
-            }
-        ]
+        engine_resp = []
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -399,8 +460,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                                                    'wordpress', '6')
         res_identity = identifier.ResourceIdentifier(resource_name=res_name,
                                                      **stack_identity)
-        ev1_identity = identifier.EventIdentifier(event_id='41',
-                                                  **res_identity)
         ev_identity = identifier.EventIdentifier(event_id=event_id,
                                                  **res_identity)
 
@@ -409,22 +468,9 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
+                  'sort_dir': None, 'filters': {'resource_name': res_name}}
 
         engine_resp = [
-            {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev1_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
-                u'resource_type': u'AWS::EC2::Instance',
-            },
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:06:00Z',
@@ -476,92 +522,21 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(expected, result)
         self.m.VerifyAll()
 
-    def test_show_nonexist_event_id_integer(self, mock_enforce):
-        self._test_show_nonexist('42', '41', mock_enforce)
-
-    def test_show_nonexist_event_id_uuid(self, mock_enforce):
-        self._test_show_nonexist('a3455d8c-9f88-404d-a85b-5315293e67de',
-                                 'x3455x8x-9x88-404x-x85x-5315293x67xx',
-                                 mock_enforce)
-
-    def _test_show_nonexist(self, event_id, search_event_id, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'show', True)
-        res_name = 'WikiDatabase'
-        stack_identity = identifier.HeatIdentifier(self.tenant,
-                                                   'wordpress', '6')
-        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
-                                                     **stack_identity)
-        ev_identity = identifier.EventIdentifier(event_id=search_event_id,
-                                                 **res_identity)
-
-        req = self._get(stack_identity._tenant_path() +
-                        '/resources/' + res_name + '/events/' + event_id)
-
-        kwargs = {'stack_identity': stack_identity,
-                  'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
-
-        engine_resp = [
-            {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
-                u'resource_type': u'AWS::EC2::Instance',
-            }
-        ]
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context, ('list_events', kwargs)).AndReturn(engine_resp)
-        self.m.ReplayAll()
-
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.show,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name, event_id=event_id)
-        self.m.VerifyAll()
-
     def test_show_bad_resource(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
         event_id = '42'
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
-        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
-                                                     **stack_identity)
-        ev_identity = identifier.EventIdentifier(event_id='41',
-                                                 **res_identity)
 
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
+                  'sort_dir': None, 'filters': {'resource_name': res_name}}
 
-        engine_resp = [
-            {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': 'SomeOtherResourceName',
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
-                u'resource_type': u'AWS::EC2::Instance',
-            }
-        ]
+        engine_resp = []
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context, ('list_events', kwargs)).AndReturn(engine_resp)
@@ -587,7 +562,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': None}
+                  'sort_dir': None, 'filters': {'resource_name': res_name}}
 
         error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
@@ -630,3 +605,45 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_show_multiple_resource_names(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show', True)
+        res_name = 'resource3'
+        event_id = '42'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events/' + event_id)
+
+        mock_call.return_value = [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'resource_name': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_action': u'CREATE',
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]
+
+        self.controller.show(req, tenant_id=self.tenant,
+                             stack_name=stack_identity.stack_name,
+                             stack_id=stack_identity.stack_id,
+                             resource_name=res_name, event_id=event_id)
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[1][1]
+        self.assertEqual(6, len(engine_args))
+        self.assertIn('filters', engine_args)
+        self.assertIn('resource_name', engine_args['filters'])
+        self.assertIn(res_name, engine_args['filters']['resource_name'])
