@@ -1341,8 +1341,8 @@ class ResourceTest(common.HeatTestCase):
     def _test_skip_validation_if_custom_constraint(self, tmpl):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         stack.store()
-        path = ('heat.engine.clients.os.neutron.NetworkConstraint.'
-                'validate_with_client')
+        path = ('heat.engine.clients.os.neutron.neutron_constraints.'
+                'NetworkConstraint.validate_with_client')
         with mock.patch(path) as mock_validate:
             mock_validate.side_effect = neutron_exp.NeutronClientException
             rsrc2 = stack['bar']

@@ -29,7 +29,7 @@ from heat.common import policy
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
-from heat.engine.clients.os import neutron
+from heat.engine.clients.os.neutron import neutron_constraints as neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import sahara
 from heat.engine.clients.os import trove
