@@ -112,6 +112,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
                          ).return_value = 'some_pool_id'
         sahara_mock = mock.MagicMock()
         self.ngt_mgr = sahara_mock.node_group_templates
+        self.plugin_mgr = sahara_mock.plugins
         self.patchobject(sahara.SaharaClientPlugin,
                          '_create').return_value = sahara_mock
         self.patchobject(sahara.SaharaClientPlugin, 'validate_hadoop_version'
@@ -222,6 +223,24 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.ngt_mgr.get.return_value = self.fake_ngt
         self.assertEqual({"ng-template": "info"}, ngt.FnGetAtt('show'))
         self.ngt_mgr.get.assert_called_once_with('some_ng_id')
+
+    def test_validate_node_processes_fails(self):
+        ngt = self._init_ngt(self.t)
+        plugin_mock = mock.MagicMock()
+        plugin_mock.node_processes = {
+            "HDFS": ["namenode", "datanode", "secondarynamenode"],
+            "JobFlow": ["oozie"]
+        }
+        self.plugin_mgr.get_version_details.return_value = plugin_mock
+        ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
+        self.assertIn("resources.node-group.properties: Plugin vanilla "
+                      "doesn't support the following node processes: "
+                      "jobtracker. Allowed processes are: ",
+                      six.text_type(ex))
+        self.assertIn("namenode", six.text_type(ex))
+        self.assertIn("datanode", six.text_type(ex))
+        self.assertIn("secondarynamenode", six.text_type(ex))
+        self.assertIn("oozie", six.text_type(ex))
 
 
 class SaharaClusterTemplateTest(common.HeatTestCase):
