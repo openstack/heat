@@ -1,7 +1,5 @@
-import six
+import sys
 
+from mox3 import mox
 
-if six.PY3:
-    from mox3 import mox
-    import sys
-    sys.modules['mox'] = mox
+sys.modules['mox'] = mox

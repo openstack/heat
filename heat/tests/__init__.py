@@ -11,14 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+import sys
+
+from mox3 import mox
 import oslo_i18n as i18n
-import six
 
-
-if six.PY3:
-    from mox3 import mox
-    import sys
-    sys.modules['mox'] = mox
+sys.modules['mox'] = mox
 
 
 def fake_translate_msgid(msgid, domain, desired_locale=None):
