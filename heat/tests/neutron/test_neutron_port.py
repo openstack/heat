@@ -831,5 +831,6 @@ class NeutronPortTest(common.HeatTestCase):
         # same ip was removed from old port
         expected_new_props = {'port': {'fixed_ips': []}}
         expected_old_props = {'port': {'fixed_ips': _value}}
-        n_client.update_port.has_calls(('new_res_id', expected_new_props),
-                                       ('old_res_id', expected_old_props))
+        n_client.update_port.assert_has_calls([
+            mock.call('new_res_id', expected_new_props),
+            mock.call('old_res_id', expected_old_props)])
