@@ -13,10 +13,7 @@
 # under the License.
 
 
-"""
-Resource object
-"""
-
+"""Resource object."""
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils

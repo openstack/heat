@@ -13,10 +13,7 @@
 # under the License.
 
 
-"""
-SoftwareConfig object
-"""
-
+"""SoftwareConfig object."""
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields

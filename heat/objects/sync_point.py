@@ -12,9 +12,7 @@
 # under the License.
 
 
-"""
-SyncPoint object
-"""
+"""SyncPoint object."""
 
 
 from oslo_versionedobjects import base
