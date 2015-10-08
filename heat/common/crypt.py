@@ -78,8 +78,8 @@ def get_valid_encryption_key(encryption_key, fix_length=False):
 
 
 def heat_decrypt(value, encryption_key=None):
-    """Decrypt function for data that has been encrypted using an older
-    version of Heat.
+    """Decrypt data that has been encrypted using an older version of Heat.
+
     Note: the encrypt function returns the function that is needed to
     decrypt the data. The database then stores this. When the data is
     then retrieved (potentially by a later version of Heat) the decrypt

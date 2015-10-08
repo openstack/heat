@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Utilities for handling ISO 8601 duration format.
-"""
+"""Utilities for handling ISO 8601 duration format."""
 
 import datetime
 import random
@@ -28,13 +26,12 @@ wallclock = time.time
 
 
 class Duration(object):
-    '''
-    Note that we don't attempt to handle leap seconds or large clock
-    jumps here. The latter are assumed to be rare and the former
-    negligible in the context of the timeout. Time zone adjustments,
-    Daylight Savings and the like *are* handled. PEP 418 adds a proper
-    monotonic clock, but only in Python 3.3.
-    '''
+    # (NOTE): we don't attempt to handle leap seconds or large clock
+    # jumps here. The latter are assumed to be rare and the former
+    # negligible in the context of the timeout. Time zone adjustments,
+    # Daylight Savings and the like *are* handled. PEP 418 adds a proper
+    # monotonic clock, but only in Python 3.3.
+
     def __init__(self, timeout=0):
         self._endtime = wallclock() + timeout
 
@@ -46,8 +43,7 @@ class Duration(object):
 
 
 def parse_isoduration(duration):
-    """
-    Convert duration in ISO 8601 format to second(s).
+    """Convert duration in ISO 8601 format to second(s).
 
     Year, Month, Week, and Day designators are not supported.
     Example: 'PT12H30M5S'
@@ -66,8 +62,7 @@ def parse_isoduration(duration):
 
 
 def retry_backoff_delay(attempt, scale_factor=1.0, jitter_max=0.0):
-    """
-    Calculate an exponential backoff delay with jitter.
+    """Calculate an exponential backoff delay with jitter.
 
     Delay is calculated as
     2^attempt + (uniform random from [0,1) * jitter_max)

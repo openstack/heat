@@ -162,7 +162,6 @@ class HeatIdentifier(collections.Mapping):
 
 
 class ResourceIdentifier(HeatIdentifier):
-
     """An identifier for a resource."""
 
     RESOURCE_NAME = 'resource_name'
@@ -198,7 +197,6 @@ class ResourceIdentifier(HeatIdentifier):
 
 
 class EventIdentifier(HeatIdentifier):
-
     """An identifier for an event."""
 
     (RESOURCE_NAME, EVENT_ID) = (ResourceIdentifier.RESOURCE_NAME, 'event_id')

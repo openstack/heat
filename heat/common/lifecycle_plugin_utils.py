@@ -12,9 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
-Utility for fetching and running plug point implementation classes
-'''
+"""Utility for fetching and running plug point implementation classes."""
 
 from oslo_log import log as logging
 
@@ -27,14 +25,15 @@ pp_class_instances = None
 
 
 def get_plug_point_class_instances():
-    '''
+    """Instances of classes that implements pre/post stack operation methods.
+
     Get list of instances of classes that (may) implement pre and post
     stack operation methods.
 
     The list of class instances is sorted using get_ordinal methods
     on the plug point classes. If class1.ordinal() < class2.ordinal(),
     then class1 will be before before class2 in the list.
-    '''
+    """
     global pp_class_instances
     if pp_class_instances is None:
         pp_class_instances = []
@@ -60,13 +59,14 @@ def get_plug_point_class_instances():
 
 
 def do_pre_ops(cnxt, stack, current_stack=None, action=None):
-    '''
-    Call available pre-op methods sequentially, in order determined with
-    get_ordinal(), with parameters context, stack, current_stack, action
+    """Call available pre-op methods sequentially.
+
+    In order determined with get_ordinal(), with parameters context, stack,
+    current_stack, action.
 
     On failure of any pre_op method, will call post-op methods corresponding
-    to successful calls of pre-op methods
-    '''
+    to successful calls of pre-op methods.
+    """
     cinstances = get_plug_point_class_instances()
     if action is None:
         action = stack.action
@@ -82,11 +82,11 @@ def do_pre_ops(cnxt, stack, current_stack=None, action=None):
 
 def do_post_ops(cnxt, stack, current_stack=None, action=None,
                 is_stack_failure=False):
-    '''
-    Call available post-op methods sequentially, in order determined with
-    get_ordinal(), with parameters context, stack, current_stack,
-    action, is_stack_failure
-    '''
+    """Call available post-op methods sequentially.
+
+    In order determined with get_ordinal(), with parameters context, stack,
+    current_stack, action, is_stack_failure.
+    """
     cinstances = get_plug_point_class_instances()
     if action is None:
         action = stack.action
