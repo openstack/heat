@@ -333,10 +333,10 @@ class ServerNetworkMixin(object):
 
         data = {'external_ports': [],
                 'internal_ports': []}
-        port_data = itertools.chain(
+        port_data = list(itertools.chain(
             [('internal_ports', port) for port in self._data_get_ports()],
             [('external_ports', port)
-             for port in self._data_get_ports('external_ports')])
+             for port in self._data_get_ports('external_ports')]))
         for port_type, port in port_data:
             # store port fixed_ips for restoring after failed update
             port_details = self.client('neutron').show_port(port['id'])['port']
