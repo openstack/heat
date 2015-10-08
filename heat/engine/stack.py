@@ -717,6 +717,11 @@ class Stack(collections.Mapping):
         self.status = status
         self.status_reason = reason
 
+        if cfg.CONF.convergence_engine:
+            # for convergence stack lock is not used, hence persist state
+            self._persist_state()
+            return
+
         # Persist state to db only if status == IN_PROGRESS
         # or action == self.DELETE/self.ROLLBACK. Else, it would
         # be done before releasing the stack lock.
