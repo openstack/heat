@@ -1378,8 +1378,12 @@ class Resource(object):
 
         if not updated_ok:
             ex = exception.UpdateInProgress(self.name)
-            LOG.exception('atomic:%s engine_id:%s/%s' % (
-                rs.atomic_key, rs.engine_id, engine_id))
+            LOG.error(_LE(
+                'Error acquiring lock for resource id:%(resource_id)s with'
+                'atomic key:%(atomic_key)s,'
+                'engine_id:%(rs_engine_id)s/%(engine_id)s') % {
+                    'resource_id': rs.id, 'atomic_key': rs.atomic_key,
+                    'rs_engine_id': rs.engine_id, 'engine_id': engine_id})
             raise ex
 
     def _release(self, engine_id):
