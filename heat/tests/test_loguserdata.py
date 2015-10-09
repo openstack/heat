@@ -15,158 +15,155 @@ import errno
 import os
 import subprocess
 
-import mox
-import pkg_resources
-import six
+import mock
+import unittest
 
 from heat.cloudinit import loguserdata
-from heat.tests import common
 
 
 class FakeCiVersion(object):
-    def __init__(self, version=None):
+    def __init__(self, version):
         self.version = version
 
 
-class FakePOpen(object):
-    def __init__(self, returncode=0):
-        self.returncode = returncode
+class LoguserdataTest(unittest.TestCase):
 
-    def wait(self):
-        pass
+    @mock.patch('pkg_resources.get_distribution')
+    def test_ci_version_with_pkg_resources(self, mock_get):
+        # Setup
+        returned_versions = [
+            FakeCiVersion('0.5.0'),
+            FakeCiVersion('0.5.9'),
+            FakeCiVersion('0.6.0'),
+            FakeCiVersion('0.7.0'),
+            FakeCiVersion('1.0'),
+            FakeCiVersion('2.0'),
+        ]
+        mock_get.side_effect = returned_versions
 
-    def communicate(self, input=None):
-        pass
-
-
-class LoguserdataTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(LoguserdataTest, self).setUp()
-        self.m.StubOutWithMock(pkg_resources, 'get_distribution')
-        self.m.StubOutWithMock(subprocess, 'Popen')
-        self.m.StubOutWithMock(os, 'chmod')
-
-    def test_ci_version(self):
-        # too old versions
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.5.0'))
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.5.9'))
-
-        # new enough versions
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.6.0'))
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('1.0'))
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('2.0'))
-
-        self.m.ReplayAll()
-
+        # Test & Verify
         self.assertFalse(loguserdata.chk_ci_version())
         self.assertFalse(loguserdata.chk_ci_version())
-
         self.assertTrue(loguserdata.chk_ci_version())
         self.assertTrue(loguserdata.chk_ci_version())
         self.assertTrue(loguserdata.chk_ci_version())
         self.assertTrue(loguserdata.chk_ci_version())
+        self.assertEqual(6, mock_get.call_count)
 
-        self.m.VerifyAll()
+    @mock.patch('pkg_resources.get_distribution')
+    @mock.patch('subprocess.Popen')
+    def test_ci_version_with_subprocess(self, mock_popen,
+                                        mock_get_distribution):
+        # Setup
+        mock_get_distribution.side_effect = Exception()
 
-    def test_call(self):
-        subprocess.Popen(
-            ['echo', 'hi'],
-            stderr=mox.IgnoreArg(),
-            stdout=mox.IgnoreArg()).AndReturn(FakePOpen(0))
+        popen_return = [
+            [None, 'cloud-init 0.0.5\n'],
+            [None, 'cloud-init 0.7.5\n'],
+        ]
+        mock_popen.return_value = mock.MagicMock()
+        mock_popen.return_value.communicate.side_effect = popen_return
 
-        self.m.ReplayAll()
-        self.assertEqual(0, loguserdata.call(['echo', 'hi']))
-        self.m.VerifyAll()
+        # Test & Verify
+        self.assertFalse(loguserdata.chk_ci_version())
+        self.assertTrue(loguserdata.chk_ci_version())
+        self.assertEqual(2, mock_get_distribution.call_count)
 
-    def test_main(self):
+    @mock.patch('pkg_resources.get_distribution')
+    @mock.patch('subprocess.Popen')
+    def test_ci_version_with_subprocess_exception(self, mock_popen,
+                                                  mock_get_distribution):
+        # Setup
+        mock_get_distribution.side_effect = Exception()
+        mock_popen.return_value = mock.MagicMock()
+        mock_popen.return_value.communicate.return_value = ['non-empty',
+                                                            'irrelevant']
 
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
+        # Test
+        self.assertRaises(Exception, loguserdata.chk_ci_version)  # noqa
+        self.assertEqual(1, mock_get_distribution.call_count)
 
-        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
-        subprocess.Popen(
-            ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=mox.IgnoreArg(),
-            stdout=mox.IgnoreArg()).AndReturn(FakePOpen(0))
+    @mock.patch('subprocess.Popen')
+    def test_call(self, mock_popen):
+        # Setup
+        mock_popen.return_value = mock.MagicMock()
+        mock_popen.return_value.communicate.return_value = ['a', 'b']
+        mock_popen.return_value.returncode = 0
 
-        self.m.ReplayAll()
-        loguserdata.main()
-        self.m.VerifyAll()
+        # Test
+        return_code = loguserdata.call(['foo', 'bar'])
 
-    def test_main_script_empty(self):
+        # Verify
+        mock_popen.assert_called_once_with(['foo', 'bar'],
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE)
+        self.assertEqual(0, return_code)
 
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
+    @mock.patch('sys.exc_info')
+    @mock.patch('subprocess.Popen')
+    def test_call_oserror_enoexec(self, mock_popen, mock_exc_info):
+        # Setup
+        mock_popen.side_effect = OSError()
+        no_exec = mock.MagicMock(errno=errno.ENOEXEC)
+        mock_exc_info.return_value = None, no_exec, None
 
-        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
-        subprocess.Popen(
-            ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=mox.IgnoreArg(),
-            stdout=mox.IgnoreArg()).AndRaise(
-                OSError(errno.ENOEXEC, "empty script"))
+        # Test
+        return_code = loguserdata.call(['foo', 'bar'])
 
-        self.m.ReplayAll()
-        self.assertIsNone(loguserdata.main())
+        # Verify
+        self.assertEqual(os.EX_OK, return_code)
 
-        self.m.VerifyAll()
+    @mock.patch('sys.exc_info')
+    @mock.patch('subprocess.Popen')
+    def test_call_oserror_other(self, mock_popen, mock_exc_info):
+        # Setup
+        mock_popen.side_effect = OSError()
+        no_exec = mock.MagicMock(errno='foo')
+        mock_exc_info.return_value = None, no_exec, None
 
-    def test_main_os_error(self):
+        # Test
+        return_code = loguserdata.call(['foo', 'bar'])
 
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
+        # Verify
+        self.assertEqual(os.EX_OSERR, return_code)
 
-        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
-        subprocess.Popen(
-            ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=mox.IgnoreArg(),
-            stdout=mox.IgnoreArg()).AndRaise(
-                OSError(errno.ENOENT, "no such file"))
+    @mock.patch('sys.exc_info')
+    @mock.patch('subprocess.Popen')
+    def test_call_exception(self, mock_popen, mock_exc_info):
+        # Setup
+        mock_popen.side_effect = Exception()
+        no_exec = mock.MagicMock(errno='irrelevant')
+        mock_exc_info.return_value = None, no_exec, None
 
-        self.m.ReplayAll()
-        self.assertEqual(os.EX_OSERR, loguserdata.main())
+        # Test
+        return_code = loguserdata.call(['foo', 'bar'])
 
-        self.m.VerifyAll()
+        # Verify
+        self.assertEqual(os.EX_SOFTWARE, return_code)
 
-    def test_main_error_other(self):
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
-        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
-        subprocess.Popen(
-            ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=mox.IgnoreArg(),
-            stdout=mox.IgnoreArg()).AndRaise(IOError("read failed"))
+    @mock.patch('pkg_resources.get_distribution')
+    @mock.patch('os.chmod')
+    @mock.patch('heat.cloudinit.loguserdata.call')
+    def test_main(self, mock_call, mock_chmod, mock_get):
+        # Setup
+        mock_get.return_value = FakeCiVersion('1.0')
+        mock_call.return_value = 10
 
-        self.m.ReplayAll()
-        if six.PY3:
-            self.assertEqual(os.EX_OSERR, loguserdata.main())
-        else:
-            self.assertEqual(os.EX_SOFTWARE, loguserdata.main())
-        self.m.VerifyAll()
+        # Test
+        return_code = loguserdata.main()
 
-    def test_main_fails(self):
+        # Verify
+        expected_path = os.path.join(loguserdata.VAR_PATH, 'cfn-userdata')
+        mock_chmod.assert_called_once_with(expected_path, int('700', 8))
+        self.assertEqual(10, return_code)
 
-        # fail on ci version
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.5.0'))
-        # fail on execute cfn-userdata
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
+    @mock.patch('pkg_resources.get_distribution')
+    def test_main_failed_ci_version(self, mock_get):
+        # Setup
+        mock_get.return_value = FakeCiVersion('0.0.0')
 
-        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
-        subprocess.Popen(
-            ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=mox.IgnoreArg(),
-            stdout=mox.IgnoreArg()).AndReturn(FakePOpen(-2))
+        # Test
+        return_code = loguserdata.main()
 
-        self.m.ReplayAll()
-        self.assertEqual(-1, loguserdata.main())
-        self.assertEqual(-2, loguserdata.main())
-        self.m.VerifyAll()
+        # Verify
+        self.assertEqual(-1, return_code)
