@@ -24,7 +24,7 @@ There are instructions for `installing the RDO OpenStack distribution
 
 If installing with packstack, you can install heat by specifying
 ``--os-heat-install=y`` in your packstack invocation, or setting
-``CONFIG_HEAT_INSTALL=y`` in your anwsers file.
+``CONFIG_HEAT_INSTALL=y`` in your answers file.
 
 If installing with `RDO-Manager
 <https://www.rdoproject.org/RDO-Manager>`_ Heat will be installed by
