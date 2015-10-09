@@ -42,6 +42,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import service
 from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests.fakes import FakeKeystoneClient
@@ -3431,6 +3432,112 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
         self.assertEqual('AResource1',
+                         self.stack['BResource'].properties['Foo'])
+
+        self.m.VerifyAll()
+
+    def test_update_failure_recovery_new_param_stack_list(self):
+        '''
+        assertion:
+        check that stack-list is not broken if update fails in between.
+        Also ensure that next update passes
+        '''
+
+        class ResourceTypeA(generic_rsrc.ResourceWithProps):
+            count = 0
+
+            def handle_create(self):
+                ResourceTypeA.count += 1
+                self.resource_id_set('%s%d' % (self.name, self.count))
+
+            def handle_delete(self):
+                return super(ResourceTypeA, self).handle_delete()
+
+        resource._register_class('ResourceTypeA', ResourceTypeA)
+
+        tmpl = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'abc-param': {'Type': 'String'}
+            },
+            'Resources': {
+                'AResource': {'Type': 'ResourceTypeA',
+                              'Properties': {'Foo': {'Ref': 'abc-param'}}},
+                'BResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': {'Ref': 'AResource'}}}
+            }
+        }
+        env1 = environment.Environment({'abc-param': 'abc'})
+        tmpl2 = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'smelly-param': {'Type': 'String'}
+            },
+            'Resources': {
+                'AResource': {'Type': 'ResourceTypeA',
+                              'Properties': {'Foo': {'Ref': 'smelly-param'}}},
+                'BResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': {'Ref': 'AResource'}}}
+            }
+        }
+        env2 = environment.Environment({'smelly-param': 'smelly'})
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl), env1,
+                                  disable_rollback=True)
+
+        self.stack.store()
+        self.stack.create()
+
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        self.assertEqual('AResource1',
+                         self.stack['BResource'].properties['Foo'])
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+        self.m.StubOutWithMock(ResourceTypeA, 'handle_delete')
+
+        # mock to make the replace fail when creating the second
+        # replacement resource
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
+        # delete the old resource on the second update
+        generic_rsrc.ResourceWithProps.handle_delete()
+        ResourceTypeA.handle_delete()
+        generic_rsrc.ResourceWithProps.handle_create()
+        generic_rsrc.ResourceWithProps.handle_delete()
+
+        self.m.ReplayAll()
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2), env2,
+                                     disable_rollback=True)
+        self.stack.update(updated_stack)
+
+        # Ensure UPDATE FAILED
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
+                         self.stack.state)
+        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+
+        # check if heat stack-list works, wherein it tries to fetch template
+        # parameters value from env
+        self.eng = service.EngineService('a-host', 'a-topic')
+        self.eng.list_stacks(self.ctx)
+
+        # Check if next update works fine
+        self.stack = parser.Stack.load(self.ctx, self.stack.id)
+        updated_stack2 = parser.Stack(self.ctx, 'updated_stack',
+                                      template.Template(tmpl2), env2,
+                                      disable_rollback=True)
+
+        self.stack.update(updated_stack2)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        self.stack = parser.Stack.load(self.ctx, self.stack.id)
+        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+        self.assertEqual('AResource2',
                          self.stack['BResource'].properties['Foo'])
 
         self.m.VerifyAll()
