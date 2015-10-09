@@ -13,16 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Client side of the heat engine RPC API.
-"""
+"""Client side of the heat engine RPC API."""
 
 from heat.common import messaging
 from heat.rpc import api as rpc_api
 
 
 class EngineClient(object):
-    '''Client side of the heat engine rpc API.
+    """Client side of the heat engine rpc API.
 
     API version history::
 
@@ -39,7 +37,7 @@ class EngineClient(object):
         1.16 - Adds version, type_name to list_resource_types()
         1.17 - Add files to validate_template
         1.18 - Add show_nested to validate_template
-    '''
+    """
 
     BASE_RPC_API_VERSION = '1.0'
 
@@ -69,8 +67,7 @@ class EngineClient(object):
         return client.cast(ctxt, method, **kwargs)
 
     def local_error_name(self, error):
-        """
-        Returns the name of the error with any _Remote postfix removed.
+        """Returns the name of the error with any _Remote postfix removed.
 
         :param error: Remote raised error to derive the name from.
         """
@@ -78,8 +75,7 @@ class EngineClient(object):
         return error_name.split('_Remote')[0]
 
     def ignore_error_named(self, error, name):
-        """
-        Raises the error unless its local name matches the supplied name
+        """Raises the error unless its local name matches the supplied name.
 
         :param error: Remote raised error to derive the local name from.
         :param name: Name to compare local name to.
@@ -88,9 +84,7 @@ class EngineClient(object):
             raise error
 
     def identify_stack(self, ctxt, stack_name):
-        """
-        The identify_stack method returns the full stack identifier for a
-        single, live stack given the stack name.
+        """Returns the full stack identifier for a single, live stack.
 
         :param ctxt: RPC context.
         :param stack_name: Name of the stack you want to see,
@@ -104,10 +98,11 @@ class EngineClient(object):
                     show_deleted=False, show_nested=False, show_hidden=False,
                     tags=None, tags_any=None, not_tags=None,
                     not_tags_any=None):
-        """
-        The list_stacks method returns attributes of all stacks.  It supports
-        pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
-        ``sort_dir``) and filtering (``filters``) of the results.
+        """Returns attributes of all stacks.
+
+        It supports pagination (``limit`` and ``marker``), sorting
+        (``sort_keys`` and ``sort_dir``) and filtering (``filters``) of the
+        results.
 
         :param ctxt: RPC context.
         :param limit: the number of stacks to list (integer or string)
@@ -146,8 +141,8 @@ class EngineClient(object):
                      show_deleted=False, show_nested=False, show_hidden=False,
                      tags=None, tags_any=None, not_tags=None,
                      not_tags_any=None):
-        """
-        Return the number of stacks that match the given filters
+        """Returns the number of stacks that match the given filters.
+
         :param ctxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
         :param tenant_safe: if true, scope the request by the current tenant
@@ -177,8 +172,8 @@ class EngineClient(object):
                          version='1.8')
 
     def show_stack(self, ctxt, stack_identity):
-        """
-        Return detailed information about one or all stacks.
+        """Returns detailed information about one or all stacks.
+
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to show, or None to
         show all
@@ -187,8 +182,7 @@ class EngineClient(object):
                                              stack_identity=stack_identity))
 
     def preview_stack(self, ctxt, stack_name, template, params, files, args):
-        """
-        Simulates a new stack using the provided template.
+        """Simulates a new stack using the provided template.
 
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
@@ -206,9 +200,8 @@ class EngineClient(object):
                                        params=params, files=files, args=args))
 
     def create_stack(self, ctxt, stack_name, template, params, files, args):
-        """
-        The create_stack method creates a new stack using the template
-        provided.
+        """Creates a new stack using the template provided.
+
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
 
@@ -225,10 +218,11 @@ class EngineClient(object):
     def _create_stack(self, ctxt, stack_name, template, params, files, args,
                       owner_id=None, nested_depth=0, user_creds_id=None,
                       stack_user_project_id=None, parent_resource_name=None):
-        """
-        Internal create_stack interface for engine-to-engine communication via
-        RPC.  Allows some additional options which should not be exposed to
-        users via the API:
+        """Internal interface for engine-to-engine communication via RPC.
+
+        Allows some additional options which should not be exposed to users via
+        the API:
+
         :param owner_id: parent stack ID for nested stacks
         :param nested_depth: nested depth for nested stacks
         :param user_creds_id: user_creds record for nested stack
@@ -248,9 +242,8 @@ class EngineClient(object):
 
     def update_stack(self, ctxt, stack_identity, template, params,
                      files, args):
-        """
-        The update_stack method updates an existing stack based on the
-        provided template and parameters.
+        """Updates an existing stack based on the provided template and params.
+
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
 
@@ -270,10 +263,9 @@ class EngineClient(object):
 
     def preview_update_stack(self, ctxt, stack_identity, template, params,
                              files, args):
-        """
-        The preview_update_stack method returns the resources that would be
-        changed in an update of an existing stack based on the provided
-        template and parameters.
+        """Returns the resources that would be changed in an update.
+
+        Based on the provided template and parameters.
 
         Requires RPC version 1.15 or above.
 
@@ -296,9 +288,7 @@ class EngineClient(object):
 
     def validate_template(self, ctxt, template, params=None, files=None,
                           show_nested=False):
-        """
-        The validate_template method uses the stack parser to check
-        the validity of a template.
+        """Uses the stack parser to check the validity of a template.
 
         :param ctxt: RPC context.
         :param template: Template of stack you want to create.
@@ -314,7 +304,8 @@ class EngineClient(object):
                          version='1.18')
 
     def authenticated_to_backend(self, ctxt):
-        """
+        """Validate the credentials in the RPC context.
+
         Verify that the credentials in the RPC context are valid for the
         current cloud backend.
 
@@ -323,8 +314,7 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('authenticated_to_backend'))
 
     def get_template(self, ctxt, stack_identity):
-        """
-        Get the template.
+        """Get the template.
 
         :param ctxt: RPC context.
         :param stack_name: Name of the stack you want to see.
@@ -333,8 +323,7 @@ class EngineClient(object):
                                              stack_identity=stack_identity))
 
     def delete_stack(self, ctxt, stack_identity, cast=True):
-        """
-        The delete_stack method deletes a given stack.
+        """Deletes a given stack.
 
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to delete.
@@ -346,9 +335,7 @@ class EngineClient(object):
                                         stack_identity=stack_identity))
 
     def abandon_stack(self, ctxt, stack_identity):
-        """
-        The abandon_stack method deletes a given stack but
-        resources would not be deleted.
+        """Deletes a given stack but resources would not be deleted.
 
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to abandon.
@@ -362,8 +349,7 @@ class EngineClient(object):
                             support_status=None,
                             type_name=None,
                             heat_version=None):
-        """
-        Get a list of valid resource types.
+        """Get a list of valid resource types.
 
         :param ctxt: RPC context.
         :param support_status: Support status of resource type
@@ -377,8 +363,7 @@ class EngineClient(object):
                          version='1.16')
 
     def list_template_versions(self, ctxt):
-        """
-        Get a list of available template versions
+        """Get a list of available template versions.
 
         :param ctxt: RPC context.
         """
@@ -386,8 +371,7 @@ class EngineClient(object):
                          version='1.11')
 
     def list_template_functions(self, ctxt, template_version):
-        """
-        Get a list of available functions in a given template
+        """Get a list of available functions in a given template.
 
         :param ctxt: RPC context
         :param template_name : name of the template which function list you
@@ -398,8 +382,7 @@ class EngineClient(object):
             version='1.13')
 
     def resource_schema(self, ctxt, type_name):
-        """
-        Get the schema for a resource type.
+        """Get the schema for a resource type.
 
         :param ctxt: RPC context.
         """
@@ -407,8 +390,7 @@ class EngineClient(object):
                                              type_name=type_name))
 
     def generate_template(self, ctxt, type_name, template_type='cfn'):
-        """
-        Generate a template based on the specified type.
+        """Generate a template based on the specified type.
 
         :param ctxt: RPC context.
         :param type_name: The resource type name to generate a template for.
@@ -421,8 +403,8 @@ class EngineClient(object):
 
     def list_events(self, ctxt, stack_identity, filters=None, limit=None,
                     marker=None, sort_keys=None, sort_dir=None,):
-        """
-        The list_events method lists all events associated with a given stack.
+        """Lists all events associated with a given stack.
+
         It supports pagination (``limit`` and ``marker``),
         sorting (``sort_keys`` and ``sort_dir``) and filtering(filters)
         of the results.
@@ -445,8 +427,8 @@ class EngineClient(object):
 
     def describe_stack_resource(self, ctxt, stack_identity, resource_name,
                                 with_attr=None):
-        """
-        Get detailed resource information about a particular resource.
+        """Get detailed resource information about a particular resource.
+
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param resource_name: the Resource.
@@ -459,9 +441,8 @@ class EngineClient(object):
                          version='1.2')
 
     def find_physical_resource(self, ctxt, physical_resource_id):
-        """
-        Return an identifier for the resource with the specified physical
-        resource ID.
+        """Return an identifier for the resource.
+
         :param ctxt RPC context.
         :param physcial_resource_id The physical resource ID to look up.
         """
@@ -471,8 +452,8 @@ class EngineClient(object):
                              physical_resource_id=physical_resource_id))
 
     def describe_stack_resources(self, ctxt, stack_identity, resource_name):
-        """
-        Get detailed resource information about one or more resources.
+        """Get detailed resource information about one or more resources.
+
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param resource_name: the Resource.
@@ -483,8 +464,8 @@ class EngineClient(object):
 
     def list_stack_resources(self, ctxt, stack_identity,
                              nested_depth=0, with_detail=False):
-        """
-        List the resources belonging to a stack.
+        """List the resources belonging to a stack.
+
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param nested_depth: Levels of nested stacks of which list resources.
@@ -520,8 +501,8 @@ class EngineClient(object):
 
     def resource_signal(self, ctxt, stack_identity, resource_name, details,
                         sync_call=False):
-        """
-        Generate an alarm on the resource.
+        """Generate an alarm on the resource.
+
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param resource_name: the Resource.
@@ -536,21 +517,24 @@ class EngineClient(object):
                          version='1.3')
 
     def create_watch_data(self, ctxt, watch_name, stats_data):
-        '''
-        This could be used by CloudWatch and WaitConditions
-        and treat HA service events like any other CloudWatch.
+        """Creates data for CloudWatch and WaitConditions.
+
+        This could be used by CloudWatch and WaitConditions and treat HA
+        service events like any other CloudWatch.
+
         :param ctxt: RPC context.
         :param watch_name: Name of the watch/alarm
         :param stats_data: The data to post.
-        '''
+        """
         return self.call(ctxt, self.make_msg('create_watch_data',
                                              watch_name=watch_name,
                                              stats_data=stats_data))
 
     def show_watch(self, ctxt, watch_name):
-        """
+        """Returns the attributes of one watch/alarm.
+
         The show_watch method returns the attributes of one watch
-        or all watches if no watch_name is passed
+        or all watches if no watch_name is passed.
 
         :param ctxt: RPC context.
         :param watch_name: Name of the watch/alarm you want to see,
@@ -560,9 +544,10 @@ class EngineClient(object):
                                              watch_name=watch_name))
 
     def show_watch_metric(self, ctxt, metric_namespace=None, metric_name=None):
-        """
+        """Returns the datapoints for a metric.
+
         The show_watch_metric method returns the datapoints associated
-        with a specified metric, or all metrics if no metric_name is passed
+        with a specified metric, or all metrics if no metric_name is passed.
 
         :param ctxt: RPC context.
         :param metric_namespace: Name of the namespace you want to see,
@@ -575,12 +560,12 @@ class EngineClient(object):
                                              metric_name=metric_name))
 
     def set_watch_state(self, ctxt, watch_name, state):
-        '''
-        Temporarily set the state of a given watch
+        """Temporarily set the state of a given watch.
+
         :param ctxt: RPC context.
         :param watch_name: Name of the watch
         :param state: State (must be one defined in WatchRule class)
-        '''
+        """
         return self.call(ctxt, self.make_msg('set_watch_state',
                                              watch_name=watch_name,
                                              state=state))

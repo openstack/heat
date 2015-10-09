@@ -13,23 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Client side of the heat worker RPC API.
-"""
+"""Client side of the heat worker RPC API."""
 
 from heat.common import messaging
 from heat.rpc import worker_api
 
 
 class WorkerClient(object):
-    '''Client side of the heat worker RPC API.
+    """Client side of the heat worker RPC API.
 
     API version history::
 
         1.0 - Initial version.
         1.1 - Added check_resource.
         1.2 - Add adopt data argument to check_resource.
-    '''
+    """
 
     BASE_RPC_API_VERSION = '1.0'
 
