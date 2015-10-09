@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Heat Engine Server.
+
+This does the work of actually implementing the API calls made by the user.
+Normal communications is done via the heat API which then calls into this
+engine.
+"""
+
 import warnings
 warnings.warn("DEPRECATED: This script is deprecated. Please use the "
               "system level heat binaries installed to start "
               "any of the heat services.", DeprecationWarning)
-
-"""
-Heat Engine Server.  This does the work of actually implementing the API
-calls made by the user.  Normal communications is done via the heat API
-which then calls into this engine.
-"""
 
 import os
 import sys
