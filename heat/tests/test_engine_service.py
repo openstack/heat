@@ -830,9 +830,10 @@ class StackServiceTest(common.HeatTestCase):
                 'resource_id': '9999',
                 'status': 'COMPLETE',
                 'type': u'AWS::EC2::Instance'}}
+        self.stack.tags = ['tag1', 'tag2']
         self.m.ReplayAll()
         ret = self.eng.abandon_stack(self.ctx, self.stack.identifier())
-        self.assertEqual(10, len(ret))
+        self.assertEqual(11, len(ret))
         self.assertEqual('CREATE', ret['action'])
         self.assertEqual('COMPLETE', ret['status'])
         self.assertEqual('service_abandon_stack', ret['name'])
@@ -844,6 +845,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIn('stack_user_project_id', ret)
         self.assertIn('environment', ret)
         self.assertIn('files', ret)
+        self.assertEqual(['tag1', 'tag2'], ret['tags'])
         self.m.VerifyAll()
 
     def test_stack_describe_nonexistent(self):

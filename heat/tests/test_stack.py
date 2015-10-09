@@ -377,7 +377,8 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'stack_details_test',
                                  template.Template(tpl, env=env),
                                  tenant_id='123',
-                                 stack_user_project_id='234')
+                                 stack_user_project_id='234',
+                                 tags=['tag1', 'tag2'])
         self.stack.store()
         info = self.stack.prepare_abandon()
         self.assertEqual('CREATE', info['action'])
@@ -389,6 +390,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('123', info['project_id'])
         self.assertEqual('234', info['stack_user_project_id'])
         self.assertEqual(env.params, info['environment']['parameters'])
+        self.assertEqual(['tag1', 'tag2'], info['tags'])
 
     def test_set_param_id(self):
         self.stack = stack.Stack(self.ctx, 'param_arn_test', self.tmpl)
