@@ -21,10 +21,9 @@ from docutils.parsers.rst.directives.tables import Table
 
 
 class TableFromText(Table):
-    """
-    Take input from a file and create a simple table.
+    """Take input from a file and create a simple table.
 
-    Exanple:
+    Example:
 
     .. table_from_text:: ../setup.cfg
     :header: Name,Plug-in
