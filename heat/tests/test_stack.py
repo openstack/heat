@@ -21,7 +21,6 @@ import mock
 import mox
 from oslo_config import cfg
 import six
-import testtools
 
 from heat.common import context
 from heat.common import exception
@@ -1044,7 +1043,6 @@ class StackTest(common.HeatTestCase):
                          '(a foo) is incorrect.', self.stack.status_reason)
         self.m.VerifyAll()
 
-    @testtools.skipIf(six.PY3, "skipped until review 193726 is merged")
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(timeutils, 'wallclock')

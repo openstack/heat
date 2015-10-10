@@ -12,7 +12,6 @@
 #    under the License.
 
 import contextlib
-import testtools
 
 import eventlet
 import six
@@ -314,7 +313,6 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         self.assertEqual(e1, exc)
 
 
-@testtools.skipIf(six.PY3, "mox3 bug")
 class TaskTest(common.HeatTestCase):
 
     def setUp(self):
