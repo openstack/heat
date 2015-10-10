@@ -616,8 +616,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         stack = utils.parse_stack(t, stack_name=stack_name,
                                   params=params)
         stack.set_stack_user_project_id('1234')
-        self.assertEqual(stack.t.t,
-                         t)
+        self.assertEqual(t, stack.t.t)
         stack.action = stack.CREATE
         stack.status = stack.COMPLETE
 
@@ -649,8 +648,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         stack = utils.parse_stack(t, stack_name=stack_name,
                                   params=params)
         stack.set_stack_user_project_id('1234')
-        self.assertEqual(stack.t.t,
-                         t)
+        self.assertEqual(t, stack.t.t)
         stack.action = stack.UPDATE
         stack.status = stack.FAILED
 
@@ -747,14 +745,14 @@ resources:
         result = self._test_stack_update_preview(self.old_tmpl, self.new_tmpl)
 
         added = [x for x in result['added']][0]
-        self.assertEqual(added['resource_name'], 'password')
+        self.assertEqual('password', added['resource_name'])
         unchanged = [x for x in result['unchanged']][0]
-        self.assertEqual(unchanged['resource_name'], 'web_server')
+        self.assertEqual('web_server', unchanged['resource_name'])
 
         empty_sections = ('deleted', 'replaced', 'updated')
         for section in empty_sections:
             section_contents = [x for x in result[section]]
-            self.assertEqual(section_contents, [])
+            self.assertEqual([], section_contents)
 
     def test_stack_update_preview_replaced(self):
         # new template with a different key_name
@@ -763,11 +761,11 @@ resources:
         result = self._test_stack_update_preview(self.old_tmpl, new_tmpl)
 
         replaced = [x for x in result['replaced']][0]
-        self.assertEqual(replaced['resource_name'], 'web_server')
+        self.assertEqual('web_server', replaced['resource_name'])
         empty_sections = ('added', 'deleted', 'unchanged', 'updated')
         for section in empty_sections:
             section_contents = [x for x in result[section]]
-            self.assertEqual(section_contents, [])
+            self.assertEqual([], section_contents)
 
     def test_stack_update_preview_updated(self):
         # new template changes to flavor of server
@@ -776,21 +774,21 @@ resources:
         result = self._test_stack_update_preview(self.old_tmpl, new_tmpl)
 
         updated = [x for x in result['updated']][0]
-        self.assertEqual(updated['resource_name'], 'web_server')
+        self.assertEqual('web_server', updated['resource_name'])
         empty_sections = ('added', 'deleted', 'unchanged', 'replaced')
         for section in empty_sections:
             section_contents = [x for x in result[section]]
-            self.assertEqual(section_contents, [])
+            self.assertEqual([], section_contents)
 
     def test_stack_update_preview_deleted(self):
         # do the reverse direction, i.e. delete resources
         result = self._test_stack_update_preview(self.new_tmpl, self.old_tmpl)
 
         deleted = [x for x in result['deleted']][0]
-        self.assertEqual(deleted['resource_name'], 'password')
+        self.assertEqual('password', deleted['resource_name'])
         unchanged = [x for x in result['unchanged']][0]
-        self.assertEqual(unchanged['resource_name'], 'web_server')
+        self.assertEqual('web_server', unchanged['resource_name'])
         empty_sections = ('added', 'updated', 'replaced')
         for section in empty_sections:
             section_contents = [x for x in result[section]]
-            self.assertEqual(section_contents, [])
+            self.assertEqual([], section_contents)
