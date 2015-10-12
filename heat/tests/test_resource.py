@@ -406,13 +406,13 @@ class ResourceTest(common.HeatTestCase):
         self.stack.state_set('ROLLBACK', 'IN_PROGRESS', 'Simulate rollback')
         res = TestResource('test_resource', tmpl, self.stack)
 
-        res.restore_after_rollback = mock.Mock()
+        res.restore_prev_rsrc = mock.Mock()
 
         utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
                                              {'a_string': 'foo'})
         self.assertRaises(
             exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
-        self.assertTrue(res.restore_after_rollback.called)
+        self.assertTrue(res.restore_prev_rsrc.called)
 
     def test_update_replace_in_failed_without_nested(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',

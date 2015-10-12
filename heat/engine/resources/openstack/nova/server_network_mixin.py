@@ -20,6 +20,7 @@ from oslo_utils import netutils
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
+from heat.engine import resource
 
 LOG = logging.getLogger(__name__)
 
@@ -355,22 +356,38 @@ class ServerNetworkMixin(object):
             self.client('neutron').update_port(
                 port['id'], {'port': {'fixed_ips': []}})
 
-    def restore_ports_after_rollback(self):
+    def restore_ports_after_rollback(self, convergence):
         if not self.is_using_neutron():
             return
 
-        old_server = self.stack._backup_stack().resources.get(self.name)
+        # In case of convergence, during rollback, the previous rsrc is
+        # already selected and is being acted upon.
+        prev_server = self if convergence else \
+            self.stack._backup_stack().resources.get(self.name)
 
-        port_data = itertools.chain(self._data_get_ports(),
-                                    self._data_get_ports('external_ports'))
+        if convergence:
+            rsrc, stack = resource.Resource.load(
+                prev_server.context, prev_server.replaced_by, True,
+                prev_server.stack.cache_data
+            )
+            existing_server = rsrc
+        else:
+            existing_server = self
+
+        port_data = itertools.chain(
+            existing_server._data_get_ports(),
+            existing_server._data_get_ports('external_ports')
+        )
         for port in port_data:
+            # reset fixed_ips to [] for new resource
             self.client('neutron').update_port(port['id'],
                                                {'port': {'fixed_ips': []}})
 
-        old_port_data = itertools.chain(
-            old_server._data_get_ports(),
-            old_server._data_get_ports('external_ports'))
-        for port in old_port_data:
+        # restore ip for old port
+        prev_port_data = itertools.chain(
+            prev_server._data_get_ports(),
+            prev_server._data_get_ports('external_ports'))
+        for port in prev_port_data:
             fixed_ips = port['fixed_ips']
             self.client('neutron').update_port(
                 port['id'], {'port': {'fixed_ips': fixed_ips}})

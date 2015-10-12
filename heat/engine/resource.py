@@ -883,6 +883,10 @@ class Resource(object):
         with self.lock(engine_id):
             new_temp = template.Template.load(self.context, template_id)
             new_res_def = new_temp.resource_definitions(self.stack)[self.name]
+            if self.stack.action == self.stack.ROLLBACK and \
+                    self.stack.status == self.stack.IN_PROGRESS \
+                    and self.replaced_by:
+                self.restore_prev_rsrc(convergence=True)
             runner = scheduler.TaskRunner(self.update, new_res_def)
             try:
                 runner(timeout=timeout)
@@ -947,10 +951,11 @@ class Resource(object):
         except exception.UpdateReplace as ex:
             # catch all UpdateReplace expections
             if (self.stack.action == 'ROLLBACK' and
-                    self.stack.status == 'IN_PROGRESS'):
+                    self.stack.status == 'IN_PROGRESS' and
+                    not cfg.CONF.convergence_engine):
                 # handle case, when it's rollback and we should restore
                 # old resource
-                self.restore_after_rollback()
+                self.restore_prev_rsrc()
             else:
                 self.prepare_for_replace()
             raise ex
@@ -964,7 +969,7 @@ class Resource(object):
         """
         pass
 
-    def restore_after_rollback(self):
+    def restore_prev_rsrc(self, convergence=False):
         """Restore resource after rollback.
 
         Some resources requires additional actions after rollback.

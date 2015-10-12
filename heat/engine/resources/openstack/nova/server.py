@@ -1411,8 +1411,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
     def prepare_for_replace(self):
         self.prepare_ports_for_replace()
 
-    def restore_after_rollback(self):
-        self.restore_ports_after_rollback()
+    def restore_prev_rsrc(self, convergence=False):
+        self.restore_ports_after_rollback(convergence=convergence)
 
 
 def resource_mapping():

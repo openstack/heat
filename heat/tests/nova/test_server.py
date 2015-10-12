@@ -4275,7 +4275,86 @@ class ServerInternalPortTest(common.HeatTestCase):
         stack._backup_stack().resources.get.return_value = old_server
         old_server._data_get_ports.side_effect = [port_ids, external_port_ids]
 
-        server.restore_after_rollback()
+        server.restore_prev_rsrc()
+
+        # check, that all ip were removed from new_ports
+        empty_fixed_ips = {'port': {'fixed_ips': []}}
+        self.port_update.assert_has_calls([
+            mock.call(1122, empty_fixed_ips),
+            mock.call(3344, empty_fixed_ips),
+            mock.call(5566, empty_fixed_ips)])
+
+        # check, that all ip were restored for old_ports
+        self.port_update.assert_has_calls([
+            mock.call(1122, {'port': port1_fixed_ip}),
+            mock.call(3344, {'port': port2_fixed_ip}),
+            mock.call(5566, {'port': port3_fixed_ip})])
+
+    def test_restore_ports_after_rollback_convergence(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+        """
+        t = template_format.parse(tmpl)
+        stack = utils.parse_stack(t)
+        stack.store()
+
+        # mock resource from previous template
+        prev_rsrc = stack['server']
+        prev_rsrc.resource_id = 'prev-rsrc'
+        # store in db
+        prev_rsrc.state_set(prev_rsrc.UPDATE, prev_rsrc.COMPLETE)
+
+        # mock resource from existing template, store in db, and set _data
+        existing_rsrc = stack['server']
+        existing_rsrc.current_template_id = stack.t.id
+        existing_rsrc.resource_id = 'existing-rsrc'
+        existing_rsrc.state_set(existing_rsrc.UPDATE, existing_rsrc.COMPLETE)
+
+        port_ids = [{'id': 1122}, {'id': 3344}]
+        external_port_ids = [{'id': 5566}]
+        existing_rsrc.data_set("internal_ports", jsonutils.dumps(port_ids))
+        existing_rsrc.data_set("external_ports",
+                               jsonutils.dumps(external_port_ids))
+
+        # mock previous resource was replaced by existing resource
+        prev_rsrc.replaced_by = existing_rsrc.id
+
+        port1_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet1',
+                'ip_address': '41.41.41.41'
+            }
+        }
+        port2_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet2',
+                'ip_address': '42.42.42.42'
+            }
+        }
+        port3_fixed_ip = {
+            'fixed_ips': {
+                'subnet_id': 'test_subnet3',
+                'ip_address': '43.43.43.43'
+            }
+        }
+        port_ids[0].update(port1_fixed_ip)
+        port_ids[1].update(port2_fixed_ip)
+        external_port_ids[0].update(port3_fixed_ip)
+        # add data to old server
+        prev_rsrc._data = {
+            "internal_ports": jsonutils.dumps(port_ids),
+            "external_ports": jsonutils.dumps(external_port_ids)
+        }
+
+        prev_rsrc.restore_prev_rsrc(convergence=True)
 
         # check, that all ip were removed from new_ports
         empty_fixed_ips = {'port': {'fixed_ips': []}}
