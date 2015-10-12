@@ -63,8 +63,22 @@ resources:
     type: GenericResourceType
 ''')
 
+hot_tpl_generic_resource_20141016 = template_format.parse('''
+heat_template_version: 2014-10-16
+resources:
+  resource1:
+    type: GenericResourceType
+''')
+
 hot_tpl_complex_attrs = template_format.parse('''
 heat_template_version: 2013-05-23
+resources:
+  resource1:
+    type: ResourceWithComplexAttributesType
+''')
+
+hot_tpl_complex_attrs_20141016 = template_format.parse('''
+heat_template_version: 2014-10-16
 resources:
   resource1:
     type: ResourceWithComplexAttributesType
@@ -1158,6 +1172,7 @@ class StackAttributesTest(common.HeatTestCase):
         self.m.ReplayAll()
 
     scenarios = [
+        # for hot template 2013-05-23, get_attr: hot_funcs.GetAttThenSelect
         ('get_flat_attr',
          dict(hot_tpl=hot_tpl_generic_resource,
               snippet={'Value': {'get_attr': ['resource1', 'foo']}},
@@ -1208,6 +1223,59 @@ class StackAttributesTest(common.HeatTestCase):
                                               'none',
                                               'who_cares']}},
               resource_name='resource1',
+              expected={'Value': None})),
+        # for hot template version 2014-10-16 and 2015-04-30,
+        # get_attr: hot_funcs.GetAtt
+        ('get_flat_attr',
+         dict(hot_tpl=hot_tpl_generic_resource_20141016,
+              snippet={'Value': {'get_attr': ['resource1', 'foo']}},
+              resource_name='resource1',
+              expected={'Value': 'resource1'})),
+        ('get_list_attr',
+         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
+              snippet={'Value': {'get_attr': ['resource1', 'list', 0]}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.list[0]})),
+        ('get_flat_dict_attr',
+         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'flat_dict',
+                                              'key2']}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  flat_dict['key2']})),
+        ('get_nested_attr_list',
+         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'nested_dict',
+                                              'list',
+                                              0]}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  nested_dict['list'][0]})),
+        ('get_nested_attr_dict',
+         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'nested_dict',
+                                              'dict',
+                                              'a']}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  nested_dict['dict']['a']})),
+        ('get_attr_none',
+         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'none',
+                                              'who_cares']}},
+              resource_name='resource1',
               expected={'Value': None}))
     ]
 
@@ -1227,8 +1295,16 @@ class StackAttributesTest(common.HeatTestCase):
                 (rsrc.CREATE, rsrc.COMPLETE),
                 (rsrc.RESUME, rsrc.IN_PROGRESS),
                 (rsrc.RESUME, rsrc.COMPLETE),
+                (rsrc.SUSPEND, rsrc.IN_PROGRESS),
+                (rsrc.SUSPEND, rsrc.COMPLETE),
                 (rsrc.UPDATE, rsrc.IN_PROGRESS),
-                (rsrc.UPDATE, rsrc.COMPLETE)):
+                (rsrc.UPDATE, rsrc.COMPLETE),
+                (rsrc.SNAPSHOT, rsrc.IN_PROGRESS),
+                (rsrc.SNAPSHOT, rsrc.COMPLETE),
+                (rsrc.CHECK, rsrc.IN_PROGRESS),
+                (rsrc.CHECK, rsrc.COMPLETE),
+                (rsrc.ADOPT, rsrc.IN_PROGRESS),
+                (rsrc.ADOPT, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
 
             resolved = function.resolve(self.stack.t.parse(self.stack,

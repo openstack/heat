@@ -196,7 +196,8 @@ class GetAtt(function.Function):
         attribute = function.resolve(self._attribute)
 
         r = self._resource()
-        if (r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME, r.UPDATE)):
+        if r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
+                        r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
             return r.FnGetAtt(attribute)
         else:
             return None

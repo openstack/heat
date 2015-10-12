@@ -145,7 +145,7 @@ class GetAtt(GetAttThenSelect):
         r = self._resource()
         if (r.status in (r.IN_PROGRESS, r.COMPLETE) and
                 r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
-                             r.UPDATE)):
+                             r.UPDATE, r.CHECK, r.SNAPSHOT)):
             return r.FnGetAtt(attribute, *path_components)
         else:
             return None
