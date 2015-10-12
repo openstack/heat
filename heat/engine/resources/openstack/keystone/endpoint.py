@@ -73,70 +73,38 @@ class KeystoneEndpoint(resource.Resource):
     def client(self):
         return super(KeystoneEndpoint, self).client().client
 
-    def _create_endpoint(self,
-                         service,
-                         interface,
-                         url,
-                         region=None,
-                         name=None):
-        return self.client().endpoints.create(
+    def handle_create(self):
+        region = self.properties[self.REGION]
+        service = self.properties[self.SERVICE]
+        interface = self.properties[self.INTERFACE]
+        url = self.properties[self.SERVICE_URL]
+        name = (self.properties[self.NAME] or
+                self.physical_resource_name())
+
+        endpoint = self.client().endpoints.create(
             region=region,
             service=service,
             interface=interface,
             url=url,
             name=name)
 
-    def _update_endpoint(self,
-                         endpoint_id,
-                         new_region=None,
-                         new_service=None,
-                         new_interface=None,
-                         new_url=None,
-                         new_name=None):
-        return self.client().endpoints.update(
-            endpoint=endpoint_id,
-            region=new_region,
-            service=new_service,
-            interface=new_interface,
-            url=new_url,
-            name=new_name)
-
-    def handle_create(self):
-        region = self.properties.get(self.REGION)
-        service = self.properties.get(self.SERVICE)
-        interface = self.properties.get(self.INTERFACE)
-        url = self.properties.get(self.SERVICE_URL)
-        name = (self.properties.get(self.NAME) or
-                self.physical_resource_name())
-
-        endpoint = self._create_endpoint(
-            region=region,
-            service=service,
-            interface=interface,
-            url=url,
-            name=name
-        )
-
         self.resource_id_set(endpoint.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        region = prop_diff.get(self.REGION)
-        service = prop_diff.get(self.SERVICE)
-        interface = prop_diff.get(self.INTERFACE)
-        url = prop_diff.get(self.SERVICE_URL)
-        name = None
-        if self.NAME in prop_diff:
-            name = (prop_diff.get(self.NAME) or
-                    self.physical_resource_name())
+        if prop_diff:
+            region = prop_diff.get(self.REGION)
+            service = prop_diff.get(self.SERVICE)
+            interface = prop_diff.get(self.INTERFACE)
+            url = prop_diff.get(self.SERVICE_URL)
+            name = prop_diff.get(self.NAME) or self.physical_resource_name()
 
-        self._update_endpoint(
-            endpoint_id=self.resource_id,
-            new_region=region,
-            new_interface=interface,
-            new_service=service,
-            new_url=url,
-            new_name=name
-        )
+            self.client().endpoints.update(
+                endpoint=self.resource_id,
+                region=region,
+                service=service,
+                interface=interface,
+                url=url,
+                name=name)
 
 
 def resource_mapping():

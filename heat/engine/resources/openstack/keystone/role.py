@@ -45,30 +45,18 @@ class KeystoneRole(resource.Resource):
     def client(self):
         return super(KeystoneRole, self).client().client
 
-    def _create_role(self, role_name):
-        return self.client().roles.create(name=role_name)
-
-    def _update_role(self, role_id, new_name):
-        return self.client().roles.update(
-            role=role_id,
-            name=new_name
-        )
-
     def handle_create(self):
-        role_name = (self.properties.get(self.NAME) or
+        role_name = (self.properties[self.NAME] or
                      self.physical_resource_name())
 
-        role = self._create_role(role_name=role_name)
+        role = self.client().roles.create(name=role_name)
 
         self.resource_id_set(role.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if self.NAME in prop_diff:
+        if prop_diff:
             name = prop_diff.get(self.NAME) or self.physical_resource_name()
-            self._update_role(
-                role_id=self.resource_id,
-                new_name=name
-            )
+            self.client().roles.update(role=self.resource_id, name=name)
 
 
 def resource_mapping():

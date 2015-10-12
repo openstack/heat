@@ -251,6 +251,7 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.projects.create.return_value = mock_project
         self.test_project.properties = mock.MagicMock()
         self.test_project.properties.get.side_effect = _side_effect
+        self.test_project.properties.__getitem__.side_effect = _side_effect
 
         self.test_project.physical_resource_name = mock.MagicMock()
         self.test_project.physical_resource_name.return_value = 'foo'

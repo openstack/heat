@@ -108,6 +108,7 @@ class KeystoneServiceTest(common.HeatTestCase):
         self.services.create.return_value = mock_service
         self.test_service.properties = mock.MagicMock()
         self.test_service.properties.get.side_effect = _side_effect
+        self.test_service.properties.__getitem__.side_effect = _side_effect
 
         self.test_service.physical_resource_name = mock.MagicMock()
         self.test_service.physical_resource_name.return_value = 'foo'

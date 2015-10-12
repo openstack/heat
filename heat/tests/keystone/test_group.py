@@ -218,6 +218,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.groups.create.return_value = mock_group
         self.test_group.properties = mock.MagicMock()
         self.test_group.properties.get.side_effect = _side_effect
+        self.test_group.properties.__getitem__.side_effect = _side_effect
 
         self.test_group.physical_resource_name = mock.MagicMock()
         self.test_group.physical_resource_name.return_value = 'foo'

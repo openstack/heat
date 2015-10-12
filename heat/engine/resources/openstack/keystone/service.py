@@ -56,54 +56,31 @@ class KeystoneService(resource.Resource):
     def client(self):
         return super(KeystoneService, self).client().client
 
-    def _create_service(self,
-                        name,
-                        type,
-                        description=None):
-        return self.client().services.create(
+    def handle_create(self):
+        name = (self.properties[self.NAME] or
+                self.physical_resource_name())
+        description = self.properties[self.DESCRIPTION]
+        type = self.properties[self.TYPE]
+
+        service = self.client().services.create(
             name=name,
             description=description,
             type=type)
 
-    def _update_service(self,
-                        service_id,
-                        new_name=None,
-                        new_description=None,
-                        new_type=None):
-        return self.client().services.update(
-            service=service_id,
-            name=new_name,
-            description=new_description,
-            type=new_type)
-
-    def handle_create(self):
-        name = (self.properties.get(self.NAME) or
-                self.physical_resource_name())
-        description = self.properties.get(self.DESCRIPTION)
-        type = self.properties.get(self.TYPE)
-
-        service = self._create_service(
-            name=name,
-            description=description,
-            type=type
-        )
-
         self.resource_id_set(service.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        name = None
-        if self.NAME in prop_diff:
+        if prop_diff:
             name = (prop_diff.get(self.NAME) or
                     self.physical_resource_name())
-        description = prop_diff.get(self.DESCRIPTION)
-        type = prop_diff.get(self.TYPE)
+            description = prop_diff.get(self.DESCRIPTION)
+            type = prop_diff.get(self.TYPE)
 
-        self._update_service(
-            service_id=self.resource_id,
-            new_name=name,
-            new_description=description,
-            new_type=type
-        )
+            self.client().services.update(
+                service=self.resource_id,
+                name=name,
+                description=description,
+                type=type)
 
 
 def resource_mapping():

@@ -65,71 +65,38 @@ class KeystoneProject(resource.Resource):
     def client(self):
         return super(KeystoneProject, self).client().client
 
-    def _create_project(self,
-                        project_name,
-                        description,
-                        domain,
-                        enabled):
-        domain = self.client_plugin().get_domain_id(domain)
+    def handle_create(self):
+        project_name = (self.properties[self.NAME] or
+                        self.physical_resource_name())
+        description = self.properties[self.DESCRIPTION]
+        domain = self.client_plugin().get_domain_id(
+            self.properties[self.DOMAIN])
+        enabled = self.properties[self.ENABLED]
 
-        return self.client().projects.create(
+        project = self.client().projects.create(
             name=project_name,
             domain=domain,
             description=description,
             enabled=enabled)
 
-    def _update_project(self,
-                        project_id,
-                        domain,
-                        new_name=None,
-                        new_description=None,
-                        enabled=None):
-        values = dict()
-
-        if new_name is not None:
-            values['name'] = new_name
-        if new_description is not None:
-            values['description'] = new_description
-        if enabled is not None:
-            values['enabled'] = enabled
-
-        values['project'] = project_id
-        domain = self.client_plugin().get_domain_id(domain)
-
-        values['domain'] = domain
-
-        return self.client().projects.update(**values)
-
-    def handle_create(self):
-        project_name = (self.properties.get(self.NAME) or
-                        self.physical_resource_name())
-        description = self.properties.get(self.DESCRIPTION)
-        domain = self.properties.get(self.DOMAIN)
-        enabled = self.properties.get(self.ENABLED)
-
-        project = self._create_project(
-            project_name=project_name,
-            description=description,
-            domain=domain,
-            enabled=enabled
-        )
-
         self.resource_id_set(project.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        name = prop_diff.get(self.NAME) or self.physical_resource_name()
-        description = prop_diff.get(self.DESCRIPTION)
-        enabled = prop_diff.get(self.ENABLED)
-        domain = (prop_diff.get(self.DOMAIN) or
-                  self._stored_properties_data.get(self.DOMAIN))
+        if prop_diff:
+            name = prop_diff.get(self.NAME) or self.physical_resource_name()
+            description = prop_diff.get(self.DESCRIPTION)
+            enabled = prop_diff.get(self.ENABLED)
+            domain = (prop_diff.get(self.DOMAIN) or
+                      self._stored_properties_data.get(self.DOMAIN))
+            domain_id = self.client_plugin().get_domain_id(domain)
 
-        self._update_project(
-            project_id=self.resource_id,
-            domain=domain,
-            new_name=name,
-            new_description=description,
-            enabled=enabled
-        )
+            self.client().projects.update(
+                project=self.resource_id,
+                name=name,
+                description=description,
+                enabled=enabled,
+                domain=domain_id
+            )
 
 
 def resource_mapping():

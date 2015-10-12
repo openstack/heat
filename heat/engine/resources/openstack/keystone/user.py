@@ -102,31 +102,6 @@ class KeystoneUser(resource.Resource,
     def client(self):
         return super(KeystoneUser, self).client().client
 
-    def _create_user(self,
-                     user_name,
-                     description,
-                     domain,
-                     default_project,
-                     enabled=None,
-                     email=None,
-                     password=None):
-        domain = (self.client_plugin().get_domain_id(domain))
-        if default_project:
-            default_project = (self.client_plugin().
-                               get_project_id(default_project))
-
-        return self.client().users.create(
-            name=user_name,
-            domain=domain,
-            description=description,
-            enabled=enabled,
-            email=email,
-            password=password,
-            default_project=default_project)
-
-    def _delete_user(self, user_id):
-        return self.client().users.delete(user_id)
-
     def _update_user(self,
                      user_id,
                      domain,
@@ -190,25 +165,26 @@ class KeystoneUser(resource.Resource,
         return new_group_ids, removed_group_ids
 
     def handle_create(self):
-        user_name = (self.properties.get(self.NAME) or
+        user_name = (self.properties[self.NAME] or
                      self.physical_resource_name())
-        description = self.properties.get(self.DESCRIPTION)
-        domain = self.properties.get(self.DOMAIN)
-        enabled = self.properties.get(self.ENABLED)
-        email = self.properties.get(self.EMAIL)
-        password = self.properties.get(self.PASSWORD)
-        default_project = self.properties.get(self.DEFAULT_PROJECT)
-        groups = self.properties.get(self.GROUPS)
+        description = self.properties[self.DESCRIPTION]
+        domain = self.client_plugin().get_domain_id(
+            self.properties[self.DOMAIN])
+        enabled = self.properties[self.ENABLED]
+        email = self.properties[self.EMAIL]
+        password = self.properties[self.PASSWORD]
+        default_project = self.client_plugin().get_project_id(
+            self.properties[self.DEFAULT_PROJECT])
+        groups = self.properties[self.GROUPS]
 
-        user = self._create_user(
-            user_name=user_name,
-            description=description,
+        user = self.client().users.create(
+            name=user_name,
             domain=domain,
+            description=description,
             enabled=enabled,
             email=email,
             password=password,
-            default_project=default_project
-        )
+            default_project=default_project)
 
         self.resource_id_set(user.id)
 
@@ -217,38 +193,42 @@ class KeystoneUser(resource.Resource,
         self.create_assignment(user_id=user.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        name = prop_diff.get(self.NAME) or self.physical_resource_name()
-        description = prop_diff.get(self.DESCRIPTION)
-        enabled = prop_diff.get(self.ENABLED)
-        email = prop_diff.get(self.EMAIL)
-        password = prop_diff.get(self.PASSWORD)
-        domain = (prop_diff.get(self.DOMAIN) or
-                  self._stored_properties_data.get(self.DOMAIN))
-        default_project = prop_diff.get(self.DEFAULT_PROJECT)
+        if prop_diff:
+            name = prop_diff.get(self.NAME) or self.physical_resource_name()
+            description = prop_diff.get(self.DESCRIPTION)
+            enabled = prop_diff.get(self.ENABLED)
+            email = prop_diff.get(self.EMAIL)
+            password = prop_diff.get(self.PASSWORD)
+            domain = (prop_diff.get(self.DOMAIN) or
+                      self._stored_properties_data.get(self.DOMAIN))
 
-        (new_group_ids,
-         removed_group_ids) = self._find_diff(
-            prop_diff.get(self.GROUPS),
-            self._stored_properties_data.get(self.GROUPS))
+            default_project = prop_diff.get(self.DEFAULT_PROJECT)
 
-        self._update_user(
-            user_id=self.resource_id,
-            domain=domain,
-            new_name=name,
-            new_description=description,
-            enabled=enabled,
-            new_default_project=default_project,
-            new_email=email,
-            new_password=password
-        )
+            (new_group_ids,
+             removed_group_ids) = self._find_diff(
+                prop_diff.get(self.GROUPS),
+                self._stored_properties_data.get(self.GROUPS))
 
-        if len(new_group_ids) > 0:
-            self._add_user_to_groups(self.resource_id, new_group_ids)
+            self._update_user(
+                user_id=self.resource_id,
+                domain=domain,
+                new_name=name,
+                new_description=description,
+                enabled=enabled,
+                new_default_project=default_project,
+                new_email=email,
+                new_password=password
+            )
 
-        if len(removed_group_ids) > 0:
-            self._remove_user_from_groups(self.resource_id, removed_group_ids)
+            if len(new_group_ids) > 0:
+                self._add_user_to_groups(self.resource_id, new_group_ids)
 
-        self.update_assignment(prop_diff=prop_diff, user_id=self.resource_id)
+            if len(removed_group_ids) > 0:
+                self._remove_user_from_groups(self.resource_id,
+                                              removed_group_ids)
+
+            self.update_assignment(prop_diff=prop_diff,
+                                   user_id=self.resource_id)
 
     def handle_delete(self):
         if self.resource_id is not None:
@@ -262,7 +242,7 @@ class KeystoneUser(resource.Resource,
                          for group in
                          self._stored_properties_data.get(self.GROUPS)])
 
-                self._delete_user(user_id=self.resource_id)
+                self.client().users.delete(self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 
