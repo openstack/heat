@@ -289,6 +289,11 @@ class DockerContainer(resource.Resource):
 
     def check_create_complete(self, container_id):
         status = self._get_container_status(container_id)
+        exit_status = status.get('ExitCode')
+        if exit_status is not None and exit_status != 0:
+            logs = self.get_client().logs(self.resource_id)
+            raise resource.ResourceInError(resource_status=self.FAILED,
+                                           status_reason=logs)
         return status['Running']
 
     def handle_delete(self):
