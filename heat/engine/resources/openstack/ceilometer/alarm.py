@@ -182,6 +182,15 @@ def actions_to_urls(stack, properties):
 
 
 class CeilometerAlarm(resource.Resource):
+    """A resource that implements alarming service of Ceilometer.
+
+    A resource that allows for the setting alarms based on threshold evaluation
+    for a collection of samples. Also, you can define actions to take if state
+    of watched resource will be satisfied specified conditions. For example, it
+    can watch for the memory consumption and when it reaches 70% on a given
+    instance if the instance has been up for more than 10 min, some action will
+    be called.
+    """
 
     PROPERTIES = (
         COMPARISON_OPERATOR, EVALUATION_PERIODS, METER_NAME, PERIOD,
@@ -425,6 +434,12 @@ class BaseCeilometerAlarm(resource.Resource):
 
 
 class CombinationAlarm(BaseCeilometerAlarm):
+    """A resource that implements combination of Ceilometer alarms.
+
+    Allows to use alarm as a combination of other alarms with some operator:
+    activate this alarm if any alarm in combination has been activated or
+    if all alarms in combination have been activated.
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

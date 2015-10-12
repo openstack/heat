@@ -21,7 +21,12 @@ from heat.engine import support
 
 class KeystoneUser(resource.Resource,
                    role_assignments.KeystoneRoleAssignmentMixin):
-    """Heat Template Resource for Keystone User."""
+    """Heat Template Resource for Keystone User.
+
+    Users represent an individual API consumer. A user itself must be owned by
+    a specific domain, and hence all user names are not globally unique, but
+    only unique to their domain.
+    """
 
     support_status = support.SupportStatus(
         version='2015.1',

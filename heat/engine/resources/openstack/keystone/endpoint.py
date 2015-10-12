@@ -19,7 +19,12 @@ from heat.engine import support
 
 
 class KeystoneEndpoint(resource.Resource):
-    """Heat Template Resource for Keystone Service Endpoint."""
+    """Heat Template Resource for Keystone Service Endpoint.
+
+    Keystone endpoint is just the URL that can be used for accessing a service
+    within OpenStack. Endpoint can be accessed by admin, by services or public,
+    i.e. everyone can use this endpoint.
+    """
 
     support_status = support.SupportStatus(
         version='5.0.0',

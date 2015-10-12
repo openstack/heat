@@ -20,6 +20,14 @@ from heat.engine import support
 
 
 class CronTrigger(resource.Resource):
+    """A resource implements Mistral cron trigger.
+
+    Cron trigger is an object allowing to run workflow on a schedule. User
+    specifies what workflow with what input needs to be run and also specifies
+    how often it should be run. Pattern property is used to describe the
+    frequency of workflow execution.
+    """
+
     support_status = support.SupportStatus(version='5.0.0')
 
     PROPERTIES = (

@@ -18,7 +18,10 @@ from heat.engine import support
 
 
 class KeystoneService(resource.Resource):
-    """Heat Template Resource for Keystone Service."""
+    """Heat Template Resource for Keystone Service.
+
+    A resource that allows to create new service and manage it by Keystone.
+    """
 
     support_status = support.SupportStatus(
         version='5.0.0',

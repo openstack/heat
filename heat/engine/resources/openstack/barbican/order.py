@@ -21,6 +21,13 @@ from heat.engine import support
 
 
 class Order(resource.Resource):
+    """A resource allowing for the generation secret material by Barbican.
+
+    The resource allows to generate some secret material. It can be, for
+    example, some key or certificate. The order encapsulates the workflow
+    and history for the creation of a secret. The time to generate a secret can
+    vary depending on the type of secret.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

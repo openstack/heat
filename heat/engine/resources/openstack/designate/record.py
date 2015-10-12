@@ -21,7 +21,12 @@ from heat.engine import support
 
 
 class DesignateRecord(resource.Resource):
-    """Heat Template Resource for Designate Record."""
+    """Heat Template Resource for Designate Record.
+
+    Designate provides DNS-as-a-Service services for OpenStack. Record is
+    storage unit in DNS. So, DNS name server is a server that stores the DNS
+    records for a domain. Each record has a type and type-specific data.
+    """
 
     support_status = support.SupportStatus(
         version='5.0.0')

@@ -19,7 +19,11 @@ from heat.engine import support
 
 
 class GlanceImage(resource.Resource):
-    """A resource managing images in Glance."""
+    """A resource managing images in Glance.
+
+    A resource provides managing images that are meant to be used with other
+    services.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

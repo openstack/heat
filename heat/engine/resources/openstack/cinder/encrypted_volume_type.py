@@ -21,6 +21,9 @@ from heat.engine import support
 class CinderEncryptedVolumeType(resource.Resource):
     """A resource for encrypting a cinder volume type.
 
+    A Volume Encryption Type is a collection of settings used to conduct
+    encryption for a specific volume type.
+
     Note that default cinder security policy usage of this resource
     is limited to being used by administrators only.
     """

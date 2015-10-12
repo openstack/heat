@@ -30,6 +30,12 @@ LOG = logging.getLogger(__name__)
 
 
 class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
+    """A resource that implements Cinder volumes.
+
+    Cinder volume is a storage in the form of block devices. It can be used,
+    for example, for providing storage to instance. Volume supports creation
+    from snapshot, backup or image. Also volume can be created only by size.
+    """
 
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, SNAPSHOT_ID, BACKUP_ID, NAME,
