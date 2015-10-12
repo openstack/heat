@@ -231,9 +231,7 @@ class ElasticIpAssociation(resource.Resource):
         return self.physical_resource_name_or_FnGetRefId()
 
     def validate(self):
-        '''
-        Validate any of the provided parameters
-        '''
+        """Validate any of the provided parameters."""
         super(ElasticIpAssociation, self).validate()
         eip = self.properties[self.EIP]
         allocation_id = self.properties[self.ALLOCATION_ID]

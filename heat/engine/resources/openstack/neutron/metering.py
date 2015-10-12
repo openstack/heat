@@ -20,9 +20,7 @@ from heat.engine import support
 
 
 class MeteringLabel(neutron.NeutronResource):
-    """
-    A resource for creating neutron metering label.
-    """
+    """A resource for creating neutron metering label."""
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -95,9 +93,7 @@ class MeteringLabel(neutron.NeutronResource):
 
 
 class MeteringRule(neutron.NeutronResource):
-    """
-    A resource to create rule for some label.
-    """
+    """A resource to create rule for some label."""
 
     support_status = support.SupportStatus(version='2014.1')
 

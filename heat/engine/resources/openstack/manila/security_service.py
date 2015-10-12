@@ -19,7 +19,8 @@ from heat.engine import support
 
 
 class SecurityService(resource.Resource):
-    """
+    """A resource that implements security service of Manila.
+
     A security_service is a set of options that defines a security domain
     for a particular shared filesystem protocol, such as an
     Active Directory domain or a Kerberos domain.

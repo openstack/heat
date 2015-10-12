@@ -20,8 +20,7 @@ from heat.rpc import api as rpc_api
 
 
 class CloudConfig(software_config.SoftwareConfig):
-    '''
-    A configuration resource for representing cloud-init cloud-config.
+    """A configuration resource for representing cloud-init cloud-config.
 
     This resource allows cloud-config YAML to be defined and stored by the
     config API. Any intrinsic functions called in the config will be resolved
@@ -31,7 +30,7 @@ class CloudConfig(software_config.SoftwareConfig):
     or OS::Heat::MultipartMime parts config. Since cloud-config is boot-only
     configuration, any changes to the definition will result in the
     replacement of all servers which reference it.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

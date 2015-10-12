@@ -18,8 +18,7 @@ from heat.engine import support
 
 
 class ManilaShareType(resource.Resource):
-    """
-    A resource for creating manila share type.
+    """A resource for creating manila share type.
 
     A share_type is an administrator-defined "type of service", comprised of
     a tenant visible description, and a list of non-tenant-visible key/value

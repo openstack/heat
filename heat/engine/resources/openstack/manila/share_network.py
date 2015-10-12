@@ -21,7 +21,8 @@ from heat.engine import support
 
 
 class ManilaShareNetwork(resource.Resource):
-    """
+    """A resource that stores network information for share servers.
+
     Stores network information that will be used by share servers,
     where shares are hosted.
     """

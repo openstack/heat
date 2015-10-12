@@ -274,7 +274,6 @@ class LoadBalancer(stack_resource.StackResource):
     (https://getfedora.org/cloud/download/)
     and apart from installing packages goes through some hoops
     around SELinux due to pecularities of heat-cfntools.
-
     """
 
     PROPERTIES = (
@@ -570,11 +569,11 @@ backend servers
         return self.create_with_template(templ, params)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        '''
-        re-generate the Metadata
-        save it to the db.
-        rely on the cfn-hup to reconfigure HAProxy
-        '''
+        """Re-generate the Metadata.
+
+        Save it to the db.
+        Rely on the cfn-hup to reconfigure HAProxy.
+        """
 
         new_props = json_snippet.properties(self.properties_schema,
                                             self.context)
@@ -606,9 +605,7 @@ backend servers
         return True
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         res = super(LoadBalancer, self).validate()
         if res:
             return res
@@ -630,9 +627,7 @@ backend servers
         return six.text_type(self.name)
 
     def _resolve_attribute(self, name):
-        '''
-        We don't really support any of these yet.
-        '''
+        """We don't really support any of these yet."""
         if name == self.DNS_NAME:
             return self.get_output('PublicIp')
         elif name in self.attributes_schema:

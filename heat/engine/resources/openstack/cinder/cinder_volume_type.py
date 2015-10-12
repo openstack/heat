@@ -20,8 +20,7 @@ from heat.engine import support
 
 
 class CinderVolumeType(resource.Resource):
-    """
-    A resource for creating cinder volume types.
+    """A resource for creating cinder volume types.
 
     Note that default cinder security policy usage of this resource
     is limited to being used by administrators only.

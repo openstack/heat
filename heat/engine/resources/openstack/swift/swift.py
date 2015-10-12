@@ -123,10 +123,10 @@ class SwiftContainer(resource.Resource):
 
     @staticmethod
     def _build_meta_headers(obj_type, meta_props):
-        '''
-        Returns a new dict where each key is prepended with:
-        X-Container-Meta-
-        '''
+        """Returns a new dict.
+
+        Each key of new dict is prepended with "X-Container-Meta-".
+        """
         if meta_props is None:
             return {}
         return dict(

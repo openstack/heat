@@ -25,8 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SoftwareConfig(resource.Resource):
-    '''
-    A resource for describing and storing software configuration.
+    """A resource for describing and storing software configuration.
 
     The software_configs API which backs this resource creates immutable
     configs, so any change to the template resource definition will result
@@ -44,7 +43,7 @@ class SoftwareConfig(resource.Resource):
     inputs and outputs which the config script is expected to consume and
     produce. Inputs and outputs are optional and will map to concepts which
     are specific to the configuration tool being used.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -174,10 +173,11 @@ class SoftwareConfig(resource.Resource):
             self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def _resolve_attribute(self, name):
-        '''
+        """Retrieve attributes of the SoftwareConfig resource.
+
         "config" returns the config value of the software config. If the
          software config does not exist, returns an empty string.
-        '''
+        """
         if name == self.CONFIG_ATTR and self.resource_id:
             try:
                 sc = self.rpc_client().show_software_config(

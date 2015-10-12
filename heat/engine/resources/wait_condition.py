@@ -24,13 +24,13 @@ LOG = logging.getLogger(__name__)
 
 
 class BaseWaitConditionHandle(signal_responder.SignalResponder):
-    '''
-    Base WaitConditionHandle resource.
+    """Base WaitConditionHandle resource.
+
     The main point of this class is to :
     - have no dependencies (so the instance can reference it)
     - create credentials to allow for signalling from the instance.
     - handle signals from the instance, validate and store result
-    '''
+    """
     properties_schema = {}
 
     WAIT_STATUSES = (
@@ -75,16 +75,12 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         return signal_reason
 
     def get_status(self):
-        '''
-        Return a list of the Status values for the handle signals
-        '''
+        """Return a list of the Status values for the handle signals."""
         return [v[self.STATUS]
                 for v in six.itervalues(self.metadata_get(refresh=True))]
 
     def get_status_reason(self, status):
-        '''
-        Return a list of reasons associated with a particular status
-        '''
+        """Return a list of reasons associated with a particular status."""
         return [v[self.REASON]
                 for v in six.itervalues(self.metadata_get(refresh=True))
                 if v[self.STATUS] == status]

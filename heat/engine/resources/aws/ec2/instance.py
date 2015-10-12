@@ -351,9 +351,10 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         self.ipaddress = None
 
     def _set_ipaddress(self, networks):
-        '''
-        Read the server's IP address from a list of networks provided by Nova
-        '''
+        """Set IP address to self.ipaddress from a list of networks.
+
+        Read the server's IP address from a list of networks provided by Nova.
+        """
         # Just record the first ipaddress
         for n in sorted(networks, reverse=True):
             if len(networks[n]) > 0:
@@ -361,9 +362,10 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
                 break
 
     def _ipaddress(self):
-        '''
-        Return the server's IP address, fetching it from Nova if necessary
-        '''
+        """Return the server's IP address.
+
+        Fetching it from Nova if necessary.
+        """
         if self.ipaddress is None:
             self.ipaddress = self.client_plugin().server_to_ipaddress(
                 self.resource_id)
@@ -371,9 +373,10 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         return self.ipaddress or '0.0.0.0'
 
     def _availability_zone(self):
-        '''
-        Return Server's Availability Zone, fetching it from Nova if necessary.
-        '''
+        """Return Server's Availability Zone.
+
+        Fetching it from Nova if necessary.
+        """
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
         if availability_zone is None:
             try:
@@ -600,9 +603,10 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         return out
 
     def volumes(self):
-        """
-        Return an iterator over (volume_id, device) tuples for all volumes
-        that should be attached to this instance.
+        """Return an iterator for all volumes that should be attached.
+
+        Return an iterator over (volume_id, device) tuples for all volumes that
+        should be attached to this instance.
         """
         volumes = self.properties[self.VOLUMES]
 
@@ -749,7 +753,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         return updaters
 
     def check_update_complete(self, updaters):
-        '''Push all updaters to completion in list order.'''
+        """Push all updaters to completion in list order."""
         for prg in updaters:
             if not prg.called:
                 handler = getattr(self.client_plugin(), prg.handler)
@@ -764,16 +768,12 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         return all(prg.complete for prg in updaters)
 
     def metadata_update(self, new_metadata=None):
-        '''
-        Refresh the metadata if new_metadata is None
-        '''
+        """Refresh the metadata if new_metadata is None."""
         if new_metadata is None:
             self.metadata_set(self.t.metadata())
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         res = super(Instance, self).validate()
         if res:
             return res
@@ -833,11 +833,12 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         return self.client_plugin().check_delete_server_complete(server_id)
 
     def handle_suspend(self):
-        '''
-        Suspend an instance - note we do not wait for the SUSPENDED state,
-        this is polled for by check_suspend_complete in a similar way to the
-        create logic so we can take advantage of coroutines
-        '''
+        """Suspend an instance.
+
+        Note we do not wait for the SUSPENDED state, this is polled for by
+        check_suspend_complete in a similar way to the create logic so we can
+        take advantage of coroutines.
+        """
         if self.resource_id is None:
             raise exception.Error(_('Cannot suspend %s, resource_id not set') %
                                   self.name)
@@ -875,11 +876,12 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
             raise exc
 
     def handle_resume(self):
-        '''
-        Resume an instance - note we do not wait for the ACTIVE state,
-        this is polled for by check_resume_complete in a similar way to the
-        create logic so we can take advantage of coroutines
-        '''
+        """Resume an instance.
+
+        Note we do not wait for the ACTIVE state, this is polled for by
+        check_resume_complete in a similar way to the create logic so we can
+        take advantage of coroutines.
+        """
         if self.resource_id is None:
             raise exception.Error(_('Cannot resume %s, resource_id not set') %
                                   self.name)

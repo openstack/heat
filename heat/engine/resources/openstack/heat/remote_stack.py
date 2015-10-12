@@ -31,9 +31,9 @@ LOG = logging.getLogger(__name__)
 
 
 class RemoteStack(resource.Resource):
-    """
-    A Resource representing a stack which can be created using specified
-    context.
+    """A Resource representing a stack.
+
+    Stack can be created using specified context.
     """
     default_client_name = 'heat'
 

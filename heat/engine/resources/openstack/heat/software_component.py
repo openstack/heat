@@ -22,8 +22,7 @@ from heat.rpc import api as rpc_api
 
 
 class SoftwareComponent(sc.SoftwareConfig):
-    '''
-    A resource for describing and storing a software component.
+    """A resource for describing and storing a software component.
 
     This resource is similar to OS::Heat::SoftwareConfig. In contrast to
     SoftwareConfig which allows for storing only one configuration (e.g. one
@@ -34,7 +33,7 @@ class SoftwareComponent(sc.SoftwareConfig):
     This resource is backed by the persistence layer and the API of the
     SoftwareConfig resource, and only adds handling for the additional
     'configs' property and attribute.
-    '''
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 
@@ -121,13 +120,12 @@ class SoftwareComponent(sc.SoftwareConfig):
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
 
     def _resolve_attribute(self, name):
-        '''
-        Retrieve attributes of the SoftwareComponent resource.
+        """Retrieve attributes of the SoftwareComponent resource.
 
         'configs' returns the list of configurations for the software
         component's lifecycle actions. If the attribute does not exist,
         an empty list is returned.
-        '''
+        """
         if name == self.CONFIGS_ATTR and self.resource_id:
             try:
                 sc = self.rpc_client().show_software_config(
@@ -139,7 +137,7 @@ class SoftwareComponent(sc.SoftwareConfig):
                 self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def validate(self):
-        '''Validate SoftwareComponent properties consistency.'''
+        """Validate SoftwareComponent properties consistency."""
         super(SoftwareComponent, self).validate()
 
         # One lifecycle action (e.g. CREATE) can only be associated with one

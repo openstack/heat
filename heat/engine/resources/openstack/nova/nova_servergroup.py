@@ -18,9 +18,7 @@ from heat.engine import support
 
 
 class ServerGroup(resource.Resource):
-    """
-    A resource for managing a Nova server group.
-    """
+    """A resource for managing a Nova server group."""
 
     support_status = support.SupportStatus(version='2014.2')
 

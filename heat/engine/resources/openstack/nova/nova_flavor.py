@@ -18,8 +18,7 @@ from heat.engine import support
 
 
 class NovaFlavor(resource.Resource):
-    """
-    A resource for creating OpenStack virtual hardware templates.
+    """A resource for creating OpenStack virtual hardware templates.
 
     Due to default nova security policy usage of this resource is limited to
     being used by administrators only. The rights may also be delegated to

@@ -27,9 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 class OSDBInstance(resource.Resource):
-    '''
-    OpenStack cloud database instance resource.
-    '''
+    """OpenStack cloud database instance resource."""
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -299,9 +297,7 @@ class OSDBInstance(resource.Resource):
         return self.physical_resource_name()
 
     def handle_create(self):
-        '''
-        Create cloud database instance.
-        '''
+        """Create cloud database instance."""
         self.flavor = self.client_plugin().get_flavor_id(
             self.properties[self.FLAVOR])
         self.volume = {'size': self.properties[self.SIZE]}
@@ -381,9 +377,7 @@ class OSDBInstance(resource.Resource):
                 raise
 
     def check_create_complete(self, instance_id):
-        '''
-        Check if cloud DB instance creation is complete.
-        '''
+        """Check if cloud DB instance creation is complete."""
         instance = self._refresh_instance(instance_id)  # refresh attributes
         if instance is None:
             return False
@@ -415,9 +409,7 @@ class OSDBInstance(resource.Resource):
         self._verify_check_conditions(checks)
 
     def handle_delete(self):
-        '''
-        Delete a cloud database instance.
-        '''
+        """Delete a cloud database instance."""
         if not self.resource_id:
             return
 
@@ -430,9 +422,7 @@ class OSDBInstance(resource.Resource):
             return instance.id
 
     def check_delete_complete(self, instance_id):
-        '''
-        Check for completion of cloud DB instance deletion
-        '''
+        """Check for completion of cloud DB instance deletion."""
         if not instance_id:
             return True
 
@@ -446,9 +436,7 @@ class OSDBInstance(resource.Resource):
         return False
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         res = super(OSDBInstance, self).validate()
         if res:
             return res

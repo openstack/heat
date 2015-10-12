@@ -26,9 +26,7 @@ class NeutronResource(resource.Resource):
     default_client_name = 'neutron'
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         res = super(NeutronResource, self).validate()
         if res:
             return res
@@ -36,13 +34,14 @@ class NeutronResource(resource.Resource):
 
     @staticmethod
     def validate_properties(properties):
-        '''
-        Validates to ensure nothing in value_specs overwrites
-        any key that exists in the schema.
+        """Validate properties for the resource.
+
+        Validates to ensure nothing in value_specs overwrites any key that
+        exists in the schema.
 
         Also ensures that shared and tenant_id is not specified
         in value_specs.
-        '''
+        """
         if 'value_specs' in six.iterkeys(properties):
             vs = properties.get('value_specs')
             banned_keys = set(['shared', 'tenant_id']).union(
@@ -68,13 +67,14 @@ class NeutronResource(resource.Resource):
 
     @staticmethod
     def prepare_properties(properties, name):
-        '''
+        """Prepares the property values for correct Neutron create call.
+
         Prepares the property values so that they can be passed directly to
         the Neutron create call.
 
         Removes None values and value_specs, merges value_specs with the main
         values.
-        '''
+        """
         props = dict((k, v) for k, v in properties.items()
                      if v is not None and k != 'value_specs')
 
@@ -87,13 +87,14 @@ class NeutronResource(resource.Resource):
         return props
 
     def prepare_update_properties(self, definition):
-        '''
+        """Prepares the property values for correct Neutron update call.
+
         Prepares the property values so that they can be passed directly to
         the Neutron update call.
 
         Removes any properties which are not update_allowed, then processes
         as for prepare_properties.
-        '''
+        """
         p = definition.properties(self.properties_schema, self.context)
         update_props = dict((k, v) for k, v in p.items()
                             if p.props.get(k).schema.update_allowed)
@@ -127,13 +128,13 @@ class NeutronResource(resource.Resource):
 
     @staticmethod
     def get_secgroup_uuids(security_groups, client, tenant_id):
-        '''
-        Returns a list of security group UUIDs.
+        """Returns a list of security group UUIDs.
+
         Args:
             security_groups: List of security group names or UUIDs
             client: reference to neutronclient
             tenant_id: the tenant id to match the security_groups
-        '''
+        """
         warnings.warn('neutron.NeutronResource.get_secgroup_uuids is '
                       'deprecated. Use '
                       'self.client_plugin("neutron").get_secgroup_uuids')

@@ -184,12 +184,13 @@ class AccessKey(resource.Resource):
             self._register_access_key()
 
     def _get_user(self):
-        """
+        """Derive the keystone userid, stored in the User resource_id.
+
         Helper function to derive the keystone userid, which is stored in the
-        resource_id of the User associated with this key.  We want to avoid
+        resource_id of the User associated with this key. We want to avoid
         looking the name up via listing keystone users, as this requires admin
         rights in keystone, so FnGetAtt which calls _secret_accesskey won't
-        work for normal non-admin users
+        work for normal non-admin users.
         """
         # Lookup User resource by intrinsic reference (which is what is passed
         # into the UserName parameter.  Would be cleaner to just make the User
@@ -225,9 +226,10 @@ class AccessKey(resource.Resource):
         user._delete_keypair()
 
     def _secret_accesskey(self):
-        '''
-        Return the user's access key, fetching it from keystone if necessary
-        '''
+        """Return the user's access key.
+
+        Fetching it from keystone if necessary.
+        """
         if self._secret is None:
             if not self.resource_id:
                 LOG.info(_LI('could not get secret for %(username)s '
