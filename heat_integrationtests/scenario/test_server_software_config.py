@@ -133,8 +133,7 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
                 dep1_dep.creation_time)
 
     def test_server_software_config(self):
-        """
-        Check that passed files with scripts are executed on created server.
+        """Check that passed files with scripts are executed on created server.
 
         The alternative scenario is the following:
             1. Create a stack and pass files with scripts.

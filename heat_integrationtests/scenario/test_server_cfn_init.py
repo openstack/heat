@@ -17,9 +17,7 @@ from heat_integrationtests.scenario import scenario_base
 
 
 class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
-    """
-    The class is responsible for testing cfn-init and cfn-signal workability
-    """
+    """Testing cfn-init and cfn-signal workability."""
 
     def setUp(self):
         super(CfnInitIntegrationTest, self).setUp()
@@ -94,8 +92,7 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
                 raise e
 
     def test_server_cfn_init(self):
-        """
-        Check cfn-init and cfn-signal availability on the created server.
+        """Check cfn-init and cfn-signal availability on the created server.
 
         The alternative scenario is the following:
             1. Create a stack with a server and configured security group.

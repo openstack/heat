@@ -88,8 +88,7 @@ class Client(object):
         return (time.time() - self.timeout) > start_time
 
     def exec_command(self, cmd):
-        """
-        Execute the specified command on the server.
+        """Execute the specified command on the server.
 
         Note that this method is reading whole command outputs to memory, thus
         shouldn't be used for large outputs.
@@ -170,8 +169,9 @@ class RemoteClient(object):
         return self.ssh_client.exec_command(cmd)
 
     def validate_authentication(self):
-        """Validate ssh connection and authentication
-           This method raises an Exception when the validation fails.
+        """Validate ssh connection and authentication.
+
+        This method raises an Exception when the validation fails.
         """
         self.ssh_client.test_connection_auth()
 

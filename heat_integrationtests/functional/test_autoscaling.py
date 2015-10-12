@@ -189,7 +189,9 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         self.assert_instance_count(stack, 5)
 
     def test_update_group_replace(self):
-        """Make sure that during a group update the non updatable
+        """Test case for ensuring non-updatable props case a replacement.
+
+        Make sure that during a group update the non-updatable
         properties cause a replacement.
         """
         files = {'provider.yaml': self.instance_template}
@@ -219,7 +221,9 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         self.assertNotEqual(orig_asg_id, rsrc.physical_resource_id)
 
     def test_create_instance_error_causes_group_error(self):
-        """If a resource in an instance group fails to be created, the instance
+        """Test create failing a resource in the instance group.
+
+        If a resource in an instance group fails to be created, the instance
         group itself will fail and the broken inner resource will remain.
         """
         stack_name = self._stack_rand_name()
@@ -252,7 +256,9 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         self._assert_instance_state(nested_ident, 0, 2)
 
     def test_update_instance_error_causes_group_error(self):
-        """If a resource in an instance group fails to be created during an
+        """Test update failing a resource in the instance group.
+
+        If a resource in an instance group fails to be created during an
         update, the instance group itself will fail and the broken inner
         resource will remain.
         """
@@ -408,9 +414,10 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
             self.assertNotIn(deletes_expected, updt_names)
 
     def test_instance_group_update_replace(self):
-        """
-        Test simple update replace with no conflict in batch size and
-        minimum instances in service.
+        """Test simple update replace.
+
+        Test update replace with no conflict in batch size and minimum
+        instances in service.
         """
         updt_template = self.ig_tmpl_with_updt_policy()
         grp = updt_template['Resources']['JobServerGroup']
@@ -427,9 +434,10 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
                                    update_replace=True)
 
     def test_instance_group_update_replace_with_adjusted_capacity(self):
-        """
-        Test update replace with capacity adjustment due to conflict in
-        batch size and minimum instances in service.
+        """Test update replace with capacity adjustment.
+
+        Test update replace with capacity adjustment due to conflict in batch
+        size and minimum instances in service.
         """
         updt_template = self.ig_tmpl_with_updt_policy()
         grp = updt_template['Resources']['JobServerGroup']
@@ -446,9 +454,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
                                    update_replace=True)
 
     def test_instance_group_update_replace_huge_batch_size(self):
-        """
-        Test update replace with a huge batch size.
-        """
+        """Test update replace with a huge batch size."""
         updt_template = self.ig_tmpl_with_updt_policy()
         group = updt_template['Resources']['JobServerGroup']
         policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
@@ -464,9 +470,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
                                    update_replace=True)
 
     def test_instance_group_update_replace_huge_min_in_service(self):
-        """
-        Test update replace with a huge number of minimum instances in service.
-        """
+        """Update replace with huge number of minimum instances in service."""
         updt_template = self.ig_tmpl_with_updt_policy()
         group = updt_template['Resources']['JobServerGroup']
         policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
@@ -483,7 +487,8 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
                                    update_replace=True)
 
     def test_instance_group_update_no_replace(self):
-        """
+        """Test simple update only and no replace.
+
         Test simple update only and no replace (i.e. updated instance flavor
         in Launch Configuration) with no conflict in batch size and
         minimum instances in service.
@@ -504,7 +509,8 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
                                    update_replace=False)
 
     def test_instance_group_update_no_replace_with_adjusted_capacity(self):
-        """
+        """Test update only and no replace with capacity adjustment.
+
         Test update only and no replace (i.e. updated instance flavor in
         Launch Configuration) with capacity adjustment due to conflict in
         batch size and minimum instances in service.

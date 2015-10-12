@@ -23,7 +23,8 @@ import swiftclient
 
 
 class ClientManager(object):
-    """
+    """Provides access to the official python clients for calling various APIs.
+
     Manager that provides access to the official python clients for
     calling various OpenStack APIs.
     """

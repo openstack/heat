@@ -267,11 +267,13 @@ resources:
         self.assertEqual(initial_rand, updated_rand)
 
     def test_update_nochange_resource_needs_update(self):
-        """Test update when the resource definition has changed."""
-        # Test the scenario when the ResourceGroup update happens without
-        # any changed properties, this can happen if the definition of
-        # a contained provider resource changes (files map changes), then
-        # the group and underlying nested stack should end up updated.
+        """Test update when the resource definition has changed.
+
+        Test the scenario when the ResourceGroup update happens without
+        any changed properties, this can happen if the definition of
+        a contained provider resource changes (files map changes), then
+        the group and underlying nested stack should end up updated.
+        """
 
         random_templ1 = '''
 heat_template_version: 2013-05-23

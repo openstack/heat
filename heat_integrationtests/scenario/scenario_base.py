@@ -14,7 +14,7 @@ from heat_integrationtests.common import test
 
 
 class ScenarioTestsBase(test.HeatIntegrationTest):
-    "This class define common parameters for scenario tests"
+    """This class defines common parameters for scenario tests."""
 
     def setUp(self):
         super(ScenarioTestsBase, self).setUp()

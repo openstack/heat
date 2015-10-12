@@ -20,8 +20,7 @@ from heat_integrationtests.scenario import scenario_base
 
 
 class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
-    """
-    The class is responsible for testing ASG + LB scenario.
+    """The class is responsible for testing ASG + LB scenario.
 
     The very common use case tested is an autoscaling group
     of some web application servers behind a loadbalancer.
@@ -52,8 +51,7 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
         return all_res and all_res_complete
 
     def test_autoscaling_loadbalancer_neutron(self):
-        """
-        Check work of AutoScaing and Neutron LBaaS resource in Heat.
+        """Check work of AutoScaing and Neutron LBaaS resource in Heat.
 
         The scenario is the following:
             1. Launch a stack with a load balancer and autoscaling group
