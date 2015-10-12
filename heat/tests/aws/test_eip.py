@@ -867,6 +867,57 @@ class AllocTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_update_association_needs_update_InstanceId(self):
+        server = self.fc.servers.list()[0]
+        self._mock_server_get(mock_server=server, multiple=True)
+
+        server_update = self.fc.servers.list()[1]
+        self._mock_server_get(server='5678',
+                              mock_server=server_update,
+                              multiple=True,
+                              mock_again=True)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        self.create_eip(t, stack, 'IPAddress')
+        before_props = {'InstanceId': {'Ref': 'WebServer'},
+                        'EIP': '11.0.0.1'}
+        after_props = {'InstanceId': {'Ref': 'WebServer2'},
+                       'EIP': '11.0.0.1'}
+        before = self.create_association(t, stack, 'IPAssoc')
+        after = rsrc_defn.ResourceDefinition(before.name, before.type(),
+                                             after_props)
+        self.assertTrue(exception.UpdateReplace,
+                        before._needs_update(after, before, after_props,
+                                             before_props, None))
+
+    def test_update_association_needs_update_InstanceId_EIP(self):
+        server = self.fc.servers.list()[0]
+        self._mock_server_get(mock_server=server, multiple=True)
+
+        server_update = self.fc.servers.list()[1]
+        self._mock_server_get(server='5678',
+                              mock_server=server_update,
+                              multiple=True,
+                              mock_again=True)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        self.create_eip(t, stack, 'IPAddress')
+        before_props = {'InstanceId': {'Ref': 'WebServer'},
+                        'EIP': '11.0.0.1'}
+        after_props = {'InstanceId': {'Ref': 'WebServer2'},
+                       'EIP': '11.0.0.2'}
+        before = self.create_association(t, stack, 'IPAssoc')
+        after = rsrc_defn.ResourceDefinition(before.name, before.type(),
+                                             after_props)
+        self.assertRaises(exception.UpdateReplace, before._needs_update,
+                          after, before, after_props, before_props, None)
+
     def test_update_association_with_NetworkInterfaceId_or_InstanceId(self):
         self.mock_create_floatingip()
         self.mock_list_ports()
