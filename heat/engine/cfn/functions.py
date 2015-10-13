@@ -191,7 +191,7 @@ class GetAtt(function.Function):
 
         r = self._resource()
         if r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
-                        r.UPDATE, r.ROLLBACK):
+                        r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
             return r.FnGetAtt(attribute)
         # NOTE(sirushtim): Add r.INIT to states above once convergence
         # is the default.
