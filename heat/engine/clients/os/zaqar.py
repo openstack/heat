@@ -41,7 +41,7 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
             return None
 
         opts = {
-            'os_auth_token': con.auth_token,
+            'os_auth_token': self.auth_token,
             'os_auth_url': con.auth_url,
             'os_project_id': tenant_id,
             'os_service_type': self.MESSAGING,
