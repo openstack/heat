@@ -21,10 +21,6 @@ class MistralClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [WORKFLOW_V2] = ['workflowv2']
 
-    @staticmethod
-    def is_available():
-        return mistral_base is not None
-
     def _create(self):
         endpoint_type = self._get_client_option('mistral', 'endpoint_type')
         endpoint = self.url_for(service_type=self.WORKFLOW_V2,
