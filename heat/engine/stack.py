@@ -1668,7 +1668,8 @@ class Stack(collections.Mapping):
             'resources': dict((res.name, res.prepare_abandon())
                               for res in six.itervalues(self.resources)),
             'project_id': self.tenant_id,
-            'stack_user_project_id': self.stack_user_project_id
+            'stack_user_project_id': self.stack_user_project_id,
+            'tags': self.tags,
         }
 
     def resolve_static_data(self, snippet):
