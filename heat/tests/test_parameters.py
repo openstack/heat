@@ -453,7 +453,7 @@ params_schema = json.loads('''{
 }''')
 
 
-class ParametersTest(common.HeatTestCase):
+class ParametersBase(common.HeatTestCase):
     def new_parameters(self, stack_name, tmpl, user_params=None,
                        stack_id=None, validate_value=True,
                        param_defaults=None):
@@ -465,6 +465,9 @@ class ParametersTest(common.HeatTestCase):
             user_params, param_defaults=param_defaults)
         params.validate(validate_value)
         return params
+
+
+class ParametersTest(ParametersBase):
 
     def test_pseudo_params(self):
         stack_name = 'test_stack'
@@ -571,20 +574,59 @@ class ParametersTest(common.HeatTestCase):
                           'test',
                           params)
 
-    def test_use_user_default(self):
-        template = {'Parameters': {'a': {'Type': 'Number', 'Default': '42'}}}
+
+class ParameterDefaultsTest(ParametersBase):
+    scenarios = [
+        ('type_list', dict(p_type='CommaDelimitedList',
+                           value='1,1,1',
+                           expected=[['4', '2'], ['7', '7'], ['1', '1', '1']],
+                           param_default='7,7',
+                           default='4,2')),
+        ('type_number', dict(p_type='Number',
+                             value=111,
+                             expected=[42, 77, 111],
+                             param_default=77,
+                             default=42)),
+        ('type_string', dict(p_type='String',
+                             value='111',
+                             expected=['42', '77', '111'],
+                             param_default='77',
+                             default='42')),
+        ('type_json', dict(p_type='Json',
+                           value={'1': '11'},
+                           expected=[{'4': '2'}, {'7': '7'}, {'1': '11'}],
+                           param_default={'7': '7'},
+                           default={'4': '2'})),
+        ('type_boolean1', dict(p_type='Boolean',
+                               value=True,
+                               expected=[False, False, True],
+                               param_default=False,
+                               default=False)),
+        ('type_boolean2', dict(p_type='Boolean',
+                               value=False,
+                               expected=[False, True, False],
+                               param_default=True,
+                               default=False)),
+        ('type_boolean3', dict(p_type='Boolean',
+                               value=False,
+                               expected=[True, False, False],
+                               param_default=False,
+                               default=True))]
+
+    def test_use_expected_default(self):
+        template = {'Parameters': {'a': {'Type': self.p_type,
+                                         'Default': self.default}}}
+        params = self.new_parameters('test_params', template)
+        self.assertEqual(self.expected[0], params['a'])
+
         params = self.new_parameters('test_params', template,
-                                     param_defaults={'a': '77'})
+                                     param_defaults={'a': self.param_default})
+        self.assertEqual(self.expected[1], params['a'])
 
-        self.assertEqual(77, params['a'])
-
-    def test_dont_use_user_default(self):
-        template = {'Parameters': {'a': {'Type': 'Number', 'Default': '42'}}}
         params = self.new_parameters('test_params', template,
-                                     {'a': '111'},
-                                     param_defaults={'a': '77'})
-
-        self.assertEqual(111, params['a'])
+                                     {'a': self.value},
+                                     param_defaults={'a': self.param_default})
+        self.assertEqual(self.expected[2], params['a'])
 
 
 class ParameterSchemaTest(common.HeatTestCase):

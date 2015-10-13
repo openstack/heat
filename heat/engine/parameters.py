@@ -340,18 +340,31 @@ class StringParam(Parameter):
         self.schema.validate_value(val, context)
 
 
-class CommaDelimitedListParam(Parameter, collections.Sequence):
-    """A template parameter of type "CommaDelimitedList"."""
+class ParsedParameter(Parameter):
+    """A template parameter with cached parsed value."""
 
     def __init__(self, name, schema, value=None):
-        super(CommaDelimitedListParam, self).__init__(name, schema, value)
+        super(ParsedParameter, self).__init__(name, schema, value)
+        self._update_parsed()
+
+    def set_default(self, value):
+        super(ParsedParameter, self).set_default(value)
+        self._update_parsed()
+
+    def _update_parsed(self):
         if self.has_value():
             if self.user_value is not None:
                 self.parsed = self.parse(self.user_value)
             else:
                 self.parsed = self.parse(self.default())
-        else:
-            self.parsed = []
+
+
+class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
+    """A template parameter of type "CommaDelimitedList"."""
+
+    def __init__(self, name, schema, value=None):
+        self.parsed = []
+        super(CommaDelimitedListParam, self).__init__(name, schema, value)
 
     def parse(self, value):
         # only parse when value is not already a list
@@ -391,18 +404,12 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         self.schema.validate_value(parsed, context)
 
 
-class JsonParam(Parameter):
+class JsonParam(ParsedParameter):
     """A template parameter who's value is map or list."""
 
     def __init__(self, name, schema, value=None):
+        self.parsed = {}
         super(JsonParam, self).__init__(name, schema, value)
-        if self.has_value():
-            if self.user_value is not None:
-                self.parsed = self.parse(self.user_value)
-            else:
-                self.parsed = self.parse(self.default())
-        else:
-            self.parsed = {}
 
     def parse(self, value):
         try:
