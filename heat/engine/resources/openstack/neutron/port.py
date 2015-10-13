@@ -21,6 +21,7 @@ from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import support
@@ -441,16 +442,30 @@ class Port(neutron.NeutronResource):
         props = {'fixed_ips': []}
         self.client().update_port(self.resource_id, {'port': props})
 
-    def restore_after_rollback(self):
-        old_port = self.stack._backup_stack().resources.get(self.name)
-        fixed_ips = old_port.data().get('port_fip', [])
-        # restore fixed_ips for this port by setting fixed_ips to []
+    def restore_prev_rsrc(self, convergence=False):
+        # In case of convergence, during rollback, the previous rsrc is
+        # already selected and is being acted upon.
+        prev_port = self if convergence else \
+            self.stack._backup_stack().resources.get(self.name)
+        fixed_ips = prev_port.data().get('port_fip', [])
+
         props = {'fixed_ips': []}
-        old_props = {'fixed_ips': jsonutils.loads(fixed_ips)}
-        # remove ip from new port
-        self.client().update_port(self.resource_id, {'port': props})
-        # restore ip for old port
-        self.client().update_port(old_port.resource_id, {'port': old_props})
+        if convergence:
+            existing_port, stack = resource.Resource.load(
+                prev_port.context, prev_port.replaced_by, True,
+                prev_port.stack.cache_data
+            )
+            existing_port_id = existing_port.resource_id
+        else:
+            existing_port_id = self.resource_id
+        if existing_port_id:
+            # reset fixed_ips to [] for new resource
+            self.client().update_port(existing_port_id, {'port': props})
+        if fixed_ips and prev_port.resource_id:
+            # restore ip for old port
+            prev_port_props = {'fixed_ips': jsonutils.loads(fixed_ips)}
+            self.client().update_port(prev_port.resource_id,
+                                      {'port': prev_port_props})
 
 
 def resource_mapping():

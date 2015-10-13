@@ -748,7 +748,7 @@ class NeutronPortTest(common.HeatTestCase):
         n_client.update_port.assert_called_once_with('test_res_id',
                                                      expected_props)
 
-    def test_restore_after_rollback_port(self):
+    def test_restore_prev_rsrc(self):
         t = template_format.parse(neutron_port_template)
         stack = utils.parse_stack(t)
         new_port = stack['port']
@@ -769,7 +769,7 @@ class NeutronPortTest(common.HeatTestCase):
         new_port.client = mock.Mock(return_value=n_client)
 
         # execute prepare_for_replace
-        new_port.restore_after_rollback()
+        new_port.restore_prev_rsrc()
 
         # check, that ports were updated: old port get ip and
         # same ip was removed from old port
@@ -778,3 +778,40 @@ class NeutronPortTest(common.HeatTestCase):
         n_client.update_port.assert_has_calls([
             mock.call('new_res_id', expected_new_props),
             mock.call('old_res_id', expected_old_props)])
+
+    def test_restore_prev_rsrc_convergence(self):
+        t = template_format.parse(neutron_port_template)
+        stack = utils.parse_stack(t)
+        stack.store()
+
+        # mock resource from previous template
+        prev_rsrc = stack['port']
+        prev_rsrc.resource_id = 'prev-rsrc'
+        # store in db
+        prev_rsrc.state_set(prev_rsrc.UPDATE, prev_rsrc.COMPLETE)
+
+        # mock resource from existing template and store in db
+        existing_rsrc = stack['port']
+        existing_rsrc.current_template_id = stack.t.id
+        existing_rsrc.resource_id = 'existing-rsrc'
+        existing_rsrc.state_set(existing_rsrc.UPDATE, existing_rsrc.COMPLETE)
+
+        # mock previous resource was replaced by existing resource
+        prev_rsrc.replaced_by = existing_rsrc.id
+        _value = {
+            'subnet_id': 'test_subnet',
+            'ip_address': '42.42.42.42'
+        }
+        prev_rsrc._data = {'port_fip': jsonutils.dumps(_value)}
+
+        n_client = mock.Mock()
+        prev_rsrc.client = mock.Mock(return_value=n_client)
+
+        # execute prepare_for_replace
+        prev_rsrc.restore_prev_rsrc(convergence=True)
+
+        expected_existing_props = {'port': {'fixed_ips': []}}
+        expected_prev_props = {'port': {'fixed_ips': _value}}
+        n_client.update_port.assert_has_calls([
+            mock.call(existing_rsrc.resource_id, expected_existing_props),
+            mock.call(prev_rsrc.resource_id, expected_prev_props)])
