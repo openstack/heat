@@ -42,7 +42,7 @@ def chk_ci_version():
         raise Exception()
     # data[1] has such format: 'cloud-init 0.7.5\n', need to parse version
     v = re.split(' |\n', data[1])[1].split('.')
-    return tuple(v) >= tuple('0', '6', '0')
+    return tuple(v) >= tuple(['0', '6', '0'])
 
 
 def init_logging():
