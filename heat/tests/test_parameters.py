@@ -327,6 +327,26 @@ class ParameterTestSpecific(common.HeatTestCase):
                                 'foo,baz,blarg')
         self.assertIn('wibble', six.text_type(err))
 
+    def test_list_validate_good(self):
+        schema = {'Type': 'CommaDelimitedList'}
+        val = ['foo', 'bar', 'baz']
+        val_s = 'foo,bar,baz'
+        p = new_parameter('p', schema, val_s, validate_value=False)
+        p.validate()
+        self.assertEqual(val, p.value())
+        self.assertEqual(val, p.parsed)
+
+    def test_list_validate_bad(self):
+        schema = {'Type': 'CommaDelimitedList'}
+        # just need something here that is growing to throw an AttributeError
+        # when .split() is called
+        val_s = 0
+        p = new_parameter('p', schema, validate_value=False)
+        p.user_value = val_s
+        err = self.assertRaises(exception.StackValidationFailed,
+                                p.validate)
+        self.assertIn('Parameter \'p\' is invalid', six.text_type(err))
+
     def test_map_value(self):
         '''Happy path for value that's already a map.'''
         schema = {'Type': 'Json'}
@@ -395,6 +415,24 @@ class ParameterTestSpecific(common.HeatTestCase):
         self.assertIsInstance(p.value(), list)
         self.assertIn("fizz", p.value())
         self.assertIn("buzz", p.value())
+
+    def test_json_validate_good(self):
+        schema = {'Type': 'Json'}
+        val = {"foo": "bar", "items": [1, 2, 3]}
+        val_s = json.dumps(val)
+        p = new_parameter('p', schema, val_s, validate_value=False)
+        p.validate()
+        self.assertEqual(val, p.value())
+        self.assertEqual(val, p.parsed)
+
+    def test_json_validate_bad(self):
+        schema = {'Type': 'Json'}
+        val_s = '{"foo": "bar", "invalid": ]}'
+        p = new_parameter('p', schema, validate_value=False)
+        p.user_value = val_s
+        err = self.assertRaises(exception.StackValidationFailed,
+                                p.validate)
+        self.assertIn('Parameter \'p\' is invalid', six.text_type(err))
 
     def test_bool_value_true(self):
         schema = {'Type': 'Boolean'}

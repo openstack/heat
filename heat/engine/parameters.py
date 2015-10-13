@@ -400,7 +400,10 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
         return ",".join(self.value())
 
     def _validate(self, val, context):
-        parsed = self.parse(val)
+        try:
+            parsed = self.parse(val)
+        except ValueError as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
         self.schema.validate_value(parsed, context)
 
 
@@ -445,8 +448,11 @@ class JsonParam(ParsedParameter):
         return encodeutils.safe_decode(jsonutils.dumps(self.value()))
 
     def _validate(self, val, context):
-        val = self.parse(val)
-        self.schema.validate_value(val, context)
+        try:
+            parsed = self.parse(val)
+        except ValueError as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
+        self.schema.validate_value(parsed, context)
 
 
 class Parameters(collections.Mapping):
