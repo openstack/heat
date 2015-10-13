@@ -112,6 +112,18 @@ resources:
       network: 12345
 '''
 
+tmpl_server_with_network_id = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      flavor: m1.small
+      image: F17-x86_64-gold
+      networks:
+        - network: 4321
+"""
+
 
 class ServersTest(common.HeatTestCase):
     def setUp(self):
@@ -3927,20 +3939,8 @@ class ServerInternalPortTest(common.HeatTestCase):
                                          '[{"id": "111222"}]')
 
     def test_build_nics_do_not_create_internal_port(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
 
         self.resolve.side_effect = ['4321', '1234']
         self.port_create.return_value = {'port': {'id': '111222'}}
@@ -4060,19 +4060,8 @@ class ServerInternalPortTest(common.HeatTestCase):
             mock.call('internal_ports', '[{"id": "1122"}, {"id": "5566"}]')))
 
     def test_delete_internal_ports(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
 
         get_data = [{'internal_ports': '[{"id": "1122"}, {"id": "3344"}, '
                                        '{"id": "5566"}]'},
@@ -4102,19 +4091,8 @@ class ServerInternalPortTest(common.HeatTestCase):
         data_delete.assert_called_once_with('internal_ports')
 
     def test_get_data_internal_ports(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
 
         server._data = {"internal_ports": '[{"id": "1122"}]'}
         data = server._data_get_ports()
@@ -4125,19 +4103,8 @@ class ServerInternalPortTest(common.HeatTestCase):
         self.assertEqual([], data)
 
     def test_store_external_ports(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
 
         class Fake(object):
             def interface_list(self):
@@ -4168,19 +4135,8 @@ class ServerInternalPortTest(common.HeatTestCase):
                          update_data.call_args_list[1][1])
 
     def test_prepare_ports_for_replace(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
         port_ids = [{'id': 1122}, {'id': 3344}]
         external_port_ids = [{'id': 5566}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
@@ -4230,19 +4186,8 @@ class ServerInternalPortTest(common.HeatTestCase):
             mock.call(5566, empty_fixed_ips)])
 
     def test_restore_ports_after_rollback(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
         port_ids = [{'id': 1122}, {'id': 3344}]
         external_port_ids = [{'id': 5566}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
@@ -4290,18 +4235,7 @@ class ServerInternalPortTest(common.HeatTestCase):
             mock.call(5566, {'port': port3_fixed_ip})])
 
     def test_restore_ports_after_rollback_convergence(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t = template_format.parse(tmpl)
+        t = template_format.parse(tmpl_server_with_network_id)
         stack = utils.parse_stack(t)
         stack.store()
 
@@ -4369,19 +4303,8 @@ class ServerInternalPortTest(common.HeatTestCase):
             mock.call(5566, {'port': port3_fixed_ip})])
 
     def test_store_external_ports_os_interface_not_installed(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-        """
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
 
         class Fake(object):
             def interface_list(self):
