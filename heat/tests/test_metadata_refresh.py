@@ -1,35 +1,34 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import mock
-import mox
 from oslo_serialization import jsonutils
 
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
+from heat.engine.resources.aws.cfn.wait_condition_handle \
+    import WaitConditionHandle
 from heat.engine.resources.aws.ec2 import instance
-from heat.engine.resources.openstack.nova import server
-from heat.engine import scheduler
+from heat.engine.resources.openstack.nova.server import Server
+from heat.engine.scheduler import TaskRunner
 from heat.engine import service
-from heat.engine import stack as parser
+from heat.engine import stack as stk
 from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import utils
 
 
-test_template_metadata = '''
+TEST_TEMPLATE_METADATA = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "",
@@ -75,7 +74,7 @@ test_template_metadata = '''
 }
 '''
 
-test_template_waitcondition = '''
+TEST_TEMPLATE_WAIT_CONDITION = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "Just a WaitCondition.",
@@ -123,7 +122,7 @@ test_template_waitcondition = '''
 '''
 
 
-test_template_server = '''
+TEST_TEMPLATE_SERVER = '''
 heat_template_version: 2013-05-23
 resources:
   instance1:
@@ -143,150 +142,134 @@ resources:
 '''
 
 
-class MetadataRefreshTest(common.HeatTestCase):
-    """Metadata gets updated when FnGetAtt() returns something different.
+class MetadataRefreshTests(common.HeatTestCase):
 
-    The point of the test is to confirm that metadata gets updated
-    when FnGetAtt() returns something different.
-    """
-    def setUp(self):
-        super(MetadataRefreshTest, self).setUp()
-
-    def create_stack(self, stack_name='test_stack', params=None):
-        params = params or {}
-        temp = template_format.parse(test_template_metadata)
+    @mock.patch.object(instance.Instance, 'handle_create')
+    @mock.patch.object(instance.Instance, 'check_create_complete')
+    @mock.patch.object(instance.Instance, 'FnGetAtt')
+    def test_FnGetAtt_metadata_updated(self, mock_get,
+                                       mock_check, mock_handle):
+        """Tests that metadata gets updated when FnGetAtt return changes."""
+        # Setup
+        temp = template_format.parse(TEST_TEMPLATE_METADATA)
         template = tmpl.Template(temp,
-                                 env=environment.Environment(params))
+                                 env=environment.Environment({}))
         ctx = utils.dummy_context()
-        stack = parser.Stack(ctx, stack_name, template,
-                             disable_rollback=True)
-
-        self.stack_id = stack.store()
+        stack = stk.Stack(ctx, 'test_stack', template, disable_rollback=True)
+        stack.store()
 
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        for cookie in (object(), object()):
-            instance.Instance.handle_create().AndReturn(cookie)
-            create_complete = instance.Instance.check_create_complete(cookie)
-            create_complete.InAnyOrder().AndReturn(True)
-        self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
+        # Configure FnGetAtt to return different values on subsequent calls
+        mock_get.side_effect = [
+            '10.0.0.1',
+            '10.0.0.2',
+        ]
 
-        return stack
+        # Initial resolution of the metadata
+        stack.create()
 
-    def test_FnGetAtt(self):
-        self.stack = self.create_stack()
-
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.5')
-
-        # called by metadata_update()
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.5')
-
-        self.m.ReplayAll()
-        self.stack.create()
-
-        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
-                         self.stack.state)
-
-        s1 = self.stack['S1']
-        s2 = self.stack['S2']
-        files = s1.metadata_get()[
-            'AWS::CloudFormation::Init']['config']['files']
-        cont = files['/tmp/random_file']['content']
+        # Sanity check on S2
+        s2 = stack['S2']
         self.assertEqual((s2.CREATE, s2.COMPLETE), s2.state)
-        self.assertEqual('s2-ip=1.2.3.5', cont)
 
+        # Verify S1 is using the initial value from S2
+        s1 = stack['S1']
+        content = self._get_metadata_content(s1.metadata_get())
+        self.assertEqual('s2-ip=10.0.0.1', content)
+
+        # Run metadata update to pick up the new value from S2
         s1.metadata_update()
         s2.metadata_update()
-        files = s1.metadata_get()[
-            'AWS::CloudFormation::Init']['config']['files']
-        cont = files['/tmp/random_file']['content']
-        self.assertEqual('s2-ip=10.0.0.5', cont)
 
-        self.m.VerifyAll()
+        # Verify the updated value is correct in S1
+        content = self._get_metadata_content(s1.metadata_get())
+        self.assertEqual('s2-ip=10.0.0.2', content)
+
+        # Verify outgoing calls
+        mock_get.assert_has_calls([
+            mock.call('PublicIp'),
+            mock.call('PublicIp')])
+        self.assertEqual(2, mock_handle.call_count)
+        self.assertEqual(2, mock_check.call_count)
+
+    @staticmethod
+    def _get_metadata_content(m):
+        tmp = m['AWS::CloudFormation::Init']['config']['files']
+        return tmp['/tmp/random_file']['content']
 
 
-class WaitCondMetadataUpdateTest(common.HeatTestCase):
+class WaitConditionMetadataUpdateTests(common.HeatTestCase):
+
     def setUp(self):
-        super(WaitCondMetadataUpdateTest, self).setUp()
+        super(WaitConditionMetadataUpdateTests, self).setUp()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
-    def create_stack(self, stack_name='test_stack'):
-        temp = template_format.parse(test_template_waitcondition)
+    @mock.patch.object(instance.Instance, 'handle_create')
+    @mock.patch.object(instance.Instance, 'check_create_complete')
+    @mock.patch.object(instance.Instance, 'is_service_available')
+    @mock.patch.object(TaskRunner, '_sleep')
+    @mock.patch.object(WaitConditionHandle, 'identifier')
+    def test_wait_metadata(self, mock_identifier, mock_sleep, mock_available,
+                           mock_check, mock_handle):
+        """Tests a wait condition metadata update after a signal call."""
+
+        # Setup Stack
+        temp = template_format.parse(TEST_TEMPLATE_WAIT_CONDITION)
         template = tmpl.Template(temp)
         ctx = utils.dummy_context()
-        stack = parser.Stack(ctx, stack_name, template, disable_rollback=True)
-
-        self.stack_id = stack.store()
+        stack = stk.Stack(ctx, 'test-stack', template, disable_rollback=True)
+        stack.store()
 
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        for cookie in (object(), object()):
-            instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_create_complete(cookie).AndReturn(True)
+        res_id = identifier.ResourceIdentifier('test_tenant_id', stack.name,
+                                               stack.id, '', 'WH')
+        mock_identifier.return_value = res_id
 
-        id = identifier.ResourceIdentifier('test_tenant_id', stack.name,
-                                           stack.id, '', 'WH')
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
-        aws_wch.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+        watch = stack['WC']
+        inst = stack['S2']
 
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        return stack
-
-    @mock.patch(('heat.engine.resources.aws.ec2.instance.Instance'
-                 '.is_service_available'))
-    def test_wait_meta(self, mock_is_service_available):
-        """Tests valid waitcondition metadata after signal call.
-
-        1 create stack
-        2 assert empty instance metadata
-        3 service.resource_signal()
-        4 assert valid waitcond metadata
-        5 assert valid instance metadata
-        """
-        mock_is_service_available.return_value = True
-        self.stack = self.create_stack()
-
-        watch = self.stack['WC']
-        inst = self.stack['S2']
+        # Setup Sleep Behavior
+        self.run_empty = True
 
         def check_empty(sleep_time):
             self.assertEqual('{}', watch.FnGetAtt('Data'))
             self.assertIsNone(inst.metadata_get()['test'])
 
-        def update_metadata(id, data, reason):
-            self.man.resource_signal(utils.dummy_context(),
-                                     dict(self.stack.identifier()),
+        def update_metadata(unique_id, data, reason):
+            self.man.resource_signal(ctx,
+                                     dict(stack.identifier()),
                                      'WH',
                                      {'Data': data, 'Reason': reason,
-                                      'Status': 'SUCCESS', 'UniqueId': id},
+                                      'Status': 'SUCCESS',
+                                      'UniqueId': unique_id},
                                      sync_call=True)
 
         def post_success(sleep_time):
             update_metadata('123', 'foo', 'bar')
 
-        scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(check_empty)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(post_success)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes().AndReturn(
-            None)
+        def side_effect_popper(sleep_time):
+            if self.run_empty:
+                self.run_empty = False
+                check_empty(sleep_time)
+            else:
+                post_success(sleep_time)
 
-        self.m.ReplayAll()
-        self.stack.create()
+        mock_sleep.side_effect = side_effect_popper
 
-        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
-                         self.stack.state)
-
+        # Test Initial Creation
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         self.assertEqual('{"123": "foo"}', watch.FnGetAtt('Data'))
         self.assertEqual('{"123": "foo"}', inst.metadata_get()['test'])
 
+        # Test Update
         update_metadata('456', 'blarg', 'wibble')
 
         self.assertEqual({'123': 'foo', '456': 'blarg'},
@@ -297,74 +280,42 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
             {'123': 'foo', '456': 'blarg'},
             jsonutils.loads(inst.metadata_get(refresh=True)['test']))
 
-        self.m.VerifyAll()
+        # Verify outgoing calls
+        self.assertTrue(mock_available.call_count > 0)
+        self.assertEqual(2, mock_handle.call_count)
+        self.assertEqual(2, mock_check.call_count)
 
 
-class MetadataRefreshTestServer(common.HeatTestCase):
-    """Metadata gets updated when FnGetAtt() returns something different.
+class MetadataRefreshServerTests(common.HeatTestCase):
 
-    The point of the test is to confirm that metadata gets updated
-    when FnGetAtt() returns something different when using a native
-    OS::Nova::Server resource, and that metadata keys set inside the
-    resource (as opposed to in the template), e.g for deployments, don't
-    get overwritten on update/refresh.
-    """
-    def setUp(self):
-        super(MetadataRefreshTestServer, self).setUp()
-
-    def create_stack(self, stack_name='test_stack_native', params=None):
-        params = params or {}
-        temp = template_format.parse(test_template_server)
+    @mock.patch.object(Server, 'handle_create')
+    @mock.patch.object(Server, 'check_create_complete')
+    @mock.patch.object(Server, 'FnGetAtt')
+    def test_FnGetAtt_metadata_update(self, mock_get, mock_check, mock_handle):
+        temp = template_format.parse(TEST_TEMPLATE_SERVER)
         template = tmpl.Template(temp,
-                                 env=environment.Environment(params))
+                                 env=environment.Environment({}))
         ctx = utils.dummy_context()
-        stack = parser.Stack(ctx, stack_name, template,
-                             disable_rollback=True)
-
-        self.stack_id = stack.store()
+        stack = stk.Stack(ctx, 'test-stack', template, disable_rollback=True)
+        stack.store()
 
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
-        self.m.StubOutWithMock(server.Server, 'handle_create')
-        self.m.StubOutWithMock(server.Server, 'check_create_complete')
-        for cookie in (object(), object()):
-            server.Server.handle_create().AndReturn(cookie)
-            create_complete = server.Server.check_create_complete(cookie)
-            create_complete.InAnyOrder().AndReturn(True)
-        self.m.StubOutWithMock(server.Server, 'FnGetAtt')
-
-        return stack
-
-    def test_FnGetAtt(self):
-        self.stack = self.create_stack()
-
         # Note dummy addresses are from TEST-NET-1 ref rfc5737
-        server.Server.FnGetAtt('first_address').AndReturn('192.0.2.1')
+        mock_get.side_effect = ['192.0.2.1', '192.0.2.2', '192.0.2.2']
 
-        # called by metadata_update()
-        server.Server.FnGetAtt('first_address').AndReturn('192.0.2.2')
-        server.Server.FnGetAtt('first_address').AndReturn('192.0.2.2')
+        # Test
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
-        self.m.ReplayAll()
-        self.stack.create()
-
-        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
-                         self.stack.state)
-
-        s1 = self.stack['instance1']
-        s2 = self.stack['instance2']
+        s1 = stack['instance1']
         md = s1.metadata_get()
         self.assertEqual({u'template_data': '192.0.2.1'}, md)
 
-        s1.metadata_update()
-        s2.metadata_update()
-        md = s1.metadata_get()
-        self.assertEqual({u'template_data': '192.0.2.2'}, md)
-
         # Now set some metadata via the resource, like is done by
-        # _populate_deployments_metadata.  This should be persisted over
+        # _populate_deployments_metadata. This should be persisted over
         # calls to metadata_update()
         new_md = {u'template_data': '192.0.2.2', 'set_by_rsrc': 'orange'}
         s1.metadata_set(new_md)
@@ -374,4 +325,9 @@ class MetadataRefreshTestServer(common.HeatTestCase):
         md = s1.metadata_get(refresh=True)
         self.assertEqual(new_md, md)
 
-        self.m.VerifyAll()
+        # Verify outgoing calls
+        mock_get.assert_has_calls([
+            mock.call('first_address'),
+            mock.call('first_address')])
+        self.assertEqual(2, mock_handle.call_count)
+        self.assertEqual(2, mock_check.call_count)
