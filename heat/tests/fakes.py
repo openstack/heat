@@ -94,7 +94,7 @@ class FakeKeystoneClient(object):
     def __init__(self, username='test_username', password='password',
                  user_id='1234', access='4567', secret='8901',
                  credential_id='abcdxyz', auth_token='abcd1234',
-                 context=None):
+                 context=None, stack_domain_id='4321'):
         self.username = username
         self.password = password
         self.user_id = user_id
@@ -105,6 +105,7 @@ class FakeKeystoneClient(object):
         self.token = auth_token
         self.context = context
         self.v3_endpoint = 'http://localhost:5000/v3'
+        self.stack_domain_id = stack_domain_id
 
         class FakeCred(object):
             id = self.credential_id

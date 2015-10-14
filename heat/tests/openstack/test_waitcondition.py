@@ -14,6 +14,7 @@
 import datetime
 import uuid
 
+import mox
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
 import six
@@ -22,6 +23,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine.clients.os import heat_plugin
+from heat.engine.clients.os import swift as swift_plugin
 from heat.engine import environment
 from heat.engine.resources.openstack.heat import wait_condition_handle as h_wch
 from heat.engine import stack as parser
@@ -55,11 +57,47 @@ resources:
         type: OS::Heat::WaitConditionHandle
 '''
 
-test_template_heat_waithandle = '''
+test_template_heat_waithandle_token = '''
 heat_template_version: 2013-05-23
 resources:
     wait_handle:
         type: OS::Heat::WaitConditionHandle
+'''
+
+test_template_heat_waithandle_heat = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+        properties:
+            signal_transport: HEAT_SIGNAL
+'''
+
+test_template_heat_waithandle_swift = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+        properties:
+            signal_transport: TEMP_URL_SIGNAL
+'''
+
+test_template_heat_waithandle_zaqar = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+        properties:
+            signal_transport: ZAQAR_SIGNAL
+'''
+
+test_template_heat_waithandle_none = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+        properties:
+            signal_transport: NO_SIGNAL
 '''
 
 test_template_update_waithandle = '''
@@ -67,6 +105,18 @@ heat_template_version: 2013-05-23
 resources:
     update_wait_handle:
         type: OS::Heat::UpdateWaitConditionHandle
+'''
+
+test_template_bad_waithandle = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_condition:
+        type: OS::Heat::WaitCondition
+        properties:
+            handle: {get_resource: wait_handle}
+            timeout: 5
+    wait_handle:
+        type: OS::Heat::RandomString
 '''
 
 
@@ -154,6 +204,18 @@ class HeatWaitConditionTest(common.HeatTestCase):
             None, 'wait_handle', self.stack.id)
         self.assertEqual('wait_handle', r.name)
         self.m.VerifyAll()
+
+    def test_bad_wait_handle(self):
+        self.stack = self.create_stack(
+            template=test_template_bad_waithandle)
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['wait_condition']
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        reason = rsrc.status_reason
+        self.assertEqual(reason, 'ValueError: resources.wait_condition: '
+                                 'wait_handle is not a valid wait condition '
+                                 'handle.')
 
     def test_timeout(self):
         self.stack = self.create_stack()
@@ -269,9 +331,9 @@ class HeatWaitConditionTest(common.HeatTestCase):
                          json.loads(wc_att))
         self.m.VerifyAll()
 
-    def _create_heat_handle(self):
-        self.stack = self.create_stack(
-            template=test_template_heat_waithandle, stub_status=False)
+    def _create_heat_handle(self,
+                            template=test_template_heat_waithandle_token):
+        self.stack = self.create_stack(template=template, stub_status=False)
 
         self.m.ReplayAll()
         self.stack.create()
@@ -350,6 +412,73 @@ class HeatWaitConditionTest(common.HeatTestCase):
                     "/signal" % self.stack_id)
         self.assertEqual(expected, handle.FnGetAtt('curl_cli'))
         self.m.VerifyAll()
+
+    def test_getatt_signal_heat(self):
+        handle = self._create_heat_handle(
+            template=test_template_heat_waithandle_heat)
+        self.assertIsNone(handle.FnGetAtt('token'))
+        self.assertIsNone(handle.FnGetAtt('endpoint'))
+        self.assertIsNone(handle.FnGetAtt('curl_cli'))
+        signal = json.loads(handle.FnGetAtt('signal'))
+        self.assertIn('alarm_url', signal)
+        self.assertIn('username', signal)
+        self.assertIn('password', signal)
+        self.assertIn('auth_url', signal)
+        self.assertIn('project_id', signal)
+        self.assertIn('domain_id', signal)
+
+    def test_getatt_signal_swift(self):
+        self.m.StubOutWithMock(swift_plugin.SwiftClientPlugin, 'get_temp_url')
+        self.m.StubOutWithMock(swift_plugin.SwiftClientPlugin, 'client')
+
+        class mock_swift(object):
+            @staticmethod
+            def put_container(container, **kwargs):
+                pass
+
+            @staticmethod
+            def put_object(container, object, contents, **kwargs):
+                pass
+
+        swift_plugin.SwiftClientPlugin.client().AndReturn(mock_swift)
+        swift_plugin.SwiftClientPlugin.client().AndReturn(mock_swift)
+        swift_plugin.SwiftClientPlugin.client().AndReturn(mock_swift)
+        swift_plugin.SwiftClientPlugin.get_temp_url(mox.IgnoreArg(),
+                                                    mox.IgnoreArg(),
+                                                    mox.IgnoreArg())\
+            .AndReturn('foo')
+
+        self.m.ReplayAll()
+
+        handle = self._create_heat_handle(
+            template=test_template_heat_waithandle_swift)
+        self.assertIsNone(handle.FnGetAtt('token'))
+        self.assertIsNone(handle.FnGetAtt('endpoint'))
+        self.assertIsNone(handle.FnGetAtt('curl_cli'))
+        signal = json.loads(handle.FnGetAtt('signal'))
+        self.assertIn('alarm_url', signal)
+
+    def test_getatt_signal_zaqar(self):
+        handle = self._create_heat_handle(
+            template=test_template_heat_waithandle_zaqar)
+        self.assertIsNone(handle.FnGetAtt('token'))
+        self.assertIsNone(handle.FnGetAtt('endpoint'))
+        self.assertIsNone(handle.FnGetAtt('curl_cli'))
+        signal = json.loads(handle.FnGetAtt('signal'))
+        self.assertIn('queue_id', signal)
+        self.assertIn('username', signal)
+        self.assertIn('password', signal)
+        self.assertIn('auth_url', signal)
+        self.assertIn('project_id', signal)
+        self.assertIn('domain_id', signal)
+
+    def test_getatt_signal_none(self):
+        handle = self._create_heat_handle(
+            template=test_template_heat_waithandle_none)
+        self.assertIsNone(handle.FnGetAtt('token'))
+        self.assertIsNone(handle.FnGetAtt('endpoint'))
+        self.assertIsNone(handle.FnGetAtt('curl_cli'))
+        self.assertEqual('{}', handle.FnGetAtt('signal'))
 
     def test_create_update_updatehandle(self):
         self.stack = self.create_stack(

@@ -1031,6 +1031,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             return_value=dep_data)
 
         sc = mock.MagicMock()
+        sc.get_container.return_value = ({}, [{'name': object_name}])
         sc.head_container.return_value = {
             'x-container-object-count': 0
         }
@@ -1040,7 +1041,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.id = 23
         self.deployment.uuid = str(uuid.uuid4())
-        container = self.deployment.physical_resource_name()
+        container = self.stack.id
         self.deployment._delete_swift_signal_url()
         sc.delete_object.assert_called_once_with(container, object_name)
         self.assertEqual(

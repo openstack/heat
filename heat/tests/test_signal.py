@@ -400,22 +400,31 @@ class SignalTest(common.HeatTestCase):
                                'delete_container')
         self.m.StubOutWithMock(self.stack.clients.client('swift'),
                                'head_container')
+        self.m.StubOutWithMock(self.stack.clients.client('swift'),
+                               'get_container')
+        self.m.StubOutWithMock(self.stack['signal_handler'],
+                               'physical_resource_name')
 
+        self.stack['signal_handler'].physical_resource_name().AndReturn('bar')
         self.stack.clients.client('swift').put_container(
             mox.IgnoreArg()).AndReturn(None)
         self.stack.clients.client_plugin('swift').get_temp_url(
             mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(
             'http://server.test/v1/AUTH_aprojectid/foo/bar')
+        self.stack['signal_handler'].physical_resource_name().AndReturn('bar')
         self.stack.clients.client('swift').put_object(
             mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
 
         self.stack.clients.client('swift').put_container(
             mox.IgnoreArg()).AndReturn(None)
+        self.stack['signal_handler'].physical_resource_name().AndReturn('bar')
         self.stack.clients.client_plugin('swift').get_temp_url(
             mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(
             'http://server.test/v1/AUTH_aprojectid/foo/bar')
         self.stack.clients.client('swift').put_object(
             mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
+        self.stack.clients.client('swift').get_container(
+            mox.IgnoreArg()).AndReturn(({}, [{'name': 'bar'}]))
         self.stack.clients.client('swift').delete_object(
             mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(None)
         self.stack.clients.client('swift').head_container(

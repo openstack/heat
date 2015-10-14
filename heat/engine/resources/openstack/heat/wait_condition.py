@@ -87,6 +87,11 @@ class HeatWaitCondition(resource.Resource):
     def _get_handle_resource(self):
         return self.stack.resource_by_refid(self.properties[self.HANDLE])
 
+    def _validate_handle_resource(self, handle):
+        if not isinstance(handle, wc_base.BaseWaitConditionHandle):
+            raise ValueError(_('%(name)s is not a valid wait condition '
+                               'handle.') % {'name': handle.name})
+
     def _wait(self, handle, started_at, timeout_in):
         if timeutils.is_older_than(started_at, timeout_in):
             exc = wc_base.WaitConditionTimeout(self, handle)
@@ -109,6 +114,7 @@ class HeatWaitCondition(resource.Resource):
 
     def handle_create(self):
         handle = self._get_handle_resource()
+        self._validate_handle_resource(handle)
         started_at = timeutils.utcnow()
         return handle, started_at, float(self.properties[self.TIMEOUT])
 
