@@ -171,6 +171,7 @@ class KeystoneUserTest(common.HeatTestCase):
         self.users.create.return_value = mock_user
         self.test_user.properties = mock.MagicMock()
         self.test_user.properties.get.side_effect = _side_effect
+        self.test_user.properties.__getitem__.side_effect = _side_effect
 
         self.test_user.physical_resource_name = mock.MagicMock()
         self.test_user.physical_resource_name.return_value = 'foo'

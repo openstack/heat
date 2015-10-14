@@ -85,7 +85,7 @@ class KeystoneRoleTest(common.HeatTestCase):
         # reset the NAME value to None, to make sure role is
         # created with physical_resource_name
         self.test_role.properties = mock.MagicMock()
-        self.test_role.properties.get.return_value = None
+        self.test_role.properties.__getitem__.return_value = None
 
         self.test_role.handle_create()
 
