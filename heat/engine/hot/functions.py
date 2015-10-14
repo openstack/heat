@@ -218,6 +218,9 @@ class GetAttAllAttributes(GetAtt):
         else:
             return super(GetAttAllAttributes, self).result()
 
+    def _allow_without_attribute_name(self):
+        return True
+
 
 class Replace(cfn_funcs.Replace):
     """A function for performing string substitutions.

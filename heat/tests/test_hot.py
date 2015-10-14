@@ -2096,3 +2096,18 @@ class TestGetAttAllAttributes(common.HeatTestCase):
             else:
                 self.assertEqual(self.expected,
                                  self.resolve(self.snippet, tmpl, stack))
+
+    def test_stack_validate_outputs_get_all_attribute(self):
+        hot_liberty_tpl = template_format.parse('''
+heat_template_version: 2015-10-15
+resources:
+  resource1:
+    type: GenericResourceType
+outputs:
+  all_attr:
+    value: {get_attr: [resource1]}
+''')
+
+        stack = parser.Stack(utils.dummy_context(), 'test_outputs_get_all',
+                             template.Template(hot_liberty_tpl))
+        stack.validate()
