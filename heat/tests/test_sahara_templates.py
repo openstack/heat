@@ -143,26 +143,28 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
 
     def test_ngt_create(self):
         self._create_ngt(self.t)
-        expected_args = ('node-group-template', 'vanilla',
-                         '2.3.0', 'someflavorid')
-        expected_kwargs = {'description': "",
-                           'volumes_per_node': None,
-                           'volumes_size': None,
-                           'volume_type': 'lvm',
-                           'security_groups': None,
-                           'auto_security_group': None,
-                           'availability_zone': None,
-                           'volumes_availability_zone': None,
-                           'node_processes': ['namenode', 'jobtracker'],
-                           'floating_ip_pool': 'some_pool_id',
-                           'node_configs': None,
-                           'image_id': None,
-                           'is_proxy_gateway': True,
-                           'volume_local_to_instance': None,
-                           'use_autoconfig': None
-                           }
-        self.ngt_mgr.create.assert_called_once_with(*expected_args,
-                                                    **expected_kwargs)
+        args = {
+            'name': 'node-group-template',
+            'plugin_name': 'vanilla',
+            'hadoop_version': '2.3.0',
+            'flavor_id': 'someflavorid',
+            'description': "",
+            'volumes_per_node': None,
+            'volumes_size': None,
+            'volume_type': 'lvm',
+            'security_groups': None,
+            'auto_security_group': None,
+            'availability_zone': None,
+            'volumes_availability_zone': None,
+            'node_processes': ['namenode', 'jobtracker'],
+            'floating_ip_pool': 'some_pool_id',
+            'node_configs': None,
+            'image_id': None,
+            'is_proxy_gateway': True,
+            'volume_local_to_instance': None,
+            'use_autoconfig': None
+        }
+        self.ngt_mgr.create.assert_called_once_with(**args)
 
     def test_validate_floatingippool_on_neutron_fails(self):
         ngt = self._init_ngt(self.t)
@@ -215,7 +217,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         scheduler.TaskRunner(ngt.create)()
         self.assertEqual((ngt.CREATE, ngt.COMPLETE), ngt.state)
         self.assertEqual(self.fake_ngt.id, ngt.resource_id)
-        name = self.ngt_mgr.create.call_args[0][0]
+        name = self.ngt_mgr.create.call_args[1]['name']
         self.assertIn('-nodegroup-', name)
 
     def test_ngt_show_resource(self):
@@ -241,6 +243,36 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.assertIn("datanode", six.text_type(ex))
         self.assertIn("secondarynamenode", six.text_type(ex))
         self.assertIn("oozie", six.text_type(ex))
+
+    def test_update(self):
+        ngt = self._create_ngt(self.t)
+        rsrc_defn = self.stack.t.resource_definitions(self.stack)['node-group']
+        rsrc_defn['Properties']['node_processes'] = [
+            'tasktracker', 'datanode']
+        scheduler.TaskRunner(ngt.update, rsrc_defn)()
+        args = {
+            'name': 'node-group-template',
+            'plugin_name': 'vanilla',
+            'hadoop_version': '2.3.0',
+            'flavor_id': 'someflavorid',
+            'description': "",
+            'volumes_per_node': None,
+            'volumes_size': None,
+            'volume_type': 'lvm',
+            'security_groups': None,
+            'auto_security_group': None,
+            'availability_zone': None,
+            'volumes_availability_zone': None,
+            'node_processes': ['tasktracker', 'datanode'],
+            'floating_ip_pool': 'some_pool_id',
+            'node_configs': None,
+            'image_id': None,
+            'is_proxy_gateway': True,
+            'volume_local_to_instance': None,
+            'use_autoconfig': None
+        }
+        self.ngt_mgr.update.assert_called_once_with('some_ng_id', **args)
+        self.assertEqual((ngt.UPDATE, ngt.COMPLETE), ngt.state)
 
 
 class SaharaClusterTemplateTest(common.HeatTestCase):
