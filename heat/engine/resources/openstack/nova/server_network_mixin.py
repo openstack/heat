@@ -22,6 +22,8 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import resource
 
+from heat.engine.resources.openstack.neutron import port as neutron_port
+
 LOG = logging.getLogger(__name__)
 
 
@@ -86,8 +88,19 @@ class ServerNetworkMixin(object):
         name = _('%(server)s-port-%(number)s') % {'server': self.name,
                                                   'number': net_number}
 
-        kwargs = {'network_id': self._get_network_id(net_data),
-                  'name': name}
+        kwargs = self._prepare_internal_port_kwargs(net_data)
+        kwargs['name'] = name
+
+        port = self.client('neutron').create_port({'port': kwargs})['port']
+
+        # Store ids (used for floating_ip association, updating, etc.)
+        # in resource's data.
+        self._data_update_ports(port['id'], 'add')
+
+        return port['id']
+
+    def _prepare_internal_port_kwargs(self, net_data):
+        kwargs = {'network_id': self._get_network_id(net_data)}
         fixed_ip = net_data.get(self.NETWORK_FIXED_IP)
         subnet = net_data.get(self.NETWORK_SUBNET)
         body = {}
@@ -99,13 +112,34 @@ class ServerNetworkMixin(object):
         if body:
             kwargs.update({'fixed_ips': [body]})
 
-        port = self.client('neutron').create_port({'port': kwargs})['port']
+        if net_data.get(self.SECURITY_GROUPS):
+            sec_uuids = self.client_plugin(
+                'neutron').get_secgroup_uuids(net_data.get(
+                    self.SECURITY_GROUPS))
+            kwargs['security_groups'] = sec_uuids
 
-        # Store ids (used for floating_ip association, updating, etc.)
-        # in resource's data.
-        self._data_update_ports(port['id'], 'add')
+        extra_props = net_data.get(self.NETWORK_PORT_EXTRA)
+        if extra_props is not None:
+            port_extra_keys = list(neutron_port.Port.EXTRA_PROPERTIES)
+            port_extra_keys.remove(neutron_port.Port.ALLOWED_ADDRESS_PAIRS)
+            for key in port_extra_keys:
+                if extra_props.get(key) is not None:
+                    kwargs[key] = extra_props.get(key)
 
-        return port['id']
+            allowed_address_pairs = extra_props.get(
+                neutron_port.Port.ALLOWED_ADDRESS_PAIRS)
+            if allowed_address_pairs is not None:
+                for pair in allowed_address_pairs:
+                    if (neutron_port.Port.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS
+                        in pair and pair.get(
+                            neutron_port.Port.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS)
+                            is None):
+                        del pair[
+                            neutron_port.Port.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS]
+                kwargs[neutron_port.Port.ALLOWED_ADDRESS_PAIRS] = \
+                    allowed_address_pairs
+
+        return kwargs
 
     def _delete_internal_port(self, port_id):
         """Delete physical port by id."""

@@ -32,16 +32,19 @@ LOG = logging.getLogger(__name__)
 class Port(neutron.NeutronResource):
 
     PROPERTIES = (
-        NETWORK_ID, NETWORK, NAME, VALUE_SPECS,
-        ADMIN_STATE_UP, FIXED_IPS, MAC_ADDRESS,
-        DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
-        DEVICE_OWNER, REPLACEMENT_POLICY, VNIC_TYPE,
-        PORT_SECURITY_ENABLED,
+        NAME, NETWORK_ID, NETWORK, FIXED_IPS, SECURITY_GROUPS,
+        REPLACEMENT_POLICY, DEVICE_ID, DEVICE_OWNER
     ) = (
-        'network_id', 'network', 'name', 'value_specs',
-        'admin_state_up', 'fixed_ips', 'mac_address',
-        'device_id', 'security_groups', 'allowed_address_pairs',
-        'device_owner', 'replacement_policy', 'binding:vnic_type',
+        'name', 'network_id', 'network', 'fixed_ips', 'security_groups',
+        'replacement_policy', 'device_id', 'device_owner'
+    )
+
+    EXTRA_PROPERTIES = (
+        VALUE_SPECS, ADMIN_STATE_UP, MAC_ADDRESS,
+        ALLOWED_ADDRESS_PAIRS, VNIC_TYPE, PORT_SECURITY_ENABLED,
+    ) = (
+        'value_specs', 'admin_state_up', 'mac_address',
+        'allowed_address_pairs', 'binding:vnic_type',
         'port_security_enabled',
     )
 
@@ -70,6 +73,11 @@ class Port(neutron.NeutronResource):
     )
 
     properties_schema = {
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('A symbolic name for this port.'),
+            update_allowed=True
+        ),
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
@@ -97,22 +105,16 @@ class Port(neutron.NeutronResource):
                 constraints.CustomConstraint('neutron.network')
             ],
         ),
-
-        NAME: properties.Schema(
+        DEVICE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('A symbolic name for this port.'),
+            _('Device ID of this port.'),
             update_allowed=True
         ),
-        VALUE_SPECS: properties.Schema(
-            properties.Schema.MAP,
-            _('Extra parameters to include in the "port" object in the '
-              'creation request.'),
-            default={}
-        ),
-        ADMIN_STATE_UP: properties.Schema(
-            properties.Schema.BOOLEAN,
-            _('The administrative state of this port.'),
-            default=True,
+        DEVICE_OWNER: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the network owning the port. '
+              'The value is typically network:floatingip '
+              'or network:router_interface or network:dhcp'),
             update_allowed=True
         ),
         FIXED_IPS: properties.Schema(
@@ -157,22 +159,46 @@ class Port(neutron.NeutronResource):
             ),
             update_allowed=True
         ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('Security group IDs to associate with this port.'),
+            update_allowed=True
+        ),
+        REPLACEMENT_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Policy on how to respond to a stack-update for this resource. '
+              'REPLACE_ALWAYS will replace the port regardless of any '
+              'property changes. AUTO will update the existing port for any '
+              'changed update-allowed property.'),
+            default='AUTO',
+            constraints=[
+                constraints.AllowedValues(['REPLACE_ALWAYS', 'AUTO']),
+            ],
+            update_allowed=True
+        ),
+    }
+
+    # NOTE(prazumovsky): properties_schema has been separated because some
+    # properties used in server for creating internal port.
+    extra_properties_schema = {
+        VALUE_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            _('Extra parameters to include in the "port" object in the '
+              'creation request.'),
+            default={}
+        ),
+        ADMIN_STATE_UP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('The administrative state of this port.'),
+            default=True,
+            update_allowed=True
+        ),
         MAC_ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('MAC address to give to this port.'),
             constraints=[
                 constraints.CustomConstraint('mac_addr')
             ]
-        ),
-        DEVICE_ID: properties.Schema(
-            properties.Schema.STRING,
-            _('Device ID of this port.'),
-            update_allowed=True
-        ),
-        SECURITY_GROUPS: properties.Schema(
-            properties.Schema.LIST,
-            _('Security group IDs to associate with this port.'),
-            update_allowed=True
         ),
         ALLOWED_ADDRESS_PAIRS: properties.Schema(
             properties.Schema.LIST,
@@ -198,25 +224,6 @@ class Port(neutron.NeutronResource):
                     ),
                 },
             )
-        ),
-        DEVICE_OWNER: properties.Schema(
-            properties.Schema.STRING,
-            _('Name of the network owning the port. '
-              'The value is typically network:floatingip '
-              'or network:router_interface or network:dhcp'),
-            update_allowed=True
-        ),
-        REPLACEMENT_POLICY: properties.Schema(
-            properties.Schema.STRING,
-            _('Policy on how to respond to a stack-update for this resource. '
-              'REPLACE_ALWAYS will replace the port regardless of any '
-              'property changes. AUTO will update the existing port for any '
-              'changed update-allowed property.'),
-            default='AUTO',
-            constraints=[
-                constraints.AllowedValues(['REPLACE_ALWAYS', 'AUTO']),
-            ],
-            update_allowed=True
         ),
         VNIC_TYPE: properties.Schema(
             properties.Schema.STRING,
@@ -299,6 +306,11 @@ class Port(neutron.NeutronResource):
             type=attributes.Schema.BOOLEAN
         ),
     }
+
+    def __init__(self, name, definition, stack):
+        """Overloaded init in case of merging two schemas to one."""
+        self.properties_schema.update(self.extra_properties_schema)
+        super(Port, self).__init__(name, definition, stack)
 
     def translation_rules(self):
         return [

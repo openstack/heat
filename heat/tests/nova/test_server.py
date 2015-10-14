@@ -2996,10 +2996,12 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
-    def create_old_net(self, port=None, net=None, ip=None, uuid=None,
-                       subnet=None):
+    def create_old_net(self, port=None, net=None,
+                       ip=None, uuid=None, subnet=None,
+                       port_extra_properties=None):
         return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid,
-                'subnet': subnet}
+                'subnet': subnet,
+                'port_extra_properties': port_extra_properties}
 
     def create_fake_iface(self, port, net, ip):
         class fake_interface(object):
@@ -3082,7 +3084,8 @@ class ServersTest(common.HeatTestCase):
             new_nets_copy = copy.deepcopy(new_nets)
             old_nets_copy = copy.deepcopy(old_nets)
             for net in new_nets_copy:
-                for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet'):
+                for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
+                            'port_extra_properties'):
                     net.setdefault(key)
 
             matched_nets = server._exclude_not_updated_networks(old_nets,
@@ -3112,7 +3115,8 @@ class ServersTest(common.HeatTestCase):
         new_nets_copy = copy.deepcopy(new_nets)
         old_nets_copy = copy.deepcopy(old_nets)
         for net in new_nets_copy:
-            for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet'):
+            for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
+                        'port_extra_properties'):
                 net.setdefault(key)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3135,7 +3139,8 @@ class ServersTest(common.HeatTestCase):
              'fixed_ip': None,
              'port': None,
              'uuid': None,
-             'subnet': None}]
+             'subnet': None,
+             'port_extra_properties': None}]
         new_nets_copy = copy.deepcopy(new_nets)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3176,27 +3181,33 @@ class ServersTest(common.HeatTestCase):
              'network': None,
              'fixed_ip': None,
              'uuid': None,
-             'subnet': None},
+             'subnet': None,
+             'port_extra_properties': None,
+             'uuid': None},
             {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '1.2.3.4',
-             'uuid': None,
-             'subnet': None},
+             'subnet': None,
+             'port_extra_properties': None,
+             'uuid': None},
             {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': None,
-             'uuid': None,
-             'subnet': None},
+             'subnet': None,
+             'port_extra_properties': None,
+             'uuid': None},
             {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
              'network': None,
              'fixed_ip': None,
-             'uuid': None,
-             'subnet': None},
+             'subnet': None,
+             'port_extra_properties': None,
+             'uuid': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
              'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '5.6.7.8',
-             'network': None,
-             'subnet': None}]
+             'subnet': None,
+             'port_extra_properties': None,
+             'network': None}]
 
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
                          return_value='gggggggg-1111-1111-1111-gggggggggggg')
@@ -3901,7 +3912,7 @@ class ServerInternalPortTest(common.HeatTestCase):
         self.assertEqual('Specified subnet 1234 does not belongs to '
                          'network 4321.', six.text_type(ex))
 
-    def test_build_nics_create_internal_port_all_props(self):
+    def test_build_nics_create_internal_port_all_props_without_extras(self):
         tmpl = """
         heat_template_version: 2015-10-15
         resources:
@@ -3951,6 +3962,55 @@ class ServerInternalPortTest(common.HeatTestCase):
 
         self.assertFalse(self.port_create.called)
         self.assertFalse(data_set.called)
+
+    def test_prepare_port_kwargs_with_extras(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+                  subnet: 1234
+                  fixed_ip: 127.0.0.1
+                  port_extra_properties:
+                    mac_address: 00:00:00:00:00:00
+                    allowed_address_pairs:
+                      - ip_address: 127.0.0.1
+                        mac_address: None
+                      - mac_address: 00:00:00:00:00:00
+
+        """
+
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+
+        self.resolve.side_effect = ['4321', '1234']
+
+        network = {'network': '4321', 'subnet': '1234',
+                   'fixed_ip': '127.0.0.1',
+                   'port_extra_properties': {
+                       'mac_address': '00:00:00:00:00:00',
+                       'allowed_address_pairs': [
+                           {'ip_address': '127.0.0.1',
+                            'mac_address': None},
+                           {'mac_address': '00:00:00:00:00:00'}
+                       ]
+                   }}
+        kwargs = server._prepare_internal_port_kwargs(network)
+
+        self.assertEqual({'network_id': '4321',
+                          'fixed_ips': [
+                              {'ip_address': '127.0.0.1', 'subnet_id': '1234'}
+                          ],
+                          'mac_address': '00:00:00:00:00:00',
+                          'allowed_address_pairs': [
+                              {'ip_address': '127.0.0.1'},
+                              {'mac_address': '00:00:00:00:00:00'}]},
+                         kwargs)
 
     def test_build_nics_create_internal_port_without_net(self):
         tmpl = """
