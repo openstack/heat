@@ -28,7 +28,8 @@ keystone_service_template = {
             'properties': {
                 'name': 'test_service_1',
                 'description': 'Test service',
-                'type': 'orchestration'
+                'type': 'orchestration',
+                'enabled': False
             }
         }
     }
@@ -43,23 +44,30 @@ class KeystoneServiceTest(common.HeatTestCase):
 
         self.ctx = utils.dummy_context()
 
-        self.stack = stack.Stack(
-            self.ctx, 'test_stack_keystone',
-            template.Template(keystone_service_template)
-        )
-
-        self.test_service = self.stack['test_service']
-
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_service.client = mock.MagicMock()
-        self.test_service.client.return_value = self.keystoneclient
         self.services = self.keystoneclient.services
 
         # Mock client plugin
-        keystone_client_plugin = mock.MagicMock()
-        self.test_service.client_plugin = mock.MagicMock()
-        self.test_service.client_plugin.return_value = keystone_client_plugin
+        self.keystone_client_plugin = mock.MagicMock()
+
+    def _setup_service_resource(self, stack_name, use_default=False):
+        test_stack = stack.Stack(
+            self.ctx, stack_name,
+            template.Template(keystone_service_template)
+        )
+        r_service = test_stack['test_service']
+        r_service.client = mock.MagicMock()
+        r_service.client.return_value = self.keystoneclient
+        r_service.client_plugin = mock.MagicMock()
+        r_service.client_plugin.return_value = self.keystone_client_plugin
+
+        if use_default:
+            del r_service.t['Properties']['name']
+            del r_service.t['Properties']['enabled']
+            del r_service.t['Properties']['description']
+
+        return r_service
 
     def _get_mock_service(self):
         value = mock.MagicMock()
@@ -68,119 +76,122 @@ class KeystoneServiceTest(common.HeatTestCase):
         return value
 
     def test_service_handle_create(self):
+        rsrc = self._setup_service_resource('test_service_create')
         mock_service = self._get_mock_service()
         self.services.create.return_value = mock_service
 
         # validate the properties
         self.assertEqual(
             'test_service_1',
-            self.test_service.properties.get(service.KeystoneService.NAME))
+            rsrc.properties.get(service.KeystoneService.NAME))
         self.assertEqual(
             'Test service',
-            self.test_service.properties.get(
+            rsrc.properties.get(
                 service.KeystoneService.DESCRIPTION))
         self.assertEqual(
             'orchestration',
-            self.test_service.properties.get(service.KeystoneService.TYPE))
+            rsrc.properties.get(service.KeystoneService.TYPE))
+        self.assertFalse(rsrc.properties.get(
+            service.KeystoneService.ENABLED))
 
-        self.test_service.handle_create()
+        rsrc.handle_create()
 
         # validate service creation
         self.services.create.assert_called_once_with(
             name='test_service_1',
             description='Test service',
-            type='orchestration')
+            type='orchestration',
+            enabled=False)
 
         # validate physical resource id
-        self.assertEqual(mock_service.id, self.test_service.resource_id)
+        self.assertEqual(mock_service.id, rsrc.resource_id)
 
     def test_service_handle_create_default(self):
-        values = {
-            service.KeystoneService.NAME: None,
-            service.KeystoneService.DESCRIPTION: None,
-            service.KeystoneService.TYPE: 'orchestration'
-        }
-
-        def _side_effect(key):
-            return values[key]
-
+        rsrc = self._setup_service_resource('test_create_with_defaults',
+                                            use_default=True)
         mock_service = self._get_mock_service()
         self.services.create.return_value = mock_service
-        self.test_service.properties = mock.MagicMock()
-        self.test_service.properties.get.side_effect = _side_effect
-        self.test_service.properties.__getitem__.side_effect = _side_effect
 
-        self.test_service.physical_resource_name = mock.MagicMock()
-        self.test_service.physical_resource_name.return_value = 'foo'
+        rsrc.physical_resource_name = mock.MagicMock()
+        rsrc.physical_resource_name.return_value = 'foo'
 
         # validate the properties
         self.assertIsNone(
-            self.test_service.properties.get(service.KeystoneService.NAME))
-        self.assertIsNone(
-            self.test_service.properties.get(
-                service.KeystoneService.DESCRIPTION))
+            rsrc.properties.get(service.KeystoneService.NAME))
+        self.assertIsNone(rsrc.properties.get(
+            service.KeystoneService.DESCRIPTION))
         self.assertEqual(
             'orchestration',
-            self.test_service.properties.get(service.KeystoneService.TYPE))
+            rsrc.properties.get(service.KeystoneService.TYPE))
+        self.assertTrue(rsrc.properties.get(service.KeystoneService.ENABLED))
 
-        self.test_service.handle_create()
+        rsrc.handle_create()
 
         # validate service creation with physical resource name
         self.services.create.assert_called_once_with(
             name='foo',
             description=None,
-            type='orchestration')
+            type='orchestration',
+            enabled=True)
 
     def test_service_handle_update(self):
-        self.test_service.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        rsrc = self._setup_service_resource('test_update')
+        rsrc.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
         prop_diff = {service.KeystoneService.NAME: 'test_service_1_updated',
                      service.KeystoneService.DESCRIPTION:
                          'Test Service updated',
-                     service.KeystoneService.TYPE: 'heat_updated'}
+                     service.KeystoneService.TYPE: 'heat_updated',
+                     service.KeystoneService.ENABLED: False}
 
-        self.test_service.handle_update(json_snippet=None,
-                                        tmpl_diff=None,
-                                        prop_diff=prop_diff)
+        rsrc.handle_update(json_snippet=None,
+                           tmpl_diff=None,
+                           prop_diff=prop_diff)
 
         self.services.update.assert_called_once_with(
-            service=self.test_service.resource_id,
+            service=rsrc.resource_id,
             name=prop_diff[service.KeystoneService.NAME],
             description=prop_diff[service.KeystoneService.DESCRIPTION],
-            type=prop_diff[service.KeystoneService.TYPE]
+            type=prop_diff[service.KeystoneService.TYPE],
+            enabled=prop_diff[service.KeystoneService.ENABLED]
         )
 
-    def test_service_handle_update_default(self):
-        self.test_service.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_service.physical_resource_name = mock.MagicMock()
-        self.test_service.physical_resource_name.return_value = 'foo'
+    def test_service_handle_update_default_name(self):
+        rsrc = self._setup_service_resource('test_update_default_name')
+        rsrc.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        rsrc.physical_resource_name = mock.MagicMock()
+        rsrc.physical_resource_name.return_value = 'foo'
 
         # Name is reset to None, so default to physical resource name
         prop_diff = {service.KeystoneService.NAME: None}
 
-        self.test_service.handle_update(json_snippet=None,
-                                        tmpl_diff=None,
-                                        prop_diff=prop_diff)
+        rsrc.handle_update(json_snippet=None,
+                           tmpl_diff=None,
+                           prop_diff=prop_diff)
 
         # validate default name to physical resource name
         self.services.update.assert_called_once_with(
-            service=self.test_service.resource_id,
+            service=rsrc.resource_id,
             name='foo',
             type=None,
-            description=None
+            description=None,
+            enabled=None
         )
 
     def test_resource_mapping(self):
+        rsrc = self._setup_service_resource(
+            'test_resource_mapping')
         mapping = service.resource_mapping()
         self.assertEqual(1, len(mapping))
         self.assertEqual(service.KeystoneService, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_service, service.KeystoneService)
+        self.assertIsInstance(rsrc, service.KeystoneService)
 
     def test_properties_title(self):
         property_title_map = {
             service.KeystoneService.NAME: 'name',
             service.KeystoneService.DESCRIPTION: 'description',
-            service.KeystoneService.TYPE: 'type'
+            service.KeystoneService.TYPE: 'type',
+            service.KeystoneService.ENABLED: 'enabled'
         }
 
         for actual_title, expected_title in property_title_map.items():
@@ -250,8 +261,9 @@ class KeystoneServiceTest(common.HeatTestCase):
                          service.KeystoneService.TYPE)
 
     def test_show_resource(self):
-        service = mock.Mock()
-        service.to_dict.return_value = {'attr': 'val'}
-        self.services.get.return_value = service
-        res = self.test_service._show_resource()
-        self.assertEqual({'attr': 'val'}, res)
+        rsrc = self._setup_service_resource('test_show_resource')
+        moc_service = mock.Mock()
+        moc_service.to_dict.return_value = {'attr': 'val'}
+        self.services.get.return_value = moc_service
+        attributes = rsrc._show_resource()
+        self.assertEqual({'attr': 'val'}, attributes)
