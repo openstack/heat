@@ -20,12 +20,12 @@ source $GRENADE_DIR/functions
 # We need base DevStack functions for this
 source $BASE_DEVSTACK_DIR/functions
 source $BASE_DEVSTACK_DIR/stackrc # needed for status directory
-source $BASE_DEVSTACK_DIR/lib/tls
-source $BASE_DEVSTACK_DIR/lib/heat
 
 set -o xtrace
 
-stop_heat
+for serv in h-eng h-api h-api-cfn h-api-cw; do
+    stop_process $serv
+done
 
 SERVICES_DOWN="heat-api heat-engine heat-api-cfn heat-api-cloudwatch"
 
