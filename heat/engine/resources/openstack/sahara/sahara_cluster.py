@@ -85,10 +85,14 @@ class SaharaCluster(resource.Resource):
             properties.Schema.STRING,
             _('Name or UUID of the image used to boot Hadoop nodes.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                message=_('Use property %s.') % IMAGE_ID,
-                version='2015.1',
-                previous_status=support.SupportStatus(version='2014.2')),
+                status=support.HIDDEN,
+                version='6.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    message=_('Use property %s.') % IMAGE_ID,
+                    version='2015.1',
+                    previous_status=support.SupportStatus(version='2014.2'))
+            ),
             constraints=[
                 constraints.CustomConstraint('glance.image')
             ],
@@ -129,6 +133,14 @@ class SaharaCluster(resource.Resource):
     default_client_name = 'sahara'
 
     entity = 'clusters'
+
+    def translation_rules(self):
+        return [properties.TranslationRule(
+            self.properties,
+            properties.TranslationRule.REPLACE,
+            [self.IMAGE_ID],
+            value_path=[self.IMAGE]
+        )]
 
     def _validate_depr_keys(self, properties, key, depr_key):
         value = properties.get(key)

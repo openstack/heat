@@ -136,16 +136,16 @@ class VPNServiceTest(common.HeatTestCase):
             'subnet',
             'sub123'
         ).AndReturn('sub123')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'rou123'
+        ).AndReturn('rou123')
         if resolve_neutron:
             snippet = template_format.parse(vpnservice_template)
         else:
             snippet = template_format.parse(vpnservice_template_deprecated)
         if resolve_router:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'router',
-                'rou123'
-            ).AndReturn('rou123')
             props = snippet['resources']['VPNService']['properties']
             props['router'] = 'rou123'
             del props['router_id']
@@ -172,6 +172,11 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        # Ensure that property translates
+        if not resolve_router:
+            self.assertEqual('rou123', rsrc.properties.get(rsrc.ROUTER))
+            self.assertIsNone(rsrc.properties.get(rsrc.ROUTER_ID))
         self.m.VerifyAll()
 
     def test_create_failed(self):
@@ -180,6 +185,11 @@ class VPNServiceTest(common.HeatTestCase):
             'subnet',
             'sub123'
         ).MultipleTimes().AndReturn('sub123')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'rou123'
+        ).MultipleTimes().AndReturn('rou123')
         self.stub_RouterConstraint_validate()
 
         neutronclient.Client.create_vpnservice(self.VPN_SERVICE_CONF).AndRaise(

@@ -83,10 +83,14 @@ class VPNService(neutron.NeutronResource):
             _('Unique identifier for the router to which the vpn service '
               'will be inserted.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                message=_('Use property %s') % ROUTER,
-                version='2015.1',
-                previous_status=support.SupportStatus(version='2013.2')),
+                status=support.HIDDEN,
+                version='6.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    message=_('Use property %s') % ROUTER,
+                    version='2015.1',
+                    previous_status=support.SupportStatus(version='2013.2'))
+            ),
             constraints=[
                 constraints.CustomConstraint('neutron.router')
             ]
@@ -141,6 +145,12 @@ class VPNService(neutron.NeutronResource):
                 properties.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
+            ),
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.ROUTER],
+                value_path=[self.ROUTER_ID]
             )
         ]
 

@@ -117,6 +117,11 @@ class NeutronSubnetTest(common.HeatTestCase):
             'network',
             'None'
         ).AndReturn('None')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'None'
+        ).AndReturn('None')
         stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
@@ -167,6 +172,11 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
+            'None'
+        ).AndReturn('None')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
             'None'
         ).AndReturn('None')
         self.m.ReplayAll()

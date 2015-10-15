@@ -92,10 +92,15 @@ class Router(neutron.NeutronResource):
               'users only.'),
             update_allowed=True,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                version='2015.1',
-                message=_('Use property %s.') % L3_AGENT_IDS,
-                previous_status=support.SupportStatus(version='2014.1')),
+                status=support.HIDDEN,
+                version='6.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='2015.1',
+                    message=_('Use property %s.') % L3_AGENT_IDS,
+                    previous_status=support.SupportStatus(version='2014.1')
+                )
+            ),
         ),
         L3_AGENT_IDS: properties.Schema(
             properties.Schema.LIST,
@@ -149,6 +154,21 @@ class Router(neutron.NeutronResource):
             type=attributes.Schema.STRING
         ),
     }
+
+    def translation_rules(self):
+        if self.properties.get(self.L3_AGENT_ID):
+            return [
+                properties.TranslationRule(
+                    self.properties,
+                    properties.TranslationRule.ADD,
+                    [self.L3_AGENT_IDS],
+                    [self.properties.get(self.L3_AGENT_ID)]),
+                properties.TranslationRule(
+                    self.properties,
+                    properties.TranslationRule.DELETE,
+                    [self.L3_AGENT_ID]
+                )
+            ]
 
     def validate(self):
         super(Router, self).validate()
@@ -277,10 +297,14 @@ class RouterInterface(neutron.NeutronResource):
             properties.Schema.STRING,
             _('ID of the router.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                message=_('Use property %s.') % ROUTER,
-                version='2015.1',
-                previous_status=support.SupportStatus(version='2013.1')
+                status=support.HIDDEN,
+                version='6.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    message=_('Use property %s.') % ROUTER,
+                    version='2015.1',
+                    previous_status=support.SupportStatus(version='2013.1')
+                )
             ),
             constraints=[
                 constraints.CustomConstraint('neutron.router')
@@ -313,10 +337,14 @@ class RouterInterface(neutron.NeutronResource):
             properties.Schema.STRING,
             _('The port id, either subnet or port_id should be specified.'),
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                message=_('Use property %s.') % PORT,
-                version='2015.1',
-                previous_status=support.SupportStatus(version='2014.1')
+                status=support.HIDDEN,
+                version='6.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    message=_('Use property %s.') % PORT,
+                    version='2015.1',
+                    previous_status=support.SupportStatus(version='2014.1')
+                )
             ),
             constraints=[
                 constraints.CustomConstraint('neutron.port')
@@ -334,6 +362,18 @@ class RouterInterface(neutron.NeutronResource):
 
     def translation_rules(self):
         return [
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.PORT],
+                value_path=[self.PORT_ID]
+            ),
+            properties.TranslationRule(
+                self.properties,
+                properties.TranslationRule.REPLACE,
+                [self.ROUTER],
+                value_path=[self.ROUTER_ID]
+            ),
             properties.TranslationRule(
                 self.properties,
                 properties.TranslationRule.REPLACE,
@@ -464,7 +504,12 @@ class RouterGateway(neutron.NeutronResource):
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if resource.has_interface('OS::Neutron::RouterInterface'):
-                dep_router_id = resource.properties.get(
+                # Since RouterInterface translates router_id property to
+                # router, we should correctly resolve it for RouterGateway.
+                dep_router_id = self.client_plugin().resolve_router({
+                    RouterInterface.ROUTER: resource.properties.get(
+                        RouterInterface.ROUTER),
+                    RouterInterface.ROUTER_ID: None}, RouterInterface.ROUTER,
                     RouterInterface.ROUTER_ID)
                 router_id = self.properties[self.ROUTER_ID]
                 if dep_router_id == router_id:

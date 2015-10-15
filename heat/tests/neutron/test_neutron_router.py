@@ -170,7 +170,6 @@ class NeutronRouterTest(common.HeatTestCase):
         props['l3_agent_ids'] = ['id1', 'id2']
         stack = utils.parse_stack(t)
         rsrc = stack['router']
-        rsrc.t['Properties'].pop('l3_agent_id')
         exc = self.assertRaises(exception.ResourcePropertyConflict,
                                 rsrc.validate)
         self.assertIn('distributed, l3_agent_id/l3_agent_ids',
@@ -184,9 +183,11 @@ class NeutronRouterTest(common.HeatTestCase):
         props['l3_agent_ids'] = ['id1', 'id2']
         stack = utils.parse_stack(t)
         rsrc = stack['router']
-        exc = self.assertRaises(exception.ResourcePropertyConflict,
+        exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn('l3_agent_id, l3_agent_ids', six.text_type(exc))
+        self.assertIn('Non HA routers can only have one L3 agent',
+                      six.text_type(exc))
+        self.assertIsNone(rsrc.properties.get(rsrc.L3_AGENT_ID))
 
     def test_router_validate_ha_distribute(self):
         t = template_format.parse(neutron_template)
@@ -197,7 +198,7 @@ class NeutronRouterTest(common.HeatTestCase):
         props['distributed'] = True
         stack = utils.parse_stack(t)
         rsrc = stack['router']
-        rsrc.t['Properties'].pop('l3_agent_id')
+        rsrc.t['Properties'].pop('l3_agent_ids')
         exc = self.assertRaises(exception.ResourcePropertyConflict,
                                 rsrc.validate)
         self.assertIn('distributed, ha', six.text_type(exc))
@@ -210,7 +211,6 @@ class NeutronRouterTest(common.HeatTestCase):
         props['l3_agent_ids'] = ['id1', 'id2']
         stack = utils.parse_stack(t)
         rsrc = stack['router']
-        rsrc.t['Properties'].pop('l3_agent_id')
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn('Non HA routers can only have one L3 agent.',
@@ -403,7 +403,7 @@ class NeutronRouterTest(common.HeatTestCase):
         prop_diff = {
             "admin_state_up": False,
             "name": "myrouter",
-            "l3_agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
+            "l3_agent_ids": ["63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"]
         }
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
@@ -458,16 +458,14 @@ class NeutronRouterTest(common.HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
-        router_key = 'router_id'
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
-        if resolve_router:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'router',
-                '3e46229d-8fce-4733-819a-b5fe630550f8'
-            ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
-            router_key = 'router'
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
+        router_key = 'router'
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
@@ -481,6 +479,13 @@ class NeutronRouterTest(common.HeatTestCase):
                 router_key: '3e46229d-8fce-4733-819a-b5fe630550f8',
                 subnet_key: '91e47a57-7508-46fe-afc9-fc454e8580e1'
             })
+
+        # Ensure that properties correctly translates
+        if not resolve_router:
+            self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
+                             rsrc.properties.get(rsrc.ROUTER))
+            self.assertIsNone(rsrc.properties.get(rsrc.ROUTER_ID))
+
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
@@ -489,6 +494,12 @@ class NeutronRouterTest(common.HeatTestCase):
     def test_router_interface_with_old_data(self):
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
@@ -513,8 +524,8 @@ class NeutronRouterTest(common.HeatTestCase):
 
         rsrc = self.create_router_interface(
             t, stack, 'router_interface', properties={
-                'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
-                'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'
+                'router': '3e46229d-8fce-4733-819a-b5fe630550f8',
+                'subnet': '91e47a57-7508-46fe-afc9-fc454e8580e1'
             })
         self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8'
                          ':subnet_id=91e47a57-7508-46fe-afc9-fc454e8580e1',
@@ -536,18 +547,22 @@ class NeutronRouterTest(common.HeatTestCase):
         self._test_router_interface_with_port(resolve_port=False)
 
     def _test_router_interface_with_port(self, resolve_port=True):
-        port_key = 'port_id'
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'ae478782-53c0-4434-ab16-49900c88016c'
+        ).AndReturn('ae478782-53c0-4434-ab16-49900c88016c')
+        port_key = 'port'
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'port',
+            '9577cafd-8e98-4059-a2e6-8a771b4d318e'
+        ).AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
+
         neutronclient.Client.add_interface_router(
             'ae478782-53c0-4434-ab16-49900c88016c',
             {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         ).AndReturn(None)
-        if resolve_port:
-            port_key = 'port'
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'port',
-                '9577cafd-8e98-4059-a2e6-8a771b4d318e'
-            ).AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
 
         neutronclient.Client.remove_interface_router(
             'ae478782-53c0-4434-ab16-49900c88016c',
@@ -566,9 +581,16 @@ class NeutronRouterTest(common.HeatTestCase):
 
         rsrc = self.create_router_interface(
             t, stack, 'router_interface', properties={
-                'router_id': 'ae478782-53c0-4434-ab16-49900c88016c',
+                'router': 'ae478782-53c0-4434-ab16-49900c88016c',
                 port_key: '9577cafd-8e98-4059-a2e6-8a771b4d318e'
             })
+
+        # Ensure that properties correctly translates
+        if not resolve_port:
+            self.assertEqual('9577cafd-8e98-4059-a2e6-8a771b4d318e',
+                             rsrc.properties.get(rsrc.PORT))
+            self.assertIsNone(rsrc.properties.get(rsrc.PORT_ID))
+
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()

@@ -58,10 +58,13 @@ class ExtraRoute(neutron.NeutronResource):
         for resource in six.itervalues(self.stack):
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
-            if (resource.has_interface('OS::Neutron::RouterInterface') and
-                resource.properties['router_id'] ==
-                    self.properties['router_id']):
-                        deps += (self, resource)
+            if resource.has_interface('OS::Neutron::RouterInterface'):
+                dep_router_id = self.client_plugin().resolve_router({
+                    'router': resource.properties.get('router'),
+                    'router_id': None}, 'router', 'router_id')
+                router_id = self.properties[self.ROUTER_ID]
+                if dep_router_id == router_id:
+                    deps += (self, resource)
             # depend on any RouterGateway in this template with the same
             # router_id as this router_id
             elif (resource.has_interface('OS::Neutron::RouterGateway') and

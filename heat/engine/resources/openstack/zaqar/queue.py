@@ -54,11 +54,16 @@ class ZaqarQueue(resource.Resource):
             _("ID of the queue."),
             cache_mode=attributes.Schema.CACHE_NONE,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                message=_("Use get_resource|Ref command instead. "
-                          "For example: { get_resource : <resource_name> }"),
-                version='2015.1',
-                previous_status=support.SupportStatus(version='2014.1')
+                status=support.HIDDEN,
+                version='6.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    message=_("Use get_resource|Ref command instead. "
+                              "For example: { get_resource : "
+                              "<resource_name> }"),
+                    version='2015.1',
+                    previous_status=support.SupportStatus(version='2014.1')
+                )
             )
         ),
         HREF: attributes.Schema(

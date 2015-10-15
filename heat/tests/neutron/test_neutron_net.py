@@ -12,8 +12,10 @@
 #    under the License.
 
 import copy
+import mox
 
 from neutronclient.common import exceptions as qe
+from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
@@ -88,6 +90,7 @@ class NeutronNetTest(common.HeatTestCase):
                                'remove_network_from_dhcp_agent')
         self.m.StubOutWithMock(neutronclient.Client,
                                'list_dhcp_agent_hosting_networks')
+        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
 
     def create_net(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -97,6 +100,12 @@ class NeutronNetTest(common.HeatTestCase):
         return rsrc
 
     def test_net(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'None'
+        ).AndReturn('None')
+
         # Create script
         neutronclient.Client.create_network({
             'network': {

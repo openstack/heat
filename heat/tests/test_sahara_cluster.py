@@ -182,7 +182,7 @@ class SaharaClusterTest(common.HeatTestCase):
         self.assertEqual("neutron_management_network must be provided",
                          six.text_type(ex))
 
-    def test_validation_error_for_deprecated_properties(self):
+    def test_deprecated_properties_correctly_translates(self):
         tmpl = '''
 heat_template_version: 2013-05-23
 description: Hadoop Cluster by Sahara
@@ -195,11 +195,9 @@ resources:
       hadoop_version: 2.3.0
       cluster_template_id: some_cluster_template_id
       image: some_image
-      default_image_id: test_image_id
       key_name: admin
       neutron_management_network: some_network
       '''
-        ct = self._init_cluster(template_format.parse(tmpl))
-        ex = self.assertRaises(exception.ResourcePropertyConflict, ct.validate)
-        msg = 'Cannot define the following properties at the same time: '
-        self.assertIn(msg, six.text_type(ex))
+        ct = self._create_cluster(template_format.parse(tmpl))
+        self.assertEqual('some_image', ct.properties.get('default_image_id'))
+        self.assertIsNone(ct.properties.get('image'))
