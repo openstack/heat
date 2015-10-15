@@ -20,7 +20,7 @@ from heat_integrationtests.scenario import scenario_base
 
 
 class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
-    """The class is responsible for testing ASG + LB scenario.
+    """The class is responsible for testing ASG + LBv1 scenario.
 
     The very common use case tested is an autoscaling group
     of some web application servers behind a loadbalancer.
@@ -31,6 +31,8 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
         self.template_name = 'test_autoscaling_lb_neutron.yaml'
         self.app_server_template_name = 'app_server_neutron.yaml'
         self.webapp_template_name = 'netcat-webapp.yaml'
+        if not self.is_network_extension_supported('lbaas'):
+            self.skipTest('LBaas v1 extension not available, skipping')
 
     def check_num_responses(self, url, expected_num, retries=10):
         resp = set()
@@ -51,7 +53,7 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
         return all_res and all_res_complete
 
     def test_autoscaling_loadbalancer_neutron(self):
-        """Check work of AutoScaing and Neutron LBaaS resource in Heat.
+        """Check work of AutoScaing and Neutron LBaaS v1 resource in Heat.
 
         The scenario is the following:
             1. Launch a stack with a load balancer and autoscaling group
