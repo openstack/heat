@@ -13,7 +13,6 @@
 
 
 import mock
-import mox
 import six
 import swiftclient.client as sc
 
@@ -25,7 +24,7 @@ from heat.tests import common
 from heat.tests import utils
 
 
-swift_template = '''
+SWIFT_TEMPLATE = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "Template to test OS::Swift::Container resources",
@@ -66,371 +65,398 @@ swift_template = '''
 '''
 
 
-class swiftTest(common.HeatTestCase):
+class SwiftTest(common.HeatTestCase):
+
     def setUp(self):
-        super(swiftTest, self).setUp()
-        self.m.CreateMock(sc.Connection)
-        self.m.StubOutWithMock(sc.Connection, 'post_account')
-        self.m.StubOutWithMock(sc.Connection, 'put_container')
-        self.m.StubOutWithMock(sc.Connection, 'get_container')
-        self.m.StubOutWithMock(sc.Connection, 'delete_container')
-        self.m.StubOutWithMock(sc.Connection, 'delete_object')
-        self.m.StubOutWithMock(sc.Connection, 'head_container')
-        self.m.StubOutWithMock(sc.Connection, 'get_auth')
-        self.stub_auth()
+        super(SwiftTest, self).setUp()
+        self.t = template_format.parse(SWIFT_TEMPLATE)
 
-    def create_resource(self, t, stack, resource_name):
+    def _create_container(self, stack, definition_name='SwiftContainer'):
         resource_defns = stack.t.resource_definitions(stack)
-        rsrc = swift.SwiftContainer(
-            'test_resource',
-            resource_defns[resource_name],
-            stack)
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        return rsrc
+        container = swift.SwiftContainer('test_resource',
+                                         resource_defns[definition_name],
+                                         stack)
+        runner = scheduler.TaskRunner(container.create)
+        runner()
+        self.assertEqual((container.CREATE, container.COMPLETE),
+                         container.state)
+        return container
 
-    def stub_delete_empty(self, res_id):
-        sc.Connection.get_container(res_id).AndReturn(
-            ({'name': res_id}, []))
-        sc.Connection.delete_container(res_id).AndReturn(None)
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_create_container_name(self, mock_put):
+        # Setup
+        self.t['Resources']['SwiftContainer']['Properties']['name'] = \
+            'the_name'
+        stack = utils.parse_stack(self.t)
 
-    def test_create_container_name(self):
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        t['Resources']['SwiftContainer']['Properties']['name'] = 'the_name'
-        stack = utils.parse_stack(t)
-        resource_defns = stack.t.resource_definitions(stack)
-        rsrc = swift.SwiftContainer(
-            'test_resource',
-            resource_defns['SwiftContainer'],
-            stack)
+        # Test
+        container = self._create_container(stack)
+        container_name = container.physical_resource_name()
 
-        self.assertEqual('the_name', rsrc.physical_resource_name())
+        # Verify
+        self.assertEqual('the_name', container_name)
+        mock_put.assert_called_once_with('the_name', {})
 
     def test_build_meta_headers(self):
-        self.m.UnsetStubs()
+        # Setup
+        headers = {'Web-Index': 'index.html', 'Web-Error': 'error.html'}
+
+        # Test
         self.assertEqual({}, swift.SwiftContainer._build_meta_headers(
             'container', {}))
         self.assertEqual({}, swift.SwiftContainer._build_meta_headers(
             'container', None))
-        meta = {
+        built = swift.SwiftContainer._build_meta_headers('container', headers)
+
+        # Verify
+        expected = {
             'X-Container-Meta-Web-Index': 'index.html',
             'X-Container-Meta-Web-Error': 'error.html'
         }
-        self.assertEqual(meta, swift.SwiftContainer._build_meta_headers(
-            'container', {
-                "Web-Index": "index.html",
-                "Web-Error": "error.html"
-            }))
+        self.assertEqual(expected, built)
 
-    def test_attributes(self):
-        headers = {
-            "content-length": "0",
-            "x-container-object-count": "82",
-            "accept-ranges": "bytes",
-            "x-trans-id": "tx08ea48ef2fa24e6da3d2f5c188fd938b",
-            "date": "Wed, 23 Jan 2013 22:48:05 GMT",
-            "x-timestamp": "1358980499.84298",
-            "x-container-read": ".r:*",
-            "x-container-bytes-used": "17680980",
-            "content-type": "text/plain; charset=utf-8"}
+    @mock.patch('swiftclient.client.Connection.head_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_attributes(self, mock_put, mock_head):
+        # Setup
+        headers = {'content-length': '0',
+                   'x-container-object-count': '82',
+                   'accept-ranges': 'bytes',
+                   'x-trans-id': 'tx08ea48ef2fa24e6da3d2f5c188fd938b',
+                   'date': 'Wed, 23 Jan 2013 22:48:05 GMT',
+                   'x-timestamp': '1358980499.84298',
+                   'x-container-read': '.r:*',
+                   'x-container-bytes-used': '17680980',
+                   'content-type': 'text/plain; charset=utf-8'}
+        mock_head.return_value = headers
 
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name, {}).AndReturn(None)
-        sc.Connection.head_container(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(headers)
-        self.stub_delete_empty(container_name)
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        # Test
+        container = self._create_container(stack)
 
-        ref_id = rsrc.FnGetRefId()
-        self.assertEqual(container_name, ref_id)
+        # Verify Attributes
+        self.assertEqual(container_name, container.FnGetRefId())
+        self.assertEqual('82', container.FnGetAtt('ObjectCount'))
+        self.assertEqual('17680980', container.FnGetAtt('BytesUsed'))
+        self.assertEqual('server.test', container.FnGetAtt('DomainName'))
+        self.assertEqual(headers, container.FnGetAtt('HeadContainer'))
+        self.assertEqual(headers, container.FnGetAtt('show'))
 
-        self.assertEqual('example.com', rsrc.FnGetAtt('DomainName'))
-        url = 'http://example.com:1234/v1/%s' % ref_id
-
-        self.assertEqual(url, rsrc.FnGetAtt('WebsiteURL'))
-        self.assertEqual('82', rsrc.FnGetAtt('ObjectCount'))
-        self.assertEqual('17680980', rsrc.FnGetAtt('BytesUsed'))
-        self.assertEqual(headers, rsrc.FnGetAtt('HeadContainer'))
-        self.assertEqual(headers, rsrc.FnGetAtt('show'))
+        expected_url = 'http://server.test:5000/v3/%s' % container.FnGetRefId()
+        self.assertEqual(expected_url, container.FnGetAtt('WebsiteURL'))
 
         self.assertRaises(exception.InvalidTemplateAttribute,
-                          rsrc.FnGetAtt, 'Foo')
+                          container.FnGetAtt, 'Foo')
 
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        # Verify Expected Calls
+        mock_put.assert_called_once_with(container_name, {})
+        self.assertTrue(mock_head.call_count > 0)
 
-    def test_public_read(self):
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_public_read(self, mock_put):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Read': '.r:*'}).AndReturn(None)
-        self.stub_delete_empty(container_name)
-
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        properties = t['Resources']['SwiftContainer']['Properties']
+        properties = self.t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        stack = utils.parse_stack(self.t)
 
-    def test_public_read_write(self):
+        # Test
+        self._create_container(stack)
+
+        # Verify
+        expected = {'X-Container-Read': '.r:*'}
+        mock_put.assert_called_once_with(container_name, expected)
+
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_public_read_write(self, mock_put):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': '.r:*',
-             'X-Container-Read': '.r:*'}).AndReturn(None)
-        self.stub_delete_empty(container_name)
-
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        properties = t['Resources']['SwiftContainer']['Properties']
+        properties = self.t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
         properties['X-Container-Write'] = '.r:*'
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        stack = utils.parse_stack(self.t)
 
-    def test_container_headers(self):
+        # Test
+        self._create_container(stack)
+
+        # Verify
+        expected = {'X-Container-Write': '.r:*', 'X-Container-Read': '.r:*'}
+        mock_put.assert_called_once_with(container_name, expected)
+
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_container_headers(self, mock_put):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Meta-Web-Error': 'error.html',
-             'X-Container-Meta-Web-Index': 'index.html',
-             'X-Container-Read': '.r:*'}).AndReturn(None)
-        self.stub_delete_empty(container_name)
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainerWebsite')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        # Test
+        self._create_container(stack,
+                               definition_name='SwiftContainerWebsite')
 
-    def test_account_headers(self):
+        # Verify
+        expected = {'X-Container-Meta-Web-Error': 'error.html',
+                    'X-Container-Meta-Web-Index': 'index.html',
+                    'X-Container-Read': '.r:*'}
+        mock_put.assert_called_once_with(container_name, expected)
+
+    @mock.patch('swiftclient.client.Connection.post_account')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_account_headers(self, mock_put, mock_post):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(container_name, {})
-        sc.Connection.post_account(
-            {'X-Account-Meta-Temp-Url-Key': 'secret'}).AndReturn(None)
-        self.stub_delete_empty(container_name)
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftAccountMetadata')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        # Test
+        self._create_container(stack,
+                               definition_name='SwiftAccountMetadata')
 
-    def test_delete_exception(self):
+        # Verify
+        mock_put.assert_called_once_with(container_name, {})
+        expected = {'X-Account-Meta-Temp-Url-Key': 'secret'}
+        mock_post.assert_called_once_with(expected)
+
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_default_headers_not_none_empty_string(self, mock_put):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {}).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       []))
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Test delete failure'))
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(rsrc.delete))
+        # Test
+        container = self._create_container(stack)
 
-        self.m.VerifyAll()
+        # Verify
+        mock_put.assert_called_once_with(container_name, {})
+        self.assertEqual({}, container.metadata_get())
 
-    def test_delete_not_found(self):
+    @mock.patch('swiftclient.client.Connection.delete_container')
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_exception(self, mock_put, mock_get, mock_delete):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {}).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       []))
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Its gone',
-                               http_status=404))
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
+        mock_delete.side_effect = sc.ClientException('test-delete-failure')
+        mock_get.return_value = ({'name': container_name}, [])
 
-        self.m.VerifyAll()
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        self.assertRaises(exception.ResourceFailure, runner)
 
-    def test_delete_non_empty_not_allowed(self):
+        # Verify
+        self.assertEqual((container.DELETE, container.FAILED),
+                         container.state)
+        mock_put.assert_called_once_with(container_name, {})
+        mock_get.assert_called_once_with(container_name)
+        mock_delete.assert_called_once_with(container_name)
+
+    @mock.patch('swiftclient.client.Connection.delete_container')
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_not_found(self, mock_put, mock_get, mock_delete):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {}).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       [{'name': 'test_object'}]))
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        deleter = scheduler.TaskRunner(rsrc.delete)
-        ex = self.assertRaises(exception.ResourceFailure, deleter)
+        mock_delete.side_effect = sc.ClientException('missing',
+                                                     http_status=404)
+        mock_get.return_value = ({'name': container_name}, [])
+
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        runner()
+
+        # Verify
+        self.assertEqual((container.DELETE, container.COMPLETE),
+                         container.state)
+        mock_put.assert_called_once_with(container_name, {})
+        mock_get.assert_called_once_with(container_name)
+        mock_delete.assert_called_once_with(container_name)
+
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_non_empty_not_allowed(self, mock_put, mock_get):
+        # Setup
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        stack = utils.parse_stack(self.t)
+
+        mock_get.return_value = ({'name': container_name},
+                                 [{'name': 'test_object'}])
+
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        ex = self.assertRaises(exception.ResourceFailure, runner)
+
+        # Verify
+        self.assertEqual((container.DELETE, container.FAILED),
+                         container.state)
         self.assertIn('ResourceActionNotSupported: resources.test_resource: '
                       'Deleting non-empty container',
                       six.text_type(ex))
+        mock_put.assert_called_once_with(container_name, {})
+        mock_get.assert_called_once_with(container_name)
 
-        self.m.VerifyAll()
-
-    def test_delete_non_empty_allowed(self):
+    @mock.patch('swiftclient.client.Connection.delete_container')
+    @mock.patch('swiftclient.client.Connection.delete_object')
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_non_empty_allowed(self, mock_put, mock_get,
+                                      mock_delete_object,
+                                      mock_delete_container):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {}).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       [{'name': 'test_object1'},
-                                        {'name': 'test_object2'}]))
-        sc.Connection.delete_object(container_name, 'test_object2'
-                                    ).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       [{'name': 'test_object1'}]))
-        sc.Connection.delete_object(container_name, 'test_object1'
-                                    ).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
+            = True
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] = True
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        get_return_values = [
+            ({'name': container_name},
+             [{'name': 'test_object1'},
+              {'name': 'test_object2'}]),
+            ({'name': container_name}, [{'name': 'test_object1'}]),
+        ]
+        mock_get.side_effect = get_return_values
 
-    def test_delete_non_empty_allowed_ignores_not_found(self):
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        runner()
+
+        # Verify
+        self.assertEqual((container.DELETE, container.COMPLETE),
+                         container.state)
+        mock_put.assert_called_once_with(container_name, {})
+        mock_delete_container.assert_called_once_with(container_name)
+        self.assertEqual(2, mock_get.call_count)
+        self.assertEqual(2, mock_delete_object.call_count)
+
+    @mock.patch('swiftclient.client.Connection.delete_container')
+    @mock.patch('swiftclient.client.Connection.delete_object')
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_non_empty_allowed_not_found(self, mock_put, mock_get,
+                                                mock_delete_object,
+                                                mock_delete_container):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {}).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       [{'name': 'test_object'}]))
-        sc.Connection.delete_object(
-            container_name, 'test_object').AndRaise(
-                sc.ClientException('Object is gone', http_status=404))
-        sc.Connection.delete_container(
-            container_name).AndRaise(
-                sc.ClientException('Container is gone', http_status=404))
+        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
+            = True
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] = True
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        mock_get.return_value = ({'name': container_name},
+                                 [{'name': 'test_object'}])
+        mock_delete_object.side_effect =\
+            sc.ClientException('object-is-gone', http_status=404)
+        mock_delete_container.side_effect =\
+            sc.ClientException('container-is-gone', http_status=404)
 
-    def test_delete_non_empty_fails_delete_object(self):
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        runner()
+
+        # Verify
+        self.assertEqual((container.DELETE, container.COMPLETE),
+                         container.state)
+        mock_put.assert_called_once_with(container_name, {})
+        mock_get.assert_called_once_with(container_name)
+        mock_delete_object.assert_called_once_with(container_name,
+                                                   'test_object')
+        mock_delete_container.assert_called_once_with(container_name)
+
+    @mock.patch('swiftclient.client.Connection.delete_object')
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_non_empty_fails_delete_object(self, mock_put, mock_get,
+                                                  mock_delete_object):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {}).AndReturn(None)
-        sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name},
-                                       [{'name': 'test_object'}]))
-        sc.Connection.delete_object(
-            container_name, 'test_object').AndRaise(
-                sc.ClientException('Test object delete failure'))
+        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
+            = True
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] = True
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(rsrc.delete))
-        self.m.VerifyAll()
+        mock_get.return_value = ({'name': container_name},
+                                 [{'name': 'test_object'}])
+        mock_delete_object.side_effect =\
+            sc.ClientException('object-delete-failure')
 
-    def _get_check_resource(self):
-        t = template_format.parse(swift_template)
-        self.stack = utils.parse_stack(t)
-        res = self.create_resource(t, self.stack, 'SwiftContainer')
-        res.client = mock.Mock()
-        return res
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        self.assertRaises(exception.ResourceFailure, runner)
 
-    def test_check(self):
-        res = self._get_check_resource()
-        scheduler.TaskRunner(res.check)()
-        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+        # Verify
+        self.assertEqual((container.DELETE, container.FAILED),
+                         container.state)
+        mock_put.assert_called_once_with(container_name, {})
+        mock_get.assert_called_once_with(container_name)
+        mock_delete_object.assert_called_once_with(container_name,
+                                                   'test_object')
 
-    def test_check_fail(self):
-        res = self._get_check_resource()
-        res.client().get_container.side_effect = Exception('boom')
-
-        exc = self.assertRaises(exception.ResourceFailure,
-                                scheduler.TaskRunner(res.check))
-        self.assertIn('boom', six.text_type(exc))
-        self.assertEqual((res.CHECK, res.FAILED), res.state)
-
-    def test_delete_retain(self):
-        # first run, with retain policy
-        sc.Connection.put_container(
-            utils.PhysName('test_stack', 'test_resource'),
-            {}).AndReturn(None)
-
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-
-        container = t['Resources']['SwiftContainer']
-        container['DeletionPolicy'] = 'Retain'
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def test_default_headers_not_none_empty_string(self):
-        """Test that we are not passing None.
-
-        Test that we are not passing None when we have a default
-        empty string or sc will pass them as string None. see
-        bug lp:1259571.
-        """
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_delete_retain(self, mock_put):
+        # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        sc.Connection.put_container(
-            container_name, {}).AndReturn(None)
-        self.stub_delete_empty(container_name)
+        self.t['Resources']['SwiftContainer']['DeletionPolicy'] = 'Retain'
+        stack = utils.parse_stack(self.t)
 
-        self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.delete)
+        runner()
 
-        self.assertEqual({}, rsrc.metadata_get())
+        # Verify
+        self.assertEqual((container.DELETE, container.COMPLETE),
+                         container.state)
+        mock_put.assert_called_once_with(container_name, {})
+
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_check(self, mock_put, mock_get):
+        # Setup
+        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
+            = True
+        stack = utils.parse_stack(self.t)
+
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.check)
+        runner()
+        self.assertEqual((container.CHECK, container.COMPLETE),
+                         container.state)
+
+    @mock.patch('swiftclient.client.Connection.get_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_check_fail(self, mock_put, mock_get):
+        # Setup
+        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
+            = True
+        stack = utils.parse_stack(self.t)
+
+        mock_get.side_effect = Exception('boom')
+
+        # Test
+        container = self._create_container(stack)
+        runner = scheduler.TaskRunner(container.check)
+        ex = self.assertRaises(exception.ResourceFailure, runner)
+
+        # Verify
+        self.assertIn('boom', six.text_type(ex))
+        self.assertEqual((container.CHECK, container.FAILED),
+                         container.state)
 
     def test_refid(self):
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(self.t)
         rsrc = stack['SwiftContainer']
         rsrc.resource_id = 'xyz'
         self.assertEqual('xyz', rsrc.FnGetRefId())
 
     def test_refid_convergence_cache_data(self):
-        t = template_format.parse(swift_template)
         cache_data = {'SwiftContainer': {
             'uuid': mock.ANY,
             'id': mock.ANY,
@@ -438,6 +464,6 @@ class swiftTest(common.HeatTestCase):
             'status': 'COMPLETE',
             'reference_id': 'xyz_convg'
         }}
-        stack = utils.parse_stack(t, cache_data=cache_data)
+        stack = utils.parse_stack(self.t, cache_data=cache_data)
         rsrc = stack['SwiftContainer']
         self.assertEqual('xyz_convg', rsrc.FnGetRefId())
