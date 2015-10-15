@@ -30,7 +30,8 @@ keystone_project_template = {
                 'name': 'test_project_1',
                 'description': 'Test project',
                 'domain': 'default',
-                'enabled': 'True'
+                'enabled': 'True',
+                'parent': 'my_father'
             }
         }
     }
@@ -59,11 +60,12 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.projects = self.keystoneclient.projects
 
         # Mock client plugin
-        def _domain_side_effect(value):
+        def _id_side_effect(value):
             return value
 
         keystone_client_plugin = mock.MagicMock()
-        keystone_client_plugin.get_domain_id.side_effect = _domain_side_effect
+        keystone_client_plugin.get_domain_id.side_effect = _id_side_effect
+        keystone_client_plugin.get_project_id.side_effect = _id_side_effect
         self.test_project.client_plugin = mock.MagicMock()
         self.test_project.client_plugin.return_value = keystone_client_plugin
 
@@ -98,6 +100,9 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.assertEqual(
             True,
             self.test_project.properties.get(project.KeystoneProject.ENABLED))
+        self.assertEqual(
+            'my_father',
+            self.test_project.properties.get(project.KeystoneProject.PARENT))
 
         self.test_project.handle_create()
 
@@ -106,7 +111,8 @@ class KeystoneProjectTest(common.HeatTestCase):
             name='test_project_1',
             description='Test project',
             domain='default',
-            enabled=True)
+            enabled=True,
+            parent='my_father')
 
         # validate physical resource id
         self.assertEqual(mock_project.id, self.test_project.resource_id)
@@ -116,7 +122,8 @@ class KeystoneProjectTest(common.HeatTestCase):
             project.KeystoneProject.NAME: 'name',
             project.KeystoneProject.DESCRIPTION: 'description',
             project.KeystoneProject.DOMAIN: 'domain',
-            project.KeystoneProject.ENABLED: 'enabled'
+            project.KeystoneProject.ENABLED: 'enabled',
+            project.KeystoneProject.PARENT: 'parent'
         }
 
         for actual_title, expected_title in property_title_map.items():
@@ -241,7 +248,10 @@ class KeystoneProjectTest(common.HeatTestCase):
              project.KeystoneProject.DOMAIN)),
             project.KeystoneProject.ENABLED:
             (self._get_property_schema_value_default(
-             project.KeystoneProject.ENABLED))
+             project.KeystoneProject.ENABLED)),
+            project.KeystoneProject.PARENT:
+            (self._get_property_schema_value_default(
+             project.KeystoneProject.PARENT))
         }
 
         def _side_effect(key):
@@ -270,6 +280,8 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.assertEqual(
             True,
             self.test_project.properties.get(project.KeystoneProject.ENABLED))
+        self.assertIsNone(
+            self.test_project.properties.get(project.KeystoneProject.PARENT))
 
         self.test_project.handle_create()
 
@@ -278,7 +290,8 @@ class KeystoneProjectTest(common.HeatTestCase):
             name='foo',
             description='',
             domain='default',
-            enabled=True)
+            enabled=True,
+            parent=None)
 
     def test_project_handle_update(self):
         self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'

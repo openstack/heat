@@ -30,9 +30,9 @@ class KeystoneProject(resource.Resource):
     entity = 'projects'
 
     PROPERTIES = (
-        NAME, DOMAIN, DESCRIPTION, ENABLED
+        NAME, DOMAIN, DESCRIPTION, ENABLED, PARENT,
     ) = (
-        'name', 'domain', 'description', 'enabled'
+        'name', 'domain', 'description', 'enabled', 'parent',
     )
 
     properties_schema = {
@@ -59,7 +59,14 @@ class KeystoneProject(resource.Resource):
             _('This project is enabled or disabled.'),
             default=True,
             update_allowed=True
-        )
+        ),
+        PARENT: properties.Schema(
+            properties.Schema.STRING,
+            _('The name or ID of parent of this keystone project '
+              'in hierarchy.'),
+            support_status=support.SupportStatus(version='6.0.0'),
+            constraints=[constraints.CustomConstraint('keystone.project')]
+        ),
     }
 
     def client(self):
@@ -72,12 +79,15 @@ class KeystoneProject(resource.Resource):
         domain = self.client_plugin().get_domain_id(
             self.properties[self.DOMAIN])
         enabled = self.properties[self.ENABLED]
+        pp = self.properties[self.PARENT]
+        parent = self.client_plugin().get_project_id(pp)
 
         project = self.client().projects.create(
             name=project_name,
             domain=domain,
             description=description,
-            enabled=enabled)
+            enabled=enabled,
+            parent=parent)
 
         self.resource_id_set(project.id)
 
