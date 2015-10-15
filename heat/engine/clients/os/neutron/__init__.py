@@ -104,6 +104,15 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         subnet_info = self.client().show_subnet(subnet_id)
         return subnet_info['subnet']['network_id']
 
+    def get_qos_policy_id(self, policy):
+        """Returns the id of QoS policy.
+
+        Args:
+        policy: ID or name of the policy.
+        """
+        return neutronV20.find_resourceid_by_name_or_id(
+            self.client(), 'policy', policy, cmd_resource='qos_policy')
+
     def get_secgroup_uuids(self, security_groups):
         '''Returns a list of security group UUIDs.
 
