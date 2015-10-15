@@ -54,10 +54,16 @@ def simple_parse(tmpl_str):
     except ValueError:
         try:
             tpl = yaml.load(tmpl_str, Loader=yaml_loader)
-        except yaml.YAMLError as yea:
-            yea = six.text_type(yea)
-            msg = _('Error parsing template: %s') % yea
-            raise ValueError(msg)
+        except yaml.YAMLError:
+            # NOTE(prazumovsky): we need to return more informative error for
+            # user, so use SafeLoader, which return error message with template
+            # snippet where error has been occurred.
+            try:
+                tpl = yaml.load(tmpl_str, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as yea:
+                yea = six.text_type(yea)
+                msg = _('Error parsing template: %s') % yea
+                raise ValueError(msg)
         else:
             if tpl is None:
                 tpl = {}
