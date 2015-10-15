@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import yaml
 
 from heat.common.i18n import _
 from heat.common import template_format
@@ -32,8 +33,14 @@ def parse(env_str):
     try:
         env = template_format.yaml.load(env_str,
                                         Loader=template_format.yaml_loader)
-    except template_format.yaml.YAMLError as yea:
-        raise ValueError(yea)
+    except yaml.YAMLError:
+        # NOTE(prazumovsky): we need to return more informative error for
+        # user, so use SafeLoader, which return error message with template
+        # snippet where error has been occurred.
+        try:
+            env = yaml.load(env_str, Loader=yaml.SafeLoader)
+        except yaml.YAMLError as yea:
+            raise ValueError(yea)
     else:
         if env is None:
             env = {}
