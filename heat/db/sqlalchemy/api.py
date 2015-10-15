@@ -1091,8 +1091,15 @@ def purge_deleted(age, granularity='days'):
     stack_del = stack.delete().where(stack.c.deleted_at < time_line)
     engine.execute(stack_del)
     # delete orphaned raw templates
-    stack_templ_sel = sqlalchemy.select([stack.c.raw_template_id])
-    raw_templ_sel = sqlalchemy.not_(raw_template.c.id.in_(stack_templ_sel))
+    raw_templ_sel = raw_template.c.id.in_(
+        sqlalchemy.select([raw_template.c.id]).select_from(
+            sqlalchemy.join(
+                raw_template,
+                stack,
+                sqlalchemy.or_(
+                    stack.c.prev_raw_template_id == raw_template.c.id,
+                    stack.c.raw_template_id == raw_template.c.id),
+                isouter=True)).where(stack.c.id == None))  # noqa
     raw_templ_del = raw_template.delete().where(raw_templ_sel)
     engine.execute(raw_templ_del)
     # purge any user creds that are no longer referenced
