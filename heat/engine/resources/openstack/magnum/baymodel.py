@@ -26,11 +26,13 @@ class BayModel(resource.Resource):
     PROPERTIES = (
         NAME, IMAGE, FLAVOR, MASTER_FLAVOR, KEYPAIR,
         EXTERNAL_NETWORK, FIXED_NETWORK, DNS_NAMESERVER,
-        DOCKER_VOLUME_SIZE, SSH_AUTHORIZED_KEY, COE
+        DOCKER_VOLUME_SIZE, SSH_AUTHORIZED_KEY, COE, NETWORK_DRIVER,
+        HTTP_PROXY, HTTPS_PROXY, NO_PROXY, LABELS, INSECURE
     ) = (
         'name', 'image', 'flavor', 'master_flavor', 'keypair',
         'external_network', 'fixed_network', 'dns_nameserver',
-        'docker_volume_size', 'ssh_authorized_key', 'coe'
+        'docker_volume_size', 'ssh_authorized_key', 'coe', 'network_driver',
+        'http_proxy', 'https_proxy', 'no_proxy', 'labels', 'insecure'
     )
 
     properties_schema = {
@@ -110,7 +112,43 @@ class BayModel(resource.Resource):
                 constraints.AllowedValues(['kubernetes', 'swarm'])
             ],
             required=True
-        )
+        ),
+        NETWORK_DRIVER: properties.Schema(
+            properties.Schema.STRING,
+            _('The name of the driver used for instantiating '
+              'container networks.'),
+            required=True,
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+        HTTP_PROXY: properties.Schema(
+            properties.Schema.STRING,
+            _('The http_proxy address to use for nodes in bay.'),
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+        HTTPS_PROXY: properties.Schema(
+            properties.Schema.STRING,
+            _('The https_proxy address to use for nodes in bay.'),
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+        NO_PROXY: properties.Schema(
+            properties.Schema.STRING,
+            _('A comma separated list of addresses for which proxies should '
+              'not be used in the bay.'),
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+        LABELS: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary labels in the form of key=value pairs to '
+              'associate with a baymodel.'),
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+        INSECURE: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Disable TLS in the Bay.'),
+            default=False,
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+
     }
 
     default_client_name = 'magnum'
@@ -129,8 +167,15 @@ class BayModel(resource.Resource):
             'dns_nameserver': self.properties[self.DNS_NAMESERVER],
             'docker_volume_size': self.properties[self.DOCKER_VOLUME_SIZE],
             'ssh_authorized_key': self.properties[self.SSH_AUTHORIZED_KEY],
-            'coe': self.properties[self.COE]
+            'coe': self.properties[self.COE],
+            'network_driver': self.properties[self.NETWORK_DRIVER],
+            'http_proxy': self.properties[self. HTTP_PROXY],
+            'https_proxy': self.properties[self.HTTPS_PROXY],
+            'no_proxy': self.properties[self.NO_PROXY],
+            'labels': self.properties[self.LABELS],
+            'insecure': self.properties[self.INSECURE]
         }
+
         bm = self.client().baymodels.create(**args)
         self.resource_id_set(bm.uuid)
 

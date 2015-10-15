@@ -21,7 +21,11 @@ from heat.tests import common
 from heat.tests import utils
 
 
-magnum_template = '''
+RESOURCE_TYPE = 'OS::Magnum::BayModel'
+
+
+class TestMagnumBayModel(common.HeatTestCase):
+    magnum_template = '''
     heat_template_version: 2015-04-30
     resources:
       test_baymodel:
@@ -38,22 +42,14 @@ magnum_template = '''
           docker_volume_size: 5
           ssh_authorized_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB
           coe: 'swarm'
+          network_driver: 'flannel'
 '''
 
-RESOURCE_TYPE = 'OS::Magnum::BayModel'
-
-
-class FakeBayModel(object):
-    def __init__(self):
-        self.to_dict = lambda: {'attr': 'val'}
-
-
-class TestMagnumBayModel(common.HeatTestCase):
     def setUp(self):
         super(TestMagnumBayModel, self).setUp()
         self.ctx = utils.dummy_context()
         resource._register_class(RESOURCE_TYPE, baymodel.BayModel)
-        t = template_format.parse(magnum_template)
+        t = template_format.parse(self.magnum_template)
         self.stack = utils.parse_stack(t)
 
         resource_defns = self.stack.t.resource_definitions(self.stack)
@@ -85,7 +81,29 @@ class TestMagnumBayModel(common.HeatTestCase):
         self.assertEqual(1, len(mapping))
         self.assertEqual(baymodel.BayModel, mapping[RESOURCE_TYPE])
 
-    def test_show_resource(self):
-        bm = self._create_resource('bm', self.rsrc_defn, self.stack)
-        self.client.baymodels.get.return_value = FakeBayModel()
-        self.assertEqual({'attr': 'val'}, bm.FnGetAtt('show'))
+
+class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
+    magnum_template = '''
+    heat_template_version: 2015-04-30
+    resources:
+      test_baymodel:
+        type: OS::Magnum::BayModel
+        properties:
+          name: test_bay_model
+          image: fedora-21-atomic-2
+          flavor: m1.small
+          master_flavor: m1.medium
+          keypair: heat_key
+          external_network: 0244b54d-ae1f-44f0-a24a-442760f1d681
+          fixed_network: 0f59a3dd-fac1-4d03-b41a-d4115fbffa89
+          dns_nameserver: 8.8.8.8
+          docker_volume_size: 5
+          ssh_authorized_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB
+          coe: 'swarm'
+          network_driver: 'flannel'
+          http_proxy: 'http://proxy.com:123'
+          https_proxy: 'https://proxy.com:123'
+          no_proxy: '192.168.0.1'
+          labels: {'flannel_cidr': ['10.101.0.0/16', '10.102.0.0/16']}
+          insecure: True
+    '''
