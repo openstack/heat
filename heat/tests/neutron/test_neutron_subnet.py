@@ -20,6 +20,7 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -103,6 +104,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'update_subnet')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_subnet(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)

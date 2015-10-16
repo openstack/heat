@@ -14,6 +14,7 @@
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import extraroute
 from heat.engine import scheduler
 from heat.tests import common
@@ -55,6 +56,8 @@ class NeutronExtraRouteTest(common.HeatTestCase):
         super(NeutronExtraRouteTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')
         self.m.StubOutWithMock(neutronclient.Client, 'update_router')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_extraroute(self, t, stack, resource_name, properties=None):
         properties = properties or {}

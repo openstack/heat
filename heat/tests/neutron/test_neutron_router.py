@@ -21,6 +21,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import router
 from heat.engine import rsrc_defn
@@ -121,6 +122,8 @@ class NeutronRouterTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'list_l3_agent_hosting_routers')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_router(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)

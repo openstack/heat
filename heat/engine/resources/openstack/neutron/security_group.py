@@ -21,6 +21,8 @@ from heat.engine import support
 
 class SecurityGroup(neutron.NeutronResource):
 
+    required_service_extension = 'security-group'
+
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (

@@ -21,6 +21,7 @@ import yaml
 from heat.common import config
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.tests import common
 from heat.tests import utils
 
@@ -205,6 +206,8 @@ class JsonYamlResolvedCompareTest(common.HeatTestCase):
             self.assertEqual(stack1[key].t, stack2[key].t)
 
     def test_neutron_resolved(self):
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
         self.compare_stacks('Neutron.template', 'Neutron.yaml', {})
 
     def test_wordpress_resolved(self):

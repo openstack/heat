@@ -22,6 +22,8 @@ from heat.engine import support
 class VPNService(neutron.NeutronResource):
     """A resource for VPN service in Neutron."""
 
+    required_service_extension = 'vpnaas'
+
     PROPERTIES = (
         NAME, DESCRIPTION, ADMIN_STATE_UP,
         SUBNET_ID, SUBNET, ROUTER_ID, ROUTER
@@ -190,6 +192,8 @@ class VPNService(neutron.NeutronResource):
 
 class IPsecSiteConnection(neutron.NeutronResource):
     """A resource for IPsec site connection in Neutron."""
+
+    required_service_extension = 'vpnaas'
 
     PROPERTIES = (
         NAME, DESCRIPTION, PEER_ADDRESS, PEER_ID, PEER_CIDRS, MTU,
@@ -433,6 +437,8 @@ class IPsecSiteConnection(neutron.NeutronResource):
 class IKEPolicy(neutron.NeutronResource):
     """A resource for IKE policy in Neutron."""
 
+    required_service_extension = 'vpnaas'
+
     PROPERTIES = (
         NAME, DESCRIPTION, AUTH_ALGORITHM, ENCRYPTION_ALGORITHM,
         PHASE1_NEGOTIATION_MODE, LIFETIME, PFS, IKE_VERSION,
@@ -598,6 +604,8 @@ class IKEPolicy(neutron.NeutronResource):
 
 class IPsecPolicy(neutron.NeutronResource):
     """A resource for IPsec policy in Neutron."""
+
+    required_service_extension = 'vpnaas'
 
     PROPERTIES = (
         NAME, DESCRIPTION, TRANSFORM_PROTOCOL, ENCAPSULATION_MODE,

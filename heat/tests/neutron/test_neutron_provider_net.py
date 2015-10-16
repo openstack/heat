@@ -18,6 +18,7 @@ from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import provider_net
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -66,6 +67,8 @@ class NeutronProviderNetTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_network')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
         self.m.StubOutWithMock(neutronclient.Client, 'update_network')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_provider_net(self):
         # Create script

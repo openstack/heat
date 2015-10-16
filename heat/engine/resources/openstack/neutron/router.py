@@ -25,6 +25,8 @@ from heat.engine import support
 
 class Router(neutron.NeutronResource):
 
+    required_service_extension = 'router'
+
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
         L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA,
@@ -279,6 +281,9 @@ class Router(neutron.NeutronResource):
 
 
 class RouterInterface(neutron.NeutronResource):
+
+    required_service_extension = 'router'
+
     PROPERTIES = (
         ROUTER, ROUTER_ID, SUBNET_ID, SUBNET, PORT_ID, PORT
     ) = (

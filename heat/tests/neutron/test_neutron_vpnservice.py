@@ -21,6 +21,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import vpnservice
 from heat.engine import scheduler
 from heat.tests import common
@@ -127,6 +128,8 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'update_vpnservice')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_vpnservice(self, resolve_neutron=True, resolve_router=True):
         self.stub_SubnetConstraint_validate()
@@ -317,6 +320,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
                                'show_ipsec_site_connection')
         self.m.StubOutWithMock(neutronclient.Client,
                                'update_ipsec_site_connection')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_ipsec_site_connection(self):
         neutronclient.Client.create_ipsec_site_connection(
@@ -465,6 +470,8 @@ class IKEPolicyTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_ikepolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'show_ikepolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_ikepolicy')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_ikepolicy(self):
         neutronclient.Client.create_ikepolicy(
@@ -607,6 +614,8 @@ class IPsecPolicyTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_ipsecpolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'show_ipsecpolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_ipsecpolicy')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_ipsecpolicy(self):
         neutronclient.Client.create_ipsecpolicy(

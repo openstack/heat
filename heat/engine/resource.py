@@ -112,6 +112,9 @@ class Resource(object):
     # Default name to use for calls to self.client()
     default_client_name = None
 
+    # Required service extension for this resource
+    required_service_extension = None
+
     # no signal actions
     no_signal_actions = (SUSPEND, DELETE)
 
@@ -559,9 +562,14 @@ class Resource(object):
             # NOTE(kanagaraj-manickam): if one of the service_type does
             # exist in the keystone, then considered it as available.
             for service_type in service_types:
-                if client_plugin.does_endpoint_exist(
-                        service_type=service_type,
-                        service_name=cls.default_client_name):
+                endpoint_exists = client_plugin.does_endpoint_exist(
+                    service_type=service_type,
+                    service_name=cls.default_client_name)
+                req_extension = cls.required_service_extension
+                is_ext_available = (
+                    not req_extension or client_plugin.has_extension(
+                        req_extension))
+                if endpoint_exists and is_ext_available:
                     return True
         except Exception as ex:
             LOG.exception(ex)

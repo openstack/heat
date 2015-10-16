@@ -27,6 +27,8 @@ from heat.engine import support
 class HealthMonitor(neutron.NeutronResource):
     """A resource for managing health monitors for loadbalancers in Neutron."""
 
+    required_service_extension = 'lbaas'
+
     PROPERTIES = (
         DELAY, TYPE, MAX_RETRIES, TIMEOUT, ADMIN_STATE_UP,
         HTTP_METHOD, EXPECTED_CODES, URL_PATH,
@@ -172,6 +174,8 @@ class HealthMonitor(neutron.NeutronResource):
 
 class Pool(neutron.NeutronResource):
     """A resource for managing load balancer pools in Neutron."""
+
+    required_service_extension = 'lbaas'
 
     PROPERTIES = (
         PROTOCOL, SUBNET_ID, SUBNET, LB_METHOD, NAME, DESCRIPTION,
@@ -549,6 +553,8 @@ class Pool(neutron.NeutronResource):
 class PoolMember(neutron.NeutronResource):
     """A resource to handle loadbalancer members."""
 
+    required_service_extension = 'lbaas'
+
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
@@ -671,6 +677,8 @@ class PoolMember(neutron.NeutronResource):
 
 class LoadBalancer(resource.Resource):
     """A resource to link a neutron pool with servers."""
+
+    required_service_extension = 'lbaas'
 
     PROPERTIES = (
         POOL_ID, PROTOCOL_PORT, MEMBERS,

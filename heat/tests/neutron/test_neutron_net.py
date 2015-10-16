@@ -20,6 +20,7 @@ from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import net
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -91,6 +92,8 @@ class NeutronNetTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'list_dhcp_agent_hosting_networks')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_net(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)

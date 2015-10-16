@@ -182,3 +182,22 @@ class NeutronConstraintsValidate(common.HeatTestCase):
         self.assertFalse(constraint.validate("bar", ctx))
         mock_find.assert_has_calls([mock.call(nc, self.resource_type, 'foo'),
                                     mock.call(nc, self.resource_type, 'bar')])
+
+
+class NeutronClientPluginExtensionsTests(NeutronClientPluginTestCase):
+    """Tests for extensions in neutronclient."""
+
+    def test_has_no_extension(self):
+        mock_extensions = {'extensions': []}
+        self.neutron_client.list_extensions.return_value = mock_extensions
+        self.assertFalse(self.neutron_plugin.has_extension('lbaas'))
+
+    def test_without_service_extension(self):
+        mock_extensions = {'extensions': [{'alias': 'router'}]}
+        self.neutron_client.list_extensions.return_value = mock_extensions
+        self.assertFalse(self.neutron_plugin.has_extension('lbaas'))
+
+    def test_has_service_extension(self):
+        mock_extensions = {'extensions': [{'alias': 'router'}]}
+        self.neutron_client.list_extensions.return_value = mock_extensions
+        self.assertTrue(self.neutron_plugin.has_extension('router'))

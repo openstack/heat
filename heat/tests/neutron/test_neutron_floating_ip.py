@@ -22,6 +22,7 @@ from neutronclient.v2_0 import client as neutronclient
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine.clients.os import neutron
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -130,6 +131,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(neutronV20,
                                'find_resourceid_by_name_or_id')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def test_floating_ip_validate(self):
         t = template_format.parse(neutron_floating_no_assoc_template)

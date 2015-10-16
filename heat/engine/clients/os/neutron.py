@@ -72,6 +72,11 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), key_type, props.get(key))
 
+    def has_extension(self, alias):
+        """Check if specific extension is present."""
+        extensions = self.client().list_extensions().get('extensions')
+        return alias in [extension.get('alias') for extension in extensions]
+
     def _resolve(self, props, key, id_key, key_type):
         if props.get(key):
             props[id_key] = self.find_neutron_resource(

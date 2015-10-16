@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import short_id
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -247,6 +248,9 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         lb.update.assert_called_once_with(expected)
 
     def test_members(self):
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
+
         t = template_format.parse(inline_templates.as_template)
         t['Resources']['ElasticLoadBalancer'] = {
             'Type': 'OS::Neutron::LoadBalancer',

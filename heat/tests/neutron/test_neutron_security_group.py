@@ -18,6 +18,7 @@ from novaclient.v2 import security_groups as nova_sg
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
@@ -100,6 +101,8 @@ resources:
             neutronclient.Client, 'delete_security_group_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
         self.m.StubOutWithMock(neutronclient.Client, 'update_security_group')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_stack(self, templ):
         t = template_format.parse(templ)

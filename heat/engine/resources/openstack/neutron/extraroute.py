@@ -24,6 +24,8 @@ from heat.engine import support
 
 class ExtraRoute(neutron.NeutronResource):
 
+    required_service_extension = 'extraroute'
+
     support_status = support.SupportStatus(
         status=support.UNSUPPORTED,
         message=_('This resource is not supported, use at your own risk.'))

@@ -23,6 +23,7 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.resources.openstack.neutron import loadbalancer
 from heat.engine import scheduler
@@ -177,6 +178,8 @@ class HealthMonitorTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'show_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'update_health_monitor')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_health_monitor(self):
         neutronclient.Client.create_health_monitor({
@@ -311,6 +314,8 @@ class PoolTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_pool(self, resolve_neutron=True, with_vip_subnet=False):
         neutronclient.Client.create_pool({
@@ -839,6 +844,8 @@ class PoolMemberTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(neutronclient.Client, 'update_member')
         self.m.StubOutWithMock(neutronclient.Client, 'show_member')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_member(self):
         neutronclient.Client.create_member({
@@ -939,6 +946,8 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def create_load_balancer(self):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -1036,6 +1045,8 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
 
     def _create_pool_with_health_monitors(self):
         neutronclient.Client.create_health_monitor({

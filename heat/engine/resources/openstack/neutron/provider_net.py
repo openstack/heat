@@ -24,6 +24,8 @@ from heat.engine import support
 
 class ProviderNet(net.Net):
 
+    required_service_extension = 'provider'
+
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
