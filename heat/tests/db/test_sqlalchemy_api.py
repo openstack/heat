@@ -1335,7 +1335,8 @@ def create_stack(ctx, template, user_creds, **kwargs):
         'owner_id': None,
         'timeout': '60',
         'disable_rollback': 0,
-        'current_traversal': 'dummy-uuid'
+        'current_traversal': 'dummy-uuid',
+        'prev_raw_template': None
     }
     values.update(kwargs)
     return db_api.stack_create(ctx, values)
@@ -1884,6 +1885,20 @@ class DBAPIStackTest(common.HeatTestCase):
         db_api.purge_deleted(age=3600, granularity='seconds')
         self._deleted_stack_existance(utils.dummy_context(), stacks,
                                       (), (0, 1, 2, 3, 4))
+
+    def test_purge_deleted_prev_raw_template(self):
+        now = datetime.datetime.now()
+        templates = [create_raw_template(self.ctx) for i in range(2)]
+        stacks = [create_stack(self.ctx, templates[0],
+                               create_user_creds(self.ctx),
+                               deleted_at=now - datetime.timedelta(seconds=10),
+                               prev_raw_template=templates[1])]
+
+        db_api.purge_deleted(age=3600, granularity='seconds')
+        ctx = utils.dummy_context()
+        self.assertIsNotNone(db_api.stack_get(ctx, stacks[0].id,
+                                              show_deleted=True))
+        self.assertIsNotNone(db_api.raw_template_get(ctx, templates[1].id))
 
     def _deleted_stack_existance(self, ctx, stacks, existing, deleted):
         for s in existing:
