@@ -17,6 +17,7 @@ import mock
 
 from heat.common import exception
 from heat.common import template_format
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine import scheduler
@@ -50,6 +51,7 @@ class StackUpdateTest(common.HeatTestCase):
                                  template.Template(tmpl))
         self.stack.store()
         self.stack.create()
+        raw_template_id = self.stack.t.id
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
 
@@ -63,6 +65,10 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertIn('BResource', self.stack)
+        self.assertNotEqual(raw_template_id, self.stack.t.id)
+        self.assertNotEqual(raw_template_id, self.stack.prev_raw_template_id)
+        self.assertRaises(exception.NotFound,
+                          db_api.raw_template_get, self.ctx, raw_template_id)
 
     def test_update_remove(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -859,8 +865,9 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
                                        'handle_create', side_effect=Exception)
 
-        with mock.patch.object(stack_object.Stack,
-                               'update_by_id') as mock_db_update:
+        with mock.patch.object(
+                stack_object.Stack, 'update_by_id',
+                wraps=stack_object.Stack.update_by_id) as mock_db_update:
             self.stack.update(updated_stack)
             self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                              self.stack.state)
