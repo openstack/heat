@@ -989,6 +989,21 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(sorted(expected, key=lambda k: k['functions']),
                          sorted(functions, key=lambda k: k['functions']))
 
+    @mock.patch('heat.engine.template._get_template_extension_manager')
+    def test_list_template_functions_version_not_found(self, templ_mock):
+        class DummyMgr(object):
+            def __getitem__(self, item):
+                raise KeyError()
+
+        templ_mock.return_value = DummyMgr()
+        version = 'dummytemplate'
+        ex = self.assertRaises(exception.NotFound,
+                               self.eng.list_template_functions,
+                               self.ctx,
+                               version)
+        msg = "Template with version %s not found" % version
+        self.assertEqual(msg, six.text_type(ex))
+
     def test_stack_list_all_empty(self):
         sl = self.eng.list_stacks(self.ctx)
 

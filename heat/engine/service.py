@@ -1172,7 +1172,12 @@ class EngineService(service.Service):
 
     def list_template_functions(self, cnxt, template_version):
         mgr = templatem._get_template_extension_manager()
-        tmpl_class = mgr[template_version]
+        try:
+            tmpl_class = mgr[template_version]
+        except KeyError:
+            raise exception.NotFound(_("Template with version %s not found") %
+                                     template_version)
+
         functions = []
         for func_name, func in six.iteritems(tmpl_class.plugin.functions):
             if func is not hot_functions.Removed:
