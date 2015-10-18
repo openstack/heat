@@ -52,6 +52,10 @@ hot_liberty_tpl_empty = template_format.parse('''
 heat_template_version: 2015-10-15
 ''')
 
+hot_mitaka_tpl_empty = template_format.parse('''
+heat_template_version: 2016-04-08
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -707,6 +711,35 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_liberty_tpl_empty)
         exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
         self.assertIn('Incorrect arguments', six.text_type(exc))
+
+    def test_merge(self):
+        snippet = {'map_merge': [{'f1': 'b1', 'f2': 'b2'}, {'f1': 'b2'}]}
+        tmpl = template.Template(hot_mitaka_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual('b2', resolved['f1'])
+        self.assertEqual('b2', resolved['f2'])
+
+    def test_merge_none(self):
+        snippet = {'map_merge': [{'f1': 'b1', 'f2': 'b2'}, None]}
+        tmpl = template.Template(hot_mitaka_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual('b1', resolved['f1'])
+        self.assertEqual('b2', resolved['f2'])
+
+    def test_merge_invalid(self):
+        snippet = {'map_merge': [{'f1': 'b1', 'f2': 'b2'}, ['f1', 'b2']]}
+        tmpl = template.Template(hot_mitaka_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc))
+
+    def test_merge_containing_repeat(self):
+        snippet = {'map_merge': {'repeat': {'template': {'ROLE': 'ROLE'},
+                   'for_each': {'ROLE': ['role1', 'role2']}}}}
+        tmpl = template.Template(hot_mitaka_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('role1', resolved['role1'])
+        self.assertEqual('role2', resolved['role2'])
 
     def test_repeat(self):
         """Test repeat function."""

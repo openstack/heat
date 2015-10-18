@@ -429,6 +429,47 @@ class JoinMultiple(function.Function):
         return delim.join(ensure_string(s) for s in strings)
 
 
+class MapMerge(function.Function):
+    """A function for merging maps.
+
+    Takes the form::
+
+        { "map_merge" : [{'k1': 'v1', 'k2': 'v2'}, {'k1': 'v2'}] }
+
+    And resolves to::
+
+        {'k1': 'v2', 'k2': 'v2'}
+
+    """
+
+    def __init__(self, stack, fn_name, args):
+        super(MapMerge, self).__init__(stack, fn_name, args)
+        example = (_('"%s" : [ { "key1": "val1" }, { "key2": "val2" } ]')
+                   % fn_name)
+        self.fmt_data = {'fn_name': fn_name, 'example': example}
+
+    def result(self):
+        args = function.resolve(self.args)
+
+        if not isinstance(args, collections.Sequence):
+            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                              'should be: %(example)s') % self.fmt_data)
+
+        def ensure_map(m):
+            if m is None:
+                return {}
+            elif isinstance(m, collections.Mapping):
+                return m
+            else:
+                msg = _('Incorrect arguments: Items to merge must be maps.')
+                raise TypeError(msg)
+
+        ret_map = {}
+        for m in args:
+            ret_map.update(ensure_map(m))
+        return ret_map
+
+
 class ResourceFacade(cfn_funcs.ResourceFacade):
     """A function for retrieving data in a parent provider template.
 
