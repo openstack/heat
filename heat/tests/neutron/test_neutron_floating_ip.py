@@ -631,6 +631,12 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'subnet',
             'sub1234'
         ).MultipleTimes().AndReturn('sub1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'None'
+        ).MultipleTimes().AndReturn('None')
+
         neutronclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
