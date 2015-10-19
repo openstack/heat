@@ -41,10 +41,11 @@ class Port(neutron.NeutronResource):
 
     EXTRA_PROPERTIES = (
         VALUE_SPECS, ADMIN_STATE_UP, MAC_ADDRESS,
-        ALLOWED_ADDRESS_PAIRS, VNIC_TYPE, PORT_SECURITY_ENABLED,
+        ALLOWED_ADDRESS_PAIRS, VNIC_TYPE, QOS_POLICY,
+        PORT_SECURITY_ENABLED,
     ) = (
         'value_specs', 'admin_state_up', 'mac_address',
-        'allowed_address_pairs', 'binding:vnic_type',
+        'allowed_address_pairs', 'binding:vnic_type', 'qos_policy',
         'port_security_enabled',
     )
 
@@ -64,12 +65,12 @@ class Port(neutron.NeutronResource):
         ADMIN_STATE_UP_ATTR, DEVICE_ID_ATTR, DEVICE_OWNER_ATTR, FIXED_IPS_ATTR,
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
         STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SUBNETS_ATTR,
-        PORT_SECURITY_ENABLED_ATTR,
+        PORT_SECURITY_ENABLED_ATTR, QOS_POLICY_ATTR,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
         'status', 'tenant_id', 'allowed_address_pairs', 'subnets',
-        'port_security_enabled',
+        'port_security_enabled', 'qos_policy_id',
     )
 
     properties_schema = {
@@ -249,6 +250,15 @@ class Port(neutron.NeutronResource):
             update_allowed=True,
             support_status=support.SupportStatus(version='5.0.0')
         ),
+        QOS_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('The name or ID of QoS policy to attach to this port.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.qos_policy')
+            ],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -306,6 +316,11 @@ class Port(neutron.NeutronResource):
             support_status=support.SupportStatus(version='5.0.0'),
             type=attributes.Schema.BOOLEAN
         ),
+        QOS_POLICY_ATTR: attributes.Schema(
+            _("The QoS policy ID attached to this port."),
+            type=attributes.Schema.STRING,
+            support_status=support.SupportStatus(version='6.0.0'),
+        ),
     }
 
     def __init__(self, name, definition, stack):
@@ -349,6 +364,10 @@ class Port(neutron.NeutronResource):
             self.physical_resource_name())
         self.client_plugin().resolve_network(props, self.NETWORK, 'network_id')
         self._prepare_port_properties(props)
+        qos_policy = props.pop(self.QOS_POLICY, None)
+        if qos_policy:
+            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
+                qos_policy)
 
         port = self.client().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
@@ -432,6 +451,11 @@ class Port(neutron.NeutronResource):
         props = self.prepare_update_properties(json_snippet)
 
         self._prepare_port_properties(props, prepare_for_update=True)
+        qos_policy = props.pop(self.QOS_POLICY, None)
+        if self.QOS_POLICY in prop_diff:
+            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
+                qos_policy) if qos_policy else None
+
         LOG.debug('updating port with %s' % props)
         self.client().update_port(self.resource_id, {'port': props})
 

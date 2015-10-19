@@ -21,6 +21,7 @@ from oslo_serialization import jsonutils
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -398,7 +399,8 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}
+            'device_owner': u'network:dhcp'
+        }
 
         self._mock_create_with_security_groups(port_prop)
 
@@ -416,18 +418,25 @@ class NeutronPortTest(common.HeatTestCase):
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
                  'device_owner': u'network:dhcp'}
+        policy_id = '8a2f582a-e1cd-480f-b85d-b02631c10656'
         new_props = props.copy()
         new_props['name'] = "new_name"
         new_props['security_groups'] = [
             '8a2f582a-e1cd-480f-b85d-b02631c10656']
+        new_props['device_id'] = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        new_props['device_owner'] = 'network:router_interface'
         new_props_update = new_props.copy()
         new_props_update.pop('network_id')
+        new_props_update['qos_policy_id'] = policy_id
+        new_props['qos_policy'] = policy_id
 
         new_props1 = new_props.copy()
         new_props1.pop('security_groups')
+        new_props1['qos_policy'] = None
         new_props_update1 = new_props_update.copy()
         new_props_update1['security_groups'] = [
             '0389f747-7785-4757-b7bb-2ab07e4b09c3']
+        new_props_update1['qos_policy_id'] = None
 
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
@@ -452,6 +461,10 @@ class NeutronPortTest(common.HeatTestCase):
                 "ip_address": "10.0.0.2"
             }
         }})
+
+        self.patchobject(neutron.NeutronClientPlugin, 'get_qos_policy_id')
+        neutron.NeutronClientPlugin.get_qos_policy_id.return_value = policy_id
+        self.stub_QoSPolicyConstraint_validate()
         neutronclient.Client.update_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'port': new_props_update}
@@ -490,7 +503,9 @@ class NeutronPortTest(common.HeatTestCase):
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
         scheduler.TaskRunner(port.update, update_snippet)()
+
         # update again to test port without security group
+        # and without qos_policy
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props1)
         scheduler.TaskRunner(port.update, update_snippet)()
