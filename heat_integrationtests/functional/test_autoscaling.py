@@ -346,8 +346,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
     def update_instance_group(self, updt_template,
                               num_updates_expected_on_updt,
                               num_creates_expected_on_updt,
-                              num_deletes_expected_on_updt,
-                              update_replace):
+                              num_deletes_expected_on_updt):
 
         # setup stack from the initial template
         files = {'provider.yaml': self.instance_template}
@@ -430,8 +429,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=10,
                                    num_creates_expected_on_updt=0,
-                                   num_deletes_expected_on_updt=0,
-                                   update_replace=True)
+                                   num_deletes_expected_on_updt=0)
 
     def test_instance_group_update_replace_with_adjusted_capacity(self):
         """Test update replace with capacity adjustment.
@@ -450,8 +448,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=8,
                                    num_creates_expected_on_updt=2,
-                                   num_deletes_expected_on_updt=2,
-                                   update_replace=True)
+                                   num_deletes_expected_on_updt=2)
 
     def test_instance_group_update_replace_huge_batch_size(self):
         """Test update replace with a huge batch size."""
@@ -466,8 +463,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=10,
                                    num_creates_expected_on_updt=0,
-                                   num_deletes_expected_on_updt=0,
-                                   update_replace=True)
+                                   num_deletes_expected_on_updt=0)
 
     def test_instance_group_update_replace_huge_min_in_service(self):
         """Update replace with huge number of minimum instances in service."""
@@ -483,8 +479,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=9,
                                    num_creates_expected_on_updt=1,
-                                   num_deletes_expected_on_updt=1,
-                                   update_replace=True)
+                                   num_deletes_expected_on_updt=1)
 
     def test_instance_group_update_no_replace(self):
         """Test simple update only and no replace.
@@ -505,8 +500,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=10,
                                    num_creates_expected_on_updt=0,
-                                   num_deletes_expected_on_updt=0,
-                                   update_replace=False)
+                                   num_deletes_expected_on_updt=0)
 
     def test_instance_group_update_no_replace_with_adjusted_capacity(self):
         """Test update only and no replace with capacity adjustment.
@@ -527,8 +521,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=8,
                                    num_creates_expected_on_updt=2,
-                                   num_deletes_expected_on_updt=2,
-                                   update_replace=False)
+                                   num_deletes_expected_on_updt=2)
 
 
 class AutoScalingSignalTest(AutoscalingGroupTest):
