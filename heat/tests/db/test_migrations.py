@@ -21,6 +21,7 @@ if possible.
 """
 
 import datetime
+import fixtures
 import os
 import uuid
 
@@ -31,11 +32,54 @@ from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
 import six
 import sqlalchemy
+import testtools
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.tests import common
+
+
+class DBNotAllowed(Exception):
+    pass
+
+
+class BannedDBSchemaOperations(fixtures.Fixture):
+    """Ban some operations for migrations"""
+    def __init__(self, banned_resources=None):
+        super(BannedDBSchemaOperations, self).__init__()
+        self._banned_resources = banned_resources or []
+
+    @staticmethod
+    def _explode(resource, op):
+        print('%s.%s()' % (resource, op))
+        raise DBNotAllowed(
+            'Operation %s.%s() is not allowed in a database migration' % (
+                resource, op))
+
+    def setUp(self):
+        super(BannedDBSchemaOperations, self).setUp()
+        for thing in self._banned_resources:
+            self.useFixture(fixtures.MonkeyPatch(
+                'sqlalchemy.%s.drop' % thing,
+                lambda *a, **k: self._explode(thing, 'drop')))
+            self.useFixture(fixtures.MonkeyPatch(
+                'sqlalchemy.%s.alter' % thing,
+                lambda *a, **k: self._explode(thing, 'alter')))
+
+
+class TestBannedDBSchemaOperations(testtools.TestCase):
+    def test_column(self):
+        column = sqlalchemy.Column()
+        with BannedDBSchemaOperations(['Column']):
+            self.assertRaises(DBNotAllowed, column.drop)
+            self.assertRaises(DBNotAllowed, column.alter)
+
+    def test_table(self):
+        table = sqlalchemy.Table()
+        with BannedDBSchemaOperations(['Table']):
+            self.assertRaises(DBNotAllowed, table.drop)
+            self.assertRaises(DBNotAllowed, table.alter)
 
 
 class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
@@ -65,6 +109,31 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
     @property
     def migrate_engine(self):
         return self.engine
+
+    def migrate_up(self, version, with_data=False):
+        """Check that migrations don't cause downtime.
+
+        Schema migrations can be done online, allowing for rolling upgrades.
+        """
+        # NOTE(xek): This is a list of migrations where we allow dropping
+        # things. The rules for adding exceptions are very very specific.
+        # Chances are you don't meet the critera.
+        # Reviewers: DO NOT ALLOW THINGS TO BE ADDED HERE
+        exceptions = [
+            64,  # drop constraint
+        ]
+        # Reviewers: DO NOT ALLOW THINGS TO BE ADDED HERE
+
+        # NOTE(xek): We start requiring things be additive in
+        # liberty, so ignore all migrations before that point.
+        LIBERTY_START = 63
+
+        if version >= LIBERTY_START and version not in exceptions:
+            banned = ['Table', 'Column']
+        else:
+            banned = None
+        with BannedDBSchemaOperations(banned):
+            super(HeatMigrationsCheckers, self).migrate_up(version, with_data)
 
     def test_walk_versions(self):
         self.walk_versions(self.snake_walk, self.downgrade)
