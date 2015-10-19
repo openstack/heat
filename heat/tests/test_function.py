@@ -280,3 +280,10 @@ class ValidateGetAttTest(common.HeatTestCase):
         func = functions.GetAtt(self.stack, 'Fn::GetAtt',
                                 [self.rsrc.name, 'Foo'])
         self.assertIsNone(func.validate())
+
+    def test_get_attr_without_attribute_name(self):
+        ex = self.assertRaises(ValueError, functions.GetAtt,
+                               self.stack, 'Fn::GetAtt', [self.rsrc.name])
+        self.assertEqual('Arguments to "Fn::GetAtt" must be '
+                         'of the form [resource_name, attribute]',
+                         six.text_type(ex))

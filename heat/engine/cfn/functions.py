@@ -176,9 +176,19 @@ class GetAtt(function.Function):
         return itertools.chain(super(GetAtt, self).dependencies(path),
                                [self._resource(path)])
 
+    def _allow_without_attribute_name(self):
+        return False
+
     def validate(self):
         super(GetAtt, self).validate()
         res = self._resource()
+
+        if self._allow_without_attribute_name():
+            # if allow without attribute_name, then don't check
+            # when attribute_name is None
+            if self._attribute is None:
+                return
+
         attr = function.resolve(self._attribute)
         from heat.engine import resource
         if (type(res).FnGetAtt == resource.Resource.FnGetAtt and
