@@ -63,7 +63,7 @@ resources:
 '''
 
 neutron_external_gateway_template = '''
-heat_template_version: 2015-04-30
+heat_template_version: 2016-04-08
 description: Template to test gateway Neutron resource
 resources:
  router:
@@ -73,6 +73,9 @@ resources:
      external_gateway_info:
        network: public
        enable_snat: true
+       external_fixed_ips:
+        - ip_address: 192.168.10.99
+          subnet: sub1234
 '''
 
 neutron_subnet_and_external_gateway_template = '''
@@ -708,13 +711,23 @@ class NeutronRouterTest(common.HeatTestCase):
             'public',
             cmd_resource=None,
         ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('sub1234')
 
         neutronclient.Client.create_router({
             "router": {
                 "name": "Test Router",
                 "external_gateway_info": {
                     'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                    'enable_snat': True
+                    'enable_snat': True,
+                    'external_fixed_ips': [{
+                        'ip_address': '192.168.10.99',
+                        'subnet_id': 'sub1234'
+                    }]
                 },
                 "admin_state_up": True,
             }
@@ -736,7 +749,11 @@ class NeutronRouterTest(common.HeatTestCase):
                     "external_gateway_info": {
                         "network_id":
                         "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-                        "enable_snat": True
+                        "enable_snat": True,
+                        'external_fixed_ips': [{
+                            'ip_address': '192.168.10.99',
+                            'subnet_id': 'sub1234'
+                        }]
                     },
                     "name": "Test Router",
                     "admin_state_up": True,
@@ -756,7 +773,11 @@ class NeutronRouterTest(common.HeatTestCase):
                     "external_gateway_info": {
                         "network_id":
                         "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-                        "enable_snat": True
+                        "enable_snat": True,
+                        'external_fixed_ips': [{
+                            'ip_address': '192.168.10.99',
+                            'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'
+                        }]
                     },
                     "name": "Test Router",
                     "admin_state_up": True,
@@ -769,16 +790,18 @@ class NeutronRouterTest(common.HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(neutron_external_gateway_template)
         stack = utils.parse_stack(t)
-        rsrc = self.create_router(t, stack, 'router')
 
-        rsrc.validate()
-
-        ref_id = rsrc.FnGetRefId()
-        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
-        gateway_info = rsrc.FnGetAtt('external_gateway_info')
+        router = stack['router']
+        scheduler.TaskRunner(router.create)()
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
+                         router.FnGetRefId())
+        gateway_info = router.FnGetAtt('external_gateway_info')
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          gateway_info.get('network_id'))
         self.assertTrue(gateway_info.get('enable_snat'))
+        self.assertEqual([{'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e',
+                           'ip_address': '192.168.10.99'}],
+                         gateway_info.get('external_fixed_ips'))
         self.m.VerifyAll()
 
     def test_create_router_gateway_enable_snat(self):
@@ -829,6 +852,8 @@ class NeutronRouterTest(common.HeatTestCase):
         t = template_format.parse(neutron_external_gateway_template)
         t["resources"]["router"]["properties"]["external_gateway_info"].pop(
             "enable_snat")
+        t["resources"]["router"]["properties"]["external_gateway_info"].pop(
+            "external_fixed_ips")
         stack = utils.parse_stack(t)
         rsrc = self.create_router(t, stack, 'router')
 
