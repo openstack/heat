@@ -235,7 +235,18 @@ class NeutronNetTest(common.HeatTestCase):
                 'shared': True,
                 'name': 'mynet',
                 'admin_state_up': True,
-                'port_security_enabled': False
+                'port_security_enabled': False,
+                'qos_policy_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'
+            }}).AndReturn(None)
+        # update again to detach qos_policy
+        neutronclient.Client.update_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'shared': True,
+                'name': 'mynet_update_again',
+                'admin_state_up': True,
+                'port_security_enabled': False,
+                'qos_policy_id': None
             }}).AndReturn(None)
 
         # Delete script
@@ -250,6 +261,9 @@ class NeutronNetTest(common.HeatTestCase):
         neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
+
+        self.patchobject(neutron.NeutronClientPlugin, 'get_qos_policy_id',
+                         return_value='0389f747-7785-4757-b7bb-2ab07e4b09c3')
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
@@ -278,13 +292,24 @@ class NeutronNetTest(common.HeatTestCase):
             "name": "mynet",
             "dhcp_agent_ids": [
                 "bb09cfcd-5277-473d-8336-d4ed8628ae68"
-            ]
+            ],
+            'qos_policy': '0389f747-7785-4757-b7bb-2ab07e4b09c3'
         }
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
         rsrc.handle_update(update_snippet, {}, prop_diff)
+
+        prop_diff1 = {
+            "name": "mynet_update_again",
+            'qos_policy': None
+        }
+        props1 = copy.copy(rsrc.properties.data)
+        props1.update(prop_diff1)
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props1)
+        rsrc.handle_update(update_snippet, {}, prop_diff1)
 
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')

@@ -13,6 +13,7 @@
 
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
@@ -21,18 +22,18 @@ from heat.engine import support
 class Net(neutron.NeutronResource):
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
-        DHCP_AGENT_IDS, PORT_SECURITY_ENABLED,
+        DHCP_AGENT_IDS, PORT_SECURITY_ENABLED, QOS_POLICY,
     ) = (
         'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
-        'dhcp_agent_ids', 'port_security_enabled',
+        'dhcp_agent_ids', 'port_security_enabled', 'qos_policy',
     )
 
     ATTRIBUTES = (
         STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR,
-        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR,
+        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR, QOS_POLICY_ATTR,
     ) = (
         "status", "name", "subnets", "admin_state_up", "tenant_id",
-        "port_security_enabled", "mtu",
+        "port_security_enabled", "mtu", 'qos_policy_id',
     )
 
     properties_schema = {
@@ -86,6 +87,15 @@ class Net(neutron.NeutronResource):
             update_allowed=True,
             support_status=support.SupportStatus(version='5.0.0')
         ),
+        QOS_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('The name or ID of QoS policy to attach to this network.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.qos_policy')
+            ],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -119,6 +129,11 @@ class Net(neutron.NeutronResource):
             support_status=support.SupportStatus(version='5.0.0'),
             type=attributes.Schema.INTEGER
         ),
+        QOS_POLICY_ATTR: attributes.Schema(
+            _("The QoS policy ID attached to this network."),
+            type=attributes.Schema.STRING,
+            support_status=support.SupportStatus(version='6.0.0'),
+        ),
     }
 
     def handle_create(self):
@@ -127,6 +142,10 @@ class Net(neutron.NeutronResource):
             self.physical_resource_name())
 
         dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
+        qos_policy = props.pop(self.QOS_POLICY, None)
+        if qos_policy:
+            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
+                qos_policy)
 
         net = self.client().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
@@ -152,7 +171,10 @@ class Net(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
-
+        qos_policy = props.pop(self.QOS_POLICY, None)
+        if self.QOS_POLICY in prop_diff:
+            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
+                qos_policy) if qos_policy else None
         dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
 
         if self.DHCP_AGENT_IDS in prop_diff:
