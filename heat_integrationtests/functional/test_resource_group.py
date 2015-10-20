@@ -45,19 +45,6 @@ outputs:
     def setUp(self):
         super(ResourceGroupTest, self).setUp()
 
-    def _group_nested_identifier(self, stack_identifier,
-                                 group_name='random_group'):
-        # Get the nested stack identifier from the group
-        rsrc = self.client.resources.get(stack_identifier, group_name)
-        physical_resource_id = rsrc.physical_resource_id
-
-        nested_stack = self.client.stacks.get(physical_resource_id)
-        nested_identifier = '%s/%s' % (nested_stack.stack_name,
-                                       nested_stack.id)
-        parent_id = stack_identifier.split("/")[-1]
-        self.assertEqual(parent_id, nested_stack.parent)
-        return nested_identifier
-
     def test_resource_group_zero_novalidate(self):
         # Nested resources should be validated only when size > 0
         # This allows features to be disabled via size=0 without
@@ -92,7 +79,8 @@ resources:
                          self.list_resources(stack_identifier))
 
         # Check we created an empty nested stack
-        nested_identifier = self._group_nested_identifier(stack_identifier)
+        nested_identifier = self.group_nested_identifier(stack_identifier,
+                                                         'random_group')
         self.assertEqual({}, self.list_resources(nested_identifier))
 
         # Prove validation works for non-zero create/update
@@ -108,12 +96,9 @@ resources:
                                environment=env, files=files)
         self.assertIn(expected_err, six.text_type(ex))
 
-    def _list_group_resources(self, stack_identifier):
-        nested_identifier = self._group_nested_identifier(stack_identifier)
-        return self.list_resources(nested_identifier)
-
     def _validate_resources(self, stack_identifier, expected_count):
-        resources = self._list_group_resources(stack_identifier)
+        resources = self.list_group_resources(stack_identifier,
+                                              'random_group')
         self.assertEqual(expected_count, len(resources))
         expected_resources = dict(
             (str(idx), 'My::RandomString')
@@ -187,7 +172,8 @@ resources:
         stack_identifier = self.stack_create(template=rp_template)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
-        group_resources = self._list_group_resources(stack_identifier)
+        group_resources = self.list_group_resources(stack_identifier,
+                                                    'random_group')
         expected_resources = {u'0': u'OS::Heat::RandomString',
                               u'1': u'OS::Heat::RandomString',
                               u'2': u'OS::Heat::RandomString',
@@ -200,7 +186,8 @@ resources:
             'removal_policies: []',
             'removal_policies: [{resource_list: [\'1\', \'2\', \'3\']}]')
         self.update_stack(stack_identifier, update_template)
-        group_resources = self._list_group_resources(stack_identifier)
+        group_resources = self.list_group_resources(stack_identifier,
+                                                    'random_group')
         expected_resources = {u'0': u'OS::Heat::RandomString',
                               u'4': u'OS::Heat::RandomString',
                               u'5': u'OS::Heat::RandomString',
@@ -219,7 +206,8 @@ resources:
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
-        initial_nested_ident = self._group_nested_identifier(stack_identifier)
+        initial_nested_ident = self.group_nested_identifier(stack_identifier,
+                                                            'random_group')
         self.assertEqual({'0': 'My::RandomString'},
                          self.list_resources(initial_nested_ident))
         # get the resource id
@@ -230,7 +218,8 @@ resources:
         # not the nested stack or resource group.
         template_salt = template_one.replace("salt: initial", "salt: more")
         self.update_stack(stack_identifier, template_salt, environment=env)
-        updated_nested_ident = self._group_nested_identifier(stack_identifier)
+        updated_nested_ident = self.group_nested_identifier(stack_identifier,
+                                                            'random_group')
         self.assertEqual(initial_nested_ident, updated_nested_ident)
 
         # compare the resource id, we expect a change.
@@ -249,7 +238,8 @@ resources:
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
-        initial_nested_ident = self._group_nested_identifier(stack_identifier)
+        initial_nested_ident = self.group_nested_identifier(stack_identifier,
+                                                            'random_group')
         self.assertEqual({'0': 'My::RandomString', '1': 'My::RandomString'},
                          self.list_resources(initial_nested_ident))
         # get the output
@@ -258,7 +248,8 @@ resources:
 
         template_copy = copy.deepcopy(template_one)
         self.update_stack(stack_identifier, template_copy, environment=env)
-        updated_nested_ident = self._group_nested_identifier(stack_identifier)
+        updated_nested_ident = self.group_nested_identifier(stack_identifier,
+                                                            'random_group')
         self.assertEqual(initial_nested_ident, updated_nested_ident)
 
         # compare the random number, we expect no change.
@@ -309,7 +300,8 @@ outputs:
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
-        initial_nested_ident = self._group_nested_identifier(stack_identifier)
+        initial_nested_ident = self.group_nested_identifier(stack_identifier,
+                                                            'random_group')
         self.assertEqual({'0': 'My::RandomString', '1': 'My::RandomString'},
                          self.list_resources(initial_nested_ident))
         # get the output
@@ -320,7 +312,8 @@ outputs:
         # note "files2".
         self.update_stack(stack_identifier, template_one,
                           environment=env, files=files2)
-        updated_nested_ident = self._group_nested_identifier(stack_identifier)
+        updated_nested_ident = self.group_nested_identifier(stack_identifier,
+                                                            'random_group')
         self.assertEqual(initial_nested_ident, updated_nested_ident)
 
         # compare the output, we expect a change.
@@ -510,3 +503,201 @@ resources:
         self._wait_for_stack_status(
             stack_identifier, 'DELETE_COMPLETE',
             success_on_not_found=True)
+
+
+class ResourceGroupUpdatePolicyTest(functional_base.FunctionalTestsBase):
+
+    template = '''
+heat_template_version: '2015-04-30'
+resources:
+  random_group:
+    type: OS::Heat::ResourceGroup
+    update_policy:
+      rolling_update:
+        min_in_service: 1
+        max_batch_size: 2
+        pause_time: 1
+    properties:
+      count: 10
+      resource_def:
+        type: OS::Heat::TestResource
+        properties:
+          value: initial
+          update_replace: False
+'''
+
+    def update_resource_group(self, update_template,
+                              updated, created, deleted):
+        stack_identifier = self.stack_create(template=self.template)
+        group_resources = self.list_group_resources(stack_identifier,
+                                                    'random_group',
+                                                    minimal=False)
+
+        init_names = [res.physical_resource_id for res in group_resources]
+
+        self.update_stack(stack_identifier, update_template)
+        group_resources = self.list_group_resources(stack_identifier,
+                                                    'random_group',
+                                                    minimal=False)
+
+        updt_names = [res.physical_resource_id for res in group_resources]
+
+        matched_names = set(updt_names) & set(init_names)
+
+        self.assertEqual(updated, len(matched_names))
+
+        self.assertEqual(created, len(set(updt_names) - set(init_names)))
+
+        self.assertEqual(deleted, len(set(init_names) - set(updt_names)))
+
+    def test_resource_group_update(self):
+        """Test rolling update with no conflict.
+
+        Simple rolling update with no conflict in batch size
+        and minimum instances in service.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '1'
+        policy['max_batch_size'] = '3'
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+
+        self.update_resource_group(updt_template,
+                                   updated=10,
+                                   created=0,
+                                   deleted=0)
+
+    def test_resource_group_update_replace(self):
+        """Test rolling update(replace)with no conflict.
+
+        Simple rolling update replace with no conflict in batch size
+        and minimum instances in service.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '1'
+        policy['max_batch_size'] = '3'
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+        res_def['properties']['update_replace'] = True
+
+        self.update_resource_group(updt_template,
+                                   updated=0,
+                                   created=10,
+                                   deleted=10)
+
+    def test_resource_group_update_scaledown(self):
+        """Test rolling update with scaledown.
+
+        Simple rolling update with reduced size.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '1'
+        policy['max_batch_size'] = '3'
+        grp['properties']['count'] = 6
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+
+        self.update_resource_group(updt_template,
+                                   updated=6,
+                                   created=0,
+                                   deleted=4)
+
+    def test_resource_group_update_scaleup(self):
+        """Test rolling update with scaleup.
+
+        Simple rolling update with increased size.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '1'
+        policy['max_batch_size'] = '3'
+        grp['properties']['count'] = 12
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+
+        self.update_resource_group(updt_template,
+                                   updated=10,
+                                   created=2,
+                                   deleted=0)
+
+    def test_resource_group_update_adjusted(self):
+        """Test rolling update with enough available resources
+
+        Update  with capacity adjustment with enough resources.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '8'
+        policy['max_batch_size'] = '4'
+        grp['properties']['count'] = 6
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+
+        self.update_resource_group(updt_template,
+                                   updated=6,
+                                   created=0,
+                                   deleted=4)
+
+    def test_resource_group_update_with_adjusted_capacity(self):
+        """Test rolling update with capacity adjustment.
+
+        Rolling update with capacity adjustment due to conflict in
+        batch size and minimum instances in service.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '8'
+        policy['max_batch_size'] = '4'
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+
+        self.update_resource_group(updt_template,
+                                   updated=10,
+                                   created=0,
+                                   deleted=0)
+
+    def test_resource_group_update_huge_batch_size(self):
+        """Test rolling update with huge batch size.
+
+        Rolling Update with a huge batch size(more than
+        current size).
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '0'
+        policy['max_batch_size'] = '20'
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+        self.update_resource_group(updt_template,
+                                   updated=10,
+                                   created=0,
+                                   deleted=0)
+
+    def test_resource_group_update_huge_min_in_service(self):
+        """Test rolling update with huge minimum capacity.
+
+        Rolling Update with a huge number of minimum instances
+        in service.
+        """
+        updt_template = yaml.load(copy.deepcopy(self.template))
+        grp = updt_template['resources']['random_group']
+        policy = grp['update_policy']['rolling_update']
+        policy['min_in_service'] = '20'
+        policy['max_batch_size'] = '1'
+        res_def = grp['properties']['resource_def']
+        res_def['properties']['value'] = 'updated'
+
+        self.update_resource_group(updt_template,
+                                   updated=10,
+                                   created=0,
+                                   deleted=0)
