@@ -13,6 +13,7 @@
 
 import mock
 
+from heat.engine.clients.os import nova as novac
 from heat.engine.resources.openstack.nova import nova_flavor
 from heat.engine import stack
 from heat.engine import template
@@ -41,7 +42,8 @@ flavor_template = {
 class NovaFlavorTest(common.HeatTestCase):
     def setUp(self):
         super(NovaFlavorTest, self).setUp()
-
+        self.patchobject(novac.NovaClientPlugin, 'has_extension',
+                         return_value=True)
         self.ctx = utils.dummy_context()
 
         self.stack = stack.Stack(

@@ -44,6 +44,8 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.fake_nova = self.m.CreateMockAnything()
         self.fake_keypairs = self.m.CreateMockAnything()
         self.fake_nova.keypairs = self.fake_keypairs
+        self.patchobject(nova.NovaClientPlugin, 'has_extension',
+                         return_value=True)
 
     def _mock_key(self, name, pub=None, priv=None):
         mkey = self.m.CreateMockAnything()
