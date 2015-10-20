@@ -96,7 +96,7 @@ class ExtraRoute(neutron.NeutronResource):
         if not self.resource_id:
             return
         (router_id, destination, nexthop) = self.resource_id.split(':')
-        try:
+        with self.client_plugin().ignore_not_found:
             routes = self.client().show_router(
                 router_id).get('router').get('routes', [])
             try:
@@ -106,8 +106,6 @@ class ExtraRoute(neutron.NeutronResource):
                 return
             self.client().update_router(router_id,
                                         {'router': {'routes': routes}})
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

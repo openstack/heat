@@ -251,7 +251,7 @@ class SignalResponder(stack_user.StackUser):
         object_name = self.data().get('swift_signal_object_name')
         if not object_name:
             return
-        try:
+        with self.client_plugin('swift').ignore_not_found:
             container_name = self.stack.id
             swift = self.client('swift')
 
@@ -268,8 +268,6 @@ class SignalResponder(stack_user.StackUser):
             headers = swift.head_container(container_name)
             if int(headers['x-container-object-count']) == 0:
                 swift.delete_container(container_name)
-        except Exception as ex:
-            self.client_plugin('swift').ignore_not_found(ex)
         self.data_delete('swift_signal_object_name')
         self.data_delete('swift_signal_url')
 
@@ -302,10 +300,8 @@ class SignalResponder(stack_user.StackUser):
         if not queue_id:
             return
         zaqar = self.client('zaqar')
-        try:
+        with self.client_plugin('zaqar').ignore_not_found:
             zaqar.queue(queue_id).delete()
-        except Exception as ex:
-            self.client_plugin('zaqar').ignore_not_found(ex)
         self.data_delete('zaqar_signal_queue_id')
 
     def _get_signal(self, signal_type=SIGNAL, multiple_signals=False):

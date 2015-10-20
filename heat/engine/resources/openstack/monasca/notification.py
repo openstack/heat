@@ -101,11 +101,9 @@ class MonascaNotification(resource.Resource):
 
     def handle_delete(self):
         if self.resource_id is not None:
-            try:
+            with self.client_plugin().ignore_not_found:
                 self.client().notifications.delete(
                     notification_id=self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
     # FIXME(kanagaraj-manickam) Remove this method once monasca defect 1484900
     # is fixed.

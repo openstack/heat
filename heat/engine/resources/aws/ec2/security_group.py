@@ -151,10 +151,8 @@ class NovaSecurityGroup(BaseSecurityGroup):
                 self.client.security_groups.delete(self.sg.resource_id)
 
     def delete_rule(self, rule_id):
-        try:
+        with self.plugin.ignore_not_found:
             self.client.security_group_rules.delete(rule_id)
-        except Exception as e:
-            self.plugin.ignore_not_found(e)
 
     def update(self, props):
         sec = self.client.security_groups.get(self.sg.resource_id)
@@ -277,16 +275,13 @@ class NeutronSecurityGroup(BaseSecurityGroup):
             else:
                 for rule in sec['security_group_rules']:
                     self.delete_rule(rule['id'])
-                try:
+
+                with self.plugin.ignore_not_found:
                     self.client.delete_security_group(self.sg.resource_id)
-                except Exception as ex:
-                    self.plugin.ignore_not_found(ex)
 
     def delete_rule(self, rule_id):
-        try:
+        with self.plugin.ignore_not_found:
             self.client.delete_security_group_rule(rule_id)
-        except Exception as ex:
-            self.plugin.ignore_not_found(ex)
 
     def delete_default_egress_rules(self, sec):
         """Delete the default rules which allow all egress traffic."""

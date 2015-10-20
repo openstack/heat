@@ -150,15 +150,11 @@ class ElasticIp(resource.Resource):
 
         # deallocate the eip
         if self.properties[self.DOMAIN]:
-            try:
+            with self.client_plugin('neutron').ignore_not_found:
                 self.neutron().delete_floatingip(self.resource_id)
-            except Exception as ex:
-                self.client_plugin('neutron').ignore_not_found(ex)
         else:
-            try:
+            with self.client_plugin('nova').ignore_not_found:
                 self.client().floating_ips.delete(self.resource_id)
-            except Exception as e:
-                self.client_plugin('nova').ignore_not_found(e)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

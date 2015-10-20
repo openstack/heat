@@ -232,7 +232,7 @@ class KeystoneUser(resource.Resource,
 
     def handle_delete(self):
         if self.resource_id is not None:
-            try:
+            with self.client_plugin().ignore_not_found:
                 self.delete_assignment(user_id=self.resource_id)
 
                 if self._stored_properties_data.get(self.GROUPS) is not None:
@@ -243,8 +243,6 @@ class KeystoneUser(resource.Resource,
                          self._stored_properties_data.get(self.GROUPS)])
 
                 self.client().users.delete(self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

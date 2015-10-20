@@ -111,17 +111,13 @@ class VPC(resource.Resource):
         if self.resource_id is None:
             return
 
-        try:
+        with self.client_plugin().ignore_not_found:
             router = self.router_for_vpc(self.client(), self.resource_id)
             if router:
                 self.client().delete_router(router['id'])
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
-        try:
+        with self.client_plugin().ignore_not_found:
             self.client().delete_network(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

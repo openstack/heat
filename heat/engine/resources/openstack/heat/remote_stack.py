@@ -173,10 +173,8 @@ class RemoteStack(resource.Resource):
 
     def handle_delete(self):
         if self.resource_id is not None:
-            try:
+            with self.client_plugin().ignore_not_found:
                 self.heat().stacks.delete(stack_id=self.resource_id)
-            except Exception as e:
-                self.client_plugin().ignore_not_found(e)
 
     def handle_resume(self):
         if self.resource_id is None:

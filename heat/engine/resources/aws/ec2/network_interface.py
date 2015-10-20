@@ -134,10 +134,8 @@ class NetworkInterface(resource.Resource):
         if self.resource_id is None:
             return
 
-        try:
+        with self.client_plugin().ignore_not_found:
             self.client().delete_port(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

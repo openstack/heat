@@ -740,10 +740,8 @@ class LoadBalancer(resource.Resource):
             old_members = set(six.iterkeys(rd_members))
             for member in old_members - members:
                 member_id = rd_members[member]
-                try:
+                with self.client_plugin().ignore_not_found:
                     self.client().delete_member(member_id)
-                except Exception as ex:
-                    self.client_plugin().ignore_not_found(ex)
                 self.data_delete(member)
             pool = self.properties[self.POOL_ID]
             protocol_port = self.properties[self.PROTOCOL_PORT]
@@ -761,10 +759,8 @@ class LoadBalancer(resource.Resource):
         # FIXME(pshchelo): this deletes members in a tight loop,
         # so is prone to OverLimit bug similar to LP 1265937
         for member, member_id in self.data().items():
-            try:
+            with self.client_plugin().ignore_not_found:
                 self.client().delete_member(member_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
             self.data_delete(member)
 
 

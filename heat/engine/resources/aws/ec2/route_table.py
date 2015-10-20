@@ -92,16 +92,12 @@ class RouteTable(resource.Resource):
         client = self.client()
 
         router_id = self.resource_id
-        try:
+        with self.client_plugin().ignore_not_found:
             client.delete_router(router_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
         # just in case this router has been added to a gateway, remove it
-        try:
+        with self.client_plugin().ignore_not_found:
             client.remove_gateway_router(router_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
 
 class SubnetRouteTableAssociation(resource.Resource):
@@ -137,14 +133,12 @@ class SubnetRouteTableAssociation(resource.Resource):
         router_id = self.properties.get(self.ROUTE_TABLE_ID)
 
         # remove the default router association for this subnet.
-        try:
+        with self.client_plugin().ignore_not_found:
             previous_router = self._router_for_subnet(subnet_id)
             if previous_router:
                 client.remove_interface_router(
                     previous_router['id'],
                     {'subnet_id': subnet_id})
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
         client.add_interface_router(
             router_id, {'subnet_id': subnet_id})
@@ -162,20 +156,16 @@ class SubnetRouteTableAssociation(resource.Resource):
 
         router_id = self.properties.get(self.ROUTE_TABLE_ID)
 
-        try:
+        with self.client_plugin().ignore_not_found:
             client.remove_interface_router(router_id, {
                 'subnet_id': subnet_id})
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
         # add back the default router
-        try:
+        with self.client_plugin().ignore_not_found:
             default_router = self._router_for_subnet(subnet_id)
             if default_router:
                 client.add_interface_router(
                     default_router['id'], {'subnet_id': subnet_id})
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

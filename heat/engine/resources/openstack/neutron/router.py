@@ -442,12 +442,10 @@ class RouterInterface(neutron.NeutronResource):
         if len(tokens) == 2:    # compatible with old data
             tokens.insert(1, 'subnet_id')
         (router_id, key, value) = tokens
-        try:
+        with self.client_plugin().ignore_not_found:
             self.client().remove_interface_router(
                 router_id,
                 {key: value})
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
 
 class RouterGateway(neutron.NeutronResource):
@@ -545,10 +543,8 @@ class RouterGateway(neutron.NeutronResource):
             return
 
         (router_id, network_id) = self.resource_id.split(':')
-        try:
+        with self.client_plugin().ignore_not_found:
             self.client().remove_gateway_router(router_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

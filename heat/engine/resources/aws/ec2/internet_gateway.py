@@ -126,10 +126,8 @@ class VPCGatewayAttachment(resource.Resource):
 
     def handle_delete(self):
         for router in self._vpc_route_tables():
-            try:
+            with self.client_plugin().ignore_not_found:
                 self.client().remove_gateway_router(router.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

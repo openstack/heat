@@ -404,10 +404,8 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         # delete the port data which implicit-created
         port_id = self.data().get('port_id')
         if port_id:
-            try:
+            with self.client_plugin('neutron').ignore_not_found:
                 self.neutron().delete_port(port_id)
-            except Exception as ex:
-                self.client_plugin('neutron').ignore_not_found(ex)
             self.data_delete('port_id')
 
     def _build_nics(self, network_interfaces,

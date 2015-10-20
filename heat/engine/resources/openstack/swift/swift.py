@@ -177,10 +177,9 @@ class SwiftContainer(resource.Resource):
             args.append(obj['name'])
         else:
             deleter = self.client().delete_container
-        try:
+
+        with self.client_plugin().ignore_not_found:
             deleter(*args)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
     def handle_delete(self):
         if self.resource_id is None:

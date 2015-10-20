@@ -103,12 +103,10 @@ class KeystoneGroup(resource.Resource,
 
     def handle_delete(self):
         if self.resource_id is not None:
-            try:
+            with self.client_plugin.ignore_not_found:
                 self.delete_assignment(group_id=self.resource_id)
 
                 self.client().groups.delete(self.resource_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

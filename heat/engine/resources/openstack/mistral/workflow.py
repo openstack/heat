@@ -525,10 +525,8 @@ class Workflow(signal_responder.SignalResponder,
     def _delete_executions(self):
         if self.data().get(self.EXECUTIONS):
             for id in self.data().get(self.EXECUTIONS).split(','):
-                try:
+                with self.client_plugin().ignore_not_found:
                     self.client().executions.delete(id)
-                except Exception as ex:
-                    self.client_plugin().ignore_not_found(ex)
 
             self.data_delete('executions')
 

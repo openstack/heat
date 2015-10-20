@@ -107,19 +107,15 @@ class Subnet(resource.Resource):
         network_id = self.properties.get(self.VPC_ID)
         subnet_id = self.resource_id
 
-        try:
+        with self.client_plugin().ignore_not_found:
             router = vpc.VPC.router_for_vpc(self.client(), network_id)
             if router:
                 self.client().remove_interface_router(
                     router['id'],
                     {'subnet_id': subnet_id})
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
-        try:
+        with self.client_plugin().ignore_not_found:
             self.client().delete_subnet(subnet_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
 
     def _resolve_attribute(self, name):
         if name == self.AVAILABILITY_ZONE:

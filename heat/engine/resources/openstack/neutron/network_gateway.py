@@ -207,7 +207,7 @@ class NetworkGateway(neutron.NeutronResource):
 
         connections = self.properties[self.CONNECTIONS]
         for connection in connections:
-            try:
+            with self.client_plugin().ignore_not_found:
                 self.client_plugin().resolve_network(
                     connection, self.NETWORK, 'network_id')
                 if self.NETWORK in six.iterkeys(connection):
@@ -215,8 +215,6 @@ class NetworkGateway(neutron.NeutronResource):
                 self.client().disconnect_network_gateway(
                     self.resource_id, connection
                 )
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
 
         try:
             self.client().delete_network_gateway(self.resource_id)
@@ -243,7 +241,7 @@ class NetworkGateway(neutron.NeutronResource):
 
         if self.CONNECTIONS in prop_diff:
             for connection in self.properties[self.CONNECTIONS]:
-                try:
+                with self.client_plugin().ignore_not_found:
                     self.client_plugin().resolve_network(
                         connection, self.NETWORK, 'network_id')
                     if self.NETWORK in six.iterkeys(connection):
@@ -251,8 +249,6 @@ class NetworkGateway(neutron.NeutronResource):
                     self.client().disconnect_network_gateway(
                         self.resource_id, connection
                     )
-                except Exception as ex:
-                    self.client_plugin().ignore_not_found(ex)
             for connection in connections:
                 self.client_plugin().resolve_network(
                     connection, self.NETWORK, 'network_id')

@@ -143,10 +143,8 @@ class ServerNetworkMixin(object):
 
     def _delete_internal_port(self, port_id):
         """Delete physical port by id."""
-        try:
+        with self.client_plugin('neutron').ignore_not_found:
             self.client('neutron').delete_port(port_id)
-        except Exception as ex:
-            self.client_plugin('neutron').ignore_not_found(ex)
 
         self._data_update_ports(port_id, 'delete')
 

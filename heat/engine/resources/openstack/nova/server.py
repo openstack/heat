@@ -1249,15 +1249,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         object_name = self.data().get('metadata_object_name')
         if not object_name:
             return
-        try:
+        with self.client_plugin('swift').ignore_not_found:
             container = self.physical_resource_name()
             swift = self.client('swift')
             swift.delete_object(container, object_name)
             headers = swift.head_container(container)
             if int(headers['x-container-object-count']) == 0:
                 swift.delete_container(container)
-        except Exception as ex:
-            self.client_plugin('swift').ignore_not_found(ex)
 
     def _delete_queue(self):
         queue_id = self.data().get('metadata_queue_id')
@@ -1266,10 +1264,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         client_plugin = self.client_plugin('zaqar')
         zaqar = client_plugin.create_for_tenant(
             self.stack.stack_user_project_id)
-        try:
+        with client_plugin.ignore_not_found:
             zaqar.queue(queue_id).delete()
-        except Exception as ex:
-            client_plugin.ignore_not_found(ex)
         self.data_delete('metadata_queue_id')
 
     def handle_snapshot_delete(self, state):
@@ -1407,10 +1403,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     def handle_delete_snapshot(self, snapshot):
         image_id = snapshot['resource_data'].get('snapshot_image_id')
-        try:
+        with self.client_plugin().ignore_not_found:
             self.client().images.delete(image_id)
-        except Exception as e:
-            self.client_plugin().ignore_not_found(e)
 
     def handle_restore(self, defn, restore_data):
         image_id = restore_data['resource_data']['snapshot_image_id']
