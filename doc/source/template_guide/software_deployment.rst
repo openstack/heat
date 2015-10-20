@@ -788,14 +788,14 @@ contents of the file ``example-puppet-manifest.pp``, containing:
 
 
 .. _`AWS::CloudFormation::Init`: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
-.. _diskimage-builder: https://github.com/openstack/diskimage-builder
+.. _diskimage-builder: https://git.openstack.org/cgit/openstack/diskimage-builder
 .. _imagefactory: http://imgfac.org/
 .. _`Metadata service`: http://docs.openstack.org/admin-guide-cloud/compute-networking-nova.html#metadata-service
 .. _Cloud-init: http://cloudinit.readthedocs.org/en/latest/
 .. _curl: http://curl.haxx.se/
 .. _`Orchestration API`: http://developer.openstack.org/api-ref-orchestration-v1.html
-.. _os-refresh-config: https://github.com/openstack/os-refresh-config
-.. _os-apply-config: https://github.com/openstack/os-apply-config
-.. _tripleo-heat-templates: https://github.com/openstack/tripleo-heat-templates
-.. _tripleo-image-elements: https://github.com/openstack/tripleo-image-elements
+.. _os-refresh-config: https://git.openstack.org/cgit/openstack/os-refresh-config
+.. _os-apply-config: https://git.openstack.org/cgit/openstack/os-apply-config
+.. _tripleo-heat-templates: https://git.openstack.org/cgit/openstack/tripleo-heat-templates
+.. _tripleo-image-elements: https://git.openstack.org/cgit/openstack/tripleo-image-elements
 .. _puppet: http://puppetlabs.com/

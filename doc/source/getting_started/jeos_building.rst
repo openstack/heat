@@ -18,7 +18,7 @@ the heat-cfntools_ package installed.
 This document describes some options for creating a heat-cfntools enabled image
 for yourself.
 
-.. _heat-cfntools: https://github.com/openstack/heat-cfntools
+.. _heat-cfntools: https://git.openstack.org/cgit/openstack/heat-cfntools
 
 Building an image with diskimage-builder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,14 +27,14 @@ tripleo-image-elements_ is a collection of diskimage-builder elements related
 to the TripleO_ project. It includes an element for heat-cfntools which can be
 used to create heat-enabled images.
 
-.. _diskimage-builder: https://github.com/openstack/diskimage-builder
-.. _tripleo-image-elements: https://github.com/openstack/tripleo-image-elements
+.. _diskimage-builder: https://git.openstack.org/cgit/openstack/diskimage-builder
+.. _tripleo-image-elements: https://git.openstack.org/cgit/openstack/tripleo-image-elements
 .. _TripleO: https://wiki.openstack.org/wiki/TripleO
 
 Install the tool (preferably in a virtualenv) and fetch the elements::
 
-    pip install git+https://github.com/openstack/diskimage-builder.git
-    git clone https://github.com/openstack/tripleo-image-elements.git
+    pip install git+git://git.openstack.org/openstack/diskimage-builder.git
+    git clone git://git.openstack.org/openstack/tripleo-image-elements.git
 
 To create a heat-cfntools enabled image with the current release of Fedora x86_64::
 
@@ -63,9 +63,9 @@ package download failure causing the stack launch to fail.
 To create an image that contains hooks needed for SoftwareConfig and SoftwareDeployment,
 you can follow the steps bellow to build a fedora based image::
 
-    pip install git+https://git.openstack.org/openstack/diskimage-builder.git
-    git clone https://git.openstack.org/openstack/tripleo-image-elements.git
-    git clone https://git.openstack.org/openstack/heat-templates.git
+    pip install git+git://git.openstack.org/openstack/diskimage-builder.git
+    git clone git://git.openstack.org/openstack/tripleo-image-elements.git
+    git clone git://git.openstack.org/openstack/heat-templates.git
     export ELEMENTS_PATH=tripleo-image-elements/elements:heat-templates/hot/software-config/elements
     disk-image-create vm \
         fedora selinux-permissive \

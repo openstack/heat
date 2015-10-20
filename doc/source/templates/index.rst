@@ -11,7 +11,7 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-This page documents the templates at https://github.com/openstack/heat-templates/
+This page documents the templates at https://git.openstack.org/cgit/openstack/heat-templates/
 
 Example HOT Templates
 =====================

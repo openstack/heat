@@ -33,7 +33,7 @@ Rackspace resources depend on the dev branch of
 `pyrax <https://github.com/rackspace/pyrax/tree/dev>`_ to work
 properly. More information about them can be found in the
 `RACKSPACE_README
-<https://github.com/openstack/heat/blob/master/contrib/rackspace/README.md>`_.
+<https://git.openstack.org/cgit/openstack/heat/tree/contrib/rackspace/README.md>`_.
 
 
 .. contribrespages:: Rackspace::
@@ -47,6 +47,6 @@ DockerInc Resource
 This plugin enables the use of  Docker containers in a Heat template and
 requires the `docker-py <https://pypi.python.org/pypi/docker-py>`_
 package. You can find more information in the `DOCKER_README
-<https://github.com/openstack/heat/blob/master/contrib/heat_docker/README.md>`_.
+<https://git.openstack.org/cgit/openstack/heat/tree/contrib/heat_docker/README.md>`_.
 
 .. contribrespages:: DockerInc::
