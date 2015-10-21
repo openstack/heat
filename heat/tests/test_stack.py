@@ -501,6 +501,24 @@ class StackTest(common.HeatTestCase):
         stacks = list(stack.Stack.load_all(self.ctx, show_nested=True))
         self.assertEqual(3, len(stacks))
 
+    def test_load_all_not_found(self):
+        stack1 = stack.Stack(self.ctx, 'stack1', self.tmpl)
+        stack1.store()
+        tmpl2 = template.Template(copy.deepcopy(empty_template))
+        stack2 = stack.Stack(self.ctx, 'stack2', tmpl2)
+        stack2.store()
+
+        def fake_load(ctx, template_id, tmpl):
+            if template_id == stack2.t.id:
+                raise exception.NotFound()
+            else:
+                return tmpl2
+
+        with mock.patch.object(template.Template, 'load') as tmpl_load:
+            tmpl_load.side_effect = fake_load
+            stacks = list(stack.Stack.load_all(self.ctx))
+            self.assertEqual(1, len(stacks))
+
     def test_created_time(self):
         self.stack = stack.Stack(self.ctx, 'creation_time_test', self.tmpl)
         self.assertIsNone(self.stack.created_time)

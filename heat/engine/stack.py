@@ -402,7 +402,12 @@ class Stack(collections.Mapping):
             not_tags,
             not_tags_any) or []
         for stack in stacks:
-            yield cls._from_db(context, stack, resolve_data=resolve_data)
+            try:
+                yield cls._from_db(context, stack, resolve_data=resolve_data)
+            except exception.NotFound:
+                # We're in a different transaction than the get_all, so a stack
+                # returned above can be deleted by the time we try to load it.
+                pass
 
     @classmethod
     def _from_db(cls, context, stack, resolve_data=True,
