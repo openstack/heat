@@ -125,6 +125,11 @@ engine_opts = [
                help=_('Number of times to retry to bring a '
                       'resource to a non-error state. Set to 0 to disable '
                       'retries.')),
+    cfg.IntOpt('client_retry_limit',
+               default=2,
+               help=_('Number of times to retry when a client encounters an '
+                      'expected intermittent error. Set to 0 to disable '
+                      'retries.')),
     cfg.IntOpt('event_purge_batch_size',
                default=10,
                help=_("Controls how many events will be pruned whenever a "
