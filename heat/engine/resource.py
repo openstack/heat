@@ -391,6 +391,19 @@ class Resource(object):
         # common resources have not nested, StackResource overrides it
         return False
 
+    def resource_class(self):
+        """Return the resource class.
+
+        This is used to compare old and new resources when updating, to ensure
+        that in-place updates are possible. This method shold return the
+        highest common class in the hierarchy whose subclasses are all capable
+        of converting to each other's types via handle_update().
+
+        This mechanism may disappear again in future, so third-party resource
+        types should not rely on it.
+        """
+        return type(self)
+
     def has_hook(self, hook):
         # Clear the cache to make sure the data is up to date:
         self._data = None
