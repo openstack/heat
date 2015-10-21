@@ -4,7 +4,7 @@ oslo-incubator
 A number of modules from oslo-incubator are imported into this project.
 You can clone the oslo-incubator repository using the following url:
 
-  git://git.openstack.org/openstack/oslo-incubator
+  https://git.openstack.org/openstack/oslo-incubator
 
 These modules are "incubating" in oslo-incubator and are kept in sync
 with the help of oslo-incubator's update.py script. See:

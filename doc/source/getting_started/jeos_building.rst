@@ -33,8 +33,8 @@ used to create heat-enabled images.
 
 Install the tool (preferably in a virtualenv) and fetch the elements::
 
-    pip install git+git://git.openstack.org/openstack/diskimage-builder.git
-    git clone git://git.openstack.org/openstack/tripleo-image-elements.git
+    pip install git+https://git.openstack.org/openstack/diskimage-builder
+    git clone https://git.openstack.org/openstack/tripleo-image-elements
 
 To create a heat-cfntools enabled image with the current release of Fedora x86_64::
 
@@ -63,9 +63,9 @@ package download failure causing the stack launch to fail.
 To create an image that contains hooks needed for SoftwareConfig and SoftwareDeployment,
 you can follow the steps bellow to build a fedora based image::
 
-    pip install git+git://git.openstack.org/openstack/diskimage-builder.git
-    git clone git://git.openstack.org/openstack/tripleo-image-elements.git
-    git clone git://git.openstack.org/openstack/heat-templates.git
+    pip install git+https://git.openstack.org/openstack/diskimage-builder
+    git clone https://git.openstack.org/openstack/tripleo-image-elements
+    git clone https://git.openstack.org/openstack/heat-templates
     export ELEMENTS_PATH=tripleo-image-elements/elements:heat-templates/hot/software-config/elements
     disk-image-create vm \
         fedora selinux-permissive \
