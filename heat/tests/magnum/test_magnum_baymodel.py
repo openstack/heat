@@ -105,5 +105,5 @@ class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
           https_proxy: 'https://proxy.com:123'
           no_proxy: '192.168.0.1'
           labels: {'flannel_cidr': ['10.101.0.0/16', '10.102.0.0/16']}
-          insecure: True
+          tls_disabled: True
     '''
