@@ -14,6 +14,7 @@
 import abc
 import functools
 import sys
+import weakref
 
 from keystoneclient import auth
 from keystoneclient.auth.identity import v2
@@ -23,7 +24,6 @@ from keystoneclient import session
 from oslo_config import cfg
 import six
 
-from heat.common import context
 from heat.common.i18n import _
 
 
@@ -96,10 +96,20 @@ class ClientPlugin(object):
     service_types = []
 
     def __init__(self, context):
-        self.context = context
-        self.clients = context.clients
+        self._context = weakref.ref(context)
+        self._clients = weakref.ref(context.clients)
         self._client = None
         self._keystone_session_obj = None
+
+    @property
+    def context(self):
+        ctxt = self._context()
+        assert ctxt is not None, "Need a reference to the context"
+        return ctxt
+
+    @property
+    def clients(self):
+        return self._clients()
 
     @property
     def _keystone_session(self):
@@ -176,10 +186,9 @@ class ClientPlugin(object):
             auth_ref = token_obj.get_auth_ref(self._keystone_session)
 
             if catalog_key in auth_ref:
-                cxt = self.context.to_dict()
-                access_info = cxt['auth_token_info'][access_key]
+                access_info = self.context.auth_token_info[access_key]
                 access_info[catalog_key] = auth_ref[catalog_key]
-                self.context = context.RequestContext.from_dict(cxt)
+                self.context.reload_auth_plugin()
                 url = get_endpoint()
 
         # NOTE(jamielennox): raising exception maintains compatibility with
