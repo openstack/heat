@@ -55,3 +55,19 @@ resources:
       action: access_as_shared
       object_id: 9ba4c03a-dbd5-4836-b651-defa595796ba
 '''
+
+LB_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a loadbalancer
+resources:
+  lb:
+    type: OS::Neutron::LBaaS::LoadBalancer
+    properties:
+      name: my_lb
+      description: my loadbalancer
+      vip_address: 10.0.0.4
+      vip_subnet: sub123
+      provider: octavia
+      tenant_id: 1234
+      admin_state_up: True
+'''

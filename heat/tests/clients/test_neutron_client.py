@@ -149,6 +149,19 @@ class NeutronClientPluginTest(NeutronClientPluginTestCase):
                           self.neutron_plugin.get_secgroup_uuids,
                           sgs_non_uuid)
 
+    def test_check_lb_status(self):
+        self.neutron_client.show_loadbalancer.side_effect = [
+            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
+            {'loadbalancer': {'provisioning_status': 'PENDING_CREATE'}},
+            {'loadbalancer': {'provisioning_status': 'ERROR'}}
+        ]
+
+        self.assertTrue(self.neutron_plugin.check_lb_status('1234'))
+        self.assertFalse(self.neutron_plugin.check_lb_status('1234'))
+        self.assertRaises(exception.ResourceInError,
+                          self.neutron_plugin.check_lb_status,
+                          '1234')
+
 
 class NeutronConstraintsValidate(common.HeatTestCase):
     scenarios = [
