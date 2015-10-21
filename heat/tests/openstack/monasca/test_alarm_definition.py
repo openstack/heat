@@ -73,18 +73,19 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
 
         self.test_resource = self.stack['test_resource']
 
-        # Mock client plugin
-        self.test_client_plugin = mock.MagicMock()
-        self.test_resource.client_plugin = mock.MagicMock(
-            return_value=self.test_client_plugin)
-        self.test_client_plugin.get_notification.return_value = (
-            'sample_notification'
-        )
-
         # Mock client
         self.test_client = mock.MagicMock()
         self.test_resource.client = mock.MagicMock(
             return_value=self.test_client)
+
+        # Mock client plugin
+        self.test_client_plugin = client_plugin.MonascaClientPlugin(self.ctx)
+        self.test_client_plugin._create = mock.MagicMock(
+            return_value=self.test_client)
+        self.test_resource.client_plugin = mock.MagicMock(
+            return_value=self.test_client_plugin)
+        self.test_client_plugin.get_notification = mock.MagicMock(
+            return_value='sample_notification')
 
     def _get_mock_resource(self):
         value = dict(id='477e8273-60a7-4c41-b683-fdb0bc7cd152')
@@ -220,10 +221,6 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
         mock_alarm_delete = self.test_client.alarm_definitions.delete
         mock_alarm_delete.side_effect = client_plugin.monasca_exc.NotFound
         self.assertIsNone(self.test_resource.handle_delete())
-        self.assertEqual(1,
-                         self.test_client_plugin.ignore_not_found.call_count)
-        e_type = type(self.test_client_plugin.ignore_not_found.call_args[0][0])
-        self.assertEqual(type(client_plugin.monasca_exc.NotFound()), e_type)
 
     def test_resource_mapping(self):
         mapping = alarm_definition.resource_mapping()
