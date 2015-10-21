@@ -386,7 +386,7 @@ class ScalingPolicyTest(HeatTestCase):
 
         past = timeutils.strtime(timeutils.utcnow() -
                                  datetime.timedelta(seconds=65))
-        policy.metadata_set({past: 'ChangeInCapacity : 1'})
+        policy.metadata_set({'cooldown': {past: 'ChangeInCapacity : 1'}})
 
         policy.signal()
         self.assertEqual(3, len(group.get_instance_names()))
