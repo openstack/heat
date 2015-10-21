@@ -205,6 +205,9 @@ class RequestContext(context.RequestContext):
                       "trust or auth_token!"))
         raise exception.AuthorizationFailure()
 
+    def reload_auth_plugin(self):
+        self._auth_plugin = None
+
     @property
     def auth_plugin(self):
         if not self._auth_plugin:

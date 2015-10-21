@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import weakref
+
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
@@ -38,9 +40,15 @@ class OpenStackClients(object):
     """Convenience class to create and cache client instances."""
 
     def __init__(self, context):
-        self.context = context
+        self._context = weakref.ref(context)
         self._clients = {}
         self._client_plugins = {}
+
+    @property
+    def context(self):
+        ctxt = self._context()
+        assert ctxt is not None, "Need a reference to the context"
+        return ctxt
 
     def client_plugin(self, name):
         global _mgr
