@@ -37,6 +37,7 @@ class EngineClient(object):
         1.16 - Adds version, type_name to list_resource_types()
         1.17 - Add files to validate_template
         1.18 - Add show_nested to validate_template
+        1.19 - Add show_output and list_outputs for returning stack outputs
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -686,3 +687,14 @@ class EngineClient(object):
 
     def list_services(self, cnxt):
         return self.call(cnxt, self.make_msg('list_services'), version='1.4')
+
+    def list_outputs(self, cntx, stack_identity):
+        return self.call(cntx, self.make_msg('list_outputs',
+                                             stack_identity=stack_identity),
+                         version='1.19')
+
+    def show_output(self, cntx, stack_identity, output_key):
+        return self.call(cntx, self.make_msg('show_output',
+                                             stack_identity=stack_identity,
+                                             output_key=output_key),
+                         version='1.19')

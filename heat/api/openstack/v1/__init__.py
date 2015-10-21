@@ -265,6 +265,21 @@ class API(wsgi.Router):
                                '{snapshot_id}/restore',
                         'action': 'restore_snapshot',
                         'method': 'POST'
+                    },
+
+                    # Stack outputs
+                    {
+                        'name': 'stack_output_list',
+                        'url': '/stacks/{stack_name}/{stack_id}/outputs',
+                        'action': 'list_outputs',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_output_show',
+                        'url': '/stacks/{stack_name}/{stack_id}/outputs/'
+                               '{output_key}',
+                        'action': 'show_output',
+                        'method': 'GET'
                     }
                 ])
 

@@ -364,3 +364,14 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def test_list_services(self):
         self._test_engine_api('list_services', 'call', version='1.4')
+
+    def test_stack_list_outputs(self):
+        self._test_engine_api(
+            'list_outputs', 'call', stack_identity=self.identity,
+            version='1.19'
+        )
+
+    def test_stack_show_output(self):
+        self._test_engine_api(
+            'show_output', 'call', stack_identity=self.identity,
+            output_key='test', version='1.19')

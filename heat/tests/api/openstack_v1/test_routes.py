@@ -235,6 +235,34 @@ class RoutesTest(common.HeatTestCase):
                 'snapshot_id': 'cccc'
             })
 
+    def test_stack_outputs(self):
+        self.assertRoute(
+            self.m,
+            '/aaaa/stacks/teststack/bbbb/outputs',
+            'GET',
+            'list_outputs',
+            'StackController',
+            {
+                'tenant_id': 'aaaa',
+                'stack_name': 'teststack',
+                'stack_id': 'bbbb'
+            }
+        )
+
+        self.assertRoute(
+            self.m,
+            '/aaaa/stacks/teststack/bbbb/outputs/cccc',
+            'GET',
+            'show_output',
+            'StackController',
+            {
+                'tenant_id': 'aaaa',
+                'stack_name': 'teststack',
+                'stack_id': 'bbbb',
+                'output_key': 'cccc'
+            }
+        )
+
     def test_stack_data_template(self):
         self.assertRoute(
             self.m,
