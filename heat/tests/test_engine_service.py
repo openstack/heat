@@ -1004,6 +1004,62 @@ class StackServiceTest(common.HeatTestCase):
         msg = "Template with version %s not found" % version
         self.assertEqual(msg, six.text_type(ex))
 
+    def test_stack_list_outputs(self):
+        t = template_format.parse(tools.wp_template)
+        t['outputs'] = {
+            'test': {'value': '{ get_attr: fir }',
+                     'description': 'sec'},
+            'test2': {'value': 'sec'}}
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl)
+
+        self.patchobject(self.eng, '_get_stack')
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+
+        outputs = self.eng.list_outputs(self.ctx, mock.ANY)
+
+        self.assertIn({'output_key': 'test',
+                       'description': 'sec'}, outputs)
+        self.assertIn({'output_key': 'test2',
+                       'description': 'No description given'},
+                      outputs)
+
+    def test_stack_empty_list_outputs(self):
+        # Ensure that stack with no output returns empty list
+        t = template_format.parse(tools.wp_template)
+        t['outputs'] = {}
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl)
+
+        self.patchobject(self.eng, '_get_stack')
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+
+        outputs = self.eng.list_outputs(self.ctx, mock.ANY)
+        self.assertEqual([], outputs)
+
+    def test_stack_show_output(self):
+        t = template_format.parse(tools.wp_template)
+        t['outputs'] = {'test': {'value': 'first', 'description': 'sec'},
+                        'test2': {'value': 'sec'}}
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl)
+
+        self.patchobject(self.eng, '_get_stack')
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+
+        output = self.eng.show_output(self.ctx, mock.ANY, 'test')
+        self.assertEqual({'output_key': 'test', 'output_value': 'first',
+                          'description': 'sec'},
+                         output)
+
+        # Ensure that stack raised NotFound error with incorrect key.
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.show_output,
+                               self.ctx, mock.ANY, 'bunny')
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+        self.assertEqual('Specified output key bunny not found.',
+                         six.text_type(ex.exc_info[1]))
+
     def test_stack_list_all_empty(self):
         sl = self.eng.list_stacks(self.ctx)
 

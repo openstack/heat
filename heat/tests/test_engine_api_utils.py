@@ -412,7 +412,8 @@ class FormatTest(common.HeatTestCase):
         stack.status = 'COMPLETE'
         stack['generic'].action = 'CREATE'
         stack['generic'].status = 'COMPLETE'
-        info = api.format_stack_outputs(stack, stack.outputs)
+        info = api.format_stack_outputs(stack, stack.outputs,
+                                        resolve_value=True)
         expected = [{'description': 'No description given',
                      'output_error': 'The Referenced Attribute (generic Bar) '
                                      'is incorrect.',
@@ -421,6 +422,37 @@ class FormatTest(common.HeatTestCase):
                     {'description': 'Good output',
                      'output_key': 'correct_output',
                      'output_value': 'generic'}]
+
+        self.assertEqual(expected, sorted(info, key=lambda k: k['output_key'],
+                                          reverse=True))
+
+    def test_format_stack_outputs_unresolved(self):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'generic': {'Type': 'GenericResourceType'}
+            },
+            'Outputs': {
+                'correct_output': {
+                    'Description': 'Good output',
+                    'Value': {'Fn::GetAtt': ['generic', 'Foo']}
+                },
+                'incorrect_output': {
+                    'Value': {'Fn::GetAtt': ['generic', 'Bar']}
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl, stack_id=str(uuid.uuid4()))
+        stack.action = 'CREATE'
+        stack.status = 'COMPLETE'
+        stack['generic'].action = 'CREATE'
+        stack['generic'].status = 'COMPLETE'
+        info = api.format_stack_outputs(stack, stack.outputs)
+        expected = [{'description': 'No description given',
+                     'output_key': 'incorrect_output'},
+                    {'description': 'Good output',
+                     'output_key': 'correct_output'}]
 
         self.assertEqual(expected, sorted(info, key=lambda k: k['output_key'],
                                           reverse=True))

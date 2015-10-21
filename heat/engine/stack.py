@@ -361,7 +361,8 @@ class Stack(collections.Mapping):
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
-             use_stored_context=False, force_reload=False, cache_data=None):
+             use_stored_context=False, force_reload=False, cache_data=None,
+             resolve_data=True):
         """Retrieve a Stack from the database."""
         if stack is None:
             stack = stack_object.Stack.get_by_id(
@@ -378,7 +379,7 @@ class Stack(collections.Mapping):
 
         return cls._from_db(context, stack,
                             use_stored_context=use_stored_context,
-                            cache_data=cache_data)
+                            cache_data=cache_data, resolve_data=resolve_data)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
