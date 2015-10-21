@@ -13,7 +13,7 @@
 
 AWS Wordpress Single Instance Template
 --------------------------------------
-https://github.com/openstack/heat-templates/blob/master/cfn/F18/WordPress_Single_Instance.template
+https://git.openstack.org/cgit/openstack/heat-templates/tree/cfn/F18/WordPress_Single_Instance.template
 
 Description
 -----------

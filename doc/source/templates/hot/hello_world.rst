@@ -13,7 +13,7 @@
 
 Hello World HOT Template
 ------------------------
-https://github.com/openstack/heat-templates/blob/master/hot/hello_world.yaml
+https://git.openstack.org/cgit/openstack/heat-templates/tree/hot/hello_world.yaml
 
 Description
 -----------

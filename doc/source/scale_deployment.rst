@@ -256,7 +256,11 @@ Running the API and Engine Services
 
 For each machine, B and C, you must do the following steps:
 
-    1. Clone the heat repository https://github.com/openstack/heat;
+    1. Clone the heat repository https://git.openstack.org/cgit/openstack/heat, run:
+
+    ::
+        git clone git://git.openstack.org/openstack/heat.git
+
     2. Create a local copy of the configuration file */etc/heat/heat.conf* from
        the machine A;
     3. Make required changes on the configuration file;

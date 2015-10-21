@@ -13,16 +13,16 @@ Getting Started
 
 If you'd like to run from the master branch, you can clone the git repo:
 
-    git clone git@github.com:openstack/heat.git
+    git clone git://git.openstack.org/openstack/heat.git
 
 
 * Wiki: http://wiki.openstack.org/Heat
 * Developer docs: http://docs.openstack.org/developer/heat
-* Template samples: https://github.com/openstack/heat-templates
+* Template samples: https://git.openstack.org/cgit/openstack/heat-templates
 
 Python client
 -------------
-https://github.com/openstack/python-heatclient
+https://git.openstack.org/cgit/openstack/python-heatclient
 
 References
 ----------
@@ -33,18 +33,19 @@ References
 
 We have integration with
 ------------------------
-* https://github.com/openstack/python-novaclient (instance)
-* https://github.com/openstack/python-keystoneclient (auth)
-* https://github.com/openstack/python-swiftclient (s3)
-* https://github.com/openstack/python-neutronclient (networking)
-* https://github.com/openstack/python-ceilometerclient (metering)
-* https://github.com/openstack/python-cinderclient (storage service)
-* https://github.com/openstack/python-glanceclient (image service)
-* https://github.com/openstack/python-troveclient (database as a Service)
-* https://github.com/openstack/python-saharaclient (hadoop cluster)
-* https://github.com/openstack/python-barbicanclient (key management service)
-* https://github.com/openstack/python-designateclient (DNS service)
-* https://github.com/openstack/python-magnumclient (container service)
-* https://github.com/openstack/python-manilaclient (shared file system service)
-* https://github.com/openstack/python-mistralclient (workflow service)
-* https://github.com/openstack/python-zaqarclient (messaging service)
+* https://git.openstack.org/cgit/openstack/python-novaclient (instance)
+* https://git.openstack.org/cgit/openstack/python-keystoneclient (auth)
+* https://git.openstack.org/cgit/openstack/python-swiftclient (s3)
+* https://git.openstack.org/cgit/openstack/python-neutronclient (networking)
+* https://git.openstack.org/cgit/openstack/python-ceilometerclient (metering)
+* https://git.openstack.org/cgit/openstack/python-cinderclient (storage service)
+* https://git.openstack.org/cgit/openstack/python-glanceclient (image service)
+* https://git.openstack.org/cgit/openstack/python-troveclient (database as a Service)
+* https://git.openstack.org/cgit/openstack/python-saharaclient (hadoop cluster)
+* https://git.openstack.org/cgit/openstack/python-barbicanclient (key management service)
+* https://git.openstack.org/cgit/openstack/python-designateclient (DNS service)
+* https://git.openstack.org/cgit/openstack/python-magnumclient (container service)
+* https://git.openstack.org/cgit/openstack/python-manilaclient (shared file system service)
+* https://git.openstack.org/cgit/openstack/python-mistralclient (workflow service)
+* https://git.openstack.org/cgit/openstack/python-zaqarclient (messaging service)
+* https://git.openstack.org/cgit/openstack/python-monascaclient (monitoring service)
