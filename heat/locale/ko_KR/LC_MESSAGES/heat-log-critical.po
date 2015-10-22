@@ -6,19 +6,18 @@
 # OpenStack Infra <zanata@openstack.org>, 2015. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b4.dev190\n"
+"Project-Id-Version: heat 6.0.0.dev128\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-17 06:09+0000\n"
+"POT-Creation-Date: 2015-10-22 06:03+0000\n"
 "PO-Revision-Date: 2015-09-04 08:15+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
-"Language-Team: Korean (Korea) (http://www.transifex.com/openstack/heat/"
-"language/ko_KR/)\n"
+"Language-Team: Korean (South Korea)\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"Generated-By: Babel 2.0\n"
 "X-Generator: Zanata 3.7.1\n"
 
 #, python-format
