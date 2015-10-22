@@ -47,25 +47,6 @@ def lb_immutable(exc):
     return False
 
 
-def retry_if_immutable(task):
-    @six.wraps(task)
-    def wrapper(*args, **kwargs):
-        while True:
-            yield
-            try:
-                task(*args, **kwargs)
-            except Exception as exc:
-                # InvalidLoadBalancerParameters, or BadRequest for the
-                # same immutable load balancer error, so check the
-                # exception message instead of the exception type
-                if lb_immutable(exc):
-                    continue
-                raise
-            else:
-                break
-    return wrapper
-
-
 class LoadbalancerBuildError(exception.HeatException):
     msg_fmt = _("There was an error building the loadbalancer:%(lb_name)s.")
 
@@ -463,6 +444,7 @@ class CloudLoadBalancer(resource.Resource):
     ACTIVE_STATUS = 'ACTIVE'
     DELETED_STATUS = 'DELETED'
     PENDING_DELETE_STATUS = 'PENDING_DELETE'
+    PENDING_UPDATE_STATUS = 'PENDING_UPDATE'
 
     def __init__(self, name, json_snippet, stack):
         super(CloudLoadBalancer, self).__init__(name, json_snippet, stack)
@@ -637,71 +619,131 @@ class CloudLoadBalancer(resource.Resource):
                                     "(was: %s)") % loadbalancer.status)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """Add and remove nodes specified in the prop_diff."""
+        return prop_diff
+
+    def check_update_complete(self, prop_diff):
         lb = self.clb.get(self.resource_id)
-        checkers = []
+        return (lb.status != self.PENDING_UPDATE_STATUS and  # lb immutable?
+                self._update_props(lb, prop_diff) and
+                self._update_nodes_add(lb, prop_diff) and
+                self._update_nodes_delete(lb, prop_diff) and
+                self._update_nodes_change(lb, prop_diff) and
+                self._update_health_monitor(lb, prop_diff) and
+                self._update_session_persistence(lb, prop_diff) and
+                self._update_ssl_termination(lb, prop_diff) and
+                self._update_metadata(lb, prop_diff) and
+                self._update_errorpage(lb, prop_diff) and
+                self._update_connection_logging(lb, prop_diff) and
+                self._update_connection_throttle(lb, prop_diff) and
+                self._update_content_caching(lb, prop_diff))
 
-        if self.NODES in prop_diff:
-            updated_nodes = prop_diff[self.NODES]
-            checkers.extend(self._update_nodes(lb, updated_nodes))
+    def _nodes_need_update_add(self, old, new):
+        if not old:
+            return True
 
-        updated_props = {}
+        new = list(self._process_nodes(new))
+        new_nodes = ["%s%s" % (x['address'], x['port']) for x in new]
+        old_nodes = ["%s%s" % (x.address, x.port) for x in old]
+        for node in new_nodes:
+            if node not in old_nodes:
+                return True
+
+        return False
+
+    def _nodes_need_update_delete(self, old, new):
+        if not new:
+            return True
+
+        new = list(self._process_nodes(new))
+        new_nodes = ["%s%s" % (x['address'], x['port']) for x in new]
+        old_nodes = ["%s%s" % (x.address, x.port) for x in old]
+        for node in old_nodes:
+            if node not in new_nodes:
+                return True
+
+        return False
+
+    def _nodes_need_update_change(self, old, new):
+        def find_node(nodes, address, port):
+            for node in nodes:
+                if node['address'] == address and node['port'] == port:
+                    return node
+
+        new = list(self._process_nodes(new))
+        for old_node in old:
+            new_node = find_node(new, old_node.address, old_node.port)
+            if (new_node['condition'] != old_node.condition or
+                    new_node['type'] != old_node.type or
+                    new_node['weight'] != old_node.weight):
+                return True
+
+        return False
+
+    def _needs_update_comparison(self, old, new):
+        if old != new:
+            return True
+        return False
+
+    def _needs_update_comparison_bool(self, old, new):
+        if new is None:
+            return old
+        return self._needs_update_comparison(old, new)
+
+    def _needs_update_comparison_nullable(self, old, new):
+        if not old and not new:
+            return False
+        return self._needs_update_comparison(old, new)
+
+    def _props_need_update(self, old, new):
+        return self._needs_update_comparison_nullable(old, new)  # dict
+
+    def _hm_needs_update(self, old, new):
+        return self._needs_update_comparison_nullable(old, new)  # dict
+
+    def _sp_needs_update(self, old, new):
+        return self._needs_update_comparison_bool(old, new)  # bool
+
+    def _metadata_needs_update(self, old, new):
+        return self._needs_update_comparison_nullable(old, new)  # dict
+
+    def _errorpage_needs_update(self, old, new):
+        return self._needs_update_comparison_nullable(old, new)  # str
+
+    def _cl_needs_update(self, old, new):
+        return self._needs_update_comparison_bool(old, new)  # bool
+
+    def _ct_needs_update(self, old, new):
+        return self._needs_update_comparison_nullable(old, new)  # dict
+
+    def _cc_needs_update(self, old, new):
+        return self._needs_update_comparison_bool(old, new)  # bool
+
+    def _ssl_term_needs_update(self, old, new):
+        return self._needs_update_comparison_nullable(old, new)  # dict
+
+    def _update_props(self, lb, prop_diff):
+        old_props = {}
+        new_props = {}
+
         for prop in six.iterkeys(prop_diff):
             if prop in self.LB_UPDATE_PROPS:
-                updated_props[prop] = prop_diff[prop]
-        if updated_props:
-            checkers.append(self._update_lb_properties(lb, updated_props))
+                old_props[prop] = getattr(lb, prop)
+                new_props[prop] = prop_diff[prop]
 
-        if self.HEALTH_MONITOR in prop_diff:
-            updated_hm = prop_diff[self.HEALTH_MONITOR]
-            checkers.append(self._update_health_monitor(lb, updated_hm))
+        if new_props and self._props_need_update(old_props, new_props):
+            try:
+                lb.update(**new_props)
+            except Exception as exc:
+                if lb_immutable(exc):
+                    return False
+                raise
+            return False
 
-        if self.SESSION_PERSISTENCE in prop_diff:
-            updated_sp = prop_diff[self.SESSION_PERSISTENCE]
-            checkers.append(self._update_session_persistence(lb, updated_sp))
+        return True
 
-        if self.SSL_TERMINATION in prop_diff:
-            updated_ssl_term = prop_diff[self.SSL_TERMINATION]
-            checkers.append(self._update_ssl_termination(lb, updated_ssl_term))
-
-        if self.METADATA in prop_diff:
-            updated_metadata = prop_diff[self.METADATA]
-            checkers.append(self._update_metadata(lb, updated_metadata))
-
-        if self.ERROR_PAGE in prop_diff:
-            updated_errorpage = prop_diff[self.ERROR_PAGE]
-            checkers.append(self._update_errorpage(lb, updated_errorpage))
-
-        if self.CONNECTION_LOGGING in prop_diff:
-            updated_cl = prop_diff[self.CONNECTION_LOGGING]
-            checkers.append(self._update_connection_logging(lb, updated_cl))
-
-        if self.CONNECTION_THROTTLE in prop_diff:
-            updated_ct = prop_diff[self.CONNECTION_THROTTLE]
-            checkers.append(self._update_connection_throttle(lb, updated_ct))
-
-        if self.CONTENT_CACHING in prop_diff:
-            updated_cc = prop_diff[self.CONTENT_CACHING]
-            checkers.append(self._update_content_caching(lb, updated_cc))
-
-        return checkers
-
-    def _update_nodes(self, lb, updated_nodes):
-        @retry_if_immutable
-        def add_nodes(lb, new_nodes):
-            lb.add_nodes(new_nodes)
-
-        @retry_if_immutable
-        def remove_node(known, node):
-            known[node].delete()
-
-        @retry_if_immutable
-        def update_node(known, node):
-            known[node].update()
-
-        checkers = []
+    def _nodes_update_data(self, lb, prop_diff):
         current_nodes = lb.nodes
-        diff_nodes = self._process_nodes(updated_nodes)
+        diff_nodes = self._process_nodes(prop_diff[self.NODES])
         # Loadbalancers can be uniquely identified by address and
         # port.  Old is a dict of all nodes the loadbalancer
         # currently knows about.
@@ -720,24 +762,66 @@ class CloudLoadBalancer(resource.Resource):
         added = new_set.difference(old_set)
         updated = new_set.intersection(old_set)
 
-        if len(current_nodes) + len(added) - len(deleted) < 1:
-            raise ValueError(_("The loadbalancer:%s requires at least one "
-                             "node.") % self.name)
-        """
-        Add loadbalancers in the new map that are not in the old map.
-        Add before delete to avoid deleting the last node and getting in
-        an invalid state.
-        """
+        return old, new, deleted, added, updated
+
+    def _update_nodes_add(self, lb, prop_diff):
+        """Add loadbalancers in the new map that are not in the old map."""
+        if self.NODES not in prop_diff:
+            return True
+
+        old_nodes = lb.nodes if hasattr(lb, self.NODES) else None
+        new_nodes = prop_diff[self.NODES]
+        if not self._nodes_need_update_add(old_nodes, new_nodes):
+            return True
+
+        old, new, deleted, added, updated = self._nodes_update_data(lb,
+                                                                    prop_diff)
         new_nodes = [self.clb.Node(**new[lb_node]) for lb_node in added]
         if new_nodes:
-            checkers.append(scheduler.TaskRunner(add_nodes, lb, new_nodes))
+            try:
+                lb.add_nodes(new_nodes)
+            except Exception as exc:
+                if lb_immutable(exc):
+                    return False
+                raise
 
-        # Delete loadbalancers in the old dict that are not in the
-        # new dict.
+        return False
+
+    def _update_nodes_delete(self, lb, prop_diff):
+        """Delete loadbalancers in the old dict that aren't in the new dict."""
+        if self.NODES not in prop_diff:
+            return True
+
+        old_nodes = lb.nodes if hasattr(lb, self.NODES) else None
+        new_nodes = prop_diff[self.NODES]
+        if not self._nodes_need_update_delete(old_nodes, new_nodes):
+            return True
+
+        old, new, deleted, added, updated = self._nodes_update_data(lb,
+                                                                    prop_diff)
         for node in deleted:
-            checkers.append(scheduler.TaskRunner(remove_node, old, node))
+            try:
+                old[node].delete()
+            except Exception as exc:
+                if lb_immutable(exc):
+                    return False
+                raise
 
-        # Update nodes that have been changed
+        return False
+
+    def _update_nodes_change(self, lb, prop_diff):
+        """Update nodes that have been changed."""
+        if self.NODES not in prop_diff:
+            return True
+
+        old_nodes = lb.nodes if hasattr(lb, self.NODES) else None
+        new_nodes = prop_diff[self.NODES]
+        if not self._nodes_need_update_change(old_nodes, new_nodes):
+            return True
+
+        old, new, deleted, added, updated = self._nodes_update_data(lb,
+                                                                    prop_diff)
+
         for node in updated:
             node_changed = False
             for attribute in six.iterkeys(new[node]):
@@ -746,141 +830,183 @@ class CloudLoadBalancer(resource.Resource):
                     node_changed = True
                     setattr(old[node], attribute, new_value)
             if node_changed:
-                checkers.append(scheduler.TaskRunner(update_node, old, node))
+                try:
+                    old[node].update()
+                except Exception as exc:
+                    if lb_immutable(exc):
+                        return False
+                    raise
 
-        return checkers
+        return False
 
-    def _update_lb_properties(self, lb, updated_props):
-        @retry_if_immutable
-        def update_lb():
-            lb.update(**updated_props)
+    def _update_health_monitor(self, lb, prop_diff):
+        if self.HEALTH_MONITOR not in prop_diff:
+            return True
 
-        return scheduler.TaskRunner(update_lb)
+        old_hm = lb.get_health_monitor()
+        new_hm = prop_diff[self.HEALTH_MONITOR]
+        if not self._hm_needs_update(old_hm, new_hm):
+            return True
 
-    def _update_health_monitor(self, lb, updated_hm):
-        @retry_if_immutable
-        def add_health_monitor():
-            lb.add_health_monitor(**updated_hm)
-
-        @retry_if_immutable
-        def delete_health_monitor():
-            lb.delete_health_monitor()
-
-        if updated_hm is None:
-            return scheduler.TaskRunner(delete_health_monitor)
-        else:
-            # Adding a health monitor is a destructive, so there's
-            # no need to delete, then add
-            return scheduler.TaskRunner(add_health_monitor)
-
-    def _update_session_persistence(self, lb, updated_sp):
-        @retry_if_immutable
-        def add_session_persistence():
-            lb.session_persistence = updated_sp
-
-        @retry_if_immutable
-        def delete_session_persistence():
-            lb.session_persistence = ''
-
-        if updated_sp is None:
-            return scheduler.TaskRunner(delete_session_persistence)
-        else:
-            # Adding session persistence is destructive
-            return scheduler.TaskRunner(add_session_persistence)
-
-    def _update_ssl_termination(self, lb, updated_ssl_term):
-        @retry_if_immutable
-        def add_ssl_termination():
-            lb.add_ssl_termination(**updated_ssl_term)
-
-        @retry_if_immutable
-        def delete_ssl_termination():
-            lb.delete_ssl_termination()
-
-        if updated_ssl_term is None:
-            return scheduler.TaskRunner(delete_ssl_termination)
-        else:
-            # Adding SSL termination is destructive
-            return scheduler.TaskRunner(add_ssl_termination)
-
-    def _update_metadata(self, lb, updated_metadata):
-        @retry_if_immutable
-        def add_metadata():
-            lb.set_metadata(updated_metadata)
-
-        @retry_if_immutable
-        def delete_metadata():
-            lb.delete_metadata()
-
-        if updated_metadata is None:
-            return scheduler.TaskRunner(delete_metadata)
-        else:
-            return scheduler.TaskRunner(add_metadata)
-
-    def _update_errorpage(self, lb, updated_errorpage):
-        @retry_if_immutable
-        def add_errorpage():
-            lb.set_error_page(updated_errorpage)
-
-        @retry_if_immutable
-        def delete_errorpage():
-            lb.clear_error_page()
-
-        if updated_errorpage is None:
-            return scheduler.TaskRunner(delete_errorpage)
-        else:
-            return scheduler.TaskRunner(add_errorpage)
-
-    def _update_connection_logging(self, lb, updated_cl):
-        @retry_if_immutable
-        def enable_connection_logging():
-            lb.connection_logging = True
-
-        @retry_if_immutable
-        def disable_connection_logging():
-            lb.connection_logging = False
-
-        if updated_cl:
-            return scheduler.TaskRunner(enable_connection_logging)
-        else:
-            return scheduler.TaskRunner(disable_connection_logging)
-
-    def _update_connection_throttle(self, lb, updated_ct):
-        @retry_if_immutable
-        def add_connection_throttle():
-            lb.add_connection_throttle(**updated_ct)
-
-        @retry_if_immutable
-        def delete_connection_throttle():
-            lb.delete_connection_throttle()
-
-        if updated_ct is None:
-            return scheduler.TaskRunner(delete_connection_throttle)
-        else:
-            return scheduler.TaskRunner(add_connection_throttle)
-
-    def _update_content_caching(self, lb, updated_cc):
-        @retry_if_immutable
-        def enable_content_caching():
-            lb.content_caching = True
-
-        @retry_if_immutable
-        def disable_content_caching():
-            lb.content_caching = False
-
-        if updated_cc == 'ENABLED':
-            return scheduler.TaskRunner(enable_content_caching)
-        else:
-            return scheduler.TaskRunner(disable_content_caching)
-
-    def check_update_complete(self, checkers):
-        """Push all checkers to completion in list order."""
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
+        try:
+            if new_hm is None:
+                lb.delete_health_monitor()
+            else:
+                # Adding a health monitor is a destructive, so there's
+                # no need to delete, then add
+                lb.add_health_monitor(**new_hm)
+        except Exception as exc:
+            if lb_immutable(exc):
                 return False
-        return True
+            raise
+
+        return False
+
+    def _update_session_persistence(self, lb, prop_diff):
+        if self.SESSION_PERSISTENCE not in prop_diff:
+            return True
+
+        old_sp = lb.session_persistence
+        new_sp = prop_diff[self.SESSION_PERSISTENCE]
+        if not self._sp_needs_update(old_sp, new_sp):
+            return True
+
+        try:
+            if new_sp is None:
+                lb.session_persistence = ''
+            else:
+                # Adding session persistence is destructive
+                lb.session_persistence = new_sp
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
+
+    def _update_ssl_termination(self, lb, prop_diff):
+        if self.SSL_TERMINATION not in prop_diff:
+            return True
+
+        old_ssl_term = lb.get_ssl_termination()
+        new_ssl_term = prop_diff[self.SSL_TERMINATION]
+        if not self._ssl_term_needs_update(old_ssl_term, new_ssl_term):
+            return True
+
+        try:
+            if new_ssl_term is None:
+                lb.delete_ssl_termination()
+            else:
+                # Adding SSL termination is destructive
+                lb.add_ssl_termination(**new_ssl_term)
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
+
+    def _update_metadata(self, lb, prop_diff):
+        if self.METADATA not in prop_diff:
+            return True
+
+        old_metadata = lb.get_metadata()
+        new_metadata = prop_diff[self.METADATA]
+        if not self._metadata_needs_update(old_metadata, new_metadata):
+            return True
+
+        try:
+            if new_metadata is None:
+                lb.delete_metadata()
+            else:
+                lb.set_metadata(new_metadata)
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
+
+    def _update_errorpage(self, lb, prop_diff):
+        if self.ERROR_PAGE not in prop_diff:
+            return True
+
+        old_errorpage = lb.get_error_page()['errorpage']['content']
+        new_errorpage = prop_diff[self.ERROR_PAGE]
+        if not self._errorpage_needs_update(old_errorpage, new_errorpage):
+            return True
+
+        try:
+            if new_errorpage is None:
+                lb.clear_error_page()
+            else:
+                lb.set_error_page(new_errorpage)
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
+
+    def _update_connection_logging(self, lb, prop_diff):
+        if self.CONNECTION_LOGGING not in prop_diff:
+            return True
+
+        old_cl = lb.connection_logging
+        new_cl = prop_diff[self.CONNECTION_LOGGING]
+        if not self._cl_needs_update(old_cl, new_cl):
+            return True
+
+        try:
+            if new_cl:
+                lb.connection_logging = True
+            else:
+                lb.connection_logging = False
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
+
+    def _update_connection_throttle(self, lb, prop_diff):
+        if self.CONNECTION_THROTTLE not in prop_diff:
+            return True
+
+        old_ct = lb.get_connection_throttle()
+        new_ct = prop_diff[self.CONNECTION_THROTTLE]
+        if not self._ct_needs_update(old_ct, new_ct):
+            return True
+
+        try:
+            if new_ct is None:
+                lb.delete_connection_throttle()
+            else:
+                lb.add_connection_throttle(**new_ct)
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
+
+    def _update_content_caching(self, lb, prop_diff):
+        if self.CONTENT_CACHING not in prop_diff:
+            return True
+
+        old_cc = lb.content_caching
+        new_cc = prop_diff[self.CONTENT_CACHING] == 'ENABLED'
+        if not self._cc_needs_update(old_cc, new_cc):
+            return True
+
+        try:
+            lb.content_caching = new_cc
+        except Exception as exc:
+            if lb_immutable(exc):
+                return False
+            raise
+
+        return False
 
     def check_delete_complete(self, *args):
         if self.resource_id is None:
