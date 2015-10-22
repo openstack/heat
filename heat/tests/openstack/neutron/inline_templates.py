@@ -71,3 +71,24 @@ resources:
       tenant_id: 1234
       admin_state_up: True
 '''
+
+LISTENER_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a listener
+resources:
+  listener:
+    type: OS::Neutron::LBaaS::Listener
+    properties:
+      protocol_port: 80
+      protocol: TCP
+      loadbalancer: 123
+      name: my_listener
+      description: my listener
+      admin_state_up: True
+      default_tls_container_ref: ref
+      sni_container_refs:
+        - ref1
+        - ref2
+      connection_limit: -1
+      tenant_id: 1234
+'''
