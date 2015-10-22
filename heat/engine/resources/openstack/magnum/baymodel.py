@@ -27,12 +27,12 @@ class BayModel(resource.Resource):
         NAME, IMAGE, FLAVOR, MASTER_FLAVOR, KEYPAIR,
         EXTERNAL_NETWORK, FIXED_NETWORK, DNS_NAMESERVER,
         DOCKER_VOLUME_SIZE, SSH_AUTHORIZED_KEY, COE, NETWORK_DRIVER,
-        HTTP_PROXY, HTTPS_PROXY, NO_PROXY, LABELS, INSECURE
+        HTTP_PROXY, HTTPS_PROXY, NO_PROXY, LABELS, TLS_DISABLED
     ) = (
         'name', 'image', 'flavor', 'master_flavor', 'keypair',
         'external_network', 'fixed_network', 'dns_nameserver',
         'docker_volume_size', 'ssh_authorized_key', 'coe', 'network_driver',
-        'http_proxy', 'https_proxy', 'no_proxy', 'labels', 'insecure'
+        'http_proxy', 'https_proxy', 'no_proxy', 'labels', 'tls_disabled'
     )
 
     properties_schema = {
@@ -142,7 +142,7 @@ class BayModel(resource.Resource):
               'associate with a baymodel.'),
             support_status=support.SupportStatus(version='6.0.0')
         ),
-        INSECURE: properties.Schema(
+        TLS_DISABLED: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Disable TLS in the Bay.'),
             default=False,
@@ -173,7 +173,7 @@ class BayModel(resource.Resource):
             'https_proxy': self.properties[self.HTTPS_PROXY],
             'no_proxy': self.properties[self.NO_PROXY],
             'labels': self.properties[self.LABELS],
-            'insecure': self.properties[self.INSECURE]
+            'tls_disabled': self.properties[self.TLS_DISABLED]
         }
 
         bm = self.client().baymodels.create(**args)
