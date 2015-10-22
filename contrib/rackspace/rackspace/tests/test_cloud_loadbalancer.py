@@ -234,6 +234,7 @@ class FakeLoadBalancer(object):
         self.port = None
         self.name = None
         self.halfClosed = None
+        self.content_caching = False
 
     def get(self, *args, **kwargs):
         pass
@@ -293,6 +294,9 @@ class FakeLoadBalancer(object):
         pass
 
     def get_ssl_termination(self, *args, **kwargs):
+        pass
+
+    def get_access_list(self, *args, **kwargs):
         pass
 
 
@@ -380,6 +384,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
         fake_lb = FakeLoadBalancer(name=lb_name)
         fake_lb.status = 'ACTIVE'
+        fake_lb.resource_id = 1234
 
         self.m.StubOutWithMock(rsrc.clb, 'create')
         rsrc.clb.create(lb_name, **lb_body).AndReturn(fake_lb)
@@ -611,6 +616,10 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc, fake_lb = self._mock_loadbalancer(template,
                                                 self.lb_name,
                                                 self.expected_body)
+        self.m.StubOutWithMock(fake_lb, 'get_access_list')
+        fake_lb.get_access_list().AndReturn([])
+        fake_lb.get_access_list().AndReturn(access_list)
+
         self.m.StubOutWithMock(fake_lb, 'add_access_list')
         fake_lb.add_access_list(access_list)
 
@@ -638,6 +647,11 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc, fake_lb = self._mock_loadbalancer(template,
                                                 self.lb_name,
                                                 self.expected_body)
+        self.m.StubOutWithMock(fake_lb, 'get_error_page')
+        fake_lb.get_error_page().AndReturn({u'errorpage': {u'content': u''}})
+        fake_lb.get_error_page().AndReturn(
+            {u'errorpage': {u'content': error_page}})
+
         self.m.StubOutWithMock(fake_lb, 'set_error_page')
         fake_lb.set_error_page(error_page)
 
@@ -646,27 +660,27 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_post_creation_ssl_termination(self):
-        ssl_termination = {
+        ssl_termination_template = {
             'securePort': 443,
             'privatekey': 'afwefawe',
             'certificate': 'fawefwea',
             'intermediateCertificate': "intermediate_certificate",
             'secureTrafficOnly': False
         }
+        ssl_termination_api = copy.deepcopy(ssl_termination_template)
+        ssl_termination_api['enabled'] = True
 
         template = self._set_template(self.lb_template,
-                                      sslTermination=ssl_termination)
+                                      sslTermination=ssl_termination_template)
         rsrc, fake_lb = self._mock_loadbalancer(template,
                                                 self.lb_name,
                                                 self.expected_body)
+        self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
+        fake_lb.get_ssl_termination().AndReturn({})
+        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
+
         self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
-        fake_lb.add_ssl_termination(
-            ssl_termination['securePort'],
-            ssl_termination['privatekey'],
-            ssl_termination['certificate'],
-            intermediateCertificate=ssl_termination['intermediateCertificate'],
-            enabled=True,
-            secureTrafficOnly=ssl_termination['secureTrafficOnly'])
+        fake_lb.add_ssl_termination(**ssl_termination_api)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -911,6 +925,32 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
+    def test_create_immutable_exception(self):
+        access_list = [{"address": '192.168.1.1/0',
+                        'type': 'ALLOW'},
+                       {'address': '172.165.3.43',
+                        'type': 'DENY'}]
+
+        template = self._set_template(self.lb_template,
+                                      accessList=access_list)
+        rsrc, fake_lb = self._mock_loadbalancer(template,
+                                                self.lb_name,
+                                                self.expected_body)
+        self.m.StubOutWithMock(fake_lb, 'get_access_list')
+        fake_lb.get_access_list().AndReturn({})
+        fake_lb.get_access_list().AndReturn({})
+        fake_lb.get_access_list().AndReturn(access_list)
+
+        self.m.StubOutWithMock(fake_lb, 'add_access_list')
+        msg = ("Load Balancer '%s' has a status of 'PENDING_UPDATE' and "
+               "is considered immutable." % rsrc.resource_id)
+        fake_lb.add_access_list(access_list).AndRaise(Exception(msg))
+        fake_lb.add_access_list(access_list)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
     def test_update_lb_name(self):
         rsrc, fake_lb = self._mock_loadbalancer(self.lb_template,
                                                 self.lb_name,
@@ -1066,16 +1106,18 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_lb_redirect_HTTP_with_SSL_term(self):
-        ssl_termination = {
+        ssl_termination_template = {
             'privatekey': private_key,
             'intermediateCertificate': 'fwaefawe',
             'secureTrafficOnly': True,
             'securePort': 443,
             'certificate': cert
         }
+        ssl_termination_api = copy.deepcopy(ssl_termination_template)
+        ssl_termination_api['enabled'] = True
         template = self._set_template(
-            self.lb_template, sslTermination=ssl_termination, protocol="HTTP",
-            httpsRedirect=True)
+            self.lb_template, sslTermination=ssl_termination_template,
+            protocol="HTTP", httpsRedirect=True)
 
         expected = self._set_expected(
             self.expected_body, protocol="HTTP", httpsRedirect=False)
@@ -1083,10 +1125,31 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc, fake_lb = self._mock_loadbalancer(template,
                                                 self.lb_name,
                                                 expected)
+
+        self.m.UnsetStubs()
+        self.m.StubOutWithMock(rsrc.clb, 'create')
+        rsrc.clb.create(self.lb_name, **expected).AndReturn(fake_lb)
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb)
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb)
+
+        fake_lb1 = copy.deepcopy(fake_lb)
+        fake_lb1.httpsRedirect = True
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb1)
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb1)
+        rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb1)
+
+        self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
+        fake_lb.get_ssl_termination().AndReturn({})
+        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
+        self.m.StubOutWithMock(fake_lb1, 'get_ssl_termination')
+        fake_lb1.get_ssl_termination().AndReturn(ssl_termination_api)
+        fake_lb1.get_ssl_termination().AndReturn(ssl_termination_api)
+        fake_lb1.get_ssl_termination().AndReturn(ssl_termination_api)
+
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
 
     def test_update_lb_half_closed(self):
         rsrc, fake_lb = self._mock_loadbalancer(self.lb_template,
@@ -1304,26 +1367,41 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_ssl_termination_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
-        template['Resources'][lb_name]['Properties']['sslTermination'] = {
+        ssl_termination_template = {
             'securePort': 443, 'privatekey': private_key, 'certificate': cert,
-            'secureTrafficOnly': False}
+            'intermediateCertificate': '', 'secureTrafficOnly': False}
+        ssl_termination_api = copy.deepcopy(ssl_termination_template)
+        ssl_termination_api['enabled'] = True
+        lb_name = list(six.iterkeys(template['Resources']))[0]
+        template['Resources'][lb_name]['Properties']['sslTermination'] = \
+            ssl_termination_template
         # The SSL termination config is done post-creation, so no need
         # to modify self.expected_body
         rsrc, fake_lb = self._mock_loadbalancer(template,
                                                 self.lb_name,
                                                 self.expected_body)
 
+        self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
+        fake_lb.get_ssl_termination().AndReturn({})
+
+        self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
+        fake_lb.add_ssl_termination(**ssl_termination_api)
+
+        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
+
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
+        self.m.UnsetStubs()
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['sslTermination']
 
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            fake_lb)
+
         self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
-        fake_lb.get_ssl_termination().AndReturn({
-            'securePort': 443, 'privatekey': private_key, 'certificate': cert,
-            'secureTrafficOnly': False})
+        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
 
         self.m.StubOutWithMock(fake_lb, 'delete_ssl_termination')
         fake_lb.delete_ssl_termination()
@@ -1430,11 +1508,25 @@ class LoadBalancerTest(common.HeatTestCase):
                                                 self.lb_name,
                                                 self.expected_body)
 
+        self.m.StubOutWithMock(fake_lb, 'get_error_page')
+        fake_lb.get_error_page().AndReturn({})
+
+        self.m.StubOutWithMock(fake_lb, 'set_error_page')
+        fake_lb.set_error_page(error_page)
+
+        fake_lb.get_error_page().AndReturn({'errorpage':
+                                            {'content': error_page}})
+
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
+        self.m.UnsetStubs()
         update_template = copy.deepcopy(rsrc.t)
         del update_template['Properties']['errorPage']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            fake_lb)
 
         self.m.StubOutWithMock(fake_lb, 'clear_error_page')
         fake_lb.clear_error_page()
