@@ -78,7 +78,7 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_role_assignment.client = mock.MagicMock()
         self.test_role_assignment.client.return_value = self.keystoneclient
-        self.roles = self.keystoneclient.client.roles
+        self.roles = self.keystoneclient.roles
 
         # Mock client plugin
         def _side_effect(value):
@@ -412,7 +412,7 @@ class KeystoneUserRoleAssignmentTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_role_assignment.client = mock.MagicMock()
         self.test_role_assignment.client.return_value = self.keystoneclient
-        self.roles = self.keystoneclient.client.roles
+        self.roles = self.keystoneclient.roles
 
         # Mock client plugin
         def _side_effect(value):
@@ -550,7 +550,7 @@ class KeystoneGroupRoleAssignmentTest(common.HeatTestCase):
         self.keystoneclient = mock.MagicMock()
         self.test_role_assignment.client = mock.MagicMock()
         self.test_role_assignment.client.return_value = self.keystoneclient
-        self.roles = self.keystoneclient.client.roles
+        self.roles = self.keystoneclient.roles
 
         # Mock client plugin
         def _side_effect(value):
