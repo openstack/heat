@@ -179,6 +179,25 @@ For example, Heat currently supports the following values for the
       str_replace
       str_split
 
+2016-04-08
+    The key with value ``2016-04-08`` indicates that the YAML document is a HOT
+    template and it may contain features added and/or removed up until the
+    Mitaka release.  This version also adds the map_merge function which
+    can be used to merge the contents of maps. The complete list of supported
+    functions is::
+
+      digest
+      get_attr
+      get_file
+      get_param
+      get_resource
+      list_join
+      map_merge
+      repeat
+      resource_facade
+      str_replace
+      str_split
+
 .. _hot_spec_parameter_groups:
 
 Parameter groups section
@@ -1209,3 +1228,28 @@ The result of which is:
 
 Note: The index starts at zero, and any value outside the maximum (e.g the
 length of the list minus one) will cause an error.
+
+map_merge
+---------
+The ``map_merge`` function merges maps together. Values in the latter maps
+override any values in earlier ones. Can be very useful when composing maps
+that contain configuration data into a single consolidated map.
+
+The syntax of the ``map_merge`` function is
+
+.. code-block:: yaml
+
+    map_merge:
+    - <map 1>
+    - <map 2>
+    - ...
+
+For example
+
+.. code-block:: yaml
+
+    map_merge: [{'k1': 'v1', 'k2': 'v2'}, {'k1': 'v2'}]
+
+This resolves to a map containing ``{'k1': 'v2', 'k2': 'v2'}``.
+
+Maps containing no items resolve to {}.
