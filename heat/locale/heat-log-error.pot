@@ -6,18 +6,18 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b3.dev76\n"
+"Project-Id-Version: heat 5.0.1.dev1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-08-04 06:15+0000\n"
+"POT-Creation-Date: 2015-10-22 06:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
+"Generated-By: Babel 2.1.1\n"
 
-#: heat/api/aws/ec2token.py:189
+#: heat/api/aws/ec2token.py:199
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 
@@ -30,39 +30,39 @@ msgstr ""
 msgid "Request does not contain required MetricData"
 msgstr ""
 
-#: heat/common/context.py:167
+#: heat/common/context.py:204
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
 
-#: heat/common/exception.py:116
+#: heat/common/exception.py:69
 msgid "Exception in string format operation"
 msgstr ""
 
-#: heat/common/exception.py:118
+#: heat/common/exception.py:71
 #, python-format
 msgid "%(name)s: %(value)s"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:151
-#: heat/common/heat_keystoneclient.py:231
+#: heat/common/heat_keystoneclient.py:131
+#: heat/common/heat_keystoneclient.py:212
 msgid "Domain admin client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:177
-#: heat/common/heat_keystoneclient.py:378
+#: heat/common/heat_keystoneclient.py:157
+#: heat/common/heat_keystoneclient.py:359
 msgid "Keystone client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:183
+#: heat/common/heat_keystoneclient.py:163
 msgid "trust token re-scoping failed!"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:187
+#: heat/common/heat_keystoneclient.py:167
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:301
-#: heat/common/heat_keystoneclient.py:363
+#: heat/common/heat_keystoneclient.py:282
+#: heat/common/heat_keystoneclient.py:344
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -103,17 +103,17 @@ msgstr ""
 msgid "Not respawning child %d, cannot recover from termination"
 msgstr ""
 
-#: heat/common/wsgi.py:855
+#: heat/common/wsgi.py:856
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr ""
 
-#: heat/common/wsgi.py:877
+#: heat/common/wsgi.py:878
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr ""
 
-#: heat/common/wsgi.py:951
+#: heat/common/wsgi.py:952
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -122,60 +122,67 @@ msgstr ""
 msgid "Timeout conversion failed"
 msgstr ""
 
-#: heat/engine/api.py:340
+#: heat/engine/api.py:424
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:599
+#: heat/engine/environment.py:658
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:611
+#: heat/engine/environment.py:670
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:615
+#: heat/engine/environment.py:674
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
 
-#: heat/engine/plugin_manager.py:97
+#: heat/engine/plugin_manager.py:95
 #, python-format
 msgid "Failed to load %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/plugin_manager.py:104
+#: heat/engine/plugin_manager.py:102
 #, python-format
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:632
+#: heat/engine/resource.py:629
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:1225 heat/engine/resource.py:1270
-#: heat/engine/resource.py:1298
+#: heat/engine/resource.py:1302 heat/engine/resource.py:1348
+#: heat/engine/resource.py:1376
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1519
+#: heat/engine/resource.py:1381
+#, python-format
+msgid ""
+"Error acquiring lock for resource id:%(resource_id)s withatomic "
+"key:%(atomic_key)s,engine_id:%(rs_engine_id)s/%(engine_id)s"
+msgstr ""
+
+#: heat/engine/resource.py:1627
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:370
+#: heat/engine/service.py:375
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1482
+#: heat/engine/service.py:1623
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service.py:1631
+#: heat/engine/service.py:1771
 #, python-format
 msgid "Service %(service_id)s update failed: %(error)s"
 msgstr ""
@@ -185,32 +192,32 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/stack.py:639
+#: heat/engine/stack.py:656
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:1093
+#: heat/engine/stack.py:1140
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:1330
+#: heat/engine/stack.py:1415
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1528
+#: heat/engine/stack.py:1617
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1537
+#: heat/engine/stack.py:1626
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/worker.py:89
+#: heat/engine/worker.py:90
 #, python-format
 msgid "%(topic)s is failed to stop, %(exc)s"
 msgstr ""
@@ -219,7 +226,7 @@ msgstr ""
 msgid "Zaqar connection failed, no auth_token!"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:430
+#: heat/engine/resources/stack_resource.py:436
 msgid "update_stack"
 msgstr ""
 
@@ -228,7 +235,7 @@ msgstr ""
 msgid "Metadata failed validation for %s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:348
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:309
 msgid "Failed sending error notification"
 msgstr ""
 
