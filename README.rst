@@ -13,7 +13,7 @@ Getting Started
 
 If you'd like to run from the master branch, you can clone the git repo:
 
-    git clone git://git.openstack.org/openstack/heat.git
+    git clone https://git.openstack.org/openstack/heat
 
 
 * Wiki: http://wiki.openstack.org/Heat

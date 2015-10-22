@@ -259,7 +259,7 @@ For each machine, B and C, you must do the following steps:
     1. Clone the heat repository https://git.openstack.org/cgit/openstack/heat, run:
 
     ::
-        git clone git://git.openstack.org/openstack/heat.git
+        git clone https://git.openstack.org/openstack/heat
 
     2. Create a local copy of the configuration file */etc/heat/heat.conf* from
        the machine A;
