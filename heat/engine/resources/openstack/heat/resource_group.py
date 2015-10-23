@@ -16,6 +16,7 @@ import copy
 import itertools
 
 import six
+import six.moves
 
 from heat.common import exception
 from heat.common import grouputils
@@ -497,8 +498,6 @@ class ResourceGroup(stack_resource.StackResource):
         valid_resources = [(n, d) for n, d in self._get_resources()
                            if n not in name_blacklist]
 
-        num_creating = max(total_capacity - len(valid_resources), 0)
-        new_names = iter(names[total_capacity - num_creating:])
         targ_cap = self.get_size()
 
         def replace_priority(res_item):
@@ -517,6 +516,10 @@ class ResourceGroup(stack_resource.StackResource):
                     return total_capacity
 
         old_resources = sorted(valid_resources, key=replace_priority)
+
+        existing_names = set(n for n, d in valid_resources)
+        new_names = six.moves.filterfalse(lambda n: n in existing_names,
+                                          names)
 
         res_def = self._build_resource_definition(include_all)
         resources = scale_template.member_definitions(old_resources, res_def,

@@ -275,6 +275,39 @@ class ResourceGroupTest(common.HeatTestCase):
         resg._build_resource_definition = mock.Mock(return_value=resource_def)
         self.assertEqual(expect, resg._assemble_for_rolling_update(2, 0))
 
+    def test_assemble_nested_rolling_update_failed_resource(self):
+        expect = {
+            "heat_template_version": "2015-04-30",
+            "resources": {
+                "0": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "baz"
+                    }
+                },
+                "1": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "bar"
+                    }
+                }
+            }
+        }
+        resource_def = {
+            "type": "OverwrittenFnGetRefIdType",
+            "properties": {
+                "foo": "baz"
+            }
+        }
+        stack = utils.parse_stack(template)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        resg._nested = get_fake_nested_stack(['0', '1'])
+        res0 = resg._nested['0']
+        res0.status = res0.FAILED
+        resg._build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1))
+
     def test_index_var(self):
         stack = utils.parse_stack(template_repl)
         snip = stack.t.resource_definitions(stack)['group1']
