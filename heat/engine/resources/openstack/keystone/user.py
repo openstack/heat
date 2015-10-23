@@ -233,8 +233,6 @@ class KeystoneUser(resource.Resource,
     def handle_delete(self):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
-                self.delete_assignment(user_id=self.resource_id)
-
                 if self._stored_properties_data.get(self.GROUPS) is not None:
                     self._remove_user_from_groups(
                         self.resource_id,
