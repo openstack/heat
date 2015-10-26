@@ -270,6 +270,12 @@ class ResourceTest(common.HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertTrue(res.has_interface('GenericResourceType'))
 
+    def test_has_interface_mapping_no_match(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'OS::Test::GenoricResort')
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertFalse(res.has_interface('GenericResourceType'))
+
     def test_created_time(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_res_new', tmpl, self.stack)
