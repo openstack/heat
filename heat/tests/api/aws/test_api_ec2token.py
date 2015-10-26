@@ -569,4 +569,4 @@ class Ec2TokenTest(common.HeatTestCase):
     def test_filter_factory_none_app(self):
         ec2_filter = ec2token.EC2Token_filter_factory(global_conf={})
 
-        self.assertEqual(None, ec2_filter(None).application)
+        self.assertIsNone(ec2_filter(None).application)

@@ -1849,7 +1849,7 @@ class ResourceTest(common.HeatTestCase):
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_update.assert_called_once_with(expected_rsrc_def)
         # ensure that current_template_id was not updated
-        self.assertEqual(None, res.current_template_id)
+        self.assertIsNone(res.current_template_id)
         # ensure that requires was not updated
         self.assertItemsEqual([2], res.requires)
         self._assert_resource_lock(res.id, None, 2)
@@ -1949,7 +1949,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(db_res.select_and_update.called)
         args, kwargs = db_res.select_and_update.call_args
         self.assertEqual({'replaces': None, 'needed_by': [4, 5]}, args[0])
-        self.assertEqual(None, kwargs['expected_engine_id'])
+        self.assertIsNone(kwargs['expected_engine_id'])
 
     @mock.patch.object(resource_objects.Resource, 'get_obj')
     def test_update_replacement_data_ignores_rsrc_from_different_tmpl(

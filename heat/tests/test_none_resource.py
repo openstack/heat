@@ -40,7 +40,7 @@ outputs:
         self.assertEqual(self.rsrc.COMPLETE, self.rsrc.status)
         self.assertEqual(self.stack.CREATE, self.stack.action)
         self.assertEqual(self.stack.COMPLETE, self.stack.status)
-        self.assertEqual(None, self.stack.output('anything'))
+        self.assertIsNone(self.stack.output('anything'))
 
     def test_none_stack_create(self):
         self._create_none_stack()

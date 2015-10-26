@@ -125,7 +125,7 @@ class SaharaUtilsTests(common.HeatTestCase):
                                                error_name='NOT_FOUND')
 
         self.sahara_client.plugins.get.side_effect = side_effect
-        self.assertEqual(None, self.sahara_plugin.get_plugin_id(plugin_name))
+        self.assertIsNone(self.sahara_plugin.get_plugin_id(plugin_name))
         self.assertRaises(exception.EntityNotFound,
                           self.sahara_plugin.get_plugin_id, 'noplugin')
 

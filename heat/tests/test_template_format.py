@@ -86,7 +86,7 @@ class JsonToYamlTest(common.HeatTestCase):
             match = re.search('[\s,{]\d+\s*:', yml_str)
             # Check that there are no matches of integer-only keys
             # lacking explicit quotes
-            self.assertEqual(match, None)
+            self.assertIsNone(match)
 
 
 class YamlMinimalTest(common.HeatTestCase):

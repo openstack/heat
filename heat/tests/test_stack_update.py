@@ -232,7 +232,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual(None, self.stack.tags)
+        self.assertIsNone(self.stack.tags)
 
     def test_update_modify_ok_replace(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
