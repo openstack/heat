@@ -447,6 +447,9 @@ class Port(neutron.NeutronResource):
         return self.is_built(attributes)
 
     def prepare_for_replace(self):
+        # if the port has not been created yet, return directly
+        if self.resource_id is None:
+            return
         # store port fixed_ips for restoring after failed update
         fixed_ips = self._show_resource().get('fixed_ips', [])
         self.data_set('port_fip', jsonutils.dumps(fixed_ips))
