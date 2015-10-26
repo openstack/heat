@@ -25,7 +25,7 @@ class dependenciesTest(common.HeatTestCase):
         order = list(func(d))
 
         for n in nodes:
-            self.assertTrue(n in order, '"%s" is not in the sequence' % n)
+            self.assertIn(n, order, '"%s" is not in the sequence' % n)
             self.assertEqual(1, order.count(n))
 
         self.assertEqual(len(nodes), len(order))
@@ -181,8 +181,8 @@ class dependenciesTest(common.HeatTestCase):
         order = list(iter(p))
         self.assertEqual(2, len(order))
         for n in ('last', 'middle'):
-            self.assertTrue(n in order,
-                            "'%s' not found in dependency order" % n)
+            self.assertIn(n, order,
+                          "'%s' not found in dependency order" % n)
         self.assertTrue(order.index('last') > order.index('middle'))
 
     def test_simple_multilevel_partial(self):
@@ -193,8 +193,8 @@ class dependenciesTest(common.HeatTestCase):
         order = list(iter(p))
         self.assertEqual(3, len(order))
         for n in ('last', 'middle', 'target'):
-            self.assertTrue(n in order,
-                            "'%s' not found in dependency order" % n)
+            self.assertIn(n, order,
+                          "'%s' not found in dependency order" % n)
 
     def test_complex_partial(self):
         d = dependencies.Dependencies([('last', 'e1'), ('last', 'mid1'),
@@ -205,8 +205,8 @@ class dependenciesTest(common.HeatTestCase):
         order = list(iter(p))
         self.assertEqual(4, len(order))
         for n in ('last', 'mid1', 'mid2', 'mid3'):
-            self.assertTrue(n in order,
-                            "'%s' not found in dependency order" % n)
+            self.assertIn(n, order,
+                          "'%s' not found in dependency order" % n)
 
     def test_required_by(self):
         d = dependencies.Dependencies([('last', 'e1'), ('last', 'mid1'),
@@ -219,13 +219,13 @@ class dependenciesTest(common.HeatTestCase):
         required_by = list(d.required_by('mid3'))
         self.assertEqual(2, len(required_by))
         for n in ('mid1', 'mid2'):
-            self.assertTrue(n in required_by,
-                            "'%s' not found in required_by" % n)
+            self.assertIn(n, required_by,
+                          "'%s' not found in required_by" % n)
 
         required_by = list(d.required_by('e2'))
         self.assertEqual(1, len(required_by))
-        self.assertTrue('mid1' in required_by,
-                        "'%s' not found in required_by" % n)
+        self.assertIn('mid1', required_by,
+                      "'%s' not found in required_by" % n)
 
         self.assertRaises(KeyError, d.required_by, 'foo')
 
