@@ -254,7 +254,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         result = self.man.create_stack(self.ctx, 'service_create_test_stack',
                                        template, params, None, api_args)
         db_stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
-        self.assertEqual(db_stack.convergence, True)
+        self.assertTrue(db_stack.convergence)
         self.assertEqual(result['stack_id'], db_stack.id)
         self.m.VerifyAll()
 
@@ -307,7 +307,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         api_args = {'timeout_mins': 60, 'disable_rollback': False}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, api_args)
-        self.assertEqual(old_stack.convergence, True)
+        self.assertTrue(old_stack.convergence)
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])

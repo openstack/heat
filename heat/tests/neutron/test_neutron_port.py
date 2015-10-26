@@ -559,7 +559,7 @@ class NeutronPortTest(common.HeatTestCase):
         scheduler.TaskRunner(port.create)()
         self.assertEqual('DOWN', port.FnGetAtt('status'))
         self.assertEqual([], port.FnGetAtt('allowed_address_pairs'))
-        self.assertEqual(True, port.FnGetAtt('admin_state_up'))
+        self.assertTrue(port.FnGetAtt('admin_state_up'))
         self.assertEqual('net1234', port.FnGetAtt('network_id'))
         self.assertEqual('fa:16:3e:75:67:60', port.FnGetAtt('mac_address'))
         self.assertEqual(utils.PhysName('test_stack', 'port'),

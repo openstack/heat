@@ -103,9 +103,9 @@ parameters:
                              res['resource_type'])
 
             # common properties
-            self.assertEqual(False, res['properties']['fail'])
+            self.assertFalse(res['properties']['fail'])
             self.assertEqual(0, res['properties']['wait_secs'])
-            self.assertEqual(False, res['properties']['update_replace'])
+            self.assertFalse(res['properties']['update_replace'])
 
             if res['resource_name'] == 'one':
                 self.assertEqual('fred', res['properties']['value'])
@@ -180,9 +180,9 @@ outputs:
         self.assertEqual('OS::Heat::TestResource',
                          res['resource_type'])
 
-        self.assertEqual(False, res['properties']['fail'])
+        self.assertFalse(res['properties']['fail'])
         self.assertEqual(0, res['properties']['wait_secs'])
-        self.assertEqual(False, res['properties']['update_replace'])
+        self.assertFalse(res['properties']['update_replace'])
 
         self.assertEqual('abc', res['properties']['value'])
         self.assertEqual([], res['required_by'])

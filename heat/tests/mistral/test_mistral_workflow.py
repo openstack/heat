@@ -629,11 +629,11 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual(5, task['retry']['delay'])
         self.assertEqual(15, task['retry']['count'])
         self.assertEqual(8, task['wait-after'])
-        self.assertEqual(True, task['pause-before'])
+        self.assertTrue(task['pause-before'])
         self.assertEqual(11, task['timeout'])
         self.assertEqual('test', task['target'])
         self.assertEqual(7, task['wait-before'])
-        self.assertEqual(False, task['keep-result'])
+        self.assertFalse(task['keep-result'])
 
         return [FakeWorkflow('create_vm')]
 

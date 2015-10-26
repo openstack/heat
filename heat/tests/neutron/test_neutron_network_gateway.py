@@ -568,7 +568,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37',
                          rsrc.FnGetRefId())
-        self.assertEqual(False, rsrc.FnGetAtt('default'))
+        self.assertFalse(rsrc.FnGetAtt('default'))
 
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'hoge')

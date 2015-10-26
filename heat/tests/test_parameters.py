@@ -400,13 +400,13 @@ class ParameterTestSpecific(common.HeatTestCase):
         schema = {'Type': 'Boolean'}
         for val in ('1', 't', 'true', 'on', 'y', 'yes', True, 1):
             bo = new_parameter('bo', schema, val)
-            self.assertEqual(True, bo.value())
+            self.assertTrue(bo.value())
 
     def test_bool_value_false(self):
         schema = {'Type': 'Boolean'}
         for val in ('0', 'f', 'false', 'off', 'n', 'no', False, 0):
             bo = new_parameter('bo', schema, val)
-            self.assertEqual(False, bo.value())
+            self.assertFalse(bo.value())
 
     def test_bool_value_invalid(self):
         schema = {'Type': 'Boolean'}

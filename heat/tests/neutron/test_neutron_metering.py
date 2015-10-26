@@ -154,7 +154,7 @@ class MeteringLabelTest(common.HeatTestCase):
         self.assertEqual('TestLabel', rsrc.FnGetAtt('name'))
         self.assertEqual('Description of TestLabel',
                          rsrc.FnGetAtt('description'))
-        self.assertEqual(True, rsrc.FnGetAtt('shared'))
+        self.assertTrue(rsrc.FnGetAtt('shared'))
         self.m.VerifyAll()
 
 
