@@ -57,7 +57,7 @@ class JsonToYamlTest(common.HeatTestCase):
 
         self.assertEqual(u'2012-12-12', yml[u'HeatTemplateFormatVersion'],
                          file_name)
-        self.assertFalse(u'AWSTemplateFormatVersion' in yml, file_name)
+        self.assertNotIn(u'AWSTemplateFormatVersion', yml, file_name)
         del(yml[u'HeatTemplateFormatVersion'])
 
         jsn = template_format.parse(json_str)

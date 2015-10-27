@@ -253,8 +253,8 @@ class IdentifierTest(common.HeatTestCase):
 
     def test_id_contains(self):
         hi = identifier.HeatIdentifier('t', 's', ':/')
-        self.assertFalse("t" in hi)
-        self.assertTrue("stack_id" in hi)
+        self.assertNotIn("t", hi)
+        self.assertIn("stack_id", hi)
 
     def test_path_escape(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', ':/')
