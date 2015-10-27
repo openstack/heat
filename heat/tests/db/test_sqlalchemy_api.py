@@ -2775,12 +2775,12 @@ class DBAPISyncPointTest(common.HeatTestCase):
             ret_sync_point_rsrc = db_api.sync_point_get(
                 self.ctx, str(res.id), self.stack.current_traversal, True
             )
-            self.assertEqual(None, ret_sync_point_rsrc)
+            self.assertIsNone(ret_sync_point_rsrc)
 
         ret_sync_point_stack = db_api.sync_point_get(
             self.ctx, self.stack.id, self.stack.current_traversal, True
         )
-        self.assertEqual(None, ret_sync_point_stack)
+        self.assertIsNone(ret_sync_point_stack)
 
 
 class DBAPICryptParamsPropsTest(common.HeatTestCase):

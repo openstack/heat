@@ -3020,7 +3020,7 @@ class ServersTest(common.HeatTestCase):
 
         net = {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}
         net_id = server._get_network_id(net)
-        self.assertEqual(None, net_id)
+        self.assertIsNone(net_id)
 
         net = {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
                'fixed_ip': '1.2.3.4'}
@@ -3038,7 +3038,7 @@ class ServersTest(common.HeatTestCase):
 
         net = {'network': '', 'fixed_ip': '1.2.3.4'}
         net_id = server._get_network_id(net)
-        self.assertEqual(None, net_id)
+        self.assertIsNone(net_id)
 
     def test_get_network_id_nova(self):
         return_server = self.fc.servers.list()[3]
@@ -3049,7 +3049,7 @@ class ServersTest(common.HeatTestCase):
         net = {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}
 
         net_id = server._get_network_id(net)
-        self.assertEqual(None, net_id)
+        self.assertIsNone(net_id)
 
         net = {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
                'fixed_ip': '1.2.3.4'}

@@ -80,4 +80,4 @@ class SoftwareConfigTest(common.HeatTestCase):
         self.assertEqual(
             '#!/bin/bash', self.config._resolve_attribute('config'))
         self.rpc_client.show_software_config.side_effect = exc.NotFound
-        self.assertEqual(None, self.config._resolve_attribute('config'))
+        self.assertIsNone(self.config._resolve_attribute('config'))
