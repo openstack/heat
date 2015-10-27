@@ -1555,7 +1555,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(True, fake_lb.connection_logging)
+        self.assertTrue(fake_lb.connection_logging)
         self.m.VerifyAll()
 
     def test_update_connection_logging_delete(self):
@@ -1589,7 +1589,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(False, fake_lb.connection_logging)
+        self.assertFalse(fake_lb.connection_logging)
         self.m.VerifyAll()
 
     def test_update_connection_logging_disable(self):
@@ -1613,7 +1613,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(False, fake_lb.connection_logging)
+        self.assertFalse(fake_lb.connection_logging)
         self.m.VerifyAll()
 
     def test_update_connection_throttle_add(self):

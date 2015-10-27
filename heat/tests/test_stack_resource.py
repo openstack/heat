@@ -535,7 +535,7 @@ class StackResourceTest(StackResourceBaseTest):
             self.parent_resource.properties,
             self.parent_resource)
 
-        self.assertEqual(True, need_update)
+        self.assertTrue(need_update)
 
     def test_need_update_in_failed_state_for_nested_resource(self):
         """Test the resource with no nested stack should need replacement.

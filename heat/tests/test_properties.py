@@ -1027,7 +1027,7 @@ class PropertiesTest(common.HeatTestCase):
         self.assertEqual('foofoo', self.props['string'])
 
     def test_bool_not_str(self):
-        self.assertEqual(False, self.props['default_bool'])
+        self.assertFalse(self.props['default_bool'])
 
     def test_missing_required(self):
         self.assertRaises(ValueError, self.props.get, 'required_int')

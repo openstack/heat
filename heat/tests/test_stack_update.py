@@ -189,7 +189,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual(True, self.stack.disable_rollback)
+        self.assertTrue(self.stack.disable_rollback)
 
     def test_update_tags(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
