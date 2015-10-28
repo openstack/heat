@@ -92,3 +92,20 @@ resources:
       connection_limit: -1
       tenant_id: 1234
 '''
+
+POOL_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a pool
+resources:
+  pool:
+    type: OS::Neutron::LBaaS::Pool
+    properties:
+      name: my_pool
+      description: my pool
+      session_persistence:
+        type: HTTP_COOKIE
+      lb_algorithm: ROUND_ROBIN
+      listener: 123
+      protocol: HTTP
+      admin_state_up: True
+'''

@@ -100,6 +100,9 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def resolve_loadbalancer(self, props, lb_key, lb_id_key):
         return self._resolve(props, lb_key, lb_id_key, 'loadbalancer')
 
+    def resolve_listener(self, props, listener_key, listener_id_key):
+        return self._resolve(props, listener_key, listener_id_key, 'listener')
+
     def resolve_network(self, props, net_key, net_id_key):
         return self._resolve(props, net_key, net_id_key, 'network')
 
