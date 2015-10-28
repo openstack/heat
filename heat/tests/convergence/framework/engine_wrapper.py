@@ -67,7 +67,7 @@ class Engine(message_processor.MessageProcessor):
         srv.thread_group_mgr = thread_group_mgr
         hot_tmpl = self.scenario_template_to_hot(scenario_tmpl)
         srv.create_stack(cnxt, stack_name, hot_tmpl,
-                         params={}, files={}, args={})
+                         params={}, files={}, environment_files=None, args={})
 
     @message_processor.asynchronous
     def update_stack(self, stack_name, scenario_tmpl):
@@ -82,7 +82,7 @@ class Engine(message_processor.MessageProcessor):
                           'tenant': db_stack.tenant,
                           'path': ''}
         srv.update_stack(cnxt, stack_identity, hot_tmpl,
-                         params={}, files={}, args={})
+                         params={}, files={}, environment_files=None, args={})
 
     @message_processor.asynchronous
     def delete_stack(self, stack_name):
