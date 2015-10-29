@@ -187,8 +187,6 @@ class Stack(
                                            'traversal': self.current_traversal,
                                            'msg': 'that does not exist'})
 
-        return self.refresh()
-
     def __eq__(self, another):
         self.refresh()  # to make test object comparison work well
         return super(Stack, self).__eq__(another)
