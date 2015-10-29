@@ -137,7 +137,8 @@ class Subnet(neutron.NeutronResource):
                         required=True
                     ),
                 },
-            )
+            ),
+            update_allowed=True
         ),
         TENANT_ID: properties.Schema(
             properties.Schema.STRING,
@@ -271,6 +272,9 @@ class Subnet(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
+        if (self.ALLOCATION_POOLS in prop_diff and
+                self.ALLOCATION_POOLS not in props):
+            props[self.ALLOCATION_POOLS] = []
         self.neutron().update_subnet(
             self.resource_id, {'subnet': props})
 
