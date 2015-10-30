@@ -294,6 +294,42 @@ class NeutronPortTest(common.HeatTestCase):
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
+    def test_ip_address_is_cidr(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234'
+        ).MultipleTimes().AndReturn('abcd1234')
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'abcd1234',
+            'allowed_address_pairs': [{
+                'ip_address': u'10.0.3.0/24',
+                'mac_address': u'00-B0-D0-86-BB-F7'
+            }],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "2e00180a-ff9d-42c4-b701-a0606b243447"
+        }})
+        neutronclient.Client.show_port(
+            '2e00180a-ff9d-42c4-b701-a0606b243447'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "2e00180a-ff9d-42c4-b701-a0606b243447"
+        }})
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_with_address_pair_template)
+        t['resources']['port']['properties'][
+            'allowed_address_pairs'][0]['ip_address'] = '10.0.3.0/24'
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.m.VerifyAll()
+
     def _mock_create_with_security_groups(self, port_prop):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
