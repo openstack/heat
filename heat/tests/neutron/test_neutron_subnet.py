@@ -482,6 +482,21 @@ class NeutronSubnetTest(common.HeatTestCase):
         rsrc.validate()
         self.m.VerifyAll()
 
+    def test_host_routes_validate_destination(self):
+        t = template_format.parse(neutron_template)
+        props = t['resources']['sub_net']['properties']
+        props['host_routes'] = [{'destination': 'invalid_cidr',
+                                 'nexthop': '10.0.3.20'}]
+        stack = utils.parse_stack(t)
+        rsrc = stack['sub_net']
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               rsrc.validate)
+        msg = ("Property error: "
+               "resources.sub_net.properties.host_routes[0].destination: "
+               "Error validating value 'invalid_cidr': Invalid net cidr "
+               "invalid IPNetwork invalid_cidr ")
+        self.assertEqual(msg, six.text_type(ex))
+
     def test_ipv6_validate_ra_mode(self):
         t = template_format.parse(neutron_template)
         props = t['resources']['sub_net']['properties']

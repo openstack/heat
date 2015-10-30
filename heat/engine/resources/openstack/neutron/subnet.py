@@ -168,7 +168,10 @@ class Subnet(neutron.NeutronResource):
                 schema={
                     ROUTE_DESTINATION: properties.Schema(
                         properties.Schema.STRING,
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('net_cidr')
+                        ]
                     ),
                     ROUTE_NEXTHOP: properties.Schema(
                         properties.Schema.STRING,
