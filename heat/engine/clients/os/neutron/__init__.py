@@ -103,6 +103,13 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def resolve_listener(self, props, listener_key, listener_id_key):
         return self._resolve(props, listener_key, listener_id_key, 'listener')
 
+    def resolve_pool(self, props, pool_key, pool_id_key):
+        if props.get(pool_key):
+            props[pool_id_key] = self.find_resourceid_by_name_or_id(
+                'pool', props.get(pool_key), cmd_resource='lbaas_pool')
+            props.pop(pool_key)
+        return props[pool_id_key]
+
     def resolve_network(self, props, net_key, net_id_key):
         return self._resolve(props, net_key, net_id_key, 'network')
 
