@@ -985,7 +985,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
     def converge_stack(self, template, action=UPDATE, new_stack=None):
-        """Updates the stack and triggers convergence for resources."""
+        """Update the stack and triggers convergence for resources."""
         if action not in [self.CREATE, self.ADOPT]:
             # no back-up template for create action
             self.prev_raw_template_id = getattr(self.t, 'id', None)
@@ -997,7 +997,10 @@ class Stack(collections.Mapping):
 
         previous_traversal = self.current_traversal
         self.current_traversal = uuidutils.generate_uuid()
-        self.updated_time = datetime.datetime.utcnow()
+
+        if action is not self.CREATE:
+            self.updated_time = datetime.datetime.utcnow()
+
         if new_stack is not None:
             self.disable_rollback = new_stack.disable_rollback
             self.timeout_mins = new_stack.timeout_mins

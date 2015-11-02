@@ -443,6 +443,20 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         # should return resource with template id 2 which is prev template
         self.assertEqual(a_res_2.id, best_res.id)
 
+    def test_updated_time(self, mock_cr):
+        stack = parser.Stack(utils.dummy_context(), 'convg_updated_time_test',
+                             templatem.Template.create_empty_template())
+        stack.store()
+        stack.create()
+        self.assertIsNone(stack.updated_time)
+
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'R1': {'Type': 'GenericResourceType'}}}
+        newstack = parser.Stack(utils.dummy_context(), 'updated_time_test',
+                                templatem.Template(tmpl))
+        stack.update(newstack)
+        self.assertIsNotNone(stack.updated_time)
+
 
 class TestConvgStackRollback(common.HeatTestCase):
 
