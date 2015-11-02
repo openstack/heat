@@ -317,7 +317,7 @@ class Subnet(neutron.NeutronResource):
         props = self.prepare_update_properties(json_snippet)
         if (self.ALLOCATION_POOLS in prop_diff and
                 self.ALLOCATION_POOLS not in props):
-            props[self.ALLOCATION_POOLS] = None
+            props[self.ALLOCATION_POOLS] = []
         self.client().update_subnet(
             self.resource_id, {'subnet': props})
 
