@@ -199,6 +199,14 @@ class StackResourceTest(StackResourceBaseTest):
         ret = self.parent_resource.prepare_abandon()
         self.assertEqual({}, ret)
 
+    def test_abandon_nested_not_deleted(self):
+        delete_nested = self.patchobject(self.parent_resource, 'delete_nested')
+
+        self.parent_stack.prepare_abandon()
+        self.parent_stack.delete(abandon=True)
+
+        self.assertEqual(0, delete_nested.call_count)
+
     @testtools.skipIf(six.PY3, "needs a separate change")
     def test_implementation_signature(self):
         self.parent_resource.child_template = mock.Mock(

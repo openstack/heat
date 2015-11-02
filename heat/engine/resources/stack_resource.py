@@ -500,6 +500,7 @@ class StackResource(resource.Resource):
         return self._check_status_complete(resource.Resource.CHECK)
 
     def prepare_abandon(self):
+        self.abandon_in_progress = True
         nested_stack = self.nested()
         if nested_stack:
             return self.nested().prepare_abandon()
