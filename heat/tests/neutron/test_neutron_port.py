@@ -756,6 +756,26 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_prepare_for_replace_port_not_created(self):
+        t = template_format.parse(neutron_port_template)
+        stack = utils.parse_stack(t)
+        port = stack['port']
+        port._show_resource = mock.Mock()
+        port.data_set = mock.Mock()
+        n_client = mock.Mock()
+        port.client = mock.Mock(return_value=n_client)
+
+        self.assertIsNone(port.resource_id)
+
+        # execute prepare_for_replace
+        port.prepare_for_replace()
+
+        # check, if the port is not created, do nothing in
+        # prepare_for_replace()
+        self.assertFalse(port._show_resource.called)
+        self.assertFalse(port.data_set.called)
+        self.assertFalse(n_client.update_port.called)
+
     def test_prepare_for_replace_port(self):
         t = template_format.parse(neutron_port_template)
         stack = utils.parse_stack(t)
@@ -804,7 +824,7 @@ class NeutronPortTest(common.HeatTestCase):
         n_client = mock.Mock()
         new_port.client = mock.Mock(return_value=n_client)
 
-        # execute prepare_for_replace
+        # execute restore_prev_rsrc
         new_port.restore_prev_rsrc()
 
         # check, that ports were updated: old port get ip and
@@ -843,7 +863,7 @@ class NeutronPortTest(common.HeatTestCase):
         n_client = mock.Mock()
         prev_rsrc.client = mock.Mock(return_value=n_client)
 
-        # execute prepare_for_replace
+        # execute restore_prev_rsrc
         prev_rsrc.restore_prev_rsrc(convergence=True)
 
         expected_existing_props = {'port': {'fixed_ips': []}}
