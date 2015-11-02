@@ -16,9 +16,9 @@ import os
 import subprocess
 
 import mock
-import unittest
 
 from heat.cloudinit import loguserdata
+from heat.tests import common
 
 
 class FakeCiVersion(object):
@@ -26,7 +26,7 @@ class FakeCiVersion(object):
         self.version = version
 
 
-class LoguserdataTest(unittest.TestCase):
+class LoguserdataTest(common.HeatTestCase):
 
     @mock.patch('pkg_resources.get_distribution')
     def test_ci_version_with_pkg_resources(self, mock_get):
