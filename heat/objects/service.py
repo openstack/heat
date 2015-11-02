@@ -46,10 +46,8 @@ class Service(base.VersionedObject,
 
     @classmethod
     def _from_db_objects(cls, context, list_obj):
-        return map(lambda obj: cls._from_db_object(context,
-                                                   cls(context),
-                                                   obj),
-                   list_obj)
+        return [cls._from_db_object(context, cls(context), obj)
+                for obj in list_obj]
 
     @classmethod
     def get_by_id(cls, context, service_id):
