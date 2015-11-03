@@ -919,7 +919,6 @@ class Resource(object):
             if not self._needs_update(after, before, after_props, before_props,
                                       prev_resource):
                 return
-
             if not cfg.CONF.convergence_engine:
                 if (self.action, self.status) in (
                         (self.CREATE, self.IN_PROGRESS),
@@ -946,13 +945,20 @@ class Resource(object):
                 self._update_stored_properties()
         except exception.UpdateReplace as ex:
             # catch all UpdateReplace expections
-            if (self.stack.action == 'ROLLBACK' and
-                    self.stack.status == 'IN_PROGRESS'):
-                # handle case, when it's rollback and we should restore
-                # old resource
-                self.restore_after_rollback()
-            else:
-                self.prepare_for_replace()
+            try:
+                if (self.stack.action == 'ROLLBACK' and
+                        self.stack.status == 'IN_PROGRESS'):
+                    # handle case, when it's rollback and we should restore
+                    # old resource
+                    self.restore_after_rollback()
+                else:
+                    self.prepare_for_replace()
+            except Exception as e:
+                # if any exception happen, we should set the resource to
+                # FAILED, then raise ResourceFailure
+                failure = exception.ResourceFailure(e, self, action)
+                self.state_set(action, self.FAILED, six.text_type(failure))
+                raise failure
             raise ex
 
     def prepare_for_replace(self):

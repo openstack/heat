@@ -357,62 +357,75 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsNotNone(res.updated_time)
         self.assertNotEqual(res.updated_time, stored_time)
 
-    def test_update_replace(self):
+    def _setup_resource_for_update(self, res_name):
         class TestResource(resource.Resource):
             properties_schema = {'a_string': {'Type': 'String'}}
             update_allowed_properties = ('a_string',)
 
         resource._register_class('TestResource', TestResource)
 
-        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+        tmpl = rsrc_defn.ResourceDefinition(res_name,
                                             'TestResource')
         res = TestResource('test_resource', tmpl, self.stack)
+
+        utmpl = rsrc_defn.ResourceDefinition(res_name, 'TestResource',
+                                             {'a_string': 'foo'})
+
+        return res, utmpl
+
+    def test_update_replace(self):
+        res, utmpl = self._setup_resource_for_update(
+            res_name='test_update_replace')
         res.prepare_for_replace = mock.Mock()
 
-        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
-                                             {'a_string': 'foo'})
         self.assertRaises(
             exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
         self.assertTrue(res.prepare_for_replace.called)
 
+    def test_update_replace_prepare_replace_error(self):
+        # test if any error happened when prepare_for_replace,
+        # whether the resource will go to FAILED
+        res, utmpl = self._setup_resource_for_update(
+            res_name='test_update_replace_prepare_replace_error')
+        res.prepare_for_replace = mock.Mock(side_effect=Exception)
+
+        self.assertRaises(
+            exception.ResourceFailure,
+            scheduler.TaskRunner(res.update, utmpl))
+        self.assertTrue(res.prepare_for_replace.called)
+        self.assertEqual((res.UPDATE, res.FAILED), res.state)
+
     def test_update_rsrc_in_progress_raises_exception(self):
-        class TestResource(resource.Resource):
-            properties_schema = {'a_string': {'Type': 'String'}}
-            update_allowed_properties = ('a_string',)
+        res, utmpl = self._setup_resource_for_update(
+            res_name='test_update_rsrc_in_progress_raises_exception')
 
         cfg.CONF.set_override('convergence_engine', False)
-        resource._register_class('TestResource', TestResource)
 
-        tmpl = rsrc_defn.ResourceDefinition('test_resource',
-                                            'TestResource')
-        res = TestResource('test_resource', tmpl, self.stack)
-
-        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
-                                             {'a_string': 'foo'})
         res.action = res.UPDATE
         res.status = res.IN_PROGRESS
         self.assertRaises(
             exception.ResourceFailure, scheduler.TaskRunner(res.update, utmpl))
 
     def test_update_replace_rollback(self):
-        class TestResource(resource.Resource):
-            properties_schema = {'a_string': {'Type': 'String'}}
-            update_allowed_properties = ('a_string',)
-
-        resource._register_class('TestResource', TestResource)
-
-        tmpl = rsrc_defn.ResourceDefinition('test_resource',
-                                            'TestResource')
-        self.stack.state_set('ROLLBACK', 'IN_PROGRESS', 'Simulate rollback')
-        res = TestResource('test_resource', tmpl, self.stack)
-
+        res, utmpl = self._setup_resource_for_update(
+            res_name='test_update_replace_rollback')
         res.restore_after_rollback = mock.Mock()
+        self.stack.state_set('ROLLBACK', 'IN_PROGRESS', 'Simulate rollback')
 
-        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
-                                             {'a_string': 'foo'})
         self.assertRaises(
             exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
         self.assertTrue(res.restore_after_rollback.called)
+
+    def test_update_replace_rollback_restore_after_rsrc_error(self):
+        res, utmpl = self._setup_resource_for_update(
+            res_name='restore_after_rsrc_error')
+        res.restore_after_rollback = mock.Mock(side_effect=Exception)
+        self.stack.state_set('ROLLBACK', 'IN_PROGRESS', 'Simulate rollback')
+
+        self.assertRaises(
+            exception.ResourceFailure, scheduler.TaskRunner(res.update, utmpl))
+        self.assertTrue(res.restore_after_rollback.called)
+        self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_replace_in_failed_without_nested(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
