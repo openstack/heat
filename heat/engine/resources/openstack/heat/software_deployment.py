@@ -651,8 +651,9 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
 
 class SoftwareDeployments(SoftwareDeploymentGroup):
 
-    deprecation_msg = _('This resource is deprecated and use is discouraged. '
-                        'Please use resource OS::Heat:SoftwareDeploymentGroup '
+    deprecation_msg = _('The resource OS::Heat::SoftwareDeployments is '
+                        'deprecated and usage is discouraged. Please use '
+                        'resource OS::Heat::SoftwareDeploymentGroup '
                         'instead.')
     support_status = support.SupportStatus(status=support.DEPRECATED,
                                            message=deprecation_msg,
