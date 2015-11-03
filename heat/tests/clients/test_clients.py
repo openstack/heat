@@ -341,7 +341,7 @@ class TestClientPluginsInitialise(common.HeatTestCase):
             self.assertEqual(con, plugin.context)
             self.assertIsNone(plugin._client)
             self.assertTrue(clients.has_client(plugin_name))
-            self.assertTrue(isinstance(plugin.service_types, list))
+            self.assertIsInstance(plugin.service_types, list)
             self.assertTrue(len(plugin.service_types) >= 1,
                             'service_types is not defined for plugin')
 

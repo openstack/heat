@@ -139,7 +139,7 @@ class ResolveTest(common.HeatTestCase):
         result = function.resolve(func)
 
         self.assertEqual('wibble', result)
-        self.assertTrue(isinstance(result, str))
+        self.assertIsInstance(result, str)
 
     def test_resolve_dict(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])

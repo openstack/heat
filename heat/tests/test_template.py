@@ -634,7 +634,7 @@ class TemplateTest(common.HeatTestCase):
 
         p_snippet = {"Ref": "baz"}
         parsed = tmpl.parse(stk, p_snippet)
-        self.assertTrue(isinstance(parsed, cfn_funcs.ParamRef))
+        self.assertIsInstance(parsed, cfn_funcs.ParamRef)
 
     def test_select_from_list(self):
         tmpl = template.Template(empty_template)
