@@ -38,6 +38,6 @@ iniset heat_integrationtests.conf DEFAULT minimal_image_ref cirros-0.3.4-x86_64-
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest, AutoscalingLoadBalancerTest.test_autoscaling_loadbalancer_neutron'
 
 cat heat_integrationtests.conf
