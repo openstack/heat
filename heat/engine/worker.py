@@ -140,14 +140,13 @@ class WorkerService(service.Service):
             # no data to resolve in cleanup phase
             cache_data = {}
 
-        rsrc, stack = None, None
         try:
-            rsrc, stack = resource.Resource.load(cnxt, resource_id, is_update,
-                                                 cache_data)
+            return resource.Resource.load(cnxt, resource_id,
+                                          is_update, cache_data)
         except (exception.ResourceNotFound, exception.NotFound):
             pass  # can be ignored
 
-        return rsrc, stack
+        return None, None, None
 
     def _do_check_resource(self, cnxt, current_traversal, tmpl, resource_data,
                            is_update, rsrc, stack, adopt_stack_data):
@@ -156,7 +155,7 @@ class WorkerService(service.Service):
                 try:
                     check_resource_update(rsrc, tmpl.id, resource_data,
                                           self.engine_id,
-                                          stack.time_remaining())
+                                          stack)
                 except exception.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
                     LOG.info("Replacing resource with new id %s", new_res_id)
@@ -229,7 +228,7 @@ class WorkerService(service.Service):
 
         def _get_input_data(req, fwd):
             if fwd:
-                return construct_input_data(rsrc)
+                return construct_input_data(rsrc, stack)
             else:
                 # Don't send data if initiating clean-up for self i.e.
                 # initiating delete of a replaced resource
@@ -272,8 +271,9 @@ class WorkerService(service.Service):
         associated resource.
         """
         resource_data = dict(sync_point.deserialize_input_data(data))
-        rsrc, stack = self._load_resource(cnxt, resource_id, resource_data,
-                                          is_update)
+        rsrc, rsrc_owning_stack, stack = self._load_resource(cnxt, resource_id,
+                                                             resource_data,
+                                                             is_update)
 
         if rsrc is None:
             return
@@ -307,10 +307,10 @@ class WorkerService(service.Service):
                                               rsrc, stack)
 
 
-def construct_input_data(rsrc):
-    attributes = rsrc.stack.get_dep_attrs(
-        six.itervalues(rsrc.stack.resources),
-        rsrc.stack.outputs,
+def construct_input_data(rsrc, curr_stack):
+    attributes = curr_stack.get_dep_attrs(
+        six.itervalues(curr_stack.resources),
+        curr_stack.outputs,
         rsrc.name)
     resolved_attributes = {}
     for attr in attributes:
@@ -366,12 +366,14 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
 
 
 def check_resource_update(rsrc, template_id, resource_data, engine_id,
-                          timeout):
+                          stack):
     """Create or update the Resource if appropriate."""
     if rsrc.action == resource.Resource.INIT:
-        rsrc.create_convergence(template_id, resource_data, engine_id, timeout)
+        rsrc.create_convergence(template_id, resource_data, engine_id,
+                                stack.time_remaining())
     else:
-        rsrc.update_convergence(template_id, resource_data, engine_id, timeout)
+        rsrc.update_convergence(template_id, resource_data, engine_id,
+                                stack.time_remaining(), stack)
 
 
 def check_resource_cleanup(rsrc, template_id, resource_data, engine_id,

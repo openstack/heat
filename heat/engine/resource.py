@@ -44,6 +44,7 @@ from heat.engine import support
 from heat.engine import template
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
+from heat.objects import stack as stack_objects
 from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
@@ -263,30 +264,32 @@ class Resource(object):
     def load(cls, context, resource_id, is_update, data):
         from heat.engine import stack as stack_mod
         db_res = resource_objects.Resource.get_obj(context, resource_id)
+        curr_stack = stack_mod.Stack.load(context, stack_id=db_res.stack_id,
+                                          cache_data=data)
 
-        @contextlib.contextmanager
-        def special_stack(tmpl, swap_template):
-            stk = stack_mod.Stack.load(context, db_res.stack_id,
-                                       cache_data=data)
+        resource_owning_stack = curr_stack
+        if db_res.current_template_id != curr_stack.t.id:
+            # load stack with template owning the resource
+            db_stack = stack_objects.Stack.get_by_id(context, db_res.stack_id)
+            db_stack.raw_template = None
+            db_stack.raw_template_id = db_res.current_template_id
+            resource_owning_stack = stack_mod.Stack.load(context,
+                                                         stack=db_stack)
 
-            # NOTE(sirushtim): Because on delete/cleanup operations, we simply
-            # update with another template, the stack object won't have the
-            # template of the previous stack-run.
-            if swap_template:
-                prev_tmpl = stk.t
-                stk.t = tmpl
-                stk.resources
-            yield stk
-            if swap_template:
-                stk.t = prev_tmpl
+        # Load only the resource in question; don't load all resources
+        # by invoking stack.resources. Maintain light-weight stack.
+        res_defn = resource_owning_stack.t.resource_definitions(
+            resource_owning_stack)[db_res.name]
+        resource = cls(db_res.name, res_defn, resource_owning_stack)
+        resource._load_data(db_res)
 
-        tmpl = template.Template.load(context, db_res.current_template_id)
-        with special_stack(tmpl, not is_update) as stack:
-            stack_res = tmpl.resource_definitions(stack)[db_res.name]
-            resource = cls(db_res.name, stack_res, stack)
-            resource._load_data(db_res)
+        # assign current stack to the resource for updates
+        if is_update:
+            resource.stack = curr_stack
 
-        return resource, stack
+        # return resource owning stack so that it is not GCed since it
+        # is the only stack instance with a weak-ref from resource
+        return resource, resource_owning_stack, curr_stack
 
     def make_replacement(self, new_tmpl_id):
         # 1. create the replacement with "replaces" = self.id
@@ -886,7 +889,7 @@ class Resource(object):
             return True
 
     def update_convergence(self, template_id, resource_data, engine_id,
-                           timeout):
+                           timeout, new_stack):
         """Update the resource synchronously.
 
         Persist the resource's current_template_id to template_id and
@@ -903,7 +906,7 @@ class Resource(object):
 
         with self.lock(engine_id):
             new_temp = template.Template.load(self.context, template_id)
-            new_res_def = new_temp.resource_definitions(self.stack)[self.name]
+            new_res_def = new_temp.resource_definitions(new_stack)[self.name]
             if self.stack.action == self.stack.ROLLBACK and \
                     self.stack.status == self.stack.IN_PROGRESS \
                     and self.replaced_by:

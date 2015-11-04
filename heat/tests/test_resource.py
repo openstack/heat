@@ -95,8 +95,8 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = self.stack.t.id
         res.state_set('CREATE', 'IN_PROGRESS')
         self.stack.add_resource(res)
-        loaded_res, stack = resource.Resource.load(self.stack.context,
-                                                   res.id, True, {})
+        loaded_res, res_owning_stack, stack = resource.Resource.load(
+            self.stack.context, res.id, True, {})
         self.assertEqual(loaded_res.id, res.id)
         self.assertEqual(self.stack.t, stack.t)
 
@@ -119,8 +119,8 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = self.old_stack.t.id
         res.state_set('CREATE', 'IN_PROGRESS')
         self.old_stack.add_resource(res)
-        loaded_res, stack = resource.Resource.load(self.old_stack.context,
-                                                   res.id, False, {})
+        loaded_res, res_owning_stack, stack = resource.Resource.load(
+            self.old_stack.context, res.id, False, {})
         self.assertEqual(loaded_res.id, res.id)
         self.assertEqual(self.old_stack.t, stack.t)
         self.assertNotEqual(self.new_stack.t, stack.t)
@@ -141,12 +141,12 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = self.stack.t.id
         res.state_set('CREATE', 'IN_PROGRESS')
         self.stack.add_resource(res)
-        origin_resources = self.stack._resources
+        origin_resources = self.stack.resources
         self.stack._resources = None
 
-        loaded_res, stack = resource.Resource.load(self.stack.context,
-                                                   res.id, False, {})
-        self.assertEqual(origin_resources, stack._resources)
+        loaded_res, res_owning_stack, stack = resource.Resource.load(
+            self.stack.context, res.id, False, {})
+        self.assertEqual(origin_resources, stack.resources)
         self.assertEqual(loaded_res.id, res.id)
         self.assertEqual(self.stack.t, stack.t)
 
@@ -1757,7 +1757,8 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res.update_convergence(new_temp.id, res_data, 'engine-007', 120)
+        res.update_convergence(new_temp.id, res_data, 'engine-007', 120,
+                               mock.ANY)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_init.assert_called_once_with(res.update, expected_rsrc_def)
@@ -1783,7 +1784,7 @@ class ResourceTest(common.HeatTestCase):
         res_data = {}
         self.assertRaises(scheduler.Timeout, res.update_convergence,
                           new_temp.id, res_data, 'engine-007',
-                          0)
+                          0, mock.ANY)
 
     def test_update_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -1800,7 +1801,8 @@ class ResourceTest(common.HeatTestCase):
                                res.update_convergence,
                                'template_key',
                                res_data, 'engine-007',
-                               self.dummy_timeout)
+                               self.dummy_timeout,
+                               mock.ANY)
         msg = ("The resource %s is already being updated." %
                res.name)
         self.assertEqual(msg, six.text_type(ex))
@@ -1831,7 +1833,7 @@ class ResourceTest(common.HeatTestCase):
         mock_update.side_effect = dummy_ex
         self.assertRaises(exception.ResourceFailure,
                           res.update_convergence, new_temp.id, res_data,
-                          'engine-007', 120)
+                          'engine-007', 120, mock.ANY)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_update.assert_called_once_with(expected_rsrc_def)
@@ -1863,7 +1865,7 @@ class ResourceTest(common.HeatTestCase):
         mock_update.side_effect = exception.UpdateReplace
         self.assertRaises(exception.UpdateReplace,
                           res.update_convergence, new_temp.id, res_data,
-                          'engine-007', 120)
+                          'engine-007', 120, mock.ANY)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_update.assert_called_once_with(expected_rsrc_def)
@@ -2096,13 +2098,15 @@ class ResourceTest(common.HeatTestCase):
         stack.store()
         mock_tmpl_load.return_value = tmpl
         res = stack['res']
+        res.current_template_id = stack.t.id
         res._store()
         data = {'bar': {'atrr1': 'baz', 'attr2': 'baz2'}}
         mock_stack_load.return_value = stack
         resource.Resource.load(stack.context, res.id, True, data)
-        mock_stack_load.assert_called_once_with(stack.context,
-                                                stack.id,
-                                                cache_data=data)
+        self.assertTrue(mock_stack_load.called)
+        mock_stack_load.assert_called_with(stack.context,
+                                           stack_id=stack.id,
+                                           cache_data=data)
         self.assertTrue(mock_load_data.called)
 
 

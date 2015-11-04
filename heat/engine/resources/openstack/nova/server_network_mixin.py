@@ -397,7 +397,7 @@ class ServerNetworkMixin(object):
             self.stack._backup_stack().resources.get(self.name)
 
         if convergence:
-            rsrc, stack = resource.Resource.load(
+            rsrc, rsrc_owning_stack, stack = resource.Resource.load(
                 prev_server.context, prev_server.replaced_by, True,
                 prev_server.stack.cache_data
             )
