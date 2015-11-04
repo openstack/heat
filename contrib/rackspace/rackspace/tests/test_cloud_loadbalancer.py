@@ -424,7 +424,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_process_node(self):
         nodes = [{'addresses': ['1234'], 'port': 80, 'enabled': True},
                  {'addresses': ['4567', '8901', '8903'], 'port': 80,
-                  'enabled': True}]
+                  'enabled': True},
+                 {'addresses': [], 'port': 80, 'enabled': True}]
         rsrc, fake_lb = self._mock_loadbalancer(self.lb_template,
                                                 self.lb_name,
                                                 self.expected_body)
