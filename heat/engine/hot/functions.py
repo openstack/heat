@@ -164,7 +164,7 @@ class GetAtt(GetAttThenSelect):
 
 
 class GetAttAllAttributes(GetAtt):
-    """A  function for resolving resource attributes.
+    """A function for resolving resource attributes.
 
     Takes the form::
 
