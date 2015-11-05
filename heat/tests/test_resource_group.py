@@ -17,6 +17,7 @@ import mock
 import six
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common import template_format
 from heat.engine import function
 from heat.engine.resources.openstack.heat import resource_group
@@ -1383,9 +1384,9 @@ class TestGetBatches(common.HeatTestCase):
 
         resources = [(str(i), old_def) for i in range(self.init_cap + 1)]
         self.grp.get_size = mock.Mock(return_value=self.targ_cap)
+        self.patchobject(grouputils, 'get_member_definitions',
+                         return_value=resources)
         self.grp.build_resource_definition = mock.Mock(return_value=new_def)
-        self.grp._get_resources = mock.Mock(return_value=resources)
-
         all_updated_names = set()
 
         for size, max_upd, names in self.batches:

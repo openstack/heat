@@ -16,6 +16,7 @@ import six
 
 from heat.common import grouputils
 from heat.common import template_format
+from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import utils
 
@@ -44,7 +45,6 @@ class GroupUtilsTest(common.HeatTestCase):
         group = mock.Mock()
         t = template_format.parse(nested_stack)
         stack = utils.parse_stack(t)
-
         # group size
         self.patchobject(group, 'nested', return_value=stack)
         self.assertEqual(2, grouputils.get_size(group))
@@ -62,7 +62,16 @@ class GroupUtilsTest(common.HeatTestCase):
         self.assertEqual(['ID-r0'], partial_ids)
 
         # names
-        self.assertEqual(['r0', 'r1'], grouputils.get_member_names(group))
+        names = grouputils.get_member_names(group)
+        self.assertEqual(['r0', 'r1'], names)
+
+        # defn snippets as list
+        expected = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType")
+
+        member_defs = grouputils.get_member_definitions(group)
+        self.assertEqual([(x, expected) for x in names], member_defs)
 
     def test_group_with_failed_members(self):
         group = mock.Mock()
