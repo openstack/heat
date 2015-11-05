@@ -16,7 +16,6 @@ import copy
 import itertools
 
 import six
-import six.moves
 
 from heat.common import exception
 from heat.common import grouputils
@@ -24,19 +23,14 @@ from heat.common.i18n import _
 from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine import constraints
+from heat.engine.hot import template
 from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
-from heat.engine import template
 from heat.scaling import rolling_update
-from heat.scaling import template as scale_template
-
-template_template = {
-    "heat_template_version": "2015-04-30",
-    "resources": {}
-}
+from heat.scaling import template as scl_template
 
 
 class ResourceGroup(stack_resource.StackResource):
@@ -277,8 +271,8 @@ class ResourceGroup(stack_resource.StackResource):
             return
 
         test_tmpl = self._assemble_nested(["0"], include_all=True)
-        val_templ = template.Template(test_tmpl)
-        res_def = val_templ.resource_definitions(self.stack)["0"]
+        res_def = next(six.itervalues(
+            test_tmpl.resource_definitions(self.stack)))
         # make sure we can resolve the nested resource type
         try:
             self.stack.env.get_class(res_def.resource_type)
@@ -348,8 +342,8 @@ class ResourceGroup(stack_resource.StackResource):
                                 size)
 
     def _get_resources(self):
-        """Get templates for resources."""
-        return [(resource.name, resource.t.render_hot())
+        """Get definitions for resources."""
+        return [(resource.name, resource.t)
                 for resource in grouputils.get_members(self)]
 
     def _count_black_listed(self):
@@ -448,17 +442,28 @@ class ResourceGroup(stack_resource.StackResource):
         return [grouputils.get_rsrc_attr(self, key, False, n, *path)
                 for n in names]
 
-    def _build_resource_definition(self, include_all=False):
+    def build_resource_definition(self, res_name, res_defn):
+        res_def = copy.deepcopy(res_defn)
+        props = res_def.get(self.RESOURCE_DEF_PROPERTIES)
+        if props:
+            repl_props = self._handle_repl_val(res_name, props)
+            res_def[self.RESOURCE_DEF_PROPERTIES] = repl_props
+        return template.HOTemplate20130523.rsrc_defn_from_snippet(res_name,
+                                                                  res_def)
+
+    def get_resource_def(self, include_all=False):
         res_def = self.properties[self.RESOURCE_DEF]
-        if res_def[self.RESOURCE_DEF_PROPERTIES] is None:
-            res_def[self.RESOURCE_DEF_PROPERTIES] = {}
-        if res_def[self.RESOURCE_DEF_METADATA] is None:
-            del res_def[self.RESOURCE_DEF_METADATA]
         if not include_all:
-            resource_def_props = res_def[self.RESOURCE_DEF_PROPERTIES]
-            clean = dict((k, v) for k, v in resource_def_props.items()
-                         if v is not None)
-            res_def[self.RESOURCE_DEF_PROPERTIES] = clean
+            return self._clean_props(res_def)
+        return res_def
+
+    def _clean_props(self, res_defn):
+        res_def = copy.deepcopy(res_defn)
+        props = res_def.get(self.RESOURCE_DEF_PROPERTIES)
+        if props:
+            clean = dict((k, v) for k, v in props.items() if v is not None)
+            props = clean
+            res_def[self.RESOURCE_DEF_PROPERTIES] = props
         return res_def
 
     def _handle_repl_val(self, res_name, val):
@@ -470,29 +475,25 @@ class ResourceGroup(stack_resource.StackResource):
         if isinstance(val, six.string_types):
             return val.replace(repl_var, res_name)
         elif isinstance(val, collections.Mapping):
-            return dict(zip(val, map(recurse, six.itervalues(val))))
+            return {k: recurse(v) for k, v in val.items()}
         elif isinstance(val, collections.Sequence):
-            return map(recurse, val)
+            return [recurse(v) for v in val]
         return val
 
-    def _do_prop_replace(self, res_name, res_def_template):
-        res_def = copy.deepcopy(res_def_template)
-        props = res_def[self.RESOURCE_DEF_PROPERTIES]
-        if props:
-            props = self._handle_repl_val(res_name, props)
-            res_def[self.RESOURCE_DEF_PROPERTIES] = props
-        return res_def
+    def _assemble_nested(self, names, include_all=False,
+                         template_version=('heat_template_version',
+                                           '2015-04-30')):
 
-    def _assemble_nested(self, names, include_all=False):
-        res_def = self._build_resource_definition(include_all)
-        resources = dict((k, self._do_prop_replace(k, res_def))
-                         for k in names)
-        child_template = copy.deepcopy(template_template)
-        child_template['resources'] = resources
-        return child_template
+        def_dict = self.get_resource_def(include_all)
+        definitions = [(k, self.build_resource_definition(k, def_dict))
+                       for k in names]
+        return scl_template.make_template(definitions,
+                                          version=template_version)
 
     def _assemble_for_rolling_update(self, total_capacity, max_updates,
-                                     include_all=False):
+                                     include_all=False,
+                                     template_version=('heat_template_version',
+                                                       '2015-04-30')):
         names = list(self._resource_names(total_capacity))
         name_blacklist = self._name_blacklist()
 
@@ -517,21 +518,18 @@ class ResourceGroup(stack_resource.StackResource):
                     return total_capacity
 
         old_resources = sorted(valid_resources, key=replace_priority)
-
         existing_names = set(n for n, d in valid_resources)
         new_names = six.moves.filterfalse(lambda n: n in existing_names,
                                           names)
-
-        res_def = self._build_resource_definition(include_all)
-        resources = scale_template.member_definitions(old_resources, res_def,
-                                                      total_capacity,
-                                                      max_updates,
-                                                      lambda: next(new_names),
-                                                      self._do_prop_replace)
-
-        child_template = copy.deepcopy(template_template)
-        child_template['resources'] = dict(resources)
-        return child_template
+        res_def = self.get_resource_def(include_all)
+        definitions = scl_template.member_definitions(
+            old_resources, res_def,
+            total_capacity,
+            max_updates,
+            lambda: next(new_names),
+            self.build_resource_definition)
+        return scl_template.make_template(definitions,
+                                          version=template_version)
 
     def _try_rolling_update(self):
         if self.update_policy[self.ROLLING_UPDATE]:

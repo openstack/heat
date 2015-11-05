@@ -283,7 +283,10 @@ class StackResource(resource.Resource):
             if 'environment' not in adopt_data:
                 adopt_data['environment'] = child_env.user_env_as_dict()
             if 'template' not in adopt_data:
-                adopt_data['template'] = child_template
+                if isinstance(child_template, template.Template):
+                    adopt_data['template'] = child_template.t
+                else:
+                    adopt_data['template'] = child_template
             adopt_data_str = json.dumps(adopt_data)
 
         args = {rpc_api.PARAM_TIMEOUT: timeout_mins,

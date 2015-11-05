@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import copy
 import functools
 
 import six
@@ -22,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.heat import software_config as sc
 from heat.engine.resources.openstack.heat import software_deployment as sd
+from heat.engine import rsrc_defn
 from heat.engine import support
 
 
@@ -217,20 +219,13 @@ class StructuredDeploymentGroup(sd.SoftwareDeploymentGroup):
         StructuredDeployment.properties_schema[INPUT_VALUES_VALIDATE],
     }
 
-    def _build_resource_definition(self, include_all=False):
-        p = self.properties
-        return {
-            self.RESOURCE_DEF_TYPE: 'OS::Heat::StructuredDeployment',
-            self.RESOURCE_DEF_PROPERTIES: {
-                self.CONFIG: p[self.CONFIG],
-                self.INPUT_VALUES: p[self.INPUT_VALUES],
-                self.DEPLOY_ACTIONS: p[self.DEPLOY_ACTIONS],
-                self.SIGNAL_TRANSPORT: p[self.SIGNAL_TRANSPORT],
-                self.NAME: p[self.NAME],
-                self.INPUT_KEY: p[self.INPUT_KEY],
-                self.INPUT_VALUES_VALIDATE: p[self.INPUT_VALUES_VALIDATE],
-            }
-        }
+    def build_resource_definition(self, res_name, res_defn):
+        props = copy.deepcopy(res_defn)
+        servers = props.pop(self.SERVERS)
+        props[StructuredDeployment.SERVER] = servers.get(res_name)
+        return rsrc_defn.ResourceDefinition(res_name,
+                                            'OS::Heat::StructuredDeployment',
+                                            props, None)
 
 
 class StructuredDeployments(StructuredDeploymentGroup):
