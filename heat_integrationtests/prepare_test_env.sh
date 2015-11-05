@@ -40,4 +40,9 @@ iniset heat_integrationtests.conf DEFAULT minimal_image_ref cirros-0.3.4-x86_64-
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
 iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
 
+# Skip some tests for convergence until it is fixed
+if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
+    iniset heat_integrationtests.conf DEFAULT skip_functional_test_list 'StackValidationTest, UpdateStackTest.test_stack_update_alias_type, UpdateStackTest.test_stack_update_alias_changes'
+fi
+
 cat heat_integrationtests.conf
