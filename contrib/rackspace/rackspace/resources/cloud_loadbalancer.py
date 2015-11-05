@@ -503,14 +503,11 @@ class CloudLoadBalancer(resource.Resource):
         return False
 
     def _process_node(self, node):
-        if not node.get(self.NODE_ADDRESSES):
-            yield node
-        else:
-            for addr in node.get(self.NODE_ADDRESSES):
-                norm_node = copy.deepcopy(node)
-                norm_node['address'] = addr
-                del norm_node[self.NODE_ADDRESSES]
-                yield norm_node
+        for addr in node.get(self.NODE_ADDRESSES, []):
+            norm_node = copy.deepcopy(node)
+            norm_node['address'] = addr
+            del norm_node[self.NODE_ADDRESSES]
+            yield norm_node
 
     def _process_nodes(self, node_list):
         node_itr = six.moves.map(self._process_node, node_list)
