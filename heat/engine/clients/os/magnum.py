@@ -11,10 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from magnumclient.openstack.common.apiclient import exceptions
+from magnumclient.openstack.common.apiclient import exceptions as mc_exc
 from magnumclient.v1 import client as magnum_client
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 
 class MagnumClientPlugin(client_plugin.ClientPlugin):
@@ -34,10 +36,25 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
         return client
 
     def is_not_found(self, ex):
-        return isinstance(ex, exceptions.NotFound)
+        return isinstance(ex, mc_exc.NotFound)
 
     def is_over_limit(self, ex):
-        return isinstance(ex, exceptions.RequestEntityTooLarge)
+        return isinstance(ex, mc_exc.RequestEntityTooLarge)
 
     def is_conflict(self, ex):
-        return isinstance(ex, exceptions.Conflict)
+        return isinstance(ex, mc_exc.Conflict)
+
+    def get_baymodel(self, value):
+        try:
+            self.client().baymodels.get(value)
+        except mc_exc.NotFound:
+            raise exception.EntityNotFound(entity='BayModel',
+                                           name=value)
+
+
+class BaymodelConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.EntityNotFound,)
+
+    def validate_with_client(self, client, value):
+        client.client_plugin('magnum').get_baymodel(value)

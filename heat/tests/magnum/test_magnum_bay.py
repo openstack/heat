@@ -16,8 +16,11 @@ import mock
 from oslo_config import cfg
 import six
 
+from magnumclient.openstack.common.apiclient import exceptions as mc_exc
+
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import magnum as mc
 from heat.engine import resource
 from heat.engine.resources.openstack.magnum import bay
 from heat.engine import scheduler
@@ -54,6 +57,7 @@ class TestMagnumBay(common.HeatTestCase):
         self.rsrc_defn = resource_defns['test_bay']
         self.client = mock.Mock()
         self.patchobject(bay.Bay, 'client', return_value=self.client)
+        self.patchobject(mc.MagnumClientPlugin, 'get_baymodel')
 
     def _create_resource(self, name, snippet, stack, stat='CREATE_COMPLETE'):
         self.resource_id = '12345'
@@ -144,3 +148,21 @@ class TestMagnumBay(common.HeatTestCase):
         mapping = bay.resource_mapping()
         self.assertEqual(1, len(mapping))
         self.assertEqual(mapping[RESOURCE_TYPE], bay.Bay)
+
+
+class BaymodelConstraintTest(common.HeatTestCase):
+    def setUp(self):
+        super(BaymodelConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_baymodel_get = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'magnum').client().baymodels.get = self.mock_baymodel_get
+        self.constraint = mc.BaymodelConstraint()
+
+    def test_validate(self):
+        self.mock_baymodel_get.return_value = None
+        self.assertTrue(self.constraint.validate("mybaymodel", self.ctx))
+
+    def test_validate_fail(self):
+        self.mock_baymodel_get.side_effect = mc_exc.NotFound()
+        self.assertFalse(self.constraint.validate("badbaymodel", self.ctx))
