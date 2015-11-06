@@ -303,7 +303,7 @@ class Join(function.Function):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (six.string_types, collections.Mapping)):
+        if not isinstance(self.args, list):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -331,7 +331,8 @@ class Join(function.Function):
                 return ''
             if not isinstance(s, six.string_types):
                 raise TypeError(
-                    _('Items to join must be strings %s') % (repr(s)[:200]))
+                    _('Items to join must be strings not %s'
+                      ) % (repr(s)[:200]))
             return s
 
         return delim.join(ensure_string(s) for s in strings)
