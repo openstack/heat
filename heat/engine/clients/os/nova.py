@@ -33,6 +33,7 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
+from heat.engine.clients import os as os_client
 from heat.engine import constraints
 
 LOG = logging.getLogger(__name__)
@@ -656,10 +657,14 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         else:
             return False
 
-    def has_extension(self, alias):
-        """Check if extension is present."""
+    @os_client.MEMOIZE
+    def _list_extensions(self):
         extensions = self.client().list_extensions.show_all()
-        return alias in [extension.alias for extension in extensions]
+        return set(extension.alias for extension in extensions)
+
+    def has_extension(self, alias):
+        """Check if specific extension is present."""
+        return alias in self._list_extensions()
 
 
 class ServerConstraint(constraints.BaseCustomConstraint):
