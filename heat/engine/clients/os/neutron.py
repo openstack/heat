@@ -14,11 +14,19 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
+from oslo_cache import core
+from oslo_config import cfg
 from oslo_utils import uuidutils
 
+from heat.common import cache
 from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+
+
+MEMOIZE = core.get_memoization_decorator(conf=cfg.CONF,
+                                         region=cache.get_cache_region(),
+                                         group="service_extension_cache")
 
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
@@ -72,10 +80,14 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), key_type, props.get(key))
 
+    @MEMOIZE
+    def _list_extensions(self):
+        extensions = self.client().list_extensions().get('extensions')
+        return set(extension.get('alias') for extension in extensions)
+
     def has_extension(self, alias):
         """Check if specific extension is present."""
-        extensions = self.client().list_extensions().get('extensions')
-        return alias in [extension.get('alias') for extension in extensions]
+        return alias in self._list_extensions()
 
     def _resolve(self, props, key, id_key, key_type):
         if props.get(key):
