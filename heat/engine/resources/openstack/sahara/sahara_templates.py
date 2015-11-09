@@ -44,7 +44,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
         SECURITY_GROUPS, AUTO_SECURITY_GROUP,
         AVAILABILITY_ZONE, VOLUMES_AVAILABILITY_ZONE,
         NODE_PROCESSES, FLOATING_IP_POOL, NODE_CONFIGS, IMAGE_ID,
-        IS_PROXY_GATEWAY, VOLUME_LOCAL_TO_INSTANCE, USE_AUTOCONFIG
+        IS_PROXY_GATEWAY, VOLUME_LOCAL_TO_INSTANCE, USE_AUTOCONFIG,
+        SHARES
 
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'flavor', 'description',
@@ -52,7 +53,14 @@ class SaharaNodeGroupTemplate(resource.Resource):
         'security_groups', 'auto_security_group',
         'availability_zone', 'volumes_availability_zone',
         'node_processes', 'floating_ip_pool', 'node_configs', 'image_id',
-        'is_proxy_gateway', 'volume_local_to_instance', 'use_autoconfig'
+        'is_proxy_gateway', 'volume_local_to_instance', 'use_autoconfig',
+        'shares'
+    )
+
+    _SHARE_KEYS = (
+        SHARE_ID, PATH, ACCESS_LEVEL
+    ) = (
+        'id', 'path', 'access_level'
     )
 
     properties_schema = {
@@ -195,6 +203,36 @@ class SaharaNodeGroupTemplate(resource.Resource):
             _("Configure most important configs automatically."),
             support_status=support.SupportStatus(version='5.0.0'),
             update_allowed=True
+        ),
+        SHARES: properties.Schema(
+            properties.Schema.LIST,
+            _("List of manila shares to be mounted."),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    SHARE_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Id of the manila share."),
+                        required=True
+                    ),
+                    PATH: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Local path on each cluster node on which to mount "
+                          "the share. Defaults to '/mnt/{share_id}'.")
+                    ),
+                    ACCESS_LEVEL: properties.Schema(
+                        properties.Schema.STRING,
+                        _("Governs permissions set in manila for the cluster "
+                          "ips."),
+                        constraints=[
+                            constraints.AllowedValues(['rw', 'ro']),
+                        ],
+                        default='rw'
+                    )
+                }
+            ),
+            support_status=support.SupportStatus(version='6.0.0'),
+            update_allowed=True
         )
     }
 
@@ -233,7 +271,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
             'is_proxy_gateway': self.properties[self.IS_PROXY_GATEWAY],
             'volume_local_to_instance': self.properties[
                 self.VOLUME_LOCAL_TO_INSTANCE],
-            'use_autoconfig': self.properties[self.USE_AUTOCONFIG]
+            'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
+            'shares': self.properties[self.SHARES]
         }
         if props['floating_ip_pool'] and self.is_using_neutron():
             props['floating_ip_pool'] = self.client_plugin(
