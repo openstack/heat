@@ -400,20 +400,19 @@ class ResourceRegistry(object):
     def get_class(self, resource_type, resource_name=None):
         if resource_type == "":
             msg = _('Resource "%s" has no type') % resource_name
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.InvalidResourceType(message=msg)
         elif resource_type is None:
             msg = _('Non-empty resource type is required '
                     'for resource "%s"') % resource_name
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.InvalidResourceType(message=msg)
         elif not isinstance(resource_type, six.string_types):
             msg = _('Resource "%s" type is not a string') % resource_name
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.InvalidResourceType(message=msg)
 
         info = self.get_resource_info(resource_type,
                                       resource_name=resource_name)
         if info is None:
-            msg = _("Unknown resource Type : %s") % resource_type
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.ResourceTypeNotFound(type_name=resource_type)
         return info.get_class()
 
     def as_dict(self):

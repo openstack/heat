@@ -978,10 +978,10 @@ class EngineService(service.Service):
         """
         try:
             resource_class = resources.global_env().get_class(type_name)
-        except exception.StackValidationFailed:
-            raise exception.ResourceTypeNotFound(type_name=type_name)
-        except exception.NotFound as ex:
-            raise exception.StackValidationFailed(message=ex.message)
+        except (exception.InvalidResourceType,
+                exception.ResourceTypeNotFound,
+                exception.TemplateNotFound) as ex:
+            raise ex
 
         def properties_schema():
             for name, schema_dict in resource_class.properties_schema.items():
@@ -1010,10 +1010,10 @@ class EngineService(service.Service):
         try:
             return resources.global_env().get_class(
                 type_name).resource_to_template(type_name)
-        except exception.StackValidationFailed:
-            raise exception.ResourceTypeNotFound(type_name=type_name)
-        except exception.NotFound as ex:
-            raise exception.StackValidationFailed(message=ex.message)
+        except (exception.InvalidResourceType,
+                exception.ResourceTypeNotFound,
+                exception.TemplateNotFound) as ex:
+            raise ex
 
     @context.request_context
     def list_events(self, cnxt, stack_identity, filters=None, limit=None,

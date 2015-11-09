@@ -562,7 +562,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": "some_magic.yaml"}}}}
         env = environment.Environment(env_str)
-        ex = self.assertRaises(exception.NotFound, env.get_class,
+        ex = self.assertRaises(exception.TemplateNotFound, env.get_class,
                                'OS::ResourceType', 'fred')
         self.assertIn('Could not fetch remote template "some_magic.yaml"',
                       six.text_type(ex))
@@ -887,14 +887,14 @@ class TemplateDataTest(common.HeatTestCase):
         self.res.action = self.res.UPDATE
         self.res.nested = mock.MagicMock()
         self.res.get_template_file = mock.Mock(
-            side_effect=exception.NotFound())
-        self.assertRaises(exception.NotFound, self.res.template_data)
+            side_effect=exception.TemplateNotFound(message='not found'))
+        self.assertRaises(exception.TemplateNotFound, self.res.template_data)
 
     def test_template_data_in_create_without_template_file(self):
         self.res.action = self.res.CREATE
         self.res.nested = mock.MagicMock()
         self.res.get_template_file = mock.Mock(
-            side_effect=exception.NotFound())
+            side_effect=exception.TemplateNotFound(message='not found'))
         self.assertEqual('{}', self.res.template_data())
 
 
