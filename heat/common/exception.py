@@ -55,12 +55,16 @@ class HeatException(Exception):
     provided to the constructor.
     """
     message = _("An unknown exception occurred.")
+    error_code = None
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
         try:
             self.message = self.msg_fmt % kwargs
+
+            if self.error_code:
+                self.message = 'HEAT-E%s %s' % (self.error_code, self.message)
         except KeyError:
             exc_info = sys.exc_info()
             # kwargs doesn't match a variable in the message
