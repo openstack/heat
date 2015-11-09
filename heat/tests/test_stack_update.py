@@ -404,6 +404,43 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
 
+    def test_update_replace_delete_hook(self):
+        tmpl = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'foo': {'Type': 'String'}
+            },
+            'Resources': {
+                'AResource': {
+                    'Type': 'ResourceWithPropsType',
+                    'Properties': {'Foo': {'Ref': 'foo'}}
+                }
+            }
+        }
+
+        env = environment.Environment({'foo': 'abc'})
+        env.registry.load(
+            {'resources': {'AResource': {'hooks': 'pre-delete'}}})
+        self.stack = stack.Stack(
+            self.ctx, 'update_test_stack',
+            template.Template(tmpl, env=env))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        env2 = environment.Environment({'foo': 'xyz'})
+        env2.registry.load(
+            {'resources': {'AResource': {'hooks': 'pre-delete'}}})
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl, env=env2))
+
+        self.stack.update(updated_stack)
+        # The hook is not called, and update succeeds properly
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+
     def test_update_modify_update_failed(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',

@@ -35,7 +35,11 @@ from heat.engine import support
 LOG = log.getLogger(__name__)
 
 
-HOOK_TYPES = (HOOK_PRE_CREATE, HOOK_PRE_UPDATE) = ('pre-create', 'pre-update')
+HOOK_TYPES = (
+    HOOK_PRE_CREATE, HOOK_PRE_UPDATE, HOOK_PRE_DELETE
+) = (
+    'pre-create', 'pre-update', 'pre-delete'
+)
 
 
 def valid_hook_type(hook):
