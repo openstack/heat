@@ -12,35 +12,26 @@
 # under the License.
 
 from oslo_config import cfg
-
-from heat.common import wsgi
+from oslo_middleware import ssl
 
 ssl_middleware_opts = [
     cfg.StrOpt('secure_proxy_ssl_header',
                default='X-Forwarded-Proto',
+               deprecated_group='DEFAULT',
                help="The HTTP Header that will be used to determine which "
                     "the original request protocol scheme was, even if it was "
                     "removed by an SSL terminator proxy.")
 ]
-cfg.CONF.register_opts(ssl_middleware_opts)
 
 
-class SSLMiddleware(wsgi.Middleware):
-    """Replaces request wsgi.url_scheme env variable with value of HTTP header.
+class SSLMiddleware(ssl.SSLMiddleware):
 
-    A middleware that replaces the request wsgi.url_scheme environment
-    variable with the value of HTTP header configured in
-    secure_proxy_ssl_header if exists in the incoming request.
-    This is useful if the server is behind a SSL termination proxy.
-    """
-    def __init__(self, application):
-        super(SSLMiddleware, self).__init__(application)
-        self.secure_proxy_ssl_header = 'HTTP_{0}'.format(
-            cfg.CONF.secure_proxy_ssl_header.upper().replace('-', '_'))
-
-    def process_request(self, req):
-        req.environ['wsgi.url_scheme'] = req.environ.get(
-            self.secure_proxy_ssl_header, req.environ['wsgi.url_scheme'])
+    def __init__(self, application, *args, **kwargs):
+        # NOTE(cbrandily): calling super(ssl.SSLMiddleware, self).__init__
+        # allows to define our opt (including a deprecation).
+        super(ssl.SSLMiddleware, self).__init__(application, *args, **kwargs)
+        self.oslo_conf.register_opts(
+            ssl_middleware_opts, group='oslo_middleware')
 
 
 def list_opts():
