@@ -1055,7 +1055,7 @@ def purge_deleted(age, granularity='days'):
     elif granularity == 'minutes':
         age = age * 60
 
-    time_line = datetime.datetime.now() - datetime.timedelta(seconds=age)
+    time_line = timeutils.utcnow() - datetime.timedelta(seconds=age)
     engine = get_engine()
     meta = sqlalchemy.MetaData()
     meta.bind = engine

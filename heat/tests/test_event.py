@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
 import mock
 from oslo_config import cfg
 import oslo_db.exception
+from oslo_utils import timeutils
 
 from heat.common import exception
 from heat.engine import event
@@ -103,7 +103,7 @@ class EventTest(EventCommon):
 
     def test_load_with_timestamp(self):
         self.resource.resource_id_set('resource_physical_id')
-        timestamp = datetime.datetime.utcnow()
+        timestamp = timeutils.utcnow()
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', self.resource.properties,

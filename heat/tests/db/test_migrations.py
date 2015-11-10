@@ -30,6 +30,7 @@ from oslo_db.sqlalchemy import test_base
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
+from oslo_utils import timeutils
 import six
 import sqlalchemy
 import testtools
@@ -229,7 +230,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             'resource_status_reason': '',
             'resource_type': '',
             'resource_properties': None,
-            'created_at': datetime.datetime.now()},
+            'created_at': timeutils.utcnow()},
             {'id': '11111111-152e-405d-b13a-35d4c816390c',
              'stack_id': '967aaefb-152e-405d-b13a-35d4c816390c',
              'resource_action': 'Test',
@@ -239,7 +240,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
              'resource_status_reason': '',
              'resource_type': '',
              'resource_properties': None,
-             'created_at': datetime.datetime.now() +
+             'created_at': timeutils.utcnow() +
                 datetime.timedelta(days=5)}]
         engine.execute(event_table.insert(), data)
         return data
@@ -267,7 +268,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             'resource_status_reason': '',
             'resource_type': '',
             'resource_properties': None,
-            'created_at': datetime.datetime.now()}]
+            'created_at': timeutils.utcnow()}]
         result = engine.execute(event_table.insert(), data)
         self.assertEqual(last_id + 1, result.inserted_primary_key[0])
 
@@ -520,10 +521,10 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                      username='test_user',
                      disable_rollback=True,
                      parameters='test_params',
-                     created_at=datetime.datetime.utcnow(),
+                     created_at=timeutils.utcnow(),
                      deleted_at=None)
                 for ll_id, templ_id in stack_ids]
-        data[-1]['deleted_at'] = datetime.datetime.utcnow()
+        data[-1]['deleted_at'] = timeutils.utcnow()
 
         engine.execute(stack.insert(), data)
         return data
@@ -714,7 +715,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                      username='test_user',
                      disable_rollback=True,
                      parameters='test_params',
-                     created_at=datetime.datetime.utcnow(),
+                     created_at=timeutils.utcnow(),
                      deleted_at=None)
                 for ll_id, templ_id, owner_id in stack_ids]
 

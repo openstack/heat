@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import datetime
+from oslo_utils import timeutils
 import uuid
 
 from heat.common import service_utils
@@ -31,7 +32,7 @@ class TestServiceUtils(common.HeatTestCase):
         service.host = 'engine-1'
         service.report_interval = 60
         service.topic = 'engine'
-        service.created_at = datetime.datetime.utcnow()
+        service.created_at = timeutils.utcnow()
         service.deleted_at = None
         service.updated_at = None
 
@@ -55,19 +56,19 @@ class TestServiceUtils(common.HeatTestCase):
         self.assertEqual(service_dict['status'], 'up')
 
         # check update not happen within report_interval time (60+)
-        service.created_at = (datetime.datetime.utcnow() -
+        service.created_at = (timeutils.utcnow() -
                               datetime.timedelta(0, 70))
         service_dict = service_utils.format_service(service)
         self.assertEqual(service_dict['status'], 'down')
 
         # check update happened after report_interval time (60+)
-        service.updated_at = (datetime.datetime.utcnow() -
+        service.updated_at = (timeutils.utcnow() -
                               datetime.timedelta(0, 70))
         service_dict = service_utils.format_service(service)
         self.assertEqual(service_dict['status'], 'down')
 
         # check update happened within report_interval time (60)
-        service.updated_at = (datetime.datetime.utcnow() -
+        service.updated_at = (timeutils.utcnow() -
                               datetime.timedelta(0, 50))
         service_dict = service_utils.format_service(service)
         self.assertEqual(service_dict['status'], 'up')
