@@ -1015,12 +1015,14 @@ class Stack(collections.Mapping):
 
         self.store()
 
+        # delete the prev traversal sync_points
+        if previous_traversal:
+            sync_point.delete_all(self.context, self.id, previous_traversal)
+
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
-        # delete the prev traversal sync_points
-        sync_point.delete_all(self.context, self.id, previous_traversal)
         self._converge_create_or_update()
 
     def _converge_create_or_update(self):
