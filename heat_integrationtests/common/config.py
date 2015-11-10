@@ -44,7 +44,6 @@ IntegrationTestGroup = [
     cfg.StrOpt('image_ref',
                help="Name of image to use for tests which boot servers."),
     cfg.StrOpt('keypair_name',
-               default=None,
                help="Name of existing keypair to launch servers with."),
     cfg.StrOpt('minimal_image_ref',
                help="Name of minimal (e.g cirros) image to use when "
