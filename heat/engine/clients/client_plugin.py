@@ -127,8 +127,20 @@ class ClientPlugin(object):
 
         return self._keystone_session_obj
 
+    def invalidate(self):
+        """Invalidate/clear any cached client."""
+        self._client = None
+
     def client(self):
         if not self._client:
+            self._client = self._create()
+        elif (cfg.CONF.reauthentication_auth_method == 'trusts'
+                and self.context.auth_plugin.auth_ref.will_expire_soon(
+                    cfg.CONF.stale_token_duration)):
+            # If the token is near expiry, force creating a new client,
+            # which will get a new token via another call to auth_token
+            # We also have to invalidate all other cached clients
+            self.clients.invalidate_plugins()
             self._client = self._create()
         return self._client
 
