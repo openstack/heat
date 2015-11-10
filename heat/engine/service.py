@@ -1814,30 +1814,48 @@ class EngineService(service.Service):
 
     def reset_stack_status(self):
         cnxt = context.get_admin_context()
-        filters = {'status': parser.Stack.IN_PROGRESS}
+        filters = {
+            'status': parser.Stack.IN_PROGRESS,
+            'convergence': False
+        }
         stacks = stack_object.Stack.get_all(cnxt,
                                             filters=filters,
                                             tenant_safe=False,
                                             show_nested=True) or []
         for s in stacks:
-            lock = stack_lock.StackLock(cnxt, s.id, self.engine_id)
-            # If stacklock is released, means stack status may changed.
+            stack_id = s.id
+            lock = stack_lock.StackLock(cnxt, stack_id, self.engine_id)
             engine_id = lock.get_engine_id()
-            if not engine_id:
-                continue
-            # Try to steal the lock and set status to failed.
             try:
-                lock.acquire(retry=False)
+                with lock.thread_lock(retry=False):
+
+                    # refetch stack and confirm it is still IN_PROGRESS
+                    s = stack_object.Stack.get_by_id(
+                        cnxt,
+                        stack_id,
+                        tenant_safe=False,
+                        eager_load=True)
+                    if s.status != parser.Stack.IN_PROGRESS:
+                        lock.release()
+                        continue
+
+                    stk = parser.Stack.load(cnxt, stack=s,
+                                            use_stored_context=True)
+                    LOG.info(_LI('Engine %(engine)s went down when stack '
+                                 '%(stack_id)s was in action %(action)s'),
+                             {'engine': engine_id, 'action': stk.action,
+                              'stack_id': stk.id})
+
+                    # Set stack and resources status to FAILED in sub thread
+                    self.thread_group_mgr.start_with_acquired_lock(
+                        stk,
+                        lock,
+                        self.set_stack_and_resource_to_failed,
+                        stk
+                    )
             except exception.ActionInProgress:
                 continue
-            stk = parser.Stack.load(cnxt, stack=s,
-                                    use_stored_context=True)
-            LOG.info(_LI('Engine %(engine)s went down when stack %(stack_id)s'
-                         ' was in action %(action)s'),
-                     {'engine': engine_id, 'action': stk.action,
-                      'stack_id': stk.id})
-
-            # Set stack and resources status to FAILED in sub thread
-            self.thread_group_mgr.start_with_acquired_lock(
-                stk, lock, self.set_stack_and_resource_to_failed, stk
-            )
+            except Exception:
+                LOG.exception(_LE('Error while resetting stack: %s')
+                              % stack_id)
+                continue

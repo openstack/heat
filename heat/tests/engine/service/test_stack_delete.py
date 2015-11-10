@@ -119,7 +119,7 @@ class StackDeleteTest(common.HeatTestCase):
         mock_load.assert_called_with(self.ctx, stack=st)
         self.assertEqual(2, len(mock_load.mock_calls))
         mock_try.assert_called_once_with()
-        mock_acquire.assert_called_once_with()
+        mock_acquire.assert_called_once_with(True)
         mock_stop.assert_called_once_with(stack.id)
 
     @mock.patch.object(parser.Stack, 'load')
@@ -187,7 +187,7 @@ class StackDeleteTest(common.HeatTestCase):
         mock_alive.assert_called_once_with(self.ctx, OTHER_ENGINE)
         mock_call.assert_called_once_with(self.ctx, OTHER_ENGINE, "stop_stack",
                                           stack_identity=mock.ANY)
-        mock_acquire.assert_called_once_with()
+        mock_acquire.assert_called_once_with(True)
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
@@ -213,5 +213,5 @@ class StackDeleteTest(common.HeatTestCase):
 
         mock_load.assert_called_with(self.ctx, stack=st)
         mock_try.assert_called_once_with()
-        mock_acquire.assert_called_once_with()
+        mock_acquire.assert_called_once_with(True)
         mock_alive.assert_called_once_with(self.ctx, OTHER_ENGINE)
