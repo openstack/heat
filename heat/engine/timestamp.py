@@ -18,7 +18,7 @@ class Timestamp(object):
     """A descriptor for writing a timestamp to the database."""
 
     def __init__(self, db_fetch, attribute):
-        """Initialisation of timestamp.
+        """Initialise the timestamp descriptor.
 
         Initialise with a function to fetch the database representation of an
         object (given a context and ID) and the name of the attribute to

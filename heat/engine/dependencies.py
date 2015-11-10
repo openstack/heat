@@ -104,7 +104,7 @@ class Graph(collections.defaultdict):
         super(Graph, self).__init__(Node, *args)
 
     def map(self, func):
-        """A dict mapping the supplied function onto each node in the graph.
+        """Map the supplied function onto each node in the graph.
 
         Return a dictionary derived from mapping the supplied function onto
         each node in the graph.
@@ -172,7 +172,7 @@ class Dependencies(object):
     def __init__(self, edges=None):
         """Initialise, optionally with a list of edges.
 
-        Each edge has the form of (requirer, required) tuple.
+        Each edge takes the form of a (requirer, required) tuple.
         """
         edges = edges or []
         self._graph = Graph()
@@ -207,10 +207,10 @@ class Dependencies(object):
         return self._graph[target].requires()
 
     def __getitem__(self, last):
-        """Partial dependency graph consisting of the specified node.
+        """Return a partial dependency graph starting with the specified node.
 
-        Return a partial dependency graph consisting of the specified node and
-        all those that require it only.
+        Return a subset of the dependency graph consisting of the specified
+        node and all those that require it only.
         """
         if last not in self._graph:
             raise KeyError

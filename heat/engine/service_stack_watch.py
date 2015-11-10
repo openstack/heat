@@ -106,7 +106,7 @@ class StackWatch(object):
                                             actions, rule.get_details())
 
     def periodic_watcher_task(self, sid):
-        """Triggers watch-rule evaluation for all rules defined for stack ID.
+        """Evaluate all watch-rules defined for stack ID.
 
         Periodic task, created for each stack, triggers watch-rule evaluation
         for all rules defined for the stack sid = stack ID.

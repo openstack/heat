@@ -94,7 +94,7 @@ class ThreadGroupManager(object):
     def _service_task(self):
         """Dummy task which gets queued on the service.Service threadgroup.
 
-        Without this service.Service sees nothing running i.e has nothing to
+        Without this, service.Service sees nothing running i.e has nothing to
         wait() on, so the process exits. This could also be used to trigger
         periodic non-stack-specific housekeeping tasks.
         """
@@ -136,7 +136,7 @@ class ThreadGroupManager(object):
         return th
 
     def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
-        """Run the method in sub-thread if acquire a stack lock is successful.
+        """Run the method in sub-thread after acquiring the stack lock.
 
         Release the lock when the thread finishes.
 
@@ -156,7 +156,7 @@ class ThreadGroupManager(object):
             return th
 
     def start_with_acquired_lock(self, stack, lock, func, *args, **kwargs):
-        """Run the given method in a sub-thread.
+        """Run the given method in a sub-thread with an existing stack lock.
 
         Release the provided lock when the thread finishes.
 
@@ -189,7 +189,7 @@ class ThreadGroupManager(object):
     def add_timer(self, stack_id, func, *args, **kwargs):
         """Define a periodic task in the stack threadgroups.
 
-        Defining is to be run in a separate thread.
+        The task is run in a separate greenthread.
 
         Periodicity is cfg.CONF.periodic_interval
         """
@@ -261,7 +261,7 @@ class EngineListener(service.Service):
         server.start()
 
     def listening(self, ctxt):
-        """Confirm the engine performing the action is still alive.
+        """Respond to a watchdog request.
 
         Respond affirmatively to confirm that the engine performing the action
         is still alive.
@@ -642,7 +642,7 @@ class EngineService(service.Service):
 
     @context.request_context
     def preview_stack(self, cnxt, stack_name, template, params, files, args):
-        """Simulates a new stack using the provided template.
+        """Simulate a new stack using the provided template.
 
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
@@ -673,7 +673,7 @@ class EngineService(service.Service):
     def create_stack(self, cnxt, stack_name, template, params, files, args,
                      owner_id=None, nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None, parent_resource_name=None):
-        """Creates a new stack using the template provided.
+        """Create a new stack using the template provided.
 
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
@@ -741,7 +741,7 @@ class EngineService(service.Service):
 
     def _prepare_stack_updates(self, cnxt, current_stack, template, params,
                                files, args):
-        """Return the current and updated stack.
+        """Return the current and updated stack for a given transition.
 
         Changes *will not* be persisted, this is a helper method for
         update_stack and preview_update_stack.
@@ -829,7 +829,7 @@ class EngineService(service.Service):
     @context.request_context
     def update_stack(self, cnxt, stack_identity, template, params,
                      files, args):
-        """Updates an existing stack based on the provided template and params.
+        """Update an existing stack based on the provided template and params.
 
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
@@ -877,7 +877,7 @@ class EngineService(service.Service):
     @context.request_context
     def preview_update_stack(self, cnxt, stack_identity, template, params,
                              files, args):
-        """Shows the resources that would be updated.
+        """Show the resources that would be updated.
 
         The preview_update_stack method shows the resources that would be
         changed with an update to an existing stack based on the provided
@@ -970,7 +970,11 @@ class EngineService(service.Service):
     @context.request_context
     def validate_template(self, cnxt, template, params=None, files=None,
                           show_nested=False):
-        """Uses the stack parser to check the validity of a template.
+        """Check the validity of a template.
+
+        Checks, so far as we can, that a template is valid, and returns
+        information about the parameters suitable for producing a user
+        interface through which to specify the parameter values.
 
         :param cnxt: RPC context.
         :param template: Template of stack you want to create.
@@ -1074,7 +1078,7 @@ class EngineService(service.Service):
 
     @context.request_context
     def delete_stack(self, cnxt, stack_identity):
-        """The delete_stack method deletes a given stack.
+        """Delete a given stack.
 
         :param cnxt: RPC context.
         :param stack_identity: Name of the stack you want to delete.
@@ -1131,7 +1135,7 @@ class EngineService(service.Service):
 
     @context.request_context
     def abandon_stack(self, cnxt, stack_identity):
-        """The abandon_stack method abandons a given stack.
+        """Abandon a given stack.
 
         :param cnxt: RPC context.
         :param stack_identity: Name of the stack you want to abandon.
@@ -1602,7 +1606,7 @@ class EngineService(service.Service):
 
     @context.request_context
     def show_watch(self, cnxt, watch_name):
-        """The show_watch method returns the attributes of one watch/alarm.
+        """Return the attributes of one watch/alarm.
 
         :param cnxt: RPC context.
         :param watch_name: Name of the watch you want to see, or None to see
@@ -1623,7 +1627,7 @@ class EngineService(service.Service):
 
     @context.request_context
     def show_watch_metric(self, cnxt, metric_namespace=None, metric_name=None):
-        """The show_watch method returns the datapoints for a metric.
+        """Return the datapoints for a metric.
 
         :param cnxt: RPC context.
         :param metric_namespace: Name of the namespace you want to see, or None

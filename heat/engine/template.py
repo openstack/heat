@@ -262,7 +262,7 @@ class Template(collections.Mapping):
     @classmethod
     def create_empty_template(cls,
                               version=('heat_template_version', '2015-04-30')):
-        """Creates an empty template.
+        """Create an empty template.
 
         Creates a new empty template with given version. If version is
         not provided, a new empty HOT template of version "2015-04-30"

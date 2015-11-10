@@ -35,10 +35,10 @@ class ParameterGroups(object):
         self.parameter_groups = tmpl.get(PARAMETER_GROUPS)
 
     def validate(self):
-        """Validate parameters in current parameter group.
+        """Validate the parameter group.
 
-        Validate that a parameter belongs to only one Parameter Group
-        and that each parameter name references a valid parameter.
+        Validate that each parameter belongs to only one Parameter Group and
+        that each parameter name in the group references a valid parameter.
         """
         LOG.debug('Validating Parameter Groups.')
         LOG.debug(self.parameter_names)

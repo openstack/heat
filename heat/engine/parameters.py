@@ -202,7 +202,7 @@ class Parameter(object):
         return ParamClass(name, schema, value)
 
     def __init__(self, name, schema, value=None):
-        """Initialisation of the parameter.
+        """Initialise the parameter.
 
         Initialise the Parameter with a name, schema and optional user-supplied
         value.
@@ -255,10 +255,9 @@ class Parameter(object):
         return self.user_value is not None or self.has_default()
 
     def hidden(self):
-        """Return if parameter is hidden.
+        """Return whether the parameter is hidden.
 
-        Return whether the parameter should be sanitised in any output to
-        the user.
+        Hidden parameters should be sanitised in any output to the user.
         """
         return self.schema.hidden
 
@@ -458,7 +457,7 @@ class JsonParam(ParsedParameter):
 class Parameters(collections.Mapping):
     """Parameters of a stack.
 
-    The parameters of a stack, with type checking, defaults etc., specified by
+    The parameters of a stack, with type checking, defaults, etc. specified by
     the stack's template.
     """
 
@@ -528,10 +527,10 @@ class Parameters(collections.Mapping):
         return self.params[key].value()
 
     def map(self, func, filter_func=lambda p: True):
-        """Map the supplied filter function onto each Parameter.
+        """Map the supplied function onto each Parameter.
 
-        Map the supplied filter function onto each Parameter (with an
-        optional filter function) and return the resulting dictionary.
+        Map the supplied function onto each Parameter (with an optional filter
+        function) and return the resulting dictionary.
         """
         return dict((n, func(p))
                     for n, p in six.iteritems(self.params) if filter_func(p))
