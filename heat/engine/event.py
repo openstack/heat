@@ -27,11 +27,10 @@ class Event(object):
     def __init__(self, context, stack, action, status, reason,
                  physical_resource_id, resource_properties, resource_name,
                  resource_type, uuid=None, timestamp=None, id=None):
-        """Initialisation of the event.
+        """Initialise from a context, stack, and event information.
 
-        Initialise from a context, stack, and event information. The timestamp
-        and database ID may also be initialised if the event is already in the
-        database.
+        The timestamp and database ID may also be initialised if the event is
+        already in the database.
         """
         self.context = context
         self.stack = stack

@@ -66,6 +66,11 @@ class Function(object):
         return dependencies(self.args, '.'.join([path, self.fn_name]))
 
     def dep_attrs(self, resource_name):
+        """Return the attributes of the specified resource that are referenced.
+
+        Return an iterator over any attributes of the specified resource that
+        this function references.
+        """
         return dep_attrs(self.args, resource_name)
 
     def __reduce__(self):
@@ -179,12 +184,13 @@ def dependencies(snippet, path=''):
 
 
 def dep_attrs(snippet, resource_name):
-    """Iterator over dependent attrs for resource_name in a template snippet.
+    """Iterator over dependent attrs of a resource in a template snippet.
 
     The snippet should be already parsed to insert Function objects where
     appropriate.
-    :returns: an iterator over dependent attributes for specified resource_name
-        in a template snippet.
+
+    :returns: an iterator over the attributes of the specified resource that
+    are referenced in the template snippet.
     """
 
     if isinstance(snippet, Function):

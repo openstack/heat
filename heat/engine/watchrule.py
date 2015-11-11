@@ -77,7 +77,8 @@ class WatchRule(object):
     def load(cls, context, watch_name=None, watch=None):
         """Load the watchrule object.
 
-        Loading object either by name or via an existing DB object.
+        The object can be loaded either from the DB by name or from an existing
+        DB object.
         """
         if watch is None:
             try:

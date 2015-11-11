@@ -98,7 +98,7 @@ class Stack(collections.Mapping):
                  current_traversal=None, tags=None, prev_raw_template_id=None,
                  current_deps=None, cache_data=None, resource_validate=True):
 
-        """Initialisation of stack.
+        """Initialise the Stack.
 
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -330,18 +330,18 @@ class Stack(collections.Mapping):
     def _set_param_stackid(self):
         """Update self.parameters with the current ARN.
 
-        self.parameters is then provided via the Parameters class as
-        the StackId pseudo parameter.
+        The ARN is then provided via the Parameters class as the StackId pseudo
+        parameter.
         """
         if not self.parameters.set_stack_id(self.identifier()):
             LOG.warn(_LW("Unable to set parameters StackId identifier"))
 
     @staticmethod
     def get_dep_attrs(resources, outputs, resource_name):
-        """Return the set of dependent attributes for specified resource name.
+        """Return the attributes of the specified resource that are referenced.
 
-        Return the set of dependent attributes for specified resource name by
-        inspecting all resources and outputs in template.
+        Return an iterator over any attributes of the specified resource that
+        are referenced.
         """
         attr_lists = itertools.chain((res.dep_attrs(resource_name)
                                       for res in resources),
@@ -599,7 +599,7 @@ class Stack(collections.Mapping):
                 return r
 
     def register_access_allowed_handler(self, credential_id, handler):
-        """Register a specific function.
+        """Register an authorization handler function.
 
         Register a function which determines whether the credentials with a
         given ID can have access to a named resource.
@@ -820,8 +820,8 @@ class Stack(collections.Mapping):
                    aggregate_exceptions=False, pre_completion_func=None):
         """A task to perform an action on the stack.
 
-        All of the resources in forward or reverse dependency order as
-        specified by reverse.
+        All of the resources are traversed in forward or reverse dependency
+        order.
 
         :param action action that should be executed with stack resources
         :param reverse defines if action on the resources need to be executed
@@ -947,7 +947,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.adopt', hide_args=False)
     def adopt(self):
-        """Adopt the stack (create stack with all the existing resources)."""
+        """Adopt existing resources into a new stack."""
         def rollback():
             if not self.disable_rollback and self.state == (self.ADOPT,
                                                             self.FAILED):
@@ -985,7 +985,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
     def converge_stack(self, template, action=UPDATE, new_stack=None):
-        """Update the stack and triggers convergence for resources."""
+        """Update the stack template and trigger convergence for resources."""
         if action not in [self.CREATE, self.ADOPT]:
             # no back-up template for create action
             self.prev_raw_template_id = getattr(self.t, 'id', None)

@@ -196,10 +196,11 @@ class StackUpdate(object):
             self.existing_stack.remove_resource(res_name)
 
     def dependencies(self):
-        """Return a Dependencies object.
+        """Return the Dependencies graph for the update.
 
-        Dependencies object representing the dependencies between update
-        operations to move from an existing stack definition to a new one.
+        Returns a Dependencies object representing the dependencies between
+        update operations to move from an existing stack definition to a new
+        one.
         """
         existing_deps = self.existing_stack.dependencies
         new_deps = self.new_stack.dependencies

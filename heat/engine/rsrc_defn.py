@@ -27,10 +27,7 @@ __all__ = ['ResourceDefinition']
 
 
 class ResourceDefinitionCore(object):
-    """A definition of a resource.
-
-    Independent of any particular template format.
-    """
+    """A definition of a resource, independent of any template format."""
 
     DELETION_POLICIES = (
         DELETE, RETAIN, SNAPSHOT,
@@ -141,7 +138,7 @@ class ResourceDefinitionCore(object):
             update_policy=reparse_snippet(self._update_policy))
 
     def dep_attrs(self, resource_name):
-        """Return an iterator over dependent attributes for resource_name.
+        """Iterate over attributes of a given resource that this references.
 
         Return an iterator over dependent attributes for specified
         resource_name in resources' properties and metadata fields.

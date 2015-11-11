@@ -33,7 +33,7 @@ class LifecyclePlugin(object):
         pass
 
     def get_ordinal(self):
-        """Order class instances for pre and post operation execution.
+        """Get the sort order for pre and post operation execution.
 
         The values returned by get_ordinal are used to create a partial order
         for pre and post operation method invocations. The default ordinal

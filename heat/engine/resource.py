@@ -468,7 +468,7 @@ class Resource(object):
         return dict((k, after.get(k)) for k in changed_keys_set)
 
     def update_template_diff_properties(self, after_props, before_props):
-        """The changed Properties between the before and after properties.
+        """Return changed Properties between the before and after properties.
 
         If any property having immutable as True is updated, raises
         NotSupported error.
@@ -525,13 +525,12 @@ class Resource(object):
         deps += (self, None)
 
     def required_by(self):
-        """List of resources' names which require the resource as dependency.
+        """List of resources that require this one as a dependency.
 
-        Returns a list of resources' names which directly require this
-        resource as a dependency.
+        Returns a list of names of resources that depend on this resource
+        directly.
         """
-        return list(
-            [r.name for r in self.stack.dependencies.required_by(self)])
+        return [r.name for r in self.stack.dependencies.required_by(self)]
 
     def client(self, name=None):
         client_name = name or self.default_client_name
@@ -874,12 +873,12 @@ class Resource(object):
 
     def update_convergence(self, template_id, resource_data, engine_id,
                            timeout):
-        """Updates the resource.
+        """Update the resource synchronously.
 
-        Updates the resource by invoking the scheduler TaskRunner
-        and it persists the resource's current_template_id to template_id and
-        resource's requires to list of the required resource id from the
-        given resource_data and existing resource's requires.
+        Persist the resource's current_template_id to template_id and
+        resource's requires to list of the required resource ids from the given
+        resource_data and existing resource's requires, then updates the
+        resource by invoking the scheduler TaskRunner.
         """
         def update_tmpl_id_and_requires():
             self.current_template_id = template_id
@@ -905,7 +904,7 @@ class Resource(object):
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
-        """Update the resource.
+        """Return a task to update the resource.
 
         Subclasses should provide a handle_update() method to customise update,
         the base-class handle_update will fail by default.
@@ -1026,7 +1025,7 @@ class Resource(object):
             raise exception.Error('; '.join(invalid_checks))
 
     def suspend(self):
-        """Suspend the resource.
+        """Return a task to suspend the resource.
 
         Subclasses should provide a handle_suspend() method to implement
         suspend.
@@ -1046,7 +1045,7 @@ class Resource(object):
         return self._do_action(action)
 
     def resume(self):
-        """Resume the resource.
+        """Return a task to resume the resource.
 
         Subclasses should provide a handle_resume() method to implement resume.
         """
@@ -1222,7 +1221,7 @@ class Resource(object):
 
     @scheduler.wrappertask
     def delete(self):
-        """Delete the resource.
+        """A task to delete the resource.
 
         Subclasses should provide a handle_delete() method to customise
         deletion.
@@ -1260,7 +1259,7 @@ class Resource(object):
 
     @scheduler.wrappertask
     def destroy(self):
-        """Delete the resource and remove it from the database."""
+        """A task to delete the resource and remove it from the database."""
         yield self.delete()
 
         if self.id is None:
@@ -1672,7 +1671,7 @@ class Resource(object):
 
     @classmethod
     def resource_to_template(cls, resource_type, template_type='cfn'):
-        """Template where resource's properties mapped as parameters.
+        """Generate a provider template that mirrors the resource.
 
         :param resource_type: The resource type to be displayed in the template
         :param template_type: the template type to generate, cfn or hot.
@@ -1720,7 +1719,7 @@ class Resource(object):
         return tmpl_dict
 
     def data(self):
-        """Resource data for this resource.
+        """Return the resource data for this resource.
 
         Use methods data_set and data_delete to modify the resource data
         for this resource.
@@ -1736,13 +1735,13 @@ class Resource(object):
         return self._data or {}
 
     def data_set(self, key, value, redact=False):
-        """Save resource's key/value pair to database."""
+        """Set a key in the resource data."""
         resource_data_objects.ResourceData.set(self, key, value, redact)
         # force fetch all resource data from the database again
         self._data = None
 
     def data_delete(self, key):
-        """Remove a resource_data element associated to a resource.
+        """Remove a key from the resource data.
 
         :returns: True if the key existed to delete.
         """

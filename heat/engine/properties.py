@@ -350,10 +350,10 @@ class Properties(collections.Mapping):
 
     @staticmethod
     def schema_from_params(params_snippet):
-        """Convert a template snippet with parameters into a properties schema.
+        """Create properties schema from the parameters section of a template.
 
         :param params_snippet: parameter definition from a template
-        :returns: an equivalent properties schema for the specified params
+        :returns: equivalent properties schemata for the specified parameters
         """
         if params_snippet:
             return dict((n, Schema.from_parameter(p)) for n, p
@@ -561,7 +561,10 @@ class Properties(collections.Mapping):
 
     @classmethod
     def schema_to_parameters_and_properties(cls, schema, template_type='cfn'):
-        """Generates properties with params resolved for a schema.
+        """Convert a schema to template parameters and properties.
+
+        This can be used to generate a provider template that matches the
+        given properties schemata.
 
         :param schema: A resource type's properties_schema
         :returns: A tuple of params and properties dicts

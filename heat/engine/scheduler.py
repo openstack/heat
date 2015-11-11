@@ -32,9 +32,9 @@ ENABLE_SLEEP = True
 
 
 def task_description(task):
-    """Return a human-readable string description of a task suitable.
+    """Return a human-readable string description of a task.
 
-    Description is used for logging the status of the task.
+    The description is used to identify the task when logging its status.
     """
     name = task.__name__ if hasattr(task, '__name__') else None
     if isinstance(task, types.MethodType):
@@ -132,9 +132,9 @@ class TaskRunner(object):
     """Wrapper for a resumable task (co-routine)."""
 
     def __init__(self, task, *args, **kwargs):
-        """Initialise with a task function.
+        """Initialise with a task function and arguments.
 
-        Arguments to be passed to task when it is started.
+        The arguments are passed to task when it is started.
 
         The task function may be a co-routine that yields control flow between
         steps.
@@ -200,7 +200,7 @@ class TaskRunner(object):
     def step(self):
         """Run another step of the task.
 
-        :returns: True if the task is complete; False otherwise.
+        Return True if the task is complete; False otherwise.
         """
         if not self.done():
             assert self._runner is not None, "Task not started"
@@ -336,11 +336,10 @@ class DependencyTaskGroup(object):
                  aggregate_exceptions=False):
         """Initialise with the task dependencies.
 
-        Optionally initialise with a task to run on each.
-
-        If no task is supplied, it is assumed that the tasks are stored
-        directly in the dependency tree. If a task is supplied, the object
-        stored in the dependency tree is passed as an argument.
+        A task to run on each dependency may optionally be specified.  If no
+        task is supplied, it is assumed that the tasks are stored directly in
+        the dependency tree. If a task is supplied, the object stored in the
+        dependency tree is passed as an argument.
 
         If an error_wait_time is specified, tasks that are already running at
         the time of an error will continue to run for up to the specified
@@ -415,8 +414,8 @@ class DependencyTaskGroup(object):
     def _ready(self):
         """Iterate over all subtasks that are ready to start.
 
-        All subtasks' dependencies have been satisfied but they have not yet
-        been started.
+        Ready subtasks are subtasks whose dependencies have all been satisfied,
+        but which have not yet been started.
         """
         for k, n in six.iteritems(self._graph):
             if not n:
@@ -427,7 +426,8 @@ class DependencyTaskGroup(object):
     def _running(self):
         """Iterate over all subtasks that are currently running.
 
-        Subtasks have been started but have not yet completed.
+        Running subtasks are subtasks have been started but have not yet
+        completed.
         """
 
         def running(k_r):
