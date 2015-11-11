@@ -1876,6 +1876,134 @@ class ResourceTest(common.HeatTestCase):
         self.assertItemsEqual([2], res.requires)
         self._assert_resource_lock(res.id, None, 2)
 
+    def _prepare_resource_live_state(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'ResourceWithPropsType',
+                                            {'Foo': 'abc',
+                                             'FooInt': 2})
+        res = generic_rsrc.ResourceWithProps('test_resource',
+                                             tmpl, self.stack)
+        res.update_allowed_properties = ('Foo', 'FooInt',)
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        return res
+
+    def test_update_resource_live_state_all_args(self):
+        res = self._prepare_resource_live_state()
+
+        self.patchobject(res, 'get_live_state', return_value={'Foo': 'abb',
+                                                              'FooInt': 2})
+        cfg.CONF.set_override('observe_on_update', True)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'ResourceWithPropsType',
+                                             {'Foo': 'bca',
+                                              'FooInt': 3})
+
+        scheduler.TaskRunner(res.update, utmpl)()
+        self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
+        self.assertEqual({'Foo': 'bca', 'FooInt': 3}, res.properties.data)
+
+    def test_update_resource_live_state_some_args(self):
+        res = self._prepare_resource_live_state()
+
+        self.patchobject(res, 'get_live_state', return_value={'Foo': 'bca'})
+        cfg.CONF.set_override('observe_on_update', True)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'ResourceWithPropsType',
+                                             {'Foo': 'bca',
+                                              'FooInt': 3})
+
+        scheduler.TaskRunner(res.update, utmpl)()
+        self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
+        self.assertEqual({'Foo': 'bca', 'FooInt': 3}, res.properties.data)
+
+    def test_update_resource_live_state_not_found(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'ResourceWithRequiredProps',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithRequiredProps('test_resource',
+                                                     tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        self.patchobject(res, 'get_live_state',
+                         side_effect=[exception.EntityNotFound(
+                             entity='resource', name='test')])
+        cfg.CONF.set_override('observe_on_update', True)
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'ResourceWithPropsType',
+                                             {'Foo': 'bca'})
+
+        self.assertRaises(exception.UpdateReplace,
+                          scheduler.TaskRunner(res.update, utmpl))
+
+    def test_update_resource_live_state_other_error(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'ResourceWithRequiredProps',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithRequiredProps('test_resource',
+                                                     tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        self.patchobject(res, 'get_live_state',
+                         side_effect=[exception.Error('boom')])
+        cfg.CONF.set_override('observe_on_update', True)
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'ResourceWithPropsType',
+                                             {'Foo': 'bca'})
+
+        self.assertRaises(exception.Error,
+                          scheduler.TaskRunner(res.update, utmpl))
+
+    def test_update_resource_live_state_not_found_id(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'ResourceWithRequiredProps',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithRequiredProps('test_resource',
+                                                     tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+
+        cfg.CONF.set_override('observe_on_update', True)
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'ResourceWithPropsType',
+                                             {'Foo': 'bca'})
+        res.resource_id = None
+
+        self.assertRaises(exception.UpdateReplace,
+                          scheduler.TaskRunner(res.update, utmpl))
+
+    def test_update_resource_live_state_no_stored_properties(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'ResourceWithRequiredProps',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithRequiredProps('test_resource',
+                                                     tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+
+        cfg.CONF.set_override('observe_on_update', True)
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'ResourceWithPropsType',
+                                             {'Foo': 'bca'})
+        self.patchobject(res, 'get_live_state', side_effect=[ValueError])
+        scheduler.TaskRunner(res.update, utmpl)()
+        self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
+
     @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
                        return_value=None)
     @mock.patch.object(resource.scheduler.TaskRunner, '__call__')

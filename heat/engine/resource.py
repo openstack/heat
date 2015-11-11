@@ -48,6 +48,7 @@ from heat.objects import stack as stack_objects
 from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
+cfg.CONF.import_opt('observe_on_update', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -924,6 +925,19 @@ class Resource(object):
 
         before_props = before.properties(self.properties_schema,
                                          self.context)
+
+        if cfg.CONF.observe_on_update:
+            try:
+                resource_reality = self.get_live_state(before_props)
+                self._update_properties_with_live_state(before_props,
+                                                        resource_reality)
+            except ValueError as ex:
+                LOG.warning(_LW("Resource cannot be updated with it's live "
+                                "state in case of "
+                                "error: %s"), six.text_type(ex))
+            except exception.EntityNotFound:
+                raise exception.UpdateReplace(self)
+
         # Regenerate the schema, else validation would fail
         self.regenerate_info_schema(after)
         after_props = after.properties(self.properties_schema,
@@ -1475,6 +1489,31 @@ class Resource(object):
             except AttributeError as ex:
                 LOG.warn(_LW("Resolving 'show' attribute has failed : %s"), ex)
                 return None
+
+    def get_live_state(self, resource_properties=None):
+        """Default implementation; should be overridden by resources.
+
+        :returns: dict of resource's real state of properties.
+        """
+        if not self.resource_id:
+            raise exception.EntityNotFound(entity='Resource', name=self.name)
+
+        return {}
+
+    def _update_properties_with_live_state(self, resource_properties,
+                                           live_properties):
+        """Update resource properties data with live state properties.
+
+        Note, that live_properties can contains None values, so there's next
+        situation: property equals to some value, but live state has no such
+        property, i.e. property equals to None, so during update property
+        should be updated with None.
+        """
+        for key in resource_properties:
+            if key in live_properties:
+                if resource_properties.get(key) != live_properties.get(key):
+                    resource_properties.data.update(
+                        {key: live_properties.get(key)})
 
     def _resolve_attribute(self, name):
         """Default implementation of resolving resource's attributes.
