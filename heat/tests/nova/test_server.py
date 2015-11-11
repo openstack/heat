@@ -4219,14 +4219,16 @@ class ServerInternalPortTest(common.HeatTestCase):
 
         expected_data = jsonutils.dumps(port_ids)
         expected_external_data = jsonutils.dumps(external_port_ids)
-        data_set.has_calls(('internal_ports', expected_data),
-                           ('external_ports', expected_external_data))
+        data_set.assert_has_calls([
+            mock.call('internal_ports', expected_data),
+            mock.call('external_ports', expected_external_data)])
 
         # check, that all ip were removed from ports
         empty_fixed_ips = {'port': {'fixed_ips': []}}
-        self.port_update.has_calls((1122, empty_fixed_ips),
-                                   (3344, empty_fixed_ips),
-                                   (5566, empty_fixed_ips))
+        self.port_update.assert_has_calls([
+            mock.call(1122, empty_fixed_ips),
+            mock.call(3344, empty_fixed_ips),
+            mock.call(5566, empty_fixed_ips)])
 
     def test_restore_ports_after_rollback(self):
         tmpl = """
@@ -4271,20 +4273,22 @@ class ServerInternalPortTest(common.HeatTestCase):
         old_server = mock.Mock()
         stack._backup_stack = mock.Mock()
         stack._backup_stack().resources.get.return_value = old_server
-        old_server._data_get_ports.side_effect = [port_ids, []]
+        old_server._data_get_ports.side_effect = [port_ids, external_port_ids]
 
         server.restore_after_rollback()
 
         # check, that all ip were removed from new_ports
         empty_fixed_ips = {'port': {'fixed_ips': []}}
-        self.port_update.has_calls((1122, empty_fixed_ips),
-                                   (3344, empty_fixed_ips),
-                                   (5566, empty_fixed_ips))
+        self.port_update.assert_has_calls([
+            mock.call(1122, empty_fixed_ips),
+            mock.call(3344, empty_fixed_ips),
+            mock.call(5566, empty_fixed_ips)])
 
         # check, that all ip were restored for old_ports
-        self.port_update.has_calls((1122, {'port': port1_fixed_ip}),
-                                   (3344, {'port': port2_fixed_ip}),
-                                   (5566, {'port': port3_fixed_ip}))
+        self.port_update.assert_has_calls([
+            mock.call(1122, {'port': port1_fixed_ip}),
+            mock.call(3344, {'port': port2_fixed_ip}),
+            mock.call(5566, {'port': port3_fixed_ip})])
 
     def test_store_external_ports_os_interface_not_installed(self):
         tmpl = """
