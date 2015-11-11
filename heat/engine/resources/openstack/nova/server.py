@@ -923,6 +923,69 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         checks = [{'attr': 'status', 'expected': 'ACTIVE', 'current': status}]
         self._verify_check_conditions(checks)
 
+    def get_live_resource_data(self):
+        try:
+            server = self.client().servers.get(self.resource_id)
+            server_data = server.to_dict()
+            active = self.client_plugin()._check_active(server)
+            if not active:
+                # There is no difference what error raised, because update
+                # method of resource just silently log it as warning.
+                raise exception.Error(_('Server %s is not '
+                                        'in ACTIVE state') % self.name)
+        except Exception as ex:
+            if self.client_plugin().is_not_found(ex):
+                raise exception.EntityNotFound(entity='Resource',
+                                               name=self.name)
+            raise
+        return server, server_data
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        server, server_data = resource_data
+        return {
+            # there's a risk that flavor id will be int type, so cast to str
+            self.FLAVOR: six.text_type(server_data.get(self.FLAVOR)['id']),
+            self.IMAGE: six.text_type(server_data.get(self.IMAGE)['id']),
+            self.NAME: server_data.get(self.NAME),
+            self.METADATA: server_data.get(self.METADATA),
+            self.NETWORKS: self._get_live_networks(server, resource_properties)
+        }
+
+    def _get_live_networks(self, server, props):
+        reality_nets = self._add_port_for_address(server,
+                                                  extend_networks=False)
+        reality_net_ids = {}
+        for net_key in reality_nets:
+            try:
+                net_id = self.client_plugin().get_net_id_by_label(net_key)
+            except (exception.EntityNotFound,
+                    exception.PhysicalResourceNameAmbiguity):
+                net_id = None
+            if net_id:
+                reality_net_ids[net_id] = reality_nets.get(net_key)
+
+        resource_nets = props.get(self.NETWORKS)
+
+        result_nets = []
+        for net in resource_nets or []:
+            net_id = self._get_network_id(net)
+            if reality_net_ids.get(net_id):
+                for idx, address in enumerate(reality_net_ids.get(net_id)):
+                    if address['addr'] == net[self.NETWORK_FIXED_IP]:
+                        result_nets.append(net)
+                        reality_net_ids.get(net_id).pop(idx)
+                        break
+
+        for key, value in six.iteritems(reality_nets):
+            for address in reality_nets[key]:
+                new_net = {self.NETWORK_ID: key,
+                           self.NETWORK_FIXED_IP: address['addr']}
+                if address['port'] not in [port['id']
+                                           for port in self._data_get_ports()]:
+                    new_net.update({self.NETWORK_PORT: address['port']})
+                result_nets.append(new_net)
+        return result_nets
+
     @classmethod
     def _build_block_device_mapping(cls, bdm):
         if not bdm:
@@ -1017,12 +1080,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         return bdm_v2_list
 
-    def _add_port_for_address(self, server):
+    def _add_port_for_address(self, server, extend_networks=True):
         """Method adds port id to list of addresses.
 
         This method is used only for resolving attributes.
         """
-        nets = copy.deepcopy(server.addresses)
+        nets = copy.deepcopy(server.addresses) or {}
         ifaces = server.interface_list()
         ip_mac_mapping_on_port_id = dict(((iface.fixed_ips[0]['ip_address'],
                                            iface.mac_addr), iface.port_id)
@@ -1031,7 +1094,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             for addr in nets[net_name]:
                 addr['port'] = ip_mac_mapping_on_port_id.get(
                     (addr['addr'], addr['OS-EXT-IPS-MAC:mac_addr']))
-        return self._extend_networks(nets)
+        if extend_networks:
+            return self._extend_networks(nets)
+        else:
+            return nets
 
     def _extend_networks(self, networks):
         """Method adds same networks with replaced name on network id.

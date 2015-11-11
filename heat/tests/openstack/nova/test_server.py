@@ -13,8 +13,8 @@
 
 import collections
 import copy
-
 import mock
+
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
 from oslo_serialization import jsonutils
@@ -1776,6 +1776,71 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         return_server.change_password.assert_called_once_with(new_password)
         self.assertEqual(1, return_server.change_password.call_count)
+
+    def test_server_get_live_state(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = '5678'
+
+        server = self._create_test_server(return_server,
+                                          'get_live_state_stack')
+
+        server.properties.data['networks'] = [{'network': 'public_id',
+                                               'fixed_ip': '5.6.9.8'}]
+
+        class fake_interface(object):
+            def __init__(self, port_id, net_id, fixed_ip, mac_addr):
+                self.port_id = port_id
+                self.net_id = net_id
+                self.mac_addr = mac_addr
+
+                self.fixed_ips = [{'ip_address': fixed_ip}]
+
+        iface = fake_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                               'public',
+                               '5.6.9.8',
+                               'fa:16:3e:8c:33:aa')
+        iface1 = fake_interface('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                                'public',
+                                '4.5.6.7',
+                                'fa:16:3e:8c:22:aa')
+        iface2 = fake_interface('cccccccc-cccc-cccc-cccc-cccccccccccc',
+                                'private',
+                                '10.13.12.13',
+                                'fa:16:3e:8c:44:cc')
+        self.patchobject(return_server, 'interface_list',
+                         return_value=[iface, iface1, iface2])
+
+        self.patchobject(nova.NovaClientPlugin, 'get_net_id_by_label',
+                         side_effect=['public_id',
+                                      'private_id'])
+        reality = server.get_live_state(server.properties)
+
+        expected = {'flavor': '1',
+                    'image': '2',
+                    'name': 'sample-server2',
+                    'networks': [
+                        {'fixed_ip': '4.5.6.7',
+                         'network': 'public',
+                         'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'},
+                        {'fixed_ip': '5.6.9.8',
+                         'network': 'public',
+                         'port': None},
+                        {'fixed_ip': '10.13.12.13',
+                         'network': 'private',
+                         'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc'}],
+                    'metadata': {}}
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        expected_nets = expected.pop('networks')
+        reality_nets = reality.pop('networks')
+        for net in reality_nets:
+            for exp_net in expected_nets:
+                if net == exp_net:
+                    for key in net:
+                        self.assertEqual(exp_net[key], net[key])
+                    break
+
+        for key in six.iterkeys(reality):
+            self.assertEqual(reality[key], expected[key])
 
     def test_server_update_server_flavor(self):
         """Tests update server changing the flavor.
