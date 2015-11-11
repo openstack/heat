@@ -246,6 +246,21 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             raise exception.FlavorMissing(flavor_id=flavor)
         return flavor_id
 
+    def get_host(self, host_name):
+        """Get the host id specified by name.
+
+        :param host_name: the name of host to find
+        :returns: the list of match hosts
+        :raises: exception.EntityNotFound
+        """
+
+        host_list = self.client().hosts.list()
+        for host in host_list:
+            if host.host_name == host_name and host.service == self.COMPUTE:
+                return host
+
+        raise exception.EntityNotFound(entity='Host', name=host_name)
+
     def get_keypair(self, key_name):
         """Get the public key specified by :key_name:
 
@@ -697,3 +712,11 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, network):
         client.client_plugin('nova').get_nova_network_id(network)
+
+
+class HostConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.EntityNotFound,)
+
+    def validate_with_client(self, client, host_name):
+        client.client_plugin('nova').get_host(host_name)
