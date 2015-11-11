@@ -72,6 +72,8 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.novaclient.servers, 'remove_floating_ip')
         self.patchobject(nova.NovaClientPlugin, 'get_server',
                          return_value=mock.MagicMock())
+        self.patchobject(nova.NovaClientPlugin, 'has_extension',
+                         return_value=True)
 
     def _make_obj(self, **kwargs):
         mock = self.m.CreateMockAnything()

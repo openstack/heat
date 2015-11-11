@@ -58,12 +58,6 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [COMPUTE] = ['compute']
 
-    EXTENSIONS = (
-        OS_INTERFACE_EXTENSION
-    ) = (
-        "OSInterface"
-    )
-
     def _create(self):
         endpoint_type = self._get_client_option('nova', 'endpoint_type')
         management_url = self.url_for(service_type=self.COMPUTE,
@@ -662,10 +656,10 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         else:
             return False
 
-    def _has_extension(self, extension_name):
+    def has_extension(self, alias):
         """Check if extension is present."""
         extensions = self.client().list_extensions.show_all()
-        return extension_name in [extension.name for extension in extensions]
+        return alias in [extension.alias for extension in extensions]
 
 
 class ServerConstraint(constraints.BaseCustomConstraint):

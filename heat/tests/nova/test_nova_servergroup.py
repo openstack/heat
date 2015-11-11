@@ -16,6 +16,7 @@ import json
 import mock
 
 from heat.common import template_format
+from heat.engine.clients.os import nova
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -43,6 +44,8 @@ class FakeGroup(object):
 class NovaServerGroupTest(common.HeatTestCase):
     def setUp(self):
         super(NovaServerGroupTest, self).setUp()
+        self.patchobject(nova.NovaClientPlugin, 'has_extension',
+                         return_value=True)
 
     def _init_template(self, sg_template):
         template = template_format.parse(json.dumps(sg_template))
