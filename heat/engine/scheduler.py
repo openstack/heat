@@ -282,7 +282,10 @@ def wrappertask(task):
     def wrapper(*args, **kwargs):
         parent = task(*args, **kwargs)
 
-        subtask = next(parent)
+        try:
+            subtask = next(parent)
+        except StopIteration:
+            return
 
         while True:
             try:
@@ -317,7 +320,10 @@ def wrappertask(task):
             except:  # noqa
                 subtask = parent.throw(*sys.exc_info())
             else:
-                subtask = next(parent)
+                try:
+                    subtask = next(parent)
+                except StopIteration:
+                    return
 
     return wrapper
 
