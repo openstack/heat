@@ -149,11 +149,10 @@ class ServerNetworkMixin(object):
         if not self.is_using_neutron():
             return
 
-        # check if OSInterface extension is installed on this cloud. If it's
-        # not, then novaclient's interface_list method cannot be used to get
-        # the list of interfaces.
-        if not self.client_plugin()._has_extension(
-                self.client_plugin().OS_INTERFACE_EXTENSION):
+        # check if os-attach-interfaces extension is installed on this cloud.
+        # If it's not, then novaclient's interface_list method cannot be used
+        # to get the list of interfaces.
+        if not self.client_plugin().has_extension('os-attach-interfaces'):
             return
 
         server = self.client().servers.get(self.resource_id)

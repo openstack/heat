@@ -586,26 +586,25 @@ class ConsoleUrlsTest(common.HeatTestCase):
 class NovaClientPluginExtensionsTests(NovaClientPluginTestCase):
     """Tests for extensions in novaclient."""
 
-    def test_defines_required_extension_names(self):
-        self.assertEqual(self.nova_plugin.OS_INTERFACE_EXTENSION,
-                         "OSInterface")
-
     def test_has_no_extensions(self):
         self.nova_client.list_extensions.show_all.return_value = []
-        self.assertFalse(self.nova_plugin._has_extension("OSInterface"))
+        self.assertFalse(self.nova_plugin.has_extension(
+            "os-virtual-interfaces"))
 
     def test_has_no_interface_extensions(self):
         mock_extension = mock.Mock()
-        p = mock.PropertyMock(return_value='notOSInterface')
-        type(mock_extension).name = p
+        p = mock.PropertyMock(return_value='os-xxxx')
+        type(mock_extension).alias = p
         self.nova_client.list_extensions.show_all.return_value = [
             mock_extension]
-        self.assertFalse(self.nova_plugin._has_extension("OSInterface"))
+        self.assertFalse(self.nova_plugin.has_extension(
+            "os-virtual-interfaces"))
 
     def test_has_os_interface_extension(self):
         mock_extension = mock.Mock()
-        p = mock.PropertyMock(return_value='OSInterface')
-        type(mock_extension).name = p
+        p = mock.PropertyMock(return_value='os-virtual-interfaces')
+        type(mock_extension).alias = p
         self.nova_client.list_extensions.show_all.return_value = [
             mock_extension]
-        self.assertTrue(self.nova_plugin._has_extension("OSInterface"))
+        self.assertTrue(self.nova_plugin.has_extension(
+            "os-virtual-interfaces"))
