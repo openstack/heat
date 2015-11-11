@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -52,10 +53,16 @@ class NovaFlavor(resource.Resource):
 
     PROPERTIES = (
         RAM, VCPUS, DISK, SWAP, EPHEMERAL,
-        RXTX_FACTOR, EXTRA_SPECS,
+        RXTX_FACTOR, EXTRA_SPECS, IS_PUBLIC
     ) = (
         'ram', 'vcpus', 'disk', 'swap', 'ephemeral',
-        'rxtx_factor', 'extra_specs',
+        'rxtx_factor', 'extra_specs', 'is_public',
+    )
+
+    ATTRIBUTES = (
+        IS_PUBLIC_ATTR,
+    ) = (
+        'is_public',
     )
 
     properties_schema = {
@@ -96,17 +103,29 @@ class NovaFlavor(resource.Resource):
             _('Key/Value pairs to extend the capabilities of the flavor.'),
             update_allowed=True,
         ),
+        IS_PUBLIC: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Scope of flavor accessibility. Public or private.'
+              'Default value is True, means public, shared '
+              'across all projects.'),
+            default=True,
+            support_status=support.SupportStatus(version='6.0.0'),
+        ),
 
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(NovaFlavor, self).__init__(name, json_snippet, stack)
+    attributes_schema = {
+        IS_PUBLIC_ATTR: attributes.Schema(
+            _('Whether the flavor is shared across all projects.'),
+            support_status=support.SupportStatus(version='6.0.0'),
+            type=attributes.Schema.BOOLEAN
+        ),
+    }
 
     def handle_create(self):
         args = dict(self.properties)
         args['flavorid'] = 'auto'
         args['name'] = self.physical_resource_name()
-        args['is_public'] = False
         flavor_keys = args.pop(self.EXTRA_SPECS)
 
         flavor = self.client().flavors.create(**args)
@@ -115,9 +134,9 @@ class NovaFlavor(resource.Resource):
             flavor.set_keys(flavor_keys)
 
         tenant = self.stack.context.tenant_id
-        # grant access to the active project and the admin project
-        self.client().flavor_access.add_tenant_access(flavor, tenant)
-        self.client().flavor_access.add_tenant_access(flavor, 'admin')
+        if not args['is_public']:
+            # grant access only to the active project(private flavor)
+            self.client().flavor_access.add_tenant_access(flavor, tenant)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update nova flavor."""
@@ -128,6 +147,11 @@ class NovaFlavor(resource.Resource):
             new_keys = prop_diff.get(self.EXTRA_SPECS)
             if new_keys is not None:
                 flavor.set_keys(new_keys)
+
+    def _resolve_attribute(self, name):
+        flavor = self.client().flavors.get(self.resource_id)
+        if name == self.IS_PUBLIC_ATTR:
+            return getattr(flavor, name)
 
 
 def resource_mapping():
