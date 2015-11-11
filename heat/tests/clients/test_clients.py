@@ -30,7 +30,6 @@ from testtools import testcase
 from troveclient import client as troveclient
 from zaqarclient.transport import errors as zaqar_exc
 
-from heat.common import context
 from heat.common import exception
 from heat.engine import clients
 from heat.engine.clients import client_plugin
@@ -183,10 +182,10 @@ class ClientPluginTest(common.HeatTestCase):
                          plugin._get_client_option('foo', 'ca_file'))
 
     def test_get_client_args(self):
-        plugin = FooClientsPlugin(mock.Mock())
+        ctxt = mock.Mock()
+        plugin = FooClientsPlugin(ctxt)
 
         plugin.url_for = mock.Mock(return_value='sample_endpoint_url')
-        plugin.context = mock.Mock()
         plugin.context.auth_url = 'sample_auth_url'
         plugin.context.tenant_id = 'sample_project_id'
 
@@ -276,9 +275,8 @@ class ClientPluginTest(common.HeatTestCase):
                          plugin.url_for(service_type='foo'))
         self.assertTrue(con.auth_plugin.get_endpoint.called)
 
-    @mock.patch.object(context, "RequestContext")
     @mock.patch.object(v3, "Token", name="v3_token")
-    def test_get_missing_service_catalog(self, mock_v3, mkreqctx):
+    def test_get_missing_service_catalog(self, mock_v3):
         class FakeKeystone(fakes.FakeKeystoneClient):
             def __init__(self):
                 super(FakeKeystone, self).__init__()
@@ -286,7 +284,7 @@ class ClientPluginTest(common.HeatTestCase):
                 self.version = 'v3'
 
         self.stub_keystoneclient(fake_client=FakeKeystone())
-        con = mock.Mock(auth_token="1234", trust_id=None)
+        con = mock.MagicMock(auth_token="1234", trust_id=None)
         c = clients.Clients(con)
         con.clients = c
 
@@ -301,10 +299,6 @@ class ClientPluginTest(common.HeatTestCase):
         mock_v3.return_value = mock_token_obj
 
         plugin = FooClientsPlugin(con)
-        mock_cxt_dict = {'auth_token_info': {'token': {'catalog': 'baz'}}}
-        plugin.context.to_dict.return_value = mock_cxt_dict
-
-        mkreqctx.from_dict.return_value.auth_plugin = con.auth_plugin
 
         self.assertEqual('http://192.0.2.1/bar',
                          plugin.url_for(service_type='bar'))
