@@ -564,12 +564,13 @@ class Resource(object):
                 endpoint_exists = client_plugin.does_endpoint_exist(
                     service_type=service_type,
                     service_name=cls.default_client_name)
-                req_extension = cls.required_service_extension
-                is_ext_available = (
-                    not req_extension or client_plugin.has_extension(
-                        req_extension))
-                if endpoint_exists and is_ext_available:
-                    return True
+                if endpoint_exists:
+                    req_extension = cls.required_service_extension
+                    is_ext_available = (
+                        not req_extension or client_plugin.has_extension(
+                            req_extension))
+                    if is_ext_available:
+                        return True
         except Exception as ex:
             LOG.exception(ex)
 

@@ -235,6 +235,11 @@ class ResourceWithDefaultClientName(resource.Resource):
     default_client_name = 'sample'
 
 
+class ResourceWithDefaultClientNameExt(resource.Resource):
+    default_client_name = 'sample'
+    required_service_extension = 'foo'
+
+
 class ResourceWithFnGetAttType(GenericResource):
     def FnGetAtt(self, name):
         pass
