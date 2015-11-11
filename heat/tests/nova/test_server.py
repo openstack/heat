@@ -4178,7 +4178,7 @@ class ServerInternalPortTest(common.HeatTestCase):
         server.client = mock.Mock()
         server.client().servers.get.return_value = Fake()
         server.client_plugin = mock.Mock()
-        server.client_plugin()._has_extension.return_value = True
+        server.client_plugin().has_extension.return_value = True
         server._data = {"internal_ports": '[{"id": "1122"}]',
                         "external_ports": '[{"id": "3344"},{"id": "5566"}]'}
 
