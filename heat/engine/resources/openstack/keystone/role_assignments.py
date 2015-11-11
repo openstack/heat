@@ -98,13 +98,13 @@ class KeystoneRoleAssignmentMixin(object):
     def _add_role_assignments_to_group(self, group_id, role_assignments):
         for role_assignment in self._normalize_to_id(role_assignments):
             if role_assignment.get(self.PROJECT) is not None:
-                self.client().client.roles.grant(
+                self.client().roles.grant(
                     role=role_assignment.get(self.ROLE),
                     project=role_assignment.get(self.PROJECT),
                     group=group_id
                 )
             elif role_assignment.get(self.DOMAIN) is not None:
-                self.client().client.roles.grant(
+                self.client().roles.grant(
                     role=role_assignment.get(self.ROLE),
                     domain=role_assignment.get(self.DOMAIN),
                     group=group_id
@@ -113,13 +113,13 @@ class KeystoneRoleAssignmentMixin(object):
     def _add_role_assignments_to_user(self, user_id, role_assignments):
         for role_assignment in self._normalize_to_id(role_assignments):
             if role_assignment.get(self.PROJECT) is not None:
-                self.client().client.roles.grant(
+                self.client().roles.grant(
                     role=role_assignment.get(self.ROLE),
                     project=role_assignment.get(self.PROJECT),
                     user=user_id
                 )
             elif role_assignment.get(self.DOMAIN) is not None:
-                self.client().client.roles.grant(
+                self.client().roles.grant(
                     role=role_assignment.get(self.ROLE),
                     domain=role_assignment.get(self.DOMAIN),
                     user=user_id
@@ -128,13 +128,13 @@ class KeystoneRoleAssignmentMixin(object):
     def _remove_role_assignments_from_group(self, group_id, role_assignments):
         for role_assignment in self._normalize_to_id(role_assignments):
             if role_assignment.get(self.PROJECT) is not None:
-                self.client().client.roles.revoke(
+                self.client().roles.revoke(
                     role=role_assignment.get(self.ROLE),
                     project=role_assignment.get(self.PROJECT),
                     group=group_id
                 )
             elif role_assignment.get(self.DOMAIN) is not None:
-                self.client().client.roles.revoke(
+                self.client().roles.revoke(
                     role=role_assignment.get(self.ROLE),
                     domain=role_assignment.get(self.DOMAIN),
                     group=group_id
@@ -143,13 +143,13 @@ class KeystoneRoleAssignmentMixin(object):
     def _remove_role_assignments_from_user(self, user_id, role_assignments):
         for role_assignment in self._normalize_to_id(role_assignments):
             if role_assignment.get(self.PROJECT) is not None:
-                self.client().client.roles.revoke(
+                self.client().roles.revoke(
                     role=role_assignment.get(self.ROLE),
                     project=role_assignment.get(self.PROJECT),
                     user=user_id
                 )
             elif role_assignment.get(self.DOMAIN) is not None:
-                self.client().client.roles.revoke(
+                self.client().roles.revoke(
                     role=role_assignment.get(self.ROLE),
                     domain=role_assignment.get(self.DOMAIN),
                     user=user_id
