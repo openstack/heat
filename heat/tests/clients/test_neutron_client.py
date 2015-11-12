@@ -16,6 +16,8 @@ from neutronclient.common import exceptions as qe
 
 from heat.common import exception
 from heat.engine.clients.os import neutron
+from heat.engine.clients.os.neutron import lbaas_constraints as lc
+from heat.engine.clients.os.neutron import neutron_constraints as nc
 from heat.tests import common
 from heat.tests import utils
 
@@ -154,17 +156,26 @@ class NeutronClientPluginTests(NeutronClientPluginTestCase):
 class NeutronConstraintsValidate(common.HeatTestCase):
     scenarios = [
         ('validate_network',
-            dict(constraint_class=neutron.NetworkConstraint,
+            dict(constraint_class=nc.NetworkConstraint,
                  resource_type='network')),
         ('validate_port',
-            dict(constraint_class=neutron.PortConstraint,
+            dict(constraint_class=nc.PortConstraint,
                  resource_type='port')),
         ('validate_router',
-            dict(constraint_class=neutron.RouterConstraint,
+            dict(constraint_class=nc.RouterConstraint,
                  resource_type='router')),
         ('validate_subnet',
-            dict(constraint_class=neutron.SubnetConstraint,
-                 resource_type='subnet'))
+            dict(constraint_class=nc.SubnetConstraint,
+                 resource_type='subnet')),
+        ('validate_loadbalancer',
+            dict(constraint_class=lc.LoadbalancerConstraint,
+                 resource_type='loadbalancer')),
+        ('validate_listener',
+            dict(constraint_class=lc.ListenerConstraint,
+                 resource_type='listener')),
+        ('validate_pool',
+            dict(constraint_class=lc.PoolConstraint,
+                 resource_type='lbaas_pool'))
     ]
 
     def test_validate(self):
