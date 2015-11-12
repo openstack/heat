@@ -15,6 +15,7 @@
 import mock
 from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
+import six
 import uuid
 
 from heat.common import exception
@@ -231,6 +232,14 @@ class NovaUtilsMetadataTests(NovaClientPluginTestCase):
         original = {'test_key': None}
         expected = {'test_key': 'null'}
         self.assertEqual(expected, self.nova_plugin.meta_serialize(original))
+
+    def test_serialize_no_value(self):
+        """This test is to prove that the user can only pass in a dict to nova
+        metadata.
+        """
+        excp = self.assertRaises(exception.StackValidationFailed,
+                                 self.nova_plugin.meta_serialize, "foo")
+        self.assertIn('metadata needs to be a Map', six.text_type(excp))
 
     def test_serialize_combined(self):
         original = {
