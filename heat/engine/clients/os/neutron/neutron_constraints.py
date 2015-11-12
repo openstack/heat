@@ -23,7 +23,7 @@ from heat.engine import constraints
 class NetworkConstraint(constraints.BaseCustomConstraint):
 
     expected_exceptions = (exceptions.NeutronClientException,
-                           exception.NovaNetworkNotFound,
+                           exception.EntityNotFound,
                            exception.PhysicalResourceNameAmbiguity)
 
     def validate_with_client(self, client, value):

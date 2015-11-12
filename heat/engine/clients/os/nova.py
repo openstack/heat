@@ -573,7 +573,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         except exceptions.NotFound as ex:
             LOG.debug('Nova network (%(net)s) not found: %(ex)s',
                       {'net': label, 'ex': ex})
-            raise exception.NovaNetworkNotFound(network=label)
+            raise exception.EntityNotFound(entity='Nova network', name=label)
         except exceptions.NoUniqueMatch as exc:
             LOG.debug('Nova network (%(net)s) is not unique matched: %(exc)s',
                       {'net': label, 'exc': exc})
@@ -692,7 +692,7 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
 
 class NetworkConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.NovaNetworkNotFound,
+    expected_exceptions = (exception.EntityNotFound,
                            exception.PhysicalResourceNameAmbiguity)
 
     def validate_with_client(self, client, network):

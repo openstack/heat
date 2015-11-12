@@ -2428,7 +2428,7 @@ class ServersTest(common.HeatTestCase):
         self.assertIn(expected, six.text_type(exc))
         expected = 'The Nova network (bar) could not be found'
         exc = self.assertRaises(
-            exception.NovaNetworkNotFound,
+            exception.EntityNotFound,
             server._build_nics, ([{'network': 'bar'}]))
         self.assertIn(expected, six.text_type(exc))
 
