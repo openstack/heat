@@ -431,7 +431,8 @@ class ResourceRegistry(object):
         info = self.get_resource_info(resource_type,
                                       resource_name=resource_name)
         if info is None:
-            raise exception.ResourceTypeNotFound(type_name=resource_type)
+            raise exception.EntityNotFound(entity='Resource Type',
+                                           name=resource_type)
         return info.get_class(files=files)
 
     def as_dict(self):

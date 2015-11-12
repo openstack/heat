@@ -417,7 +417,7 @@ class ResourceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmp)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
-        exc = self.assertRaises(exception.ResourceTypeNotFound,
+        exc = self.assertRaises(exception.EntityNotFound,
                                 resg.validate)
         exp_msg = 'The Resource Type (idontexist) could not be found.'
         self.assertIn(exp_msg, six.text_type(exc))

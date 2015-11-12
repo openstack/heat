@@ -396,7 +396,7 @@ class StackResourceTest(StackResourceBaseTest):
             exc = self.assertRaises(exception.StackValidationFailed,
                                     rsrc.validate)
         else:
-            exc = self.assertRaises(exception.ResourceTypeNotFound,
+            exc = self.assertRaises(exception.EntityNotFound,
                                     rsrc.validate)
         self.assertIn(raise_exc_msg, six.text_type(exc))
 
