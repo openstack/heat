@@ -284,7 +284,7 @@ def map_remote_error(ex):
         'AttributeError',
         'ValueError',
         'InvalidTenant',
-        'StackNotFound',
+        'EntityNotFound',
         'ResourceActionNotSupported',
         'ResourceNotFound',
         'ResourceNotAvailable',

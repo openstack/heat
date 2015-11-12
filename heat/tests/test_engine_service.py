@@ -450,7 +450,7 @@ class StackServiceTest(common.HeatTestCase):
     def test_stack_identify_nonexist(self):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.identify_stack, self.ctx, 'wibble')
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     @tools.stack_context('service_create_existing_test_stack', False)
     def test_stack_create_existing(self):
@@ -853,7 +853,8 @@ class StackServiceTest(common.HeatTestCase):
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
-        stack_not_found_exc = exception.StackNotFound(stack_name='test')
+        stack_not_found_exc = exception.EntityNotFound(
+            entity='Stack', name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
             self.ctx, non_exist_identifier,
@@ -863,7 +864,7 @@ class StackServiceTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.show_stack,
                                self.ctx, non_exist_identifier)
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         self.m.VerifyAll()
 
     def test_stack_describe_bad_tenant(self):

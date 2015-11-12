@@ -554,7 +554,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                                self.man.update_stack,
                                self.ctx, stk.identifier(), template,
                                params, None, {})
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     def test_stack_update_no_credentials(self):
         cfg.CONF.set_default('deferred_auth_method', 'password')

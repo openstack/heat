@@ -1284,7 +1284,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get('/stacks/%(stack_name)s' % {
             'stack_name': stack_name})
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -1298,7 +1298,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_name=stack_name)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_lookup_err_policy(self, mock_enforce):
@@ -1346,7 +1346,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get('/stacks/%(stack_name)s/resources' % {
             'stack_name': stack_name})
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -1361,7 +1361,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              path='resources')
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_lookup_resource_err_denied_policy(self, mock_enforce):
@@ -1454,7 +1454,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -1469,7 +1469,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_invalidtenant(self, mock_enforce):
@@ -1546,7 +1546,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -1562,7 +1562,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_update(self, mock_enforce):
@@ -1651,7 +1651,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
                         json.dumps(body))
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -1675,7 +1675,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              body=body)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_update_timeout_not_int(self, mock_enforce):
@@ -2054,7 +2054,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Engine returns None when delete successful
         rpc_client.EngineClient.call(
@@ -2070,7 +2070,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_validate_template(self, mock_enforce):

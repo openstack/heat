@@ -439,7 +439,7 @@ class EngineService(service.Service):
             stack = parser.Stack.load(cnxt, stack=s)
             return dict(stack.identifier())
         else:
-            raise exception.StackNotFound(stack_name=stack_name)
+            raise exception.EntityNotFound(entity='Stack', name=stack_name)
 
     def _get_stack(self, cnxt, stack_identity, show_deleted=False):
         identity = identifier.HeatIdentifier(**stack_identity)
@@ -451,7 +451,8 @@ class EngineService(service.Service):
             eager_load=True)
 
         if s is None:
-            raise exception.StackNotFound(stack_name=identity.stack_name)
+            raise exception.EntityNotFound(entity='Stack',
+                                           name=identity.stack_name)
 
         if cnxt.tenant_id not in (identity.tenant, s.stack_user_project_id):
             # The DB API should not allow this, but sanity-check anyway..
@@ -459,7 +460,8 @@ class EngineService(service.Service):
                                           actual=cnxt.tenant_id)
 
         if identity.path or s.name != identity.stack_name:
-            raise exception.StackNotFound(stack_name=identity.stack_name)
+            raise exception.EntityNotFound(entity='Stack',
+                                           name=identity.stack_name)
 
         return s
 

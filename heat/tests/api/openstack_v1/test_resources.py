@@ -108,7 +108,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/resources')
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -127,7 +127,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             stack_id=stack_identity.stack_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_index_nested_depth(self, mock_enforce):
@@ -391,7 +391,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(res_identity._tenant_path())
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -411,7 +411,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             resource_name=res_name)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_with_single_attribute(self, mock_enforce):
@@ -597,7 +597,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(res_identity._tenant_path() + '/metadata')
 
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -617,7 +617,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             resource_name=res_name)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_metadata_show_nonexist_resource(self, mock_enforce):

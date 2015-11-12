@@ -52,7 +52,7 @@ class StackDeleteTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.delete_stack,
                                self.ctx, stack.identifier())
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')

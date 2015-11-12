@@ -26,7 +26,7 @@ from heat.common.i18n import _
 from heat.tests import common
 
 
-class StackNotFoundChild(heat_exc.StackNotFound):
+class StackNotFoundChild(heat_exc.EntityNotFound):
     pass
 
 
@@ -70,11 +70,11 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
     def test_openstack_exception_with_kwargs(self):
         wrapper = fault.FaultWrapper(None)
-        msg = wrapper._error(heat_exc.StackNotFound(stack_name='a'))
+        msg = wrapper._error(heat_exc.EntityNotFound(entity='Stack', name='a'))
         expected = {'code': 404,
                     'error': {'message': 'The Stack (a) could not be found.',
                               'traceback': None,
-                              'type': 'StackNotFound'},
+                              'type': 'EntityNotFound'},
                     'explanation': 'The resource could not be found.',
                     'title': 'Not Found'}
         self.assertEqual(expected, msg)
@@ -116,7 +116,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
     def test_remote_exception(self):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)
-        error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.EntityNotFound(entity='Stack', name='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
@@ -128,7 +128,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
         expected = {'code': 404,
                     'error': {'message': expected_message,
                               'traceback': expected_traceback,
-                              'type': 'StackNotFound'},
+                              'type': 'EntityNotFound'},
                     'explanation': 'The resource could not be found.',
                     'title': 'Not Found'}
         self.assertEqual(expected, msg)
@@ -194,7 +194,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
     def test_should_not_ignore_parent_classes(self):
         wrapper = fault.FaultWrapper(None)
 
-        msg = wrapper._error(StackNotFoundChild(stack_name='a'))
+        msg = wrapper._error(StackNotFoundChild(entity='Stack', name='a'))
         expected = {'code': 404,
                     'error': {'message': 'The Stack (a) could not be found.',
                               'traceback': None,
@@ -224,7 +224,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)
 
-        error = StackNotFoundChild(stack_name='a')
+        error = StackNotFoundChild(entity='Stack', name='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
