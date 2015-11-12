@@ -865,6 +865,50 @@ class StackTest(test_parser.StackTest):
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
         self.m.VerifyAll()
 
+    def test_update_modify_files_ok_replace(self):
+        tmpl = {
+            'heat_template_version': '2013-05-23',
+            'parameters': {},
+            'resources': {
+                'AResource': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {'Foo': {'get_file': 'foo'}}
+                }
+            }
+        }
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
+                               'update_template_diff')
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl,
+                                                    files={'foo': 'abc'}))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl,
+                                                       files={'foo': 'xyz'}))
+
+        def check_props(*args):
+            self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+
+        generic_rsrc.ResourceWithProps.update_template_diff(
+            {'Type': 'ResourceWithPropsType',
+             'Properties': {'Foo': 'xyz'}},
+            {'Type': 'ResourceWithPropsType',
+             'Properties': {'Foo': 'abc'}}
+        ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+        self.m.VerifyAll()
+
 
 class StackAttributesTest(HeatTestCase):
     """
