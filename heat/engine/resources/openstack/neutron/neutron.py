@@ -150,7 +150,7 @@ class NeutronResource(resource.Resource):
                 same_name_groups = [g for g in all_groups if g['name'] == sg]
                 groups = [g['id'] for g in same_name_groups]
                 if len(groups) == 0:
-                    raise exception.PhysicalResourceNotFound(resource_id=sg)
+                    raise exception.EntityNotFound(entity='Resource', name=sg)
                 elif len(groups) == 1:
                     seclist.append(groups[0])
                 else:

@@ -1430,8 +1430,8 @@ class EngineService(service.Service):
             cnxt,
             physical_resource_id)
         if not rs:
-            raise exception.PhysicalResourceNotFound(
-                resource_id=physical_resource_id)
+            raise exception.EntityNotFound(entity='Resource',
+                                           name=physical_resource_id)
 
         stack = parser.Stack.load(cnxt, stack_id=rs.stack.id)
         resource = stack[rs.name]

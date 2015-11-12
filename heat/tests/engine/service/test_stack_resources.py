@@ -211,7 +211,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.find_physical_resource,
                                self.ctx, 'foo')
-        self.assertEqual(exception.PhysicalResourceNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     @mock.patch.object(stack.Stack, 'load')
     @tools.stack_context('service_resources_list_test_stack')
