@@ -980,6 +980,8 @@ class Stack(collections.Mapping):
             existing_params.load(newstack.t.env.user_env_as_dict())
             self.t.env = existing_params
             self.t.store(self.context)
+            backup_stack.t.env = existing_params
+            backup_stack.t.store(self.context)
         self.store()
         lifecycle_plugin_utils.do_post_ops(self.context, self,
                                            newstack, action,

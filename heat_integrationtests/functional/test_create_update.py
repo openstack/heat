@@ -384,3 +384,35 @@ resources:
             stack_identifier,
             template=self.update_userdata_template,
             parameters=parms_updated)
+
+    def test_stack_update_with_new_env(self):
+        """Update handles new resource types in the environment.
+
+        If a resource type appears during an update and the update fails,
+        retrying the update is able to find the type properly in the
+        environment.
+        """
+        stack_identifier = self.stack_create(
+            template=test_template_one_resource)
+
+        # Update with a new resource and make the update fails
+        template = _change_rsrc_properties(test_template_one_resource,
+                                           ['test1'], {'fail': True})
+        template['resources']['test2'] = {'type': 'My::TestResource'}
+        template['resources']['test1']['depends_on'] = 'test2'
+        env = {'resource_registry':
+               {'My::TestResource': 'OS::Heat::TestResource'}}
+        self.update_stack(stack_identifier,
+                          template=template,
+                          environment=env,
+                          expected_status='UPDATE_FAILED')
+
+        # Fixing the template should fix the stack
+        template = _change_rsrc_properties(template,
+                                           ['test1'], {'fail': False})
+        self.update_stack(stack_identifier,
+                          template=template,
+                          environment=env)
+        self.assertEqual({'test1': 'OS::Heat::TestResource',
+                          'test2': 'My::TestResource'},
+                         self.list_resources(stack_identifier))
