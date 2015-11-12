@@ -20,7 +20,6 @@ import sys
 
 from oslo_log import log as logging
 import six
-from six.moves.urllib import parse as urlparse
 from six import reraise as raise_
 
 from heat.common.i18n import _
@@ -30,20 +29,6 @@ _FATAL_EXCEPTION_FORMAT_ERRORS = False
 
 
 LOG = logging.getLogger(__name__)
-
-
-class RedirectException(Exception):
-    def __init__(self, url):
-        self.url = urlparse.urlparse(url)
-
-
-class KeystoneError(Exception):
-    def __init__(self, code, message):
-        self.code = code
-        self.message = message
-
-    def __str__(self):
-        return "Code: %s, message: %s" % (self.code, self.message)
 
 
 @six.python_2_unicode_compatible
@@ -88,19 +73,6 @@ class MissingCredentialError(HeatException):
     msg_fmt = _("Missing required credential: %(required)s")
 
 
-class BadAuthStrategy(HeatException):
-    msg_fmt = _('Incorrect auth strategy, expected "%(expected)s" but '
-                'received "%(received)s"')
-
-
-class AuthBadRequest(HeatException):
-    msg_fmt = _("Connect error/bad request to Auth service at URL %(url)s.")
-
-
-class AuthUrlNotFound(HeatException):
-    msg_fmt = _("Auth service at URL %(url)s not found.")
-
-
 class AuthorizationFailure(HeatException):
     msg_fmt = _("Authorization failed.")
 
@@ -123,28 +95,6 @@ class NotAuthorized(Forbidden):
 
 class Invalid(HeatException):
     msg_fmt = _("Data supplied was not valid: %(reason)s")
-
-
-class AuthorizationRedirect(HeatException):
-    msg_fmt = _("Redirecting to %(uri)s for authorization.")
-
-
-class RequestUriTooLong(HeatException):
-    msg_fmt = _("The URI was too long.")
-
-
-class MaxRedirectsExceeded(HeatException):
-    msg_fmt = _("Maximum redirects (%(redirects)s) was exceeded.")
-
-
-class InvalidRedirect(HeatException):
-    msg_fmt = _("Received invalid HTTP redirect.")
-
-
-class RegionAmbiguity(HeatException):
-    msg_fmt = _("Multiple 'image' service matches for region %(region)s. This "
-                "generally means that a region is required and you have not "
-                "supplied one.")
 
 
 class UserParameterMissing(HeatException):
