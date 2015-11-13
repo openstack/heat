@@ -235,7 +235,9 @@ profiler_opts = [
     cfg.BoolOpt("profiler_enabled", default=False,
                 help=_('If False fully disable profiling feature.')),
     cfg.BoolOpt("trace_sqlalchemy", default=False,
-                help=_("If False do not trace SQL requests."))
+                help=_("If False do not trace SQL requests.")),
+    cfg.StrOpt("hmac_keys", default="SECRET_KEY",
+               help=_("Secret key to use to sign tracing messages."))
 ]
 
 auth_password_group = cfg.OptGroup('auth_password')
