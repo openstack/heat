@@ -102,6 +102,7 @@ def format_stack(stack, preview=False):
         api.STACK_TIMEOUT: stack.timeout_mins,
         api.STACK_OWNER: stack.username,
         api.STACK_PARENT: stack.owner_id,
+        api.STACK_USER_PROJECT_ID: stack.stack_user_project_id,
     }
 
     if not preview:
