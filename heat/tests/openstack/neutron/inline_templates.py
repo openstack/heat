@@ -124,3 +124,21 @@ resources:
       subnet: sub123
       admin_state_up: True
 '''
+
+MONITOR_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a health monitor
+resources:
+  monitor:
+    type: OS::Neutron::LBaaS::HealthMonitor
+    properties:
+      admin_state_up: True
+      delay: 3
+      expected_codes: 200-202
+      http_method: HEAD
+      max_retries: 5
+      pool: 123
+      timeout: 10
+      type: HTTP
+      url_path: /health
+'''
