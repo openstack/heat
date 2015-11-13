@@ -1178,8 +1178,7 @@ class Stack(collections.Mapping):
         self.action = action
         self.status = self.IN_PROGRESS
         self.status_reason = 'Stack %s started' % action
-        notification.send(self)
-        self._add_event(self.action, self.status, self.status_reason)
+        self._send_notification_and_add_event()
         self.store()
         if prev_tmpl_id is not None:
             raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
@@ -1257,8 +1256,7 @@ class Stack(collections.Mapping):
         # condition with the COMPLETE status
         self.action = action
 
-        notification.send(self)
-        self._add_event(self.action, self.status, self.status_reason)
+        self._send_notification_and_add_event()
         if self.status == self.FAILED:
             # Since template was incrementally updated based on existing and
             # new stack resources, we should have user params of both.
