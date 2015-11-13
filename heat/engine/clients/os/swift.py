@@ -88,11 +88,12 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         Return a Swift TempURL.
         '''
         key_header = 'x-account-meta-temp-url-key'
-        if key_header in self.client().head_account():
-            key = self.client().head_account()[key_header]
-        else:
-            key = hashlib.sha224(str(random.getrandbits(256))).hexdigest()[:32]
-            self.client().post_account({key_header: key})
+        if key_header not in self.client().head_account():
+            self.client().post_account({
+                key_header: hashlib.sha224(
+                    str(random.getrandbits(256))).hexdigest()[:32]})
+
+        key = self.client().head_account()[key_header]
 
         path = '/v1/AUTH_%s/%s/%s' % (self.context.tenant_id, container_name,
                                       obj_name)
