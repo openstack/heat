@@ -614,8 +614,10 @@ class EngineService(service.Service):
                 raise exception.NotSupported(feature='Stack Adopt')
 
             # Override the params with values given with -P option
-            new_params = common_params[rpc_api.PARAM_ADOPT_STACK_DATA][
-                'environment'][rpc_api.STACK_PARAMETERS].copy()
+            new_params = {}
+            if 'environment' in common_params[rpc_api.PARAM_ADOPT_STACK_DATA]:
+                new_params = common_params[rpc_api.PARAM_ADOPT_STACK_DATA][
+                    'environment'].get(rpc_api.STACK_PARAMETERS, {}).copy()
             new_params.update(params.get(rpc_api.STACK_PARAMETERS, {}))
             params[rpc_api.STACK_PARAMETERS] = new_params
 

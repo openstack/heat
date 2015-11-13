@@ -1238,3 +1238,54 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual('COMPLETE', test_stack.resources.get('r1').status)
         self.assertEqual('FAILED', test_stack.resources.get('r2').status)
         self.assertEqual('FAILED', test_stack.resources.get('r3').status)
+
+    def test_parse_adopt_stack_data_without_parameters(self):
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        template = {"heat_template_version": "2015-04-30",
+                    "resources": {
+                        "myres": {
+                            "type": "OS::Cinder::Volume",
+                            "properties": {
+                                "name": "volname",
+                                "size": "1"
+                            }
+                        }
+                    }}
+
+        # Assert no KeyError exception raised like before, when trying to
+        # get parameters from adopt stack data which doesn't have it.
+        args = {"adopt_stack_data": '''{}'''}
+        self.eng._parse_template_and_validate_stack(
+            self.ctx, 'stack_name', template, {}, {}, args)
+
+        args = {"adopt_stack_data": '''{
+            "environment": {}
+        }'''}
+        self.eng._parse_template_and_validate_stack(
+            self.ctx, 'stack_name', template, {}, {}, args)
+
+    def test_parse_adopt_stack_data_with_parameters(self):
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        template = {"heat_template_version": "2015-04-30",
+                    "parameters": {
+                        "volsize": {"type": "number"}
+                    },
+                    "resources": {
+                        "myres": {
+                            "type": "OS::Cinder::Volume",
+                            "properties": {
+                                "name": "volname",
+                                "size": {"get_param": "volsize"}
+                            }
+                        }
+                    }}
+
+        args = {"adopt_stack_data": '''{
+            "environment": {
+                "parameters": {
+                    "volsize": 1
+                }
+            }}'''}
+        stack = self.eng._parse_template_and_validate_stack(
+            self.ctx, 'stack_name', template, {}, {}, args)
+        self.assertEqual(1, stack.parameters['volsize'])
