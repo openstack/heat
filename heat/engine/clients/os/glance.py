@@ -18,7 +18,6 @@ from oslo_utils import uuidutils
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
@@ -93,13 +92,9 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
                 _("Error retrieving image list from glance: %s") % ex)
         num_matches = len(image_list)
         if num_matches == 0:
-            LOG.info(_LI("Image %s was not found in glance"),
-                     image_identifier)
             raise exception.EntityNotFound(entity='Image',
                                            name=image_identifier)
         elif num_matches > 1:
-            LOG.info(_LI("Multiple images %s were found in glance with name"),
-                     image_identifier)
             raise exception.PhysicalResourceNameAmbiguity(
                 name=image_identifier)
         else:
