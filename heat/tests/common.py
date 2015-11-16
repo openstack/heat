@@ -269,6 +269,10 @@ class HeatTestCase(testscenarios.WithScenarios,
         validate = self.patchobject(neutron.AddressScopeConstraint, 'validate')
         validate.return_value = True
 
+    def stub_SubnetPoolConstraint_validate(self):
+        validate = self.patchobject(neutron.SubnetPoolConstraint, 'validate')
+        validate.return_value = True
+
     def stub_RouterConstraint_validate(self):
         validate = self.patchobject(neutron.RouterConstraint, 'validate')
         validate.return_value = True
