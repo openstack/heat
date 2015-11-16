@@ -14,18 +14,11 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
-from oslo_cache import core
-from oslo_config import cfg
 from oslo_utils import uuidutils
 
-from heat.common import cache
 from heat.common import exception
 from heat.engine.clients import client_plugin
-
-
-MEMOIZE = core.get_memoization_decorator(conf=cfg.CONF,
-                                         region=cache.get_cache_region(),
-                                         group="service_extension_cache")
+from heat.engine.clients import os as os_client
 
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
@@ -79,7 +72,7 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), key_type, props.get(key))
 
-    @MEMOIZE
+    @os_client.MEMOIZE
     def _list_extensions(self):
         extensions = self.client().list_extensions().get('extensions')
         return set(extension.get('alias') for extension in extensions)
