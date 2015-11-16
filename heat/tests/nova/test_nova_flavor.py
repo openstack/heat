@@ -100,7 +100,7 @@ class NovaFlavorTest(common.HeatTestCase):
         value.unset_keys.assert_called_once_with({})
         value.set_keys.assert_called_once_with(new_keys)
 
-    def test_flavor_show_resourse(self):
+    def test_flavor_show_resource(self):
         self.my_flavor.resource_id = 'flavor_test_id'
         self.my_flavor.client = mock.MagicMock()
         flavors = mock.MagicMock()

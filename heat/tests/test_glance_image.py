@@ -185,7 +185,7 @@ class GlanceImageTest(common.HeatTestCase):
         self.my_image.handle_create()
         self.assertEqual(image_id, self.my_image.resource_id)
 
-    def test_image_show_resourse_v1(self):
+    def test_image_show_resource_v1(self):
         self.glanceclient.version = 1.0
         self.my_image.resource_id = 'test_image_id'
         image = mock.MagicMock()
@@ -196,7 +196,7 @@ class GlanceImageTest(common.HeatTestCase):
         self.assertEqual({'image': 'info'}, self.my_image.FnGetAtt('show'))
         images.get.assert_called_once_with('test_image_id')
 
-    def test_image_show_resourse_v2(self):
+    def test_image_show_resource_v2(self):
         self.my_image.resource_id = 'test_image_id'
         # glance image in v2 is warlock.model object, so it can be
         # handled via dict(). In test we use easiest analog - dict.
