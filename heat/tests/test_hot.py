@@ -496,6 +496,17 @@ class HOTemplateTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
         snippet = {'list_join': ["\n", {'get_attr': ['rg', 'name']}]}
         self.assertEqual('', self.resolve(snippet, tmpl, stack))
+        # test list_join for liberty template
+        hot_tpl['heat_template_version'] = '2015-10-15'
+        tmpl = template.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        snippet = {'list_join': ["\n", {'get_attr': ['rg', 'name']}]}
+        self.assertEqual('', self.resolve(snippet, tmpl, stack))
+        # test list join again and update to multiple lists
+        snippet = {'list_join': ["\n",
+                                 {'get_attr': ['rg', 'name']},
+                                 {'get_attr': ['rg', 'name']}]}
+        self.assertEqual('', self.resolve(snippet, tmpl, stack))
 
     def test_str_replace(self):
         """Test str_replace function."""
@@ -669,25 +680,41 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_liberty_tpl_empty)
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
+    def test_list_join_empty_list(self):
+        snippet = {'list_join': [',', []]}
+        snippet_resolved = ''
+        k_tmpl = template.Template(hot_kilo_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, k_tmpl))
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, l_tmpl))
+
     def test_join_json(self):
         snippet = {'list_join': [',', [{'foo': 'json'}, {'foo2': 'json2'}]]}
         snippet_resolved = '{"foo": "json"},{"foo2": "json2"}'
-        tmpl = template.Template(hot_liberty_tpl_empty)
-        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, l_tmpl))
+        # old versions before liberty don't support to join json
+        k_tmpl = template.Template(hot_kilo_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, k_tmpl)
+        self.assertEqual("Items to join must be strings not {'foo': 'json'}",
+                         six.text_type(exc))
 
-    def test_join_type_fail(self):
+    def test_join_object_type_fail(self):
         not_serializable = object
         snippet = {'list_join': [',', [not_serializable]]}
-        tmpl = template.Template(hot_liberty_tpl_empty)
-        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, l_tmpl)
         self.assertIn('Items to join must be string, map or list not',
                       six.text_type(exc))
+        k_tmpl = template.Template(hot_kilo_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, k_tmpl)
+        self.assertIn("Items to join must be strings", six.text_type(exc))
 
     def test_join_json_fail(self):
         not_serializable = object
         snippet = {'list_join': [',', [{'foo': not_serializable}]]}
-        tmpl = template.Template(hot_liberty_tpl_empty)
-        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, l_tmpl)
         self.assertIn('Items to join must be string, map or list',
                       six.text_type(exc))
         self.assertIn("failed json serialization",
@@ -695,22 +722,39 @@ class HOTemplateTest(common.HeatTestCase):
 
     def test_join_invalid(self):
         snippet = {'list_join': 'bad'}
-        tmpl = template.Template(hot_liberty_tpl_empty)
-        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, l_tmpl)
         self.assertIn('Incorrect arguments', six.text_type(exc))
+
+        k_tmpl = template.Template(hot_kilo_tpl_empty)
+        exc1 = self.assertRaises(TypeError, self.resolve, snippet, k_tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc1))
+
+    def test_join_int_invalid(self):
+        snippet = {'list_join': 5}
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, l_tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc))
+
+        k_tmpl = template.Template(hot_kilo_tpl_empty)
+        exc1 = self.assertRaises(TypeError, self.resolve, snippet, k_tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc1))
 
     def test_join_invalid_value(self):
         snippet = {'list_join': [',']}
-        tmpl = template.Template(hot_liberty_tpl_empty)
-
-        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        l_tmpl = template.Template(hot_liberty_tpl_empty)
+        exc = self.assertRaises(ValueError, self.resolve, snippet, l_tmpl)
         self.assertIn('Incorrect arguments', six.text_type(exc))
+
+        k_tmpl = template.Template(hot_kilo_tpl_empty)
+        exc1 = self.assertRaises(ValueError, self.resolve, snippet, k_tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc1))
 
     def test_join_invalid_multiple(self):
         snippet = {'list_join': [',', 'bad', ['foo']]}
         tmpl = template.Template(hot_liberty_tpl_empty)
         exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
-        self.assertIn('Incorrect arguments', six.text_type(exc))
+        self.assertIn('must operate on a list', six.text_type(exc))
 
     def test_merge(self):
         snippet = {'map_merge': [{'f1': 'b1', 'f2': 'b2'}, {'f1': 'b2'}]}
