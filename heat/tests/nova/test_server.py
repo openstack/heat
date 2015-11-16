@@ -1865,7 +1865,7 @@ class ServersTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_update_flavor_resize_has_not_started(self):
-        """Test update of server flavour if server resize has not started.
+        """Test update of server flavor if server resize has not started.
 
         Server resize is asynchronous operation in nova. So when heat is
         requesting resize and polling the server then the server may still be
