@@ -92,26 +92,20 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
     def get_volume(self, volume):
         try:
             return self.client().volumes.get(volume)
-        except exceptions.NotFound as ex:
-            LOG.info(_LI('Volume (%(volume)s) not found: %(ex)s'),
-                     {'volume': volume, 'ex': ex})
+        except exceptions.NotFound:
             raise exception.EntityNotFound(entity='Volume', name=volume)
 
     def get_volume_snapshot(self, snapshot):
         try:
             return self.client().volume_snapshots.get(snapshot)
-        except exceptions.NotFound as ex:
-            LOG.info(_LI('VolumeSnapshot (%(snapshot)s) not found: %(ex)s'),
-                     {'snapshot': snapshot, 'ex': ex})
+        except exceptions.NotFound:
             raise exception.EntityNotFound(entity='VolumeSnapshot',
                                            name=snapshot)
 
     def get_volume_backup(self, backup):
         try:
             return self.client().backups.get(backup)
-        except exceptions.NotFound as ex:
-            LOG.info(_LI('Volume backup (%(backup)s) not found: %(ex)s'),
-                     {'backup': backup, 'ex': ex})
+        except exceptions.NotFound:
             raise exception.EntityNotFound(entity='Volume backup',
                                            name=backup)
 

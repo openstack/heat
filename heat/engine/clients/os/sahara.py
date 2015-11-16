@@ -22,7 +22,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
@@ -115,13 +114,9 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
                   "%s") % six.text_type(ex))
         num_matches = len(image_list)
         if num_matches == 0:
-            LOG.info(_LI("Image %s was not found in sahara images"),
-                     image_identifier)
             raise exception.EntityNotFound(entity='Image',
                                            name=image_identifier)
         elif num_matches > 1:
-            LOG.info(_LI("Multiple images %s were found in sahara with name"),
-                     image_identifier)
             raise exception.PhysicalResourceNameAmbiguity(
                 name=image_identifier)
         else:
@@ -137,7 +132,6 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
         try:
             self.client().plugins.get(plugin_name)
         except sahara_base.APIException:
-            LOG.info(_LI("Plugin %s was not found in sahara"), plugin_name)
             raise exception.EntityNotFound(entity='Plugin',
                                            name=plugin_name)
 

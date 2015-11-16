@@ -111,9 +111,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         """
         try:
             return self.client().servers.get(server)
-        except exceptions.NotFound as ex:
-            LOG.warn(_LW('Server (%(server)s) not found: %(ex)s'),
-                     {'server': server, 'ex': ex})
+        except exceptions.NotFound:
             raise exception.EntityNotFound(entity='Server', name=server)
 
     def fetch_server(self, server_id):
