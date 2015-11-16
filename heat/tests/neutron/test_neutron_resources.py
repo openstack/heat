@@ -407,7 +407,17 @@ class NeutronSubnetTest(common.HeatTestCase):
         return rsrc
 
     def test_subnet(self):
-        t = self._test_subnet()
+        update_props = {'subnet': {
+            'dns_nameservers': ['8.8.8.8', '192.168.1.254'],
+            'name': 'mysubnet',
+            'enable_dhcp': True,
+            'host_routes': [{'destination': '192.168.1.0/24',
+                             'nexthop': '194.168.1.2'}],
+            "allocation_pools": [
+                {"start": "10.0.3.20", "end": "10.0.3.100"},
+                {"start": "10.0.3.110", "end": "10.0.3.200"}]}}
+
+        t = self._test_subnet(u_props=update_props)
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -438,7 +448,8 @@ class NeutronSubnetTest(common.HeatTestCase):
             "ip_version": 4,
             "cidr": "10.0.3.0/24",
             "allocation_pools": [
-                {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                {"start": "10.0.3.20", "end": "10.0.3.100"},
+                {"start": "10.0.3.110", "end": "10.0.3.200"}],
             "dns_nameservers": ["8.8.8.8", "192.168.1.254"],
             "host_routes": [
                 {"destination": "192.168.1.0/24", "nexthop": "194.168.1.2"}
@@ -480,7 +491,15 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
 
-    def _test_subnet(self, resolve_neutron=True):
+    def _test_subnet(self, resolve_neutron=True, u_props=None):
+        default_update_props = {'subnet': {
+            'dns_nameservers': ['8.8.8.8', '192.168.1.254'],
+            'name': 'mysubnet',
+            'enable_dhcp': True,
+            'host_routes': [{'destination': '192.168.1.0/24',
+                             'nexthop': '194.168.1.2'}]}}
+        update_props = u_props if u_props else default_update_props
+
         neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
@@ -556,17 +575,7 @@ class NeutronSubnetTest(common.HeatTestCase):
             t = template_format.parse(neutron_template)
             # Update script
             neutronclient.Client.update_subnet(
-                '91e47a57-7508-46fe-afc9-fc454e8580e1',
-                {'subnet': {
-                 'dns_nameservers': ['8.8.8.8', '192.168.1.254'],
-                 'name': 'mysubnet',
-                 'enable_dhcp': True,
-                 'host_routes': [
-                     {'destination': '192.168.1.0/24',
-                      'nexthop': '194.168.1.2'}
-                 ]
-                 }}
-            )
+                '91e47a57-7508-46fe-afc9-fc454e8580e1', update_props)
 
         else:
             t = template_format.parse(neutron_template_deprecated)
