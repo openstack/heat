@@ -740,10 +740,10 @@ class Stack(collections.Mapping):
         self.status_reason = reason
 
         # Persist state to db only if status == IN_PROGRESS
-        # or action == self.DELETE/self.ROLLBACK. Else, it would
+        # or action == UPDATE/DELETE/ROLLBACK. Else, it would
         # be done before releasing the stack lock.
         if status == self.IN_PROGRESS or action in (
-                self.DELETE, self.ROLLBACK):
+                self.UPDATE, self.DELETE, self.ROLLBACK):
             self._persist_state()
 
     def _persist_state(self):
