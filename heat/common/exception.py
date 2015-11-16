@@ -189,10 +189,6 @@ class EntityNotFound(HeatException):
     msg_fmt = _("The %(entity)s (%(name)s) could not be found.")
 
 
-class NovaNetworkNotFound(HeatException):
-    msg_fmt = _("The Nova network (%(network)s) could not be found.")
-
-
 class PhysicalResourceNameAmbiguity(HeatException):
     msg_fmt = _(
         "Multiple physical resources were found with name (%(name)s).")

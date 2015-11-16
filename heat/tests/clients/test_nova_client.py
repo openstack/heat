@@ -127,7 +127,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
                          self.nova_plugin.get_net_id_by_label('net_label'))
 
         exc = self.assertRaises(
-            exception.NovaNetworkNotFound,
+            exception.EntityNotFound,
             self.nova_plugin.get_net_id_by_label, 'idontexist')
         expected = 'The Nova network (idontexist) could not be found'
         self.assertIn(expected, six.text_type(exc))
@@ -155,7 +155,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.assertEqual(net.id,
                          self.nova_plugin.get_nova_network_id(net.id))
         exc = self.assertRaises(
-            exception.NovaNetworkNotFound,
+            exception.EntityNotFound,
             self.nova_plugin.get_nova_network_id, not_existent_net_id)
         expected = ('The Nova network (%s) could not be found' %
                     not_existent_net_id)

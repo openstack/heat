@@ -895,7 +895,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         for key in list(nets.keys()):
             try:
                 net_id = self.client_plugin().get_net_id_by_label(key)
-            except (exception.NovaNetworkNotFound,
+            except (exception.EntityNotFound,
                     exception.PhysicalResourceNameAmbiguity):
                 net_id = None
             if net_id:
