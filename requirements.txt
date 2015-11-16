@@ -26,7 +26,7 @@ oslo.reports>=0.6.0 # Apache-2.0
 oslo.serialization>=1.10.0 # Apache-2.0
 oslo.service>=0.10.0 # Apache-2.0
 oslo.utils!=2.6.0,>=2.4.0 # Apache-2.0
-osprofiler>=0.3.0 # Apache-2.0
+osprofiler>=0.3.1 # Apache-2.0
 oslo.versionedobjects>=0.9.0
 PasteDeploy>=1.5.0
 pycrypto>=2.6
