@@ -331,7 +331,7 @@ class Resource(object):
             return True
         ri = self.stack.env.get_resource_info(self.type(),
                                               self.name)
-        return ri.name == resource_type
+        return ri is not None and ri.name == resource_type
 
     def implementation_signature(self):
         '''
