@@ -25,6 +25,7 @@ import oslo_messaging as messaging
 from oslo_serialization import jsonutils
 from oslo_service import service
 from oslo_service import threadgroup
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
 import six
@@ -1797,7 +1798,7 @@ class EngineService(service.Service):
     def service_manage_cleanup(self):
         cnxt = context.get_admin_context()
         last_updated_window = (3 * cfg.CONF.periodic_interval)
-        time_line = datetime.datetime.utcnow() - datetime.timedelta(
+        time_line = timeutils.utcnow() - datetime.timedelta(
             seconds=last_updated_window)
 
         service_refs = service_objects.Service.get_all_by_args(
