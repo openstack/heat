@@ -71,7 +71,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_class_noexist(self):
-        self.assertRaises(exception.StackValidationFailed,
+        self.assertRaises(exception.ResourceTypeNotFound,
                           resources.global_env().get_class,
                           'NoExistResourceType')
 
@@ -105,13 +105,13 @@ class ResourceTest(common.HeatTestCase):
     def test_resource_new_err(self):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'NoExistResourceType')
-        self.assertRaises(exception.StackValidationFailed,
+        self.assertRaises(exception.ResourceTypeNotFound,
                           resource.Resource, 'aresource', snippet, self.stack)
 
     def test_resource_non_type(self):
         resource_name = 'aresource'
         snippet = rsrc_defn.ResourceDefinition(resource_name, '')
-        ex = self.assertRaises(exception.StackValidationFailed,
+        ex = self.assertRaises(exception.InvalidResourceType,
                                resource.Resource, resource_name,
                                snippet, self.stack)
         self.assertIn(_('Resource "%s" has no type') % resource_name,

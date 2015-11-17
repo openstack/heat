@@ -379,23 +379,29 @@ class StackResourceTest(common.HeatTestCase):
                                 rsrc.validate)
         self.assertIn(raise_exc_msg, six.text_type(exc))
 
-    def _test_validate_unknown_resource_type(self, stack_name,
-                                             tmpl, resource_name):
-        raise_exc_msg = ('Unknown resource Type : idontexist')
+    def _test_validate_unknown_resource_type(self, stack_name, tmpl,
+                                             resource_name,
+                                             stack_resource=True):
+        raise_exc_msg = ('The Resource Type (idontexist) could not be found.')
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         rsrc = stack[resource_name]
-
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                rsrc.validate)
+        if stack_resource:
+            exc = self.assertRaises(exception.StackValidationFailed,
+                                    rsrc.validate)
+        else:
+            exc = self.assertRaises(exception.ResourceTypeNotFound,
+                                    rsrc.validate)
         self.assertIn(raise_exc_msg, six.text_type(exc))
 
     def test_validate_resource_group(self):
-        # test validate without nested template
+        # resource group validate without nested template is a normal
+        # resource validation
         stack_name = 'validate_resource_group_template'
         t = template_format.parse(resource_group_template)
         tmpl = templatem.Template(t)
         self._test_validate_unknown_resource_type(stack_name, tmpl,
-                                                  'my_resource_group')
+                                                  'my_resource_group',
+                                                  stack_resource=False)
 
         # validate with nested template
         res_prop = t['resources']['my_resource_group']['properties']
@@ -406,7 +412,7 @@ class StackResourceTest(common.HeatTestCase):
                                                   'my_resource_group')
 
     def test_validate_heat_autoscaling_group(self):
-        # test validate without nested template
+        # Autoscaling validation is a nested stack validation
         stack_name = 'validate_heat_autoscaling_group_template'
         t = template_format.parse(heat_autoscaling_group_template)
         tmpl = templatem.Template(t)
