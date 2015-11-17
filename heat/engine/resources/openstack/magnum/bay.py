@@ -45,7 +45,10 @@ class Bay(resource.Resource):
         ),
         BAYMODEL: properties.Schema(
             properties.Schema.STRING,
-            _('The ID of the bay model.'),
+            _('The name or ID of the bay model.'),
+            constraints=[
+                constraints.CustomConstraint('magnum.baymodel')
+            ],
             required=True
         ),
         NODE_COUNT: properties.Schema(
@@ -62,7 +65,7 @@ class Bay(resource.Resource):
         ),
         DISCOVERY_URL: properties.Schema(
             properties.Schema.STRING,
-            _('Url used for bay node discovery.')
+            _('Specifies a custom discovery url for node discovery.')
         ),
         BAY_CREATE_TIMEOUT: properties.Schema(
             properties.Schema.INTEGER,
