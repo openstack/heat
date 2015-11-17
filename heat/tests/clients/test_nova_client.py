@@ -88,6 +88,31 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.assertEqual([(), (), ()],
                          self.nova_client.flavors.list.call_args_list)
 
+    def test_get_host(self):
+        """Tests the get_host function."""
+        my_host_name = 'myhost'
+        my_host = mock.MagicMock()
+        my_host.host_name = my_host_name
+        my_host.service = 'compute'
+
+        wrong_host = mock.MagicMock()
+        wrong_host.host_name = 'wrong_host'
+        wrong_host.service = 'compute'
+        self.nova_client.hosts.list.side_effect = [
+            [my_host],
+            [wrong_host],
+            exception.EntityNotFound(entity='Host', name='nohost')
+        ]
+        self.assertEqual(my_host, self.nova_plugin.get_host(my_host_name))
+        self.assertRaises(exception.EntityNotFound,
+                          self.nova_plugin.get_host, my_host_name)
+        self.assertRaises(exception.EntityNotFound,
+                          self.nova_plugin.get_host, 'nohost')
+        self.assertEqual(3, self.nova_client.hosts.list.call_count)
+        calls = [mock.call(), mock.call(), mock.call()]
+        self.assertEqual(calls,
+                         self.nova_client.hosts.list.call_args_list)
+
     def test_get_keypair(self):
         """Tests the get_keypair function."""
         my_pub_key = 'a cool public key string'
@@ -487,6 +512,26 @@ class NetworkConstraintTest(common.HeatTestCase):
         client.networks.find.return_value = network
         client.networks.find.side_effect = None
         self.assertTrue(constraint.validate(network.id, ctx))
+
+
+class HostConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(HostConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_host = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'nova').get_host = self.mock_get_host
+        self.constraint = nova.HostConstraint()
+
+    def test_validation(self):
+        self.mock_get_host.return_value = mock.MagicMock()
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        self.mock_get_host.side_effect = exception.EntityNotFound(
+            entity='Host', name='bar')
+        self.assertFalse(self.constraint.validate("bar", self.ctx))
 
 
 class KeypairConstraintTest(common.HeatTestCase):
