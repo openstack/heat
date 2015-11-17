@@ -21,7 +21,7 @@ from heat.common import template_format
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import sahara
-from heat.engine.resources.openstack.sahara import sahara_templates as st
+from heat.engine.resources.openstack.sahara import templates as st
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
