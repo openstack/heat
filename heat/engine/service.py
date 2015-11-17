@@ -116,9 +116,20 @@ class ThreadGroupManager(object):
         """
         if stack_id not in self.groups:
             self.groups[stack_id] = threadgroup.ThreadGroup()
-        return self.groups[stack_id].add_thread(self._start_with_trace,
-                                                self._serialize_profile_info(),
-                                                func, *args, **kwargs)
+
+        def log_exceptions(gt):
+            try:
+                gt.wait()
+            except Exception:
+                LOG.exception(_LE('Unhandled error in asynchronous task'))
+            except BaseException:
+                pass
+
+        th = self.groups[stack_id].add_thread(self._start_with_trace,
+                                              self._serialize_profile_info(),
+                                              func, *args, **kwargs)
+        th.link(log_exceptions)
+        return th
 
     def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
         """
