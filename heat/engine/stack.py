@@ -1075,9 +1075,11 @@ class Stack(collections.Mapping):
             self.mark_complete(self.current_traversal)
         else:
             for rsrc_id, is_update in self.convergence_dependencies.leaves():
-                LOG.info(_LI("Triggering resource %(rsrc_id)s "
-                             "for %(is_update)s update"),
-                         {'rsrc_id': rsrc_id, 'is_update': is_update})
+                if is_update:
+                    LOG.info(_LI("Triggering resource %s for update"), rsrc_id)
+                else:
+                    LOG.info(_LI("Triggering resource %s for cleanup"),
+                             rsrc_id)
                 input_data = sync_point.serialize_input_data({})
                 self.worker_client.check_resource(self.context, rsrc_id,
                                                   self.current_traversal,
