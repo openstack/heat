@@ -20,6 +20,7 @@ import re
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import encodeutils
+from oslo_utils import excutils
 from oslo_utils import timeutils as oslo_timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
@@ -69,6 +70,25 @@ class ForcedCancel(BaseException):
 
     def __str__(self):
         return "Operation cancelled"
+
+
+def reset_state_on_error(func):
+    @six.wraps(func)
+    def handle_exceptions(stack, *args, **kwargs):
+        errmsg = None
+        try:
+            return func(stack, *args, **kwargs)
+        except BaseException as exc:
+            with excutils.save_and_reraise_exception():
+                errmsg = six.text_type(exc)
+                LOG.error(_LE('Unexpected exception in %(func)s: %(msg)s'),
+                          {'func': func.__name__, 'msg': errmsg})
+        finally:
+            if stack.state == stack.IN_PROGRESS:
+                stack.set_state(stack.action, stack.FAILED, errmsg)
+                assert errmsg is not None, "Returned while IN_PROGRESS"
+
+    return handle_exceptions
 
 
 @six.python_2_unicode_compatible
@@ -793,6 +813,7 @@ class Stack(collections.Mapping):
                 r._store()
 
     @profiler.trace('Stack.create', hide_args=False)
+    @reset_state_on_error
     def create(self):
         """Create the stack and all of the resources."""
         def rollback():
@@ -894,6 +915,7 @@ class Stack(collections.Mapping):
                                            (self.status == self.FAILED))
 
     @profiler.trace('Stack.check', hide_args=False)
+    @reset_state_on_error
     def check(self):
         self.updated_time = oslo_timeutils.utcnow()
         checker = scheduler.TaskRunner(
@@ -947,6 +969,7 @@ class Stack(collections.Mapping):
             return None
 
     @profiler.trace('Stack.adopt', hide_args=False)
+    @reset_state_on_error
     def adopt(self):
         """Adopt existing resources into a new stack."""
         def rollback():
@@ -966,6 +989,7 @@ class Stack(collections.Mapping):
         creator(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.update', hide_args=False)
+    @reset_state_on_error
     def update(self, newstack, event=None):
         """Update the stack.
 
@@ -1419,6 +1443,7 @@ class Stack(collections.Mapping):
         return stack_status, reason
 
     @profiler.trace('Stack.delete', hide_args=False)
+    @reset_state_on_error
     def delete(self, action=DELETE, backup=False, abandon=False):
         """Delete all of the resources, and then the stack itself.
 
@@ -1510,6 +1535,7 @@ class Stack(collections.Mapping):
             self.id = None
 
     @profiler.trace('Stack.suspend', hide_args=False)
+    @reset_state_on_error
     def suspend(self):
         """Suspend the stack.
 
@@ -1535,6 +1561,7 @@ class Stack(collections.Mapping):
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.resume', hide_args=False)
+    @reset_state_on_error
     def resume(self):
         """Resume the stack.
 
@@ -1560,6 +1587,7 @@ class Stack(collections.Mapping):
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.snapshot', hide_args=False)
+    @reset_state_on_error
     def snapshot(self, save_snapshot_func):
         """Snapshot the stack, invoking handle_snapshot on all resources."""
         self.updated_time = oslo_timeutils.utcnow()
@@ -1572,6 +1600,7 @@ class Stack(collections.Mapping):
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
+    @reset_state_on_error
     def delete_snapshot(self, snapshot):
         """Remove a snapshot from the backends."""
         for name, rsrc in six.iteritems(self.resources):
@@ -1581,6 +1610,7 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
     @profiler.trace('Stack.restore', hide_args=False)
+    @reset_state_on_error
     def restore(self, snapshot):
         """Restore the given snapshot.
 
