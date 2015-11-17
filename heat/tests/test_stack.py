@@ -1864,3 +1864,60 @@ class StackKwargsForCloningTest(common.HeatTestCase):
             # just make sure that the kwargs are valid
             # (no exception should be raised)
             stack.Stack(ctx, utils.random_name(), tmpl, **res)
+
+
+class ResetStateOnErrorTest(common.HeatTestCase):
+    class DummyStack(object):
+
+        (COMPLETE, IN_PROGRESS, FAILED) = range(3)
+        action = 'something'
+        state = COMPLETE
+
+        @stack.reset_state_on_error
+        def raise_exception(self):
+            self.state = self.IN_PROGRESS
+            raise ValueError('oops')
+
+        @stack.reset_state_on_error
+        def raise_exit_exception(self):
+            self.state = self.IN_PROGRESS
+            raise BaseException('bye')
+
+        @stack.reset_state_on_error
+        def succeed(self):
+            return 'Hello world'
+
+        @stack.reset_state_on_error
+        def fail(self):
+            self.state = self.FAILED
+            return 'Hello world'
+
+    def test_success(self):
+        dummy = self.DummyStack()
+        dummy.set_state = mock.MagicMock()
+
+        self.assertEqual('Hello world', dummy.succeed())
+        self.assertFalse(dummy.set_state.called)
+
+    def test_failure(self):
+        dummy = self.DummyStack()
+        dummy.set_state = mock.MagicMock()
+
+        self.assertEqual('Hello world', dummy.fail())
+        self.assertFalse(dummy.set_state.called)
+
+    def test_reset_state_exception(self):
+        dummy = self.DummyStack()
+        dummy.set_state = mock.MagicMock()
+
+        exc = self.assertRaises(ValueError, dummy.raise_exception)
+        self.assertIn('oops', str(exc))
+        self.assertTrue(dummy.set_state.called)
+
+    def test_reset_state_exit_exception(self):
+        dummy = self.DummyStack()
+        dummy.set_state = mock.MagicMock()
+
+        exc = self.assertRaises(BaseException, dummy.raise_exit_exception)
+        self.assertIn('bye', str(exc))
+        self.assertTrue(dummy.set_state.called)
