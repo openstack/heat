@@ -18,7 +18,7 @@ from troveclient.openstack.common.apiclient import exceptions as troveexc
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import trove
-from heat.engine.resources.openstack.trove import trove_cluster
+from heat.engine.resources.openstack.trove import cluster
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -81,7 +81,7 @@ class TroveClusterTest(common.HeatTestCase):
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['cluster']
 
-        self.patcher_client = mock.patch.object(trove_cluster.TroveCluster,
+        self.patcher_client = mock.patch.object(cluster.TroveCluster,
                                                 'client')
         mock_client = self.patcher_client.start()
         self.client = mock_client.return_value
@@ -96,7 +96,7 @@ class TroveClusterTest(common.HeatTestCase):
         self.patcher_client.stop()
 
     def _create_resource(self, name, snippet, stack):
-        tc = trove_cluster.TroveCluster(name, snippet, stack)
+        tc = cluster.TroveCluster(name, snippet, stack)
         self.client.clusters.create.return_value = FakeTroveCluster()
         self.client.clusters.get.return_value = FakeTroveCluster()
         scheduler.TaskRunner(tc.create)()
@@ -118,9 +118,9 @@ class TroveClusterTest(common.HeatTestCase):
         self.assertEqual('clusters', tc.entity)
 
     def test_resource_mapping(self):
-        mapping = trove_cluster.resource_mapping()
+        mapping = cluster.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(trove_cluster.TroveCluster,
+        self.assertEqual(cluster.TroveCluster,
                          mapping['OS::Trove::Cluster'])
 
     def test_attributes(self):
@@ -146,12 +146,12 @@ class TroveClusterTest(common.HeatTestCase):
         self.assertEqual(2, self.client.clusters.get.call_count)
 
     def test_validate_ok(self):
-        tc = trove_cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
+        tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         self.assertIsNone(tc.validate())
 
     def test_validate_invalid_dsversion(self):
         self.rsrc_defn['Properties']['datastore_version'] = '2.6.2'
-        tc = trove_cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
+        tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
         error_msg = ('Datastore version 2.6.2 for datastore type mongodb is '
                      'not valid. Allowed versions are 2.6.1.')
@@ -159,7 +159,7 @@ class TroveClusterTest(common.HeatTestCase):
 
     def test_validate_invalid_flavor(self):
         self.rsrc_defn['Properties']['instances'][0]['flavor'] = 'm1.small'
-        tc = trove_cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
+        tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
         error_msg = ("Property error: "
                      "resources.cluster.properties.instances[0].flavor: "
