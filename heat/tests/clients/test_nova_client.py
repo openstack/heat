@@ -25,7 +25,7 @@ import six
 from heat.common import exception
 from heat.engine.clients.os import nova
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 

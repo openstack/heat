@@ -36,7 +36,7 @@ from heat.objects import stack as stack_object
 from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests import generic_resource as generic_rsrc
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')

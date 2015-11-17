@@ -34,9 +34,8 @@ from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
-
 
 wp_template = '''
 {

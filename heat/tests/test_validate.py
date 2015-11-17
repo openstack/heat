@@ -28,7 +28,7 @@ from heat.engine import service
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 test_template_volumeattach = '''
