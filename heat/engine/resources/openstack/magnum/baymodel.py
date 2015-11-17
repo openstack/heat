@@ -116,8 +116,8 @@ class BayModel(resource.Resource):
         NETWORK_DRIVER: properties.Schema(
             properties.Schema.STRING,
             _('The name of the driver used for instantiating '
-              'container networks.'),
-            required=True,
+              'container networks. By default, Magnum will choose the '
+              'pre-configured network driver based on COE type.'),
             support_status=support.SupportStatus(version='6.0.0')
         ),
         HTTP_PROXY: properties.Schema(
@@ -168,13 +168,19 @@ class BayModel(resource.Resource):
             'docker_volume_size': self.properties[self.DOCKER_VOLUME_SIZE],
             'ssh_authorized_key': self.properties[self.SSH_AUTHORIZED_KEY],
             'coe': self.properties[self.COE],
-            'network_driver': self.properties[self.NETWORK_DRIVER],
-            'http_proxy': self.properties[self. HTTP_PROXY],
-            'https_proxy': self.properties[self.HTTPS_PROXY],
-            'no_proxy': self.properties[self.NO_PROXY],
-            'labels': self.properties[self.LABELS],
-            'tls_disabled': self.properties[self.TLS_DISABLED]
         }
+        if self.properties[self.NETWORK_DRIVER]:
+            args['network_driver'] = self.properties[self.NETWORK_DRIVER]
+        if self.properties[self.HTTP_PROXY]:
+            args['http_proxy'] = self.properties[self. HTTP_PROXY]
+        if self.properties[self.HTTPS_PROXY]:
+            args['https_proxy'] = self.properties[self.HTTPS_PROXY]
+        if self.properties[self.NO_PROXY]:
+            args['no_proxy'] = self.properties[self.NO_PROXY]
+        if self.properties[self.LABELS]:
+            args['labels'] = self.properties[self.LABELS]
+        if self.properties[self.TLS_DISABLED]:
+            args['tls_disabled'] = self.properties[self.TLS_DISABLED]
 
         bm = self.client().baymodels.create(**args)
         self.resource_id_set(bm.uuid)
