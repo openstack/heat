@@ -19,7 +19,8 @@ import mox
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import ceilometer
-from heat.engine.resources.openstack.ceilometer import gnocchi_alarm as gnocchi
+from heat.engine.resources.openstack.ceilometer.gnocchi import \
+    alarm as gnocchi
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
