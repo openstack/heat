@@ -65,6 +65,11 @@ class TemplateResource(stack_resource.StackResource):
         if self.validation_exception is None:
             self._generate_schema(self.t)
 
+    def resource_class(self):
+        # All TemplateResource subclasses can be converted to each other with
+        # a stack update, so allow them to cross-update in place.
+        return TemplateResource
+
     def _get_resource_info(self, rsrc_defn):
         tri = self.stack.env.get_resource_info(
             rsrc_defn.resource_type,
