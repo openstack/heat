@@ -31,6 +31,13 @@ _FATAL_EXCEPTION_FORMAT_ERRORS = False
 LOG = logging.getLogger(__name__)
 
 
+# TODO(kanagaraj-manickam): Expose this to user via REST API
+ERROR_CODE_MAP = {
+    '99001': _("Service %(service_name)s does not have required endpoint in "
+               "service catalog for the resource type %(resource_type)s")
+}
+
+
 @six.python_2_unicode_compatible
 class HeatException(Exception):
     """Base Heat Exception.
@@ -40,12 +47,21 @@ class HeatException(Exception):
     provided to the constructor.
     """
     message = _("An unknown exception occurred.")
+    # error_code helps to provide an unique number for a given exception
+    # and is encoded in XXYYY format.
+    # Here, XX - For each of the entity type like stack, resource, etc
+    # an unique number will be provided. All exceptions for a entity will
+    # have same XX code.
+    # YYY - Specific error code for a given exception.
     error_code = None
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
         try:
+            if self.error_code in ERROR_CODE_MAP:
+                self.msg_fmt = ERROR_CODE_MAP[self.error_code]
+
             self.message = self.msg_fmt % kwargs
 
             if self.error_code:
@@ -204,6 +220,10 @@ class SnapshotNotFound(EntityNotFound):
 class InvalidGlobalResource(HeatException):
     msg_fmt = _("There was an error loading the definition of the global "
                 "resource type %(type_name)s.")
+
+
+class ResourceTypeUnavailable(HeatException):
+    error_code = '99001'
 
 
 class InvalidBreakPointHook(HeatException):
@@ -438,11 +458,6 @@ class KeystoneServiceNameConflict(HeatException):
 
 class SIGHUPInterrupt(HeatException):
     msg_fmt = _("System SIGHUP signal received.")
-
-
-class ResourceTypeUnavailable(HeatException):
-    msg_fmt = _("Service %(service_name)s does not have required endpoint in "
-                "service catalog for the resource type %(resource_type)s")
 
 
 class NoActionRequired(Exception):
