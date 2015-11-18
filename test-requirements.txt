@@ -6,6 +6,7 @@
 hacking<0.11,>=0.10.0
 bandit>=0.13.2
 coverage>=3.6
+kombu>=3.0.7
 mock>=1.2
 mox3>=0.7.0
 PyMySQL>=0.6.2 # MIT License
