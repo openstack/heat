@@ -22,7 +22,7 @@ from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import sahara
-from heat.engine.resources.openstack.sahara import sahara_cluster as sc
+from heat.engine.resources.openstack.sahara import cluster as sc
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils

@@ -17,7 +17,7 @@ import mock
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import sahara
-from heat.engine.resources.openstack.sahara import sahara_image
+from heat.engine.resources.openstack.sahara import image
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -45,13 +45,13 @@ class SaharaImageTest(common.HeatTestCase):
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['sahara-image']
         self.client = mock.Mock()
-        self.patchobject(sahara_image.SaharaImageRegistry, 'client',
+        self.patchobject(image.SaharaImageRegistry, 'client',
                          return_value=self.client)
         self.patchobject(glance.GlanceClientPlugin, 'get_image_id',
                          return_value='12345')
 
     def _create_resource(self, name, snippet, stack):
-        img = sahara_image.SaharaImageRegistry(name, snippet, stack)
+        img = image.SaharaImageRegistry(name, snippet, stack)
         scheduler.TaskRunner(img.create)()
         return img
 
@@ -106,7 +106,7 @@ class SaharaImageTest(common.HeatTestCase):
         self.assertEqual({'img': 'info'}, img.FnGetAtt('show'))
 
     def test_resource_mapping(self):
-        mapping = sahara_image.resource_mapping()
+        mapping = image.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(sahara_image.SaharaImageRegistry,
+        self.assertEqual(image.SaharaImageRegistry,
                          mapping['OS::Sahara::ImageRegistry'])
