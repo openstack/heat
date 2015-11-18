@@ -2248,8 +2248,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
-              'show_nested': False}),
-            version='1.23'
+              'show_nested': False,
+              'ignorable_errors': None}),
+            version='1.24'
         ).AndReturn(engine_response)
         self.m.ReplayAll()
 
@@ -2278,8 +2279,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
-              'show_nested': False}),
-            version='1.23'
+              'show_nested': False,
+              'ignorable_errors': None}),
+            version='1.24'
         ).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()
 

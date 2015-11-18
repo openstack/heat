@@ -1100,8 +1100,9 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context,
             ('validate_template', {'template': json_template, 'params': None,
                                    'files': None, 'environment_files': None,
-                                   'show_nested': False}),
-            version='1.23'
+                                   'show_nested': False,
+                                   'ignorable_errors': None}),
+            version='1.24'
         ).AndReturn(response)
         self.m.ReplayAll()
 

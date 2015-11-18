@@ -42,6 +42,7 @@ class EngineClient(object):
         1.21 - Add deployment_id to create_software_deployment
         1.22 - Add support for stack export
         1.23 - Add environment_files to create/update/preview/validate
+        1.24 - Adds ignorable_errors to validate_template
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -318,7 +319,8 @@ class EngineClient(object):
                          version='1.23')
 
     def validate_template(self, ctxt, template, params=None, files=None,
-                          environment_files=None, show_nested=False):
+                          environment_files=None, show_nested=False,
+                          ignorable_errors=None):
         """Uses the stack parser to check the validity of a template.
 
         :param ctxt: RPC context.
@@ -328,15 +330,18 @@ class EngineClient(object):
         :param environment_files: ordered list of environment file names
                included in the files dict
         :param show_nested: if True nested templates will be validated
+        :param ignorable_errors: List of error_code to be ignored as part of
+        validation
         """
-        return self.call(ctxt,
-                         self.make_msg('validate_template',
-                                       template=template,
-                                       params=params,
-                                       files=files,
-                                       environment_files=environment_files,
-                                       show_nested=show_nested),
-                         version='1.23')
+        return self.call(ctxt, self.make_msg(
+            'validate_template',
+            template=template,
+            params=params,
+            files=files,
+            show_nested=show_nested,
+            environment_files=environment_files,
+            ignorable_errors=ignorable_errors),
+            version='1.24')
 
     def authenticated_to_backend(self, ctxt):
         """Validate the credentials in the RPC context.

@@ -560,7 +560,8 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        whitelist = {'show_nested': util.PARAM_TYPE_SINGLE}
+        whitelist = {'show_nested': util.PARAM_TYPE_SINGLE,
+                     'ignore_errors': util.PARAM_TYPE_SINGLE}
         params = util.get_allowed_params(req.params, whitelist)
 
         show_nested = False
@@ -569,13 +570,19 @@ class StackController(object):
             params[p_name] = self._extract_bool_param(p_name, params[p_name])
             show_nested = params[p_name]
 
+        if rpc_api.PARAM_IGNORE_ERRORS in params:
+            ignorable_errors = params[rpc_api.PARAM_IGNORE_ERRORS].split(',')
+        else:
+            ignorable_errors = None
+
         result = self.rpc_client.validate_template(
             req.context,
             data.template(),
             data.environment(),
             files=data.files(),
             environment_files=data.environment_files(),
-            show_nested=show_nested)
+            show_nested=show_nested,
+            ignorable_errors=ignorable_errors)
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])

@@ -204,7 +204,9 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               params={u'Egg': u'spam'},
                               files=None,
                               environment_files=['foo.yaml'],
-                              show_nested=False)
+                              ignorable_errors=None,
+                              show_nested=False,
+                              version='1.24')
 
     def test_list_resource_types(self):
         self._test_engine_api('list_resource_types',
