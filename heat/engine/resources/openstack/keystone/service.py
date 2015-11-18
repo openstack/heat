@@ -29,9 +29,9 @@ class KeystoneService(resource.Resource):
     entity = 'services'
 
     PROPERTIES = (
-        NAME, DESCRIPTION, TYPE
+        NAME, DESCRIPTION, TYPE, ENABLED,
     ) = (
-        'name', 'description', 'type'
+        'name', 'description', 'type', 'enabled',
     )
 
     properties_schema = {
@@ -50,6 +50,13 @@ class KeystoneService(resource.Resource):
             _('Type of keystone Service.'),
             update_allowed=True,
             required=True
+        ),
+        ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('This service is enabled or disabled.'),
+            default=True,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
         )
     }
 
@@ -61,11 +68,13 @@ class KeystoneService(resource.Resource):
                 self.physical_resource_name())
         description = self.properties[self.DESCRIPTION]
         type = self.properties[self.TYPE]
+        enabled = self.properties[self.ENABLED]
 
         service = self.client().services.create(
             name=name,
             description=description,
-            type=type)
+            type=type,
+            enabled=enabled)
 
         self.resource_id_set(service.id)
 
@@ -75,12 +84,14 @@ class KeystoneService(resource.Resource):
                     self.physical_resource_name())
             description = prop_diff.get(self.DESCRIPTION)
             type = prop_diff.get(self.TYPE)
+            enabled = prop_diff.get(self.ENABLED)
 
             self.client().services.update(
                 service=self.resource_id,
                 name=name,
                 description=description,
-                type=type)
+                type=type,
+                enabled=enabled)
 
 
 def resource_mapping():
