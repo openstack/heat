@@ -35,7 +35,7 @@ from heat.engine import clients
 from heat.engine.clients import client_plugin
 from heat.tests import common
 from heat.tests import fakes
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 

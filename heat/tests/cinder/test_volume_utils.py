@@ -21,7 +21,7 @@ from heat.engine.resources.aws.ec2 import volume as aws_vol
 from heat.engine.resources.openstack.cinder import volume as os_vol
 from heat.engine import scheduler
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 
 
 class BaseVolumeTest(common.HeatTestCase):

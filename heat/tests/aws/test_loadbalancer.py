@@ -22,7 +22,7 @@ from heat.engine.clients.os import nova
 from heat.engine.resources.aws.lb import loadbalancer as lb
 from heat.engine import rsrc_defn
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 

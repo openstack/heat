@@ -25,11 +25,10 @@ from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
-from heat.tests.nova import fakes
+from heat.tests.openstack.nova import fakes
 from heat.tests import utils
 
 from ..resources import cloud_server  # noqa
-
 
 wp_template = '''
 {

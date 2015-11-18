@@ -18,10 +18,10 @@ import six
 
 from heat.common import exception
 from heat.engine.clients.os import nova
-from heat.engine.resources.openstack.nova import nova_keypair
+from heat.engine.resources.openstack.nova import keypair
 from heat.engine import scheduler
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 
@@ -60,7 +60,7 @@ class NovaKeyPairTest(common.HeatTestCase):
     def _get_test_resource(self, template):
         self.stack = utils.parse_stack(template)
         definition = self.stack.t.resource_definitions(self.stack)['kp']
-        kp_res = nova_keypair.KeyPair('kp', definition, self.stack)
+        kp_res = keypair.KeyPair('kp', definition, self.stack)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fake_nova)
         return kp_res
@@ -105,7 +105,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         template['resources']['kp']['properties']['name'] = key_name
         stack = utils.parse_stack(template)
         definition = stack.t.resource_definitions(stack)['kp']
-        kp_res = nova_keypair.KeyPair('kp', definition, stack)
+        kp_res = keypair.KeyPair('kp', definition, stack)
         self.m.ReplayAll()
         error = self.assertRaises(exception.StackValidationFailed,
                                   kp_res.validate)
@@ -121,7 +121,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         template['resources']['kp']['properties']['name'] = key_name
         stack = utils.parse_stack(template)
         definition = stack.t.resource_definitions(stack)['kp']
-        kp_res = nova_keypair.KeyPair('kp', definition, stack)
+        kp_res = keypair.KeyPair('kp', definition, stack)
         self.m.ReplayAll()
         error = self.assertRaises(exception.StackValidationFailed,
                                   kp_res.validate)

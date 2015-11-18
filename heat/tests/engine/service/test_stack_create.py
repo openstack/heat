@@ -28,7 +28,7 @@ from heat.engine import template as templatem
 from heat.objects import stack as stack_object
 from heat.tests import common
 from heat.tests.engine import tools
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 

@@ -24,7 +24,7 @@ from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import stack as parser
 from heat.engine import template as templatem
 from heat.tests import fakes as test_fakes
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 wp_template = '''

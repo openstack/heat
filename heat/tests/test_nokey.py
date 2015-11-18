@@ -17,7 +17,7 @@ from heat.engine.clients.os import nova
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
-from heat.tests.nova import fakes as fakes_nova
+from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
 
