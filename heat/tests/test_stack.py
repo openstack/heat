@@ -2495,7 +2495,8 @@ class ResetStateOnErrorTest(common.HeatTestCase):
         action = 'something'
         state = COMPLETE
 
-        set_state = mock.MagicMock()
+        def __init__(self):
+            self.set_state = mock.MagicMock()
 
         @stack.reset_state_on_error
         def raise_exception(self):
