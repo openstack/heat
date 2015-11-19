@@ -123,7 +123,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.nova_client.keypairs.get.side_effect = [
             my_key, nova_exceptions.NotFound(404)]
         self.assertEqual(my_key, self.nova_plugin.get_keypair(my_key_name))
-        self.assertRaises(exception.UserKeyPairMissing,
+        self.assertRaises(exception.EntityNotFound,
                           self.nova_plugin.get_keypair, 'notakey')
         calls = [mock.call(my_key_name),
                  mock.call('notakey')]
