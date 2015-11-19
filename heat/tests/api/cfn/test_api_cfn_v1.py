@@ -488,7 +488,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -934,7 +934,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         rpc_client.EngineClient.call(
             dummy_req.context,
             ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -1011,7 +1011,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         rpc_client.EngineClient.call(
             dummy_req.context,
             ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -1159,7 +1159,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -1267,7 +1267,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -1354,7 +1354,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -1469,7 +1469,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 
@@ -1650,7 +1650,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
 
         self.m.ReplayAll()
 

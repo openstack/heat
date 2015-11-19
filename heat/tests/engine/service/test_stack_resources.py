@@ -97,12 +97,13 @@ class StackResourcesServiceTest(common.HeatTestCase):
         non_exist_identifier = identifier.HeatIdentifier(
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
-        mock_get.side_effect = exception.StackNotFound(stack_name='test')
+        mock_get.side_effect = exception.EntityNotFound(
+            entity='Stack', name='test')
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.describe_stack_resource,
                                self.ctx, non_exist_identifier, 'WebServer')
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         mock_get.assert_called_once_with(self.ctx, non_exist_identifier)
 
     @mock.patch.object(stack.Stack, 'load')
@@ -191,7 +192,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.describe_stack_resources,
                                self.ctx, non_exist_identifier, 'WebServer')
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     @tools.stack_context('find_phys_res_stack')
     def test_find_physical_resource(self):
@@ -273,12 +274,13 @@ class StackResourcesServiceTest(common.HeatTestCase):
         non_exist_identifier = identifier.HeatIdentifier(
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
-        mock_get.side_effect = exception.StackNotFound(stack_name='test')
+        mock_get.side_effect = exception.EntityNotFound(entity='Stack',
+                                                        name='test')
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.list_stack_resources,
                                self.ctx, non_exist_identifier)
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         mock_get.assert_called_once_with(self.ctx, non_exist_identifier,
                                          show_deleted=True)
 

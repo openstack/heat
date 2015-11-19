@@ -57,7 +57,6 @@ class FaultWrapper(wsgi.Middleware):
         'ActionInProgress': webob.exc.HTTPConflict,
         'ValueError': webob.exc.HTTPBadRequest,
         'EntityNotFound': webob.exc.HTTPNotFound,
-        'StackNotFound': webob.exc.HTTPNotFound,
         'NotFound': webob.exc.HTTPNotFound,
         'ResourceActionNotSupported': webob.exc.HTTPBadRequest,
         'ResourceNotFound': webob.exc.HTTPNotFound,

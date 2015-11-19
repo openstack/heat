@@ -149,10 +149,6 @@ class InvalidTenant(HeatException):
                 "from Tenant %(actual)s forbidden.")
 
 
-class StackNotFound(HeatException):
-    msg_fmt = _("The Stack (%(stack_name)s) could not be found.")
-
-
 class StackExists(HeatException):
     msg_fmt = _("The Stack (%(stack_name)s) already exists.")
 

@@ -83,7 +83,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.stack_suspend, self.ctx,
                                stk.identifier())
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     def test_stack_resume_nonexist(self):
         stack_name = 'service_resume_nonexist_test_stack'
@@ -94,7 +94,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.stack_resume, self.ctx,
                                stk.identifier())
-        self.assertEqual(exception.StackNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     def _mock_thread_start(self, stack_id, func, *args, **kwargs):
         func(*args, **kwargs)
