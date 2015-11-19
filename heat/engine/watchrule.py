@@ -88,7 +88,8 @@ class WatchRule(object):
                 LOG.warn(_LW('WatchRule.load (%(watch_name)s) db error '
                              '%(ex)s'), {'watch_name': watch_name, 'ex': ex})
         if watch is None:
-            raise exception.WatchRuleNotFound(watch_name=watch_name)
+            raise exception.EntityNotFound(entity='Watch Rule',
+                                           name=watch_name)
         else:
             return cls(context=context,
                        watch_name=watch.name,

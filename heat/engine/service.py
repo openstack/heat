@@ -1662,7 +1662,8 @@ class EngineService(service.Service):
         if not rule_run:
             if watch_name is None:
                 watch_name = 'Unknown'
-            raise exception.WatchRuleNotFound(watch_name=watch_name)
+            raise exception.EntityNotFound(entity='Watch Rule',
+                                           name=watch_name)
 
         return stats_data
 

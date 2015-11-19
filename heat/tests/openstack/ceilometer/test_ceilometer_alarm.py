@@ -479,8 +479,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
 
         wr = mock.MagicMock()
         self.patchobject(watchrule.WatchRule, 'load',
-                         side_effect=[exception.WatchRuleNotFound(
-                             watch_name='test')])
+                         side_effect=[exception.EntityNotFound(
+                             entity='Watch Rule', name='test')])
         wr.destroy.return_value = None
 
         self.patchobject(ceilometer.CeilometerClientPlugin, 'client',
@@ -511,7 +511,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
     def test_check_watchrule_failure(self, mock_load):
         res = self._prepare_check_resource()
-        exc = alarm.exception.WatchRuleNotFound(watch_name='Boom')
+        exc = alarm.exception.EntityNotFound(entity='Watch Rule', name='Boom')
         mock_load.side_effect = exc
 
         self.assertRaises(exception.ResourceFailure,

@@ -89,7 +89,8 @@ class CloudWatchAlarmTest(common.HeatTestCase):
                                            watch_name=res_name)
 
         with mock.patch.object(watchrule.WatchRule, 'destroy') as bad_destroy:
-            watch_exc = exception.WatchRuleNotFound(watch_name='test')
+            watch_exc = exception.EntityNotFound(entity='Watch Rule',
+                                                 name='test')
             bad_destroy.side_effect = watch_exc
             self.assertIsNone(scheduler.TaskRunner(s['test_me'].delete)())
 
@@ -107,7 +108,8 @@ class CloudWatchAlarmTest(common.HeatTestCase):
     @mock.patch.object(cloud_watch.watchrule.WatchRule, 'load')
     def test_check_fail(self, mock_load):
         res = self._get_watch_rule()
-        exc = cloud_watch.exception.WatchRuleNotFound(watch_name='Boom')
+        exc = cloud_watch.exception.EntityNotFound(entity='Watch Rule',
+                                                   name='Boom')
         mock_load.side_effect = exc
 
         self.assertRaises(exception.ResourceFailure,
