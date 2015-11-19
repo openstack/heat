@@ -1265,19 +1265,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             client_plugin.ignore_not_found(ex)
         self.data_delete('metadata_queue_id')
 
-    def handle_snapshot_delete(self, state):
-        if state[0] != self.FAILED:
-            image_id = self.client().servers.create_image(
-                self.resource_id, self.physical_resource_name())
-            return progress.ServerDeleteProgress(
-                self.resource_id, image_id, False)
-        return self.handle_delete()
-
-    def handle_delete(self):
-
-        if self.resource_id is None:
-            return
-
+    def _delete(self):
         if self.user_data_software_config():
             self._delete_user()
             self._delete_temp_url()
@@ -1294,6 +1282,23 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             return
         return progress.ServerDeleteProgress(self.resource_id)
 
+    def handle_snapshot_delete(self, state):
+        if self.resource_id is None:
+            return
+
+        if state[1] != self.FAILED:
+            image_id = self.client().servers.create_image(
+                self.resource_id, self.physical_resource_name())
+            return progress.ServerDeleteProgress(
+                self.resource_id, image_id, False)
+        return self._delete()
+
+    def handle_delete(self):
+        if self.resource_id is None:
+            return
+
+        return self._delete()
+
     def check_delete_complete(self, prg):
         if not prg:
             return True
@@ -1304,7 +1309,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 raise exception.Error(image.status)
             elif image.status == 'ACTIVE':
                 prg.image_complete = True
-                if not self.handle_delete():
+                if not self._delete():
                     return True
             return False
 
