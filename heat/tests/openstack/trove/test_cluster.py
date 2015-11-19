@@ -164,5 +164,5 @@ class TroveClusterTest(common.HeatTestCase):
         error_msg = ("Property error: "
                      "resources.cluster.properties.instances[0].flavor: "
                      "Error validating value 'm1.small': "
-                     "The Flavor ID (m1.small) could not be found.")
+                     "The Flavor (m1.small) could not be found.")
         self.assertEqual(error_msg, six.text_type(ex))
