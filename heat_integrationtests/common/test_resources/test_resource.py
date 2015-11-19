@@ -11,7 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import eventlet
+from oslo_utils import timeutils
+import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -24,20 +27,27 @@ LOG = logging.getLogger(__name__)
 
 
 class TestResource(resource.Resource):
-    '''
-    A resource which stores the string value that was provided.
+    """A resource which stores the string value that was provided.
 
     This resource is to be used only for testing.
-    It has control knobs such as 'update_replace', 'fail', 'wait_secs'
+    It has control knobs such as 'update_replace', 'fail', 'wait_secs'.
+    """
 
-    '''
+    support_status = support.SupportStatus(version='5.0.0')
 
-    support_status = support.SupportStatus(version='2014.1')
+    ACTION_TIMES = (
+        CREATE_WAIT_SECS, UPDATE_WAIT_SECS, DELETE_WAIT_SECS
+    ) = (
+        'create', 'update', 'delete')
 
     PROPERTIES = (
-        VALUE, UPDATE_REPLACE, FAIL, WAIT_SECS
+        VALUE, UPDATE_REPLACE, FAIL,
+        CLIENT_NAME, ENTITY_NAME,
+        WAIT_SECS, ACTION_WAIT_SECS
     ) = (
-        'value', 'update_replace', 'fail', 'wait_secs'
+        'value', 'update_replace', 'fail',
+        'client_name', 'entity_name',
+        'wait_secs', 'action_wait_secs'
     )
 
     ATTRIBUTES = (
@@ -69,10 +79,46 @@ class TestResource(resource.Resource):
         ),
         WAIT_SECS: properties.Schema(
             properties.Schema.NUMBER,
-            _('Value which can be set for resource to wait after an action '
-              'is performed.'),
+            _('Seconds to wait after an action (-1 is infinite)'),
             update_allowed=True,
             default=0,
+        ),
+        ACTION_WAIT_SECS: properties.Schema(
+            properties.Schema.MAP,
+            _('Options for simulating waiting.'),
+            update_allowed=True,
+            schema={
+                CREATE_WAIT_SECS: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('Seconds to wait after a create. '
+                      'Defaults to the global wait_secs'),
+                    update_allowed=True,
+                ),
+                UPDATE_WAIT_SECS: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('Seconds to wait after an update. '
+                      'Defaults to the global wait_secs'),
+                    update_allowed=True,
+                ),
+                DELETE_WAIT_SECS: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('Seconds to wait after a delete. '
+                      'Defaults to the global wait_secs'),
+                    update_allowed=True,
+                ),
+            }
+        ),
+        CLIENT_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Client to poll.'),
+            default='',
+            update_allowed=True
+        ),
+        ENTITY_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Client entity to poll.'),
+            default='',
+            update_allowed=True
         ),
     }
 
@@ -84,44 +130,99 @@ class TestResource(resource.Resource):
         ),
     }
 
+    def _wait_secs(self):
+        secs = None
+        if self.properties[self.ACTION_WAIT_SECS]:
+            secs = self.properties[self.ACTION_WAIT_SECS][self.action.lower()]
+        if secs is None:
+            secs = self.properties[self.WAIT_SECS]
+        LOG.info('%s wait_secs:%s, action:%s' % (self.name, secs,
+                                                 self.action.lower()))
+        return secs
+
     def handle_create(self):
-        value = self.properties.get(self.VALUE)
         fail_prop = self.properties.get(self.FAIL)
-        sleep_secs = self.properties.get(self.WAIT_SECS)
+        if not fail_prop:
+            value = self.properties.get(self.VALUE)
+            self.data_set('value', value, redact=False)
+            self.resource_id_set(self.physical_resource_name())
 
-        self.data_set('value', value, redact=False)
-        self.resource_id_set(self.physical_resource_name())
+        return timeutils.utcnow(), self._wait_secs()
 
-        # sleep for specified time
-        if sleep_secs:
-            LOG.debug("Resource %s sleeping for %s seconds",
-                      self.name, sleep_secs)
-            eventlet.sleep(sleep_secs)
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource):
+        result = super(TestResource, self)._needs_update(
+            after, before, after_props, before_props, prev_resource)
 
-        # emulate failure
-        if fail_prop:
-            raise ValueError("Test Resource failed %s" % self.name)
+        prop_diff = self.update_template_diff_properties(after_props,
+                                                         before_props)
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
-        value = prop_diff.get(self.VALUE)
-        new_prop = json_snippet._properties
-        if value:
-            update_replace = new_prop.get(self.UPDATE_REPLACE, False)
+        if self.UPDATE_REPLACE in prop_diff:
+            update_replace = prop_diff.get(self.UPDATE_REPLACE)
             if update_replace:
                 raise resource.UpdateReplace(self.name)
-            else:
-                fail_prop = new_prop.get(self.FAIL, False)
-                sleep_secs = new_prop.get(self.WAIT_SECS, 0)
-                # emulate failure
-                if fail_prop:
-                    raise Exception("Test Resource failed %s", self.name)
+
+        return result
+
+    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
+        value = prop_diff.get(self.VALUE)
+        if value:
+            # emulate failure
+            fail_prop = self.properties[self.FAIL]
+            if not fail_prop:
                 # update in place
                 self.data_set('value', value, redact=False)
+            return timeutils.utcnow(), self._wait_secs()
+        return timeutils.utcnow(), 0
 
-                if sleep_secs:
-                    LOG.debug("Update of Resource %s sleeping for %s seconds",
-                              self.name, sleep_secs)
-                    eventlet.sleep(sleep_secs)
+    def handle_delete(self):
+        return timeutils.utcnow(), self._wait_secs()
+
+    def check_create_complete(self, cookie):
+        return self._check_status_complete(*cookie)
+
+    def check_update_complete(self, cookie):
+        return self._check_status_complete(*cookie)
+
+    def check_delete_complete(self, cookie):
+        return self._check_status_complete(*cookie)
+
+    def _check_status_complete(self, started_at, wait_secs):
+        def simulated_effort():
+            client_name = self.properties[self.CLIENT_NAME]
+            self.entity = self.properties[self.ENTITY_NAME]
+            if client_name and self.entity:
+                # Allow the user to set the value to a real resource id.
+                entity_id = self.data().get('value') or self.resource_id
+                try:
+                    obj = getattr(self.client(name=client_name), self.entity)
+                    obj.get(entity_id)
+                except Exception as exc:
+                    LOG.debug('%s.%s(%s) %s' % (client_name, self.entity,
+                                                entity_id, six.text_type(exc)))
+            else:
+                # just sleep some more
+                eventlet.sleep(1)
+
+        if isinstance(started_at, six.string_types):
+            started_at = timeutils.parse_isotime(started_at)
+
+        started_at = timeutils.normalize_time(started_at)
+        waited = timeutils.utcnow() - started_at
+        LOG.info("Resource %s waited %s/%s seconds",
+                 self.name, waited, wait_secs)
+
+        # wait_secs < 0 is an infinite wait time.
+        if wait_secs >= 0 and waited > datetime.timedelta(seconds=wait_secs):
+            fail_prop = self.properties[self.FAIL]
+            if fail_prop and self.action != self.DELETE:
+                raise ValueError("Test Resource failed %s" % self.name)
+            return True
+
+        simulated_effort()
+        return False
 
     def _resolve_attribute(self, name):
         if name == self.OUTPUT:
