@@ -34,23 +34,23 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, SNAPSHOT_ID, BACKUP_ID, NAME,
         DESCRIPTION, VOLUME_TYPE, METADATA, IMAGE_REF, IMAGE,
-        SOURCE_VOLID, CINDER_SCHEDULER_HINTS, READ_ONLY,
+        SOURCE_VOLID, CINDER_SCHEDULER_HINTS, READ_ONLY, MULTI_ATTACH,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'backup_id', 'name',
         'description', 'volume_type', 'metadata', 'imageRef', 'image',
-        'source_volid', 'scheduler_hints', 'read_only',
+        'source_volid', 'scheduler_hints', 'read_only', 'multiattach',
     )
 
     ATTRIBUTES = (
         AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME_ATTR,
         DISPLAY_DESCRIPTION_ATTR, VOLUME_TYPE_ATTR, METADATA_ATTR,
         SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE, METADATA_VALUES_ATTR,
-        ENCRYPTED_ATTR, ATTACHMENTS,
+        ENCRYPTED_ATTR, ATTACHMENTS, MULTI_ATTACH_ATTR,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'display_name',
         'display_description', 'volume_type', 'metadata',
         'source_volid', 'status', 'created_at', 'bootable', 'metadata_values',
-        'encrypted', 'attachments',
+        'encrypted', 'attachments', 'multiattach',
     )
 
     properties_schema = {
@@ -146,6 +146,12 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             support_status=support.SupportStatus(version='5.0.0'),
             update_allowed=True,
         ),
+        MULTI_ATTACH: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Whether allow the volume to be attached more than once. '
+              'This property is only supported from Cinder API v2.'),
+            support_status=support.SupportStatus(version='6.0.0'),
+        ),
     }
 
     attributes_schema = {
@@ -205,6 +211,12 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             _('The list of attachments of the volume.'),
             type=attributes.Schema.STRING
         ),
+        MULTI_ATTACH_ATTR: attributes.Schema(
+            _('Boolean indicating whether allow the volume to be attached '
+              'more than once.'),
+            type=attributes.Schema.BOOLEAN,
+            support_status=support.SupportStatus(version='6.0.0'),
+        ),
     }
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
@@ -248,9 +260,10 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 
         optionals = (self.SNAPSHOT_ID, self.VOLUME_TYPE, self.SOURCE_VOLID,
-                     self.METADATA)
+                     self.METADATA, self.MULTI_ATTACH)
+
         arguments.update((prop, self.properties[prop]) for prop in optionals
-                         if self.properties[prop])
+                         if self.properties[prop] is not None)
 
         return arguments
 
@@ -562,6 +575,13 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             raise exception.StackValidationFailed(
                 message=_('Scheduler hints are not supported by the current '
                           'volume API.'))
+        # Multi attach is only supported from Cinder API v2
+        if (self.properties[self.MULTI_ATTACH]
+                and self.client().volume_api_version == 1):
+            raise exception.StackValidationFailed(
+                message=_('Multiple attach is not supported by the current '
+                          'volume API. Use this property since '
+                          'Cinder API v2.'))
         # can not specify both image and imageRef
         image = self.properties.get(self.IMAGE)
         imageRef = self.properties.get(self.IMAGE_REF)
