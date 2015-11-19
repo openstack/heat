@@ -145,6 +145,30 @@ class KeystoneUserConstraintTest(common.HeatTestCase):
         client_plugin_mock.get_user_id.assert_called_once_with('admin')
 
 
+class KeystoneRegionConstraintTest(common.HeatTestCase):
+
+    sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+    def test_expected_exceptions(self):
+        self.assertEqual((exception.EntityNotFound,),
+                         client.KeystoneRegionConstraint.expected_exceptions,
+                         "KeystoneRegionConstraint expected exceptions error")
+
+    def test_constraint(self):
+        constraint = client.KeystoneRegionConstraint()
+        client_mock = mock.MagicMock()
+        client_plugin_mock = mock.MagicMock()
+        client_plugin_mock.get_region_id.return_value = self.sample_uuid
+        client_mock.client_plugin.return_value = client_plugin_mock
+
+        self.assertIsNone(constraint.validate_with_client(client_mock,
+                                                          self.sample_uuid))
+
+        client_plugin_mock.get_region_id.assert_called_once_with(
+            self.sample_uuid
+        )
+
+
 class KeystoneClientPluginServiceTest(common.HeatTestCase):
 
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd152'

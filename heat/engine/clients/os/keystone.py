@@ -179,3 +179,11 @@ class KeystoneUserConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, user):
         client.client_plugin('keystone').get_user_id(user)
+
+
+class KeystoneRegionConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.EntityNotFound,)
+
+    def validate_with_client(self, client, region):
+        client.client_plugin('keystone').get_region_id(region)
