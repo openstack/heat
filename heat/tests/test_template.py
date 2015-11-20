@@ -659,6 +659,11 @@ class TemplateTest(common.HeatTestCase):
         data = {"Fn::Select": ["red", {"red": "robin", "re": "foo"}]}
         self.assertEqual("robin", self.resolve(data, tmpl))
 
+    def test_select_int_from_dict(self):
+        tmpl = template.Template(empty_template)
+        data = {"Fn::Select": ["2", {"1": "bar", "2": "foo"}]}
+        self.assertEqual("foo", self.resolve(data, tmpl))
+
     def test_select_from_none(self):
         tmpl = template.Template(empty_template)
         data = {"Fn::Select": ["red", None]}
@@ -974,7 +979,7 @@ class TemplateFnErrorTest(common.HeatTestCase):
               snippet={"Fn::Select": ["one", ["foo", "bar"]]})),
         ('select_from_dict_not_str',
          dict(expect=TypeError,
-              snippet={"Fn::Select": ["1", {"red": "robin", "re": "foo"}]})),
+              snippet={"Fn::Select": [1, {"red": "robin", "re": "foo"}]})),
         ('select_from_serialized_json_wrong',
          dict(expect=ValueError,
               snippet={"Fn::Select": ["not", "no json"]})),

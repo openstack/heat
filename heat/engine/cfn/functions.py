@@ -238,11 +238,6 @@ class Select(function.Function):
     def result(self):
         index = function.resolve(self._lookup)
 
-        try:
-            index = int(index)
-        except (ValueError, TypeError):
-            pass
-
         strings = function.resolve(self._strings)
 
         if strings == '':
@@ -265,6 +260,11 @@ class Select(function.Function):
                 raise TypeError(_('Index to "%s" must be a string') %
                                 self.fn_name)
             return strings.get(index, '')
+
+        try:
+            index = int(index)
+        except (ValueError, TypeError):
+            pass
 
         if (isinstance(strings, collections.Sequence) and
                 not isinstance(strings, six.string_types)):
