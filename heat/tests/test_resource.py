@@ -73,7 +73,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_class_noexist(self):
-        self.assertRaises(exception.ResourceTypeNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           resources.global_env().get_class,
                           'NoExistResourceType')
 
@@ -173,7 +173,7 @@ class ResourceTest(common.HeatTestCase):
     def test_resource_new_err(self):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'NoExistResourceType')
-        self.assertRaises(exception.ResourceTypeNotFound,
+        self.assertRaises(exception.EntityNotFound,
                           resource.Resource, 'aresource', snippet, self.stack)
 
     def test_resource_non_type(self):

@@ -1221,7 +1221,7 @@ class EngineService(service.Service):
         try:
             resource_class = resources.global_env().get_class(type_name)
         except (exception.InvalidResourceType,
-                exception.ResourceTypeNotFound,
+                exception.EntityNotFound,
                 exception.TemplateNotFound) as ex:
             raise ex
 
@@ -1270,7 +1270,7 @@ class EngineService(service.Service):
             return resource_class.resource_to_template(type_name,
                                                        template_type)
         except (exception.InvalidResourceType,
-                exception.ResourceTypeNotFound,
+                exception.EntityNotFound,
                 exception.TemplateNotFound) as ex:
             raise ex
 

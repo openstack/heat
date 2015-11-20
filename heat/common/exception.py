@@ -213,10 +213,6 @@ class TemplateNotFound(HeatException):
     msg_fmt = _("%(message)s")
 
 
-class ResourceTypeNotFound(HeatException):
-    msg_fmt = _("The Resource Type (%(type_name)s) could not be found.")
-
-
 class InvalidResourceType(HeatException):
     msg_fmt = _("%(message)s")
 

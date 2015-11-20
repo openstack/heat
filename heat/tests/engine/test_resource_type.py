@@ -148,7 +148,7 @@ class ResourceTypeTest(common.HeatTestCase):
         self._no_template_file(self.eng.generate_template)
 
     def test_resource_schema_nonexist(self):
-        ex = self.assertRaises(exception.ResourceTypeNotFound,
+        ex = self.assertRaises(exception.EntityNotFound,
                                self.eng.resource_schema,
                                self.ctx, type_name='Bogus')
         msg = 'The Resource Type (Bogus) could not be found.'

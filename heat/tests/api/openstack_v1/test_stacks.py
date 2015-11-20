@@ -2183,7 +2183,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'list_resource_types', True)
         req = self._get('/resource_types')
 
-        error = heat_exc.ResourceTypeNotFound(type_name='')
+        error = heat_exc.EntityNotFound(entity='Resource Type', name='')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -2203,7 +2203,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             req, tenant_id=self.tenant)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_list_resource_types_err_denied_policy(self, mock_enforce):
@@ -2293,7 +2293,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get('/resource_types/BogusResourceType')
         type_name = 'BogusResourceType'
 
-        error = heat_exc.ResourceTypeNotFound(type_name='BogusResourceType')
+        error = heat_exc.EntityNotFound(entity='Resource Type',
+                                        name='BogusResourceType')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -2306,7 +2307,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              req, tenant_id=self.tenant,
                                              type_name=type_name)
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_resource_schema_err_denied_policy(self, mock_enforce):
@@ -2360,7 +2361,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'generate_template', True)
         req = self._get('/resource_types/NOT_FOUND/template')
 
-        error = heat_exc.ResourceTypeNotFound(type_name='a')
+        error = heat_exc.EntityNotFound(entity='Resource Type', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
@@ -2374,7 +2375,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              req, tenant_id=self.tenant,
                                              type_name='NOT_FOUND')
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
+        self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_generate_template_err_denied_policy(self, mock_enforce):
