@@ -225,10 +225,6 @@ class ResourceNotAvailable(HeatException):
     msg_fmt = _("The Resource (%(resource_name)s) is not available.")
 
 
-class PhysicalResourceNotFound(HeatException):
-    msg_fmt = _("The Resource (%(resource_id)s) could not be found.")
-
-
 class WatchRuleNotFound(HeatException):
     msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
 

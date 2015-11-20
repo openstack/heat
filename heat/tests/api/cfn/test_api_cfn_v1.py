@@ -1557,8 +1557,7 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context,
             ('find_physical_resource',
              {'physical_resource_id': 'aaaaaaaa-9f88-404d-cccc-ffffffffffff'})
-        ).AndRaise(heat_exception.PhysicalResourceNotFound(
-            resource_id='1'))
+        ).AndRaise(heat_exception.EntityNotFound(entity='Resource', name='1'))
 
         self.m.ReplayAll()
 
