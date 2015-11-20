@@ -18,6 +18,8 @@ import mock
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -207,6 +209,11 @@ class ScalingGroupTest(common.HeatTestCase):
         self.fake_auto_scale = FakeAutoScale()
         self.patchobject(auto_scale.Group, 'auto_scale',
                          return_value=self.fake_auto_scale)
+        # mock nova and glance client methods to satisfy contraints
+        mock_im = self.patchobject(glance.GlanceClientPlugin, 'get_image_id')
+        mock_im.return_value = 'image-ref'
+        mock_fl = self.patchobject(nova.NovaClientPlugin, 'get_flavor_id')
+        mock_fl.return_value = 'flavor-ref'
 
     def _setup_test_stack(self):
         self.stack = utils.parse_stack(self.group_template)
