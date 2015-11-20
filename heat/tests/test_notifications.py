@@ -23,7 +23,7 @@ class StackTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackTest, self).setUp()
-        self.ctx = utils.dummy_context()
+        self.ctx = utils.dummy_context(user_id='test_user_id')
 
     def test_send(self):
         created_time = timeutils.utcnow()
@@ -44,6 +44,8 @@ class StackTest(common.HeatTestCase):
             self.ctx, 'stack.f.error', 'ERROR',
             {'state_reason': 'this is why',
              'user_id': 'test_username',
+             'username': 'test_username',
+             'user_identity': 'test_user_id',
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
@@ -54,7 +56,7 @@ class StackTest(common.HeatTestCase):
 class AutoScaleTest(common.HeatTestCase):
     def setUp(self):
         super(AutoScaleTest, self).setUp()
-        self.ctx = utils.dummy_context()
+        self.ctx = utils.dummy_context(user_id='test_user_id')
 
     def test_send(self):
         created_time = timeutils.utcnow()
@@ -80,6 +82,8 @@ class AutoScaleTest(common.HeatTestCase):
             self.ctx, 'autoscaling.the-end', 'INFO',
             {'state_reason': 'this is why',
              'user_id': 'test_username',
+             'username': 'test_username',
+             'user_identity': 'test_user_id',
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
@@ -111,6 +115,8 @@ class AutoScaleTest(common.HeatTestCase):
             self.ctx, 'autoscaling.error', 'ERROR',
             {'state_reason': 'this is why',
              'user_id': 'test_username',
+             'username': 'test_username',
+             'user_identity': 'test_user_id',
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
