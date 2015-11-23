@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from heat.common import exception
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -152,6 +153,20 @@ class NovaFlavor(resource.Resource):
         flavor = self.client().flavors.get(self.resource_id)
         if name == self.IS_PUBLIC_ATTR:
             return getattr(flavor, name)
+
+    def get_live_resource_data(self):
+        try:
+            flavor = self.client().flavors.get(self.resource_id)
+            resource_data = {self.EXTRA_SPECS: flavor.get_keys()}
+        except Exception as ex:
+            if self.client_plugin().is_not_found(ex):
+                raise exception.EntityNotFound(entity='Resource',
+                                               name=self.name)
+            raise
+        return resource_data
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        return resource_data
 
 
 def resource_mapping():
