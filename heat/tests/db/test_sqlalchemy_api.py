@@ -2500,8 +2500,9 @@ class DBAPIServiceTest(common.HeatTestCase):
 
         # Delete
         db_api.service_delete(self.ctx, service.id, False)
-        self.assertRaises(exception.ServiceNotFound, db_api.service_get,
-                          self.ctx, service.id)
+        ex = self.assertRaises(exception.EntityNotFound, db_api.service_get,
+                               self.ctx, service.id)
+        self.assertEqual('Service', ex.kwargs.get('entity'))
 
 
 class DBAPIResourceUpdateTest(common.HeatTestCase):
