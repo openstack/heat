@@ -127,10 +127,6 @@ class InvalidTemplateReference(HeatException):
                 ' is incorrect.')
 
 
-class UserKeyPairMissing(HeatException):
-    msg_fmt = _("The Key (%(key_name)s) could not be found.")
-
-
 class FlavorMissing(HeatException):
     msg_fmt = _("The Flavor ID (%(flavor_id)s) could not be found.")
 

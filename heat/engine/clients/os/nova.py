@@ -265,12 +265,12 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
         :param key_name: the name of the key to look for
         :returns: the keypair (name, public_key) for :key_name:
-        :raises: exception.UserKeyPairMissing
+        :raises: exception.EntityNotFound
         """
         try:
             return self.client().keypairs.get(key_name)
         except exceptions.NotFound:
-            raise exception.UserKeyPairMissing(key_name=key_name)
+            raise exception.EntityNotFound(entity='Key', name=key_name)
 
     def build_userdata(self, metadata, userdata=None, instance_user=None,
                        user_data_format='HEAT_CFNTOOLS'):
@@ -690,7 +690,7 @@ class ServerConstraint(constraints.BaseCustomConstraint):
 
 class KeypairConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.UserKeyPairMissing,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, key_name):
         if not key_name:
