@@ -815,8 +815,8 @@ class StackServiceTest(common.HeatTestCase):
                                                      not_tags=None,
                                                      not_tags_any=None)
 
-    @tools.stack_context('service_abandon_stack')
-    def test_abandon_stack(self):
+    @tools.stack_context('service_export_stack')
+    def test_export_stack(self):
         cfg.CONF.set_override('enable_stack_abandon', True)
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -832,11 +832,11 @@ class StackServiceTest(common.HeatTestCase):
                 'type': u'AWS::EC2::Instance'}}
         self.stack.tags = ['tag1', 'tag2']
         self.m.ReplayAll()
-        ret = self.eng.abandon_stack(self.ctx, self.stack.identifier())
+        ret = self.eng.export_stack(self.ctx, self.stack.identifier())
         self.assertEqual(11, len(ret))
         self.assertEqual('CREATE', ret['action'])
         self.assertEqual('COMPLETE', ret['status'])
-        self.assertEqual('service_abandon_stack', ret['name'])
+        self.assertEqual('service_export_stack', ret['name'])
         self.assertEqual({}, ret['files'])
         self.assertIn('id', ret)
         self.assertEqual(expected_res, ret['resources'])
@@ -846,6 +846,20 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIn('environment', ret)
         self.assertIn('files', ret)
         self.assertEqual(['tag1', 'tag2'], ret['tags'])
+        self.m.VerifyAll()
+
+    @tools.stack_context('service_abandon_stack')
+    def test_abandon_stack(self):
+        cfg.CONF.set_override('enable_stack_abandon', True)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+        self.eng.abandon_stack(self.ctx, self.stack.identifier())
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.show_stack,
+                               self.ctx, self.stack.identifier())
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         self.m.VerifyAll()
 
     def test_stack_describe_nonexistent(self):

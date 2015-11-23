@@ -1139,26 +1139,42 @@ class EngineService(service.Service):
         return None
 
     @context.request_context
-    def abandon_stack(self, cnxt, stack_identity):
+    def export_stack(self, cnxt, stack_identity):
+        """Exports the stack data json.
+
+        Intended to be used to safely retrieve the stack data before
+        performing the abandon action.
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to export.
+        """
+        return self.abandon_stack(cnxt, stack_identity, abandon=False)
+
+    @context.request_context
+    def abandon_stack(self, cnxt, stack_identity, abandon=True):
         """Abandon a given stack.
 
         :param cnxt: RPC context.
         :param stack_identity: Name of the stack you want to abandon.
+        :param abandon: Delete Heat stack but not physical resources.
         """
         if not cfg.CONF.enable_stack_abandon:
             raise exception.NotSupported(feature='Stack Abandon')
 
         st = self._get_stack(cnxt, stack_identity)
-        LOG.info(_LI('abandoning stack %s'), st.name)
         stack = parser.Stack.load(cnxt, stack=st)
         lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
         with lock.thread_lock():
             # Get stack details before deleting it.
             stack_info = stack.prepare_abandon()
-            self.thread_group_mgr.start_with_acquired_lock(stack,
-                                                           lock,
-                                                           stack.delete,
-                                                           abandon=True)
+            if abandon:
+                LOG.info(_LI('abandoning stack %s'), st.name)
+                self.thread_group_mgr.start_with_acquired_lock(stack,
+                                                               lock,
+                                                               stack.delete,
+                                                               abandon=True)
+            else:
+                LOG.info(_LI('exporting stack %s'), st.name)
             return stack_info
 
     def list_resource_types(self,
