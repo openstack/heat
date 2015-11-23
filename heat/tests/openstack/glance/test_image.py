@@ -16,7 +16,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.openstack.glance import glance_image as gi
+from heat.engine.resources.openstack.glance import image as gi
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
