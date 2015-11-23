@@ -58,7 +58,6 @@ class GetAZs(function.Function):
 
     def result(self):
         # TODO(therve): Implement region scoping
-        # region = function.resolve(self.args)
 
         if self.stack is None:
             return ['nova']
