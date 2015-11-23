@@ -43,6 +43,7 @@ python-neutronclient>=2.6.0
 python-novaclient!=2.33.0,>=2.29.0
 python-openstackclient>=1.5.0
 python-saharaclient>=0.10.0
+python-senlinclient>=0.1.5
 python-swiftclient>=2.2.0
 python-troveclient>=1.2.0
 python-zaqarclient>=0.3.0
