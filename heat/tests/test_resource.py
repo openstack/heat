@@ -1743,9 +1743,15 @@ class ResourceTest(common.HeatTestCase):
                        return_value=None)
     @mock.patch.object(resource.scheduler.TaskRunner, '__call__')
     def test_update_convergence(self, mock_call, mock_init):
-        tmpl = rsrc_defn.ResourceDefinition('test_res',
-                                            'ResourceWithPropsType')
-        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType'}
+            }}, env=self.env)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        res = stack.resources['test_res']
         res.requires = [2]
         res._store()
         self._assert_resource_lock(res.id, None, None)
@@ -1757,11 +1763,13 @@ class ResourceTest(common.HeatTestCase):
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
         new_temp.store()
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
         res.update_convergence(new_temp.id, res_data, 'engine-007', 120,
-                               mock.ANY)
+                               new_stack)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_init.assert_called_once_with(res.update, expected_rsrc_def)
@@ -1771,8 +1779,35 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, 2)
 
     def test_update_convergence_throws_timeout(self):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType'}
+            }}, env=self.env)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        res = stack.resources['test_res']
+        res._store()
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_temp.store()
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
+
+        res_data = {}
+        self.assertRaises(scheduler.Timeout, res.update_convergence,
+                          new_temp.id, res_data, 'engine-007',
+                          -1, new_stack)
+
+    def test_update_convergence_checks_resource_class(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res',
-                                            'ResourceWithPropsType')
+                                            'GenericResourceType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res._store()
 
@@ -1783,11 +1818,13 @@ class ResourceTest(common.HeatTestCase):
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
         new_temp.store()
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
 
         res_data = {}
-        self.assertRaises(scheduler.Timeout, res.update_convergence,
+        self.assertRaises(exception.UpdateReplace, res.update_convergence,
                           new_temp.id, res_data, 'engine-007',
-                          -1, mock.ANY)
+                          -1, new_stack)
 
     def test_update_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -1814,9 +1851,15 @@ class ResourceTest(common.HeatTestCase):
 
     @mock.patch.object(resource.Resource, 'update')
     def test_update_resource_convergence_failed(self, mock_update):
-        tmpl = rsrc_defn.ResourceDefinition('test_res',
-                                            'ResourceWithPropsType')
-        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType'}
+            }}, env=self.env)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        res = stack.resources['test_res']
         res.requires = [2]
         res._store()
         self._assert_resource_lock(res.id, None, None)
@@ -1832,11 +1875,13 @@ class ResourceTest(common.HeatTestCase):
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
         exc = Exception(_('Resource update failed'))
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
         dummy_ex = exception.ResourceFailure(exc, res, action=res.UPDATE)
         mock_update.side_effect = dummy_ex
         self.assertRaises(exception.ResourceFailure,
                           res.update_convergence, new_temp.id, res_data,
-                          'engine-007', 120, mock.ANY)
+                          'engine-007', 120, new_stack)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_update.assert_called_once_with(expected_rsrc_def)
@@ -1848,9 +1893,15 @@ class ResourceTest(common.HeatTestCase):
 
     @mock.patch.object(resource.Resource, 'update')
     def test_update_resource_convergence_update_replace(self, mock_update):
-        tmpl = rsrc_defn.ResourceDefinition('test_res',
-                                            'ResourceWithPropsType')
-        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType'}
+            }}, env=self.env)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        res = stack.resources['test_res']
         res.requires = [2]
         res._store()
         self._assert_resource_lock(res.id, None, None)
@@ -1866,14 +1917,16 @@ class ResourceTest(common.HeatTestCase):
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
         mock_update.side_effect = exception.UpdateReplace
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
         self.assertRaises(exception.UpdateReplace,
                           res.update_convergence, new_temp.id, res_data,
-                          'engine-007', 120, mock.ANY)
+                          'engine-007', 120, new_stack)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_update.assert_called_once_with(expected_rsrc_def)
         # ensure that current_template_id was not updated
-        self.assertIsNone(res.current_template_id)
+        self.assertEqual(stack.t.id, res.current_template_id)
         # ensure that requires was not updated
         self.assertItemsEqual([2], res.requires)
         self._assert_resource_lock(res.id, None, 2)
