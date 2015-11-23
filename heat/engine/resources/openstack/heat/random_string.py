@@ -172,18 +172,18 @@ class RandomString(resource.Resource):
         'octdigits': string.octdigits
     }
 
-    def translation_rules(self):
-        if self.properties.get(self.SEQUENCE):
+    def translation_rules(self, props):
+        if props.get(self.SEQUENCE):
             return [
                 properties.TranslationRule(
-                    self.properties,
+                    props,
                     properties.TranslationRule.ADD,
                     [self.CHARACTER_CLASSES],
-                    [{self.CHARACTER_CLASSES_CLASS: self.properties.get(
+                    [{self.CHARACTER_CLASSES_CLASS: props.get(
                         self.SEQUENCE),
                         self.CHARACTER_CLASSES_MIN: 1}]),
                 properties.TranslationRule(
-                    self.properties,
+                    props,
                     properties.TranslationRule.DELETE,
                     [self.SEQUENCE]
                 )

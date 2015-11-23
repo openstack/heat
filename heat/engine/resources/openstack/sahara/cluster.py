@@ -134,9 +134,9 @@ class SaharaCluster(resource.Resource):
 
     entity = 'clusters'
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [properties.TranslationRule(
-            self.properties,
+            props,
             properties.TranslationRule.REPLACE,
             [self.IMAGE_ID],
             value_path=[self.IMAGE]

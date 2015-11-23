@@ -18,11 +18,9 @@ import six
 
 from heat.common import exception
 from heat.engine.clients.os import neutron
-from heat.engine.hot import functions
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import neutron as nr
-from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import utils
@@ -49,31 +47,6 @@ class NeutronTest(common.HeatTestCase):
             msg = '%s not allowed in value_specs' % key
             self.assertEqual(msg, nr.NeutronResource.validate_properties(p))
             vs.pop(key)
-
-    def test_validate_depr_properties_required_both(self):
-        data = {'network_id': '1234',
-                'network': 'abc'}
-        p = properties.Properties(subnet.Subnet.properties_schema, data)
-        self.assertRaises(exception.ResourcePropertyConflict,
-                          nr.NeutronResource._validate_depr_property_required,
-                          p, 'network', 'network_id')
-
-    def test_validate_depr_properties_required_neither(self):
-        data = {}
-        p = properties.Properties(subnet.Subnet.properties_schema, data)
-        self.assertRaises(exception.PropertyUnspecifiedError,
-                          nr.NeutronResource._validate_depr_property_required,
-                          p, 'network', 'network_id')
-
-    def test_validate_depr_properties_required_with_refs(self):
-        funct = functions.GetParam(mock.Mock(),
-                                   'get_param', 'private_subnet_id')
-        data = {'network_id': funct}
-        p = properties.Properties(subnet.Subnet.properties_schema, data,
-                                  resolver=lambda d: None)
-        # no assert, as we are looking for no exception.
-        nr.NeutronResource._validate_depr_property_required(
-            p, 'network', 'network_id')
 
     def test_prepare_properties(self):
         data = {'admin_state_up': False,

@@ -432,6 +432,7 @@ class NeutronPortTest(common.HeatTestCase):
         }})
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes(
         ).AndReturn({'port': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
@@ -477,11 +478,11 @@ class NeutronPortTest(common.HeatTestCase):
         # update port
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
-        self.assertIsNone(port.handle_update(update_snippet, {}, {}))
+        scheduler.TaskRunner(port.update, update_snippet)()
         # update again to test port without security group
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props1)
-        self.assertIsNone(port.handle_update(update_snippet, {}, {}))
+        scheduler.TaskRunner(port.update, update_snippet)()
 
         self.m.VerifyAll()
 
@@ -680,7 +681,7 @@ class NeutronPortTest(common.HeatTestCase):
             '8a2f582a-e1cd-480f-b85d-b02631c10656']
         new_port_prop.pop('network_id')
 
-        prop_update = new_port_prop.copy()
+        prop_update = copy.deepcopy(new_port_prop)
         new_port_prop['replacement_policy'] = 'AUTO'
         new_port_prop['network'] = u'net1234'
 
@@ -693,7 +694,7 @@ class NeutronPortTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234'
-        ).AndReturn('sub1234')
+        ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_port({'port': port_prop}).AndReturn(
             {'port': {
                 "status": "BUILD",

@@ -238,6 +238,7 @@ class Pool(neutron.NeutronResource):
             _('The subnet for the port on which the members '
               'of the pool will be connected.'),
             support_status=support.SupportStatus(version='2014.2'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ]
@@ -388,10 +389,10 @@ class Pool(neutron.NeutronResource):
         ),
     }
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
@@ -402,8 +403,6 @@ class Pool(neutron.NeutronResource):
         res = super(Pool, self).validate()
         if res:
             return res
-        self._validate_depr_property_required(
-            self.properties, self.SUBNET, self.SUBNET_ID)
         session_p = self.properties[self.VIP].get(self.VIP_SESSION_PERSISTENCE)
         if session_p is None:
             # session persistence is not configured, skip validation

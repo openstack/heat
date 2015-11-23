@@ -22,7 +22,6 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import neutron
-from heat.engine import properties
 from heat.engine.resources.openstack.neutron import router
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -886,30 +885,3 @@ class NeutronRouterTest(common.HeatTestCase):
         rsrc = self.create_router(t, stack, 'router')
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
-
-    def test_validate_depr_keys_required_both(self):
-        data = {'router_id': '1234',
-                'router': 'abc'}
-        p = properties.Properties(router.RouterInterface.properties_schema,
-                                  data)
-        self.assertRaises(
-            exception.ResourcePropertyConflict,
-            router.RouterInterface._validate_deprecated_keys,
-            p, 'router', 'router_id')
-
-    def test_validate_depr_keys_required_neither(self):
-        data = {}
-        p = properties.Properties(router.RouterInterface.properties_schema,
-                                  data)
-
-        res = router.RouterInterface._validate_deprecated_keys(
-            p, 'router', 'router_id')
-        self.assertFalse(res)
-
-    def test_validate_depr_keys_required_one(self):
-        data = {'router_id': ''}
-        p = properties.Properties(router.RouterInterface.properties_schema,
-                                  data)
-        res = router.RouterInterface._validate_deprecated_keys(
-            p, 'router', 'router_id')
-        self.assertTrue(res)
