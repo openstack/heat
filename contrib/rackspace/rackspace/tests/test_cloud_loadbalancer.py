@@ -669,7 +669,6 @@ class LoadBalancerTest(common.HeatTestCase):
             'secureTrafficOnly': False
         }
         ssl_termination_api = copy.deepcopy(ssl_termination_template)
-        ssl_termination_api['enabled'] = True
 
         template = self._set_template(self.lb_template,
                                       sslTermination=ssl_termination_template)
@@ -678,7 +677,13 @@ class LoadBalancerTest(common.HeatTestCase):
                                                 self.expected_body)
         self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
         fake_lb.get_ssl_termination().AndReturn({})
-        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
+        fake_lb.get_ssl_termination().AndReturn({
+            'securePort': 443,
+            'certificate': 'fawefwea',
+            'intermediateCertificate': "intermediate_certificate",
+            'secureTrafficOnly': False,
+            'enabled': True,
+        })
 
         self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
         fake_lb.add_ssl_termination(**ssl_termination_api)
@@ -1116,6 +1121,7 @@ class LoadBalancerTest(common.HeatTestCase):
         }
         ssl_termination_api = copy.deepcopy(ssl_termination_template)
         ssl_termination_api['enabled'] = True
+        del ssl_termination_api['privatekey']
         template = self._set_template(
             self.lb_template, sslTermination=ssl_termination_template,
             protocol="HTTP", httpsRedirect=True)
@@ -1353,8 +1359,8 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
         fake_lb.get_ssl_termination().AndReturn({})
         fake_lb.get_ssl_termination().AndReturn({
-            'securePort': 443, 'privatekey': private_key, 'certificate': cert,
-            'secureTrafficOnly': False, 'intermediateCertificate': ''})
+            'securePort': 443, 'certificate': cert,
+            'secureTrafficOnly': False, 'enabled': True})
 
         self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
         fake_lb.add_ssl_termination(
@@ -1372,7 +1378,6 @@ class LoadBalancerTest(common.HeatTestCase):
             'securePort': 443, 'privatekey': private_key, 'certificate': cert,
             'intermediateCertificate': '', 'secureTrafficOnly': False}
         ssl_termination_api = copy.deepcopy(ssl_termination_template)
-        ssl_termination_api['enabled'] = True
         lb_name = list(six.iterkeys(template['Resources']))[0]
         template['Resources'][lb_name]['Properties']['sslTermination'] = \
             ssl_termination_template
@@ -1388,7 +1393,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
         fake_lb.add_ssl_termination(**ssl_termination_api)
 
-        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
+        fake_lb.get_ssl_termination().AndReturn({
+            'securePort': 443, 'certificate': cert,
+            'secureTrafficOnly': False, 'enabled': True})
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -1402,7 +1409,9 @@ class LoadBalancerTest(common.HeatTestCase):
             fake_lb)
 
         self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
-        fake_lb.get_ssl_termination().AndReturn(ssl_termination_api)
+        fake_lb.get_ssl_termination().AndReturn({
+            'securePort': 443, 'certificate': cert,
+            'secureTrafficOnly': False})
 
         self.m.StubOutWithMock(fake_lb, 'delete_ssl_termination')
         fake_lb.delete_ssl_termination()
