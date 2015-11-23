@@ -101,6 +101,7 @@ For example, Heat currently supports the following values for the
 ``heat_template_version`` key:
 
 2013-05-23
+----------
     The key with value ``2013-05-23`` indicates that the YAML document is a HOT
     template and it may contain features implemented until the Icehouse
     release. This version supports the following functions (some are back
@@ -124,6 +125,7 @@ For example, Heat currently supports the following values for the
       Ref
 
 2014-10-16
+----------
     The key with value ``2014-10-16`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the Juno
     release.  This version removes most CFN functions that were supported in
@@ -140,6 +142,7 @@ For example, Heat currently supports the following values for the
       Fn::Select
 
 2015-04-30
+----------
     The key with value ``2015-04-30`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the Kilo
     release. This version adds the ``repeat`` function. So the complete list of
@@ -157,6 +160,7 @@ For example, Heat currently supports the following values for the
       Fn::Select
 
 2015-10-15
+----------
     The key with value ``2015-10-15`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
     Liberty release. This version removes the *Fn::Select* function, path based
@@ -180,6 +184,7 @@ For example, Heat currently supports the following values for the
       str_split
 
 2016-04-08
+----------
     The key with value ``2016-04-08`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
     Mitaka release.  This version also adds the map_merge function which
