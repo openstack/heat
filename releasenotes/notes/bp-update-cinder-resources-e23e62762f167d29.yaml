@@ -1,0 +1,5 @@
+---
+features:
+  - OS::Cinder::QoSAssociation resource plugin is added to support cinder QoS
+    Specs Association with Volume Types, which is provided by cinder
+    ``qos-specs`` API extension.
