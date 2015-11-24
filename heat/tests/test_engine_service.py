@@ -2409,7 +2409,7 @@ class StackServiceTest(common.HeatTestCase):
         mock_iterable = mock.MagicMock(return_value=iter([info]))
         with mock.patch('heat.engine.environment.ResourceRegistry.iterable_by',
                         new=mock_iterable):
-            ex = self.assertRaises(exception.TemplateNotFound,
+            ex = self.assertRaises(exception.StackValidationFailed,
                                    function,
                                    self.ctx,
                                    type_name='ResourceWithWrongRefOnFile')

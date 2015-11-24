@@ -93,7 +93,7 @@ class TemplateResource(stack_resource.StackResource):
             args = {'name': template_name, 'exc': six.text_type(r_exc)}
             msg = _('Could not fetch remote template '
                     '"%(name)s": %(exc)s') % args
-            raise exception.TemplateNotFound(message=msg)
+            raise exception.NotFound(msg_fmt=msg)
 
     @staticmethod
     def get_schemas(tmpl, param_defaults):
@@ -106,7 +106,7 @@ class TemplateResource(stack_resource.StackResource):
         self._parsed_nested = None
         try:
             tmpl = template.Template(self.child_template())
-        except (exception.TemplateNotFound, ValueError) as download_error:
+        except (exception.NotFound, ValueError) as download_error:
             self.validation_exception = download_error
             tmpl = template.Template(
                 {"HeatTemplateFormatVersion": "2012-12-12"})
@@ -192,7 +192,7 @@ class TemplateResource(stack_resource.StackResource):
             try:
                 t_data = self.get_template_file(self.template_name,
                                                 self.allowed_schemes)
-            except exception.TemplateNotFound as err:
+            except exception.NotFound as err:
                 if self.action == self.UPDATE:
                     raise
                 reported_excp = err
