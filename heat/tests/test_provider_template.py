@@ -691,10 +691,6 @@ class ProviderTemplateTest(common.HeatTestCase):
         self.assertTrue(test_templ, "Empty test template")
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
-                     allowed_schemes=('file',)
-                     ).AndRaise(urlfetch.URLFetchError(
-                         _('Failed to retrieve template')))
-        urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https')).AndReturn(test_templ)
         parsed_test_templ = template_format.parse(test_templ)
         self.m.ReplayAll()

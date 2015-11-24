@@ -274,11 +274,7 @@ class ResourceGroup(stack_resource.StackResource):
         res_def = next(six.itervalues(
             test_tmpl.resource_definitions(self.stack)))
         # make sure we can resolve the nested resource type
-        try:
-            self.stack.env.get_class(res_def.resource_type)
-        except exception.NotFound:
-            # its a template resource
-            pass
+        self.stack.env.get_class_to_instantiate(res_def.resource_type)
 
         try:
             name = "%s-%s" % (self.stack.name, self.name)

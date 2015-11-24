@@ -69,12 +69,13 @@ class ResourceTest(common.HeatTestCase):
         self.dummy_timeout = 10
 
     def test_get_class_ok(self):
-        cls = resources.global_env().get_class('GenericResourceType')
+        cls = resources.global_env().get_class_to_instantiate(
+            'GenericResourceType')
         self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_class_noexist(self):
         self.assertRaises(exception.StackValidationFailed,
-                          resources.global_env().get_class,
+                          resources.global_env().get_class_to_instantiate,
                           'NoExistResourceType')
 
     def test_resource_new_ok(self):
