@@ -205,12 +205,9 @@ class SnapshotNotFound(HeatException):
                 "could not be found.")
 
 
-class TemplateNotFound(HeatException):
-    msg_fmt = _("%(message)s")
-
-
-class InvalidResourceType(HeatException):
-    msg_fmt = _("%(message)s")
+class InvalidGlobalResource(HeatException):
+    msg_fmt = _("There was an error loading the definition of the global "
+                "resource type %(type_name)s.")
 
 
 class InvalidBreakPointHook(HeatException):

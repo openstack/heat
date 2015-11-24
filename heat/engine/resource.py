@@ -138,7 +138,7 @@ class Resource(object):
                 ResourceClass = registry.get_class(definition.resource_type,
                                                    resource_name=name,
                                                    files=stack.t.files)
-            except exception.TemplateNotFound:
+            except exception.NotFound:
                 ResourceClass = template_resource.TemplateResource
 
             assert issubclass(ResourceClass, Resource)
