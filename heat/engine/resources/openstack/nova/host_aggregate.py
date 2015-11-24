@@ -36,7 +36,7 @@ class HostAggregate(resource.Resource):
 
     default_client_name = 'nova'
 
-    entity = 'aggregate'
+    entity = 'aggregates'
 
     required_service_extension = 'os-aggregates'
 
