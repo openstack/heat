@@ -31,7 +31,8 @@ keystone_endpoint_template = {
                 'region': 'RegionOne',
                 'interface': 'public',
                 'url': 'http://127.0.0.1:8004/v1/tenant-id',
-                'name': 'endpoint_foo'
+                'name': 'endpoint_foo',
+                'enabled': False
             }
         }
     }
@@ -46,23 +47,12 @@ class KeystoneEndpointTest(common.HeatTestCase):
 
         self.ctx = utils.dummy_context()
 
-        self.stack = stack.Stack(
-            self.ctx, 'test_stack_keystone',
-            template.Template(keystone_endpoint_template)
-        )
-
-        self.test_endpoint = self.stack['test_endpoint']
-
         # Mock client
         self.keystoneclient = mock.MagicMock()
-        self.test_endpoint.client = mock.MagicMock()
-        self.test_endpoint.client.return_value = self.keystoneclient
         self.endpoints = self.keystoneclient.endpoints
 
         # Mock client plugin
-        keystone_client_plugin = mock.MagicMock()
-        self.test_endpoint.client_plugin = mock.MagicMock()
-        self.test_endpoint.client_plugin.return_value = keystone_client_plugin
+        self.keystone_client_plugin = mock.MagicMock()
 
     def _get_mock_endpoint(self):
         value = mock.MagicMock()
@@ -70,33 +60,48 @@ class KeystoneEndpointTest(common.HeatTestCase):
 
         return value
 
+    def _setup_endpoint_resource(self, stack_name, use_default=False):
+        test_stack = stack.Stack(
+            self.ctx, stack_name,
+            template.Template(keystone_endpoint_template)
+        )
+
+        r_endpoint = test_stack['test_endpoint']
+        r_endpoint.client = mock.MagicMock()
+        r_endpoint.client.return_value = self.keystoneclient
+        r_endpoint.client_plugin = mock.MagicMock()
+        r_endpoint.client_plugin.return_value = self.keystone_client_plugin
+
+        if use_default:
+            del r_endpoint.t['Properties']['name']
+            del r_endpoint.t['Properties']['enabled']
+
+        return r_endpoint
+
     def test_endpoint_handle_create(self):
+        rsrc = self._setup_endpoint_resource('test_endpoint_create')
         mock_endpoint = self._get_mock_endpoint()
         self.endpoints.create.return_value = mock_endpoint
 
         # validate the properties
         self.assertEqual(
-            'heat',
-            self.test_endpoint.properties.get(
-                endpoint.KeystoneEndpoint.SERVICE))
+            'heat', rsrc.properties.get(endpoint.KeystoneEndpoint.SERVICE))
         self.assertEqual(
             'public',
-            self.test_endpoint.properties.get(
-                endpoint.KeystoneEndpoint.INTERFACE))
+            rsrc.properties.get(endpoint.KeystoneEndpoint.INTERFACE))
         self.assertEqual(
             'RegionOne',
-            self.test_endpoint.properties.get(
-                endpoint.KeystoneEndpoint.REGION))
+            rsrc.properties.get(endpoint.KeystoneEndpoint.REGION))
         self.assertEqual(
             'http://127.0.0.1:8004/v1/tenant-id',
-            self.test_endpoint.properties.get(
-                endpoint.KeystoneEndpoint.SERVICE_URL))
+            rsrc.properties.get(endpoint.KeystoneEndpoint.SERVICE_URL))
         self.assertEqual(
             'endpoint_foo',
-            self.test_endpoint.properties.get(
-                endpoint.KeystoneEndpoint.NAME))
+            rsrc.properties.get(endpoint.KeystoneEndpoint.NAME))
+        self.assertFalse(rsrc.properties.get(
+            endpoint.KeystoneEndpoint.ENABLED))
 
-        self.test_endpoint.handle_create()
+        rsrc.handle_create()
 
         # validate endpoint creation
         self.endpoints.create.assert_called_once_with(
@@ -104,13 +109,42 @@ class KeystoneEndpointTest(common.HeatTestCase):
             url='http://127.0.0.1:8004/v1/tenant-id',
             interface='public',
             region='RegionOne',
-            name='endpoint_foo')
+            name='endpoint_foo',
+            enabled=False)
 
         # validate physical resource id
-        self.assertEqual(mock_endpoint.id, self.test_endpoint.resource_id)
+        self.assertEqual(mock_endpoint.id, rsrc.resource_id)
+
+    def test_endpoint_handle_create_default(self):
+        rsrc = self._setup_endpoint_resource('test_create_with_defaults',
+                                             use_default=True)
+        mock_endpoint = self._get_mock_endpoint()
+        self.endpoints.create.return_value = mock_endpoint
+
+        rsrc.physical_resource_name = mock.MagicMock()
+        rsrc.physical_resource_name.return_value = 'stack_endpoint_foo'
+
+        # validate the properties
+        self.assertIsNone(
+            rsrc.properties.get(endpoint.KeystoneEndpoint.NAME))
+        self.assertTrue(rsrc.properties.get(
+            endpoint.KeystoneEndpoint.ENABLED))
+
+        rsrc.handle_create()
+
+        # validate endpoints creation with physical resource name
+        # and with enabled(default is True)
+        self.endpoints.create.assert_called_once_with(
+            service='heat',
+            url='http://127.0.0.1:8004/v1/tenant-id',
+            interface='public',
+            region='RegionOne',
+            name='stack_endpoint_foo',
+            enabled=True)
 
     def test_endpoint_handle_update(self):
-        self.test_endpoint.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        rsrc = self._setup_endpoint_resource('test_endpoint_update')
+        rsrc.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
         prop_diff = {endpoint.KeystoneEndpoint.REGION: 'RegionTwo',
                      endpoint.KeystoneEndpoint.INTERFACE: 'internal',
@@ -118,48 +152,53 @@ class KeystoneEndpointTest(common.HeatTestCase):
                      endpoint.KeystoneEndpoint.SERVICE_URL:
                          'http://127.0.0.1:8004/v2/tenant-id',
                      endpoint.KeystoneEndpoint.NAME:
-                         'endpoint_foo_updated'}
+                         'endpoint_foo_updated',
+                     endpoint.KeystoneEndpoint.ENABLED: True}
 
-        self.test_endpoint.handle_update(json_snippet=None,
-                                         tmpl_diff=None,
-                                         prop_diff=prop_diff)
+        rsrc.handle_update(json_snippet=None,
+                           tmpl_diff=None,
+                           prop_diff=prop_diff)
 
         self.endpoints.update.assert_called_once_with(
-            endpoint=self.test_endpoint.resource_id,
+            endpoint=rsrc.resource_id,
             region=prop_diff[endpoint.KeystoneEndpoint.REGION],
             interface=prop_diff[endpoint.KeystoneEndpoint.INTERFACE],
             service=prop_diff[endpoint.KeystoneEndpoint.SERVICE],
             url=prop_diff[endpoint.KeystoneEndpoint.SERVICE_URL],
-            name=prop_diff[endpoint.KeystoneEndpoint.NAME]
+            name=prop_diff[endpoint.KeystoneEndpoint.NAME],
+            enabled=prop_diff[endpoint.KeystoneEndpoint.ENABLED]
         )
 
     def test_endpoint_handle_update_default(self):
-        self.test_endpoint.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_endpoint.physical_resource_name = mock.MagicMock()
-        self.test_endpoint.physical_resource_name.return_value = 'foo'
+        rsrc = self._setup_endpoint_resource('test_endpoint_update_default')
+        rsrc.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        rsrc.physical_resource_name = mock.MagicMock()
+        rsrc.physical_resource_name.return_value = 'stack_endpoint_foo'
 
         # Name is reset to None, so default to physical resource name
         prop_diff = {endpoint.KeystoneEndpoint.NAME: None}
 
-        self.test_endpoint.handle_update(json_snippet=None,
-                                         tmpl_diff=None,
-                                         prop_diff=prop_diff)
+        rsrc.handle_update(json_snippet=None,
+                           tmpl_diff=None,
+                           prop_diff=prop_diff)
 
         # validate default name to physical resource name
         self.endpoints.update.assert_called_once_with(
-            endpoint=self.test_endpoint.resource_id,
+            endpoint=rsrc.resource_id,
             region=None,
             interface=None,
             service=None,
             url=None,
-            name='foo'
+            name='stack_endpoint_foo',
+            enabled=None
         )
 
     def test_resource_mapping(self):
+        rsrc = self._setup_endpoint_resource('test_resource_mapping')
         mapping = endpoint.resource_mapping()
         self.assertEqual(1, len(mapping))
         self.assertEqual(endpoint.KeystoneEndpoint, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_endpoint, endpoint.KeystoneEndpoint)
+        self.assertIsInstance(rsrc, endpoint.KeystoneEndpoint)
 
     def test_properties_title(self):
         property_title_map = {
@@ -167,7 +206,8 @@ class KeystoneEndpointTest(common.HeatTestCase):
             endpoint.KeystoneEndpoint.REGION: 'region',
             endpoint.KeystoneEndpoint.INTERFACE: 'interface',
             endpoint.KeystoneEndpoint.SERVICE_URL: 'url',
-            endpoint.KeystoneEndpoint.NAME: 'name'
+            endpoint.KeystoneEndpoint.NAME: 'name',
+            endpoint.KeystoneEndpoint.ENABLED: 'enabled'
         }
 
         for actual_title, expected_title in property_title_map.items():
@@ -299,8 +339,9 @@ class KeystoneEndpointTest(common.HeatTestCase):
                          endpoint.KeystoneEndpoint.NAME)
 
     def test_show_resource(self):
-        endpoint = mock.Mock()
-        endpoint.to_dict.return_value = {'attr': 'val'}
-        self.endpoints.get.return_value = endpoint
-        res = self.test_endpoint._show_resource()
-        self.assertEqual({'attr': 'val'}, res)
+        rsrc = self._setup_endpoint_resource('test_show_resource')
+        mock_endpoint = mock.Mock()
+        mock_endpoint.to_dict.return_value = {'attr': 'val'}
+        self.endpoints.get.return_value = mock_endpoint
+        attrs = rsrc._show_resource()
+        self.assertEqual({'attr': 'val'}, attrs)

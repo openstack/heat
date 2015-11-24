@@ -30,9 +30,9 @@ class KeystoneEndpoint(resource.Resource):
     entity = 'endpoints'
 
     PROPERTIES = (
-        NAME, REGION, SERVICE, INTERFACE, SERVICE_URL
+        NAME, REGION, SERVICE, INTERFACE, SERVICE_URL, ENABLED,
     ) = (
-        'name', 'region', 'service', 'interface', 'url'
+        'name', 'region', 'service', 'interface', 'url', 'enabled',
     )
 
     properties_schema = {
@@ -67,6 +67,13 @@ class KeystoneEndpoint(resource.Resource):
             _('URL of keystone service endpoint.'),
             update_allowed=True,
             required=True
+        ),
+        ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('This endpoint is enabled or disabled.'),
+            default=True,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
         )
     }
 
@@ -80,13 +87,15 @@ class KeystoneEndpoint(resource.Resource):
         url = self.properties[self.SERVICE_URL]
         name = (self.properties[self.NAME] or
                 self.physical_resource_name())
+        enabled = self.properties[self.ENABLED]
 
         endpoint = self.client().endpoints.create(
             region=region,
             service=service,
             interface=interface,
             url=url,
-            name=name)
+            name=name,
+            enabled=enabled)
 
         self.resource_id_set(endpoint.id)
 
@@ -97,6 +106,7 @@ class KeystoneEndpoint(resource.Resource):
             interface = prop_diff.get(self.INTERFACE)
             url = prop_diff.get(self.SERVICE_URL)
             name = prop_diff.get(self.NAME) or self.physical_resource_name()
+            enabled = prop_diff.get(self.ENABLED)
 
             self.client().endpoints.update(
                 endpoint=self.resource_id,
@@ -104,7 +114,8 @@ class KeystoneEndpoint(resource.Resource):
                 service=service,
                 interface=interface,
                 url=url,
-                name=name)
+                name=name,
+                enabled=enabled)
 
 
 def resource_mapping():
