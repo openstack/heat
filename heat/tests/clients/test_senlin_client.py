@@ -11,12 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from testtools import testcase
+
 from heat.tests import common
 from heat.tests import utils
 
 
 class SenlinClientPluginTests(common.HeatTestCase):
 
+    @testcase.skip('skipped until bug #1519185 is fixed!')
     def test_cluster_get(self):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('senlin')
