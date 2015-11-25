@@ -42,6 +42,9 @@ resources:
       default_image_id: some_image
       key_name: admin
       neutron_management_network: some_network
+      shares:
+        - id: some_share_id
+          access_level: ro
 """
 
 
@@ -97,7 +100,10 @@ class SaharaClusterTest(common.HeatTestCase):
                            'user_keypair_id': 'admin',
                            'default_image_id': 'some_image_id',
                            'net_id': 'some_network_id',
-                           'use_autoconfig': None}
+                           'use_autoconfig': None,
+                           'shares': [{'id': 'some_share_id',
+                                       'access_level': 'ro',
+                                       'path': None}]}
         self.cl_mgr.create.assert_called_once_with(*expected_args,
                                                    **expected_kwargs)
         self.cl_mgr.get.assert_called_once_with(self.fake_cl.id)
