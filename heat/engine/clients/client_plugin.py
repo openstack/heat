@@ -159,7 +159,7 @@ class ClientPlugin(object):
 
         reg = self.context.region_name or cfg.CONF.region_name_for_services
         kwargs.setdefault('region_name', reg)
-
+        url = None
         try:
             url = get_endpoint()
         except exceptions.EmptyCatalog:
