@@ -303,6 +303,33 @@ class ClientPluginTest(common.HeatTestCase):
         self.assertEqual('http://192.0.2.1/bar',
                          plugin.url_for(service_type='bar'))
 
+    @mock.patch.object(v3, "Token", name="v3_token")
+    def test_endpoint_not_found(self, mock_v3):
+        class FakeKeystone(fakes.FakeKeystoneClient):
+            def __init__(self):
+                super(FakeKeystone, self).__init__()
+                self.client = self
+                self.version = 'v3'
+
+        self.stub_keystoneclient(fake_client=FakeKeystone())
+        con = mock.MagicMock(auth_token="1234", trust_id=None)
+        c = clients.Clients(con)
+        con.clients = c
+
+        con.auth_plugin = mock.Mock(name="auth_plugin")
+        get_endpoint_side_effects = [keystone_exc.EmptyCatalog(), None]
+        con.auth_plugin.get_endpoint = mock.Mock(
+            name="get_endpoint", side_effect=get_endpoint_side_effects)
+
+        mock_token_obj = mock.Mock()
+        mock_v3.return_value = mock_token_obj
+        mock_token_obj.get_auth_ref.return_value = {'no_catalog': 'without'}
+
+        plugin = FooClientsPlugin(con)
+
+        self.assertRaises(keystone_exc.EndpointNotFound,
+                          plugin.url_for, service_type='nonexistent')
+
     def test_abstract_create(self):
         con = mock.Mock()
         c = clients.Clients(con)
