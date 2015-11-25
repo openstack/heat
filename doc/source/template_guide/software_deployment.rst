@@ -261,15 +261,15 @@ which builds a curl command with a valid token:
                 # Or you optionally can specify any of the additional fields
                 wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal2"}'
                 wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal3", "data": "data3"}'
-                wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal4", "data": "data4"}'
+                wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal4", "id": "id4", "data": "data4"}'
 
                 # If you require control of the ID, you can pass it.
                 # The ID should be unique, unless you intend for duplicate
                 # signals to overwrite each other.  The following two calls
                 # do the exact same thing, and will be treated as one signal
                 # (You can prove this by changing count above to 7)
-                wc_notify --data-binary '{"status": "SUCCESS", "id": "5"}'
-                wc_notify --data-binary '{"status": "SUCCESS", "id": "5"}'
+                wc_notify --data-binary '{"status": "SUCCESS", "id": "id5"}'
+                wc_notify --data-binary '{"status": "SUCCESS", "id": "id5"}'
 
                 # Example of sending a failure signal, optionally
                 # reason, id, and data can be specified as above
@@ -281,10 +281,10 @@ which builds a curl command with a valid token:
       wc_data:
         value: { get_attr: [wait_condition, data] }
         # this would return the following json
-        # {"1": null, "2": null, "3": "data3", "4": "data4", "5": null}
+        # {"1": null, "2": null, "3": "data3", "id4": "data4", "id5": null}
 
       wc_data_4:
-        value: { get_attr: [wait_condition, data, '4'] }
+        value: { 'Fn::Select': ['id4', { get_attr: [wait_condition, data] }] }
         # this would return "data4"
 
 ..
