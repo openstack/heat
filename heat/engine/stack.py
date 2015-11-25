@@ -743,8 +743,10 @@ class Stack(collections.Mapping):
         self.status = status
         self.status_reason = reason
 
-        if cfg.CONF.convergence_engine:
-            # for convergence stack lock is not used, hence persist state
+        if self.convergence and action in (self.UPDATE, self.DELETE,
+                                           self.CREATE):
+            # if convergence and stack operation is create/update/delete,
+            # stack lock is not used, hence persist state
             self._persist_state()
             return
 

@@ -446,7 +446,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     @mock.patch.object(parser.Stack, '_converge_create_or_update')
     def test_updated_time_stack_create(self, mock_ccu, mock_cr):
         stack = parser.Stack(utils.dummy_context(), 'convg_updated_time_test',
-                             templatem.Template.create_empty_template())
+                             templatem.Template.create_empty_template(),
+                             convergence=True)
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.updated_time)
         self.assertTrue(mock_ccu.called)
@@ -456,7 +457,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'R1': {'Type': 'GenericResourceType'}}}
         stack = parser.Stack(utils.dummy_context(), 'updated_time_test',
-                             templatem.Template(tmpl))
+                             templatem.Template(tmpl), convergence=True)
         stack.converge_stack(template=stack.t, action=stack.UPDATE)
         self.assertIsNotNone(stack.updated_time)
         self.assertTrue(mock_ccu.called)
@@ -485,6 +486,65 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.converge_stack(template=stack.t, action=stack.UPDATE)
         self.assertTrue(mock_syncpoint_del.called)
         self.assertTrue(mock_ccu.called)
+
+
+@mock.patch.object(parser.Stack, '_persist_state')
+class TestConvgStackStateSet(common.HeatTestCase):
+    def setUp(self):
+        super(TestConvgStackStateSet, self).setUp()
+        cfg.CONF.set_override('convergence_engine', True)
+        self.stack = tools.get_stack(
+            'test_stack', utils.dummy_context(),
+            template=tools.wp_template, convergence=True)
+
+    def test_state_set_create_update_delete_complete(self, mock_ps):
+        self.stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
+                             'Create complete')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.UPDATE, self.stack.COMPLETE,
+                             'Update complete')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.DELETE, self.stack.COMPLETE,
+                             'Delete complete')
+        self.assertTrue(mock_ps.called)
+
+    def test_state_set_stack_suspend(self, mock_ps):
+        self.stack.state_set(self.stack.SUSPEND, self.stack.IN_PROGRESS,
+                             'Suspend started')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.SUSPEND, self.stack.COMPLETE,
+                             'Suspend complete')
+        self.assertFalse(mock_ps.called)
+
+    def test_state_set_stack_resume(self, mock_ps):
+        self.stack.state_set(self.stack.RESUME, self.stack.IN_PROGRESS,
+                             'Resume started')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.RESUME, self.stack.COMPLETE,
+                             'Resume complete')
+        self.assertFalse(mock_ps.called)
+
+    def test_state_set_stack_snapshot(self, mock_ps):
+        self.stack.state_set(self.stack.SNAPSHOT, self.stack.IN_PROGRESS,
+                             'Snapshot started')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.SNAPSHOT, self.stack.COMPLETE,
+                             'Snapshot complete')
+        self.assertFalse(mock_ps.called)
+
+    def test_state_set_stack_restore(self, mock_ps):
+        self.stack.state_set(self.stack.RESTORE, self.stack.IN_PROGRESS,
+                             'Restore started')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.RESTORE, self.stack.COMPLETE,
+                             'Restore complete')
+        self.assertFalse(mock_ps.called)
 
 
 class TestConvgStackRollback(common.HeatTestCase):
