@@ -148,12 +148,18 @@ class Group(resource.Resource):
                 ),
                 LAUNCH_CONFIG_ARGS_SERVER_FLAVOR_REF: properties.Schema(
                     properties.Schema.STRING,
-                    _('Flavor ID.'),
+                    _('The ID or name of the flavor to boot onto.'),
+                    constraints=[
+                        constraints.CustomConstraint('nova.flavor')
+                    ],
                     required=True
                 ),
                 LAUNCH_CONFIG_ARGS_SERVER_IMAGE_REF: properties.Schema(
                     properties.Schema.STRING,
-                    _('Image ID.'),
+                    _('The ID or name of the image to boot with.'),
+                    constraints=[
+                        constraints.CustomConstraint('glance.image')
+                    ],
                     required=True
                 ),
                 LAUNCH_CONFIG_ARGS_SERVER_METADATA: properties.Schema(
@@ -298,12 +304,16 @@ class Group(resource.Resource):
         user_data = server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_USER_DATA)
         cdrive = (server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_CDRIVE) or
                   bool(user_data is not None and len(user_data.strip())))
+        image_id = self.client_plugin('glance').get_image_id(
+            server_args[self.LAUNCH_CONFIG_ARGS_SERVER_IMAGE_REF])
+        flavor_id = self.client_plugin('nova').get_flavor_id(
+            server_args[self.LAUNCH_CONFIG_ARGS_SERVER_FLAVOR_REF])
 
         return dict(
             launch_config_type=launchconf[self.LAUNCH_CONFIG_TYPE],
             server_name=server_args[self.GROUP_CONFIGURATION_NAME],
-            image=server_args[self.LAUNCH_CONFIG_ARGS_SERVER_IMAGE_REF],
-            flavor=server_args[self.LAUNCH_CONFIG_ARGS_SERVER_FLAVOR_REF],
+            image=image_id,
+            flavor=flavor_id,
             disk_config=server_args.get(
                 self.LAUNCH_CONFIG_ARGS_SERVER_DISK_CONFIG),
             metadata=server_args.get(self.GROUP_CONFIGURATION_METADATA),
