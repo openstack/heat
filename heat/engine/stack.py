@@ -845,15 +845,15 @@ class Stack(collections.Mapping):
         All of the resources are traversed in forward or reverse dependency
         order.
 
-        :param action action that should be executed with stack resources
-        :param reverse defines if action on the resources need to be executed
+        :param action: action that should be executed with stack resources
+        :param reverse: define if action on the resources need to be executed
          in reverse order (resources - first and then res dependencies )
-        :param post_func function that need to be executed after
+        :param post_func: function that need to be executed after
         action complete on the stack
-        :param error_wait_time time to wait before cancelling all execution
+        :param error_wait_time: time to wait before cancelling all execution
         threads when an error occurred
-        :param aggregate_exceptions defines if exceptions should be aggregated
-        :param pre_completion_func function that need to be executed right
+        :param aggregate_exceptions: define if exceptions should be aggregated
+        :param pre_completion_func: function that need to be executed right
         before action completion. Uses stack ,action, status and reason as
         input parameters
         """
