@@ -266,6 +266,14 @@ class KeystoneEndpointTest(common.HeatTestCase):
                          'description for property %s is modified' %
                          endpoint.KeystoneEndpoint.REGION)
 
+        # Make sure, REGION is of keystone.region custom constraint type
+        self.assertEqual(1, len(schema.constraints))
+        keystone_region_constraint = schema.constraints[0]
+        self.assertIsInstance(keystone_region_constraint,
+                              constraints.CustomConstraint)
+        self.assertEqual('keystone.region',
+                         keystone_region_constraint.name)
+
     def test_property_interface_validate_schema(self):
         schema = (endpoint.KeystoneEndpoint.properties_schema[
                   endpoint.KeystoneEndpoint.INTERFACE])

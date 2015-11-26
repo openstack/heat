@@ -44,7 +44,8 @@ class KeystoneEndpoint(resource.Resource):
         REGION: properties.Schema(
             properties.Schema.STRING,
             _('Name or Id of keystone region.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[constraints.CustomConstraint('keystone.region')]
         ),
         SERVICE: properties.Schema(
             properties.Schema.STRING,
