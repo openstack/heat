@@ -497,7 +497,7 @@ class TestConvgStackStateSet(common.HeatTestCase):
             'test_stack', utils.dummy_context(),
             template=tools.wp_template, convergence=True)
 
-    def test_state_set_create_update_delete_complete(self, mock_ps):
+    def test_state_set_create_adopt_update_delete_complete(self, mock_ps):
         self.stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
                              'Create complete')
         self.assertTrue(mock_ps.called)
@@ -508,6 +508,10 @@ class TestConvgStackStateSet(common.HeatTestCase):
         mock_ps.reset_mock()
         self.stack.state_set(self.stack.DELETE, self.stack.COMPLETE,
                              'Delete complete')
+        self.assertTrue(mock_ps.called)
+        mock_ps.reset_mock()
+        self.stack.state_set(self.stack.ADOPT, self.stack.COMPLETE,
+                             'Adopt complete')
         self.assertTrue(mock_ps.called)
 
     def test_state_set_stack_suspend(self, mock_ps):
