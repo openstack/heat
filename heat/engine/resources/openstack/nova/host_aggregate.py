@@ -127,6 +127,14 @@ class HostAggregate(resource.Resource):
                 aggregate.remove_host(host)
         super(HostAggregate, self).handle_delete()
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        aggregate_reality = {}
+
+        for key in self.PROPERTIES:
+            aggregate_reality.update({key: resource_data.get(key)})
+
+        return aggregate_reality
+
 
 def resource_mapping():
     return {

@@ -127,3 +127,26 @@ class NovaHostAggregateTest(common.HeatTestCase):
         self.assertEqual(ag.hosts, self.aggregates.hosts)
         ag.remove_host.assert_called_once_with(ag.hosts[0])
         self.aggregates.delete.assert_called_once_with(ag.id)
+
+    def test_aggregate_get_live_state(self):
+        value = mock.MagicMock()
+        value.to_dict.return_value = {
+            'availability_zone': 'nova',
+            'name': 'test',
+            'hosts': ['ubuntu'],
+            'metadata': {'test': 'test', 'availability_zone': 'nova'}
+        }
+        self.aggregates.get.return_value = value
+
+        reality = self.my_aggregate.get_live_state(
+            self.my_aggregate.properties)
+        expected = {
+            'availability_zone': 'nova',
+            'name': 'test',
+            'hosts': ['ubuntu'],
+            'metadata': {'test': 'test', 'availability_zone': 'nova'}
+        }
+
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in reality:
+            self.assertEqual(expected[key], reality[key])
