@@ -170,24 +170,30 @@ def translate_filters(params):
     return params
 
 
-def format_stack_outputs(stack, outputs):
+def format_stack_outputs(stack, outputs, resolve_value=False):
     """Return a representation of the given output template.
 
     Return a representation of the given output template for the given stack
     that matches the API output expectations.
     """
-    def format_stack_output(k):
-        output = {
-            rpc_api.OUTPUT_DESCRIPTION: outputs[k].get('Description',
-                                                       'No description given'),
-            rpc_api.OUTPUT_KEY: k,
-            rpc_api.OUTPUT_VALUE: stack.output(k)
-        }
-        if outputs[k].get('error_msg'):
-            output.update({rpc_api.OUTPUT_ERROR: outputs[k].get('error_msg')})
-        return output
+    return [format_stack_output(stack, outputs,
+                                key, resolve_value=resolve_value)
+            for key in outputs]
 
-    return [format_stack_output(key) for key in outputs]
+
+def format_stack_output(stack, outputs, k, resolve_value=True):
+    result = {
+        rpc_api.OUTPUT_KEY: k,
+        rpc_api.OUTPUT_DESCRIPTION: outputs[k].get('Description',
+                                                   'No description given'),
+    }
+
+    if resolve_value:
+        result.update({rpc_api.OUTPUT_VALUE: stack.output(k)})
+
+    if outputs[k].get('error_msg'):
+        result.update({rpc_api.OUTPUT_ERROR: outputs[k].get('error_msg')})
+    return result
 
 
 def format_stack(stack, preview=False):
@@ -227,7 +233,8 @@ def format_stack(stack, preview=False):
     # allow users to view the outputs of stacks
     if stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS:
         info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack,
-                                                           stack.outputs)
+                                                           stack.outputs,
+                                                           resolve_value=True)
 
     return info
 

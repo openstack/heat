@@ -1069,6 +1069,39 @@ class EngineService(service.Service):
             return s.raw_template.template
         return None
 
+    @context.request_context
+    def list_outputs(self, cntx, stack_identity):
+        """Get a list of stack outputs.
+
+        :param cntx: RPC context.
+        :param stack_identity: Name of the stack you want to see.
+        :return: list of stack outputs in defined format.
+        """
+        s = self._get_stack(cntx, stack_identity)
+        stack = parser.Stack.load(cntx, stack=s, resolve_data=False)
+
+        return api.format_stack_outputs(stack, stack.t[stack.t.OUTPUTS])
+
+    @context.request_context
+    def show_output(self, cntx, stack_identity, output_key):
+        """Returns dict with specified output key, value and description.
+
+        :param cntx: RPC context.
+        :param stack_identity: Name of the stack you want to see.
+        :param output_key: key of desired stack output.
+        :return: dict with output key, value and description in defined format.
+        """
+        s = self._get_stack(cntx, stack_identity)
+        stack = parser.Stack.load(cntx, stack=s, resolve_data=False)
+
+        outputs = stack.t[stack.t.OUTPUTS]
+
+        if output_key not in outputs:
+            raise exception.NotFound(_('Specified output key %s not '
+                                       'found.') % output_key)
+        output = stack.resolve_static_data(outputs[output_key])
+        return api.format_stack_output(stack, {output_key: output}, output_key)
+
     def _remote_call(self, cnxt, lock_engine_id, call, **kwargs):
         timeout = cfg.CONF.engine_life_check_timeout
         self.cctxt = self._client.prepare(
