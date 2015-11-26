@@ -179,7 +179,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         tr())
+                                         mock.ANY)
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -200,7 +200,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         tr())
+                                         mock.ANY)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -547,7 +547,8 @@ class MiscMethodsTest(common.HeatTestCase):
                                'uuid': mock.ANY,
                                'action': mock.ANY,
                                'status': mock.ANY}
-        actual_input_data = worker.construct_input_data(self.resource)
+        actual_input_data = worker.construct_input_data(self.resource,
+                                                        self.stack)
         self.assertEqual(expected_input_data, actual_input_data)
 
     def test_construct_input_data_exception(self):
@@ -561,7 +562,8 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.FnGetAtt = mock.Mock(
             side_effect=exception.InvalidTemplateAttribute(resource='A',
                                                            key='value'))
-        actual_input_data = worker.construct_input_data(self.resource)
+        actual_input_data = worker.construct_input_data(self.resource,
+                                                        self.stack)
         self.assertEqual(expected_input_data, actual_input_data)
 
     @mock.patch.object(sync_point, 'sync')
@@ -608,7 +610,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.action = 'INIT'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {}, 'engine-id',
-                                     self.stack.timeout_secs())
+                                     self.stack)
         self.assertTrue(mock_create.called)
         self.assertFalse(mock_update.called)
 
@@ -619,7 +621,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.action = 'CREATE'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {}, 'engine-id',
-                                     self.stack.timeout_secs())
+                                     self.stack)
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
@@ -630,7 +632,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.action = 'UPDATE'
         worker.check_resource_update(self.resource, self.resource.stack.t.id,
                                      {}, 'engine-id',
-                                     self.stack.timeout_secs())
+                                     self.stack)
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 

@@ -466,7 +466,7 @@ class Port(neutron.NeutronResource):
 
         props = {'fixed_ips': []}
         if convergence:
-            existing_port, stack = resource.Resource.load(
+            existing_port, rsrc_owning_stack, stack = resource.Resource.load(
                 prev_port.context, prev_port.replaced_by, True,
                 prev_port.stack.cache_data
             )
