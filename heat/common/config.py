@@ -162,7 +162,12 @@ engine_opts = [
                 default=False,
                 help=_('Enables engine with convergence architecture. All '
                        'stacks with this option will be created using '
-                       'convergence engine .')),
+                       'convergence engine.')),
+    cfg.BoolOpt('observe_on_update',
+                default=False,
+                help=_('On update, enables heat to collect existing resource '
+                       'properties from reality and converge to '
+                       'updated template.')),
     cfg.StrOpt('default_software_config_transport',
                choices=['POLL_SERVER_CFN',
                         'POLL_SERVER_HEAT',
