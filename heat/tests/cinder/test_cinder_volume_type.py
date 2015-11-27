@@ -10,7 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+import collections
 import mock
 import six
 
@@ -51,9 +51,11 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         cinder.return_value = self.cinderclient
         self.volume_types = self.cinderclient.volume_types
         self.volume_type_access = self.cinderclient.volume_type_access
-        self.keystoneclient = mock.MagicMock()
-        self.my_volume_type.keystone = mock.MagicMock()
-        self.my_volume_type.keystone.return_value = self.keystoneclient
+        keystoneclient = self.stack.clients.client_plugin('keystone').client()
+        keystoneclient.client = mock.MagicMock()
+        keystoneclient.client.projects = mock.MagicMock()
+        self.project_list = mock.MagicMock()
+        keystoneclient.client.projects.get = self.project_list
 
     def test_resource_mapping(self):
         mapping = cinder_volume_type.resource_mapping()
@@ -71,8 +73,9 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.my_volume_type.t['Properties']['is_public'] = is_public
         if projects:
             self.my_volume_type.t['Properties']['projects'] = projects
-            self.keystoneclient.get_project_id.side_effect = [
-                p for p in projects]
+            project = collections.namedtuple('Project', ['id'])
+            stub_projects = [project(p) for p in projects]
+            self.project_list.side_effect = [p for p in stub_projects]
         self.my_volume_type.handle_create()
         self.volume_types.create.assert_called_once_with(
             name='volumeBackend', is_public=is_public, description=None)
@@ -133,25 +136,29 @@ class CinderVolumeTypeTest(common.HeatTestCase):
     def test_volume_type_update_projects(self):
         self.my_volume_type.resource_id = '8aeaa446459a4d3196bc573fc252800b'
         prop_diff = {'projects': ['id2', 'id3']}
-        old_access = {
-            'volume_type_access': [
-                {'volume_type_id': self.my_volume_type.resource_id,
-                 'project_id': 'id1'},
-                {'volume_type_id': self.my_volume_type.resource_id,
-                 'project_id': 'id2'}
-            ]}
+
+        class Access(object):
+            def __init__(self, idx, project):
+                self.volume_type_id = idx
+                self.project_id = project
+                self._info = {'volume_type_id': idx,
+                              'project_id': project}
+
+        old_access = [Access(self.my_volume_type.resource_id, 'id1'),
+                      Access(self.my_volume_type.resource_id, 'id2')]
 
         self.patchobject(self.volume_type_access, 'list',
                          return_value=old_access)
         self.patchobject(self.volume_type_access, 'remove_project_access')
-        self.keystoneclient.get_project_id.return_value = 'id3'
+        project = collections.namedtuple('Project', ['id'])
+        self.project_list.return_value = project('id3')
         self.my_volume_type.handle_update(json_snippet=None,
                                           tmpl_diff=None,
                                           prop_diff=prop_diff)
 
         self.volume_type_access.remove_project_access.assert_called_once_with(
             self.my_volume_type.resource_id, 'id1')
-        self.keystoneclient.get_project_id.assert_called_once_with('id3')
+        self.project_list.assert_called_once_with('id3')
         self.volume_type_access.add_project_access.assert_called_once_with(
             self.my_volume_type.resource_id, 'id3')
 
