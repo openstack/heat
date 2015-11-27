@@ -341,7 +341,7 @@ class StackTest(common.HeatTestCase):
                              use_stored_context=False,
                              username=mox.IgnoreArg(),
                              convergence=False,
-                             current_traversal=None,
+                             current_traversal=self.stack.current_traversal,
                              tags=mox.IgnoreArg(),
                              prev_raw_template_id=None,
                              current_deps=None, cache_data=None)
@@ -2272,23 +2272,20 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl, convergence=True)
         tmpl_stack.store()
         tmpl_stack.action = tmpl_stack.CREATE
         tmpl_stack.status = tmpl_stack.IN_PROGRESS
         tmpl_stack.current_traversal = 'some-traversal'
-        tmpl_stack.mark_complete('some-traversal')
+        tmpl_stack.mark_complete()
         self.assertEqual(tmpl_stack.prev_raw_template_id,
                          None)
         self.assertFalse(mock_tmpl_delete.called)
         self.assertFalse(mock_stack_delete.called)
         self.assertEqual(tmpl_stack.status, tmpl_stack.COMPLETE)
 
-    @mock.patch.object(stack_object.Stack, 'delete')
-    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
-    @mock.patch.object(stack.Stack, 'store')
-    def test_mark_complete_update(self, mock_store, mock_tmpl_delete,
-                                  mock_stack_delete):
+    @mock.patch.object(stack.Stack, 'purge_db')
+    def test_mark_complete_update(self, mock_purge_db):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
@@ -2296,49 +2293,35 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
-        tmpl_stack.id = 2
-        tmpl_stack.t.id = 2
+        cfg.CONF.set_default('convergence_engine', True)
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl, convergence=True)
         tmpl_stack.prev_raw_template_id = 1
         tmpl_stack.action = tmpl_stack.UPDATE
         tmpl_stack.status = tmpl_stack.IN_PROGRESS
         tmpl_stack.current_traversal = 'some-traversal'
-        tmpl_stack.mark_complete('some-traversal')
-        self.assertEqual(tmpl_stack.prev_raw_template_id,
-                         None)
-        self.assertFalse(mock_stack_delete.called)
-        mock_tmpl_delete.assert_called_once_with(self.ctx, 1)
-        self.assertEqual(tmpl_stack.status, tmpl_stack.COMPLETE)
+        tmpl_stack.store()
+        tmpl_stack.mark_complete()
+        self.assertTrue(mock_purge_db.called)
 
-    @mock.patch.object(stack_object.Stack, 'delete')
-    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
-    @mock.patch.object(stack.Stack, 'store')
-    def test_mark_complete_update_delete(self, mock_store, mock_tmpl_delete,
-                                         mock_stack_delete):
+    @mock.patch.object(stack.Stack, 'purge_db')
+    def test_mark_complete_update_delete(self, mock_purge_db):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Description': 'Empty Template'
         })
 
-        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
-        tmpl_stack.id = 2
-        tmpl_stack.t.id = 2
+        cfg.CONF.set_default('convergence_engine', True)
+        tmpl_stack = stack.Stack(self.ctx, 'test', tmpl, convergence=True)
         tmpl_stack.prev_raw_template_id = 1
         tmpl_stack.action = tmpl_stack.DELETE
         tmpl_stack.status = tmpl_stack.IN_PROGRESS
         tmpl_stack.current_traversal = 'some-traversal'
-        tmpl_stack.mark_complete('some-traversal')
-        self.assertEqual(tmpl_stack.prev_raw_template_id,
-                         None)
-        mock_tmpl_delete.assert_called_once_with(self.ctx, 1)
-        mock_stack_delete.assert_called_once_with(self.ctx, 2)
-        self.assertEqual(tmpl_stack.status, tmpl_stack.COMPLETE)
+        tmpl_stack.store()
+        tmpl_stack.mark_complete()
+        self.assertTrue(mock_purge_db.called)
 
-    @mock.patch.object(stack_object.Stack, 'delete')
-    @mock.patch.object(raw_template_object.RawTemplate, 'delete')
-    @mock.patch.object(stack.Stack, 'store')
-    def test_mark_complete_stale_traversal(self, mock_store, mock_tmpl_delete,
-                                           mock_stack_delete):
+    @mock.patch.object(stack.Stack, 'purge_db')
+    def test_mark_complete_stale_traversal(self, mock_purge_db):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
@@ -2347,12 +2330,11 @@ class StackTest(common.HeatTestCase):
         })
 
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
-        tmpl_stack.current_traversal = 'new-traversal'
-        tmpl_stack.mark_complete('old-traversal')
-        self.assertFalse(mock_tmpl_delete.called)
-        self.assertFalse(mock_stack_delete.called)
-        self.assertIsNone(tmpl_stack.prev_raw_template_id)
-        self.assertFalse(mock_store.called)
+        tmpl_stack.store()
+        # emulate stale traversal
+        tmpl_stack.current_traversal = 'old-traversal'
+        tmpl_stack.mark_complete()
+        self.assertFalse(mock_purge_db.called)
 
     @mock.patch.object(function, 'validate')
     def test_validate_assertion_exception_rethrow(self, func_val):
@@ -2434,6 +2416,73 @@ class StackTest(common.HeatTestCase):
     def test_update_exception_handler_force_cancel_no_rollback(self):
         exc = stack.ForcedCancel(with_rollback=False)
         self.update_exception_handler(exc, disable_rollback=True)
+
+    def test_store_generates_new_traversal_id_for_new_stack(self):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+        self.stack = stack.Stack(utils.dummy_context(),
+                                 'test_stack', tmpl, convergence=True)
+        self.assertIsNone(self.stack.current_traversal)
+        self.stack.store()
+        self.assertIsNotNone(self.stack.current_traversal)
+
+    @mock.patch.object(stack_object.Stack, 'select_and_update')
+    def test_store_uses_traversal_id_for_updating_db(self, mock_sau):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+        self.stack = stack.Stack(utils.dummy_context(),
+                                 'test_stack', tmpl, convergence=True)
+        mock_sau.return_value = True
+        self.stack.id = 1
+        self.stack.current_traversal = 1
+        stack_id = self.stack.store()
+        mock_sau.assert_called_once_with(mock.ANY, 1, mock.ANY, exp_trvsl=1)
+        self.assertEqual(1, stack_id)
+
+        # ensure store uses given expected traversal ID
+        stack_id = self.stack.store(exp_trvsl=2)
+        self.assertEqual(1, stack_id)
+        mock_sau.assert_called_with(mock.ANY, 1, mock.ANY, exp_trvsl=2)
+
+    @mock.patch.object(stack_object.Stack, 'select_and_update')
+    def test_store_db_update_failure(self, mock_sau):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+        self.stack = stack.Stack(utils.dummy_context(),
+                                 'test_stack', tmpl, convergence=True)
+        mock_sau.return_value = False
+        self.stack.id = 1
+        stack_id = self.stack.store()
+        self.assertIsNone(stack_id)
+
+    @mock.patch.object(stack_object.Stack, 'select_and_update')
+    def test_state_set_uses_curr_traversal_for_updating_db(self, mock_sau):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+        self.stack = stack.Stack(utils.dummy_context(),
+                                 'test_stack', tmpl, convergence=True)
+        self.stack.id = 1
+        self.stack.current_traversal = 'curr-traversal'
+        self.stack.store()
+        self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
+        mock_sau.assert_called_once_with(mock.ANY, 1, mock.ANY,
+                                         exp_trvsl='curr-traversal')
 
 
 class StackKwargsForCloningTest(common.HeatTestCase):

@@ -503,7 +503,7 @@ class Stack(collections.Mapping):
         return stack
 
     @profiler.trace('Stack.store', hide_args=False)
-    def store(self, backup=False):
+    def store(self, backup=False, exp_trvsl=None):
         """Store the stack in the database and return its ID.
 
         If self.id is set, we update the existing stack.
@@ -519,7 +519,19 @@ class Stack(collections.Mapping):
             s['raw_template_id'] = self.t.id
 
         if self.id:
-            stack_object.Stack.update_by_id(self.context, self.id, s)
+            if exp_trvsl is None:
+                exp_trvsl = self.current_traversal
+
+            if self.convergence:
+                # do things differently for convergence
+                updated = stack_object.Stack.select_and_update(
+                    self.context, self.id, s, exp_trvsl=exp_trvsl)
+
+                if not updated:
+                    return None
+            else:
+                stack_object.Stack.update_by_id(self.context, self.id, s)
+
         else:
             if not self.user_creds_id:
                 # Create a context containing a trust_id and trustor_user_id
@@ -532,6 +544,11 @@ class Stack(collections.Mapping):
                     new_creds = ucreds_object.UserCreds.create(self.context)
                 s['user_creds_id'] = new_creds.id
                 self.user_creds_id = new_creds.id
+
+            if self.convergence:
+                    # create a traversal ID
+                    self.current_traversal = uuidutils.generate_uuid()
+                    s['current_traversal'] = self.current_traversal
 
             new_s = stack_object.Stack.create(self.context, s)
             self.id = new_s.id
@@ -748,8 +765,16 @@ class Stack(collections.Mapping):
                                            self.CREATE):
             # if convergence and stack operation is create/update/delete,
             # stack lock is not used, hence persist state
-            self._persist_state()
-            return
+            updated = self._persist_state()
+            if not updated:
+                # Possibly failed concurrent update
+                LOG.warn(_LW("Failed to set state of stack %(name)s with"
+                             " traversal ID %(trvsl_id)s, to"
+                             " %(action)s_%(status)s"),
+                         {'name': self.name,
+                          'trvsl_id': self.current_traversal,
+                          'action': action, 'status': status})
+            return updated
 
         # Persist state to db only if status == IN_PROGRESS
         # or action == self.DELETE/self.ROLLBACK. Else, it would
@@ -768,7 +793,14 @@ class Stack(collections.Mapping):
                       'status': self.status,
                       'status_reason': self.status_reason}
             self._send_notification_and_add_event()
-            stack.update_and_save(values)
+            if self.convergence:
+                # do things differently for convergence
+                updated = stack_object.Stack.select_and_update(
+                    self.context, self.id, values,
+                    exp_trvsl=self.current_traversal)
+                return updated
+            else:
+                    stack.update_and_save(values)
 
     def _send_notification_and_add_event(self):
         notification.send(self)
@@ -1023,9 +1055,6 @@ class Stack(collections.Mapping):
         self.reset_dependencies()
         self._resources = None
 
-        previous_traversal = self.current_traversal
-        self.current_traversal = uuidutils.generate_uuid()
-
         if action is not self.CREATE:
             self.updated_time = oslo_timeutils.utcnow()
 
@@ -1041,15 +1070,27 @@ class Stack(collections.Mapping):
             else:
                 stack_tag_object.StackTagList.delete(self.context, self.id)
 
-        self.store()
+        self.action = action
+        self.status = self.IN_PROGRESS
+        self.status_reason = 'Stack %s started' % self.action
+
+        # generate new traversal and store
+        previous_traversal = self.current_traversal
+        self.current_traversal = uuidutils.generate_uuid()
+        # we expect to update the stack having previous traversal ID
+        stack_id = self.store(exp_trvsl=previous_traversal)
+        if stack_id is None:
+            LOG.warn(_LW("Failed to store stack %(name)s with traversal ID"
+                         " %(trvsl_id)s, aborting stack %(action)s"),
+                     {'name': self.name, 'trvsl_id': previous_traversal,
+                      'action': self.action})
+            return
 
         # delete the prev traversal sync_points
         if previous_traversal:
             sync_point.delete_all(self.context, self.id, previous_traversal)
 
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
-        self.state_set(action, self.IN_PROGRESS,
-                       'Stack %s started' % action)
 
         self._converge_create_or_update()
 
@@ -1061,7 +1102,14 @@ class Stack(collections.Mapping):
         self.current_deps = {
             'edges': [[rqr, rqd] for rqr, rqd in
                       self.convergence_dependencies.graph().edges()]}
-        self.store()
+        stack_id = self.store()
+        if stack_id is None:
+            # Failed concurrent update
+            LOG.warn(_LW("Failed to store stack %(name)s with traversal ID"
+                         " %(trvsl_id)s, aborting stack %(action)s"),
+                     {'name': self.name, 'trvsl_id': self.current_traversal,
+                      'action': self.action})
+            return
 
         LOG.info(_LI('convergence_dependencies: %s'),
                  self.convergence_dependencies)
@@ -1077,7 +1125,7 @@ class Stack(collections.Mapping):
 
         leaves = set(self.convergence_dependencies.leaves())
         if not any(leaves):
-            self.mark_complete(self.current_traversal)
+            self.mark_complete()
         else:
             for rsrc_id, is_update in self.convergence_dependencies.leaves():
                 if is_update:
@@ -1099,7 +1147,14 @@ class Stack(collections.Mapping):
         else:
             rollback_tmpl = tmpl.Template.load(self.context, old_tmpl_id)
             self.prev_raw_template_id = None
-            self.store()
+            stack_id = self.store()
+            if stack_id is None:
+                # Failed concurrent update
+                LOG.warn(_LW("Failed to store stack %(name)s with traversal ID"
+                             " %(trvsl_id)s, not trigerring rollback."),
+                         {'name': self.name,
+                          'trvsl_id': self.current_traversal})
+                return
 
         self.converge_stack(rollback_tmpl, action=self.ROLLBACK)
 
@@ -1758,21 +1813,23 @@ class Stack(collections.Mapping):
         attrs = self.cache_data.get(resource_name, {}).get('attributes', {})
         return attrs
 
-    def mark_complete(self, traversal_id):
+    def mark_complete(self):
         """Mark the update as complete.
 
         This currently occurs when all resources have been updated; there may
         still be resources being cleaned up, but the Stack should now be in
         service.
         """
-        if traversal_id != self.current_traversal:
-            return
 
         LOG.info(_LI('[%(name)s(%(id)s)] update traversal %(tid)s complete'),
-                 {'name': self.name, 'id': self.id, 'tid': traversal_id})
+                 {'name': self.name, 'id': self.id,
+                  'tid': self.current_traversal})
 
         reason = 'Stack %s completed successfully' % self.action
-        self.state_set(self.action, self.COMPLETE, reason)
+        updated = self.state_set(self.action, self.COMPLETE, reason)
+        if not updated:
+            return
+
         self.purge_db()
 
     def purge_db(self):
@@ -1787,7 +1844,14 @@ class Stack(collections.Mapping):
                 self.status != self.FAILED):
             prev_tmpl_id = self.prev_raw_template_id
             self.prev_raw_template_id = None
-            self.store()
+            stack_id = self.store()
+            if stack_id is None:
+                # Failed concurrent update
+                LOG.warn(_LW("Failed to store stack %(name)s with traversal ID"
+                             " %(trvsl_id)s, aborting stack purge"),
+                         {'name': self.name,
+                          'trvsl_id': self.current_traversal})
+                return
             raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
 
         sync_point.delete_all(self.context, self.id, self.current_traversal)

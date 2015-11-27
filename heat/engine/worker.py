@@ -110,7 +110,9 @@ class WorkerService(service.Service):
         stack.rollback()
 
     def _handle_failure(self, cnxt, stack, failure_reason):
-        stack.state_set(stack.action, stack.FAILED, failure_reason)
+        updated = stack.state_set(stack.action, stack.FAILED, failure_reason)
+        if not updated:
+            return
 
         if (not stack.disable_rollback and
                 stack.action in (stack.CREATE, stack.ADOPT, stack.UPDATE)):
@@ -118,13 +120,8 @@ class WorkerService(service.Service):
         else:
             stack.purge_db()
 
-    def _handle_resource_failure(self, cnxt, stack_id, traversal_id,
-                                 failure_reason):
+    def _handle_resource_failure(self, cnxt, stack_id, failure_reason):
         stack = parser.Stack.load(cnxt, stack_id=stack_id)
-        # make sure no new stack operation was triggered
-        if stack.current_traversal != traversal_id:
-            return
-
         self._handle_failure(cnxt, stack, failure_reason)
 
     def _handle_stack_timeout(self, cnxt, stack):
@@ -183,8 +180,7 @@ class WorkerService(service.Service):
         except exception.ResourceFailure as ex:
             reason = 'Resource %s failed: %s' % (rsrc.action,
                                                  six.text_type(ex))
-            self._handle_resource_failure(
-                cnxt, stack.id, current_traversal, reason)
+            self._handle_resource_failure(cnxt, stack.id, reason)
         except scheduler.Timeout:
             # reload the stack to verify current traversal
             stack = parser.Stack.load(cnxt, stack_id=stack.id)
@@ -345,7 +341,7 @@ def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
         return
 
     def mark_complete(stack_id, data):
-        stack.mark_complete(current_traversal)
+        stack.mark_complete()
 
     sender_key = (sender_id, is_update)
     sync_point.sync(cnxt, stack.id, current_traversal, True,
