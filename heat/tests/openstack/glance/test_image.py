@@ -221,3 +221,59 @@ class GlanceImageTest(common.HeatTestCase):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          self.my_image.FnGetAtt('show'))
         self.images.get.assert_called_once_with('test_image_id')
+
+    def test_image_get_live_state_v1(self):
+        self._test_image_get_live_state(1.0)
+
+    def test_image_get_live_state_v2(self):
+        self._test_image_get_live_state(2.0)
+
+    def _test_image_get_live_state(self, version):
+        self.glanceclient.version = version
+        self.my_image.resource_id = '1234'
+        images = mock.MagicMock()
+        show_value = {
+            'name': 'test',
+            'disk_format': 'qcow2',
+            'container_format': 'bare',
+            'protected': False,
+            'is_public': False,
+            'min_disk': 0,
+            'min_ram': 0,
+            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
+        }
+        if version == 1.0:
+            image = mock.MagicMock()
+            image.to_dict.return_value = show_value
+        else:
+            image = show_value
+        images.get.return_value = image
+        self.my_image.client().images = images
+        if version == 1.0:
+            self.my_image.properties.data.update(
+                {self.my_image.LOCATION: 'stub'})
+
+        reality = self.my_image.get_live_state(self.my_image.properties)
+        expected = {
+            'name': 'test',
+            'disk_format': 'qcow2',
+            'container_format': 'bare',
+            'protected': False,
+            'is_public': False,
+            'min_disk': 0,
+            'min_ram': 0,
+            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
+        }
+        if version == 1.0:
+            expected.update({'location': 'stub'})
+
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])
+
+    def test_get_live_state_resource_is_deleted(self):
+        self.my_image.resource_id = '1234'
+        self.my_image.client().images.get.return_value = {'status': 'deleted'}
+        self.assertRaises(exception.EntityNotFound,
+                          self.my_image.get_live_state,
+                          self.my_image.properties)
