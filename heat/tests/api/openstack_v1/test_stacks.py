@@ -2217,6 +2217,55 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_list_outputs(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'list_outputs', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
+        outputs = [
+            {'output_key': 'key1', 'description': 'description'},
+            {'output_key': 'key2', 'description': 'description1'}
+        ]
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_outputs', {'stack_identity': dict(identity)}),
+            version='1.19'
+        ).AndReturn(outputs)
+        self.m.ReplayAll()
+
+        response = self.controller.list_outputs(req, tenant_id=identity.tenant,
+                                                stack_name=identity.stack_name,
+                                                stack_id=identity.stack_id)
+
+        self.assertEqual({'outputs': outputs}, response)
+        self.m.VerifyAll()
+
+    def test_show_output(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show_output', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s/key' % identity)
+        output = {'output_key': 'key',
+                  'output_value': 'val',
+                  'description': 'description'}
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('show_output', {'output_key': 'key',
+                             'stack_identity': dict(identity)}),
+            version='1.19'
+        ).AndReturn(output)
+        self.m.ReplayAll()
+
+        response = self.controller.show_output(req, tenant_id=identity.tenant,
+                                               stack_name=identity.stack_name,
+                                               stack_id=identity.stack_id,
+                                               output_key='key')
+
+        self.assertEqual({'output': output}, response)
+        self.m.VerifyAll()
+
     def test_list_template_versions(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'list_template_versions', True)
         req = self._get('/template_versions')
