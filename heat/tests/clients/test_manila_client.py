@@ -15,6 +15,7 @@ import collections
 from manilaclient import exceptions
 import mock
 
+from heat.common import exception as heat_exception
 from heat.tests import common
 from heat.tests import utils
 
@@ -66,6 +67,7 @@ class ManilaClientPluginTests(common.HeatTestCase):
         # test that get_<method_name> is searching correctly
         get_method = getattr(self.manila_plugin, self.method_name)
         self.assertEqual(get_method("unique_id").name, "unique_name")
-        self.assertRaises(exceptions.NotFound, get_method, "non_exist")
+        self.assertRaises(heat_exception.EntityNotFound,
+                          get_method, "non_exist")
         self.assertRaises(exceptions.NoUniqueMatch, get_method,
                           "duplicated_name")
