@@ -134,11 +134,12 @@ class ResourceTypeTest(common.HeatTestCase):
         mock_iterable = mock.MagicMock(return_value=iter([info]))
         with mock.patch('heat.engine.environment.ResourceRegistry.iterable_by',
                         new=mock_iterable):
-            ex = self.assertRaises(exception.TemplateNotFound,
+            ex = self.assertRaises(exception.InvalidGlobalResource,
                                    function,
                                    self.ctx,
                                    type_name='ResourceWithWrongRefOnFile')
-            msg = 'Could not fetch remote template "not_existing.yaml"'
+            msg = ('There was an error loading the definition of the global '
+                   'resource type ResourceWithWrongRefOnFile.')
             self.assertIn(msg, six.text_type(ex))
 
     def test_resource_schema_no_template_file(self):

@@ -284,7 +284,7 @@ class ResourceGroup(stack_resource.StackResource):
         # make sure we can resolve the nested resource type
         try:
             self.stack.env.get_class(res_def.resource_type)
-        except exception.TemplateNotFound:
+        except exception.NotFound:
             # its a template resource
             pass
 

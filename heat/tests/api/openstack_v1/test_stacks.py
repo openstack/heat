@@ -2308,6 +2308,27 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
+    def test_resource_schema_faulty_template(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'resource_schema', True)
+        req = self._get('/resource_types/FaultyTemplate')
+        type_name = 'FaultyTemplate'
+
+        error = heat_exc.InvalidGlobalResource(type_name='FaultyTemplate')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('resource_schema', {'type_name': type_name})
+        ).AndRaise(tools.to_remote_error(error))
+        self.m.ReplayAll()
+
+        resp = tools.request_with_middleware(fault.FaultWrapper,
+                                             self.controller.resource_schema,
+                                             req, tenant_id=self.tenant,
+                                             type_name=type_name)
+        self.assertEqual(500, resp.json['code'])
+        self.assertEqual('InvalidGlobalResource', resp.json['error']['type'])
+        self.m.VerifyAll()
+
     def test_resource_schema_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'resource_schema', False)
         req = self._get('/resource_types/BogusResourceType')
