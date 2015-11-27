@@ -63,8 +63,7 @@ class ProviderNet(net.Net):
             properties.Schema.STRING,
             _('A string specifying physical network mapping for the '
               'network.'),
-            update_allowed=True,
-            required=True,
+            update_allowed=True
         ),
         PROVIDER_SEGMENTATION_ID: properties.Schema(
             properties.Schema.STRING,
