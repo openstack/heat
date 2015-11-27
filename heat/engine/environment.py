@@ -35,9 +35,11 @@ LOG = log.getLogger(__name__)
 
 
 HOOK_TYPES = (
-    HOOK_PRE_CREATE, HOOK_PRE_UPDATE, HOOK_PRE_DELETE
+    HOOK_PRE_CREATE, HOOK_PRE_UPDATE, HOOK_PRE_DELETE, HOOK_POST_CREATE,
+    HOOK_POST_UPDATE, HOOK_POST_DELETE
 ) = (
-    'pre-create', 'pre-update', 'pre-delete'
+    'pre-create', 'pre-update', 'pre-delete', 'post-create',
+    'post-update', 'post-delete'
 )
 
 RESTRICTED_ACTIONS = (UPDATE, REPLACE) = ('update', 'replace')

@@ -137,15 +137,16 @@ template::
        my_db_server:
          "OS::DBInstance": file:///home/mine/all_my_cool_templates/db.yaml
 
-Pause stack creation or update on a given resource
---------------------------------------------------
-If you want to debug your stack as it's being created or updated, or if you want
-to run it in phases, you can set ``pre-create`` and ``pre-update`` hooks in the
-``resources`` section of ``resource_registry``.
+Pause stack creation, update or deletion on a given resource
+------------------------------------------------------------
+If you want to debug your stack as it's being created, updated or deleted, or
+if you want to run it in phases, you can set ``pre-create``, ``pre-update``,
+``pre-delete``, ``post-create``, ``post-update`` and ``post-delete`` hooks in
+the ``resources`` section of ``resource_registry``.
 
-To set a hook, add either ``hooks: pre-create`` or ``hooks: pre-update`` to the
-resource's dictionary. You can also use ``[pre-create, pre-update]`` to stop
-on both actions.
+To set a hook, add either ``hooks: $hook_name`` (for example ``hooks:
+pre-update``) to the resource's dictionary. You can also use a list (``hooks:
+[pre-create, pre-update]``) to stop on several actions.
 
 You can combine hooks with other ``resources`` properties such as provider
 templates or type mapping::
@@ -175,8 +176,8 @@ resource name. For example, the following entry pauses while creating
       "*_server":
         hooks: pre-create
 
-Clear hooks by signaling the resource with ``{unset_hook: pre-create}``
-or ``{unset_hook: pre-update}``.
+Clear hooks by signaling the resource with ``{unset_hook: $hook_name}`` (for
+example ``{unset_hook: pre-update}``).
 
 Retrieving events
 -----------------

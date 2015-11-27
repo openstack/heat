@@ -790,7 +790,8 @@ class Resource(object):
             try:
                 yield self._do_action(action, self.properties.validate)
                 if action == self.CREATE:
-                    return
+                    first_failure = None
+                    break
                 else:
                     action = self.CREATE
             except exception.ResourceFailure as failure:
@@ -808,6 +809,10 @@ class Resource(object):
 
         if first_failure:
             raise first_failure
+
+        if self.stack.action == self.stack.CREATE:
+            yield self._break_if_required(
+                self.CREATE, environment.HOOK_POST_CREATE)
 
     def prepare_abandon(self):
         self.abandon_in_progress = True
@@ -1083,6 +1088,9 @@ class Resource(object):
                 self.state_set(action, self.FAILED, six.text_type(failure))
                 raise failure
             raise
+
+        yield self._break_if_required(
+            self.UPDATE, environment.HOOK_POST_UPDATE)
 
     def prepare_for_replace(self):
         """Prepare resource for replacing.
@@ -1380,6 +1388,10 @@ class Resource(object):
                 else:
                     action_args = []
                 yield self.action_handler_task(action, *action_args)
+
+        if self.stack.action == self.stack.DELETE:
+            yield self._break_if_required(
+                self.DELETE, environment.HOOK_POST_DELETE)
 
     @scheduler.wrappertask
     def destroy(self):

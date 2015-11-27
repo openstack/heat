@@ -384,6 +384,7 @@ class AccessKeyTest(common.HeatTestCase):
                           rsrc)
 
         rsrc._secret = None
+        rsrc._data = None
         self.assertEqual(self.fc.secret,
                          rsrc.FnGetAtt('SecretAccessKey'))
 
