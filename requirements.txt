@@ -49,7 +49,7 @@ python-troveclient>=1.2.0
 python-zaqarclient>=0.3.0
 pytz>=2013.6
 PyYAML>=3.1.0
-requests!=2.8.0,>=2.5.2
+requests>=2.8.1
 Routes!=2.0,!=2.1,>=1.12.3;python_version=='2.7'
 Routes!=2.0,>=1.12.3;python_version!='2.7'
 six>=1.9.0
