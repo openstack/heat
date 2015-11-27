@@ -60,11 +60,12 @@ deploy a single compute instance.
         image: F18-x86_64-cfntools
         flavor: m1.small
 
-Each HOT template has to include the *heat_template_version* key with value
-'2013-05-23' (the current version of HOT). While the *description* is optional,
-it is good practice to include some useful text that describes what users can do
-with the template. In case you want to provide a longer description that does
-not fit on a single line, you can provide multi-line text in YAML, for example:
+Each HOT template has to include the *heat_template_version* key with a valid
+version of HOT, e.g. 2015-10-15 (see :ref:`hot_spec_template_version` for a list
+of all versions). While the *description* is optional, it is good practice to
+include some useful text that describes what users can do with the template.
+In case you want to provide a longer description that does not fit on a single
+line, you can provide multi-line text in YAML, for example:
 
 .. code-block:: yaml
 
