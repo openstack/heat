@@ -18,7 +18,7 @@ from heat.common import heat_keystoneclient as hkc
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
-SERVICE_NAME = 'keystone'
+CLIENT_NAME = 'keystone'
 
 
 class KeystoneClientPlugin(client_plugin.ClientPlugin):
@@ -136,7 +136,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
 
 class KeystoneBaseConstraint(constraints.BaseCustomConstraint):
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
 
 
 class KeystoneRoleConstraint(KeystoneBaseConstraint):

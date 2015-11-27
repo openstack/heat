@@ -16,7 +16,10 @@
 from neutronclient.common import exceptions as qe
 
 from heat.common import exception
+from heat.engine.clients.os import nova
 from heat.engine import constraints
+
+CLIENT_NAME = 'neutron'
 
 
 class NetworkConstraint(constraints.BaseCustomConstraint):
@@ -27,12 +30,12 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, value):
         try:
-            client.client('neutron')
+            client.client(CLIENT_NAME)
         except Exception:
             # is not using neutron
-            client.client_plugin('nova').get_nova_network_id(value)
+            client.client_plugin(nova.CLIENT_NAME).get_nova_network_id(value)
         else:
-            neutron_plugin = client.client_plugin('neutron')
+            neutron_plugin = client.client_plugin(CLIENT_NAME)
             neutron_plugin.find_resourceid_by_name_or_id(
                 'network', value, cmd_resource=None)
 
@@ -46,7 +49,7 @@ class NeutronConstraint(constraints.BaseCustomConstraint):
     extension = None
 
     def validate_with_client(self, client, value):
-        neutron_plugin = client.client_plugin('neutron')
+        neutron_plugin = client.client_plugin(CLIENT_NAME)
         if (self.extension and
                 not neutron_plugin.has_extension(self.extension)):
             raise exception.EntityNotFound(entity='neutron extension',

@@ -29,6 +29,8 @@ IN_PROGRESS = 'in progress'
 
 MAX_EPOCH = 2147483647
 
+CLIENT_NAME = 'swift'
+
 
 class SwiftClientPlugin(client_plugin.ClientPlugin):
 
@@ -39,7 +41,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
 
         con = self.context
-        endpoint_type = self._get_client_option('swift', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'auth_version': '2.0',
             'tenant_name': con.tenant,
@@ -50,8 +52,8 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
             'preauthurl': self.url_for(service_type=self.OBJECT_STORE,
                                        endpoint_type=endpoint_type),
             'os_options': {'endpoint_type': endpoint_type},
-            'cacert': self._get_client_option('swift', 'ca_file'),
-            'insecure': self._get_client_option('swift', 'insecure')
+            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
         }
         return sc.Connection(**args)
 

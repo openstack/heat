@@ -20,7 +20,7 @@ from heat.engine import constraints
 client = importutils.try_import('monascaclient.client')
 monasca_exc = importutils.try_import('monascaclient.exc')
 
-SERVICE_NAME = 'monasca'
+CLIENT_NAME = 'monasca'
 
 
 class MonascaClientPlugin(client_plugin.ClientPlugin):
@@ -34,7 +34,7 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
         return client is not None
 
     def _create(self):
-        args = self._get_client_args(service_name=SERVICE_NAME,
+        args = self._get_client_args(service_name=CLIENT_NAME,
                                      service_type=self.MONITORING)
 
         return client.Client(
@@ -68,5 +68,5 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
 
 class MonascaNotificationConstraint(constraints.BaseCustomConstraint):
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_notification'

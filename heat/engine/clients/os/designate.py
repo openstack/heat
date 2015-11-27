@@ -20,7 +20,7 @@ from heat.common import exception as heat_exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
-SERVICE_NAME = 'designate'
+CLIENT_NAME = 'designate'
 
 
 class DesignateClientPlugin(client_plugin.ClientPlugin):
@@ -30,7 +30,7 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
     service_types = [DNS] = ['dns']
 
     def _create(self):
-        args = self._get_client_args(service_name='designate',
+        args = self._get_client_args(service_name=CLIENT_NAME,
                                      service_type=self.DNS)
 
         return client.Client(auth_url=args['auth_url'],
@@ -90,5 +90,5 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
 
 class DesignateDomainConstraint(constraints.BaseCustomConstraint):
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_domain_id'

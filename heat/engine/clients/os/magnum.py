@@ -18,7 +18,7 @@ from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
-SERVICE_NAME = 'magnum'
+CLIENT_NAME = 'magnum'
 
 
 class MagnumClientPlugin(client_plugin.ClientPlugin):
@@ -26,7 +26,7 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
     service_types = [CONTAINER] = ['container']
 
     def _create(self):
-        endpoint_type = self._get_client_option('magnum', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.CONTAINER,
                                 endpoint_type=endpoint_type)
 
@@ -56,5 +56,5 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
 
 class BaymodelConstraint(constraints.BaseCustomConstraint):
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_baymodel'
