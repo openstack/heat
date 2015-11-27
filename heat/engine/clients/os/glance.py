@@ -20,6 +20,8 @@ from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
+SERVICE_NAME = 'glance'
+
 
 class GlanceClientPlugin(client_plugin.ClientPlugin):
 
@@ -99,8 +101,5 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
 
 class ImageConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, value):
-        client.client_plugin('glance').get_image_id(value)
+    resource_client_name = SERVICE_NAME
+    resource_getter_name = 'get_image_id'

@@ -571,7 +571,9 @@ class BaseCustomConstraint(object):
     Subclass must provide `expected_exceptions` and implement
     `validate_with_client`.
     """
-    expected_exceptions = ()
+    expected_exceptions = (exception.EntityNotFound,)
+    resource_client_name = None
+    resource_getter_name = None
 
     _error_message = None
 
@@ -619,3 +621,12 @@ class BaseCustomConstraint(object):
             check_cache_or_validate_value.invalidate(cache_value_prefix,
                                                      value)
         return validation_result
+
+    def validate_with_client(self, client, resource_id):
+        if self.resource_client_name and self.resource_getter_name:
+            getattr(client.client_plugin(self.resource_client_name),
+                    self.resource_getter_name)(resource_id)
+        else:
+            raise exception.InvalidSchemaError(
+                message=_('Client name and resource getter name must be '
+                          'specified.'))

@@ -22,7 +22,7 @@ from heat.tests import common
 class MonascaNotificationConstraintTest(common.HeatTestCase):
     def test_expected_exceptions(self):
         self.assertEqual(
-            (heat_exception.EntityNotFound),
+            (heat_exception.EntityNotFound,),
             client_plugin.MonascaNotificationConstraint.expected_exceptions,
             "MonascaNotificationConstraint expected exceptions error")
 

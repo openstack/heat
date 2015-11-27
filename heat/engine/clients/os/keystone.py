@@ -18,6 +18,8 @@ from heat.common import heat_keystoneclient as hkc
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
+SERVICE_NAME = 'keystone'
+
 
 class KeystoneClientPlugin(client_plugin.ClientPlugin):
 
@@ -132,58 +134,43 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                                            name=region)
 
 
-class KeystoneRoleConstraint(constraints.BaseCustomConstraint):
+class KeystoneBaseConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, role):
-        client.client_plugin('keystone').get_role_id(role)
+    resource_client_name = SERVICE_NAME
 
 
-class KeystoneDomainConstraint(constraints.BaseCustomConstraint):
+class KeystoneRoleConstraint(KeystoneBaseConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, domain):
-        client.client_plugin('keystone').get_domain_id(domain)
+    resource_getter_name = 'get_role_id'
 
 
-class KeystoneProjectConstraint(constraints.BaseCustomConstraint):
+class KeystoneDomainConstraint(KeystoneBaseConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, project):
-        client.client_plugin('keystone').get_project_id(project)
+    resource_getter_name = 'get_domain_id'
 
 
-class KeystoneGroupConstraint(constraints.BaseCustomConstraint):
+class KeystoneProjectConstraint(KeystoneBaseConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, group):
-        client.client_plugin('keystone').get_group_id(group)
+    resource_getter_name = 'get_project_id'
 
 
-class KeystoneServiceConstraint(constraints.BaseCustomConstraint):
+class KeystoneGroupConstraint(KeystoneBaseConstraint):
+
+    resource_getter_name = 'get_group_id'
+
+
+class KeystoneServiceConstraint(KeystoneBaseConstraint):
 
     expected_exceptions = (exception.EntityNotFound,
                            exception.KeystoneServiceNameConflict,)
-
-    def validate_with_client(self, client, service):
-        client.client_plugin('keystone').get_service_id(service)
+    resource_getter_name = 'get_service_id'
 
 
-class KeystoneUserConstraint(constraints.BaseCustomConstraint):
+class KeystoneUserConstraint(KeystoneBaseConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, user):
-        client.client_plugin('keystone').get_user_id(user)
+    resource_getter_name = 'get_user_id'
 
 
-class KeystoneRegionConstraint(constraints.BaseCustomConstraint):
+class KeystoneRegionConstraint(KeystoneBaseConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, region):
-        client.client_plugin('keystone').get_region_id(region)
+    resource_getter_name = 'get_region_id'
