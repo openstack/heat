@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $EUID -ne 0 ]; then
-    echo "This script must be run as root."
+    echo "This script must be run as root." >&2
     exit
 fi
 
@@ -18,4 +18,4 @@ if [ $have_pip -eq 1 ]; then
 fi
 
 echo "pip-python not found. install package (probably python-pip) or run
-'easy_install pip', then rerun $0";
+'easy_install pip', then rerun $0" >&2;

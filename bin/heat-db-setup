@@ -152,7 +152,7 @@ then
 				exit 0
 				;;
 			*)
-				echo "Invalid response."
+				echo "Invalid response." >&2
 				exit 1
 		esac
 	fi
@@ -177,7 +177,7 @@ then
 				exit 0
 				;;
 			*)
-				echo "Invalid response."
+				echo "Invalid response." >&2
 				exit 1
 		esac
 	fi
@@ -208,14 +208,14 @@ then
 			if [ "${MYSQL_ROOT_PW}" = "${PW2}" ] ; then
 				PW_MATCH=1
 			else
-				echo "Passwords did not match."
+				echo "Passwords did not match." >&2
 			fi
 		done
 	fi
 
 	echo "UPDATE mysql.user SET password = password('${MYSQL_ROOT_PW}') WHERE user = 'root'; DELETE FROM mysql.user WHERE user = ''; flush privileges;" | mysql -u root
 	if ! [ $? -eq 0 ] ; then
-		echo "Failed to set password for 'root' MySQL user."
+		echo "Failed to set password for 'root' MySQL user." >&2
 		exit 1
 	fi
 elif [ ! "${MYSQL_ROOT_PW+defined}" ] ; then
@@ -235,7 +235,7 @@ fi
 echo "SELECT 1;" | mysql -u root ${MYSQL_ROOT_PW_ARG} > /dev/null
 if ! [ $? -eq 0 ]
 then
-	echo "Failed to connect to the MySQL server.  Please check your root user credentials."
+	echo "Failed to connect to the MySQL server.  Please check your root user credentials." >&2
 	exit 1
 fi
 echo "Verified connectivity to MySQL."
@@ -292,7 +292,7 @@ rm $log_conf
 echo "SELECT * FROM migrate_version;" | mysql -u heat --password=${MYSQL_HEAT_PW} heat > /dev/null
 if ! [ $? -eq 0 ]
 then
-	echo "Final sanity check failed."
+	echo "Final sanity check failed." >&2
 	exit 1
 fi
 

@@ -23,7 +23,7 @@ cleanup() {
     set +o errexit
 
     echo "*********************************************************************"
-    echo "ERROR: Abort $0"
+    echo "ERROR: Abort $0" >&2
     echo "*********************************************************************"
 
     # Kill ourselves to signal any calling process
