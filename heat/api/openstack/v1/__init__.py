@@ -234,6 +234,12 @@ class API(wsgi.Router):
                         'method': 'DELETE'
                     },
                     {
+                        'name': 'stack_export',
+                        'url': '/stacks/{stack_name}/{stack_id}/export',
+                        'action': 'export',
+                        'method': 'GET'
+                    },
+                    {
                         'name': 'stack_snapshot',
                         'url': '/stacks/{stack_name}/{stack_id}/snapshots',
                         'action': 'snapshot',

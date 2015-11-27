@@ -527,6 +527,14 @@ class StackController(object):
         return self.rpc_client.abandon_stack(req.context,
                                              identity)
 
+    @util.identified_stack
+    def export(self, req, identity):
+        """Export specified stack.
+
+        Return stack data in JSON format.
+        """
+        return self.rpc_client.export_stack(req.context, identity)
+
     @util.policy_enforce
     def validate_template(self, req, body):
         """Implements the ValidateTemplate API action.
