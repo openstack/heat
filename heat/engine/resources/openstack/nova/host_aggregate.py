@@ -73,6 +73,7 @@ class HostAggregate(resource.Resource):
             _('Arbitrary key/value metadata to store information '
               'for aggregate.'),
             update_allowed=True,
+            default={}
         ),
 
     }
@@ -99,25 +100,31 @@ class HostAggregate(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            metadata = {}
-            new_hosts = []
+            aggregate = self.client().aggregates.get(self.resource_id)
             if self.HOSTS in prop_diff:
                 new_hosts = prop_diff.pop(self.HOSTS)
+                old_hosts = aggregate.hosts
+                add_hosts, remove_hosts = self._find_diff(new_hosts, old_hosts)
+                for host in add_hosts:
+                    aggregate.add_host(host)
+                for host in remove_hosts:
+                    aggregate.remove_host(host)
             if self.METADATA in prop_diff:
                 metadata = prop_diff.pop(self.METADATA)
+                if metadata:
+                    aggregate.set_metadata(metadata)
 
-            aggregate = self.client().aggregates.get(self.resource_id)
             if prop_diff:
                 aggregate.update(prop_diff)
-            if metadata:
-                aggregate.set_metadata(metadata)
 
-            old_hosts = self.properties[self.HOSTS]
-            add_hosts, remove_hosts = self._find_diff(new_hosts, old_hosts)
-            for host in add_hosts:
-                aggregate.add_host(host)
-            for host in remove_hosts:
-                aggregate.remove_host(host)
+    def handle_delete(self):
+        if self.resource_id is None:
+            return
+
+        aggregate = self.client().aggregates.get(self.resource_id)
+        for host in aggregate.hosts:
+            aggregate.remove_host(host)
+        super(HostAggregate, self).handle_delete()
 
 
 def resource_mapping():
