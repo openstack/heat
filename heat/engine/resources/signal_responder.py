@@ -394,6 +394,7 @@ class SignalResponder(stack_user.StackUser):
             queue = zaqar.queue(self._get_zaqar_signal_queue_id())
         except Exception as ex:
             self.client_plugin('zaqar').ignore_not_found(ex)
+            return
         messages = list(queue.pop())
         for message in messages:
             self.signal(details=message.body)
