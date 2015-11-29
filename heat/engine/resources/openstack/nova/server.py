@@ -415,6 +415,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
               'create a dedicated zaqar queue and post the metadata '
               'for polling.'),
             default=cfg.CONF.default_software_config_transport,
+            update_allowed=True,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
             ]
@@ -550,18 +551,29 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         # This method is overridden by the derived CloudServer resource
         return self.properties[self.CONFIG_DRIVE]
 
-    def _populate_deployments_metadata(self, meta):
+    def _populate_deployments_metadata(self, meta, props):
         meta['deployments'] = meta.get('deployments', [])
         meta['os-collect-config'] = meta.get('os-collect-config', {})
-        if self.transport_poll_server_heat():
-            meta['os-collect-config'].update({'heat': {
+        occ = meta['os-collect-config']
+        # set existing values to None to override any boot-time config
+        occ_keys = ('heat', 'zaqar', 'cfn', 'request')
+        for occ_key in occ_keys:
+            if occ_key not in occ:
+                continue
+            existing = occ[occ_key]
+            for k in existing:
+                existing[k] = None
+
+        if self.transport_poll_server_heat(props):
+            occ.update({'heat': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
                 'stack_id': self.stack.identifier().stack_path(),
                 'resource_name': self.name}})
-        if self.transport_zaqar_message():
+
+        elif self.transport_zaqar_message(props):
             queue_id = self.physical_resource_name()
             self.data_set('metadata_queue_id', queue_id)
             zaqar_plugin = self.client_plugin('zaqar')
@@ -569,22 +581,26 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 self.stack.stack_user_project_id)
             queue = zaqar.queue(queue_id)
             queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
-            meta['os-collect-config'].update({'zaqar': {
+            occ.update({'zaqar': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
                 'queue_id': queue_id}})
-        elif self.transport_poll_server_cfn():
-            meta['os-collect-config'].update({'cfn': {
+
+        elif self.transport_poll_server_cfn(props):
+            occ.update({'cfn': {
                 'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
                 'access_key_id': self.access_key,
                 'secret_access_key': self.secret_key,
                 'stack_name': self.stack.name,
                 'path': '%s.Metadata' % self.name}})
-        elif self.transport_poll_temp_url():
+
+        elif self.transport_poll_temp_url(props):
             container = self.physical_resource_name()
-            object_name = str(uuid.uuid4())
+            object_name = self.data().get('metadata_object_name')
+            if not object_name:
+                object_name = str(uuid.uuid4())
 
             self.client('swift').put_container(container)
 
@@ -595,10 +611,11 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self.data_set('metadata_put_url', put_url)
             self.data_set('metadata_object_name', object_name)
 
-            meta['os-collect-config'].update({'request': {
+            occ.update({'request': {
                 'metadata_url': url}})
             self.client('swift').put_object(
                 container, object_name, jsonutils.dumps(meta))
+
         self.metadata_set(meta)
 
     def _register_access_key(self):
@@ -608,20 +625,20 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         def access_allowed(resource_name):
             return resource_name == self.name
 
-        if self.transport_poll_server_cfn():
+        if self.access_key is not None:
             self.stack.register_access_allowed_handler(
                 self.access_key, access_allowed)
-        elif self.transport_poll_server_heat():
+        if self._get_user_id() is not None:
             self.stack.register_access_allowed_handler(
                 self._get_user_id(), access_allowed)
 
-    def _create_transport_credentials(self):
-        if self.transport_poll_server_cfn():
+    def _create_transport_credentials(self, props):
+        if self.transport_poll_server_cfn(props):
             self._create_user()
             self._create_keypair()
 
-        elif (self.transport_poll_server_heat() or
-              self.transport_zaqar_message()):
+        elif (self.transport_poll_server_heat(props) or
+              self.transport_zaqar_message(props)):
             self.password = uuid.uuid4().hex
             self._create_user()
 
@@ -653,20 +670,20 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return self.properties[
             self.USER_DATA_FORMAT] == self.SOFTWARE_CONFIG
 
-    def transport_poll_server_cfn(self):
-        return self.properties[
+    def transport_poll_server_cfn(self, props):
+        return props[
             self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_SERVER_CFN
 
-    def transport_poll_server_heat(self):
-        return self.properties[
+    def transport_poll_server_heat(self, props):
+        return props[
             self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_SERVER_HEAT
 
-    def transport_poll_temp_url(self):
-        return self.properties[
+    def transport_poll_temp_url(self, props):
+        return props[
             self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_TEMP_URL
 
-    def transport_zaqar_message(self):
-        return self.properties.get(
+    def transport_zaqar_message(self, props):
+        return props.get(
             self.SOFTWARE_CONFIG_TRANSPORT) == self.ZAQAR_MESSAGE
 
     def get_software_config(self, ud_content):
@@ -691,8 +708,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         metadata = self.metadata_get(True) or {}
 
         if self.user_data_software_config():
-            self._create_transport_credentials()
-            self._populate_deployments_metadata(metadata)
+            self._create_transport_credentials(self.properties)
+            self._populate_deployments_metadata(metadata, self.properties)
 
         userdata = self.client_plugin().build_userdata(
             metadata,
@@ -1071,10 +1088,40 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if self.NETWORKS in prop_diff:
             updaters.extend(self._update_networks(server, prop_diff))
 
+        if self.SOFTWARE_CONFIG_TRANSPORT in prop_diff:
+            self._update_software_config_transport(prop_diff)
+
         # NOTE(pas-ha) optimization is possible (starting first task
         # right away), but we'd rather not, as this method already might
         # have called several APIs
         return updaters
+
+    def _update_software_config_transport(self, prop_diff):
+        if not self.user_data_software_config():
+            return
+        try:
+            metadata = self.metadata_get(True) or {}
+            self._create_transport_credentials(prop_diff)
+            self._populate_deployments_metadata(metadata, prop_diff)
+            # push new metadata to all sources by creating a dummy
+            # deployment
+            sc = self.rpc_client().create_software_config(
+                self.context, 'ignored', 'ignored', '')
+            sd = self.rpc_client().create_software_deployment(
+                self.context, self.resource_id, sc['id'])
+            self.rpc_client().delete_software_deployment(
+                self.context, sd['id'])
+            self.rpc_client().delete_software_config(
+                self.context, sc['id'])
+        except Exception as e:
+            # Updating the software config transport is on a best-effort
+            # basis as any raised exception here would result in the resource
+            # going into an ERROR state, which will be replaced on the next
+            # stack update. This is not desirable for a server. The old
+            # transport will continue to work, and the new transport may work
+            # despite exceptions in the above block.
+            LOG.error("Error while updating software config transport")
+            LOG.exception(e)
 
     def check_update_complete(self, updaters):
         '''Push all updaters to completion in list order.'''
