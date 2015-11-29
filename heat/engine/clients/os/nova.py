@@ -230,7 +230,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
-        :raises: exception.FlavorMissing
+        :raises: exception.EntityNotFound
         """
         flavor_id = None
         flavor_list = self.client().flavors.list()
@@ -242,7 +242,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                 flavor_id = o.id
                 break
         if flavor_id is None:
-            raise exception.FlavorMissing(flavor_id=flavor)
+            raise exception.EntityNotFound(entity='Flavor', name=flavor)
         return flavor_id
 
     def get_host(self, host_name):
@@ -702,7 +702,7 @@ class KeypairConstraint(constraints.BaseCustomConstraint):
 
 class FlavorConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.FlavorMissing,)
+    expected_exceptions = (exception.EntityNotFound,)
 
     def validate_with_client(self, client, flavor):
         client.client_plugin('nova').get_flavor_id(flavor)

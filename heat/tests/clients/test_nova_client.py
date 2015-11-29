@@ -82,8 +82,9 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.nova_client.flavors.list.return_value = [my_flavor]
         self.assertEqual(flav_id, self.nova_plugin.get_flavor_id(flav_name))
         self.assertEqual(flav_id, self.nova_plugin.get_flavor_id(flav_id))
-        self.assertRaises(exception.FlavorMissing,
-                          self.nova_plugin.get_flavor_id, 'noflavor')
+        ex = self.assertRaises(exception.EntityNotFound,
+                               self.nova_plugin.get_flavor_id, 'noflavor')
+        self.assertEqual('Flavor', ex.kwargs.get('entity'))
         self.assertEqual(3, self.nova_client.flavors.list.call_count)
         self.assertEqual([(), (), ()],
                          self.nova_client.flavors.list.call_args_list)
