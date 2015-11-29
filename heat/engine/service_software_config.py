@@ -103,14 +103,12 @@ class SoftwareConfigService(service.Service):
         for rd in rs.data:
             if rd.key == 'metadata_put_url':
                 metadata_put_url = rd.value
-                break
-            elif rd.key == 'metadata_queue_id':
+            if rd.key == 'metadata_queue_id':
                 metadata_queue_id = rd.value
-                break
         if metadata_put_url:
             json_md = jsonutils.dumps(md)
             requests.put(metadata_put_url, json_md)
-        elif metadata_queue_id:
+        if metadata_queue_id:
             zaqar_plugin = cnxt.clients.client_plugin('zaqar')
             zaqar = zaqar_plugin.create_for_tenant(sd.stack_user_project_id)
             queue = zaqar.queue(metadata_queue_id)
