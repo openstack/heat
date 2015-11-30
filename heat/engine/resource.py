@@ -429,9 +429,14 @@ class Resource(object):
         """
         if self.type() == resource_type:
             return True
-        ri = self.stack.env.get_resource_info(self.type(),
-                                              self.name)
-        return ri is not None and ri.name == resource_type
+
+        try:
+            ri = self.stack.env.get_resource_info(self.type(),
+                                                  self.name)
+        except exception.EntityNotFound:
+            return False
+        else:
+            return ri.name == resource_type
 
     def implementation_signature(self):
         """Return a tuple defining the implementation.
