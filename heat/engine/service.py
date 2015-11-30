@@ -1100,6 +1100,10 @@ class EngineService(service.Service):
             raise exception.NotFound(_('Specified output key %s not '
                                        'found.') % output_key)
         output = stack.resolve_static_data(outputs[output_key])
+
+        if not stack.outputs:
+            stack.outputs.update({output_key: output})
+
         return api.format_stack_output(stack, {output_key: output}, output_key)
 
     def _remote_call(self, cnxt, lock_engine_id, call, **kwargs):

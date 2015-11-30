@@ -1057,7 +1057,8 @@ class StackServiceTest(common.HeatTestCase):
         t['outputs'] = {'test': {'value': 'first', 'description': 'sec'},
                         'test2': {'value': 'sec'}}
         tmpl = templatem.Template(t)
-        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl,
+                             resolve_data=False)
 
         self.patchobject(self.eng, '_get_stack')
         self.patchobject(parser.Stack, 'load', return_value=stack)
