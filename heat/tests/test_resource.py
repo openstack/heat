@@ -1681,7 +1681,7 @@ class ResourceTest(common.HeatTestCase):
 
         self.assertRaises(scheduler.Timeout, res.create_convergence,
                           self.stack.t.id, res_data, 'engine-007',
-                          0)
+                          -1)
 
     def test_create_convergence_sets_requires_for_failure(self):
         """Ensure that requires are computed correctly.
@@ -1784,7 +1784,7 @@ class ResourceTest(common.HeatTestCase):
         res_data = {}
         self.assertRaises(scheduler.Timeout, res.update_convergence,
                           new_temp.id, res_data, 'engine-007',
-                          0, mock.ANY)
+                          -1, mock.ANY)
 
     def test_update_in_progress_convergence(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -2075,7 +2075,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res._store()
-        timeout = 0  # to emulate timeout
+        timeout = -1  # to emulate timeout
         self.assertRaises(scheduler.Timeout, res.delete_convergence,
                           1, {}, 'engine-007', timeout)
 
