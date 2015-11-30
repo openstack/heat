@@ -115,8 +115,7 @@ class DockerContainer(resource.Resource):
         ),
         MEMORY: properties.Schema(
             properties.Schema.INTEGER,
-            _('Memory limit (Bytes).'),
-            default=0
+            _('Memory limit (Bytes).')
         ),
         PORT_SPECS: properties.Schema(
             properties.Schema.LIST,
