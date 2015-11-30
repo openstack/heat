@@ -116,8 +116,5 @@ if __name__ == '__main__':
 
     provision_log = os.path.join(VAR_PATH, 'provision-finished')
     # touch the file so it is timestamped with when finished
-    pl = open(provision_log, 'a')
-    try:
+    with open(provision_log, 'a'):
         os.utime(provision_log, None)
-    finally:
-        pl.close()

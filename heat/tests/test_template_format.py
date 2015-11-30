@@ -71,11 +71,12 @@ class JsonToYamlTest(common.HeatTestCase):
         for path in os.listdir(dirpath):
             if not path.endswith('.template') and not path.endswith('.json'):
                 continue
-            f = open(os.path.join(dirpath, path), 'r')
-            json_str = f.read()
+            with open(os.path.join(dirpath, path), 'r') as f:
+                json_str = f.read()
+                f_name = f.name
 
             yml_str = template_format.convert_json_to_yaml(json_str)
-            yield (json_str, yml_str, f.name)
+            yield (json_str, yml_str, f_name)
 
     def test_integer_only_keys_get_translated_correctly(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)),

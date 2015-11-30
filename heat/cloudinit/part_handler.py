@@ -35,23 +35,14 @@ def handle_part(data, ctype, filename, payload):
     if ctype == "__end__":
         return
 
-    log = open('/var/log/part-handler.log', 'a')
-    try:
-        timestamp = datetime.datetime.now()
+    timestamp = datetime.datetime.now()
+    with open('/var/log/part-handler.log', 'a') as log:
         log.write('%s filename:%s, ctype:%s\n' % (timestamp, filename, ctype))
-    finally:
-        log.close()
 
     if ctype == 'text/x-cfninitdata':
-        f = open('/var/lib/heat-cfntools/%s' % filename, 'w')
-        try:
+        with open('/var/lib/heat-cfntools/%s' % filename, 'w') as f:
             f.write(payload)
-        finally:
-            f.close()
 
         # TODO(sdake) hopefully temporary until users move to heat-cfntools-1.3
-        f = open('/var/lib/cloud/data/%s' % filename, 'w')
-        try:
+        with open('/var/lib/cloud/data/%s' % filename, 'w') as f:
             f.write(payload)
-        finally:
-            f.close()
