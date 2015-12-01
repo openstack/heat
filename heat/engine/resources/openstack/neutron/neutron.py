@@ -10,10 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from oslo_utils import uuidutils
 import six
-
-import warnings
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -125,45 +122,6 @@ class NeutronResource(resource.Resource):
 
     def get_reference_id(self):
         return six.text_type(self.resource_id)
-
-    @staticmethod
-    def get_secgroup_uuids(security_groups, client, tenant_id):
-        """Returns a list of security group UUIDs.
-
-        Args:
-            security_groups: List of security group names or UUIDs
-            client: reference to neutronclient
-            tenant_id: the tenant id to match the security_groups
-        """
-        warnings.warn('neutron.NeutronResource.get_secgroup_uuids is '
-                      'deprecated. Use '
-                      'self.client_plugin("neutron").get_secgroup_uuids')
-        seclist = []
-        all_groups = None
-        for sg in security_groups:
-            if uuidutils.is_uuid_like(sg):
-                seclist.append(sg)
-            else:
-                if not all_groups:
-                    response = client.list_security_groups()
-                    all_groups = response['security_groups']
-                same_name_groups = [g for g in all_groups if g['name'] == sg]
-                groups = [g['id'] for g in same_name_groups]
-                if len(groups) == 0:
-                    raise exception.EntityNotFound(entity='Resource', name=sg)
-                elif len(groups) == 1:
-                    seclist.append(groups[0])
-                else:
-                    # for admin roles, can get the other users'
-                    # securityGroups, so we should match the tenant_id with
-                    # the groups, and return the own one
-                    own_groups = [g['id'] for g in same_name_groups
-                                  if g['tenant_id'] == tenant_id]
-                    if len(own_groups) == 1:
-                        seclist.append(own_groups[0])
-                    else:
-                        raise exception.PhysicalResourceNameAmbiguity(name=sg)
-        return seclist
 
     def _not_found_in_call(self, func, *args, **kwargs):
         try:
