@@ -414,7 +414,8 @@ def load_paste_app(app_name=None):
 
     conf_file = _get_deployment_config_file()
     if conf_file is None:
-        raise RuntimeError(_("Unable to locate config file"))
+        raise RuntimeError(_("Unable to locate config file [%s]") %
+                           cfg.CONF.paste_deploy['api_paste_config'])
 
     try:
         app = wsgi.paste_deploy_app(conf_file, app_name, cfg.CONF)
