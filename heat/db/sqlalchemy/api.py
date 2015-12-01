@@ -1020,7 +1020,7 @@ def service_delete(context, service_id, soft_delete=True):
 def service_get(context, service_id):
     result = model_query(context, models.Service).get(service_id)
     if result is None:
-        raise exception.ServiceNotFound(service_id=service_id)
+        raise exception.EntityNotFound(entity='Service', name=service_id)
     return result
 
 

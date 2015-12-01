@@ -403,10 +403,6 @@ class EventSendFailed(HeatException):
                 "on other engine (%(engine_id)s)")
 
 
-class ServiceNotFound(HeatException):
-    msg_fmt = _("Service %(service_id)s not found")
-
-
 class UnsupportedObjectError(HeatException):
     msg_fmt = _('Unsupported object type %(objtype)s')
 
