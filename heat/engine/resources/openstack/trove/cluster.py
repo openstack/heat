@@ -145,7 +145,7 @@ class TroveCluster(resource.Resource):
         instances = []
         for instance in self.properties[self.INSTANCES]:
             instances.append({
-                'flavorRef': self.client_plugin().get_flavor_id(
+                'flavorRef': self.client_plugin().find_flavor_by_name_or_id(
                     instance[self.FLAVOR]),
                 'volume': {'size': instance[self.VOLUME_SIZE]}
             })

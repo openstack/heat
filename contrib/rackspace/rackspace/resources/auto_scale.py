@@ -306,7 +306,7 @@ class Group(resource.Resource):
                   bool(user_data is not None and len(user_data.strip())))
         image_id = self.client_plugin('glance').get_image_id(
             server_args[self.LAUNCH_CONFIG_ARGS_SERVER_IMAGE_REF])
-        flavor_id = self.client_plugin('nova').get_flavor_id(
+        flavor_id = self.client_plugin('nova').find_flavor_by_name_or_id(
             server_args[self.LAUNCH_CONFIG_ARGS_SERVER_FLAVOR_REF])
 
         return dict(

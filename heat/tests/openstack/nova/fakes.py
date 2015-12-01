@@ -311,6 +311,9 @@ class FakeHTTPClient(base_client.HTTPClient):
     #
 
     def get_flavors_detail(self, **kw):
+        return self.get_flavors()
+
+    def get_flavors(self, **kw):
         return (200, {'flavors': [
             {'id': 1, 'name': '256 MB Server', 'ram': 256, 'disk': 10,
              'OS-FLV-EXT-DATA:ephemeral': 10},
@@ -319,6 +322,21 @@ class FakeHTTPClient(base_client.HTTPClient):
             {'id': 3, 'name': 'm1.large', 'ram': 512, 'disk': 20,
              'OS-FLV-EXT-DATA:ephemeral': 30}
         ]})
+
+    def get_flavors_1(self, **kw):
+        return (200, {'flavor': {
+            'id': 1, 'name': '256 MB Server', 'ram': 256, 'disk': 10,
+            'OS-FLV-EXT-DATA:ephemeral': 10}})
+
+    def get_flavors_2(self, **kw):
+        return (200, {'flavor': {
+            'id': 2, 'name': 'm1.small', 'ram': 512, 'disk': 20,
+            'OS-FLV-EXT-DATA:ephemeral': 20}})
+
+    def get_flavors_3(self, **kw):
+        return (200, {'flavor': {
+            'id': 3, 'name': 'm1.large', 'ram': 512, 'disk': 20,
+            'OS-FLV-EXT-DATA:ephemeral': 30}})
 
     #
     # Floating ips

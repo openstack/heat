@@ -224,27 +224,16 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                 resource_status=server.status,
                 result=_('%s is not active') % res_name)
 
-    def get_flavor_id(self, flavor):
-        """Get the id for the specified flavor name.
-
-        If the specified value is flavor id, just return it.
+    def find_flavor_by_name_or_id(self, flavor):
+        """Find the specified flavor by name or id.
 
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
-        :raises: exception.EntityNotFound
         """
-        flavor_id = None
-        flavor_list = self.client().flavors.list()
-        for o in flavor_list:
-            if o.name == flavor:
-                flavor_id = o.id
-                break
-            if o.id == flavor:
-                flavor_id = o.id
-                break
-        if flavor_id is None:
-            raise exception.EntityNotFound(entity='Flavor', name=flavor)
-        return flavor_id
+        try:
+            return self.client().flavors.find(id=flavor).id
+        except exceptions.NotFound:
+            return self.client().flavors.find(name=flavor).id
 
     def get_host(self, host_name):
         """Get the host id specified by name.
@@ -705,7 +694,9 @@ class KeypairConstraint(NovaBaseConstraint):
 
 class FlavorConstraint(NovaBaseConstraint):
 
-    resource_getter_name = 'get_flavor_id'
+    expected_exceptions = (exceptions.NotFound,)
+
+    resource_getter_name = 'find_flavor_by_name_or_id'
 
 
 class NetworkConstraint(NovaBaseConstraint):

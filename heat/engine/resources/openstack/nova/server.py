@@ -732,7 +732,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if image:
             image = self.client_plugin('glance').get_image_id(image)
 
-        flavor_id = self.client_plugin().get_flavor_id(flavor)
+        flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
 
         instance_meta = self.properties[self.METADATA]
         if instance_meta is not None:
@@ -969,7 +969,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     def _update_flavor(self, prop_diff):
         flavor = prop_diff[self.FLAVOR]
-        flavor_id = self.client_plugin().get_flavor_id(flavor)
+        flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
         handler_args = {'args': (flavor_id,)}
         checker_args = {'args': (flavor_id, flavor)}
 
