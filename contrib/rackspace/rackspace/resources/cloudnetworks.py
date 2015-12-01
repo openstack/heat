@@ -124,6 +124,9 @@ class CloudNetwork(resource.Resource):
         self.cloud_networks().get(self.resource_id)
 
     def check_delete_complete(self, cookie):
+        if not self.resource_id:
+            return True
+
         try:
             network = self.cloud_networks().get(self.resource_id)
         except NotFound:
