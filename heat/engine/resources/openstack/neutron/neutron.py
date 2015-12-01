@@ -56,15 +56,19 @@ class NeutronResource(resource.Resource):
         values.
         """
         props = dict((k, v) for k, v in properties.items()
-                     if v is not None and k != 'value_specs')
+                     if v is not None)
 
         if 'name' in six.iterkeys(properties):
             props.setdefault('name', name)
 
-        if 'value_specs' in six.iterkeys(properties):
-            props.update(properties.get('value_specs'))
-
+        if 'value_specs' in props:
+            NeutronResource.merge_value_specs(props)
         return props
+
+    @staticmethod
+    def merge_value_specs(props):
+        value_spec_props = props.pop('value_specs')
+        props.update(value_spec_props)
 
     def prepare_update_properties(self, definition):
         """Prepares the property values for correct Neutron update call.

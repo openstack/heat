@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import firewall
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -85,15 +86,23 @@ class FirewallTest(common.HeatTestCase):
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
-    def create_firewall(self):
-        neutronclient.Client.create_firewall({
-            'firewall': {
-                'name': 'test-firewall', 'admin_state_up': True,
-                'router_ids': ['router_1', 'router_2'],
-                'firewall_policy_id': 'policy-id', 'shared': True}}
-        ).AndReturn({'firewall': {'id': '5678'}})
-
+    def create_firewall(self, value_specs=True):
         snippet = template_format.parse(firewall_template)
+        if not value_specs:
+            del snippet['resources']['firewall']['properties']['value_specs']
+            neutronclient.Client.create_firewall({
+                'firewall': {
+                    'name': 'test-firewall', 'admin_state_up': True,
+                    'firewall_policy_id': 'policy-id', 'shared': True}}
+            ).AndReturn({'firewall': {'id': '5678'}})
+        else:
+            neutronclient.Client.create_firewall({
+                'firewall': {
+                    'name': 'test-firewall', 'admin_state_up': True,
+                    'router_ids': ['router_1', 'router_2'],
+                    'firewall_policy_id': 'policy-id', 'shared': True}}
+            ).AndReturn({'firewall': {'id': '5678'}})
+
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return firewall.Firewall(
@@ -205,6 +214,24 @@ class FirewallTest(common.HeatTestCase):
         update_template['Properties']['admin_state_up'] = False
         scheduler.TaskRunner(rsrc.update, update_template)()
 
+        self.m.VerifyAll()
+
+    def test_update_with_value_specs(self):
+        rsrc = self.create_firewall(value_specs=False)
+        neutronclient.Client.update_firewall(
+            '5678', {'firewall': {'router_ids': ['router_1',
+                                                 'router_2']}})
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        prop_diff = {
+            'value_specs': {
+                'router_ids': ['router_1', 'router_2']
+            }
+        }
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      prop_diff)
+        rsrc.handle_update(update_snippet, {}, prop_diff)
         self.m.VerifyAll()
 
 

@@ -68,11 +68,11 @@ class Firewall(neutron.NeutronResource):
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
-            _('Extra parameters to include in the "firewall" object in the '
-              'creation request. Parameters are often specific to installed '
-              'hardware or extensions.'),
+            _('Extra parameters to include in the request. Parameters '
+              'are often specific to installed hardware or extensions.'),
             support_status=support.SupportStatus(version='5.0.0'),
-            default={}
+            default={},
+            update_allowed=True
         ),
         SHARED: properties.Schema(
             properties.Schema.BOOLEAN,
@@ -130,6 +130,8 @@ class Firewall(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
+            if self.VALUE_SPECS in prop_diff:
+                self.merge_value_specs(prop_diff)
             self.client().update_firewall(
                 self.resource_id, {'firewall': prop_diff})
 
