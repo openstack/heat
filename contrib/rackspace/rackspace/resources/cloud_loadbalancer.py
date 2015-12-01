@@ -768,20 +768,23 @@ class CloudLoadBalancer(resource.Resource):
             return self._needs_update_comparison_nullable(
                 old, new)  # dict
 
-        old_cp = copy.deepcopy(old)
-        new_cp = copy.deepcopy(new)
-        # private_key is not returned by api
-        if self.SSL_TERMINATION_PRIVATEKEY in new_cp:
-            del new_cp[self.SSL_TERMINATION_PRIVATEKEY]
-        # enabled is returned by api but not present in schema
-        if 'enabled' in old_cp:
-            del old_cp['enabled']
-        # if new keys are empty, they don't require update
-        extra_keys = set(new_cp.keys()) - set(old_cp.keys())
-        for key in extra_keys:
-            if new_cp[key] is None or six.text_type(new_cp[key]) == u'':
-                del new_cp[key]
-        return self._needs_update_comparison_nullable(old_cp, new_cp)  # dict
+        # check all relevant keys
+        if (old.get(self.SSL_TERMINATION_SECURE_PORT) !=
+                new[self.SSL_TERMINATION_SECURE_PORT]):
+            return True
+        if (old.get(self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY) !=
+                new[self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY]):
+            return True
+        if (old.get(self.SSL_TERMINATION_CERTIFICATE, '').strip() !=
+                new.get(self.SSL_TERMINATION_CERTIFICATE, '').strip()):
+            return True
+        if (new.get(self.SSL_TERMINATION_INTERMEDIATE_CERTIFICATE, '')
+                and (old.get(self.SSL_TERMINATION_INTERMEDIATE_CERTIFICATE,
+                             '').strip()
+                     != new.get(self.SSL_TERMINATION_INTERMEDIATE_CERTIFICATE,
+                                '').strip())):
+            return True
+        return False
 
     def _access_list_needs_update(self, old, new):
         old = set([frozenset(s.items()) for s in old])

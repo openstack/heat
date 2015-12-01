@@ -33,7 +33,7 @@ from ..resources import cloud_loadbalancer as lb  # noqa
 # The following fakes are for pyrax
 
 
-cert = """-----BEGIN CERTIFICATE-----
+cert = """\n-----BEGIN CERTIFICATE-----
 MIIFBjCCAu4CCQDWdcR5LY/+/jANBgkqhkiG9w0BAQUFADBFMQswCQYDVQQGEwJB
 VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
 cyBQdHkgTHRkMB4XDTE0MTAxNjE3MDYxNVoXDTE1MTAxNjE3MDYxNVowRTELMAkG
@@ -61,9 +61,9 @@ tACplmhf6z1vDkElWiDr8y0kujJ/Gie24iLTun6oHG+f+o6bbQ9w196T0olLcGx0
 oAYL0Olqli6cWHhraVAzZ5t5PH4X9TiESuQ+PMjqGImCIUscXY4objdnB5dfPHoz
 eF5whPl36/GK8HUixCibkCyqEOBBuNqhOz7nVLM0eg5L+TE5coizEBagxVCovYSj
 fQ9zkIgaC5oeH6L0C1FFG1vRNSWokheBk14ztVoJCJyFr6p0/6pD7SeR
------END CERTIFICATE-----"""
+-----END CERTIFICATE-----\n"""
 
-private_key = """-----BEGIN PRIVATE KEY-----
+private_key = """\n-----BEGIN PRIVATE KEY-----
 MIIJRAIBADANBgkqhkiG9w0BAQEFAASCCS4wggkqAgEAAoICAQDJuTXD9LTCh25U
 +lHdZPE8Wff/Ljh8FDT27xbL0sgrqY9CdLxgk427gtiOU/wl0bZyxCLfxGq5TQKn
 I2wwlrUshCrN8w5ppK3qCAxGvKcgENsnLAlxjMQzfexd/8JS2WoFDTNBcBhy2VgY
@@ -114,7 +114,7 @@ AJR4GKr6jbRZnBztnRYZTsGA+TcrFc6SwdSPXgz7JQT9uw+JkhLi59m141XBdeRc
 NQ/LFgOaxjvRUID81izQaYEyADId7asy+2QVazMDafuALJ23WSUMSXajCXaC6/7N
 53RWrOAb+kFRgjuHM8pQkpgnY/Ds0MZxpakFw3Y7PAEL99xyYdR+rE3JOMjPlgr0
 LpTt0Xs1OFZxaNpolW5Qis4os7UmmIRV
------END PRIVATE KEY-----"""
+-----END PRIVATE KEY-----\n"""
 
 
 class FakeException(Exception):
@@ -605,6 +605,75 @@ class LoadBalancerTest(common.HeatTestCase):
                                                 self.lb_name,
                                                 expected)
         self.assertIsNone(rsrc.validate())
+
+    def test_ssl_termination_unstripped_certificates(self):
+        ssl_termination_template = {
+            'securePort': 443,
+            'privatekey': 'afwefawe',
+            'certificate': '  \nfawefwea\n     ',
+            'intermediateCertificate': "\n\nintermediate_certificate\n",
+            'secureTrafficOnly': False
+        }
+        ssl_termination_api = copy.deepcopy(ssl_termination_template)
+
+        template = self._set_template(self.lb_template,
+                                      sslTermination=ssl_termination_template)
+        rsrc, fake_lb = self._mock_loadbalancer(template,
+                                                self.lb_name,
+                                                self.expected_body)
+        self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
+        fake_lb.get_ssl_termination().AndReturn({})
+        fake_lb.get_ssl_termination().AndReturn({
+            'securePort': 443,
+            'certificate': 'fawefwea',
+            'intermediateCertificate': "intermediate_certificate",
+            'secureTrafficOnly': False,
+            'enabled': True,
+        })
+
+        self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
+        fake_lb.add_ssl_termination(**ssl_termination_api)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+    def test_ssl_termination_intermediateCertificate_None(self):
+        ssl_termination_template = {
+            'securePort': 443,
+            'privatekey': 'afwefawe',
+            'certificate': '  \nfawefwea\n     ',
+            'intermediateCertificate': None,
+            'secureTrafficOnly': False
+        }
+
+        template = self._set_template(self.lb_template,
+                                      sslTermination=ssl_termination_template)
+        rsrc, fake_lb = self._mock_loadbalancer(template,
+                                                self.lb_name,
+                                                self.expected_body)
+        self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
+        fake_lb.get_ssl_termination().AndReturn({})
+        fake_lb.get_ssl_termination().AndReturn({
+            'securePort': 443,
+            'certificate': 'fawefwea',
+            'secureTrafficOnly': False,
+            'enabled': True,
+        })
+
+        self.m.StubOutWithMock(fake_lb, 'add_ssl_termination')
+        add_ssl_termination_args = {
+            'securePort': 443,
+            'privatekey': 'afwefawe',
+            'certificate': '  \nfawefwea\n     ',
+            'intermediateCertificate': '',
+            'secureTrafficOnly': False
+        }
+        fake_lb.add_ssl_termination(**add_ssl_termination_args)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
 
     def test_post_creation_access_list(self):
         access_list = [{"address": '192.168.1.1/0',
