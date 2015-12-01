@@ -444,8 +444,8 @@ class EngineClient(object):
     def find_physical_resource(self, ctxt, physical_resource_id):
         """Return an identifier for the resource.
 
-        :param ctxt RPC context.
-        :param physcial_resource_id The physical resource ID to look up.
+        :param ctxt: RPC context.
+        :param physcial_resource_id: The physical resource ID to look up.
         """
         return self.call(ctxt,
                          self.make_msg(
