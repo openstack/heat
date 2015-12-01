@@ -106,7 +106,7 @@ class StackWatchTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.show_watch,
                                self.ctx, watch_name="nonexistent")
-        self.assertEqual(exception.WatchRuleNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
         # Check the response has all keys defined in the engine API
         for key in rpc_api.WATCH_KEYS:
@@ -255,11 +255,12 @@ class StackWatchTest(common.HeatTestCase):
     @mock.patch.object(watchrule.WatchRule, 'load')
     def test_set_watch_state_noexist(self, mock_load):
         state = watchrule.WatchRule.ALARM   # State valid
-        mock_load.side_effect = exception.WatchRuleNotFound(watch_name='test')
+        mock_load.side_effect = exception.EntityNotFound(entity='Watch Rule',
+                                                         name='test')
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.set_watch_state,
                                self.ctx, watch_name="nonexistent",
                                state=state)
-        self.assertEqual(exception.WatchRuleNotFound, ex.exc_info[0])
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         mock_load.assert_called_once_with(self.ctx, "nonexistent")

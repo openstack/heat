@@ -215,6 +215,7 @@ class ResourceNotAvailable(HeatException):
 
 
 class WatchRuleNotFound(HeatException):
+    '''Keep this for AWS compatiblility.'''
     msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
 
 

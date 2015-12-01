@@ -369,7 +369,7 @@ class CeilometerAlarm(resource.Resource):
             wr = watchrule.WatchRule.load(
                 self.context, watch_name=self.physical_resource_name())
             wr.destroy()
-        except exception.WatchRuleNotFound:
+        except exception.EntityNotFound:
             pass
 
         return super(CeilometerAlarm, self).handle_delete()

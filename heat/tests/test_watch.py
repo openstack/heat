@@ -887,10 +887,11 @@ class WatchRuleTest(common.HeatTestCase):
 
         # Test
         wr.destroy()
-        self.assertRaises(exception.WatchRuleNotFound,
-                          watchrule.WatchRule.load,
-                          context=self.ctx,
-                          watch_name='testwatch_destroy')
+        ex = self.assertRaises(exception.EntityNotFound,
+                               watchrule.WatchRule.load,
+                               context=self.ctx,
+                               watch_name='testwatch_destroy')
+        self.assertEqual('Watch Rule', ex.kwargs.get('entity'))
 
     def test_state_set(self):
         # Setup
