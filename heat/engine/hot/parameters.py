@@ -33,10 +33,10 @@ class HOTParamSchema(parameters.Schema):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS,
-        HIDDEN, LABEL
+        HIDDEN, LABEL, IMMUTABLE
     ) = (
         'type', 'description', 'default', 'schema', 'constraints',
-        'hidden', 'label'
+        'hidden', 'label', 'immutable'
     )
 
     # For Parameters the type name for Schema.LIST is comma_delimited_list
@@ -105,7 +105,8 @@ class HOTParamSchema(parameters.Schema):
                    default=schema_dict.get(HOTParamSchema.DEFAULT),
                    constraints=list(constraints()),
                    hidden=schema_dict.get(HOTParamSchema.HIDDEN, False),
-                   label=schema_dict.get(HOTParamSchema.LABEL))
+                   label=schema_dict.get(HOTParamSchema.LABEL),
+                   immutable=schema_dict.get(HOTParamSchema.IMMUTABLE, False))
 
 
 class HOTParameters(parameters.Parameters):

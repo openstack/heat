@@ -851,6 +851,12 @@ class EngineService(service.Service):
         current_kwargs.update(common_params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      **current_kwargs)
+
+        invalid_params = current_stack.parameters.immutable_params_modified(
+            updated_stack.parameters, params)
+        if invalid_params:
+            raise exception.ImmutableParameterModified(*invalid_params)
+
         self.resource_enforcer.enforce_stack(updated_stack)
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 

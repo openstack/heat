@@ -675,6 +675,112 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.assertIn("PATCH update to non-COMPLETE stack",
                       six.text_type(ex.exc_info[1]))
 
+    def test_update_immutable_parameter_disallowed(self):
+
+        template = '''
+heat_template_version: 2014-10-16
+parameters:
+  param1:
+    type: string
+    immutable: true
+    default: foo
+'''
+
+        self.ctx = utils.dummy_context(password=None)
+        stack_name = 'test_update_immutable_parameters'
+        params = {}
+        old_stack = tools.get_stack(stack_name, self.ctx,
+                                    template=template)
+        sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
+        s = stack_object.Stack.get_by_id(self.ctx, sid)
+
+        # prepare mocks
+        self.patchobject(self.man, '_get_stack', return_value=s)
+        self.patchobject(stack, 'Stack', return_value=old_stack)
+        self.patchobject(stack.Stack, 'load', return_value=old_stack)
+        self.patchobject(templatem, 'Template', return_value=old_stack.t)
+        self.patchobject(environment, 'Environment',
+                         return_value=old_stack.env)
+
+        params = {'param1': 'bar'}
+        exc = self.assertRaises(dispatcher.ExpectedException,
+                                self.man.update_stack,
+                                self.ctx, old_stack.identifier(),
+                                templatem.Template(template), params,
+                                None, {})
+        self.assertEqual(exception.ImmutableParameterModified, exc.exc_info[0])
+        self.assertEqual('The following parameters are immutable and may not '
+                         'be updated: param1', exc.exc_info[1].message)
+
+    def test_update_mutable_parameter_allowed(self):
+
+        template = '''
+heat_template_version: 2014-10-16
+parameters:
+  param1:
+    type: string
+    immutable: false
+    default: foo
+'''
+
+        self.ctx = utils.dummy_context(password=None)
+        stack_name = 'test_update_immutable_parameters'
+        params = {}
+        old_stack = tools.get_stack(stack_name, self.ctx,
+                                    template=template)
+        sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
+        s = stack_object.Stack.get_by_id(self.ctx, sid)
+
+        # prepare mocks
+        self.patchobject(self.man, '_get_stack', return_value=s)
+        self.patchobject(stack, 'Stack', return_value=old_stack)
+        self.patchobject(stack.Stack, 'load', return_value=old_stack)
+        self.patchobject(templatem, 'Template', return_value=old_stack.t)
+        self.patchobject(environment, 'Environment',
+                         return_value=old_stack.env)
+
+        params = {'param1': 'bar'}
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       templatem.Template(template), params,
+                                       None, {})
+        self.assertEqual(s.id, result['stack_id'])
+
+    def test_update_immutable_parameter_same_value(self):
+
+        template = '''
+heat_template_version: 2014-10-16
+parameters:
+  param1:
+    type: string
+    immutable: true
+    default: foo
+'''
+
+        self.ctx = utils.dummy_context(password=None)
+        stack_name = 'test_update_immutable_parameters'
+        params = {}
+        old_stack = tools.get_stack(stack_name, self.ctx,
+                                    template=template)
+        sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
+        s = stack_object.Stack.get_by_id(self.ctx, sid)
+
+        # prepare mocks
+        self.patchobject(self.man, '_get_stack', return_value=s)
+        self.patchobject(stack, 'Stack', return_value=old_stack)
+        self.patchobject(stack.Stack, 'load', return_value=old_stack)
+        self.patchobject(templatem, 'Template', return_value=old_stack.t)
+        self.patchobject(environment, 'Environment',
+                         return_value=old_stack.env)
+
+        params = {'param1': 'foo'}
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       templatem.Template(template), params,
+                                       None, {})
+        self.assertEqual(s.id, result['stack_id'])
+
 
 class ServiceStackUpdatePreviewTest(common.HeatTestCase):
 
