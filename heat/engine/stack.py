@@ -83,9 +83,11 @@ def reset_state_on_error(func):
                 LOG.error(_LE('Unexpected exception in %(func)s: %(msg)s'),
                           {'func': func.__name__, 'msg': errmsg})
         finally:
-            if stack.state == stack.IN_PROGRESS:
-                stack.set_state(stack.action, stack.FAILED, errmsg)
-                assert errmsg is not None, "Returned while IN_PROGRESS"
+            if stack.status == stack.IN_PROGRESS:
+                msg = _("Unexpected returning while IN_PROGRESS.")
+                stack.state_set(stack.action, stack.FAILED,
+                                errmsg if errmsg is not None else msg)
+                assert errmsg is not None, "Returned while IN_PROGRESS."
 
     return handle_exceptions
 
@@ -1582,7 +1584,6 @@ class Stack(collections.Mapping):
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
-    @reset_state_on_error
     def delete_snapshot(self, snapshot):
         """Remove a snapshot from the backends."""
         for name, rsrc in six.iteritems(self.resources):
