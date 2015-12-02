@@ -21,3 +21,6 @@ cover
 .pydevproject
 doc/source/api/
 etc/heat/heat.conf.sample
+
+# Files created by releasenotes build
+releasenotes/build
