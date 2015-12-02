@@ -40,9 +40,15 @@ HOOK_TYPES = (
     'pre-create', 'pre-update', 'pre-delete'
 )
 
+RESTRICTED_ACTIONS = (UPDATE, REPLACE) = ('update', 'replace')
+
 
 def valid_hook_type(hook):
     return hook in HOOK_TYPES
+
+
+def valid_restricted_actions(action):
+    return action in RESTRICTED_ACTIONS
 
 
 def is_hook_definition(key, value):
@@ -60,6 +66,25 @@ def is_hook_definition(key, value):
             raise exception.InvalidBreakPointHook(message=msg)
 
     return is_valid_hook
+
+
+def is_valid_restricted_action(key, value):
+    valid_action = False
+    if key == 'restricted_actions':
+        if isinstance(value, six.string_types):
+            valid_action = valid_restricted_actions(value)
+        elif isinstance(value, collections.Sequence):
+            valid_action = all(valid_restricted_actions(
+                action) for action in value)
+
+        if not valid_action:
+            msg = (_('Invalid restricted_action type "%(value)s" for '
+                     'resource, acceptable restricted_action '
+                     'types are: %(types)s') %
+                   {'value': value, 'types': RESTRICTED_ACTIONS})
+            raise exception.InvalidRestrictedAction(message=msg)
+
+    return valid_action
 
 
 class ResourceInfo(object):
@@ -239,22 +264,22 @@ class ResourceRegistry(object):
         for k, v in iter(registry.items()):
             if v is None:
                 self._register_info(path + [k], None)
-            elif is_hook_definition(k, v):
-                self._register_hook(path + [k], v)
+            elif is_hook_definition(k, v) or is_valid_restricted_action(k, v):
+                self._register_item(path + [k], v)
             elif isinstance(v, dict):
                 self._load_registry(path + [k], v)
             else:
                 self._register_info(path + [k],
                                     ResourceInfo(self, path + [k], v))
 
-    def _register_hook(self, path, hook):
+    def _register_item(self, path, item):
         name = path[-1]
         registry = self._registry
         for key in path[:-1]:
             if key not in registry:
                 registry[key] = {}
             registry = registry[key]
-        registry[name] = hook
+        registry[name] = item
 
     def _register_info(self, path, info):
         """Place the new info in the correct location in the registry.
@@ -325,6 +350,33 @@ class ResourceRegistry(object):
             registry = registry[key]
         if info.path[-1] in registry:
             registry.pop(info.path[-1])
+
+    def get_rsrc_restricted_actions(self, resource_name):
+        """Returns a set of restricted actions.
+
+        For a given resource we get the set of restricted actions.
+
+        Actions are set in this format via `resources`:
+
+            {
+                "restricted_actions": [update, replace]
+            }
+
+        A restricted_actions value is either `update`, `replace` or a list
+        of those values. Resources support wildcard matching. The asterisk
+        sign matches everything.
+        """
+        ress = self._registry['resources']
+        restricted_actions = set()
+        for name_pattern, resource in six.iteritems(ress):
+            if fnmatch.fnmatchcase(resource_name, name_pattern):
+                if 'restricted_actions' in resource:
+                    actions = resource['restricted_actions']
+                    if isinstance(actions, six.string_types):
+                        restricted_actions.add(actions)
+                    elif isinstance(actions, collections.Sequence):
+                        restricted_actions |= set(actions)
+        return restricted_actions
 
     def matches_hook(self, resource_name, hook):
         """Return whether a resource have a hook set in the environment.
@@ -491,7 +543,8 @@ class ResourceRegistry(object):
             for k, v in iter(level.items()):
                 if isinstance(v, dict):
                     tmp[k] = _as_dict(v)
-                elif is_hook_definition(k, v):
+                elif is_hook_definition(
+                        k, v) or is_valid_restricted_action(k, v):
                     tmp[k] = v
                 elif v.user_resource:
                     tmp[k] = v.value

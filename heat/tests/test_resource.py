@@ -36,6 +36,8 @@ from heat.engine import environment
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine.resources.openstack.heat import none_resource
+from heat.engine.resources.openstack.heat import test_resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -3359,3 +3361,127 @@ class TestLiveStateUpdate(common.HeatTestCase):
         # schema for correct work of other tests.
         for prop in six.itervalues(res.properties.props):
             prop.schema.update_allowed = False
+
+
+class ResourceUpdateRestrictionTest(common.HeatTestCase):
+    def setUp(self):
+        super(ResourceUpdateRestrictionTest, self).setUp()
+        resource._register_class('TestResourceType',
+                                 test_resource.TestResource)
+        resource._register_class('NoneResourceType',
+                                 none_resource.NoneResource)
+        self.tmpl = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'bar': {
+                    'type': 'TestResourceType',
+                    'properties': {
+                        'value': '1234',
+                        'update_replace': False
+                    }
+                }
+            }
+        }
+
+    def create_resource(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(self.tmpl, env=self.env),
+                                  stack_id=str(uuid.uuid4()))
+        res = self.stack['bar']
+        scheduler.TaskRunner(res.create)()
+        return res
+
+    def test_update_restricted(self):
+        self.env_snippet = {u'resource_registry': {
+            u'resources': {
+                'bar': {'restricted_actions': 'update'}
+            }
+        }
+        }
+        self.env = environment.Environment()
+        self.env.load(self.env_snippet)
+        res = self.create_resource()
+        ev = self.patchobject(res, '_add_event')
+        props = self.tmpl['resources']['bar']['properties']
+        props['value'] = '4567'
+        snippet = rsrc_defn.ResourceDefinition('bar',
+                                               'TestResourceType',
+                                               props)
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(res.update, snippet))
+
+        self.assertEqual('ResourceActionRestricted: resources.bar: '
+                         'update is restricted for resource.',
+                         six.text_type(error))
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        ev.assert_called_with(res.UPDATE, res.FAILED,
+                              'update is restricted for resource.')
+
+    def test_replace_rstricted(self):
+        self.env_snippet = {u'resource_registry': {
+            u'resources': {
+                'bar': {'restricted_actions': 'replace'}
+            }
+        }
+        }
+        self.env = environment.Environment()
+        self.env.load(self.env_snippet)
+        res = self.create_resource()
+        ev = self.patchobject(res, '_add_event')
+        props = self.tmpl['resources']['bar']['properties']
+        props['update_replace'] = True
+        snippet = rsrc_defn.ResourceDefinition('bar',
+                                               'TestResourceType',
+                                               props)
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(res.update, snippet))
+        self.assertEqual('ResourceActionRestricted: resources.bar: '
+                         'replace is restricted for resource.',
+                         six.text_type(error))
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        ev.assert_called_with(res.UPDATE, res.FAILED,
+                              'replace is restricted for resource.')
+
+    def test_update_with_replace_rstricted(self):
+        self.env_snippet = {u'resource_registry': {
+            u'resources': {
+                'bar': {'restricted_actions': 'replace'}
+            }
+        }
+        }
+        self.env = environment.Environment()
+        self.env.load(self.env_snippet)
+        res = self.create_resource()
+        ev = self.patchobject(res, '_add_event')
+        props = self.tmpl['resources']['bar']['properties']
+        props['value'] = '4567'
+        snippet = rsrc_defn.ResourceDefinition('bar',
+                                               'TestResourceType',
+                                               props)
+        self.assertIsNone(scheduler.TaskRunner(res.update, snippet)())
+        self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
+        ev.assert_called_with(res.UPDATE, res.COMPLETE,
+                              'state changed')
+
+    def test_replace_with_update_rstricted(self):
+        self.env_snippet = {u'resource_registry': {
+            u'resources': {
+                'bar': {'restricted_actions': 'update'}
+            }
+        }
+        }
+        self.env = environment.Environment()
+        self.env.load(self.env_snippet)
+        res = self.create_resource()
+        ev = self.patchobject(res, '_add_event')
+        prep_replace = self.patchobject(res, 'prepare_for_replace')
+        props = self.tmpl['resources']['bar']['properties']
+        props['update_replace'] = True
+        snippet = rsrc_defn.ResourceDefinition('bar',
+                                               'TestResourceType',
+                                               props)
+        error = self.assertRaises(exception.UpdateReplace,
+                                  scheduler.TaskRunner(res.update, snippet))
+        self.assertIn('requires replacement', six.text_type(error))
+        self.assertEqual(1, prep_replace.call_count)
+        ev.assert_not_called()

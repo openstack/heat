@@ -262,6 +262,49 @@ class StackUpdateTest(common.HeatTestCase):
         stored_props = loaded_stack['AResource']._stored_properties_data
         self.assertEqual({'Foo': 'xyz'}, stored_props)
 
+    def test_update_replace_resticted(self):
+        env = environment.Environment()
+        env_snippet = {u'resource_registry': {
+            u'resources': {
+                'AResource': {'restricted_actions': 'update'}
+            }
+        }
+        }
+        env.load(env_snippet)
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
+                                            'Properties': {'Foo': 'abc'}}}}
+
+        self.stack = stack.Stack(self.ctx, 'update_test_stack',
+                                 template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl1 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
+                                             'Properties': {'Foo': 'xyz'}}}}
+
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl1, env=env))
+
+        self.stack.update(updated_stack)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+        env_snippet['resource_registry']['resources'][
+            'AResource']['restricted_actions'] = 'replace'
+        env.load(env_snippet)
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl2, env=env))
+
+        self.stack.update(updated_stack)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
+                         self.stack.state)
+
     def test_update_modify_ok_replace_int(self):
         # create
         # ========

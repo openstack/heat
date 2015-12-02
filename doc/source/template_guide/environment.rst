@@ -191,3 +191,37 @@ You can specify endpoints using the ``event_sinks`` property::
     - type: zaqar-queue
       target: myqueue
       ttl: 1200
+
+Restrict update or replace of a given resource
+-----------------------------------------------
+If you want to restrict update or replace of a resource when your stack is
+being updated, you can set ``restricted_actions`` in the ``resources``
+section of ``resource_registry``.
+
+To restrict update or replace, add ``restricted_actions: update`` or
+``restricted_actions: replace`` to the resource dictionary. You can also
+use ``[update, replace]`` to restrict both actions.
+
+You can combine restrcited actions with other ``resources`` properties such
+as provider templates or type mapping or hooks::
+
+  resource_registry:
+    resources:
+      my_server:
+        "OS::DBInstance": file:///home/mine/all_my_cool_templates/db.yaml
+        restricted_actions: replace
+        hooks: pre-create
+      nested_stack:
+        nested_resource:
+          restricted_actions: update
+        another_resource:
+          restricted_actions: [update, replace]
+
+It is possible to perform a wild card match using an asterisk (`*`) in the
+resource name. For example, the following entry restricts replace for
+``app_server`` and ``database_server``, but not ``server`` or ``app_network``::
+
+  resource_registry:
+    resources:
+      "*_server":
+        restricted_actions: replace
