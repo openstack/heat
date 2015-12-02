@@ -13,7 +13,6 @@
 
 import mock
 from neutronclient.common import exceptions as qe
-from neutronclient.v2_0 import client as neutronclient
 import six
 
 from heat.common import exception
@@ -23,7 +22,6 @@ from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import neutron as nr
 from heat.engine import rsrc_defn
 from heat.tests import common
-from heat.tests import utils
 
 
 class NeutronTest(common.HeatTestCase):
@@ -111,93 +109,3 @@ class NeutronTest(common.HeatTestCase):
         # and return None due to resource_id is None
         res.attributes.reset_resolved_values()
         self.assertIsNone(res.FnGetAtt('show'))
-
-
-class GetSecGroupUuidTest(common.HeatTestCase):
-
-    scenarios = [
-        ('with_uuid', dict(
-            secgroups=['b62c3079-6946-44f5-a67b-6b9091884d4f',
-                       '9887157c-d092-40f5-b547-6361915fce7d'],
-            expected=['b62c3079-6946-44f5-a67b-6b9091884d4f',
-                      '9887157c-d092-40f5-b547-6361915fce7d'],
-            error=False,
-            fake_group_list=None)),
-        ('with_name', dict(
-            secgroups=['security_group_1'],
-            expected=['0389f747-7785-4757-b7bb-2ab07e4b09c3'],
-            error=False,
-            fake_group_list={
-                'security_groups': [
-                    {
-                        'tenant_id': 'dc4b074874244f7693dd65583733a758',
-                        'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
-                        'name': 'security_group_1',
-                        'security_group_rules': [],
-                        'description': 'no protocol'
-                    }
-                ]
-            })),
-        ('two_same_names_one_belongs_to_tenant', dict(
-            secgroups=['security_group_1'],
-            expected=['0389f747-7785-4757-b7bb-2ab07e4b09c3'],
-            error=False,
-            fake_group_list={
-                'security_groups': [
-                    {
-                        'tenant_id': 'dc4b074874244f7693dd65583733a758',
-                        'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
-                        'name': 'security_group_1',
-                        'security_group_rules': [],
-                        'description': 'no protocol'
-                    },
-                    {
-                        'tenant_id': '64395a8e5beb4930a18245f76a5b1570',
-                        'id': '384ccd91-447c-4d83-832c-06974a7d3d05',
-                        'name': 'security_group_1',
-                        'security_group_rules': [],
-                        'description': 'no protocol'
-                    }
-                ]
-            })),
-        ('two_same_names_both_belongs_to_tenant', dict(
-            secgroups=['security_group_1'],
-            expected=['0389f747-7785-4757-b7bb-2ab07e4b09c3'],
-            error=True,
-            fake_group_list={
-                'security_groups': [
-                    {
-                        'tenant_id': 'dc4b074874244f7693dd65583733a758',
-                        'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
-                        'name': 'security_group_1',
-                        'security_group_rules': [],
-                        'description': 'no protocol'
-                    },
-                    {
-                        'tenant_id': 'dc4b074874244f7693dd65583733a758',
-                        'id': '384ccd91-447c-4d83-832c-06974a7d3d05',
-                        'name': 'security_group_1',
-                        'security_group_rules': [],
-                        'description': 'no protocol'
-                    }
-                ]
-            }))
-    ]
-
-    def test_secgr(self):
-        ctx = utils.dummy_context(
-            tenant_id='dc4b074874244f7693dd65583733a758')
-        nclient = neutronclient.Client()
-        mock_list = self.patchobject(neutronclient.Client,
-                                     'list_security_groups')
-        mock_list.return_value = self.fake_group_list
-
-        if self.error:
-            self.assertRaises(exception.PhysicalResourceNameAmbiguity,
-                              nr.NeutronResource.get_secgroup_uuids,
-                              self.secgroups, nclient, ctx.tenant_id)
-        else:
-            self.assertEqual(
-                self.expected,
-                nr.NeutronResource.get_secgroup_uuids(self.secgroups, nclient,
-                                                      ctx.tenant_id))
