@@ -38,6 +38,9 @@ class KeystoneRoleConstraintTest(common.HeatTestCase):
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           'role_1'))
 
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
+
         client_plugin_mock.get_role_id.assert_called_once_with('role_1')
 
 
@@ -57,6 +60,9 @@ class KeystoneProjectConstraintTest(common.HeatTestCase):
 
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           'project_1'))
+
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
 
         client_plugin_mock.get_project_id.assert_called_once_with('project_1')
 
@@ -78,6 +84,9 @@ class KeystoneGroupConstraintTest(common.HeatTestCase):
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           'group_1'))
 
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
+
         client_plugin_mock.get_group_id.assert_called_once_with('group_1')
 
 
@@ -97,6 +106,9 @@ class KeystoneDomainConstraintTest(common.HeatTestCase):
 
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           'domain_1'))
+
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
 
         client_plugin_mock.get_domain_id.assert_called_once_with('domain_1')
 
@@ -121,9 +133,11 @@ class KeystoneServiceConstraintTest(common.HeatTestCase):
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           self.sample_uuid))
 
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
+
         client_plugin_mock.get_service_id.assert_called_once_with(
-            self.sample_uuid
-        )
+            self.sample_uuid)
 
 
 class KeystoneUserConstraintTest(common.HeatTestCase):
@@ -142,6 +156,8 @@ class KeystoneUserConstraintTest(common.HeatTestCase):
 
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           'admin'))
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
 
         client_plugin_mock.get_user_id.assert_called_once_with('admin')
 
@@ -165,9 +181,11 @@ class KeystoneRegionConstraintTest(common.HeatTestCase):
         self.assertIsNone(constraint.validate_with_client(client_mock,
                                                           self.sample_uuid))
 
+        self.assertRaises(exception.EntityNotFound,
+                          constraint.validate_with_client, client_mock, '')
+
         client_plugin_mock.get_region_id.assert_called_once_with(
-            self.sample_uuid
-        )
+            self.sample_uuid)
 
 
 class KeystoneClientPluginServiceTest(common.HeatTestCase):
