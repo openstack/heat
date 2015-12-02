@@ -74,6 +74,15 @@ class FakeClient(object):
             pass
 
 
+class FakeClientRaiseException(FakeClient):
+
+    def create(self, label=None, cidr=None):
+        raise Exception
+
+    def get(self, nwid):
+        raise Exception
+
+
 @mock.patch.object(cloudnetworks.CloudNetwork, "cloud_networks")
 class CloudNetworkTest(common.HeatTestCase):
 
@@ -146,6 +155,18 @@ class CloudNetworkTest(common.HeatTestCase):
         self.assertEqual((res.DELETE, res.COMPLETE), res.state)
         exc = self.assertRaises(NotFound, self.fake_cnw.get, res_id)
         self.assertIn(res_id, six.text_type(exc))
+
+    def test_delete_no_network_created(self, mock_client):
+        self.fake_cnw = FakeClientRaiseException()
+        mock_client.return_value = self.fake_cnw
+        self._parse_stack()
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.FAILED),
+                         self.stack.state)
+        res = self.stack['cnw']
+        self.assertEqual((res.CREATE, res.FAILED), res.state)
+        scheduler.TaskRunner(res.delete)()
+        self.assertEqual((res.DELETE, res.COMPLETE), res.state)
 
     def test_delete_in_use(self, mock_client):
         self._setup_stack(mock_client)
