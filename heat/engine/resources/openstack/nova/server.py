@@ -538,9 +538,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     entity = 'servers'
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [properties.TranslationRule(
-            self.properties,
+            props,
             properties.TranslationRule.REPLACE,
             source_path=[self.NETWORKS, self.NETWORK_ID],
             value_name=self.NETWORK_UUID)]
@@ -962,8 +962,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     # assigned to the subnet as well and could have been
                     # created by this stack. Regardless, the server should
                     # still wait on the subnet.
-                    net_id = (net.get(self.NETWORK_ID) or
-                              net.get(self.NETWORK_UUID))
+                    net_id = net.get(self.NETWORK_ID)
                     if net_id and net_id == subnet_net:
                         deps += (self, res)
                         break

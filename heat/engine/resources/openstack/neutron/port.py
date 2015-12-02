@@ -101,6 +101,7 @@ class Port(neutron.NeutronResource):
               'with %(subnet)s') % {'fixed_ips': FIXED_IPS,
                                     'subnet': FIXED_IP_SUBNET},
             support_status=support.SupportStatus(version='2014.2'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -312,26 +313,21 @@ class Port(neutron.NeutronResource):
         self.properties_schema.update(self.extra_properties_schema)
         super(Port, self).__init__(name, definition, stack)
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.NETWORK],
                 value_path=[self.NETWORK_ID]
             ),
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.FIXED_IPS, self.FIXED_IP_SUBNET],
                 value_name=self.FIXED_IP_SUBNET_ID
             )
         ]
-
-    def validate(self):
-        super(Port, self).validate()
-        self._validate_depr_property_required(self.properties,
-                                              self.NETWORK, self.NETWORK_ID)
 
     def add_dependencies(self, deps):
         super(Port, self).add_dependencies(deps)
@@ -342,11 +338,8 @@ class Port(neutron.NeutronResource):
         # the ports in that network.
         for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
-                dep_network = res.properties.get(
-                    subnet.Subnet.NETWORK) or res.properties.get(
-                        subnet.Subnet.NETWORK_ID)
-                network = self.properties[
-                    self.NETWORK] or self.properties[self.NETWORK_ID]
+                dep_network = res.properties.get(subnet.Subnet.NETWORK)
+                network = self.properties[self.NETWORK]
                 if dep_network == network:
                     deps += (self, res)
 

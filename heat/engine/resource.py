@@ -317,7 +317,7 @@ class Resource(object):
     def reparse(self):
         self.properties = self.t.properties(self.properties_schema,
                                             self.context)
-        self.translate_properties()
+        self.translate_properties(self.properties)
 
     def __eq__(self, other):
         """Allow == comparison of two resources."""
@@ -844,13 +844,12 @@ class Resource(object):
         # save the resource metadata
         self.metadata_set(metadata)
 
-    def translation_rules(self):
+    def translation_rules(self, properties):
         """Return specified rules for resource."""
-        return None
 
-    def translate_properties(self):
+    def translate_properties(self, properties):
         """Translates old properties to new ones."""
-        rules = self.translation_rules() or []
+        rules = self.translation_rules(properties) or []
         for rule in rules:
             rule.execute_rule()
 
@@ -939,6 +938,7 @@ class Resource(object):
         self.regenerate_info_schema(after)
         after_props = after.properties(self.properties_schema,
                                        self.context)
+        self.translate_properties(after_props)
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_PRE_UPDATE)

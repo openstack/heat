@@ -3526,54 +3526,6 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
-    def test_server_update_networks_with_uuid(self):
-        return_server = self.fc.servers.list()[1]
-        return_server.id = '5678'
-
-        self.patchobject(neutronclient.Client, 'create_port',
-                         return_value={'port': {'id': 'abcd1234'}})
-
-        server = self._create_test_server(return_server, 'networks_update')
-
-        old_networks = [
-            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
-        new_networks = [
-            {'uuid': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
-
-        server.t['Properties']['networks'] = old_networks
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = new_networks
-
-        self._stub_glance_for_update()
-        self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
-
-        self.m.StubOutWithMock(return_server, 'interface_list')
-
-        poor_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14')
-        ]
-
-        return_server.interface_list().AndReturn(poor_interfaces)
-
-        self.m.StubOutWithMock(return_server, 'interface_detach')
-        return_server.interface_detach(
-            poor_interfaces[0].port_id).AndReturn(None)
-
-        self.m.StubOutWithMock(return_server, 'interface_attach')
-        return_server.interface_attach(None, new_networks[0]['uuid'],
-                                       None).AndReturn(None)
-        self.stub_NetworkConstraint_validate()
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
-                         return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-        self.m.ReplayAll()
-
-        scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
-        self.m.VerifyAll()
-
     def test_server_update_networks_with_empty_list(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'

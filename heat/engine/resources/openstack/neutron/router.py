@@ -157,16 +157,16 @@ class Router(neutron.NeutronResource):
         ),
     }
 
-    def translation_rules(self):
-        if self.properties.get(self.L3_AGENT_ID):
+    def translation_rules(self, props):
+        if props.get(self.L3_AGENT_ID):
             return [
                 properties.TranslationRule(
-                    self.properties,
+                    props,
                     properties.TranslationRule.ADD,
                     [self.L3_AGENT_IDS],
-                    [self.properties.get(self.L3_AGENT_ID)]),
+                    [props.get(self.L3_AGENT_ID)]),
                 properties.TranslationRule(
-                    self.properties,
+                    props,
                     properties.TranslationRule.DELETE,
                     [self.L3_AGENT_ID]
                 )
@@ -200,9 +200,7 @@ class Router(neutron.NeutronResource):
             external_gw_net = external_gw.get(self.EXTERNAL_GATEWAY_NETWORK)
             for res in six.itervalues(self.stack):
                 if res.has_interface('OS::Neutron::Subnet'):
-                    subnet_net = res.properties.get(
-                        subnet.Subnet.NETWORK) or res.properties.get(
-                            subnet.Subnet.NETWORK_ID)
+                    subnet_net = res.properties.get(subnet.Subnet.NETWORK)
                     if subnet_net == external_gw_net:
                         deps += (self, res)
 
@@ -294,6 +292,7 @@ class RouterInterface(neutron.NeutronResource):
         ROUTER: properties.Schema(
             properties.Schema.STRING,
             _('The router.'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.router')
             ],
@@ -365,52 +364,35 @@ class RouterInterface(neutron.NeutronResource):
         )
     }
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.PORT],
                 value_path=[self.PORT_ID]
             ),
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.ROUTER],
                 value_path=[self.ROUTER_ID]
             ),
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
             )
         ]
 
-    @staticmethod
-    def _validate_deprecated_keys(props, key, deprecated_key):
-        value = props.get(key)
-        deprecated_value = props.get(deprecated_key)
-        if value and deprecated_value:
-            raise exception.ResourcePropertyConflict(key,
-                                                     deprecated_key)
-        if value is None and deprecated_value is None:
-            return False
-        return True
-
     def validate(self):
         """Validate any of the provided params."""
         super(RouterInterface, self).validate()
 
-        prop_subnet_exists = self._validate_deprecated_keys(
-            self.properties, self.SUBNET, self.SUBNET_ID)
-        if not self._validate_deprecated_keys(
-                self.properties, self.ROUTER, self.ROUTER_ID):
-            raise exception.PropertyUnspecifiedError(self.ROUTER,
-                                                     self.ROUTER_ID)
+        prop_subnet_exists = self.properties.get(self.SUBNET) is not None
 
-        prop_port_exists = self._validate_deprecated_keys(
-            self.properties, self.PORT, self.PORT_ID)
+        prop_port_exists = self.properties.get(self.PORT) is not None
 
         if prop_subnet_exists and prop_port_exists:
             raise exception.ResourcePropertyConflict(self.SUBNET,
@@ -422,7 +404,7 @@ class RouterInterface(neutron.NeutronResource):
 
     def handle_create(self):
         router_id = self.client_plugin().resolve_router(
-            dict(self.properties), self.ROUTER, self.ROUTER_ID)
+            dict(self.properties), self.ROUTER, 'router_id')
         key = 'subnet_id'
         value = self.client_plugin().resolve_subnet(
             dict(self.properties), self.SUBNET, key)
@@ -496,10 +478,15 @@ class RouterGateway(neutron.NeutronResource):
 
     }
 
-    def validate(self):
-        super(RouterGateway, self).validate()
-        self._validate_depr_property_required(
-            self.properties, self.NETWORK, self.NETWORK_ID)
+    def translation_rules(self, props):
+        return [
+            properties.TranslationRule(
+                props,
+                properties.TranslationRule.REPLACE,
+                [self.NETWORK],
+                value_path=[self.NETWORK_ID]
+            )
+        ]
 
     def add_dependencies(self, deps):
         super(RouterGateway, self).add_dependencies(deps)
@@ -522,10 +509,8 @@ class RouterGateway(neutron.NeutronResource):
             # on that subnet
             if resource.has_interface('OS::Neutron::Subnet'):
                 dep_network = resource.properties.get(
-                    subnet.Subnet.NETWORK) or resource.properties.get(
-                        subnet.Subnet.NETWORK_ID)
-                network = self.properties[
-                    self.NETWORK] or self.properties[self.NETWORK_ID]
+                    subnet.Subnet.NETWORK)
+                network = self.properties[self.NETWORK]
                 if dep_network == network:
                     deps += (self, resource)
 

@@ -223,10 +223,10 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     entity = 'volumes'
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.IMAGE],
                 value_path=[self.IMAGE_REF]
