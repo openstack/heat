@@ -1253,6 +1253,13 @@ class Resource(object):
 
         initial_state = self.state
 
+        # This method can be called when we replace a resource, too. In that
+        # case, a hook has already been dealt with in `Resource.update` so we
+        # shouldn't do it here again:
+        if self.stack.action == self.stack.DELETE:
+            yield self._break_if_required(
+                self.DELETE, environment.HOOK_PRE_DELETE)
+
         LOG.info(_LI('deleting %s'), six.text_type(self))
 
         if self._stored_properties_data is not None:

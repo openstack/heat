@@ -735,7 +735,8 @@ class ResourceRegistryTest(common.HeatTestCase):
 
         registry = environment.ResourceRegistry(None, {})
         msg = ('Invalid hook type "invalid-type" for resource breakpoint, '
-               'acceptable hook types are: (\'pre-create\', \'pre-update\')')
+               'acceptable hook types are: (\'pre-create\', \'pre-update\', '
+               '\'pre-delete\')')
         ex = self.assertRaises(exception.InvalidBreakPointHook,
                                registry.load, {'resources': resources})
         self.assertEqual(msg, six.text_type(ex))
@@ -880,8 +881,11 @@ class HookMatchTest(common.HeatTestCase):
             u'pre_update': {
                 u'hooks': 'pre-update',
             },
-            u'both': {
-                u'hooks': ['pre-create', 'pre-update'],
+            u'pre_delete': {
+                u'hooks': 'pre-delete',
+            },
+            u'all': {
+                u'hooks': ['pre-create', 'pre-update', 'pre-delete'],
             },
         }
         registry = environment.ResourceRegistry(None, {})
@@ -891,13 +895,26 @@ class HookMatchTest(common.HeatTestCase):
             'pre_create', environment.HOOK_PRE_CREATE))
         self.assertFalse(registry.matches_hook(
             'pre_create', environment.HOOK_PRE_UPDATE))
+        self.assertFalse(registry.matches_hook(
+            'pre_create', environment.HOOK_PRE_DELETE))
 
         self.assertTrue(registry.matches_hook(
             'pre_update', environment.HOOK_PRE_UPDATE))
         self.assertFalse(registry.matches_hook(
             'pre_update', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'pre_update', environment.HOOK_PRE_DELETE))
 
         self.assertTrue(registry.matches_hook(
-            'both', environment.HOOK_PRE_CREATE))
+            'pre_delete', environment.HOOK_PRE_DELETE))
+        self.assertFalse(registry.matches_hook(
+            'pre_delete', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'pre_delete', environment.HOOK_PRE_UPDATE))
+
         self.assertTrue(registry.matches_hook(
-            'both', environment.HOOK_PRE_UPDATE))
+            'all', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook(
+            'all', environment.HOOK_PRE_UPDATE))
+        self.assertTrue(registry.matches_hook(
+            'all', environment.HOOK_PRE_DELETE))

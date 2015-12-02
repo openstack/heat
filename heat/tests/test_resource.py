@@ -2814,6 +2814,11 @@ class ResourceHookTest(common.HeatTestCase):
         self.assertFalse(res.has_hook('pre-create'))
         self.assertTrue(res.has_hook('pre-update'))
 
+        res.data = mock.Mock(return_value={'pre-delete': 'True'})
+        self.assertFalse(res.has_hook('pre-create'))
+        self.assertFalse(res.has_hook('pre-update'))
+        self.assertTrue(res.has_hook('pre-delete'))
+
     def test_set_hook(self):
         snippet = rsrc_defn.ResourceDefinition('res',
                                                'GenericResourceType')
@@ -2860,7 +2865,7 @@ class ResourceHookTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidBreakPointHook,
                           res.signal, {'unset_hook': 'pre-create'})
 
-    def test_hook_call(self):
+    def test_pre_create_hook_call(self):
         self.stack.env.registry.load(
             {'resources': {'res': {'hooks': 'pre-create'}}})
         snippet = rsrc_defn.ResourceDefinition('res',
@@ -2874,6 +2879,23 @@ class ResourceHookTest(common.HeatTestCase):
         res.clear_hook('pre-create')
         task.run_to_completion()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+    def test_pre_delete_hook_call(self):
+        self.stack.env.registry.load(
+            {'resources': {'res': {'hooks': 'pre-delete'}}})
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+        res.id = '1234'
+        res.action = 'CREATE'
+        self.stack.action = 'DELETE'
+        task = scheduler.TaskRunner(res.delete)
+        task.start()
+        task.step()
+        self.assertTrue(res.has_hook('pre-delete'))
+        res.clear_hook('pre-delete')
+        task.run_to_completion()
+        self.assertEqual((res.DELETE, res.COMPLETE), res.state)
 
 
 class ResourceAvailabilityTest(common.HeatTestCase):
