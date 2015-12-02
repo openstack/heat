@@ -39,7 +39,7 @@ python-swiftclient<2.5.0,>=2.2.0
 python-troveclient<1.1.0,>=1.0.7
 PyYAML>=3.1.0
 qpid-python
-requests!=2.4.0,>=2.2.0
+requests!=2.4.0,<2.8.0,>=2.2.0
 Routes!=2.0,>=1.12.3
 six>=1.9.0
 SQLAlchemy<=0.9.99,>=0.9.7
