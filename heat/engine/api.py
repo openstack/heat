@@ -189,7 +189,15 @@ def format_stack_output(stack, outputs, k, resolve_value=True):
     }
 
     if resolve_value:
-        result.update({rpc_api.OUTPUT_VALUE: stack.output(k)})
+        try:
+            value = stack.output(k)
+        except Exception as ex:
+            # We don't need error raising, just adding output_error to
+            # resulting dict.
+            value = None
+            result.update({rpc_api.OUTPUT_ERROR: six.text_type(ex)})
+        finally:
+            result.update({rpc_api.OUTPUT_VALUE: value})
 
     if outputs[k].get('error_msg'):
         result.update({rpc_api.OUTPUT_ERROR: outputs[k].get('error_msg')})
