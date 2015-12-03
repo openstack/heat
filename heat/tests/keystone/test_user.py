@@ -234,6 +234,11 @@ class KeystoneUserTest(common.HeatTestCase):
                 self.test_user.resource_id,
                 group)
 
+        # validate the role assignment isn't updated
+        self.roles = self.keystoneclient.roles
+        self.assertEqual(0, self.roles.revoke.call_count)
+        self.assertEqual(0, self.roles.grant.call_count)
+
     def test_user_handle_delete(self):
         self.test_user.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         self.test_user._stored_properties_data = {
