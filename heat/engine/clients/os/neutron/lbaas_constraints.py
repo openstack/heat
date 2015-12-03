@@ -35,3 +35,7 @@ class PoolConstraint(nc.NeutronConstraint):
     resource_name = 'pool'
     cmd_resource = 'lbaas_pool'
     extension = 'lbaasv2'
+
+
+class LBaasV2ProviderConstraint(nc.ProviderConstraint):
+    service_type = 'LOADBALANCERV2'

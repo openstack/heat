@@ -273,6 +273,9 @@ class Pool(neutron.NeutronResource):
             properties.Schema.STRING,
             _('LBaaS provider to implement this load balancer instance.'),
             support_status=support.SupportStatus(version='5.0.0'),
+            constraints=[
+                constraints.CustomConstraint('neutron.lb.provider')
+            ],
         ),
         VIP: properties.Schema(
             properties.Schema.MAP,

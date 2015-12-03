@@ -600,6 +600,7 @@ class PoolTest(common.HeatTestCase):
         neutronclient.Client.show_vip('xyz').AndReturn(
             {'vip': {'status': 'ACTIVE'}})
         snippet = template_format.parse(pool_template_with_provider)
+        self.stub_ProviderConstraint_validate()
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
