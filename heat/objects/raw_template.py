@@ -75,7 +75,8 @@ class RawTemplate(
                     continue
                 clear_text_val = tmpl.env.params.get(param_name)
                 tmpl.env.params[param_name] = crypt.encrypt(clear_text_val)
-                tmpl.env.encrypted_param_names.append(param_name)
+                if param_name not in tmpl.env.encrypted_param_names:
+                    tmpl.env.encrypted_param_names.append(param_name)
 
     @classmethod
     def create(cls, context, values):

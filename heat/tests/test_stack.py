@@ -2228,6 +2228,27 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('foo', params.get('param1'))
         self.assertEqual('bar', params.get('param2'))
 
+        # test update the param2
+        loaded_stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
+                               'for_update')
+        env2 = environment.Environment({'param1': 'foo', 'param2': 'new_bar'})
+        new_stack = stack.Stack(self.ctx, 'test_update',
+                                template.Template(tmpl, env=env2))
+
+        loaded_stack.update(new_stack)
+        self.assertEqual((loaded_stack.UPDATE, loaded_stack.COMPLETE),
+                         loaded_stack.state)
+        db_tpl = db_api.raw_template_get(self.ctx, loaded_stack.t.id)
+        db_params = db_tpl.environment['parameters']
+        self.assertEqual('foo', db_params['param1'])
+        self.assertEqual('cryptography_decrypt_v1', db_params['param2'][0])
+        self.assertIsNotNone(db_params['param2'][1])
+
+        loaded_stack1 = stack.Stack.load(self.ctx, stack_id=self.stack.id)
+        params = loaded_stack1.t.env.params
+        self.assertEqual('foo', params.get('param1'))
+        self.assertEqual('new_bar', params.get('param2'))
+
     def test_parameters_stored_decrypted_successful_load(self):
         """Test stack loading with disabled parameter value validation."""
         tmpl = template_format.parse('''
