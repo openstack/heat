@@ -184,8 +184,8 @@ class KeystoneUser(resource.Resource,
 
         removed_group_ids = [self.client_plugin().get_group_id(group)
                              for group in
-                             (set(stored_prps or [])
-                              - set(updated_prps or []))]
+                             (set(stored_prps or []) -
+                              set(updated_prps or []))]
 
         return new_group_ids, removed_group_ids
 
@@ -217,36 +217,42 @@ class KeystoneUser(resource.Resource,
         self.create_assignment(user_id=user.id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        name = prop_diff.get(self.NAME) or self.physical_resource_name()
-        description = prop_diff.get(self.DESCRIPTION)
-        enabled = prop_diff.get(self.ENABLED)
-        email = prop_diff.get(self.EMAIL)
-        password = prop_diff.get(self.PASSWORD)
-        domain = (prop_diff.get(self.DOMAIN) or
-                  self._stored_properties_data.get(self.DOMAIN))
-        default_project = prop_diff.get(self.DEFAULT_PROJECT)
+        if prop_diff:
+            name = None
+            # Don't update the name if no change
+            if self.NAME in prop_diff:
+                name = prop_diff[self.NAME] or self.physical_resource_name()
 
-        (new_group_ids,
-         removed_group_ids) = self._find_diff(
-            prop_diff.get(self.GROUPS),
-            self._stored_properties_data.get(self.GROUPS))
+            description = prop_diff.get(self.DESCRIPTION)
+            enabled = prop_diff.get(self.ENABLED)
+            email = prop_diff.get(self.EMAIL)
+            password = prop_diff.get(self.PASSWORD)
+            domain = (prop_diff.get(self.DOMAIN) or
+                      self._stored_properties_data.get(self.DOMAIN))
 
-        self._update_user(
-            user_id=self.resource_id,
-            domain=domain,
-            new_name=name,
-            new_description=description,
-            enabled=enabled,
-            new_default_project=default_project,
-            new_email=email,
-            new_password=password
-        )
+            default_project = prop_diff.get(self.DEFAULT_PROJECT)
 
-        if len(new_group_ids) > 0:
-            self._add_user_to_groups(self.resource_id, new_group_ids)
+            self._update_user(
+                user_id=self.resource_id,
+                domain=domain,
+                new_name=name,
+                new_description=description,
+                enabled=enabled,
+                new_default_project=default_project,
+                new_email=email,
+                new_password=password
+            )
 
-        if len(removed_group_ids) > 0:
-            self._remove_user_from_groups(self.resource_id, removed_group_ids)
+            if self.GROUPS in prop_diff:
+                (new_group_ids, removed_group_ids) = self._find_diff(
+                    prop_diff[self.GROUPS],
+                    self._stored_properties_data.get(self.GROUPS))
+                if new_group_ids:
+                    self._add_user_to_groups(self.resource_id, new_group_ids)
+
+                if removed_group_ids:
+                    self._remove_user_from_groups(self.resource_id,
+                                                  removed_group_ids)
 
         self.update_assignment(prop_diff=prop_diff, user_id=self.resource_id)
 
