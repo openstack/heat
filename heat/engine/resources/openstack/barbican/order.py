@@ -266,12 +266,6 @@ class Order(resource.Resource):
 
         return getattr(order, name)
 
-    # TODO(ochuprykov): remove this method when bug #1485619 will be fixed
-    def _show_resource(self):
-        order = self.client().orders.get(self.resource_id)
-        info = order._get_formatted_entity()
-        return dict(zip(info[0], info[1]))
-
 
 def resource_mapping():
     return {

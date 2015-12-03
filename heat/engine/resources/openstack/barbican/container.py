@@ -146,12 +146,6 @@ class GenericContainer(resource.Resource):
         container = self.client().containers.get(self.resource_id)
         return getattr(container, name, None)
 
-    # TODO(ochuprykov): remove this method when bug #1485619 will be fixed
-    def _show_resource(self):
-        container = self.client().containers.get(self.resource_id)
-        info = container._get_formatted_entity()
-        return dict(zip(info[0], info[1]))
-
 
 class CertificateContainer(GenericContainer):
     """A resource for creating barbican certificate container.

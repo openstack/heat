@@ -182,8 +182,6 @@ class TestContainer(common.HeatTestCase):
         mock_container.container_ref = 'test-container-ref'
         mock_container.secret_refs = {'name': 'ref'}
         mock_container.consumers = [{'name': 'name1', 'ref': 'ref1'}]
-        mock_container._get_formatted_entity.return_value = (
-            ('attr', ), ('v',))
         res = self._create_resource('foo')
         self.client.containers.get.return_value = mock_container
         self.assertEqual('test-status', res.FnGetAtt('status'))
@@ -191,7 +189,6 @@ class TestContainer(common.HeatTestCase):
         self.assertEqual({'name': 'ref'}, res.FnGetAtt('secret_refs'))
         self.assertEqual([{'name': 'name1', 'ref': 'ref1'}],
                          res.FnGetAtt('consumers'))
-        self.assertEqual({'attr': 'v'}, res.FnGetAtt('show'))
 
     def test_check_create_complete(self):
         tmpl = template_format.parse(template_by_name())

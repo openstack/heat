@@ -156,14 +156,12 @@ class TestOrder(common.HeatTestCase):
         mock_order.status = 'test-status'
         mock_order.order_ref = 'test-order-ref'
         mock_order.secret_ref = 'test-secret-ref'
-        mock_order._get_formatted_entity.return_value = (('attr', ), ('v',))
 
         res = self._create_resource('foo', self.res_template, self.stack)
         self.barbican.orders.get.return_value = mock_order
 
         self.assertEqual('test-order-ref', res.FnGetAtt('order_ref'))
         self.assertEqual('test-secret-ref', res.FnGetAtt('secret_ref'))
-        self.assertEqual({'attr': 'v'}, res.FnGetAtt('show'))
 
     def test_attributes_handle_exceptions(self):
         mock_order = mock.Mock()
