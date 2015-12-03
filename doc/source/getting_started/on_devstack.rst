@@ -13,9 +13,12 @@
 
 Heat and DevStack
 =================
-Heat is fully integrated into DevStack. This is a convenient way to try out or develop heat alongside the current development state of all the other OpenStack projects. Heat on DevStack works on both Ubuntu and Fedora.
+Heat is fully integrated into DevStack. This is a convenient way to try out or
+develop heat alongside the current development state of all the other
+OpenStack projects. Heat on DevStack works on both Ubuntu and Fedora.
 
-These instructions assume you already have a working DevStack installation which can launch basic instances.
+These instructions assume you already have a working DevStack installation
+which can launch basic instances.
 
 Configure DevStack to enable Heat
 ---------------------------------
@@ -34,16 +37,22 @@ It would also be useful to automatically download and register
 a VM image that Heat can launch. To do that add the following to your
 devstack `localrc`::
 
-    IMAGE_URLS+=",http://download.fedoraproject.org/pub/fedora/linux/releases/21/Cloud/Images/x86_64/Fedora-Cloud-Base-20141203-21.x86_64.qcow2"
+    IMAGE_URL_SITE="http://download.fedoraproject.org"
+    IMAGE_URL_PATH="/pub/fedora/linux/releases/21/Cloud/Images/x86_64/"
+    IMAGE_URL_FILE="Fedora-Cloud-Base-20141203-21.x86_64.qcow2"
+    IMAGE_URLS+=","$IMAGE_URL_SITE$IMAGE_URL_PATH$IMAGE_URL_FILE
 
-URLs for any cloud image may be specified, but fedora images from F20 contain the heat-cfntools package which is required for some heat functionality.
+URLs for any cloud image may be specified, but fedora images from F20 contain
+the heat-cfntools package which is required for some heat functionality.
 
-That is all the configuration that is required. When you run `./stack.sh` the Heat processes will be launched in `screen` with the labels prefixed with `h-`.
+That is all the configuration that is required. When you run `./stack.sh` the
+Heat processes will be launched in `screen` with the labels prefixed with `h-`.
 
 Configure DevStack to enable Ceilometer (if using Alarms)
 ---------------------------------------------------------
 To use Ceilometer Alarms you need to enable Ceilometer in devstack.
-Adding the following lines to your `localrc` file will enable the ceilometer services::
+Adding the following lines to your `localrc` file will enable the ceilometer
+services::
 
     CEILOMETER_BACKEND=mongodb
     enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer
@@ -57,7 +66,9 @@ Add the profiler notifier to your Ceilometer to your config::
 
 Enable the profiler in /etc/heat/heat.conf::
 
-  $ echo -e "[profiler]\nprofiler_enabled = True\ntrace_sqlalchemy = True\n" >> /etc/heat/heat.conf
+  $ echo -e "[profiler]\nprofiler_enabled = True\n"\
+        "trace_sqlalchemy = True\n"\
+        >> /etc/heat/heat.conf
 
 Change the default hmac_key in /etc/heat/api-paste.ini::
 

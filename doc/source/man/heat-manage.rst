@@ -22,7 +22,8 @@ The standard pattern for executing a heat-manage command is:
 Run with -h to see a list of available commands:
 ``heat-manage -h``
 
-Commands are db_version, db_sync, purge_deleted and service. Detailed descriptions are below.
+Commands are ``db_version``, ``db_sync``, ``purge_deleted`` and ``service``.
+Detailed descriptions are below.
 
 
 Heat Db version
