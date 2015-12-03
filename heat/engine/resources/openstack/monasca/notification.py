@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common.i18n import _
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -22,15 +21,18 @@ from heat.engine import support
 class MonascaNotification(resource.Resource):
     """Heat Template Resource for Monasca Notification.
 
-    This plug-in requires python-monascaclient>=1.0.22. So to enable this
-    plug-in, install this client library and restart the heat-engine.
-
     A resource which is used to notificate if there is some alarm.
+    Monasca Notification helps to declare the hook points, which will be
+    invoked once alarm is generated. This plugin helps to create, update and
+    delete the notification.
     """
 
     support_status = support.SupportStatus(
-        version='5.0.0',
-        status=support.UNSUPPORTED)
+        version='7.0.0',
+        previous_status=support.SupportStatus(
+            version='5.0.0',
+            status=support.UNSUPPORTED
+        ))
 
     default_client_name = 'monasca'
 
@@ -114,10 +116,3 @@ def resource_mapping():
     return {
         'OS::Monasca::Notification': MonascaNotification
     }
-
-
-def available_resource_mapping():
-    if not clients.has_client(MonascaNotification.default_client_name):
-        return {}
-
-    return resource_mapping()

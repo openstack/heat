@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common.i18n import _
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -22,8 +21,9 @@ from heat.engine import support
 class MonascaAlarmDefinition(resource.Resource):
     """Heat Template Resource for Monasca Alarm definition.
 
-    This plug-in requires python-monascaclient>=1.0.22. So to enable this
-    plug-in, install this client library and restart the heat-engine.
+    Monasca Alarm definition helps to define the required expression for
+    a given alarm situation. This plugin helps to create, update and
+    delete the alarm definition.
 
     Alarm definitions is necessary to describe and manage alarms in a
     one-to-many relationship in order to avoid having to manually declare each
@@ -32,8 +32,11 @@ class MonascaAlarmDefinition(resource.Resource):
     """
 
     support_status = support.SupportStatus(
-        version='5.0.0',
-        status=support.UNSUPPORTED)
+        version='7.0.0',
+        previous_status=support.SupportStatus(
+            version='5.0.0',
+            status=support.UNSUPPORTED
+        ))
 
     default_client_name = 'monasca'
 
@@ -201,10 +204,3 @@ def resource_mapping():
     return {
         'OS::Monasca::AlarmDefinition': MonascaAlarmDefinition
     }
-
-
-def available_resource_mapping():
-    if not clients.has_client(MonascaAlarmDefinition.default_client_name):
-        return {}
-
-    return resource_mapping()

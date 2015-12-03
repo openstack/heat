@@ -90,12 +90,6 @@ class MonascaClientPluginTest(common.HeatTestCase):
             )
 
 
-# TODO(skraynev): remove it when monasca client will be
-#                 merged in global requirements
-class NotFound(Exception):
-    pass
-
-
 class MonascaClientPluginNotificationTest(common.HeatTestCase):
 
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd152'
@@ -110,10 +104,6 @@ class MonascaClientPluginNotificationTest(common.HeatTestCase):
     def setUp(self):
         super(MonascaClientPluginNotificationTest, self).setUp()
         self._client = mock.MagicMock()
-        client_plugin.monasca_exc = mock.Mock()
-        # TODO(skraynev): remove it when monasca client will be
-        #                 merged in global requirements
-        client_plugin.monasca_exc.NotFound = NotFound
         self.client_plugin = client_plugin.MonascaClientPlugin(
             context=mock.MagicMock()
         )

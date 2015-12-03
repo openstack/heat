@@ -11,27 +11,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import importutils
+from monascaclient import client
+from monascaclient import exc as monasca_exc
 
 from heat.common import exception as heat_exc
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
-
-client = importutils.try_import('monascaclient.client')
-monasca_exc = importutils.try_import('monascaclient.exc')
 
 CLIENT_NAME = 'monasca'
 
 
 class MonascaClientPlugin(client_plugin.ClientPlugin):
     exceptions_module = [monasca_exc]
+
     service_types = [MONITORING] = ['monitoring']
 
     VERSION = '2_0'
-
-    @staticmethod
-    def is_available():
-        return client is not None
 
     def _create(self):
         args = self._get_client_args(service_name=CLIENT_NAME,
