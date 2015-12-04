@@ -163,7 +163,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         self._test_floating_ip(t, resolve_neutron=False)
 
@@ -173,7 +174,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         self._test_floating_ip(t, resolve_neutron=False, r_iface=False)
 
@@ -205,7 +207,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'network',
-                'abcd1234'
+                'abcd1234',
+                cmd_resource=None,
             ).MultipleTimes().AndReturn('abcd1234')
 
         stack = utils.parse_stack(tmpl)
@@ -269,17 +272,20 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'xyz1234'
+            'xyz1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('xyz1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub1234'
+            'sub1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
@@ -497,7 +503,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).AndReturn('xyz1234')
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'xyz1234',
@@ -527,17 +534,20 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'xyz1234'
+            'xyz1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('xyz1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub1234'
+            'sub1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'None'
+            'None',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('None')
 
         neutronclient.Client.create_port({'port': {
@@ -560,7 +570,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         neutronclient.Client.create_floatingip({
             'floatingip': {

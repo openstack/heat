@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutronclient.neutron import v2_0 as neutronV20
 from oslo_utils import netutils
 
 from heat.common import exception
@@ -327,8 +326,9 @@ class Subnet(neutron.NeutronResource):
         self.client_plugin().resolve_network(props, self.NETWORK,
                                              'network_id')
         if self.SUBNETPOOL in props and props[self.SUBNETPOOL]:
-            props['subnetpool_id'] = neutronV20.find_resourceid_by_name_or_id(
-                self.client(), 'subnetpool', props.pop('subnetpool'))
+            props['subnetpool_id'] = self.client_plugin(
+                ).find_resourceid_by_name_or_id(
+                'subnetpool', props.pop('subnetpool'))
         self._null_gateway_ip(props)
         subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])

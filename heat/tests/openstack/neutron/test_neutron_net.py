@@ -106,7 +106,8 @@ class NeutronNetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
 
         # Create script

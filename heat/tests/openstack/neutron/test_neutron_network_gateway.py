@@ -117,7 +117,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).MultipleTimes().AndRaise(qe.NeutronClientException(status_code=404))
         # mock successful to delete the network_gateway
         neutronclient.Client.delete_network_gateway(
@@ -174,7 +175,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'network',
-                '6af055d3-26f6-48dd-a597-7611d7e58d35'
+                '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                cmd_resource=None,
             ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
             t = template_format.parse(gw_template)
         else:
@@ -192,7 +194,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn(
             '6af055d3-26f6-48dd-a597-7611d7e58d35')
 
@@ -278,32 +281,38 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            '6af055d3-26f6-48dd-a597-7611d7e58d35',
+            cmd_resource=None,
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
 
         neutronclient.Client.update_network_gateway(

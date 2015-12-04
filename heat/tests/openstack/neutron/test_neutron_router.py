@@ -465,13 +465,15 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            cmd_resource=None,
         ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
         router_key = 'router'
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+            '91e47a57-7508-46fe-afc9-fc454e8580e1',
+            cmd_resource=None,
         ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
         subnet_key = 'subnet'
 
@@ -499,13 +501,15 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            cmd_resource=None,
         ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
 
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+            '91e47a57-7508-46fe-afc9-fc454e8580e1',
+            cmd_resource=None,
         ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
@@ -552,13 +556,15 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'ae478782-53c0-4434-ab16-49900c88016c'
+            'ae478782-53c0-4434-ab16-49900c88016c',
+            cmd_resource=None,
         ).AndReturn('ae478782-53c0-4434-ab16-49900c88016c')
         port_key = 'port'
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'port',
-            '9577cafd-8e98-4059-a2e6-8a771b4d318e'
+            '9577cafd-8e98-4059-a2e6-8a771b4d318e',
+            cmd_resource=None,
         ).AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
 
         neutronclient.Client.add_interface_router(
@@ -646,7 +652,8 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.add_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
@@ -679,7 +686,8 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'public'
+            'public',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
         neutronclient.Client.create_router({
@@ -758,7 +766,8 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'public'
+            'public',
+            cmd_resource=None,
         ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
         neutronclient.Client.create_router({
@@ -819,7 +828,8 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'other_public'
+            'other_public',
+            cmd_resource=None,
         ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
 
         neutronclient.Client.update_router(
