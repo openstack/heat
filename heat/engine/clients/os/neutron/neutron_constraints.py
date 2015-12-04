@@ -75,3 +75,13 @@ class SubnetPoolConstraint(constraints.BaseCustomConstraint):
         neutron_client = client.client('neutron')
         neutronV20.find_resourceid_by_name_or_id(
             neutron_client, 'subnetpool', value)
+
+
+class AddressScopeConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.NeutronClientException,)
+
+    def validate_with_client(self, client, value):
+        neutron_client = client.client('neutron')
+        neutronV20.find_resourceid_by_name_or_id(
+            neutron_client, 'address_scope', value)
