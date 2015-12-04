@@ -1076,6 +1076,27 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual('Specified output key bunny not found.',
                          six.text_type(ex.exc_info[1]))
 
+    def test_stack_show_output_error(self):
+        t = template_format.parse(tools.wp_template)
+        t['outputs'] = {'test': {'value': 'first', 'description': 'sec'}}
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl,
+                             resolve_data=False)
+
+        self.patchobject(self.eng, '_get_stack')
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+        self.patchobject(
+            stack, 'output',
+            side_effect=[exception.EntityNotFound(entity='one', name='name')])
+
+        output = self.eng.show_output(self.ctx, mock.ANY, 'test')
+        self.assertEqual(
+            {'output_key': 'test',
+             'output_error': "The one (name) could not be found.",
+             'description': 'sec',
+             'output_value': None},
+            output)
+
     def test_stack_list_all_empty(self):
         sl = self.eng.list_stacks(self.ctx)
 
