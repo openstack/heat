@@ -1612,7 +1612,7 @@ class EngineService(service.Service):
             lock = stack_lock.StackLock(cnxt, stk, self.engine_id)
             engine_id = lock.get_engine_id()
             try:
-                with lock.thread_lock(retry=False):
+                with lock.thread_lock(stack_id, retry=False):
 
                     # refetch stack and confirm it is still IN_PROGRESS
                     s = stack_object.Stack.get_by_id(
