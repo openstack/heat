@@ -42,8 +42,21 @@ class TestMagnumBayModel(common.HeatTestCase):
           docker_volume_size: 5
           ssh_authorized_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB
           coe: 'swarm'
-          network_driver: 'flannel'
 '''
+
+    expected = {
+        'name': 'test_bay_model',
+        'image_id': 'fedora-21-atomic-2',
+        'flavor_id': 'm1.small',
+        'master_flavor_id': 'm1.medium',
+        'keypair_id': 'heat_key',
+        'external_network_id': '0244b54d-ae1f-44f0-a24a-442760f1d681',
+        'fixed_network': '0f59a3dd-fac1-4d03-b41a-d4115fbffa89',
+        'dns_nameserver': '8.8.8.8',
+        'docker_volume_size': 5,
+        'ssh_authorized_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB',
+        'coe': 'swarm',
+    }
 
     def setUp(self):
         super(TestMagnumBayModel, self).setUp()
@@ -75,6 +88,7 @@ class TestMagnumBayModel(common.HeatTestCase):
         bm = self._create_resource('bm', self.rsrc_defn, self.stack)
         self.assertEqual(self.resource_id, bm.resource_id)
         self.assertEqual((bm.CREATE, bm.COMPLETE), bm.state)
+        self.client.baymodels.create.assert_called_once_with(**self.expected)
 
     def test_resource_mapping(self):
         mapping = baymodel.resource_mapping()
@@ -107,3 +121,22 @@ class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
           labels: {'flannel_cidr': ['10.101.0.0/16', '10.102.0.0/16']}
           tls_disabled: True
     '''
+    expected = {
+        'name': 'test_bay_model',
+        'image_id': 'fedora-21-atomic-2',
+        'flavor_id': 'm1.small',
+        'master_flavor_id': 'm1.medium',
+        'keypair_id': 'heat_key',
+        'external_network_id': '0244b54d-ae1f-44f0-a24a-442760f1d681',
+        'fixed_network': '0f59a3dd-fac1-4d03-b41a-d4115fbffa89',
+        'dns_nameserver': '8.8.8.8',
+        'docker_volume_size': 5,
+        'ssh_authorized_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB',
+        'coe': 'swarm',
+        'network_driver': 'flannel',
+        'http_proxy': 'http://proxy.com:123',
+        'https_proxy': 'https://proxy.com:123',
+        'no_proxy': '192.168.0.1',
+        'labels': {'flannel_cidr': ['10.101.0.0/16', '10.102.0.0/16']},
+        'tls_disabled': True
+    }
