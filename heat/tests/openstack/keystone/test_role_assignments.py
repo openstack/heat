@@ -309,6 +309,20 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
             group='group_1',
             project='project_1')
 
+    def test_role_assignment_update_roles_no_change(self):
+        prop_diff = {}
+        self.test_role_assignment.update_assignment(
+            group_id='group_1',
+            prop_diff=prop_diff)
+        self.assertEqual(0, self.roles.grant.call_count)
+        self.assertEqual(0, self.roles.revoke.call_count)
+
+        self.test_role_assignment.update_assignment(
+            user_id='user_1',
+            prop_diff=prop_diff)
+        self.assertEqual(0, self.roles.grant.call_count)
+        self.assertEqual(0, self.roles.revoke.call_count)
+
     def test_role_assignment_delete_user(self):
         self.test_role_assignment._stored_properties_data = {
             'roles': [

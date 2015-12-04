@@ -261,6 +261,11 @@ class KeystoneGroupTest(common.HeatTestCase):
             domain_id='test_domain'
         )
 
+        # validate the role assignment isn't updated
+        self.roles = self.keystoneclient.roles
+        self.assertEqual(0, self.roles.revoke.call_count)
+        self.assertEqual(0, self.roles.grant.call_count)
+
     def test_group_handle_update_default(self):
         self.test_group.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         self.test_group._stored_properties_data = dict(domain='default')

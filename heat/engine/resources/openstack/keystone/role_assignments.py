@@ -254,30 +254,32 @@ class KeystoneRoleAssignmentMixin(object):
                     self.properties.get(self.ROLES))
 
     def update_assignment(self, prop_diff, user_id=None, group_id=None):
-        (new_role_assignments,
-         removed_role_assignments) = self._find_differences(
-            prop_diff.get(self.ROLES),
-            self._stored_properties_data.get(self.ROLES))
+        # if there is no change do not update
+        if self.ROLES in prop_diff:
+            (new_role_assignments,
+             removed_role_assignments) = self._find_differences(
+                prop_diff.get(self.ROLES),
+                self._stored_properties_data.get(self.ROLES))
 
-        if len(new_role_assignments) > 0:
-            if user_id is not None:
-                self._add_role_assignments_to_user(
-                    user_id,
-                    new_role_assignments)
-            elif group_id is not None:
-                self._add_role_assignments_to_group(
-                    group_id,
-                    new_role_assignments)
+            if len(new_role_assignments) > 0:
+                if user_id is not None:
+                    self._add_role_assignments_to_user(
+                        user_id,
+                        new_role_assignments)
+                elif group_id is not None:
+                    self._add_role_assignments_to_group(
+                        group_id,
+                        new_role_assignments)
 
-        if len(removed_role_assignments) > 0:
-            if user_id is not None:
-                self._remove_role_assignments_from_user(
-                    user_id,
-                    removed_role_assignments)
-            elif group_id is not None:
-                self._remove_role_assignments_from_group(
-                    group_id,
-                    removed_role_assignments)
+            if len(removed_role_assignments) > 0:
+                if user_id is not None:
+                    self._remove_role_assignments_from_user(
+                        user_id,
+                        removed_role_assignments)
+                elif group_id is not None:
+                    self._remove_role_assignments_from_group(
+                        group_id,
+                        removed_role_assignments)
 
     def delete_assignment(self, user_id=None, group_id=None):
         if self._stored_properties_data.get(self.ROLES) is not None:
