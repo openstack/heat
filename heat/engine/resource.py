@@ -180,6 +180,8 @@ class Resource(object):
         self.name = name
         self.t = definition
         self.reparse()
+        self.update_policy = self.t.update_policy(self.update_policy_schema,
+                                                  self.context)
         self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = self._init_attributes()
 

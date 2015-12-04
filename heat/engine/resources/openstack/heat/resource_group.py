@@ -255,11 +255,6 @@ class ResourceGroup(stack_resource.StackResource):
         )
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(ResourceGroup, self).__init__(name, json_snippet, stack)
-        self.update_policy = self.t.update_policy(self.update_policy_schema,
-                                                  self.context)
-
     def get_size(self):
         return self.properties.get(self.COUNT)
 
