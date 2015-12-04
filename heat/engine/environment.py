@@ -404,8 +404,12 @@ class ResourceRegistry(object):
                                   giter)
 
         for info in sorted(matches):
-            match = info.get_resource_info(resource_type,
-                                           resource_name)
+            try:
+                match = info.get_resource_info(resource_type,
+                                               resource_name)
+            except exception.EntityNotFound:
+                continue
+
             if registry_type is None or isinstance(match, registry_type):
                 if ignore is not None and match == ignore:
                     continue
@@ -420,6 +424,9 @@ class ResourceRegistry(object):
                     self._register_info([resource_type], info)
                 return match
 
+        raise exception.EntityNotFound(entity='Resource Type',
+                                       name=resource_type)
+
     def get_class(self, resource_type, resource_name=None, files=None):
         if resource_type == "":
             msg = _('Resource "%s" has no type') % resource_name
@@ -432,11 +439,12 @@ class ResourceRegistry(object):
             msg = _('Resource "%s" type is not a string') % resource_name
             raise exception.StackValidationFailed(message=msg)
 
-        info = self.get_resource_info(resource_type,
-                                      resource_name=resource_name)
-        if info is None:
-            msg = _("Unknown resource Type : %s") % resource_type
-            raise exception.StackValidationFailed(message=msg)
+        try:
+            info = self.get_resource_info(resource_type,
+                                          resource_name=resource_name)
+        except exception.EntityNotFound as exc:
+            raise exception.StackValidationFailed(message=six.text_type(exc))
+
         return info.get_class(files=files)
 
     def as_dict(self):

@@ -71,11 +71,12 @@ class TemplateResource(stack_resource.StackResource):
         return TemplateResource
 
     def _get_resource_info(self, rsrc_defn):
-        tri = self.stack.env.get_resource_info(
-            rsrc_defn.resource_type,
-            resource_name=rsrc_defn.name,
-            registry_type=environment.TemplateResourceInfo)
-        if tri is None:
+        try:
+            tri = self.stack.env.get_resource_info(
+                rsrc_defn.resource_type,
+                resource_name=rsrc_defn.name,
+                registry_type=environment.TemplateResourceInfo)
+        except exception.EntityNotFound:
             self.validation_exception = ValueError(_(
                 'Only Templates with an extension of .yaml or '
                 '.template are supported'))
@@ -88,7 +89,7 @@ class TemplateResource(stack_resource.StackResource):
             else:
                 self.allowed_schemes = ('http', 'https', 'file')
 
-        return tri
+            return tri
 
     @staticmethod
     def get_template_file(template_name, allowed_schemes):
@@ -266,14 +267,17 @@ class TemplateResource(stack_resource.StackResource):
         except ValueError as ex:
             msg = _("Failed to retrieve template data: %s") % ex
             raise exception.StackValidationFailed(message=msg)
-        fri = self.stack.env.get_resource_info(
-            self.type(),
-            resource_name=self.name,
-            ignore=self.resource_info)
 
         # If we're using an existing resource type as a facade for this
         # template, check for compatibility between the interfaces.
-        if fri is not None:
+        try:
+            fri = self.stack.env.get_resource_info(
+                self.type(),
+                resource_name=self.name,
+                ignore=self.resource_info)
+        except exception.EntityNotFound:
+            pass
+        else:
             facade_cls = fri.get_class(files=self.stack.t.files)
             self._validate_against_facade(facade_cls)
 
