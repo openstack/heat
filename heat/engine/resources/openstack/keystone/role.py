@@ -60,8 +60,10 @@ class KeystoneRole(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            name = prop_diff.get(self.NAME) or self.physical_resource_name()
-            self.client().roles.update(role=self.resource_id, name=name)
+            # Don't update the name if no change
+            if self.NAME in prop_diff:
+                name = prop_diff[self.NAME] or self.physical_resource_name()
+                self.client().roles.update(role=self.resource_id, name=name)
 
 
 def resource_mapping():

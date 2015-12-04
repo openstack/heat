@@ -111,7 +111,10 @@ class KeystoneEndpoint(resource.Resource):
             service = prop_diff.get(self.SERVICE)
             interface = prop_diff.get(self.INTERFACE)
             url = prop_diff.get(self.SERVICE_URL)
-            name = prop_diff.get(self.NAME) or self.physical_resource_name()
+            name = None
+            # Don't update the name if no change
+            if self.NAME in prop_diff:
+                name = prop_diff[self.NAME] or self.physical_resource_name()
             enabled = prop_diff.get(self.ENABLED)
 
             self.client().endpoints.update(

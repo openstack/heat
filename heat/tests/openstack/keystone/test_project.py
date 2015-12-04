@@ -317,8 +317,6 @@ class KeystoneProjectTest(common.HeatTestCase):
     def test_project_handle_update_default(self):
         self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         self.test_project._stored_properties_data = dict(domain='default')
-        self.test_project.physical_resource_name = mock.MagicMock()
-        self.test_project.physical_resource_name.return_value = 'foo'
 
         prop_diff = {project.KeystoneProject.DESCRIPTION:
                      'Test Project updated',
@@ -332,8 +330,25 @@ class KeystoneProjectTest(common.HeatTestCase):
         # domain is set from stored properties used during creation.
         self.projects.update.assert_called_once_with(
             project=self.test_project.resource_id,
-            name='foo',
+            name=None,
             description=prop_diff[project.KeystoneProject.DESCRIPTION],
+            enabled=prop_diff[project.KeystoneProject.ENABLED],
+            domain='default'
+        )
+
+    def test_project_handle_update_only_enabled(self):
+        self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        self.test_project._stored_properties_data = dict(domain='default')
+        prop_diff = {project.KeystoneProject.ENABLED: False}
+
+        self.test_project.handle_update(json_snippet=None,
+                                        tmpl_diff=None,
+                                        prop_diff=prop_diff)
+
+        self.projects.update.assert_called_once_with(
+            project=self.test_project.resource_id,
+            name=None,
+            description=None,
             enabled=prop_diff[project.KeystoneProject.ENABLED],
             domain='default'
         )

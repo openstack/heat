@@ -83,8 +83,10 @@ class KeystoneService(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            name = (prop_diff.get(self.NAME) or
-                    self.physical_resource_name())
+            name = None
+            # Don't update the name if no change
+            if self.NAME in prop_diff:
+                name = prop_diff[self.NAME] or self.physical_resource_name()
             description = prop_diff.get(self.DESCRIPTION)
             type = prop_diff.get(self.TYPE)
             enabled = prop_diff.get(self.ENABLED)
