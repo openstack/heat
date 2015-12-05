@@ -37,11 +37,11 @@ def task_description(task):
     The description is used to identify the task when logging its status.
     """
     name = task.__name__ if hasattr(task, '__name__') else None
-    if isinstance(task, types.MethodType):
-        if name is not None and hasattr(task, '__self__'):
+    if name is not None and isinstance(task, (types.MethodType,
+                                              types.FunctionType)):
+        if getattr(task, '__self__', None) is not None:
             return '%s from %s' % (name, task.__self__)
-    elif isinstance(task, types.FunctionType):
-        if name is not None:
+        else:
             return six.text_type(name)
     return repr(task)
 
