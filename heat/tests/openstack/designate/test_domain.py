@@ -186,3 +186,33 @@ class DesignateDomainTest(common.HeatTestCase):
         mock_domain_create.assert_called_once_with(
             name='test-domain.com', description='Test domain',
             email='abc@test-domain.com')
+
+    def test_domain_get_live_state(self):
+        return_domain = {
+            'name': 'test-domain.com',
+            'description': 'Test domain',
+            'ttl': 3600,
+            'email': 'abc@test-domain.com'
+        }
+        self.test_client.domains.get.return_value = return_domain
+        self.test_resource.resource_id = '1234'
+
+        reality = self.test_resource.get_live_state(
+            self.test_resource.properties)
+
+        self.assertEqual(return_domain, reality)
+
+    def test_domain_get_live_state_ttl_equals_zero(self):
+        return_domain = {
+            'name': 'test-domain.com',
+            'description': 'Test domain',
+            'ttl': 0,
+            'email': 'abc@test-domain.com'
+        }
+        self.test_client.domains.get.return_value = return_domain
+        self.test_resource.resource_id = '1234'
+
+        reality = self.test_resource.get_live_state(
+            self.test_resource.properties)
+
+        self.assertEqual(return_domain, reality)
