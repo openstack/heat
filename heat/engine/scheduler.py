@@ -352,7 +352,8 @@ class DependencyTaskGroup(object):
         of the error will be cancelled). Once all chains are complete, any
         errors will be rolled up into an ExceptionGroup exception.
         """
-        self._runners = dict((o, TaskRunner(task, o)) for o in dependencies)
+        self._keys = list(dependencies)
+        self._runners = dict((o, TaskRunner(task, o)) for o in self._keys)
         self._graph = dependencies.graph(reverse=reverse)
         self.error_wait_time = error_wait_time
         self.aggregate_exceptions = aggregate_exceptions
@@ -375,6 +376,8 @@ class DependencyTaskGroup(object):
             try:
                 for k, r in self._ready():
                     r.start()
+                    if not r:
+                        del self._graph[k]
 
                 yield
 
@@ -417,8 +420,8 @@ class DependencyTaskGroup(object):
         Iterate over all subtasks that are ready to start - i.e. all their
         dependencies have been satisfied but they have not yet been started.
         """
-        for k, n in six.iteritems(self._graph):
-            if not n:
+        for k in self._keys:
+            if not self._graph.get(k, True):
                 runner = self._runners[k]
                 if runner and not runner.started():
                     yield k, runner
