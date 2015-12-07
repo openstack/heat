@@ -726,7 +726,10 @@ class EngineService(service.Service):
             parent_resource_name)
 
         self.resource_enforcer.enforce_stack(stack)
-        stack.store()
+        stack_id = stack.store()
+        if cfg.CONF.reauthentication_auth_method == 'trusts':
+            stack = parser.Stack.load(
+                cnxt, stack_id=stack_id, use_stored_context=True)
         _create_stack_user(stack)
         if convergence:
             action = stack.CREATE
@@ -844,8 +847,11 @@ class EngineService(service.Service):
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
         LOG.info(_LI('Updating stack %s'), db_stack.name)
-
-        current_stack = parser.Stack.load(cnxt, stack=db_stack)
+        if cfg.CONF.reauthentication_auth_method == 'trusts':
+            current_stack = parser.Stack.load(
+                cnxt, stack=db_stack, use_stored_context=True)
+        else:
+            current_stack = parser.Stack.load(cnxt, stack=db_stack)
         self.resource_enforcer.enforce_stack(current_stack)
 
         if current_stack.action == current_stack.SUSPEND:
