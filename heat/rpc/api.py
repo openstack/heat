@@ -100,6 +100,8 @@ EVENT_KEYS = (
 NOTIFY_KEYS = (
     NOTIFY_TENANT_ID,
     NOTIFY_USER_ID,
+    NOTIFY_USERID,
+    NOTIFY_USERNAME,
     NOTIFY_STACK_ID,
     NOTIFY_STACK_NAME,
     NOTIFY_STATE,
@@ -108,6 +110,8 @@ NOTIFY_KEYS = (
 ) = (
     'tenant_id',
     'user_id',
+    'user_identity',
+    'username',
     STACK_ID,
     STACK_NAME,
     'state',
