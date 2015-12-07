@@ -38,8 +38,7 @@ iniset heat_integrationtests.conf DEFAULT minimal_image_ref cirros-0.3.4-x86_64-
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-# Skipping CeilometerAlarmTest.test_alarm till bug #1523337 is fixed
-iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest, CeilometerAlarmTest.test_alarm'
+iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
 
 # Skip some tests for convergence until it is fixed
 if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
