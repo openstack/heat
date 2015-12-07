@@ -184,16 +184,30 @@ class GlobResourceInfo(MapResourceInfo):
     """Store the mapping (with wild cards) of one resource type to another.
 
     like: OS::Networking::* -> OS::Neutron::*
+
+    Also supports many-to-one mapping (mostly useful together with special
+    "OS::Heat::None" resource)
+
+    like: OS::* -> OS::Heat::None
     """
     description = 'Wildcard Mapping'
 
     def get_resource_info(self, resource_type=None, resource_name=None):
+        # NOTE(pas-ha) we end up here only when self.name already
+        # ends with * so truncate it
         orig_prefix = self.name[:-1]
-        new_type = self.value[:-1] + resource_type[len(orig_prefix):]
+        if self.value.endswith('*'):
+            new_type = self.value[:-1] + resource_type[len(orig_prefix):]
+        else:
+            new_type = self.value
+
         return self.registry.get_resource_info(new_type, resource_name)
 
     def matches(self, resource_type):
-        return resource_type.startswith(self.name[:-1])
+        # prevent self-recursion in case of many-to-one mapping
+        match = (resource_type != self.value and
+                 resource_type.startswith(self.name[:-1]))
+        return match
 
 
 class ResourceRegistry(object):
