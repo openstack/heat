@@ -27,12 +27,16 @@ from heat.engine.resources import stack_resource
 from heat.engine import template
 
 
+REMOTE_SCHEMES = ('http', 'https')
+LOCAL_SCHEMES = ('file',)
+
+
 def generate_class(name, template_name, env, files=None):
     data = None
     if files is not None:
         data = files.get(template_name)
     if data is None:
-        data = TemplateResource.get_template_file(template_name, ('file',))
+        data = TemplateResource.get_template_file(template_name, LOCAL_SCHEMES)
     return generate_class_from_template(name, data, env)
 
 
@@ -84,9 +88,9 @@ class TemplateResource(stack_resource.StackResource):
             self.resource_type = tri.name
             self.resource_path = tri.path
             if tri.user_resource:
-                self.allowed_schemes = ('http', 'https')
+                self.allowed_schemes = REMOTE_SCHEMES
             else:
-                self.allowed_schemes = ('http', 'https', 'file')
+                self.allowed_schemes = REMOTE_SCHEMES + LOCAL_SCHEMES
 
             return tri
 
