@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -47,12 +48,12 @@ class DesignateDomain(resource.Resource):
             required=True,
             constraints=[constraints.Length(max=255)]
         ),
-        # Based on RFC 1035, range for ttl is set to 0 to signed 32 bit number
+        # Based on RFC 1035, range for ttl is set to 1 to signed 32 bit number
         TTL: properties.Schema(
             properties.Schema.INTEGER,
             _('Time To Live (Seconds).'),
             update_allowed=True,
-            constraints=[constraints.Range(min=0,
+            constraints=[constraints.Range(min=1,
                                            max=2147483647)]
         ),
         # designate mandates to the max length of 160 for description
@@ -82,13 +83,7 @@ class DesignateDomain(resource.Resource):
     entity = 'domains'
 
     def handle_create(self):
-        args = dict(
-            name=self.properties[self.NAME],
-            email=self.properties[self.EMAIL],
-            description=self.properties[self.DESCRIPTION],
-            ttl=self.properties[self.TTL]
-        )
-
+        args = dict((k, v) for k, v in six.iteritems(self.properties) if v)
         domain = self.client_plugin().domain_create(**args)
 
         self.resource_id_set(domain.id)
