@@ -27,8 +27,6 @@ class ParameterGroups(object):
     def __init__(self, tmpl):
         self.tmpl = tmpl
         self.parameters = tmpl.parameters(None, {}, param_defaults={})
-        LOG.debug(self.tmpl)
-        LOG.debug(self.parameters)
         self.parameter_names = []
         if self.parameters:
             self.parameter_names = [param for param in self.parameters]
@@ -40,8 +38,8 @@ class ParameterGroups(object):
         Validate that each parameter belongs to only one Parameter Group and
         that each parameter name in the group references a valid parameter.
         """
-        LOG.debug('Validating Parameter Groups.')
-        LOG.debug(self.parameter_names)
+        LOG.debug('Validating Parameter Groups: %s',
+                  ', '.join(self.parameter_names))
         if self.parameter_groups:
             if not isinstance(self.parameter_groups, list):
                 raise exception.StackValidationFailed(
