@@ -34,8 +34,26 @@ from heat.engine import clients
 
 LOG = logging.getLogger(__name__)
 
+
+# Note, we yield the options via list_opts to enable generation of the
+# sample heat.conf, but we don't register these options directly via
+# cfg.CONF.register*, it's done via auth.register_conf_options
+# Note, only auth_plugin = v3password is expected to work, example config:
+# [trustee]
+# auth_plugin = password
+# auth_url = http://192.168.1.2:35357
+# username = heat
+# password = password
+# user_domain_id = default
+V3_PASSWORD_PLUGIN = 'v3password'
 TRUSTEE_CONF_GROUP = 'trustee'
 auth.register_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
+
+
+def list_opts():
+    trustee_opts = auth.conf.get_common_conf_options()
+    trustee_opts.extend(auth.conf.get_plugin_options(V3_PASSWORD_PLUGIN))
+    yield TRUSTEE_CONF_GROUP, trustee_opts
 
 
 class RequestContext(context.RequestContext):
@@ -151,6 +169,7 @@ class RequestContext(context.RequestContext):
             cfg.CONF, TRUSTEE_CONF_GROUP, trust_id=self.trust_id)
 
         if self._trusts_auth_plugin:
+            LOG.warn(_LW('SHDEBUG NOT Using the keystone_authtoken'))
             return self._trusts_auth_plugin
 
         LOG.warn(_LW('Using the keystone_authtoken user as the heat '
