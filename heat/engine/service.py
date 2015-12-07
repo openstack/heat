@@ -930,20 +930,81 @@ class EngineService(service.Service):
 
         actions = update_task.preview()
 
-        def fmt_updated_res(k):
-            return api.format_stack_resource(updated_stack.resources.get(k))
+        def fmt_action_map(current, updated, act):
+            def fmt_updated_res(k):
+                return api.format_stack_resource(updated.resources.get(k))
 
-        def fmt_current_res(k):
-            return api.format_stack_resource(current_stack.resources.get(k))
+            def fmt_current_res(k):
+                return api.format_stack_resource(current.resources.get(k))
+
+            return {
+                'unchanged': map(fmt_updated_res, act.get('unchanged', [])),
+                'updated': map(fmt_current_res, act.get('updated', [])),
+                'replaced': map(fmt_updated_res, act.get('replaced', [])),
+                'added': map(fmt_updated_res, act.get('added', [])),
+                'deleted': map(fmt_current_res, act.get('deleted', [])),
+            }
 
         updated_stack.id = current_stack.id
-        return {
-            'unchanged': map(fmt_updated_res, actions['unchanged']),
-            'updated': map(fmt_current_res, actions['updated']),
-            'replaced': map(fmt_updated_res, actions['replaced']),
-            'added': map(fmt_updated_res, actions['added']),
-            'deleted': map(fmt_current_res, actions['deleted']),
-        }
+        fmt_actions = fmt_action_map(current_stack, updated_stack, actions)
+
+        if args.get(rpc_api.PARAM_SHOW_NESTED):
+            # Note preview_resources is needed here to build the tree
+            # of nested resources/stacks in memory, otherwise the
+            # nested/has_nested() tests below won't work
+            updated_stack.preview_resources()
+
+            def nested_fmt_actions(current, updated, act):
+                updated.id = current.id
+
+                # Recurse for resources deleted from the current stack,
+                # which is all those marked as deleted or replaced
+                def _n_deleted(stk, deleted):
+                    for rsrc in deleted:
+                        deleted_rsrc = stk.resources.get(rsrc)
+                        if deleted_rsrc.has_nested():
+                            nested_stk = deleted_rsrc.nested()
+                            nested_rsrc = nested_stk.resources.keys()
+                            n_fmt = fmt_action_map(
+                                nested_stk, None, {'deleted': nested_rsrc})
+                            fmt_actions['deleted'].extend(n_fmt['deleted'])
+                            _n_deleted(nested_stk, nested_rsrc)
+                _n_deleted(current, act['deleted'] + act['replaced'])
+
+                # Recurse for all resources added to the updated stack,
+                # which is all those marked added or replaced
+                def _n_added(stk, added):
+                    for rsrc in added:
+                        added_rsrc = stk.resources.get(rsrc)
+                        if added_rsrc.has_nested():
+                            nested_stk = added_rsrc.nested()
+                            nested_rsrc = nested_stk.resources.keys()
+                            n_fmt = fmt_action_map(
+                                None, nested_stk, {'added': nested_rsrc})
+                            fmt_actions['added'].extend(n_fmt['added'])
+                            _n_added(nested_stk, nested_rsrc)
+                _n_added(updated, act['added'] + act['replaced'])
+
+                # Recursively preview all "updated" resources
+                for rsrc in act['updated']:
+                    current_rsrc = current.resources.get(rsrc)
+                    updated_rsrc = updated.resources.get(rsrc)
+                    if current_rsrc.has_nested() and updated_rsrc.has_nested():
+                        current_nested = current_rsrc.nested()
+                        updated_nested = updated_rsrc.nested()
+                        update_task = update.StackUpdate(
+                            current_nested, updated_nested, None)
+                        n_actions = update_task.preview()
+                        n_fmt_actions = fmt_action_map(
+                            current_nested, updated_nested, n_actions)
+                        for k in fmt_actions:
+                            fmt_actions[k].extend(n_fmt_actions[k])
+                        nested_fmt_actions(current_nested, updated_nested,
+                                           n_actions)
+            # Start the recursive nested_fmt_actions with the parent stack.
+            nested_fmt_actions(current_stack, updated_stack, actions)
+
+        return fmt_actions
 
     @context.request_context
     def stack_cancel_update(self, cnxt, stack_identity,

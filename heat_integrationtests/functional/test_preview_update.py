@@ -54,7 +54,14 @@ test_template_two_resource = {
 }
 
 
-class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
+class UpdatePreviewBase(functional_base.FunctionalTestsBase):
+
+    def assert_empty_sections(self, changes, empty_sections):
+        for section in empty_sections:
+            self.assertEqual([], changes[section])
+
+
+class UpdatePreviewStackTest(UpdatePreviewBase):
 
     def test_add_resource(self):
         self.stack_identifier = self.stack_create(
@@ -69,9 +76,7 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
         added = changes['added'][0]['resource_name']
         self.assertEqual('test2', added)
 
-        empty_sections = ('updated', 'replaced', 'deleted')
-        for section in empty_sections:
-            self.assertEqual([], changes[section])
+        self.assert_empty_sections(changes, ['updated', 'replaced', 'deleted'])
 
     def test_no_change(self):
         self.stack_identifier = self.stack_create(
@@ -83,9 +88,8 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
         unchanged = changes['unchanged'][0]['resource_name']
         self.assertEqual('test1', unchanged)
 
-        empty_sections = ('updated', 'replaced', 'deleted', 'added')
-        for section in empty_sections:
-            self.assertEqual([], changes[section])
+        self.assert_empty_sections(
+            changes, ['updated', 'replaced', 'deleted', 'added'])
 
     def test_update_resource(self):
         self.stack_identifier = self.stack_create(
@@ -113,9 +117,8 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
         updated = changes['updated'][0]['resource_name']
         self.assertEqual('test1', updated)
 
-        empty_sections = ('added', 'unchanged', 'replaced', 'deleted')
-        for section in empty_sections:
-            self.assertEqual([], changes[section])
+        self.assert_empty_sections(
+            changes, ['added', 'unchanged', 'replaced', 'deleted'])
 
     def test_replaced_resource(self):
         self.stack_identifier = self.stack_create(
@@ -139,9 +142,8 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
         replaced = changes['replaced'][0]['resource_name']
         self.assertEqual('test1', replaced)
 
-        empty_sections = ('added', 'unchanged', 'updated', 'deleted')
-        for section in empty_sections:
-            self.assertEqual([], changes[section])
+        self.assert_empty_sections(
+            changes, ['added', 'unchanged', 'updated', 'deleted'])
 
     def test_delete_resource(self):
         self.stack_identifier = self.stack_create(
@@ -156,6 +158,141 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
         deleted = changes['deleted'][0]['resource_name']
         self.assertEqual('test2', deleted)
 
-        empty_sections = ('updated', 'replaced', 'added')
-        for section in empty_sections:
-            self.assertEqual([], changes[section])
+        self.assert_empty_sections(changes, ['updated', 'replaced', 'added'])
+
+
+class UpdatePreviewStackTestNested(UpdatePreviewBase):
+    template_nested_parent = '''
+heat_template_version: 2016-04-08
+resources:
+  nested1:
+    type: nested1.yaml
+'''
+
+    template_nested1 = '''
+heat_template_version: 2016-04-08
+resources:
+  nested2:
+    type: nested2.yaml
+'''
+
+    template_nested2 = '''
+heat_template_version: 2016-04-08
+resources:
+  random:
+    type: OS::Heat::RandomString
+'''
+
+    template_nested2_2 = '''
+heat_template_version: 2016-04-08
+resources:
+  random:
+    type: OS::Heat::RandomString
+  random2:
+    type: OS::Heat::RandomString
+'''
+
+    def _get_by_resource_name(self, changes, name, action):
+        filtered_l = [x for x in changes[action]
+                      if x['resource_name'] == name]
+        self.assertEqual(1, len(filtered_l))
+        return filtered_l[0]
+
+    def test_nested_resources_nochange(self):
+        files = {'nested1.yaml': self.template_nested1,
+                 'nested2.yaml': self.template_nested2}
+        self.stack_identifier = self.stack_create(
+            template=self.template_nested_parent, files=files)
+        result = self.preview_update_stack(
+            self.stack_identifier,
+            template=self.template_nested_parent,
+            files=files, show_nested=True)
+        changes = result['resource_changes']
+
+        # The nested random resource should be unchanged, but we always
+        # update nested stacks even when there are no changes
+        self.assertEqual(1, len(changes['unchanged']))
+        self.assertEqual('random', changes['unchanged'][0]['resource_name'])
+        self.assertEqual('nested2', changes['unchanged'][0]['parent_resource'])
+
+        self.assertEqual(2, len(changes['updated']))
+        u_nested1 = self._get_by_resource_name(changes, 'nested1', 'updated')
+        self.assertNotIn('parent_resource', u_nested1)
+        u_nested2 = self._get_by_resource_name(changes, 'nested2', 'updated')
+        self.assertEqual('nested1', u_nested2['parent_resource'])
+
+        self.assert_empty_sections(changes, ['replaced', 'deleted', 'added'])
+
+    def test_nested_resources_add(self):
+        files = {'nested1.yaml': self.template_nested1,
+                 'nested2.yaml': self.template_nested2}
+        self.stack_identifier = self.stack_create(
+            template=self.template_nested_parent, files=files)
+        files['nested2.yaml'] = self.template_nested2_2
+        result = self.preview_update_stack(
+            self.stack_identifier,
+            template=self.template_nested_parent,
+            files=files, show_nested=True)
+        changes = result['resource_changes']
+
+        # The nested random resource should be unchanged, but we always
+        # update nested stacks even when there are no changes
+        self.assertEqual(1, len(changes['unchanged']))
+        self.assertEqual('random', changes['unchanged'][0]['resource_name'])
+        self.assertEqual('nested2', changes['unchanged'][0]['parent_resource'])
+
+        self.assertEqual(1, len(changes['added']))
+        self.assertEqual('random2', changes['added'][0]['resource_name'])
+        self.assertEqual('nested2', changes['added'][0]['parent_resource'])
+
+        self.assert_empty_sections(changes, ['replaced', 'deleted'])
+
+    def test_nested_resources_delete(self):
+        files = {'nested1.yaml': self.template_nested1,
+                 'nested2.yaml': self.template_nested2_2}
+        self.stack_identifier = self.stack_create(
+            template=self.template_nested_parent, files=files)
+        files['nested2.yaml'] = self.template_nested2
+        result = self.preview_update_stack(
+            self.stack_identifier,
+            template=self.template_nested_parent,
+            files=files, show_nested=True)
+        changes = result['resource_changes']
+
+        # The nested random resource should be unchanged, but we always
+        # update nested stacks even when there are no changes
+        self.assertEqual(1, len(changes['unchanged']))
+        self.assertEqual('random', changes['unchanged'][0]['resource_name'])
+        self.assertEqual('nested2', changes['unchanged'][0]['parent_resource'])
+
+        self.assertEqual(1, len(changes['deleted']))
+        self.assertEqual('random2', changes['deleted'][0]['resource_name'])
+        self.assertEqual('nested2', changes['deleted'][0]['parent_resource'])
+
+        self.assert_empty_sections(changes, ['replaced', 'added'])
+
+    def test_nested_resources_replace(self):
+        files = {'nested1.yaml': self.template_nested1,
+                 'nested2.yaml': self.template_nested2}
+        self.stack_identifier = self.stack_create(
+            template=self.template_nested_parent, files=files)
+        parent_none = self.template_nested_parent.replace(
+            'nested1.yaml', 'OS::Heat::None')
+        result = self.preview_update_stack(
+            self.stack_identifier,
+            template=parent_none,
+            show_nested=True)
+        changes = result['resource_changes']
+
+        # The nested random resource should be unchanged, but we always
+        # update nested stacks even when there are no changes
+        self.assertEqual(1, len(changes['replaced']))
+        self.assertEqual('nested1', changes['replaced'][0]['resource_name'])
+
+        self.assertEqual(2, len(changes['deleted']))
+        d_random = self._get_by_resource_name(changes, 'random', 'deleted')
+        self.assertEqual('nested2', d_random['parent_resource'])
+        d_nested2 = self._get_by_resource_name(changes, 'nested2', 'deleted')
+        self.assertEqual('nested1', d_nested2['parent_resource'])
+
+        self.assert_empty_sections(changes, ['updated', 'unchanged', 'added'])

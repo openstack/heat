@@ -486,12 +486,23 @@ class StackController(object):
 
         raise exc.HTTPAccepted()
 
+    def _param_show_nested(self, req):
+        whitelist = {'show_nested': 'single'}
+        params = util.get_allowed_params(req.params, whitelist)
+
+        p_name = 'show_nested'
+        if p_name in params:
+            return self._extract_bool_param(p_name, params[p_name])
+
     @util.identified_stack
     def preview_update(self, req, identity, body):
         """Preview update for existing stack with a new template/parameters."""
         data = InstantiationData(body)
 
         args = self.prepare_args(data)
+        show_nested = self._param_show_nested(req)
+        if show_nested is not None:
+            args[rpc_api.PARAM_SHOW_NESTED] = show_nested
         changes = self.rpc_client.preview_update_stack(
             req.context,
             identity,
@@ -509,6 +520,9 @@ class StackController(object):
         data = InstantiationData(body, patch=True)
 
         args = self.prepare_args(data)
+        show_nested = self._param_show_nested(req)
+        if show_nested is not None:
+            args['show_nested'] = show_nested
         changes = self.rpc_client.preview_update_stack(
             req.context,
             identity,
