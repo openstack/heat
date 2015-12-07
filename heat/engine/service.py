@@ -1279,9 +1279,6 @@ class EngineService(service.Service):
         self.resource_enforcer.enforce(cnxt, type_name)
         try:
             resource_class = resources.global_env().get_class(type_name)
-        except exception.StackValidationFailed:
-            raise exception.EntityNotFound(entity='Resource Type',
-                                           name=type_name)
         except exception.NotFound:
             LOG.exception(_LE('Error loading resource type %s '
                               'from global environment.'),
@@ -1328,18 +1325,16 @@ class EngineService(service.Service):
         self.resource_enforcer.enforce(cnxt, type_name)
         try:
             resource_class = resources.global_env().get_class(type_name)
-            if resource_class.support_status.status == support.HIDDEN:
-                raise exception.NotSupported(type_name)
-            return resource_class.resource_to_template(type_name,
-                                                       template_type)
-        except exception.StackValidationFailed:
-            raise exception.EntityNotFound(entity='Resource Type',
-                                           name=type_name)
         except exception.NotFound:
             LOG.exception(_LE('Error loading resource type %s '
                               'from global environment.'),
                           type_name)
             raise exception.InvalidGlobalResource(type_name=type_name)
+        else:
+            if resource_class.support_status.status == support.HIDDEN:
+                raise exception.NotSupported(type_name)
+            return resource_class.resource_to_template(type_name,
+                                                       template_type)
 
     @context.request_context
     def list_events(self, cnxt, stack_identity, filters=None, limit=None,
