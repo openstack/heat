@@ -1078,6 +1078,34 @@ Resources:
 
         self.m.VerifyAll()
 
+    def test_security_group_neutron_update_with_empty_rules(self):
+        # create script
+        self.stubout_neutron_create_security_group()
+
+        # update script
+        # delete old not needed rules
+        self.stubout_neutron_get_security_group()
+        neutronclient.Client.delete_security_group_rule(
+            'eeee').InAnyOrder().AndReturn(None)
+        neutronclient.Client.delete_security_group_rule(
+            'ffff').InAnyOrder().AndReturn(None)
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template_neutron)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'aaaa')
+
+        # make updated template
+        props = copy.deepcopy(sg.properties.data)
+        del props['SecurityGroupEgress']
+        after = rsrc_defn.ResourceDefinition(sg.name, sg.type(), props)
+        scheduler.TaskRunner(sg.update, after)()
+
+        self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
+
+        self.m.VerifyAll()
+
     @mock.patch.object(security_group.SecurityGroup, 'is_using_neutron')
     def test_security_group_refid_rsrc_name(self, mock_using_neutron):
         mock_using_neutron.return_value = False

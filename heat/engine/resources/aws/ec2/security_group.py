@@ -70,7 +70,8 @@ class NovaSecurityGroup(BaseSecurityGroup):
 
     def _prop_rules_to_common(self, props, direction):
         rules = []
-        for pr in props[direction]:
+        prs = props.get(direction) or []
+        for pr in prs:
             rule = dict(pr)
             rule.pop(self.sg.RULE_SOURCE_SECURITY_GROUP_OWNER_ID)
             if rule[self.sg.RULE_FROM_PORT]:
@@ -202,7 +203,8 @@ class NeutronSecurityGroup(BaseSecurityGroup):
 
     def _prop_rules_to_common(self, props, direction):
         rules = []
-        for pr in props[direction]:
+        prs = props.get(direction) or []
+        for pr in prs:
             rule = dict(pr)
             rule.pop(self.sg.RULE_SOURCE_SECURITY_GROUP_OWNER_ID)
             # Neutron only accepts positive ints
