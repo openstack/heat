@@ -14,6 +14,7 @@
 import collections
 import copy
 import datetime
+import functools
 import itertools
 import re
 
@@ -909,15 +910,18 @@ class Stack(collections.Mapping):
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action
 
+        action_method = action.lower()
+        # If a local _$action_kwargs function exists, call it to get the
+        # action specific argument list, otherwise an empty arg list
+        handle_kwargs = getattr(self,
+                                '_%s_kwargs' % action_method,
+                                lambda x: {})
+
+        @functools.wraps(getattr(resource.Resource, action_method))
         def resource_action(r):
             # Find e.g resource.create and call it
-            action_l = action.lower()
-            handle = getattr(r, '%s' % action_l)
+            handle = getattr(r, action_method)
 
-            # If a local _$action_kwargs function exists, call it to get the
-            # action specific argument list, otherwise an empty arg list
-            handle_kwargs = getattr(self,
-                                    '_%s_kwargs' % action_l, lambda x: {})
             return handle(**handle_kwargs(r))
 
         action_task = scheduler.DependencyTaskGroup(
@@ -1558,11 +1562,8 @@ class Stack(collections.Mapping):
                                'Failed stack pre-ops: %s' % six.text_type(e))
                 return
 
-        def destroy_resource(stack_resource):
-            return stack_resource.destroy()
-
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
-                                                    destroy_resource,
+                                                    resource.Resource.destroy,
                                                     reverse=True)
         try:
             scheduler.TaskRunner(action_task)(timeout=self.timeout_secs())
