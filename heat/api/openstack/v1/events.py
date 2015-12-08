@@ -143,7 +143,7 @@ class EventController(object):
     def show(self, req, identity, resource_name, event_id):
         """Gets detailed information for an event."""
 
-        filters = {"resource_name": resource_name}
+        filters = {"resource_name": resource_name, "uuid": event_id}
         events = self._event_list(req, identity, filters=filters, detail=True)
         if not events:
             raise exc.HTTPNotFound(_('No event %s found') % event_id)
