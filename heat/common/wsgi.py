@@ -76,8 +76,10 @@ api_opts = [
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('workers', default=processutils.get_worker_count(),
-               help=_("Number of workers for Heat service."),
+    cfg.IntOpt('workers', default=0,
+               help=_("Number of workers for Heat service. "
+                      "Default value 0 means, that service will start number "
+                      "of workers equal number of cores on server."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('max_header_line', default=16384,
                help=_('Maximum line size of message headers to be accepted. '
@@ -114,7 +116,7 @@ api_cfn_opts = [
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('workers', default=0,
+    cfg.IntOpt('workers', default=1,
                help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('max_header_line', default=16384,
@@ -152,7 +154,7 @@ api_cw_opts = [
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('workers', default=0,
+    cfg.IntOpt('workers', default=1,
                help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('max_header_line', default=16384,
@@ -310,17 +312,28 @@ class Server(object):
         self.start_wsgi()
 
     def start_wsgi(self):
-        if self.conf.workers == 0:
+        workers = self.conf.workers
+        # raise error if workers is incorrect value
+        if workers < 0:
+            raise ValueError("Number of workers should be more or equal '0'!")
+        # childs == num of cores
+        if workers == 0:
+            childs_num = processutils.get_worker_count()
+        # launch only one GreenPool without childs
+        elif workers == 1:
             # Useful for profiling, test, debug etc.
             self.pool = eventlet.GreenPool(size=self.threads)
             self.pool.spawn_n(self._single_run, self.application, self.sock)
             return
+        # childs equal specified value of workers
+        else:
+            childs_num = workers
 
-        LOG.info(_LI("Starting %d workers"), self.conf.workers)
+        LOG.info(_LI("Starting %d workers"), workers)
         signal.signal(signal.SIGTERM, self.kill_children)
         signal.signal(signal.SIGINT, self.kill_children)
         signal.signal(signal.SIGHUP, self.hup)
-        while len(self.children) < self.conf.workers:
+        while len(self.children) < childs_num:
             self.run_child()
 
     def wait_on_children(self):
