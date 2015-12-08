@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -21,8 +20,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.heat import scaling_policy as heat_sp
 from heat.scaling import scalingutil as sc_util
-
-LOG = logging.getLogger(__name__)
 
 
 class AWSScalingPolicy(heat_sp.AutoScalingPolicy):

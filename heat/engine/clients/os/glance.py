@@ -13,15 +13,12 @@
 
 from glanceclient import client as gc
 from glanceclient import exc
-from oslo_log import log as logging
 from oslo_utils import uuidutils
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
-
-LOG = logging.getLogger(__name__)
 
 
 class GlanceClientPlugin(client_plugin.ClientPlugin):

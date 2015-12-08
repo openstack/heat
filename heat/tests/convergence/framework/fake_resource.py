@@ -16,9 +16,6 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
-from oslo_log import log as logging
-
-LOG = logging.getLogger(__name__)
 
 
 class TestResource(resource.Resource):
