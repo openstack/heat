@@ -469,7 +469,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': {'resource_name': res_name}}
+                  'sort_dir': None,
+                  'filters': {'resource_name': res_name, 'uuid': event_id}}
 
         engine_resp = [
             {
@@ -535,7 +536,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': {'resource_name': res_name}}
+                  'sort_dir': None,
+                  'filters': {'resource_name': res_name, 'uuid': '42'}}
 
         engine_resp = []
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
@@ -563,7 +565,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None, 'filters': {'resource_name': res_name}}
+                  'sort_dir': None,
+                  'filters': {'resource_name': res_name, 'uuid': '42'}}
 
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
