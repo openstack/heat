@@ -94,7 +94,7 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         self.steps = 0
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         with self._dep_test(('second', 'first')):
-            scheduler.TaskRunner._sleep(None).AndReturn(None)
+            pass
 
     def test_single_node(self):
         with self._dep_test(('only', None)) as dummy:
