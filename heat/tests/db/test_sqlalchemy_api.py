@@ -1938,6 +1938,8 @@ class DBAPIStackTest(common.HeatTestCase):
             self.ctx, root.id))
         self.assertEqual(root.id, db_api.stack_get_root_id(
             self.ctx, child_1.id))
+        self.assertIsNone(db_api.stack_get_root_id(
+            self.ctx, 'non existent stack'))
 
     def test_stack_count_total_resources(self):
 
