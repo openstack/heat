@@ -167,6 +167,15 @@ class DesignateRecord(resource.Resource):
                       id=self.resource_id)
         return dict(six.iteritems(self.client_plugin().record_show(**kwargs)))
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        record_reality = {}
+
+        properties_keys = list(set(self.PROPERTIES) - {self.NAME, self.DOMAIN})
+        for key in properties_keys:
+            record_reality.update({key: resource_data.get(key)})
+
+        return record_reality
+
 
 def resource_mapping():
     return {

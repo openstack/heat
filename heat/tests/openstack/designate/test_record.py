@@ -11,10 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
 from designateclient import exceptions as designate_exception
 from designateclient.v1 import records
+import mock
 
 from heat.engine.resources.openstack.designate import record
 from heat.engine import stack
@@ -242,3 +241,52 @@ class DesignateRecordTest(common.HeatTestCase):
         self.assertEqual(args,
                          self.test_resource._show_resource(),
                          'Failed to show resource')
+
+    def test_resource_get_live_state(self):
+        tmpl = {
+            'heat_template_version': '2015-04-30',
+            'resources': {
+                'test_resource': {
+                    'type': 'OS::Designate::Record',
+                    'properties': {
+                        'name': 'test-record.com',
+                        'description': 'Test record',
+                        'ttl': 3600,
+                        'type': 'MX',
+                        'priority': 1,
+                        'data': '1.1.1.1',
+                        'domain': 'example.com.'
+                    }
+                }
+            }
+        }
+        s = stack.Stack(
+            self.ctx, 'test_stack',
+            template.Template(tmpl)
+        )
+
+        test_resource = s['test_resource']
+        test_resource.resource_id = '1234'
+        test_resource.client_plugin().get_domain_id = mock.MagicMock()
+        test_resource.client_plugin().get_domain_id.return_value = '1234567'
+
+        test_resource.client().records = mock.MagicMock()
+        test_resource.client().records.get.return_value = {
+            'type': 'MX',
+            'data': '1.1.1.1',
+            'ttl': 3600,
+            'description': 'test',
+            'domain_id': '1234567',
+            'name': 'www.example.com.',
+            'priority': 0
+        }
+
+        reality = test_resource.get_live_state(test_resource.properties)
+        expected = {
+            'type': 'MX',
+            'data': '1.1.1.1',
+            'ttl': 3600,
+            'description': 'test',
+            'priority': 0
+        }
+        self.assertEqual(expected, reality)
