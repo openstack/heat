@@ -500,3 +500,7 @@ class SIGHUPInterrupt(HeatException):
 
 class NoActionRequired(Exception):
     pass
+
+
+class InvalidServiceVersion(HeatException):
+    msg_fmt = _("Invalid service %(service)s version %(version)s")

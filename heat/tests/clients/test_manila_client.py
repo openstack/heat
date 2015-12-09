@@ -43,7 +43,7 @@ class ManilaClientPluginTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.manila_plugin = c.client_plugin('manila')
-        self.manila_plugin._client = self.manila_client
+        self.manila_plugin.client = lambda: self.manila_client
         # prepare list of items to test search
         Item = collections.namedtuple('Item', ['id', 'name'])
         self.item_list = [

@@ -32,7 +32,7 @@ class SaharaUtilsTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.sahara_plugin = c.client_plugin('sahara')
-        self.sahara_plugin._client = self.sahara_client
+        self.sahara_plugin.client = lambda: self.sahara_client
         self.my_image = mock.MagicMock()
         self.my_plugin = mock.MagicMock()
 

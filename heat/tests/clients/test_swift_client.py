@@ -30,7 +30,7 @@ class SwiftClientPluginTestCase(common.HeatTestCase):
         self.context.tenant_id = "demo"
         c = self.context.clients
         self.swift_plugin = c.client_plugin('swift')
-        self.swift_plugin._client = self.swift_client
+        self.swift_plugin.client = lambda: self.swift_client
 
 
 class SwiftUtilsTest(SwiftClientPluginTestCase):
