@@ -225,8 +225,9 @@ class HeatWaitConditionTest(common.HeatTestCase):
         self.stack.timeout_secs().MultipleTimes().AndReturn(None)
 
         now = timeutils.utcnow()
-        fake_clock = [now + datetime.timedelta(0, t)
-                      for t in (0, 0.001, 0.1, 4.1, 5.1)]
+        periods = [0, 0.001, 0.1, 4.1, 5.1]
+        periods.extend(range(10, 100, 5))
+        fake_clock = [now + datetime.timedelta(0, t) for t in periods]
         timeutils.set_time_override(fake_clock)
         self.addCleanup(timeutils.clear_time_override)
 
