@@ -342,7 +342,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         return dict((r.resource_name, r.resource_type) for r in resources)
 
     def stack_create(self, stack_name=None, template=None, files=None,
-                     parameters=None, environment=None,
+                     parameters=None, environment=None, tags=None,
                      expected_status='CREATE_COMPLETE', disable_rollback=True):
         name = stack_name or self._stack_rand_name()
         templ = template or self.template
@@ -355,10 +355,11 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             files=templ_files,
             disable_rollback=disable_rollback,
             parameters=params,
-            environment=env
+            environment=env,
+            tags=tags
         )
         if expected_status not in ['ROLLBACK_COMPLETE']:
-            self.addCleanup(self.client.stacks.delete, name)
+            self.addCleanup(self._stack_delete, name)
 
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)

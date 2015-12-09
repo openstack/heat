@@ -1547,7 +1547,7 @@ class DBAPIStackTest(common.HeatTestCase):
                          db_api.stack_count_all(self.ctx, tenant_safe=False))
 
     def test_purge_deleted(self):
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         delta = datetime.timedelta(seconds=3600 * 7)
         deleted = [now - delta * i for i in range(1, 6)]
         templates = [create_raw_template(self.ctx) for i in range(5)]
