@@ -58,8 +58,8 @@ def raw_template_delete(context, template_id):
     return IMPL.raw_template_delete(context, template_id)
 
 
-def resource_data_get_all(resource, data=None):
-    return IMPL.resource_data_get_all(resource, data)
+def resource_data_get_all(context, resource_id, data=None):
+    return IMPL.resource_data_get_all(context, resource_id, data)
 
 
 def resource_data_get(resource, key):

@@ -177,14 +177,14 @@ def resource_update(context, resource_id, values, atomic_key,
         return bool(rows_updated)
 
 
-def resource_data_get_all(resource, data=None):
+def resource_data_get_all(context, resource_id, data=None):
     """Looks up resource_data by resource.id.
 
     If data is encrypted, this method will decrypt the results.
     """
     if data is None:
-        data = (model_query(resource.context, models.ResourceData)
-                .filter_by(resource_id=resource.id)).all()
+        data = (model_query(context, models.ResourceData)
+                .filter_by(resource_id=resource_id)).all()
 
     if not data:
         raise exception.NotFound(_('no resource data found'))
