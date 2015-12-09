@@ -242,7 +242,7 @@ class DesignateRecordTest(common.HeatTestCase):
             data='1.1.1.1'
         )
         rsc = records.Record(args)
-        mock_notification_get = self.test_client.records.get
+        mock_notification_get = self.test_client_plugin.record_show
         mock_notification_get.return_value = rsc
 
         self.assertEqual(args,
