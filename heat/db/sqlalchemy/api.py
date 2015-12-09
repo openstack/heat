@@ -189,7 +189,7 @@ def resource_data_get_all(resource, data=None):
     """
     if data is None:
         data = (model_query(resource.context, models.ResourceData)
-                .filter_by(resource_id=resource.id))
+                .filter_by(resource_id=resource.id)).all()
 
     if not data:
         raise exception.NotFound(_('no resource data found'))

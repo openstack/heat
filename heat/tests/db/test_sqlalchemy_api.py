@@ -2206,6 +2206,9 @@ class DBAPIResourceDataTest(common.HeatTestCase):
                           self.ctx, self.resource.id, 'test_resource_key')
         self.assertIsNotNone(res_data)
 
+        self.assertRaises(exception.NotFound, db_api.resource_data_get_all,
+                          self.resource)
+
 
 class DBAPIEventTest(common.HeatTestCase):
     def setUp(self):
