@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 from saharaclient import client as sahara_client
@@ -24,8 +22,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
-
-LOG = logging.getLogger(__name__)
 
 
 class SaharaClientPlugin(client_plugin.ClientPlugin):

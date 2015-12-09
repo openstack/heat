@@ -17,7 +17,6 @@ import copy
 import functools
 import hashlib
 
-from oslo_log import log as logging
 import six
 from stevedore import extension
 
@@ -25,8 +24,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import environment
 from heat.objects import raw_template as template_object
-
-LOG = logging.getLogger(__name__)
 
 __all__ = ['Template']
 

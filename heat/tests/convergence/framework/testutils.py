@@ -12,12 +12,9 @@
 #    under the License.
 
 import functools
-from oslo_log import log as logging
 
 from heat.tests.convergence.framework import reality
 from heat.tests.convergence.framework import scenario_template
-
-LOG = logging.getLogger(__name__)
 
 
 def verify(test, reality, tmpl):
