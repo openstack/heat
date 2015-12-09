@@ -45,9 +45,8 @@ class Net(neutron.NeutronResource):
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
-            _('Extra parameters to include in the "network" object in the '
-              'creation request. Parameters are often specific to installed '
-              'hardware or extensions.'),
+            _('Extra parameters to include in the request. Parameters are '
+              'often specific to installed hardware or extensions.'),
             default={},
             update_allowed=True
         ),
@@ -170,21 +169,24 @@ class Net(neutron.NeutronResource):
             return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        props = self.prepare_update_properties(json_snippet)
-        qos_policy = props.pop(self.QOS_POLICY, None)
-        if self.QOS_POLICY in prop_diff:
-            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
-                qos_policy) if qos_policy else None
-        dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
-
-        if self.DHCP_AGENT_IDS in prop_diff:
-            if dhcp_agent_ids is not None:
+        if prop_diff:
+            if self.DHCP_AGENT_IDS in prop_diff:
+                dhcp_agent_ids = prop_diff.pop(self.DHCP_AGENT_IDS, [])
                 self._replace_dhcp_agents(dhcp_agent_ids)
-            del prop_diff[self.DHCP_AGENT_IDS]
+            if self.QOS_POLICY in prop_diff:
+                qos_policy = prop_diff.pop(self.QOS_POLICY)
+                prop_diff[
+                    'qos_policy_id'] = self.client_plugin().get_qos_policy_id(
+                    qos_policy) if qos_policy else None
+            if self.VALUE_SPECS in prop_diff:
+                self.merge_value_specs(prop_diff)
+            if (self.NAME in prop_diff and
+                    prop_diff[self.NAME] is None):
+                prop_diff[self.NAME] = self.physical_resource_name()
 
-        if len(prop_diff) > 0:
-            self.client().update_network(
-                self.resource_id, {'network': props})
+        if prop_diff:
+            self.client().update_network(self.resource_id,
+                                         {'network': prop_diff})
 
     def check_update_complete(self, *args):
         attributes = self._show_resource()
