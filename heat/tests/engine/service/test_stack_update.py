@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import messaging
 from heat.common import template_format
 from heat.engine import environment
+from heat.engine import resource
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import stack_lock
@@ -725,6 +726,10 @@ resources:
         mock_env = self.patchobject(environment, 'Environment',
                                     return_value=stk.env)
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
+
+        # Patch _resolve_all_attributes or it tries to call novaclient
+        self.patchobject(resource.Resource, '_resolve_all_attributes',
+                         return_value=None)
 
         # do preview_update_stack
         api_args = {'timeout_mins': 60}

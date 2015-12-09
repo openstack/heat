@@ -1682,6 +1682,10 @@ class ServersTest(common.HeatTestCase):
         update_template['Properties'][
             'software_config_transport'] = 'POLL_TEMP_URL'
 
+        self.rpc_client = mock.MagicMock()
+        server._rpc_client = self.rpc_client
+        self.rpc_client.create_software_config.return_value = None
+
         self.m.ReplayAll()
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)

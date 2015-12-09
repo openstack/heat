@@ -157,6 +157,9 @@ class InstanceGroupTest(common.HeatTestCase):
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
     def get_launch_conf_name(self, stack, ig_name):
         return stack[ig_name].properties['LaunchConfigurationName']
@@ -164,9 +167,6 @@ class InstanceGroupTest(common.HeatTestCase):
     def test_parse_without_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_without_updt_policy)
         stack = utils.parse_stack(tmpl)
-        self.stub_ImageConstraint_validate()
-        self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
 
         stack.validate()
         grp = stack['JobServerGroup']
@@ -175,9 +175,6 @@ class InstanceGroupTest(common.HeatTestCase):
     def test_parse_with_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_updt_policy)
         stack = utils.parse_stack(tmpl)
-        self.stub_ImageConstraint_validate()
-        self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
 
         stack.validate()
         grp = stack['JobServerGroup']
@@ -193,9 +190,6 @@ class InstanceGroupTest(common.HeatTestCase):
     def test_parse_with_default_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_default_updt_policy)
         stack = utils.parse_stack(tmpl)
-        self.stub_ImageConstraint_validate()
-        self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
 
         stack.validate()
         grp = stack['JobServerGroup']
@@ -292,6 +286,9 @@ class InstanceGroupTest(common.HeatTestCase):
 
 class InstanceGroupReplaceTest(common.HeatTestCase):
     def test_timeout_exception(self):
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         t = template_format.parse(ig_tmpl_with_updt_policy)
         stack = utils.parse_stack(t)
 
