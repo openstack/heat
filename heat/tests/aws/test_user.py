@@ -358,8 +358,9 @@ class AccessKeyTest(common.HeatTestCase):
         # working via retrieving the keypair from keystone
         resource_data_object.ResourceData.delete(rsrc, 'credential_id')
         resource_data_object.ResourceData.delete(rsrc, 'secret_key')
-        rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual(0, len(list(six.iterkeys(rs_data))))
+        self.assertRaises(exception.NotFound,
+                          resource_data_object.ResourceData.get_all,
+                          rsrc)
 
         rsrc._secret = None
         self.assertEqual(self.fc.secret,
