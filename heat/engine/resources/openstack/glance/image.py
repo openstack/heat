@@ -30,10 +30,10 @@ class GlanceImage(resource.Resource):
 
     PROPERTIES = (
         NAME, IMAGE_ID, IS_PUBLIC, MIN_DISK, MIN_RAM, PROTECTED,
-        DISK_FORMAT, CONTAINER_FORMAT, LOCATION
+        DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS
     ) = (
         'name', 'id', 'is_public', 'min_disk', 'min_ram', 'protected',
-        'disk_format', 'container_format', 'location'
+        'disk_format', 'container_format', 'location', 'tags'
     )
 
     properties_schema = {
@@ -103,6 +103,12 @@ class GlanceImage(resource.Resource):
               'specify "swift://example.com/container/obj".'),
             required=True,
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of image tags.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0')
+        )
     }
 
     default_client_name = 'glance'
@@ -114,11 +120,37 @@ class GlanceImage(resource.Resource):
                     if v is not None)
         image_id = self.client().images.create(**args).id
         self.resource_id_set(image_id)
+
+        if self.TAGS in args:
+            for tag in args[self.TAGS]:
+                self.client(
+                    version=self.client_plugin().V2).image_tags.update(
+                    image_id,
+                    tag)
+
         return image_id
 
     def check_create_complete(self, image_id):
         image = self.client().images.get(image_id)
         return image.status == 'active'
+
+    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+        if prop_diff and self.TAGS in prop_diff:
+            existing_tags = self.properties.get(self.TAGS, [])
+
+            new_tags = set(prop_diff[self.TAGS]) - set(existing_tags)
+            for tag in new_tags:
+                self.client(
+                    version=self.client_plugin().V2).image_tags.update(
+                    self.resource_id,
+                    tag)
+
+            removed_tags = set(existing_tags) - set(prop_diff[self.TAGS])
+            for tag in removed_tags:
+                self.client(
+                    version=self.client_plugin().V2).image_tags.delete(
+                    self.resource_id,
+                    tag)
 
     def _show_resource(self):
         if self.glance().version == 1.0:
