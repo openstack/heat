@@ -48,12 +48,12 @@ class DesignateRecord(resource.Resource):
             required=True,
             constraints=[constraints.Length(max=255)]
         ),
-        # Based on RFC 1035, range for ttl is set to 0 to signed 32 bit number
+        # Based on RFC 1035, range for ttl is set to 1 to signed 32 bit number
         TTL: properties.Schema(
             properties.Schema.INTEGER,
             _('Time To Live (Seconds).'),
             update_allowed=True,
-            constraints=[constraints.Range(min=0,
+            constraints=[constraints.Range(min=1,
                                            max=2147483647)]
         ),
         # designate mandates to the max length of 160 for description
