@@ -181,6 +181,13 @@ class Firewall(neutron.NeutronResource):
                     'firewall resource.')
         return super(Firewall, self)._resolve_attribute(name)
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(Firewall, self).parse_live_resource_data(
+            resource_properties, resource_data)
+        if self.SHARED in result:
+            result.pop(self.SHARED)
+        return result
+
 
 class FirewallPolicy(neutron.NeutronResource):
     """A resource for the FirewallPolicy resource in Neutron FWaaS.

@@ -13,6 +13,7 @@
 
 import copy
 
+import mock
 from neutronclient.common import exceptions as qe
 from neutronclient.v2_0 import client as neutronclient
 
@@ -193,3 +194,36 @@ class NeutronProviderNetTest(common.HeatTestCase):
         # no prop_diff
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, {}))
         self.m.VerifyAll()
+
+    def test_get_live_state(self):
+        rsrc = self.create_provider_net()
+        rsrc.client().show_network = mock.Mock(return_value={
+            'network': {
+                'status': 'ACTIVE',
+                'subnets': [],
+                'availability_zone_hints': [],
+                'availability_zones': [],
+                'name': 'prov-provider-nhalkd5xftp3',
+                'provider:physical_network': 'public',
+                'admin_state_up': True,
+                'tenant_id': 'df49ea64e87c43a792a510698364f03e',
+                'mtu': 0,
+                'router:external': False,
+                'port_security_enabled': True,
+                'shared': True,
+                'provider:network_type': 'flat',
+                'id': 'af216806-4462-4c68-bfa4-9580857e71c3',
+                'provider:segmentation_id': None}})
+
+        reality = rsrc.get_live_state(rsrc.properties)
+        expected = {
+            'name': 'prov-provider-nhalkd5xftp3',
+            'physical_network': 'public',
+            'admin_state_up': True,
+            'network_type': 'flat',
+            'port_security_enabled': True,
+            'segmentation_id': None,
+            'router_external': False
+        }
+
+        self.assertEqual(expected, reality)

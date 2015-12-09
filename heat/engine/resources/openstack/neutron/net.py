@@ -17,6 +17,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class Net(neutron.NeutronResource):
@@ -168,6 +169,14 @@ class Net(neutron.NeutronResource):
         ),
     }
 
+    def translation_rules(self, properties):
+        return [translation.TranslationRule(
+            properties,
+            translation.TranslationRule.RESOLVE,
+            [self.QOS_POLICY],
+            client_plugin=self.client_plugin(),
+            finder='get_qos_policy_id')]
+
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
@@ -177,8 +186,7 @@ class Net(neutron.NeutronResource):
         qos_policy = props.pop(self.QOS_POLICY, None)
         tags = props.pop(self.TAGS, [])
         if qos_policy:
-            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
-                qos_policy)
+            props['qos_policy_id'] = qos_policy
 
         net = self.client().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
@@ -191,6 +199,7 @@ class Net(neutron.NeutronResource):
 
     def check_create_complete(self, *args):
         attributes = self._show_resource()
+        self._store_config_default_properties(attributes)
         return self.is_built(attributes)
 
     def handle_delete(self):
@@ -205,7 +214,7 @@ class Net(neutron.NeutronResource):
         if prop_diff:
             self.prepare_update_properties(prop_diff)
             if self.DHCP_AGENT_IDS in prop_diff:
-                dhcp_agent_ids = prop_diff.pop(self.DHCP_AGENT_IDS, [])
+                dhcp_agent_ids = prop_diff.pop(self.DHCP_AGENT_IDS) or []
                 self._replace_dhcp_agents(dhcp_agent_ids)
             if self.QOS_POLICY in prop_diff:
                 qos_policy = prop_diff.pop(self.QOS_POLICY)
@@ -248,6 +257,21 @@ class Net(neutron.NeutronResource):
                 if not (self.client_plugin().is_conflict(ex) or
                         self.client_plugin().is_not_found(ex)):
                     raise
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(Net, self).parse_live_resource_data(
+            resource_properties, resource_data)
+        result.pop(self.SHARED)
+        result[self.QOS_POLICY] = resource_data.get('qos_policy_id')
+        try:
+            dhcp = self.client().list_dhcp_agent_hosting_networks(
+                self.resource_id)
+            dhcp_agents = set([agent['id'] for agent in dhcp['agents']])
+            result.update({self.DHCP_AGENT_IDS: list(dhcp_agents)})
+        except self.client_plugin().exceptions.Forbidden:
+            # Just don't add dhcp_clients if we can't get values.
+            pass
+        return result
 
 
 def resource_mapping():

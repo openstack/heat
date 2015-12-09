@@ -285,3 +285,67 @@ class NeutronNetTest(common.HeatTestCase):
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+    def test_net_get_live_state(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          net:
+            type: OS::Neutron::Net
+            properties:
+              value_specs:
+                'test:property': test_value
+         """
+        t = template_format.parse(tmpl)
+        stack = utils.parse_stack(t)
+        show_net = self.patchobject(neutronclient.Client, 'show_network')
+        show_net.return_value = {'network': {'status': 'ACTIVE'}}
+        self.patchobject(neutronclient.Client,
+                         'list_dhcp_agent_hosting_networks',
+                         return_value={'agents': [{'id': '1111'}]})
+
+        self.patchobject(neutronclient.Client, 'create_network',
+                         return_value={"network": {
+                             "status": "BUILD",
+                             "subnets": [],
+                             "qos_policy_id": "some",
+                             "name": "name",
+                             "admin_state_up": True,
+                             "shared": True,
+                             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                             "mtu": 0
+                         }})
+        rsrc = self.create_net(t, stack, 'net')
+
+        network_resp = {
+            'name': 'net1-net-wkkl2vwupdee',
+            'admin_state_up': True,
+            'tenant_id': '30f466e3d14b4251853899f9c26e2b66',
+            'mtu': 0,
+            'router:external': False,
+            'port_security_enabled': True,
+            'shared': False,
+            'qos_policy_id': 'some',
+            'id': u'5a4bb8a0-5077-4f8a-8140-5430370020e6',
+            'test:property': 'test_value_resp'
+        }
+        show_net.return_value = {'network': network_resp}
+
+        reality = rsrc.get_live_state(rsrc.properties)
+        expected = {
+            'name': 'net1-net-wkkl2vwupdee',
+            'admin_state_up': True,
+            'qos_policy': "some",
+            'value_specs': {
+                'test:property': 'test_value_resp'
+            },
+            'port_security_enabled': True,
+            'dhcp_agent_ids': ['1111']
+        }
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            if key == 'dhcp_agent_ids':
+                self.assertEqual(set(expected[key]), set(reality[key]))
+                continue
+            self.assertEqual(expected[key], reality[key])
