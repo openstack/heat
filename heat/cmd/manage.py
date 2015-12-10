@@ -104,30 +104,38 @@ def do_crypt_parameters_and_properties():
 
 
 def add_command_parsers(subparsers):
+    # db_version parser
     parser = subparsers.add_parser('db_version')
     parser.set_defaults(func=do_db_version)
 
+    # db_sync parser
     parser = subparsers.add_parser('db_sync')
     parser.set_defaults(func=do_db_sync)
+    # positional parameter, can be skipped. default=None
     parser.add_argument('version', nargs='?')
 
+    # purge_deleted parser
     parser = subparsers.add_parser('purge_deleted')
     parser.set_defaults(func=purge_deleted)
+    # positional parameter, can be skipped. default='90'
     parser.add_argument('age', nargs='?', default='90',
                         help=_('How long to preserve deleted data.'))
+    # optional parameter, can be skipped. default='days'
     parser.add_argument(
         '-g', '--granularity', default='days',
         choices=['days', 'hours', 'minutes', 'seconds'],
         help=_('Granularity to use for age argument, defaults to days.'))
 
+    # update_params parser
     parser = subparsers.add_parser('update_params')
     parser.set_defaults(func=do_crypt_parameters_and_properties)
+    # positional parameter, can't be skipped
     parser.add_argument('crypt_operation',
-                        nargs='?',
                         choices=['encrypt', 'decrypt'],
                         help=_('Valid values are encrypt or decrypt. The '
                                'heat-engine processes must be stopped to use '
                                'this.'))
+    # positional parameter, can be skipped. default=None
     parser.add_argument('previous_encryption_key',
                         nargs='?',
                         default=None,
