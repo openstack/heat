@@ -602,6 +602,8 @@ def stack_lock_release(stack_id, engine_id):
 
 def stack_get_root_id(context, stack_id):
     s = stack_get(context, stack_id)
+    if not s:
+        return None
     while s.owner_id:
         s = stack_get(context, s.owner_id)
     return s.id
