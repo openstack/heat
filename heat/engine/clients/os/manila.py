@@ -17,6 +17,7 @@ from manilaclient import client as manila_client
 from manilaclient import exceptions
 
 MANILACLIENT_VERSION = "1"
+SERVICE_NAME = 'manila'
 
 
 class ManilaClientPlugin(client_plugin.ClientPlugin):
@@ -115,22 +116,23 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
 
 
 class ManilaShareBaseConstraint(constraints.BaseCustomConstraint):
+
     # check that exceptions module has been loaded. Without this check
     # doc tests on gates will fail
     expected_exceptions = (exceptions.NotFound, exceptions.NoUniqueMatch)
-
-    def validate_with_client(self, client, resource_id):
-        getattr(client.client_plugin("manila"), self.resource_getter_name)(
-            resource_id)
+    resource_client_name = SERVICE_NAME
 
 
 class ManilaShareNetworkConstraint(ManilaShareBaseConstraint):
+
     resource_getter_name = 'get_share_network'
 
 
 class ManilaShareTypeConstraint(ManilaShareBaseConstraint):
+
     resource_getter_name = 'get_share_type'
 
 
 class ManilaShareSnapshotConstraint(ManilaShareBaseConstraint):
+
     resource_getter_name = 'get_share_snapshot'

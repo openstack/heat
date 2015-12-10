@@ -26,6 +26,8 @@ from heat.engine import constraints
 
 LOG = logging.getLogger(__name__)
 
+SERVICE_NAME = 'cinder'
+
 
 class CinderClientPlugin(client_plugin.ClientPlugin):
 
@@ -179,33 +181,26 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         return True
 
 
-class VolumeConstraint(constraints.BaseCustomConstraint):
+class BaseCinderConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, volume):
-        client.client_plugin('cinder').get_volume(volume)
+    resource_client_name = SERVICE_NAME
 
 
-class VolumeSnapshotConstraint(constraints.BaseCustomConstraint):
+class VolumeConstraint(BaseCinderConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, snapshot):
-        client.client_plugin('cinder').get_volume_snapshot(snapshot)
+    resource_getter_name = 'get_volume'
 
 
-class VolumeTypeConstraint(constraints.BaseCustomConstraint):
+class VolumeSnapshotConstraint(BaseCinderConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, volume_type):
-        client.client_plugin('cinder').get_volume_type(volume_type)
+    resource_getter_name = 'get_volume_snapshot'
 
 
-class VolumeBackupConstraint(constraints.BaseCustomConstraint):
+class VolumeTypeConstraint(BaseCinderConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
+    resource_getter_name = 'get_volume_type'
 
-    def validate_with_client(self, client, backup):
-        client.client_plugin('cinder').get_volume_backup(backup)
+
+class VolumeBackupConstraint(BaseCinderConstraint):
+
+    resource_getter_name = 'get_volume_backup'

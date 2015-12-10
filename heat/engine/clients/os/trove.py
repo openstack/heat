@@ -19,6 +19,8 @@ from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
+SERVICE_NAME = 'trove'
+
 
 class TroveClientPlugin(client_plugin.ClientPlugin):
 
@@ -117,5 +119,5 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
 
     expected_exceptions = (exception.EntityNotFound,)
 
-    def validate_with_client(self, client, flavor):
-        client.client_plugin('trove').get_flavor_id(flavor)
+    resource_client_name = SERVICE_NAME
+    resource_getter_name = 'get_flavor_id'

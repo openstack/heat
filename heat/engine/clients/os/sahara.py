@@ -23,6 +23,8 @@ from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
+SERVICE_NAME = 'sahara'
+
 
 class SaharaClientPlugin(client_plugin.ClientPlugin):
 
@@ -132,18 +134,17 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
                                            name=plugin_name)
 
 
-class ImageConstraint(constraints.BaseCustomConstraint):
+class SaharaBaseConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = SERVICE_NAME
+
+
+class ImageConstraint(SaharaBaseConstraint):
 
     expected_exceptions = (exception.EntityNotFound,
                            exception.PhysicalResourceNameAmbiguity,)
-
-    def validate_with_client(self, client, value):
-        client.client_plugin('sahara').get_image_id(value)
+    resource_getter_name = 'get_image_id'
 
 
-class PluginConstraint(constraints.BaseCustomConstraint):
+class PluginConstraint(SaharaBaseConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, value):
-        client.client_plugin('sahara').get_plugin_id(value)
+    resource_getter_name = 'get_plugin_id'

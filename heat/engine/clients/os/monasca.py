@@ -68,7 +68,5 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
 
 class MonascaNotificationConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (heat_exc.EntityNotFound)
-
-    def validate_with_client(self, client, notification):
-        client.client_plugin(SERVICE_NAME).get_notification(notification)
+    resource_client_name = SERVICE_NAME
+    resource_getter_name = 'get_notification'

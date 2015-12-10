@@ -18,6 +18,8 @@ from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
+SERVICE_NAME = 'magnum'
+
 
 class MagnumClientPlugin(client_plugin.ClientPlugin):
 
@@ -54,7 +56,5 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
 
 class BaymodelConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
-
-    def validate_with_client(self, client, value):
-        client.client_plugin('magnum').get_baymodel(value)
+    resource_client_name = SERVICE_NAME
+    resource_getter_name = 'get_baymodel'
