@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -57,11 +59,18 @@ class Cluster(resource.Resource):
         'CREATING', 'DELETING', 'UPDATING'
     )
 
+    _ACTION_STATUS = (
+        ACTION_SUCCEEDED, ACTION_FAILED,
+    ) = (
+        'SUCCEEDED', 'FAILED',
+    )
+
     properties_schema = {
         PROFILE: properties.Schema(
             properties.Schema.STRING,
             _('The name or id of the Senlin profile.'),
             required=True,
+            update_allowed=True,
             constraints=[
                 constraints.CustomConstraint('senlin.profile')
             ]
@@ -70,16 +79,19 @@ class Cluster(resource.Resource):
             properties.Schema.STRING,
             _('Name of the cluster. By default, physical resource name '
               'is used.'),
+            update_allowed=True,
         ),
         DESIRED_CAPACITY: properties.Schema(
             properties.Schema.INTEGER,
             _('Desired initial number of resources in cluster.'),
-            default=0
+            default=0,
+            update_allowed=True,
         ),
         MIN_SIZE: properties.Schema(
             properties.Schema.INTEGER,
             _('Minimum number of resources in the cluster.'),
             default=0,
+            update_allowed=True,
             constraints=[
                 constraints.Range(min=0)
             ]
@@ -89,6 +101,7 @@ class Cluster(resource.Resource):
             _('Maximum number of resources in the cluster. '
               '-1 means unlimited.'),
             default=-1,
+            update_allowed=True,
             constraints=[
                 constraints.Range(min=-1)
             ]
@@ -96,10 +109,12 @@ class Cluster(resource.Resource):
         METADATA: properties.Schema(
             properties.Schema.MAP,
             _('Metadata key-values defined for cluster.'),
+            update_allowed=True,
         ),
         TIMEOUT: properties.Schema(
             properties.Schema.INTEGER,
             _('The number of seconds to wait for the cluster actions.'),
+            update_allowed=True,
             constraints=[
                 constraints.Range(min=0)
             ]
@@ -176,6 +191,63 @@ class Cluster(resource.Resource):
             self.client_plugin().ignore_not_found(ex)
             return True
         return False
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        UPDATE_PROPS = (self.NAME, self.METADATA, self.TIMEOUT, self.PROFILE)
+        RESIZE_PROPS = (self.MIN_SIZE, self.MAX_SIZE, self.DESIRED_CAPACITY)
+        updaters = {}
+        if prop_diff:
+            if any(p in prop_diff for p in UPDATE_PROPS):
+                params = dict((k, v) for k, v in six.iteritems(prop_diff)
+                              if k in UPDATE_PROPS)
+                if self.PROFILE in prop_diff:
+                    params.pop(self.PROFILE)
+                    params['profile_id'] = prop_diff[self.PROFILE]
+                    updaters['cluster_update'] = {
+                        'params': params,
+                        'start': False,
+                    }
+            if any(p in prop_diff for p in RESIZE_PROPS):
+                params = dict((k, v) for k, v in six.iteritems(prop_diff)
+                              if k in RESIZE_PROPS)
+                if self.DESIRED_CAPACITY in prop_diff:
+                    params.pop(self.DESIRED_CAPACITY)
+                    params['adjustment_type'] = 'EXACT_CAPACITY'
+                    params['number'] = prop_diff.pop(self.DESIRED_CAPACITY)
+                updaters['cluster_resize'] = {
+                    'params': params,
+                    'start': False,
+                }
+            return updaters
+
+    def check_update_complete(self, updaters):
+        def start_action(action, params):
+            if action == 'cluster_resize':
+                resp = self.client().cluster_resize(self.resource_id,
+                                                    **params)
+                return resp['action']
+            elif action == 'cluster_update':
+                resp = self.client().update_cluster(self.resource_id,
+                                                    **params)
+                return resp.location.split('/')[-1]
+
+        if not updaters:
+            return True
+        for k in six.iterkeys(updaters):
+            if not updaters[k]['start']:
+                action_id = start_action(k, updaters[k]['params'])
+                updaters[k]['action'] = action_id
+                updaters[k]['start'] = True
+            else:
+                action = self.client().get_action(updaters[k]['action'])
+                if action.status == self.ACTION_SUCCEEDED:
+                    del updaters[k]
+                elif action.status == self.ACTION_FAILED:
+                    raise exception.ResourceInError(
+                        status_reason=action.status_reason,
+                        resource_status=self.FAILED,
+                    )
+            return False
 
     def validate(self):
         min_size = self.properties[self.MIN_SIZE]
