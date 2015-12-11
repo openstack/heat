@@ -302,3 +302,20 @@ class DesignateClientPluginRecordTest(common.HeatTestCase):
         self._client.records.delete.assert_called_once_with(
             self.sample_domain_id,
             self.sample_uuid)
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    @mock.patch('designateclient.v1.records.Record')
+    def test_record_show(self, mock_record, client_designate):
+        self._client.records.get.return_value = None
+        client_designate.return_value = self._client
+
+        record = dict(
+            id=self.sample_uuid,
+            domain=self.sample_domain_id
+        )
+
+        self.client_plugin.record_show(**record)
+
+        self._client.records.get.assert_called_once_with(
+            self.sample_domain_id,
+            self.sample_uuid)

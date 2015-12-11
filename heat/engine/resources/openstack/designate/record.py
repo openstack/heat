@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -156,7 +158,9 @@ class DesignateRecord(resource.Resource):
     # FIXME(kanagaraj-manickam) Remove this method once designate defect
     # 1485552 is fixed.
     def _show_resource(self):
-        return dict(self.client().records.get(self.resource_id).items())
+        kwargs = dict(domain=self.properties[self.DOMAIN],
+                      id=self.resource_id)
+        return dict(six.iteritems(self.client_plugin().record_show(**kwargs)))
 
 
 def resource_mapping():

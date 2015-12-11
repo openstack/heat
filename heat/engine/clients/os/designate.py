@@ -87,6 +87,11 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
         return self.client().records.delete(domain_id,
                                             kwargs.pop('id'))
 
+    def record_show(self, **kwargs):
+        domain_id = self.get_domain_id(kwargs.pop('domain'))
+        return self.client().records.get(domain_id,
+                                         kwargs.pop('id'))
+
 
 class DesignateDomainConstraint(constraints.BaseCustomConstraint):
 
