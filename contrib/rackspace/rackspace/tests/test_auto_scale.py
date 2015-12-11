@@ -15,6 +15,7 @@ import copy
 import itertools
 
 import mock
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -200,6 +201,10 @@ class ScalingGroupTest(common.HeatTestCase):
                             networks:
                                 - uuid: "00000000-0000-0000-0000-000000000000"
                                 - uuid: "11111111-1111-1111-1111-111111111111"
+                        loadBalancers:
+                        - loadBalancerId: 234
+                          port: 80
+
     ''')
 
     def setUp(self):
@@ -237,9 +242,12 @@ class ScalingGroupTest(common.HeatTestCase):
                 'disk_config': None,
                 'flavor': 'flavor-ref',
                 'image': 'image-ref',
-                'launch_config_type': 'launch_server',
-                'load_balancers': None,
+                'load_balancers': [{
+                    'loadBalancerId': 234,
+                    'port': 80,
+                }],
                 'key_name': "my-key",
+                'launch_config_type': u'launch_server',
                 'max_entities': 25,
                 'group_metadata': {'group': 'metadata'},
                 'metadata': {'server': 'metadata'},
@@ -668,3 +676,83 @@ class WebHookTest(common.HeatTestCase):
         del self.fake_auto_scale.webhooks['0']
         scheduler.TaskRunner(resource.delete)()
         self.assertEqual({}, self.fake_auto_scale.webhooks)
+
+
+@mock.patch.object(resource.Resource, "client_plugin")
+@mock.patch.object(resource.Resource, "client")
+class AutoScaleGroupValidationTests(common.HeatTestCase):
+    def setUp(self):
+        super(AutoScaleGroupValidationTests, self).setUp()
+        self.mockstack = mock.Mock()
+        self.mockstack.has_cache_data.return_value = False
+        self.mockstack.db_resource_get.return_value = None
+
+    def test_validate_no_rcv3_pool(self, mock_client, mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_server",
+                "args": {
+                    "loadBalancers": [{
+                        "loadBalancerId": 'not integer!',
+                        }],
+                    "server": {
+                        "name": "sdfsdf",
+                        "flavorRef": "ffdgdf",
+                        "imageRef": "image-ref",
+                        },
+                    },
+                },
+            }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        mock_client().list_load_balancer_pools.return_value = []
+        error = self.assertRaises(
+            exception.StackValidationFailed, asg.validate)
+        self.assertEqual(
+            'Could not find RackConnectV3 pool with id not integer!: ',
+            six.text_type(error))
+
+    def test_validate_rcv3_pool_found(self, mock_client, mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_server",
+                "args": {
+                    "loadBalancers": [{
+                        "loadBalancerId": 'pool_exists',
+                        }],
+                    "server": {
+                        "name": "sdfsdf",
+                        "flavorRef": "ffdgdf",
+                        "imageRef": "image-ref",
+                        },
+                    },
+                },
+            }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        mock_client().list_load_balancer_pools.return_value = [
+            mock.Mock(id='pool_exists'),
+        ]
+        self.assertIsNone(asg.validate())
