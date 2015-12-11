@@ -13,8 +13,7 @@
 #
 #    Copyright 2015 IBM Corp.
 
-from neutronclient.common import exceptions
-from neutronclient.neutron import v2_0 as neutronV20
+from neutronclient.common import exceptions as qe
 
 from heat.common import exception
 from heat.engine import constraints
@@ -22,76 +21,62 @@ from heat.engine import constraints
 
 class NetworkConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exceptions.NeutronClientException,
+    expected_exceptions = (qe.NeutronClientException,
                            exception.EntityNotFound,
                            exception.PhysicalResourceNameAmbiguity)
 
     def validate_with_client(self, client, value):
         try:
-            neutron_client = client.client('neutron')
+            client.client('neutron')
         except Exception:
             # is not using neutron
             client.client_plugin('nova').get_nova_network_id(value)
         else:
-            neutronV20.find_resourceid_by_name_or_id(
-                neutron_client, 'network', value)
+            neutron_plugin = client.client_plugin('neutron')
+            neutron_plugin.find_resourceid_by_name_or_id(
+                'network', value, cmd_resource=None)
 
 
-class PortConstraint(constraints.BaseCustomConstraint):
+class NeutronConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exceptions.NeutronClientException,)
-
-    def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'port', value)
-
-
-class RouterConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exceptions.NeutronClientException,)
+    expected_exceptions = (qe.NeutronClientException,
+                           exception.EntityNotFound)
+    resource_name = None
+    cmd_resource = None
+    extension = None
 
     def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'router', value)
+        neutron_plugin = client.client_plugin('neutron')
+        if (self.extension and
+                not neutron_plugin.has_extension(self.extension)):
+            raise exception.EntityNotFound(entity='neutron extension',
+                                           name=self.extension)
+        neutron_plugin.find_resourceid_by_name_or_id(
+            self.resource_name, value, cmd_resource=self.cmd_resource)
 
 
-class SubnetConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exceptions.NeutronClientException,)
-
-    def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'subnet', value)
+class PortConstraint(NeutronConstraint):
+    resource_name = 'port'
 
 
-class SubnetPoolConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exceptions.NeutronClientException,)
-
-    def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'subnetpool', value)
+class RouterConstraint(NeutronConstraint):
+    resource_name = 'router'
 
 
-class AddressScopeConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exceptions.NeutronClientException,)
-
-    def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'address_scope', value)
+class SubnetConstraint(NeutronConstraint):
+    resource_name = 'subnet'
 
 
-class QoSPolicyConstraint(constraints.BaseCustomConstraint):
+class SubnetPoolConstraint(NeutronConstraint):
+    resource_name = 'subnetpool'
 
-    expected_exceptions = (exceptions.NeutronClientException,)
 
-    def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'policy', value, cmd_resource='qos_policy')
+class AddressScopeConstraint(NeutronConstraint):
+    resource_name = 'address_scope'
+    extension = 'address-scope'
+
+
+class QoSPolicyConstraint(NeutronConstraint):
+    resource_name = 'policy'
+    cmd_resource = 'qos_policy'
+    extension = 'qos'

@@ -82,7 +82,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
@@ -118,12 +119,14 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub1234'
+            'sub1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub1234')
 
         neutronclient.Client.create_port({'port': {
@@ -159,7 +162,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
@@ -195,7 +199,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'abcd1234',
@@ -229,7 +234,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
 
         neutronclient.Client.create_port({'port': {
@@ -262,7 +268,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'abcd1234',
@@ -298,7 +305,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'abcd1234'
+            'abcd1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'abcd1234',
@@ -334,12 +342,14 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub1234'
+            'sub1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_port({'port': port_prop}).AndReturn(
             {'port': {
@@ -422,7 +432,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port(
             {'port': props}
@@ -495,7 +506,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port(
             {'port': props}
@@ -557,7 +569,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
@@ -619,7 +632,8 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
@@ -688,12 +702,14 @@ class NeutronPortTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'net1234'
+            'net1234',
+            cmd_resource=None,
         ).AndReturn('net1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub1234'
+            'sub1234',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_port({'port': port_prop}).AndReturn(
             {'port': {

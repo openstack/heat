@@ -128,12 +128,14 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'sub_net')
@@ -201,17 +203,20 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnetpool',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnetpool',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronclient.Client.create_subnet({
             'subnet': {
@@ -267,12 +272,14 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -389,7 +396,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronclient.Client.create_subnet({
             'subnet': {
@@ -513,7 +521,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None'
+            'None',
+            cmd_resource=None,
         ).AndReturn('None')
         neutronclient.Client.create_subnet({
             'subnet': {

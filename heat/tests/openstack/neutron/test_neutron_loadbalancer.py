@@ -342,13 +342,15 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).AndReturn('sub123')
         if resolve_neutron and with_vip_subnet:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
-                'sub9999'
+                'sub9999',
+                cmd_resource=None,
             ).AndReturn('sub9999')
             snippet = template_format.parse(pool_template_with_vip_subnet)
             neutronclient.Client.create_vip(stvipvsn
@@ -391,7 +393,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
@@ -431,7 +434,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
@@ -468,7 +472,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
@@ -507,7 +512,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
@@ -536,7 +542,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
@@ -572,7 +579,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
@@ -638,7 +646,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
@@ -792,7 +801,8 @@ class PoolTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
@@ -1064,7 +1074,8 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {

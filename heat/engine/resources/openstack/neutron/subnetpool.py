@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutronclient.neutron import v2_0 as nV20
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import netutils
@@ -174,8 +172,9 @@ class SubnetPool(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
         if self.ADDRESS_SCOPE in props and props[self.ADDRESS_SCOPE]:
-            props['address_scope_id'] = nV20.find_resourceid_by_name_or_id(
-                self.client(), 'address_scope', props.pop(self.ADDRESS_SCOPE))
+            props['address_scope_id'] = self.client_plugin(
+                ).find_resourceid_by_name_or_id(
+                'address_scope', props.pop(self.ADDRESS_SCOPE))
         subnetpool = self.client().create_subnetpool(
             {'subnetpool': props})['subnetpool']
         self.resource_id_set(subnetpool['id'])
@@ -195,7 +194,8 @@ class SubnetPool(neutron.NeutronResource):
         if self.ADDRESS_SCOPE in prop_diff:
             if prop_diff[self.ADDRESS_SCOPE]:
                 prop_diff[
-                    'address_scope_id'] = nV20.find_resourceid_by_name_or_id(
+                    'address_scope_id'] = self.client_plugin(
+                    ).find_resourceid_by_name_or_id(
                     self.client(), 'address_scope',
                     prop_diff.pop(self.ADDRESS_SCOPE))
             else:

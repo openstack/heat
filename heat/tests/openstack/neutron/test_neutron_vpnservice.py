@@ -137,12 +137,14 @@ class VPNServiceTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).AndReturn('sub123')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'rou123'
+            'rou123',
+            cmd_resource=None,
         ).AndReturn('rou123')
         if resolve_neutron:
             snippet = template_format.parse(vpnservice_template)
@@ -186,12 +188,14 @@ class VPNServiceTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
-            'sub123'
+            'sub123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'rou123'
+            'rou123',
+            cmd_resource=None,
         ).MultipleTimes().AndReturn('rou123')
         self.stub_RouterConstraint_validate()
 
