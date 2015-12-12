@@ -16,13 +16,15 @@ from mistralclient.api import client as mistral_client
 
 from heat.engine.clients import client_plugin
 
+CLIENT_NAME = 'mistral'
+
 
 class MistralClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [WORKFLOW_V2] = ['workflowv2']
 
     def _create(self):
-        endpoint_type = self._get_client_option('mistral', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.WORKFLOW_V2,
                                 endpoint_type=endpoint_type)
 

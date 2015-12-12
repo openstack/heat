@@ -26,7 +26,7 @@ from heat.engine import constraints
 
 LOG = logging.getLogger(__name__)
 
-SERVICE_NAME = 'cinder'
+CLIENT_NAME = 'cinder'
 
 
 class CinderClientPlugin(client_plugin.ClientPlugin):
@@ -38,7 +38,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
     def get_volume_api_version(self):
         '''Returns the most recent API version.'''
 
-        endpoint_type = self._get_client_option('cinder', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         try:
             self.url_for(service_type=self.VOLUME_V2,
                          endpoint_type=endpoint_type)
@@ -67,7 +67,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         LOG.info(_LI('Creating Cinder client with volume API version %d.'),
                  volume_api_version)
 
-        endpoint_type = self._get_client_option('cinder', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'service_type': service_type,
             'auth_url': con.auth_url or '',
@@ -75,10 +75,10 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             'username': None,
             'api_key': None,
             'endpoint_type': endpoint_type,
-            'http_log_debug': self._get_client_option('cinder',
+            'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug'),
-            'cacert': self._get_client_option('cinder', 'ca_file'),
-            'insecure': self._get_client_option('cinder', 'insecure')
+            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
         }
 
         client = cc.Client(client_version, **args)
@@ -183,7 +183,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
 
 class BaseCinderConstraint(constraints.BaseCustomConstraint):
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
 
 
 class VolumeConstraint(BaseCinderConstraint):

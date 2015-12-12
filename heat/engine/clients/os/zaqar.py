@@ -22,6 +22,8 @@ from zaqarclient.transport import errors as zaqar_errors
 
 from heat.engine.clients import client_plugin
 
+CLIENT_NAME = 'zaqar'
+
 
 class ZaqarClientPlugin(client_plugin.ClientPlugin):
 

@@ -18,7 +18,7 @@ from manilaclient import client as manila_client
 from manilaclient import exceptions
 
 MANILACLIENT_VERSION = "1"
-SERVICE_NAME = 'manila'
+CLIENT_NAME = 'manila'
 
 
 class ManilaClientPlugin(client_plugin.ClientPlugin):
@@ -28,7 +28,7 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
     service_types = [SHARE] = ['share']
 
     def _create(self):
-        endpoint_type = self._get_client_option('manila', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.SHARE,
                                 endpoint_type=endpoint_type)
 
@@ -120,7 +120,7 @@ class ManilaShareBaseConstraint(constraints.BaseCustomConstraint):
     # doc tests on gates will fail
     expected_exceptions = (heat_exception.EntityNotFound,
                            exceptions.NoUniqueMatch)
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
 
 
 class ManilaShareNetworkConstraint(ManilaShareBaseConstraint):

@@ -40,7 +40,7 @@ LOG = logging.getLogger(__name__)
 
 
 NOVACLIENT_VERSION = "2"
-SERVICE_NAME = 'nova'
+CLIENT_NAME = 'nova'
 
 
 class NovaClientPlugin(client_plugin.ClientPlugin):
@@ -61,7 +61,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
     service_types = [COMPUTE] = ['compute']
 
     def _create(self):
-        endpoint_type = self._get_client_option('nova', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         management_url = self.url_for(service_type=self.COMPUTE,
                                       endpoint_type=endpoint_type)
         extensions = nc.discover_extensions(NOVACLIENT_VERSION)
@@ -75,10 +75,10 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             'api_key': None,
             'extensions': extensions,
             'endpoint_type': endpoint_type,
-            'http_log_debug': self._get_client_option('nova',
+            'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug'),
-            'cacert': self._get_client_option('nova', 'ca_file'),
-            'insecure': self._get_client_option('nova', 'insecure')
+            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
         }
 
         client = nc.Client(NOVACLIENT_VERSION, **args)
@@ -683,7 +683,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
 class NovaBaseConstraint(constraints.BaseCustomConstraint):
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
 
 
 class ServerConstraint(NovaBaseConstraint):

@@ -16,6 +16,8 @@ from heatclient import exc
 
 from heat.engine.clients import client_plugin
 
+CLIENT_NAME = 'heat'
+
 
 class HeatClientPlugin(client_plugin.ClientPlugin):
 
@@ -30,14 +32,14 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             'token': self.auth_token,
             'username': None,
             'password': None,
-            'ca_file': self._get_client_option('heat', 'ca_file'),
-            'cert_file': self._get_client_option('heat', 'cert_file'),
-            'key_file': self._get_client_option('heat', 'key_file'),
-            'insecure': self._get_client_option('heat', 'insecure')
+            'ca_file': self._get_client_option(CLIENT_NAME, 'ca_file'),
+            'cert_file': self._get_client_option(CLIENT_NAME, 'cert_file'),
+            'key_file': self._get_client_option(CLIENT_NAME, 'key_file'),
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
         }
 
         endpoint = self.get_heat_url()
-        if self._get_client_option('heat', 'url'):
+        if self._get_client_option(CLIENT_NAME, 'url'):
             # assume that the heat API URL is manually configured because
             # it is not in the keystone catalog, so include the credentials
             # for the standalone auth_password middleware
@@ -57,18 +59,19 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
         return isinstance(ex, exc.HTTPConflict)
 
     def get_heat_url(self):
-        heat_url = self._get_client_option('heat', 'url')
+        heat_url = self._get_client_option(CLIENT_NAME, 'url')
         if heat_url:
             tenant_id = self.context.tenant_id
             heat_url = heat_url % {'tenant_id': tenant_id}
         else:
-            endpoint_type = self._get_client_option('heat', 'endpoint_type')
+            endpoint_type = self._get_client_option(CLIENT_NAME,
+                                                    'endpoint_type')
             heat_url = self.url_for(service_type=self.ORCHESTRATION,
                                     endpoint_type=endpoint_type)
         return heat_url
 
     def get_heat_cfn_url(self):
-        endpoint_type = self._get_client_option('heat',
+        endpoint_type = self._get_client_option(CLIENT_NAME,
                                                 'endpoint_type')
         heat_cfn_url = self.url_for(service_type=self.CLOUDFORMATION,
                                     endpoint_type=endpoint_type)

@@ -23,7 +23,7 @@ from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
-SERVICE_NAME = 'sahara'
+CLIENT_NAME = 'sahara'
 
 
 class SaharaClientPlugin(client_plugin.ClientPlugin):
@@ -34,7 +34,7 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
         con = self.context
-        endpoint_type = self._get_client_option('sahara', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.DATA_PROCESSING,
                                 endpoint_type=endpoint_type)
         args = {
@@ -43,8 +43,8 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
             'auth_url': con.auth_url,
             'project_name': con.tenant,
             'sahara_url': endpoint,
-            'insecure': self._get_client_option('sahara', 'insecure'),
-            'cacert': self._get_client_option('sahara', 'ca_file')
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
+            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file')
         }
         client = sahara_client.Client('1.1', **args)
         return client
@@ -135,7 +135,7 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
 
 
 class SaharaBaseConstraint(constraints.BaseCustomConstraint):
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
 
 
 class ImageConstraint(SaharaBaseConstraint):

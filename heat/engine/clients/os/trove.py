@@ -19,7 +19,7 @@ from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
-SERVICE_NAME = 'trove'
+CLIENT_NAME = 'trove'
 
 
 class TroveClientPlugin(client_plugin.ClientPlugin):
@@ -31,15 +31,15 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
 
         con = self.context
-        endpoint_type = self._get_client_option('trove', 'endpoint_type')
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'service_type': self.DATABASE,
             'auth_url': con.auth_url or '',
             'proxy_token': con.auth_token,
             'username': None,
             'password': None,
-            'cacert': self._get_client_option('trove', 'ca_file'),
-            'insecure': self._get_client_option('trove', 'insecure'),
+            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
             'endpoint_type': endpoint_type
         }
 
@@ -119,5 +119,5 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
 
     expected_exceptions = (exception.EntityNotFound,)
 
-    resource_client_name = SERVICE_NAME
+    resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_flavor_id'
