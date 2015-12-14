@@ -328,8 +328,15 @@ class ResourceRegistry(object):
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:
                 if info.value.support_status.message is not None:
-                    LOG.warning(_LW("%s"), six.text_type(
-                        info.value.support_status.message))
+                    details = {
+                        'name': info.name,
+                        'status': six.text_type(
+                            info.value.support_status.status),
+                        'message': six.text_type(
+                            info.value.support_status.message)
+                        }
+                    LOG.warning(_LW('%(name)s is %(status)s. %(message)s'),
+                                details)
 
         info.user_resource = (self.global_registry is not None)
         registry[name] = info
