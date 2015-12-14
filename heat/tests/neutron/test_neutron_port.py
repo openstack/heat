@@ -444,11 +444,12 @@ class NeutronPortTest(common.HeatTestCase):
 
         # test always replace
         new_props['replacement_policy'] = 'REPLACE_ALWAYS'
+        new_props['network'] = new_props.pop('network_id')
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
         self.assertRaises(resource.UpdateReplace, port._needs_update,
                           update_snippet, port.frozen_definition(),
-                          new_props, props, None)
+                          new_props, port.properties, None)
 
         # test deferring to Resource._needs_update
         new_props['replacement_policy'] = 'AUTO'
@@ -456,7 +457,93 @@ class NeutronPortTest(common.HeatTestCase):
                                                       new_props)
         self.assertTrue(port._needs_update(update_snippet,
                                            port.frozen_definition(),
-                                           new_props, props, None))
+                                           new_props, port.properties, None))
+
+        self.m.VerifyAll()
+
+    def test_port_needs_update_network(self):
+        props = {'network_id': u'net1234',
+                 'name': utils.PhysName('test_stack', 'port'),
+                 'admin_state_up': True,
+                 'device_owner': u'network:dhcp'}
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234',
+        ).AndReturn('net1234')
+        create_props = props.copy()
+        neutronclient.Client.create_port(
+            {'port': create_props}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "fixed_ips": {
+                "subnet_id": "d0e971a6-a6b4-4f4c-8c88-b75e9c120b7e",
+                "ip_address": "10.0.0.2"
+            }
+        }})
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234',
+        ).MultipleTimes().AndReturn('net1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'old_network',
+        ).AndReturn('net1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234',
+        ).MultipleTimes().AndReturn('net1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'new_network',
+        ).AndReturn('net5678')
+
+        self.m.ReplayAll()
+
+        # create port
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+
+        # Switch from network_id=ID to network=ID (no replace)
+        new_props = props.copy()
+        new_props['network'] = new_props.pop('network_id')
+        new_props['network_id'] = None
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props)
+        self.assertTrue(port._needs_update(update_snippet,
+                                           port.frozen_definition(),
+                                           new_props, port.properties, None))
+
+        # Switch from network=ID to network=NAME (no replace)
+        new_props['network'] = 'old_network'
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props)
+        self.assertTrue(port._needs_update(update_snippet,
+                                           port.frozen_definition(),
+                                           new_props, port.properties, None))
+
+        # Switch to a different network (replace)
+        new_props['network'] = 'new_network'
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props)
+        self.assertRaises(resource.UpdateReplace, port._needs_update,
+                          update_snippet, port.frozen_definition(),
+                          new_props, port.properties, None)
 
         self.m.VerifyAll()
 
@@ -623,6 +710,11 @@ class NeutronPortTest(common.HeatTestCase):
         }})
         self.stub_SubnetConstraint_validate()
         self.stub_NetworkConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234'
+        ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.update_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'port': prop_update}
