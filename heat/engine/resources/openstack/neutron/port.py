@@ -83,18 +83,21 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
+            update_allowed=True,
         ),
 
         NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Network this port belongs to. If you plan to use current port '
               'to assign Floating IP, you should specify %(fixed_ips)s '
-              'with %(subnet)s') % {'fixed_ips': FIXED_IPS,
-                                    'subnet': FIXED_IP_SUBNET},
+              'with %(subnet)s.  Note if this changes to a different network '
+              'update, the port will be replaced') %
+            {'fixed_ips': FIXED_IPS, 'subnet': FIXED_IP_SUBNET},
             support_status=support.SupportStatus(version='2014.2'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
+            update_allowed=True,
         ),
 
         NAME: properties.Schema(
@@ -299,6 +302,10 @@ class Port(neutron.NeutronResource):
         ),
     }
 
+    # The network property can be updated, but only to switch between
+    # a name and ID for the same network, which is handled in _needs_update
+    update_exclude_properties = [NETWORK, NETWORK_ID]
+
     def translation_rules(self, props):
         return [
             properties.TranslationRule(
@@ -414,6 +421,17 @@ class Port(neutron.NeutronResource):
 
         if after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS':
             raise exception.UpdateReplace(self.name)
+
+        if after_props != before_props:
+            # Switching between name and ID is OK, provided the value resolves
+            # to the same network.  If the network changes, port is replaced.
+            # Support NETWORK and NETWORK_ID, as switching between those is OK.
+            before_id = self.client_plugin().find_neutron_resource(
+                before_props, self.NETWORK, 'network')
+            after_id = self.client_plugin().find_neutron_resource(
+                after_props, self.NETWORK, 'network')
+            if before_id != after_id:
+                raise exception.UpdateReplace(self.name)
 
         return super(Port, self)._needs_update(
             after, before, after_props, before_props, prev_resource,
