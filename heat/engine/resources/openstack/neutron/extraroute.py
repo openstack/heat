@@ -32,8 +32,7 @@ class ExtraRoute(neutron.NeutronResource):
 
     support_status = support.SupportStatus(
         status=support.UNSUPPORTED,
-        message=_('The resource OS::Neutron::ExtraRoute is not supported, '
-                  'use at your own risk.'))
+        message=_('Use this resource at your own risk.'))
 
     PROPERTIES = (
         ROUTER_ID, DESTINATION, NEXTHOP,
