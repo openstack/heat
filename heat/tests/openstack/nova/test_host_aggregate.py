@@ -80,36 +80,52 @@ class NovaHostAggregateTest(common.HeatTestCase):
         value = mock.MagicMock()
         self.aggregates.get.return_value = value
         prop_diff = {'name': 'new_host_aggregate',
-                     "availability_zone": "new_nova"}
+                     'metadata': {'availability_zone': 'new_nova'},
+                     'availability_zone': 'new_nova'}
         expected = {'name': 'new_host_aggregate',
-                    "availability_zone": "new_nova"}
+                    'availability_zone': 'new_nova'}
         self.my_aggregate.handle_update(
             json_snippet=None, tmpl_diff=None, prop_diff=prop_diff
         )
         value.update.assert_called_once_with(expected)
 
     def test_aggregate_handle_update_hosts(self):
-        value = mock.MagicMock()
-        self.aggregates.get.return_value = value
+        ag = mock.MagicMock()
+        ag.hosts = ['host_1', 'host_2']
+        self.aggregates.get.return_value = ag
         prop_diff = {'hosts': ['host_1', 'host_3']}
         add_host_expected = 'host_3'
         remove_host_expected = 'host_2'
         self.my_aggregate.handle_update(
             json_snippet=None, tmpl_diff=None, prop_diff=prop_diff
         )
-        self.assertEqual(0, value.update.call_count)
-        self.assertEqual(0, value.set_metadata.call_count)
-        value.add_host.assert_called_once_with(add_host_expected)
-        value.remove_host.assert_called_once_with(remove_host_expected)
+        self.assertEqual(0, ag.update.call_count)
+        self.assertEqual(0, ag.set_metadata.call_count)
+        ag.add_host.assert_called_once_with(add_host_expected)
+        ag.remove_host.assert_called_once_with(remove_host_expected)
 
     def test_aggregate_handle_update_metadata(self):
-        value = mock.MagicMock()
-        self.aggregates.get.return_value = value
-        prop_diff = {'metadata': {"availability_zone": "nova3"}}
-        set_metadata_expected = {"availability_zone": "nova3"}
+        ag = mock.MagicMock()
+        self.aggregates.get.return_value = ag
+        prop_diff = {'metadata': {'availability_zone': 'nova3'}}
+        set_metadata_expected = {'availability_zone': 'nova3'}
         self.my_aggregate.handle_update(
             json_snippet=None, tmpl_diff=None, prop_diff=prop_diff
         )
-        self.assertEqual(0, value.update.call_count)
-        self.assertEqual(0, value.add_host.call_count)
-        value.set_metadata.assert_called_once_with(set_metadata_expected)
+        self.assertEqual(0, ag.update.call_count)
+        self.assertEqual(0, ag.add_host.call_count)
+        self.assertEqual(0, ag.remove_host.call_count)
+        ag.set_metadata.assert_called_once_with(set_metadata_expected)
+
+    def test_aggregate_handle_delete(self):
+        ag = mock.MagicMock()
+        ag.id = '927202df-1afb-497f-8368-9c2d2f26e5db'
+        ag.hosts = ['host_1']
+        self.aggregates.get.return_value = ag
+        self.aggregates.hosts = ag.hosts
+        self.my_aggregate.resource_id = ag.id
+        self.my_aggregate.handle_delete()
+        self.assertEqual(1, self.aggregates.get.call_count)
+        self.assertEqual(ag.hosts, self.aggregates.hosts)
+        ag.remove_host.assert_called_once_with(ag.hosts[0])
+        self.aggregates.delete.assert_called_once_with(ag.id)
