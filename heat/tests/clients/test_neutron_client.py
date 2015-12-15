@@ -241,6 +241,33 @@ class NeutronConstraintsValidate(common.HeatTestCase):
                        cmd_resource=self.cmd_resource)])
 
 
+class NeutronProviderConstraintsValidate(common.HeatTestCase):
+    scenarios = [
+        ('validate_lbaasv1',
+            dict(constraint_class=nc.LBaasV1ProviderConstraint,
+                 service_type='LOADBALANCER')),
+        ('validate_lbaasv2',
+            dict(constraint_class=lc.LBaasV2ProviderConstraint,
+                 service_type='LOADBALANCERV2'))
+    ]
+
+    def test_provider_validate(self):
+        nc = mock.Mock()
+        mock_create = self.patchobject(neutron.NeutronClientPlugin, '_create')
+        mock_create.return_value = nc
+        providers = {
+            'service_providers': [
+                {'service_type': 'LOADBANALCERV2', 'name': 'haproxy'},
+                {'service_type': 'LOADBANALCER', 'name': 'haproxy'}
+            ]
+        }
+        nc.list_service_providers.return_value = providers
+        constraint = self.constraint_class()
+        ctx = utils.dummy_context()
+        self.assertTrue(constraint.validate('haproxy', ctx))
+        self.assertFalse(constraint.validate("bar", ctx))
+
+
 class NeutronClientPluginExtensionsTests(NeutronClientPluginTestCase):
     """Tests for extensions in neutronclient."""
 
