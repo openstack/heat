@@ -124,9 +124,10 @@ class Resource(
             resource_id2)
 
     @classmethod
-    def get_all_by_stack(cls, context, stack_id, key_id=False):
+    def get_all_by_stack(cls, context, stack_id, key_id=False, filters=None):
         resources_db = db_api.resource_get_all_by_stack(context,
-                                                        stack_id, key_id)
+                                                        stack_id, key_id,
+                                                        filters)
         resources = [
             (
                 resource_key,

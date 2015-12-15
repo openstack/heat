@@ -274,21 +274,40 @@ class Stack(collections.Mapping):
 
     @property
     def resources(self):
+        return self._find_resources()
+
+    def _find_resources(self, filters=None):
         if self._resources is None:
-            self._resources = dict((name, resource.Resource(name, data, self))
-                                   for (name, data) in
-                                   self.t.resource_definitions(self).items())
+            res_defns = self.t.resource_definitions(self)
+
+            if not filters:
+                self._resources = dict((name,
+                                        resource.Resource(name, data, self))
+                                       for (name, data) in res_defns.items())
+            else:
+                self._resources = dict()
+                self._db_resources = dict()
+                for rsc in six.itervalues(
+                        resource_objects.Resource.get_all_by_stack(
+                            self.context, self.id, True, filters)):
+                    self._db_resources[rsc.name] = rsc
+                    res = resource.Resource(rsc.name,
+                                            res_defns[rsc.name],
+                                            self)
+                    self._resources[rsc.name] = res
+
             # There is no need to continue storing the db resources
             # after resource creation
             self._db_resources = None
+
         return self._resources
 
-    def iter_resources(self, nested_depth=0):
+    def iter_resources(self, nested_depth=0, filters=None):
         """Iterates over all the resources in a stack.
 
         Iterating includes nested stacks up to `nested_depth` levels below.
         """
-        for res in six.itervalues(self):
+        for res in six.itervalues(self._find_resources(filters)):
             yield res
 
             if not res.has_nested() or nested_depth == 0:

@@ -251,7 +251,9 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api('list_stack_resources', 'call',
                               stack_identity=self.identity,
                               nested_depth=0,
-                              with_detail=False)
+                              with_detail=False,
+                              filters=None,
+                              version=1.25)
 
     def test_stack_suspend(self):
         self._test_engine_api('stack_suspend', 'call',

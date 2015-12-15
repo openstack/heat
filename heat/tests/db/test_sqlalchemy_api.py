@@ -2076,11 +2076,32 @@ class DBAPIResourceTest(common.HeatTestCase):
         values = [
             {'name': 'res1', 'stack_id': self.stack.id},
             {'name': 'res2', 'stack_id': self.stack.id},
-            {'name': 'res3', 'stack_id': self.stack1.id},
+            {'name': 'res3', 'stack_id': self.stack.id},
+            {'name': 'res4', 'stack_id': self.stack1.id},
         ]
         [create_resource(self.ctx, self.stack, **val) for val in values]
 
+        # Test for all resources in a stack
         resources = db_api.resource_get_all_by_stack(self.ctx, self.stack.id)
+        self.assertEqual(3, len(resources))
+        self.assertEqual('res1', resources.get('res1').name)
+        self.assertEqual('res2', resources.get('res2').name)
+        self.assertEqual('res3', resources.get('res3').name)
+
+        # Test for resources matching single entry
+        resources = db_api.resource_get_all_by_stack(self.ctx,
+                                                     self.stack.id,
+                                                     filters=dict(name='res1'))
+        self.assertEqual(1, len(resources))
+        self.assertEqual('res1', resources.get('res1').name)
+
+        # Test for resources matching multi entry
+        resources = db_api.resource_get_all_by_stack(self.ctx,
+                                                     self.stack.id,
+                                                     filters=dict(name=[
+                                                         'res1',
+                                                         'res2'
+                                                     ]))
         self.assertEqual(2, len(resources))
         self.assertEqual('res1', resources.get('res1').name)
         self.assertEqual('res2', resources.get('res2').name)
