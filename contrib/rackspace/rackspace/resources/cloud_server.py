@@ -44,10 +44,10 @@ class CloudServer(server.Server):
         status=support.UNSUPPORTED,
         message=_('This resource is not supported, use at your own risk.'))
 
-    # Managed Cloud automation statuses
-    MC_STATUS_IN_PROGRESS = 'In Progress'
-    MC_STATUS_COMPLETE = 'Complete'
-    MC_STATUS_BUILD_ERROR = 'Build Error'
+    # Rackspace Cloud automation statuses
+    SM_STATUS_IN_PROGRESS = 'In Progress'
+    SM_STATUS_COMPLETE = 'Complete'
+    SM_STATUS_BUILD_ERROR = 'Build Error'
 
     # RackConnect automation statuses
     RC_STATUS_DEPLOYING = 'DEPLOYING'
@@ -89,33 +89,33 @@ class CloudServer(server.Server):
         else:
             return False
 
-    def _check_managed_cloud_complete(self, server):
+    def _check_rax_automation_complete(self, server):
         if not self._managed_cloud_started_event_sent:
-            msg = _("Waiting for Managed Cloud automation to complete")
+            msg = _("Waiting for Rackspace Cloud automation to complete")
             self._add_event(self.action, self.status, msg)
             self._managed_cloud_started_event_sent = True
 
         if 'rax_service_level_automation' not in server.metadata:
-            LOG.debug("Managed Cloud server does not have the "
+            LOG.debug("Cloud server does not have the "
                       "rax_service_level_automation metadata tag yet")
             return False
 
         mc_status = server.metadata['rax_service_level_automation']
-        LOG.debug("Managed Cloud automation status: %s" % mc_status)
+        LOG.debug("Rackspace Cloud automation status: %s" % mc_status)
 
-        if mc_status == self.MC_STATUS_IN_PROGRESS:
+        if mc_status == self.SM_STATUS_IN_PROGRESS:
             return False
 
-        elif mc_status == self.MC_STATUS_COMPLETE:
-            msg = _("Managed Cloud automation has completed")
+        elif mc_status == self.SM_STATUS_COMPLETE:
+            msg = _("Rackspace Cloud automation has completed")
             self._add_event(self.action, self.status, msg)
             return True
 
-        elif mc_status == self.MC_STATUS_BUILD_ERROR:
-            raise exception.Error(_("Managed Cloud automation failed"))
+        elif mc_status == self.SM_STATUS_BUILD_ERROR:
+            raise exception.Error(_("Rackspace Cloud automation failed"))
 
         else:
-            raise exception.Error(_("Unknown Managed Cloud automation "
+            raise exception.Error(_("Unknown Rackspace Cloud automation "
                                     "status: %s") % mc_status)
 
     def _check_rack_connect_complete(self, server):
@@ -173,8 +173,7 @@ class CloudServer(server.Server):
                 self._check_rack_connect_complete(server)):
             return False
 
-        if ('rax_managed' in self.context.roles and not
-                self._check_managed_cloud_complete(server)):
+        if not self._check_rax_automation_complete(server):
             return False
 
         return True

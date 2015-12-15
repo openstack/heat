@@ -158,7 +158,10 @@ class CloudServersTest(common.HeatTestCase):
 
     def test_rackconnect_deployed(self):
         return_server = self.fc.servers.list()[1]
-        return_server.metadata = {'rackconnect_automation_status': 'DEPLOYED'}
+        return_server.metadata = {
+            'rackconnect_automation_status': 'DEPLOYED',
+            'rax_service_level_automation': 'Complete',
+        }
         server = self._setup_test_server(return_server,
                                          'test_rackconnect_deployed')
         server.context.roles = ['rack_connect']
@@ -173,7 +176,10 @@ class CloudServersTest(common.HeatTestCase):
 
     def test_rackconnect_failed(self):
         return_server = self.fc.servers.list()[1]
-        return_server.metadata = {'rackconnect_automation_status': 'FAILED'}
+        return_server.metadata = {
+            'rackconnect_automation_status': 'FAILED',
+            'rax_service_level_automation': 'Complete',
+        }
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).MultipleTimes(
         ).AndReturn(return_server)
@@ -189,10 +195,11 @@ class CloudServersTest(common.HeatTestCase):
 
     def test_rackconnect_unprocessable(self):
         return_server = self.fc.servers.list()[1]
-        return_server.metadata = {'rackconnect_automation_status':
-                                  'UNPROCESSABLE',
-                                  'rackconnect_unprocessable_reason':
-                                  'Fake reason'}
+        return_server.metadata = {
+            'rackconnect_automation_status': 'UNPROCESSABLE',
+            'rackconnect_unprocessable_reason': 'Fake reason',
+            'rax_service_level_automation': 'Complete',
+        }
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).MultipleTimes(
         ).AndReturn(return_server)
@@ -207,7 +214,10 @@ class CloudServersTest(common.HeatTestCase):
 
     def test_rackconnect_unknown(self):
         return_server = self.fc.servers.list()[1]
-        return_server.metadata = {'rackconnect_automation_status': 'FOO'}
+        return_server.metadata = {
+            'rackconnect_automation_status': 'FOO',
+            'rax_service_level_automation': 'Complete',
+        }
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).MultipleTimes(
         ).AndReturn(return_server)
@@ -227,20 +237,22 @@ class CloudServersTest(common.HeatTestCase):
                                          'srv_sts_bld')
         server.resource_id = 1234
         server.context.roles = ['rack_connect']
-
         check_iterations = [0]
 
         # Bind fake get method which check_create_complete will call
         def activate_status(server):
             check_iterations[0] += 1
             if check_iterations[0] == 1:
-                return_server.metadata[
-                    'rackconnect_automation_status'] = 'DEPLOYING'
+                return_server.metadata.update({
+                    'rackconnect_automation_status': 'DEPLOYING',
+                    'rax_service_level_automation': 'Complete',
+                    })
             if check_iterations[0] == 2:
                 return_server.status = 'ACTIVE'
             if check_iterations[0] > 3:
-                return_server.metadata[
-                    'rackconnect_automation_status'] = 'DEPLOYED'
+                return_server.metadata.update({
+                    'rackconnect_automation_status': 'DEPLOYED',
+                })
             return return_server
         self.patchobject(self.fc.servers, 'get',
                          side_effect=activate_status)
@@ -255,6 +267,7 @@ class CloudServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[0]
         server = self._setup_test_server(return_server,
                                          'srv_sts_bld')
+
         server.resource_id = 1234
         server.context.roles = ['rack_connect']
 
@@ -265,11 +278,11 @@ class CloudServersTest(common.HeatTestCase):
             check_iterations[0] += 1
             if check_iterations[0] == 1:
                 return_server.status = 'ACTIVE'
-            if check_iterations[0] == 2:
-                return_server.metadata = {}
             if check_iterations[0] > 2:
-                return_server.metadata[
-                    'rackconnect_automation_status'] = 'DEPLOYED'
+                return_server.metadata.update({
+                    'rackconnect_automation_status': 'DEPLOYED',
+                    'rax_service_level_automation': 'Complete'})
+
             return return_server
         self.patchobject(self.fc.servers, 'get',
                          side_effect=activate_status)
@@ -280,13 +293,13 @@ class CloudServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_managed_cloud_lifecycle(self):
+    def test_rax_automation_lifecycle(self):
         return_server = self.fc.servers.list()[0]
         server = self._setup_test_server(return_server,
                                          'srv_sts_bld')
         server.resource_id = 1234
-        server.context.roles = ['rack_connect', 'rax_managed']
-
+        server.context.roles = ['rack_connect']
+        server.metadata = {}
         check_iterations = [0]
 
         # Bind fake get method which check_create_complete will call
@@ -317,6 +330,7 @@ class CloudServersTest(common.HeatTestCase):
 
     def test_add_port_for_addresses(self):
         return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rax_service_level_automation': 'Complete'}
         stack_name = 'test_stack'
         (tmpl, stack) = self._setup_test_stack(stack_name)
         resource_defns = tmpl.resource_definitions(stack)
@@ -411,13 +425,12 @@ class CloudServersTest(common.HeatTestCase):
         resp = server._add_port_for_address(return_server)
         self.assertEqual(expected, resp)
 
-    def test_managed_cloud_build_error(self):
+    def test_rax_automation_build_error(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation':
                                   'Build Error'}
         server = self._setup_test_server(return_server,
                                          'test_managed_cloud_build_error')
-        server.context.roles = ['rax_managed']
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).MultipleTimes(
         ).AndReturn(return_server)
@@ -425,15 +438,14 @@ class CloudServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual('Error: resources.test_managed_cloud_build_error: '
-                         'Managed Cloud automation failed',
+                         'Rackspace Cloud automation failed',
                          six.text_type(exc))
 
-    def test_managed_cloud_unknown(self):
+    def test_rax_automation_unknown(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation': 'FOO'}
         server = self._setup_test_server(return_server,
                                          'test_managed_cloud_unknown')
-        server.context.roles = ['rax_managed']
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).MultipleTimes(
         ).AndReturn(return_server)
@@ -441,11 +453,12 @@ class CloudServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual('Error: resources.test_managed_cloud_unknown: '
-                         'Unknown Managed Cloud automation status: FOO',
+                         'Unknown Rackspace Cloud automation status: FOO',
                          six.text_type(exc))
 
     def _test_server_config_drive(self, user_data, config_drive, result):
         return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rax_service_level_automation': 'Complete'}
         stack_name = 'no_user_data'
         (tmpl, stack) = self._setup_test_stack(stack_name)
         properties = tmpl.t['Resources']['WebServer']['Properties']
@@ -454,11 +467,16 @@ class CloudServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
                                           resource_defns['WebServer'], stack)
+        server.metadata = {'rax_service_level_automation': 'Complete'}
         self.patchobject(server, 'store_external_ports')
         mock_servers_create = mock.Mock(return_value=return_server)
         self.fc.servers.create = mock_servers_create
         image_id = mock.ANY
         self._mock_get_image_id_success(image_id)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(return_server.id).MultipleTimes(
+        ).AndReturn(return_server)
+        self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
         mock_servers_create.assert_called_with(
             image=image_id,
