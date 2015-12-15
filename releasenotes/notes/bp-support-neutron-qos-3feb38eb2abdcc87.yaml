@@ -1,0 +1,10 @@
+---
+features:
+  - OS::Neutron::QoSPolicy resource plugin is added to support
+   QoS policy, which is provided by neutron ``qos`` API extension.
+  - OS::Neutron::QoSBandwidthLimitRule resource plugin is added
+   to support neutron QoS bandwidth limit rule, which is provided
+   by neutron ``qos`` API extension.
+  - Resources ``OS::Neutron::Port`` and ``OS::Neutron::Net`` now support
+   ``qos_policy`` optional property, that will associate with QoS
+   policy to offer different service levels based on the policy rules.
