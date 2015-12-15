@@ -50,7 +50,10 @@ class ResourceData(
     @classmethod
     def get_all(cls, resource, *args, **kwargs):
         # this method only returns dict, so we won't use objects mechanism here
-        return db_api.resource_data_get_all(resource, *args, **kwargs)
+        return db_api.resource_data_get_all(resource.context,
+                                            resource.id,
+                                            *args,
+                                            **kwargs)
 
     @classmethod
     def get_obj(cls, resource, key):

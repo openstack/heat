@@ -88,6 +88,16 @@ class ServiceManageCommand(object):
         remove_parser.set_defaults(func=ServiceManageCommand().service_clean)
 
 
+def do_resource_data_list():
+    ctxt = context.get_admin_context()
+    data = db_api.resource_data_get_all(ctxt, CONF.command.resource_id)
+
+    print_format = "%-16s %-64s"
+
+    for k in data.keys():
+        print(print_format % (k, data[k]))
+
+
 def purge_deleted():
     """Remove database records that have been previously soft deleted."""
     utils.purge_deleted(CONF.command.age, CONF.command.granularity)
@@ -134,6 +144,11 @@ def add_command_parsers(subparsers):
                         default=None,
                         help=_('Provide old encryption key. New encryption'
                                ' key would be used from config file.'))
+
+    parser = subparsers.add_parser('resource_data_list')
+    parser.set_defaults(func=do_resource_data_list)
+    parser.add_argument('resource_id',
+                        help=_('Stack resource id'))
 
     ServiceManageCommand.add_service_parsers(subparsers)
 
