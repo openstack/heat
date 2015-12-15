@@ -120,7 +120,6 @@ def add_command_parsers(subparsers):
     parser = subparsers.add_parser('db_sync')
     parser.set_defaults(func=do_db_sync)
     parser.add_argument('version', nargs='?')
-    parser.add_argument('current_version', nargs='?')
 
     parser = subparsers.add_parser('purge_deleted')
     parser.set_defaults(func=purge_deleted)
