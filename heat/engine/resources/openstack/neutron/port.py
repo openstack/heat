@@ -93,6 +93,7 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
+            update_allowed=True,
         ),
 
         NETWORK: properties.Schema(
@@ -327,7 +328,7 @@ class Port(neutron.NeutronResource):
 
     # The network property can be updated, but only to switch between
     # a name and ID for the same network, which is handled in _needs_update
-    update_exclude_properties = [NETWORK]
+    update_exclude_properties = [NETWORK, NETWORK_ID]
 
     def __init__(self, name, definition, stack):
         """Overloaded init in case of merging two schemas to one."""
@@ -449,15 +450,14 @@ class Port(neutron.NeutronResource):
         if after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS':
             raise exception.UpdateReplace(self.name)
 
-        # Switching between name and ID is OK, provided the value resolves
-        # to the same network.  If the network changes, the port is replaced.
-        before_net = before_props.get(self.NETWORK)
-        after_net = after_props.get(self.NETWORK)
-        if None not in (before_net, after_net):
-            before_id = self.client_plugin().find_resourceid_by_name_or_id(
-                'network', before_net)
-            after_id = self.client_plugin().find_resourceid_by_name_or_id(
-                'network', after_net)
+        if after_props != before_props:
+            # Switching between name and ID is OK, provided the value resolves
+            # to the same network.  If the network changes, port is replaced.
+            # Support NETWORK and NETWORK_ID, as switching between those is OK.
+            before_id = self.client_plugin().find_neutron_resource(
+                before_props, self.NETWORK, 'network')
+            after_id = self.client_plugin().find_neutron_resource(
+                after_props, self.NETWORK, 'network')
             if before_id != after_id:
                 raise exception.UpdateReplace(self.name)
 
