@@ -1,0 +1,9 @@
+---
+features:
+  - A new ``OS::Neutron:SubnetPool`` resource that helps in
+   managing the lifecycle of neutron subnet pool.
+   Availability of this resource depends on availability of
+   neutron ``subnet_allocation`` API extension.
+  - Resource ``OS::neutron::Subnet`` now supports ``subnetpool``
+   optional property, that will automate the allocation of CIDR
+   for the subnet from the specified subnet pool.
