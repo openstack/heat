@@ -2900,7 +2900,8 @@ class ResourceHookTest(common.HeatTestCase):
 
 
 class ResourceAvailabilityTest(common.HeatTestCase):
-    def _mock_client_plugin(self, service_types=[], is_available=True):
+    def _mock_client_plugin(self, service_types=None, is_available=True):
+        service_types = service_types or []
         mock_client_plugin = mock.Mock()
         mock_service_types = mock.PropertyMock(return_value=service_types)
         type(mock_client_plugin).service_types = mock_service_types

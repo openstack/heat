@@ -89,7 +89,8 @@ class DummyClass(object):
 
 
 class TemplatePluginFixture(fixtures.Fixture):
-    def __init__(self, templates={}):
+    def __init__(self, templates=None):
+        templates = templates or {}
         super(TemplatePluginFixture, self).__init__()
         self.templates = [extension.Extension(k, None, v, None)
                           for (k, v) in templates.items()]

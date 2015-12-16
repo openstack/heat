@@ -346,7 +346,7 @@ class ContribResourcePages(ResourcePages):
         return 'heat.engine.plugins'
 
 
-def _filter_resources(prefix=None, path=None, statuses=[]):
+def _filter_resources(prefix=None, path=None, statuses=None):
 
     def not_hidden_match(cls):
         return cls.support_status.status != support.HIDDEN
@@ -360,6 +360,7 @@ def _filter_resources(prefix=None, path=None, statuses=[]):
     def status_match(cls):
         return cls.support_status.status in statuses
 
+    statuses = statuses or []
     filtered_resources = {}
     for name in sorted(six.iterkeys(all_resources)):
         if prefix_match(name):
