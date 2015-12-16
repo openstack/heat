@@ -55,6 +55,26 @@ class CloudServer(server.Server):
     RC_STATUS_FAILED = 'FAILED'
     RC_STATUS_UNPROCESSABLE = 'UNPROCESSABLE'
 
+    # Nova Extra specs
+    FLAVOR_EXTRA_SPECS = 'OS-FLV-WITH-EXT-SPECS:extra_specs'
+    FLAVOR_CLASSES_KEY = 'flavor_classes'
+    FLAVOR_ACCEPT_ANY = '*'
+    FLAVOR_CLASS = 'class'
+    DISK_IO_INDEX = 'disk_io_index'
+    FLAVOR_CLASSES = (
+        GENERAL1, MEMORY1, PERFORMANCE2, PERFORMANCE1, STANDARD1, IO1,
+        ONMETAL, COMPUTE1
+    ) = (
+        'general1', 'memory1', 'performance2', 'performance1',
+        'standard1', 'io1', 'onmetal', 'compute1',
+    )
+
+    # flavor classes that can be booted ONLY from volume
+    BFV_VOLUME_REQUIRED = {MEMORY1, COMPUTE1}
+
+    # flavor classes that can NOT be booted from volume
+    NON_BFV = {STANDARD1, ONMETAL}
+
     properties_schema = copy.deepcopy(server.Server.properties_schema)
     properties_schema.update(
         {
@@ -218,6 +238,53 @@ class CloudServer(server.Server):
                 address['port'] = get_port(net_name, address['addr'])
 
         return self._extend_networks(nets)
+
+    def _image_flavor_class_match(self, flavor_type, image_obj):
+        flavor_class_string = image_obj.get(self.FLAVOR_CLASSES_KEY, '')
+        flavor_class_excluded = "!{0}".format(flavor_type)
+        flavor_classes_accepted = flavor_class_string.split(',')
+
+        if flavor_type in flavor_classes_accepted:
+            return True
+
+        if (self.FLAVOR_ACCEPT_ANY in flavor_classes_accepted and
+           flavor_class_excluded not in flavor_classes_accepted):
+            return True
+
+        return False
+
+    def validate(self):
+        """Validate for Rackspace Cloud specific parameters"""
+        super(CloudServer, self).validate()
+
+        # check if image, flavor combination is valid
+        flavor = self.properties[self.FLAVOR]
+        flavor_obj = self.client_plugin().get_flavor(flavor)
+        fl_xtra_specs = flavor_obj.to_dict().get(self.FLAVOR_EXTRA_SPECS, {})
+        flavor_type = fl_xtra_specs.get(self.FLAVOR_CLASS, None)
+
+        image = self.properties.get(self.IMAGE)
+        if not image:
+            if flavor_type in self.NON_BFV:
+                msg = _('Flavor %s cannot be booted from volume.') % flavor
+                raise exception.StackValidationFailed(message=msg)
+            else:
+                # we cannot determine details of the attached volume, so this
+                # is all the validation possible
+                return
+
+        image_obj = self.client_plugin('glance').get_image(image)
+
+        if not self._image_flavor_class_match(flavor_type, image_obj):
+            msg = _('Flavor %(flavor)s cannot be used with image '
+                    '%(image)s.') % {'image': image, 'flavor': flavor}
+            raise exception.StackValidationFailed(message=msg)
+
+        if flavor_type in self.BFV_VOLUME_REQUIRED:
+            msg = _('Flavor %(flavor)s must be booted from volume, '
+                    'but image %(image)s was also specified.') % {
+                'flavor': flavor, 'image': image}
+            raise exception.StackValidationFailed(message=msg)
 
 
 def resource_mapping():
