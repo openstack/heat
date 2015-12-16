@@ -83,10 +83,18 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         :param image_identifier: image name or a UUID-like identifier
         :returns: the id of the requested :image_identifier:
         """
+        return self.get_image(image_identifier).id
+
+    def get_image(self, image_identifier):
+        """Return the image object for the specified image name/id.
+
+        :param image_identifier: image name
+        :returns: an image object with name/id :image_identifier:
+        """
         try:
-            return self.client().images.get(image_identifier).id
+            return self.client().images.get(image_identifier)
         except exc.HTTPNotFound:
-            return self._find_with_attr('images', name=image_identifier).id
+            return self._find_with_attr('images', name=image_identifier)
 
 
 class ImageConstraint(constraints.BaseCustomConstraint):

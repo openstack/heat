@@ -129,6 +129,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls',
     )
 
+    # valid image Status
+    IMAGE_STATUS_ACTIVE = 'active'
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -1250,6 +1253,36 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             msg = _('Neither image nor bootable volume is specified for'
                     ' instance %s') % self.name
             raise exception.StackValidationFailed(message=msg)
+
+        if image:
+            image_obj = self.client_plugin('glance').get_image(image)
+
+            # validate image status
+            if image_obj.status.lower() != self.IMAGE_STATUS_ACTIVE:
+                msg = _('Image status is required to be %(cstatus)s not '
+                        '%(wstatus)s.') % {
+                    'cstatus': self.IMAGE_STATUS_ACTIVE,
+                    'wstatus': image_obj.status}
+                raise exception.StackValidationFailed(message=msg)
+
+            # validate image/flavor combination
+            flavor = self.properties[self.FLAVOR]
+            flavor_obj = self.client_plugin().get_flavor(flavor)
+            if flavor_obj.ram < image_obj.min_ram:
+                msg = _('Image %(image)s requires %(imram)s minimum ram. '
+                        'Flavor %(flavor)s has only %(flram)s.') % {
+                    'image': image, 'imram': image_obj.min_ram,
+                    'flavor': flavor, 'flram': flavor_obj.ram}
+                raise exception.StackValidationFailed(message=msg)
+
+            # validate image/flavor disk compatibility
+            if flavor_obj.disk < image_obj.min_disk:
+                msg = _('Image %(image)s requires %(imsz)s GB minimum '
+                        'disk space. Flavor %(flavor)s has only '
+                        '%(flsz)s GB.') % {
+                    'image': image, 'imsz': image_obj.min_disk,
+                    'flavor': flavor, 'flsz': flavor_obj.disk}
+                raise exception.StackValidationFailed(message=msg)
 
         # network properties 'uuid' and 'network' shouldn't be used
         # both at once for all networks

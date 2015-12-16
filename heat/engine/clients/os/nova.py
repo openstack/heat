@@ -230,10 +230,20 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
         """
+        return self.get_flavor(flavor).id
+
+    def get_flavor(self, flavor_identifier):
+        """Get the flavor object for the specified flavor name or id.
+
+        :param flavor_identifier: the name or id of the flavor to find
+        :returns: a flavor object with name or id :flavor:
+        """
         try:
-            return self.client().flavors.get(flavor).id
+            flavor = self.client().flavors.get(flavor_identifier)
         except exceptions.NotFound:
-            return self.client().flavors.find(name=flavor).id
+            flavor = self.client().flavors.find(name=flavor_identifier)
+
+        return flavor
 
     def get_host(self, host_name):
         """Get the host id specified by name.
