@@ -163,7 +163,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         }
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
-        rsrc.handle_update(update_snippet, {}, {})
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
 
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')

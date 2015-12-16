@@ -148,10 +148,10 @@ class NetworkGateway(neutron.NeutronResource):
         ),
     }
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.CONNECTIONS, self.NETWORK],
                 value_name=self.NETWORK_ID
