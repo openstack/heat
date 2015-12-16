@@ -643,7 +643,7 @@ class Resource(object):
         else:
             self.state_set(action, self.COMPLETE)
 
-    def action_handler_task(self, action, args=[], action_prefix=None):
+    def action_handler_task(self, action, args=None, action_prefix=None):
         """A task to call the Resource subclass's handler methods for action.
 
         Calls the handle_<ACTION>() method for the given action and then calls
@@ -655,6 +655,7 @@ class Resource(object):
         If a prefix is supplied, the handler method handle_<PREFIX>_<ACTION>()
         is called instead.
         """
+        args = args or []
         handler_action = action.lower()
         check = getattr(self, 'check_%s_complete' % handler_action, None)
 

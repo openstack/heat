@@ -16,8 +16,8 @@
 import sqlalchemy
 
 
-def clone_table(name, parent, meta, newcols=[], ignorecols=[], swapcols={},
-                ignorecons=[]):
+def clone_table(name, parent, meta, newcols=None, ignorecols=None,
+                swapcols=None, ignorecons=None):
     """Helper function that clones parent table schema onto new table.
 
     :param name: new table name
@@ -29,6 +29,11 @@ def clone_table(name, parent, meta, newcols=[], ignorecols=[], swapcols={},
 
     :return: sqlalchemy.Table instance
     """
+
+    newcols = newcols or []
+    ignorecols = ignorecols or []
+    swapcols = swapcols or {}
+    ignorecons = ignorecons or []
 
     cols = [c.copy() for c in parent.columns
             if c.name not in ignorecols
