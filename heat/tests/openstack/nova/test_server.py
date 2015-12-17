@@ -3257,7 +3257,6 @@ class ServersTest(common.HeatTestCase):
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'network': None,
              'fixed_ip': None,
-             'uuid': None,
              'subnet': None,
              'port_extra_properties': None,
              'uuid': None},

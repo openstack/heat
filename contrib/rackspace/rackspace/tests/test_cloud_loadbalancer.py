@@ -347,7 +347,6 @@ class LoadBalancerTest(common.HeatTestCase):
             "protocol": u'HTTP',
             "port": 80,
             "virtual_ips": [FakeVirtualIP(type=u"PUBLIC", ipVersion=u"IPV6")],
-            "halfClosed": None,
             "algorithm": u'LEAST_CONNECTIONS',
             "connectionThrottle": {'maxConnectionRate': 1000,
                                    'maxConnections': None,
