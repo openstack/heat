@@ -16,6 +16,7 @@ import six
 import yaml
 
 from mistralclient.api.v2 import executions
+from oslo_serialization import jsonutils
 
 from heat.common import exception
 from heat.common import template_format
@@ -75,11 +76,72 @@ resources:
 
 workflow_template_full = """
 heat_template_version: 2013-05-23
+parameters:
+    use_request_body_as_input:
+      type : boolean
+      default : false
 resources:
  create_vm:
    type: OS::Mistral::Workflow
    properties:
      name: create_vm
+     use_request_body_as_input: { get_param: use_request_body_as_input }
+     type: direct
+     input:
+       name: create_test_server
+       image: 31d8eeaf-686e-4e95-bb27-765014b9f20b
+       flavor: 2
+     output:
+       vm_id: <% $.vm_id %>
+     task_defaults:
+       on_error:
+         - on_error
+     tasks:
+       - name: create_server
+         action: |
+           nova.servers_create name=<% $.name %> image=<% $.image %>
+           flavor=<% $.flavor %>
+         publish:
+           vm_id: <% $.create_server.id %>
+         on_success:
+           - check_server_exists
+       - name: check_server_exists
+         action: nova.servers_get server=<% $.vm_id %>
+         publish:
+           server_exists: True
+         on_success:
+           - list_machines
+       - name: wait_instance
+         action: nova.servers_find id=<% $.vm_id_new %> status='ACTIVE'
+         retry:
+             delay: 5
+             count: 15
+         wait_before: 7
+         wait_after: 8
+         pause_before: true
+         timeout: 11
+         keep_result: false
+         target: test
+         with_items: vm_id_new in <% $.list_servers %>
+       - name: list_machines
+         action: nova.servers_list
+         publish:
+           -list_servers:  <% $.list_machines %>
+         on_success:
+           - wait_instance
+       - name: on_error
+         action: std.echo output="output"
+
+"""
+
+workflow_updating_request_body_property = """
+heat_template_version: 2013-05-23
+resources:
+ create_vm:
+   type: OS::Mistral::Workflow
+   properties:
+     name: create_vm
+     use_request_body_as_input: false
      type: direct
      input:
        name: create_test_server
@@ -537,6 +599,59 @@ class TestMistralWorkflow(common.HeatTestCase):
                          "Signal data error: Unknown input 1")
         self.assertEqual(error_message, six.text_type(err))
 
+    def test_signal_with_body_as_input_and_delete_with_executions(self):
+        tmpl = template_format.parse(workflow_template_full)
+        stack = utils.parse_stack(tmpl, params={
+            'parameters': {'use_request_body_as_input': 'true'}
+        })
+        rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
+        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('create_vm')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'flavor': '3'}
+        execution = mock.Mock()
+        execution.id = '12345'
+        exec_manager = executions.ExecutionManager(wf.client('mistral'))
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: exec_manager.create(*args, **kw))
+        self.patchobject(exec_manager, '_create', return_value=execution)
+        scheduler.TaskRunner(wf.signal, details)()
+        call_args = self.mistral.executions.create.call_args
+        args, _ = call_args
+        expected_args = '{"image": "31d8eeaf-686e-4e95-bb27-765014b9f20b", ' \
+                        '"name": "create_test_server", "flavor": "3"}'
+        self.validate_json_inputs(args[1], expected_args)
+        self.assertEqual({'executions': '12345'}, wf.data())
+        # Updating the workflow changing "use_request_body_as_input" to
+        # false and signaling again with the expected request body format.
+        t = template_format.parse(workflow_updating_request_body_property)
+        new_stack = utils.parse_stack(t)
+        rsrc_defns = new_stack.t.resource_definitions(new_stack)
+        self.mistral.workflows.update.return_value = [
+            FakeWorkflow('test_stack-workflow-b5fiekdsa355')]
+        scheduler.TaskRunner(wf.update, rsrc_defns['create_vm'])()
+        self.assertTrue(self.mistral.workflows.update.called)
+        self.assertEqual((wf.UPDATE, wf.COMPLETE), wf.state)
+        details = {'input': {'flavor': '4'}}
+        execution = mock.Mock()
+        execution.id = '54321'
+        exec_manager = executions.ExecutionManager(wf.client('mistral'))
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: exec_manager.create(*args, **kw))
+        self.patchobject(exec_manager, '_create', return_value=execution)
+        scheduler.TaskRunner(wf.signal, details)()
+        call_args = self.mistral.executions.create.call_args
+        args, _ = call_args
+        expected_args = '{"image": "31d8eeaf-686e-4e95-bb27-765014b9f20b", ' \
+                        '"name": "create_test_server", "flavor": "4"}'
+        self.validate_json_inputs(args[1], expected_args)
+        self.assertEqual({'executions': '54321,12345', 'name':
+                         'test_stack-workflow-b5fiekdsa355'}, wf.data())
+        scheduler.TaskRunner(wf.delete)()
+        self.assertEqual(2, self.mistral.executions.delete.call_count)
+        self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
+
     def test_signal_and_delete_with_executions(self):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)
@@ -610,6 +725,11 @@ class TestMistralWorkflow(common.HeatTestCase):
                      "used both at one time.")
         self._test_validation_failed(workflow_template_duplicate_polices,
                                      error_msg)
+
+    def validate_json_inputs(self, actual_input, expected_input):
+        actual_json_input = jsonutils.loads(actual_input)
+        expected_json_input = jsonutils.loads(expected_input)
+        self.assertEqual(expected_json_input, actual_json_input)
 
     def verify_params(self, workflow_name, workflow_input=None, **params):
         self.assertEqual({'test': 'param_value', 'test1': 'param_value_1'},

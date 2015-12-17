@@ -35,10 +35,11 @@ class Workflow(signal_responder.SignalResponder,
     entity = 'workflows'
 
     PROPERTIES = (
-        NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS, TASK_DEFAULTS
+        NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS,
+        TASK_DEFAULTS, USE_REQUEST_BODY_AS_INPUT
     ) = (
         'name', 'type', 'description', 'input', 'output', 'tasks', 'params',
-        'task_defaults'
+        'task_defaults', 'use_request_body_as_input'
     )
 
     _TASKS_KEYS = (
@@ -83,6 +84,17 @@ class Workflow(signal_responder.SignalResponder,
             ],
             required=True,
             update_allowed=True
+        ),
+        USE_REQUEST_BODY_AS_INPUT: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Defines the method in which the request body for signaling a '
+              'workflow would be parsed. In case this property is set to '
+              'True, the body would be parsed as a simple json where each '
+              'key is a workflow input, in other cases body would be parsed '
+              'expecting a specific json format with two keys: "input" and '
+              '"params"'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
@@ -322,30 +334,39 @@ class Workflow(signal_responder.SignalResponder,
     def get_reference_id(self):
         return self._workflow_name()
 
+    def _get_inputs_and_params(self, data):
+        inputs = None
+        params = None
+        if self.properties.get(self.USE_REQUEST_BODY_AS_INPUT):
+            inputs = data
+        else:
+            if data is not None:
+                inputs = data.get(self.SIGNAL_DATA_INPUT)
+                params = data.get(self.SIGNAL_DATA_PARAMS)
+        return inputs, params
+
     def _validate_signal_data(self, data):
-        if data is not None:
-            input_value = data.get(self.SIGNAL_DATA_INPUT)
-            params_value = data.get(self.SIGNAL_DATA_PARAMS)
-            if input_value is not None:
-                if not isinstance(input_value, dict):
-                    message = (_('Input in signal data must be a map, '
-                                 'find a %s') % type(input_value))
+        input_value, params_value = self._get_inputs_and_params(data)
+        if input_value is not None:
+            if not isinstance(input_value, dict):
+                message = (_('Input in signal data must be a map, '
+                             'find a %s') % type(input_value))
+                raise exception.StackValidationFailed(
+                    error=_('Signal data error'),
+                    message=message)
+            for key in six.iterkeys(input_value):
+                if (self.properties.get(self.INPUT) is None
+                        or key not in self.properties.get(self.INPUT)):
+                    message = _('Unknown input %s') % key
                     raise exception.StackValidationFailed(
                         error=_('Signal data error'),
                         message=message)
-                for key in six.iterkeys(input_value):
-                    if (self.properties.get(self.INPUT) is None
-                            or key not in self.properties.get(self.INPUT)):
-                        message = _('Unknown input %s') % key
-                        raise exception.StackValidationFailed(
-                            error=_('Signal data error'),
-                            message=message)
-            if params_value is not None and not isinstance(params_value, dict):
-                    message = (_('Params must be a map, find a '
-                                 '%s') % type(params_value))
-                    raise exception.StackValidationFailed(
-                        error=_('Signal data error'),
-                        message=message)
+        if params_value is not None and not isinstance(params_value, dict):
+                message = (_('Params must be a map, find a '
+                             '%s') % type(params_value))
+                raise exception.StackValidationFailed(
+                    error=_('Signal data error'),
+                    message=message)
 
     def validate(self):
         super(Workflow, self).validate()
@@ -475,21 +496,19 @@ class Workflow(signal_responder.SignalResponder,
 
         result_input = {}
         result_params = {}
-
-        if details is not None:
-            if details.get(self.INPUT) is not None:
-                # NOTE(prazumovsky): Signal can contains some data, interesting
-                # for workflow, e.g. inputs. So, if signal data contains input
-                # we update override inputs, other leaved defined in template.
-                for key, value in six.iteritems(
-                        self.properties.get(self.INPUT)):
-                    result_input.update(
-                        {key: details.get(
-                            self.SIGNAL_DATA_INPUT).get(key) or value})
-            if details.get(self.SIGNAL_DATA_PARAMS) is not None:
-                if self.properties.get(self.PARAMS) is not None:
-                    result_params.update(self.properties.get(self.PARAMS))
-                result_params.update(details.get(self.SIGNAL_DATA_PARAMS))
+        inputs, params = self._get_inputs_and_params(details)
+        if inputs is not None:
+            # NOTE(prazumovsky): Signal can contains some data, interesting
+            # for workflow, e.g. inputs. So, if signal data contains input
+            # we update override inputs, other leaved defined in template.
+            for key, value in six.iteritems(
+                    self.properties.get(self.INPUT)):
+                result_input.update(
+                    {key: inputs.get(key) or value})
+        if params is not None:
+            if self.properties.get(self.PARAMS) is not None:
+                result_params.update(self.properties.get(self.PARAMS))
+            result_params.update(params)
 
         if not result_input and self.properties.get(self.INPUT):
             result_input.update(self.properties.get(self.INPUT))
