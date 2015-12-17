@@ -15,7 +15,6 @@
 import os
 
 from eventlet.green import socket
-from oslo_concurrency import processutils
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -81,7 +80,6 @@ service_opts = [
                default=5,
                help=_('Maximum depth allowed when using nested stacks.')),
     cfg.IntOpt('num_engine_workers',
-               default=processutils.get_worker_count(),
                help=_('Number of heat-engine processes to fork and run.'))]
 
 engine_opts = [
