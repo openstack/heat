@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -91,6 +92,7 @@ class OSDBInstance(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('Name of the DB instance to create.'),
+            update_allowed=True,
             constraints=[
                 constraints.Length(max=255),
             ]
@@ -99,6 +101,7 @@ class OSDBInstance(resource.Resource):
             properties.Schema.STRING,
             _('Reference to a flavor for creating DB instance.'),
             required=True,
+            update_allowed=True,
             constraints=[
                 constraints.CustomConstraint('trove.flavor')
             ]
@@ -123,6 +126,7 @@ class OSDBInstance(resource.Resource):
             properties.Schema.INTEGER,
             _('Database volume size in GB.'),
             required=True,
+            update_allowed=True,
             constraints=[
                 constraints.Range(1, 150),
             ]
@@ -167,6 +171,7 @@ class OSDBInstance(resource.Resource):
             properties.Schema.LIST,
             _('List of databases to be created on DB instance creation.'),
             default=[],
+            update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
@@ -200,6 +205,7 @@ class OSDBInstance(resource.Resource):
             properties.Schema.LIST,
             _('List of users to be created on DB instance creation.'),
             default=[],
+            update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
@@ -208,6 +214,7 @@ class OSDBInstance(resource.Resource):
                         _('User name to create a user on instance '
                           'creation.'),
                         required=True,
+                        update_allowed=True,
                         constraints=[
                             constraints.Length(max=16),
                             constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
@@ -220,6 +227,7 @@ class OSDBInstance(resource.Resource):
                         _('Password for those users on instance '
                           'creation.'),
                         required=True,
+                        update_allowed=True,
                         constraints=[
                             constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
                                                        r'[a-zA-Z0-9_@?#\s]*'
@@ -230,7 +238,8 @@ class OSDBInstance(resource.Resource):
                         properties.Schema.STRING,
                         _('The host from which a user is allowed to '
                           'connect to the database.'),
-                        default='%'
+                        default='%',
+                        update_allowed=True
                     ),
                     USER_DATABASES: properties.Schema(
                         properties.Schema.LIST,
@@ -240,6 +249,7 @@ class OSDBInstance(resource.Resource):
                             properties.Schema.STRING,
                         ),
                         required=True,
+                        update_allowed=True,
                         constraints=[
                             constraints.Length(min=1),
                         ]
@@ -413,6 +423,170 @@ class OSDBInstance(resource.Resource):
             {'attr': 'status', 'expected': self.ACTIVE, 'current': status},
         ]
         self._verify_check_conditions(checks)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        updates = {}
+        if prop_diff:
+            instance = self.client().instances.get(self.resource_id)
+            if self.NAME in prop_diff:
+                updates.update({self.NAME: prop_diff[self.NAME]})
+            if self.FLAVOR in prop_diff:
+                flvid = prop_diff[self.FLAVOR]
+                flv = self.client_plugin().get_flavor_id(flvid)
+                updates.update({self.FLAVOR: flv})
+            if self.SIZE in prop_diff:
+                updates.update({self.SIZE: prop_diff[self.SIZE]})
+            if self.DATABASES in prop_diff:
+                current = [d.name
+                           for d in self.client().databases.list(instance)]
+                desired = [d[self.DATABASE_NAME]
+                           for d in prop_diff[self.DATABASES]]
+                for db in prop_diff[self.DATABASES]:
+                    dbname = db[self.DATABASE_NAME]
+                    if dbname not in current:
+                        db['ACTION'] = self.CREATE
+                for dbname in current:
+                    if dbname not in desired:
+                        deleted = {self.DATABASE_NAME: dbname,
+                                   'ACTION': self.DELETE}
+                        prop_diff[self.DATABASES].append(deleted)
+                updates.update({self.DATABASES: prop_diff[self.DATABASES]})
+            if self.USERS in prop_diff:
+                current = [u.name
+                           for u in self.client().users.list(instance)]
+                desired = [u[self.USER_NAME] for u in prop_diff[self.USERS]]
+                for usr in prop_diff[self.USERS]:
+                    if usr[self.USER_NAME] not in current:
+                        usr['ACTION'] = self.CREATE
+                for usr in current:
+                    if usr not in desired:
+                        prop_diff[self.USERS].append({self.USER_NAME: usr,
+                                                      'ACTION': self.DELETE})
+                updates.update({self.USERS: prop_diff[self.USERS]})
+        return updates
+
+    def check_update_complete(self, updates):
+        instance = self.client().instances.get(self.resource_id)
+        if instance.status in self.BAD_STATUSES:
+            raise exception.ResourceInError(
+                resource_status=instance.status,
+                status_reason=self.TROVE_STATUS_REASON.get(instance.status,
+                                                           _("Unknown")))
+        if updates:
+            if instance.status != self.ACTIVE:
+                dmsg = ("Instance is in status %(now)s. Waiting on status"
+                        " %(stat)s")
+                LOG.debug(dmsg % {"now": instance.status,
+                                  "stat": self.ACTIVE})
+                return False
+            try:
+                return (
+                    self._update_name(instance, updates.get(self.NAME)) and
+                    self._update_flavor(instance, updates.get(self.FLAVOR)) and
+                    self._update_size(instance, updates.get(self.SIZE)) and
+                    self._update_databases(instance,
+                                           updates.get(self.DATABASES)) and
+                    self._update_users(instance, updates.get(self.USERS))
+                )
+            except Exception as exc:
+                if self.client_plugin().is_client_exception(exc):
+                    # the instance could have updated between the time
+                    # we retrieve it and try to update it so check again
+                    if self.client_plugin().is_over_limit(exc):
+                        LOG.debug("API rate limit: %(ex)s. Retrying." %
+                                  {'ex': six.text_type(exc)})
+                        return False
+                    if "No change was requested" in six.text_type(exc):
+                        LOG.warn(_LW("Unexpected instance state change "
+                                     "during update. Retrying."))
+                        return False
+                raise exc
+        return True
+
+    def _update_name(self, instance, name):
+        if name and instance.name != name:
+            self.client().instances.edit(instance, name=name)
+            return False
+        return True
+
+    def _update_flavor(self, instance, new_flavor):
+        if new_flavor:
+            current_flav = six.text_type(instance.flavor['id'])
+            new_flav = six.text_type(new_flavor)
+            if new_flav != current_flav:
+                dmsg = "Resizing instance flavor from %(old)s to %(new)s"
+                LOG.debug(dmsg % {"old": current_flav, "new": new_flav})
+                self.client().instances.resize_instance(instance, new_flavor)
+                return False
+        return True
+
+    def _update_size(self, instance, new_size):
+        if new_size and instance.volume['size'] != new_size:
+            dmsg = "Resizing instance storage from %(old)s to %(new)s"
+            LOG.debug(dmsg % {"old": instance.volume['size'],
+                              "new": new_size})
+            self.client().instances.resize_volume(instance, new_size)
+            return False
+        return True
+
+    def _update_databases(self, instance, databases):
+        if databases:
+            for db in databases:
+                if db.get("ACTION") == self.CREATE:
+                    db.pop("ACTION", None)
+                    dmsg = "Adding new database %(db)s to instance"
+                    LOG.debug(dmsg % {"db": db})
+                    self.client().databases.create(instance, [db])
+                elif db.get("ACTION") == self.DELETE:
+                    dmsg = ("Deleting existing database %(db)s from "
+                            "instance")
+                    LOG.debug(dmsg % {"db": db['name']})
+                    self.client().databases.delete(instance, db['name'])
+        return True
+
+    def _update_users(self, instance, users):
+        if users:
+            for usr in users:
+                dbs = [{'name': db} for db in usr.get(self.USER_DATABASES,
+                                                      [])]
+                usr[self.USER_DATABASES] = dbs
+                if usr.get("ACTION") == self.CREATE:
+                    usr.pop("ACTION", None)
+                    dmsg = "Adding new user %(u)s to instance"
+                    LOG.debug(dmsg % {"u": usr})
+                    self.client().users.create(instance, [usr])
+                elif usr.get("ACTION") == self.DELETE:
+                    dmsg = ("Deleting existing user %(u)s from "
+                            "instance")
+                    LOG.debug(dmsg % {"u": usr['name']})
+                    self.client().users.delete(instance, usr['name'])
+                else:
+                    newattrs = {}
+                    if usr.get(self.USER_HOST):
+                        newattrs[self.USER_HOST] = usr[self.USER_HOST]
+                    if usr.get(self.USER_PASSWORD):
+                        newattrs[self.USER_PASSWORD] = usr[self.USER_PASSWORD]
+                    if newattrs:
+                        self.client().users.update_attributes(
+                            instance,
+                            usr['name'], newuserattr=newattrs,
+                            hostname=instance.hostname)
+                    current = self.client().users.get(instance,
+                                                      usr[self.USER_NAME])
+                    dbs = [db['name'] for db in current.databases]
+                    desired = [db['name'] for db in
+                               usr.get(self.USER_DATABASES, [])]
+                    grants = [db for db in desired if db not in dbs]
+                    revokes = [db for db in dbs if db not in desired]
+                    if grants:
+                        self.client().users.grant(instance,
+                                                  usr[self.USER_NAME],
+                                                  grants)
+                    if revokes:
+                        self.client().users.revoke(instance,
+                                                   usr[self.USER_NAME],
+                                                   revokes)
+        return True
 
     def handle_delete(self):
         """Delete a cloud database instance."""
