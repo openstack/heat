@@ -299,16 +299,16 @@ class Port(neutron.NeutronResource):
         ),
     }
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.NETWORK],
                 value_path=[self.NETWORK_ID]
             ),
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.FIXED_IPS, self.FIXED_IP_SUBNET],
                 value_name=self.FIXED_IP_SUBNET_ID
@@ -329,11 +329,8 @@ class Port(neutron.NeutronResource):
         # the ports in that network.
         for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
-                dep_network = res.properties.get(
-                    subnet.Subnet.NETWORK) or res.properties.get(
-                        subnet.Subnet.NETWORK_ID)
-                network = self.properties[
-                    self.NETWORK] or self.properties[self.NETWORK_ID]
+                dep_network = res.properties.get(subnet.Subnet.NETWORK)
+                network = self.properties[self.NETWORK]
                 if dep_network == network:
                     deps += (self, res)
 

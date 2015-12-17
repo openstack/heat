@@ -246,9 +246,9 @@ class Subnet(neutron.NeutronResource):
         ),
     }
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
-            properties.TranslationRule(self.properties,
+            properties.TranslationRule(props,
                                        properties.TranslationRule.REPLACE,
                                        [self.NETWORK],
                                        value_path=[self.NETWORK_ID])

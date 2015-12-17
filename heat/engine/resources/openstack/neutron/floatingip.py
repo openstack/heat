@@ -128,10 +128,10 @@ class FloatingIP(neutron.NeutronResource):
         ),
     }
 
-    def translation_rules(self):
+    def translation_rules(self, props):
         return [
             properties.TranslationRule(
-                self.properties,
+                props,
                 properties.TranslationRule.REPLACE,
                 [self.FLOATING_NETWORK],
                 value_path=[self.FLOATING_NETWORK_ID]
@@ -148,9 +148,7 @@ class FloatingIP(neutron.NeutronResource):
                 gateway_network = resource.properties.get(
                     router.RouterGateway.NETWORK) or resource.properties.get(
                         router.RouterGateway.NETWORK_ID)
-                floating_network = self.properties[
-                    self.FLOATING_NETWORK] or self.properties[
-                    self.FLOATING_NETWORK_ID]
+                floating_network = self.properties[self.FLOATING_NETWORK]
                 if gateway_network == floating_network:
                     deps += (self, resource)
 
@@ -199,9 +197,7 @@ class FloatingIP(neutron.NeutronResource):
                 if gateway:
                     gateway_network = gateway.get(
                         router.Router.EXTERNAL_GATEWAY_NETWORK)
-                    floating_network = self.properties[
-                        self.FLOATING_NETWORK] or self.properties[
-                            self.FLOATING_NETWORK_ID]
+                    floating_network = self.properties[self.FLOATING_NETWORK]
                     if gateway_network == floating_network:
                         deps += (self, resource)
 

@@ -3463,13 +3463,6 @@ class ServersTest(common.HeatTestCase):
 
         return_server.interface_list().AndReturn(poor_interfaces)
 
-        self.m.StubOutWithMock(return_server, 'interface_detach')
-        return_server.interface_detach(
-            poor_interfaces[0].port_id).AndReturn(None)
-
-        self.m.StubOutWithMock(return_server, 'interface_attach')
-        return_server.interface_attach(None, new_networks[0]['uuid'],
-                                       None).AndReturn(None)
         self.stub_NetworkConstraint_validate()
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
