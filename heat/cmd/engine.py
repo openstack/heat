@@ -23,6 +23,7 @@ eventlet.monkey_patch()
 
 import sys
 
+from oslo_concurrency import processutils
 from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
@@ -65,8 +66,11 @@ def main():
     profiler.setup('heat-engine', cfg.CONF.host)
     gmr.TextGuruMeditation.setup_autorun(version)
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
-    launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.num_engine_workers)
+    workers = cfg.CONF.num_engine_workers
+    if not workers:
+        workers = max(4, processutils.get_worker_count())
+
+    launcher = service.launch(cfg.CONF, srv, workers=workers)
     if cfg.CONF.enable_cloud_watch_lite:
         # We create the periodic tasks here, which mean they are created
         # only in the parent process when num_engine_workers>1 is specified
