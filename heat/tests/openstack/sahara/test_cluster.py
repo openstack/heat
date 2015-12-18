@@ -63,7 +63,8 @@ class SaharaClusterTest(common.HeatTestCase):
         super(SaharaClusterTest, self).setUp()
         self.patchobject(sc.constraints.CustomConstraint, '_is_valid'
                          ).return_value = True
-        self.patchobject(glance.GlanceClientPlugin, 'get_image_id'
+        self.patchobject(glance.GlanceClientPlugin,
+                         'find_image_by_name_or_id'
                          ).return_value = 'some_image_id'
         self.patchobject(neutron.NeutronClientPlugin, '_create')
         self.patchobject(neutron.NeutronClientPlugin, 'find_neutron_resource'

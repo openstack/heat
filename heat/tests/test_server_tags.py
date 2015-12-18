@@ -58,8 +58,9 @@ class ServerTagsTest(common.HeatTestCase):
         self.fc = fakes_nova.FakeClient()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _setup_test_instance(self, intags=None, nova_tags=None):

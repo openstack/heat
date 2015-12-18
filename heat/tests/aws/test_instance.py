@@ -14,7 +14,6 @@
 import copy
 import uuid
 
-from glanceclient import exc as glance_exceptions
 import mock
 import mox
 from neutronclient.v2_0 import client as neutronclient
@@ -96,13 +95,16 @@ class InstancesTest(common.HeatTestCase):
         return (tmpl, stack)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _mock_get_image_id_fail(self, image_id, exp):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(image_id).AndRaise(exp)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
+            image_id).AndRaise(exp)
 
     def _get_test_template(self, stack_name, image_id=None, volumes=False):
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -407,8 +409,7 @@ class InstancesTest(common.HeatTestCase):
                                       resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('Slackware',
-                                     exception.EntityNotFound(
-                                         entity='Image', name='Slackware'))
+                                     glance.exceptions.NotFound())
         self.stub_VolumeConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_KeypairConstraint_validate()
@@ -419,9 +420,8 @@ class InstancesTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
             "StackValidationFailed: resources.instance_create_image_err: "
-            "Property error: "
-            "WebServer.Properties.ImageId: Error validating value "
-            "'Slackware': The Image (Slackware) could not be found.",
+            "Property error: WebServer.Properties.ImageId: "
+            "Error validating value 'Slackware': Not Found (HTTP 404)",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -438,8 +438,7 @@ class InstancesTest(common.HeatTestCase):
                                       resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('CentOS 5.2',
-                                     exception.PhysicalResourceNameAmbiguity(
-                                         name='CentOS 5.2'))
+                                     glance.exceptions.NoUniqueMatch())
 
         self.stub_KeypairConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -450,10 +449,9 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: resources.instance_create_image_err: '
-            'Property error: '
-            'WebServer.Properties.ImageId: Multiple physical '
-            'resources were found with name (CentOS 5.2).',
+            "StackValidationFailed: resources.instance_create_image_err: "
+            "Property error: WebServer.Properties.ImageId: "
+            "Error validating value 'CentOS 5.2': ",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -468,7 +466,7 @@ class InstancesTest(common.HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       resource_defns['WebServer'], stack)
 
-        self._mock_get_image_id_fail('1', glance_exceptions.NotFound(404))
+        self._mock_get_image_id_fail('1', glance.exceptions.NotFound())
 
         self.stub_VolumeConstraint_validate()
         self.stub_FlavorConstraint_validate()
@@ -479,8 +477,9 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: resources.instance_create_image_err: '
-            'Property error: WebServer.Properties.ImageId: 404 (HTTP 404)',
+            "StackValidationFailed: resources.instance_create_image_err: "
+            "Property error: WebServer.Properties.ImageId: "
+            "Error validating value '1': Not Found (HTTP 404)",
             six.text_type(error))
 
         self.m.VerifyAll()

@@ -13,11 +13,10 @@
 
 import uuid
 
-from glanceclient import exc as glance_exceptions
+from glanceclient import exc
+from glanceclient.openstack.common.apiclient import exceptions
 import mock
-import six
 
-from heat.common import exception
 from heat.engine.clients.os import glance
 from heat.tests import common
 from heat.tests import utils
@@ -35,78 +34,31 @@ class GlanceUtilsTests(common.HeatTestCase):
         self.glance_plugin._client = self.glance_client
         self.my_image = mock.MagicMock()
 
-    def test_get_image_id(self):
-        """Tests the get_image_id function."""
+    def test_find_image_by_name_or_id(self):
+        """Tests the find_image_by_name_or_id function."""
         img_id = str(uuid.uuid4())
         img_name = 'myfakeimage'
         self.my_image.id = img_id
         self.my_image.name = img_name
-        self.glance_client.images.get.return_value = self.my_image
-        self.glance_client.images.list.side_effect = ([self.my_image], [])
-        self.assertEqual(img_id, self.glance_plugin.get_image_id(img_id))
-        self.assertEqual(img_id, self.glance_plugin.get_image_id(img_name))
-        self.assertRaises(exception.EntityNotFound,
-                          self.glance_plugin.get_image_id, 'noimage')
-
-        calls = [mock.call(filters={'name': img_name}),
-                 mock.call(filters={'name': 'noimage'})]
-        self.glance_client.images.get.assert_called_once_with(img_id)
-        self.glance_client.images.list.assert_has_calls(calls)
-
-    def test_get_image_id_by_name_in_uuid(self):
-        """Tests the get_image_id function by name in uuid."""
-        img_id = str(uuid.uuid4())
-        img_name = str(uuid.uuid4())
-        self.my_image.id = img_id
-        self.my_image.name = img_name
         self.glance_client.images.get.side_effect = [
-            glance_exceptions.HTTPNotFound()]
-        self.glance_client.images.list.return_value = [self.my_image]
-
-        self.assertEqual(img_id, self.glance_plugin.get_image_id(img_name))
-        self.glance_client.images.get.assert_called_once_with(img_name)
-        self.glance_client.images.list.assert_called_once_with(
-            filters={'name': img_name})
-
-    def test_get_image_id_glance_exception(self):
-        """Test get_image_id when glance raises an exception."""
-        # Simulate HTTP exception
-        img_name = str(uuid.uuid4())
+            self.my_image,
+            exc.HTTPNotFound(),
+            exc.HTTPNotFound(),
+            exc.HTTPNotFound()]
         self.glance_client.images.list.side_effect = [
-            glance_exceptions.ClientException("Error")]
-
-        expected_error = "Error retrieving image list from glance: Error"
-        e = self.assertRaises(exception.Error,
-                              self.glance_plugin.get_image_id_by_name,
-                              img_name)
-        self.assertEqual(expected_error, six.text_type(e))
-        self.glance_client.images.list.assert_called_once_with(
-            filters={'name': img_name})
-
-    def test_get_image_id_not_found(self):
-        """Tests the get_image_id function while image is not found."""
-        img_name = str(uuid.uuid4())
-        self.glance_client.images.get.side_effect = [
-            glance_exceptions.HTTPNotFound()]
-        self.glance_client.images.list.return_value = []
-
-        self.assertRaises(exception.EntityNotFound,
-                          self.glance_plugin.get_image_id, img_name)
-        self.glance_client.images.get.assert_called_once_with(img_name)
-        self.glance_client.images.list.assert_called_once_with(
-            filters={'name': img_name})
-
-    def test_get_image_id_name_ambiguity(self):
-        """Tests the get_image_id function while name ambiguity ."""
-        img_name = 'ambiguity_name'
-        self.my_image.name = img_name
-
-        self.glance_client.images.list.return_value = [self.my_image,
-                                                       self.my_image]
-        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
-                          self.glance_plugin.get_image_id, img_name)
-        self.glance_client.images.list.assert_called_once_with(
-            filters={'name': img_name})
+            [self.my_image],
+            [],
+            [self.my_image, self.my_image]]
+        self.assertEqual(img_id,
+                         self.glance_plugin.find_image_by_name_or_id(img_id))
+        self.assertEqual(img_id,
+                         self.glance_plugin.find_image_by_name_or_id(img_name))
+        self.assertRaises(exceptions.NotFound,
+                          self.glance_plugin.find_image_by_name_or_id,
+                          'noimage')
+        self.assertRaises(exceptions.NoUniqueMatch,
+                          self.glance_plugin.find_image_by_name_or_id,
+                          'myfakeimage')
 
 
 class ImageConstraintTest(common.HeatTestCase):
@@ -114,16 +66,15 @@ class ImageConstraintTest(common.HeatTestCase):
     def setUp(self):
         super(ImageConstraintTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.mock_get_image = mock.Mock()
+        self.mock_find_image = mock.Mock()
         self.ctx.clients.client_plugin(
-            'glance').get_image_id = self.mock_get_image
+            'glance').find_image_by_name_or_id = self.mock_find_image
         self.constraint = glance.ImageConstraint()
 
     def test_validation(self):
-        self.mock_get_image.return_value = "id1"
+        self.mock_find_image.side_effect = ["id1",
+                                            exceptions.NotFound(),
+                                            exceptions.NoUniqueMatch()]
         self.assertTrue(self.constraint.validate("foo", self.ctx))
-
-    def test_validation_error(self):
-        self.mock_get_image.side_effect = exception.EntityNotFound(
-            entity='Image', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
+        self.assertFalse(self.constraint.validate("baz", self.ctx))

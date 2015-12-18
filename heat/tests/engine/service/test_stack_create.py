@@ -274,7 +274,7 @@ class StackCreateTest(common.HeatTestCase):
 
         fc = fakes_nova.FakeClient()
         self.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
-        self.patchobject(glance.GlanceClientPlugin, 'get_image_id',
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
                          return_value=744)
 
         resource = stk['WebServer']

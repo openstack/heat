@@ -71,7 +71,8 @@ class SaharaImageRegistry(resource.Resource):
     entity = 'images'
 
     def handle_create(self):
-        self.resource_id_set(self.client_plugin('glance').get_image_id(
+        self.resource_id_set(self.client_plugin(
+            'glance').find_image_by_name_or_id(
             self.properties[self.IMAGE]))
 
         self.client().images.update_image(

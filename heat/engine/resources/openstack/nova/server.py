@@ -733,7 +733,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         image = self.properties[self.IMAGE]
         if image:
-            image = self.client_plugin('glance').get_image_id(image)
+            image = self.client_plugin(
+                'glance').find_image_by_name_or_id(image)
 
         flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
 
@@ -989,7 +990,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
             self.properties[self.IMAGE_UPDATE_POLICY])
         image = prop_diff[self.IMAGE]
-        image_id = self.client_plugin('glance').get_image_id(image)
+        image_id = self.client_plugin(
+            'glance').find_image_by_name_or_id(image)
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
         password = (prop_diff.get(self.ADMIN_PASS) or

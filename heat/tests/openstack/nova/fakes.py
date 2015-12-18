@@ -408,6 +408,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {'image': self.get_images_detail()[1]['images'][0]})
 
     get_images_456 = get_images_1
+    get_images_image_name = get_images_1
 
     #
     # Keypairs
