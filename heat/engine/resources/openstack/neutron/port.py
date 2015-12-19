@@ -15,7 +15,6 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
@@ -93,7 +92,6 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
-            update_allowed=True,
         ),
 
         NETWORK: properties.Schema(
@@ -108,7 +106,6 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
-            update_allowed=True,
         ),
         DEVICE_ID: properties.Schema(
             properties.Schema.STRING,
@@ -325,10 +322,6 @@ class Port(neutron.NeutronResource):
         ),
     }
 
-    # The network property can be updated, but only to switch between
-    # a name and ID for the same network, which is handled in _needs_update
-    update_exclude_properties = [NETWORK, NETWORK_ID]
-
     def __init__(self, name, definition, stack):
         """Overloaded init in case of merging two schemas to one."""
         self.properties_schema.update(self.extra_properties_schema)
@@ -458,29 +451,24 @@ class Port(neutron.NeutronResource):
             return subnets
         return super(Port, self)._resolve_attribute(name)
 
-    def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource, check_init_complete=True):
+    def needs_replace(self, after_props):
+        """Mandatory replace based on props """
+        return after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS'
 
-        if after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS':
-            raise exception.UpdateReplace(self.name)
-
-        if after_props != before_props:
-            # Switching between name and ID is OK, provided the value resolves
-            # to the same network.  If the network changes, port is replaced.
-            # Support NETWORK and NETWORK_ID, as switching between those is OK.
-            before_id = self.client_plugin().find_neutron_resource(
-                before_props, self.NETWORK, 'network')
+    def needs_replace_with_prop_diff(self, changed_properties_set,
+                                     after_props, before_props):
+        """Needs replace based on prop_diff """
+        # Switching between name and ID is OK, provided the value resolves
+        # to the same network.  If the network changes, port is replaced.
+        if self.NETWORK in changed_properties_set:
             after_id = self.client_plugin().find_neutron_resource(
                 after_props, self.NETWORK, 'network')
-            if before_id != after_id:
-                raise exception.UpdateReplace(self.name)
-
-        return super(Port, self)._needs_update(
-            after, before, after_props, before_props, prev_resource,
-            check_init_complete)
+            before_id = self.client_plugin().find_neutron_resource(
+                before_props, self.NETWORK, 'network')
+            changed_properties_set.remove(self.NETWORK)
+            return before_id != after_id
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        prop_diff.pop(self.NETWORK, None)
         if prop_diff:
             self.prepare_update_properties(prop_diff)
             if self.QOS_POLICY in prop_diff:

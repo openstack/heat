@@ -3650,6 +3650,7 @@ class ServersTest(common.HeatTestCase):
         update_template['Properties']['image_update_policy'] = 'REPLACE'
 
         # update
+        self.stub_ImageConstraint_validate()
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
