@@ -1,0 +1,11 @@
+---
+features:
+  - Added new functionality for showing and listing stack outputs without
+    resolving all outputs during stack initialisation.
+  - Added new API calls for showing and listing stack outputs
+    ``/stack/outputs`` and ``/stack/outputs/output_key``.
+  - Added using of new API in python-heatclient for ``output_show`` and
+    ``output_list``. Now, if version of Heat API is 1.19 or above, Heat client
+    will use API calls ``output_show`` and ``output_list`` instead of parsing
+    of stack get response. If version of Heat API is lower than 1.19,
+    outputs resolve in Heat client as well as before.
