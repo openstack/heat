@@ -512,7 +512,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
 
         image_id = self.client_plugin('glance').get_image_id(image_name)
 
-        flavor_id = self.client_plugin().get_flavor_id(flavor)
+        flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
 
         scheduler_hints = {}
         if self.properties[self.NOVA_SCHEDULER_HINTS]:
@@ -627,7 +627,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
 
     def _update_instance_type(self, prop_diff):
         flavor = prop_diff[self.INSTANCE_TYPE]
-        flavor_id = self.client_plugin().get_flavor_id(flavor)
+        flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
         handler_args = {'args': (flavor_id,)}
         checker_args = {'args': (flavor_id, flavor)}
 

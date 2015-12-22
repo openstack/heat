@@ -298,7 +298,7 @@ class OSDBInstance(resource.Resource):
 
     def handle_create(self):
         """Create cloud database instance."""
-        self.flavor = self.client_plugin().get_flavor_id(
+        self.flavor = self.client_plugin().find_flavor_by_name_or_id(
             self.properties[self.FLAVOR])
         self.volume = {'size': self.properties[self.SIZE]}
         self.databases = self.properties[self.DATABASES]

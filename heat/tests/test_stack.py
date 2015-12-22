@@ -1563,11 +1563,11 @@ class StackTest(common.HeatTestCase):
         flavor = collections.namedtuple("Flavor", ["id", "name"])
         flavor.id = "1234"
         flavor.name = "dummy"
-        fc.flavors.list().AndReturn([flavor])
+        fc.flavors.find(id='1234').AndReturn(flavor)
 
         self.m.ReplayAll()
 
-        test_env = environment.Environment({'flavor': 'dummy'})
+        test_env = environment.Environment({'flavor': '1234'})
         self.stack = stack.Stack(self.ctx, 'stack_with_custom_constraint',
                                  template.Template(tmpl, env=test_env))
 

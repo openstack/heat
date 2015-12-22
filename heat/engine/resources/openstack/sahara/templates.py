@@ -253,7 +253,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             'name': self._ngt_name(),
             'plugin_name': self.properties[self.PLUGIN_NAME],
             'hadoop_version': self.properties[self.HADOOP_VERSION],
-            'flavor_id': self.client_plugin("nova").get_flavor_id(
+            'flavor_id': self.client_plugin("nova").find_flavor_by_name_or_id(
                 self.properties[self.FLAVOR]),
             'description': self.properties[self.DESCRIPTION],
             'volumes_per_node': self.properties[self.VOLUMES_PER_NODE],

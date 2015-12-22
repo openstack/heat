@@ -120,8 +120,9 @@ class OSDBInstanceTest(common.HeatTestCase):
     def _stubout_common_create(self):
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.fc.flavors = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(trove.TroveClientPlugin, 'get_flavor_id')
-        trove.TroveClientPlugin.get_flavor_id('1GB').AndReturn(1)
+        self.m.StubOutWithMock(trove.TroveClientPlugin,
+                               'find_flavor_by_name_or_id')
+        trove.TroveClientPlugin.find_flavor_by_name_or_id('1GB').AndReturn(1)
         self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'create')
         self.m.StubOutWithMock(self.fc.instances, 'get')
@@ -233,9 +234,8 @@ class OSDBInstanceTest(common.HeatTestCase):
 
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.fc.flavors = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(self.fc.flavors, "list")
-        self.fc.flavors.list().AndReturn([FakeFlavor(1, '1GB'),
-                                          FakeFlavor(2, '2GB')])
+        self.m.StubOutWithMock(self.fc.flavors, "find")
+        self.fc.flavors.find(id=u'1GB').AndReturn(FakeFlavor(1, '1GB'))
         self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'create')
         users = [{"name": "testuser", "password": "pass", "host": "%",

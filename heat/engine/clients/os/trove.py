@@ -92,32 +92,21 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return isinstance(ex, exceptions.Conflict)
 
-    def get_flavor_id(self, flavor):
-        """Get the ID for the specified flavor name.
-
-        If the specified value is flavor id, just return it.
+    def find_flavor_by_name_or_id(self, flavor):
+        """Find the specified flavor by name or id.
 
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
-        :raises: exception.EntityNotFound
         """
-        flavor_id = None
-        flavor_list = self.client().flavors.list()
-        for o in flavor_list:
-            if o.name == flavor:
-                flavor_id = o.id
-                break
-            if o.id == flavor:
-                flavor_id = o.id
-                break
-        if flavor_id is None:
-            raise exception.EntityNotFound(entity='Flavor', name=flavor)
-        return flavor_id
+        try:
+            return self.client().flavors.find(id=flavor).id
+        except exceptions.NotFound:
+            return self.client().flavors.find(name=flavor).id
 
 
 class FlavorConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exception.EntityNotFound,)
+    expected_exceptions = (exceptions.NotFound,)
 
     resource_client_name = CLIENT_NAME
-    resource_getter_name = 'get_flavor_id'
+    resource_getter_name = 'find_flavor_by_name_or_id'

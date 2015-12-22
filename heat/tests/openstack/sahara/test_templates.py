@@ -111,7 +111,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.stub_FlavorConstraint_validate()
         self.stub_SaharaPluginConstraint()
         self.stub_VolumeTypeConstraint_validate()
-        self.patchobject(nova.NovaClientPlugin, 'get_flavor_id'
+        self.patchobject(nova.NovaClientPlugin, 'find_flavor_by_name_or_id'
                          ).return_value = 'someflavorid'
         self.patchobject(neutron.NeutronClientPlugin, '_create')
         self.patchobject(neutron.NeutronClientPlugin, 'find_neutron_resource'
