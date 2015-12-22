@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
@@ -137,6 +138,8 @@ class NeutronSubnetTest(common.HeatTestCase):
             'None',
             cmd_resource=None,
         ).AndReturn('None')
+        neutronclient.Client.update_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1', update_props)
         stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
@@ -155,26 +158,93 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         self.assertIn(stack['port'], stack.dependencies[stack['sub_net']])
         self.assertIn(stack['port2'], stack.dependencies[stack['sub_net']])
-        props = {
-            "name": 'mysubnet',
-            "network_id": cfn_funcs.ResourceRef(stack, "get_resource", "net"),
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "ip_version": 4,
-            "cidr": "10.0.3.0/24",
-            "allocation_pools": [
-                {"start": "10.0.3.20", "end": "10.0.3.100"},
-                {"start": "10.0.3.110", "end": "10.0.3.200"}],
-            "dns_nameservers": ["8.8.8.8", "192.168.1.254"],
-            "host_routes": [
-                {"destination": "192.168.1.0/24", "nexthop": "194.168.1.2"}
-            ]
-
-
-        }
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                      props)
-#        rsrc.handle_update(update_snippet, {}, {})
-        scheduler.TaskRunner(rsrc.update, update_snippet)()
+                                                      update_props['subnet'])
+        rsrc.handle_update(update_snippet, {}, update_props['subnet'])
+
+        # with name None
+        del update_props['subnet']['name']
+        rsrc.handle_update(update_snippet, {}, update_props['subnet'])
+
+        # with no prop_diff
+        rsrc.handle_update(update_snippet, {}, {})
+
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        self.m.VerifyAll()
+
+    def test_update_subnet_with_value_specs(self):
+        update_props = {'subnet': {
+            'name': 'mysubnet',
+            'value_specs': {
+                'enable_dhcp': True,
+                }
+        }}
+        update_props_merged = copy.deepcopy(update_props)
+        update_props_merged['subnet']['enable_dhcp'] = True
+        del update_props_merged['subnet']['value_specs']
+
+        t = self._test_subnet(u_props=update_props_merged)
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'None',
+            cmd_resource=None,
+        ).AndReturn('None')
+        stack = utils.parse_stack(t)
+        rsrc = self.create_subnet(t, stack, 'sub_net')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.validate()
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
+        self.assertIsNone(rsrc.FnGetAtt('network_id'))
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         rsrc.FnGetAtt('network_id'))
+        self.assertEqual('8.8.8.8', rsrc.FnGetAtt('dns_nameservers')[0])
+
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      update_props['subnet'])
+        rsrc.handle_update(update_snippet, {}, update_props['subnet'])
+
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        self.m.VerifyAll()
+
+    def test_update_subnet_with_no_name(self):
+        update_props = {'subnet': {
+            'name': None,
+        }}
+        update_props_name = {'subnet': {
+            'name': utils.PhysName('test_stack', 'test_subnet'),
+        }}
+        t = self._test_subnet(u_props=update_props_name)
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'None',
+            cmd_resource=None,
+        ).AndReturn('None')
+
+        stack = utils.parse_stack(t)
+        rsrc = self.create_subnet(t, stack, 'sub_net')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.validate()
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
+        self.assertIsNone(rsrc.FnGetAtt('network_id'))
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         rsrc.FnGetAtt('network_id'))
+        self.assertEqual('8.8.8.8', rsrc.FnGetAtt('dns_nameservers')[0])
+
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      update_props['subnet'])
+        rsrc.handle_update(update_snippet, {}, update_props['subnet'])
 
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')

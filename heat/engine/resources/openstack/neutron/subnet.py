@@ -112,7 +112,7 @@ class Subnet(neutron.NeutronResource):
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
-            _('Extra parameters to include in the creation request.'),
+            _('Extra parameters to include in the request.'),
             default={},
             update_allowed=True
         ),
@@ -345,12 +345,17 @@ class Subnet(neutron.NeutronResource):
         return self.client().show_subnet(self.resource_id)['subnet']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        props = self.prepare_update_properties(json_snippet)
-        if (self.ALLOCATION_POOLS in prop_diff and
-                self.ALLOCATION_POOLS not in props):
-            props[self.ALLOCATION_POOLS] = []
-        self.client().update_subnet(
-            self.resource_id, {'subnet': props})
+        if prop_diff:
+            if self.VALUE_SPECS in prop_diff:
+                self.merge_value_specs(prop_diff)
+            if (self.ALLOCATION_POOLS in prop_diff and
+                    prop_diff[self.ALLOCATION_POOLS] is None):
+                prop_diff[self.ALLOCATION_POOLS] = []
+            if (self.NAME in prop_diff and
+                    prop_diff[self.NAME] is None):
+                prop_diff[self.NAME] = self.physical_resource_name()
+            self.client().update_subnet(
+                self.resource_id, {'subnet': prop_diff})
 
 
 def resource_mapping():
