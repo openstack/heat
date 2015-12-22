@@ -343,14 +343,13 @@ class ResourceGroup(stack_resource.StackResource):
             max_batch_size = batch_create[self.MAX_BATCH_SIZE]
             pause_sec = batch_create[self.PAUSE_TIME]
             checkers = self._replace(0, max_batch_size, pause_sec)
+            checkers[0].start()
+            return checkers
         else:
             names = self._resource_names()
-            checkers = [(scheduler.TaskRunner(
-                self._run_to_completion,
-                self._assemble_nested(names),
-                self.stack.timeout_secs()))]
-        checkers[0].start()
-        return checkers
+            self.create_with_template(self._assemble_nested(names),
+                                      self.child_params(),
+                                      self.stack.timeout_secs())
 
     def check_create_complete(self, checkers=None):
         if checkers is None:

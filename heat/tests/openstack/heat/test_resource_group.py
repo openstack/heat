@@ -481,9 +481,8 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         resgrp.create_with_template = mock.Mock(return_value=None)
-        self.patchobject(scheduler.TaskRunner, 'start')
-        checkers = resgrp.handle_create()
-        self.assertEqual(1, len(checkers))
+        self.assertIsNone(resgrp.handle_create())
+        self.assertEqual(1, resgrp.create_with_template.call_count)
 
     def test_handle_create_with_batching(self):
         stack = utils.parse_stack(tmpl_with_default_updt_policy())
@@ -491,10 +490,18 @@ class ResourceGroupTest(common.HeatTestCase):
         snip['UpdatePolicy']['batch_create'] = {'max_batch_size': 3}
         snip['Properties']['count'] = 10
         resgrp = resource_group.ResourceGroup('test', snip, stack)
-        resgrp.create_with_template = mock.Mock(return_value=None)
         self.patchobject(scheduler.TaskRunner, 'start')
         checkers = resgrp.handle_create()
         self.assertEqual(4, len(checkers))
+
+    def test_run_to_completion(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp._check_status_complete = mock.Mock(side_effect=[False, True])
+        resgrp.update_with_template = mock.Mock(return_value=None)
+        next(resgrp._run_to_completion(snip, 200))
+        self.assertEqual(1, resgrp.update_with_template.call_count)
 
     def test_update_in_failed(self):
         stack = utils.parse_stack(template2)
