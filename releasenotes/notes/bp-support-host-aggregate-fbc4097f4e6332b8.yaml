@@ -1,0 +1,6 @@
+---
+features:
+    - OS::Nova::HostAggregate resource plugin is added to support host
+      aggregate, which is provided by nova ``aggregates`` API extension.
+    - nova.host constraint is added to support to validate host attribute
+      which is provided by nova ``host`` API extension.
