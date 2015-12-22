@@ -1288,7 +1288,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                          "file size (%(max_size)s bytes).") %
                        {'path': path,
                         'max_size': limits['maxPersonalitySize']})
-                self._check_maximum(len(bytes(contents.encode('utf-8'))),
+                self._check_maximum(len(bytes(contents.encode('utf-8'))
+                                        ) if contents is not None else 0,
                                     limits['maxPersonalitySize'], msg)
 
     def _delete_temp_url(self):
