@@ -845,6 +845,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
+        self.stack._persist_state()
 
         tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
                  'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
@@ -864,6 +865,10 @@ class StackUpdateTest(common.HeatTestCase):
             self.stack.update(updated_stack)
             self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                              self.stack.state)
+            self.eng = service.EngineService('a-host', 'a-topic')
+            events = self.eng.list_events(self.ctx, self.stack.identifier())
+            self.assertEqual(10, len(events))
+
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
             self.assertEqual(5, mock_db_update.call_count)
             self.assertEqual('UPDATE',

@@ -177,7 +177,7 @@ class ThreadGroupManager(object):
             releasing the lock to avoid race condtitions.
             """
             if stack is not None and stack.action not in (
-                    stack.DELETE, stack.ROLLBACK):
+                    stack.DELETE, stack.ROLLBACK, stack.UPDATE):
                 stack.persist_state_and_release_lock(lock.engine_id)
             else:
                 lock.release()
