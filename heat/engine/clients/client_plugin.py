@@ -60,7 +60,7 @@ class ExceptionFilter(object):
         self._should_ignore_ex = should_ignore_ex
         functools.update_wrapper(self, should_ignore_ex)
 
-    def __get__(self, obj, owner=None):
+    def __get__(self, obj, owner):
         return type(self)(six.create_bound_method(self._should_ignore_ex, obj))
 
     def __enter__(self):
