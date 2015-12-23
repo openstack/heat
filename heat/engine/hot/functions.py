@@ -358,7 +358,7 @@ class Join(cfn_funcs.Join):
 
 
 class JoinMultiple(function.Function):
-    """A function for joining strings.
+    """A function for joining one or more lists of strings.
 
     Takes the form::
 
@@ -377,31 +377,31 @@ class JoinMultiple(function.Function):
         fmt_data = {'fn_name': fn_name,
                     'example': example}
 
-        if isinstance(args, (six.string_types, collections.Mapping)):
+        if not isinstance(args, list):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
         try:
-            self._delim = args.pop(0)
-            self._joinlist = args.pop(0)
-        except IndexError:
+            self._delim = args[0]
+            self._joinlists = args[1:]
+            if len(self._joinlists) < 1:
+                raise ValueError
+        except (IndexError, ValueError):
             raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
                                'should be: %(example)s') % fmt_data)
-        # Optionally allow additional lists, which are appended
-        for l in args:
-            try:
-                self._joinlist += l
-            except (AttributeError, TypeError):
-                raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
-                                'should be: %(example)s') % fmt_data)
 
     def result(self):
-        strings = function.resolve(self._joinlist)
-        if strings is None:
-            strings = []
-        if (isinstance(strings, six.string_types) or
-                not isinstance(strings, collections.Sequence)):
-            raise TypeError(_('"%s" must operate on a list') % self.fn_name)
+        r_joinlists = function.resolve(self._joinlists)
+
+        strings = []
+        for jl in r_joinlists:
+            if jl:
+                if (isinstance(jl, six.string_types) or
+                        not isinstance(jl, collections.Sequence)):
+                    raise TypeError(_('"%s" must operate on '
+                                      'a list') % self.fn_name)
+
+                strings += jl
 
         delim = function.resolve(self._delim)
         if not isinstance(delim, six.string_types):
@@ -422,9 +422,7 @@ class JoinMultiple(function.Function):
                     msg = _('Items to join must be string, map or list. '
                             '%s failed json serialization'
                             ) % (repr(s)[:200])
-            else:
-                msg = _('Items to join must be string, map or list not %s'
-                        ) % (repr(s)[:200])
+
             raise TypeError(msg)
 
         return delim.join(ensure_string(s) for s in strings)
