@@ -15,6 +15,7 @@
 
 import copy
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -130,8 +131,7 @@ class Group(resource.Resource):
                     ),
                     LAUNCH_CONFIG_ARGS_LOAD_BALANCER_PORT: properties.Schema(
                         properties.Schema.INTEGER,
-                        _('Server port to connect the load balancer to.'),
-                        required=True
+                        _('Server port to connect the load balancer to.')
                     ),
                 },
             )
@@ -294,6 +294,11 @@ class Group(resource.Resource):
         lbs = copy.deepcopy(lb_args)
         if lbs:
             for lb in lbs:
+                # if the port is not specified, the lbid must be that of a
+                # RackConnectV3 lb pool.
+                if not lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_PORT]:
+                    del lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_PORT]
+                    continue
                 lbid = int(lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_ID])
                 lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_ID] = lbid
         personality = server_args.get(
@@ -390,6 +395,28 @@ class Group(resource.Resource):
             return True
         else:
             return True
+
+    def _check_rackconnect_v3_pool_exists(self, pool_id):
+        pools = self.client("rackconnect").list_load_balancer_pools()
+        if pool_id in (p.id for p in pools):
+            return True
+        return False
+
+    def validate(self):
+        super(Group, self).validate()
+        launchconf = self.properties[self.LAUNCH_CONFIGURATION]
+        lcargs = launchconf[self.LAUNCH_CONFIG_ARGS]
+        lb_args = lcargs.get(self.LAUNCH_CONFIG_ARGS_LOAD_BALANCERS)
+        lbs = copy.deepcopy(lb_args)
+        for lb in lbs:
+            lb_port = lb.get(self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_PORT)
+            lb_id = lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_ID]
+            if not lb_port:
+                # check if lb id is a valid RCV3 pool id
+                if not self._check_rackconnect_v3_pool_exists(lb_id):
+                    msg = _('Could not find RackConnectV3 pool '
+                            'with id %s') % (lb_id)
+                    raise exception.StackValidationFailed(msg)
 
     def auto_scale(self):
         return self.client('auto_scale')
