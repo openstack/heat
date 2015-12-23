@@ -86,7 +86,7 @@ class TroveClusterTest(common.HeatTestCase):
         mock_client = self.patcher_client.start()
         self.client = mock_client.return_value
         self.troveclient = mock.Mock()
-        self.troveclient.flavors.find.return_value = FakeFlavor(1, 'm1.heat')
+        self.troveclient.flavors.get.return_value = FakeFlavor(1, 'm1.heat')
         self.troveclient.datastore_versions.list.return_value = [FakeVersion()]
         self.patchobject(trove.TroveClientPlugin, 'client',
                          return_value=self.troveclient)
@@ -158,10 +158,12 @@ class TroveClusterTest(common.HeatTestCase):
         self.assertEqual(error_msg, six.text_type(ex))
 
     def test_validate_invalid_flavor(self):
-        self.troveclient.flavors.find.side_effect = [troveexc.NotFound('')]
+        self.troveclient.flavors.get.side_effect = troveexc.NotFound()
+        self.troveclient.flavors.find.side_effect = troveexc.NotFound()
         self.rsrc_defn['Properties']['instances'][0]['flavor'] = 'm1.small'
         tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
         error_msg = ("Property error: "
-                     "resources.cluster.properties.instances[0].flavor: ")
+                     "resources.cluster.properties.instances[0].flavor: "
+                     "Error validating value 'm1.small': Not Found (HTTP 404)")
         self.assertEqual(error_msg, six.text_type(ex))

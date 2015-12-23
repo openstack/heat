@@ -80,12 +80,15 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         my_flavor.name = flav_name
         my_flavor.id = flav_id
 
+        self.nova_client.flavors.get.side_effect = [
+            my_flavor,
+            nova_exceptions.NotFound(''),
+            nova_exceptions.NotFound(''),
+        ]
         self.nova_client.flavors.find.side_effect = [
             my_flavor,
             nova_exceptions.NotFound(''),
-            my_flavor,
-            nova_exceptions.NotFound(''),
-            nova_exceptions.NotFound('')]
+        ]
         self.assertEqual(flav_id,
                          self.nova_plugin.find_flavor_by_name_or_id(flav_id))
         self.assertEqual(flav_id,
@@ -93,7 +96,8 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.assertRaises(nova_exceptions.ClientException,
                           self.nova_plugin.find_flavor_by_name_or_id,
                           'noflavor')
-        self.assertEqual(5, self.nova_client.flavors.find.call_count)
+        self.assertEqual(3, self.nova_client.flavors.get.call_count)
+        self.assertEqual(2, self.nova_client.flavors.find.call_count)
 
     def test_get_host(self):
         """Tests the get_host function."""
@@ -475,19 +479,20 @@ class FlavorConstraintTest(common.HeatTestCase):
         flavor = collections.namedtuple("Flavor", ["id", "name"])
         flavor.id = "1234"
         flavor.name = "foo"
-        client.flavors.find.side_effect = [flavor,
-                                           nova_exceptions.NotFound(''),
-                                           flavor,
-                                           nova_exceptions.NotFound(''),
-                                           nova_exceptions.NotFound('')]
 
+        client.flavors.get.side_effect = [flavor,
+                                          nova_exceptions.NotFound(''),
+                                          nova_exceptions.NotFound('')]
+        client.flavors.find.side_effect = [flavor,
+                                           nova_exceptions.NotFound('')]
         constraint = nova.FlavorConstraint()
         ctx = utils.dummy_context()
         self.assertTrue(constraint.validate("1234", ctx))
         self.assertTrue(constraint.validate("foo", ctx))
         self.assertFalse(constraint.validate("bar", ctx))
         self.assertEqual(1, nova.NovaClientPlugin._create.call_count)
-        self.assertEqual(5, client.flavors.find.call_count)
+        self.assertEqual(3, client.flavors.get.call_count)
+        self.assertEqual(2, client.flavors.find.call_count)
 
 
 class NetworkConstraintTest(common.HeatTestCase):

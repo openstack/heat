@@ -64,7 +64,8 @@ class FakeHTTPClient(base_client.HTTPClient):
         args = urlparse.parse_qsl(urlparse.urlparse(url)[4])
         kwargs.update(args)
         munged_url = url.rsplit('?', 1)[0]
-        munged_url = munged_url.strip('/').replace('/', '_').replace('.', '_')
+        munged_url = munged_url.strip('/').replace('/', '_').replace(
+            '.', '_').replace(' ', '_')
         munged_url = munged_url.replace('-', '_')
 
         callback = "%s_%s" % (method.lower(), munged_url)
@@ -310,9 +311,6 @@ class FakeHTTPClient(base_client.HTTPClient):
     # Flavors
     #
 
-    def get_flavors_detail(self, **kw):
-        return self.get_flavors()
-
     def get_flavors(self, **kw):
         return (200, {'flavors': [
             {'id': 1, 'name': '256 MB Server', 'ram': 256, 'disk': 10,
@@ -322,6 +320,15 @@ class FakeHTTPClient(base_client.HTTPClient):
             {'id': 3, 'name': 'm1.large', 'ram': 512, 'disk': 20,
              'OS-FLV-EXT-DATA:ephemeral': 30}
         ]})
+
+    def get_flavors_256_MB_Server(self, **kw):
+        raise fake_exception()
+
+    def get_flavors_m1_small(self, **kw):
+        raise fake_exception()
+
+    def get_flavors_m1_large(self, **kw):
+        raise fake_exception()
 
     def get_flavors_1(self, **kw):
         return (200, {'flavor': {

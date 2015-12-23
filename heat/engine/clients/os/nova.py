@@ -231,7 +231,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         :returns: the id of :flavor:
         """
         try:
-            return self.client().flavors.find(id=flavor).id
+            return self.client().flavors.get(flavor).id
         except exceptions.NotFound:
             return self.client().flavors.find(name=flavor).id
 

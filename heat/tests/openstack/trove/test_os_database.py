@@ -234,8 +234,10 @@ class OSDBInstanceTest(common.HeatTestCase):
 
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.fc.flavors = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(self.fc.flavors, "get")
+        self.fc.flavors.get(u'1GB').AndRaise(troveexc.NotFound())
         self.m.StubOutWithMock(self.fc.flavors, "find")
-        self.fc.flavors.find(id=u'1GB').AndReturn(FakeFlavor(1, '1GB'))
+        self.fc.flavors.find(name=u'1GB').AndReturn(FakeFlavor(1, '1GB'))
         self.fc.instances = self.m.CreateMockAnything()
         self.m.StubOutWithMock(self.fc.instances, 'create')
         users = [{"name": "testuser", "password": "pass", "host": "%",
