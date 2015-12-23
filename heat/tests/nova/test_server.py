@@ -3799,6 +3799,31 @@ class ServersTest(common.HeatTestCase):
 
         delete_server.assert_not_called()
 
+    def test_handle_snapshot_delete(self):
+        t = template_format.parse(wp_template)
+        t['Resources']['WebServer']['DeletionPolicy'] = 'Snapshot'
+        tmpl = template.Template(t)
+        stack = parser.Stack(
+            utils.dummy_context(), 'snapshot_policy', tmpl)
+        stack.store()
+        rsrc = stack['WebServer']
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
+        mock_plugin.return_value = self.fc
+        delete_server = self.patchobject(self.fc.servers, 'delete')
+        delete_server.side_effect = nova_exceptions.NotFound(404)
+        create_image = self.patchobject(self.fc.servers, 'create_image')
+
+        # test resource_id is None
+        rsrc.handle_snapshot_delete((rsrc.CREATE, rsrc.FAILED))
+        delete_server.assert_not_called()
+        create_image.assert_not_called()
+
+        # test has resource_id but state is CREATE_FAILED
+        rsrc.resource_id = '4567'
+        rsrc.handle_snapshot_delete((rsrc.CREATE, rsrc.FAILED))
+        delete_server.assert_called_once_with('4567')
+        create_image.assert_not_called()
+
 
 class ServerInternalPortTest(common.HeatTestCase):
     def setUp(self):
