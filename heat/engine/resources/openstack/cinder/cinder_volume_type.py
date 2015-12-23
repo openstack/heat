@@ -81,7 +81,7 @@ class CinderVolumeType(resource.Resource):
 
     def _add_projects_access(self, projects):
         for project in projects:
-            project_id = self.keystone().get_project_id(project)
+            project_id = self.client_plugin('keystone').get_project_id(project)
             self.cinder().volume_type_access.add_project_access(
                 self.resource_id, project_id)
 
@@ -121,8 +121,8 @@ class CinderVolumeType(resource.Resource):
         # Update the projects access for volume type
         if self.PROJECTS in prop_diff:
             old_access_list = self.cinder().volume_type_access.list(
-                self.resource_id)['volume_type_access']
-            old_projects = [ac['project_id'] for ac in old_access_list]
+                self.resource_id)
+            old_projects = [ac._info['project_id'] for ac in old_access_list]
             new_projects = prop_diff.get(self.PROJECTS)
             # first remove the old projects access
             for project_id in (set(old_projects) - set(new_projects)):
