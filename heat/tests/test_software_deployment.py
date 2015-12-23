@@ -715,7 +715,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.rpc_client.show_software_deployment.return_value = sd
         self.deployment.resource_id = sd['id']
         config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
-        prop_diff = {'config': config_id}
+        prop_diff = {
+            'config': config_id,
+            'name': 'new_name'
+        }
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
         snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
@@ -729,6 +732,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual(
             (self.ctx, sd['id']),
             self.rpc_client.show_software_deployment.call_args[0])
+
+        self.assertEqual(
+            'new_name',
+            self.rpc_client.create_software_config.call_args[1]['name'])
 
         self.assertEqual({
             'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',

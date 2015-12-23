@@ -148,6 +148,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             _('Name of the derived config associated with this deployment. '
               'This is used to apply a sort order to the list of '
               'configurations currently deployed to a server.'),
+            update_allowed=True
         ),
         SIGNAL_TRANSPORT: properties.Schema(
             properties.Schema.STRING,
