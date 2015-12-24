@@ -166,7 +166,7 @@ class TestResource(resource.Resource):
 
         return result
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
         value = prop_diff.get(self.VALUE)
