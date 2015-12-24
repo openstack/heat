@@ -1944,23 +1944,33 @@ class Stack(collections.Mapping):
     def purge_db(self):
         """Cleanup database after stack has completed/failed.
 
-        1. Delete previous raw template if stack completes successfully.
-        2. Deletes all sync points. They are no longer needed after stack
+        1. If the stack failed, update the current_traversal to empty string
+        so that the resource workers bail out.
+        2. Delete previous raw template if stack completes successfully.
+        3. Deletes all sync points. They are no longer needed after stack
            has completed/failed.
-        3. Delete the stack if the action is DELETE.
+        4. Delete the stack if the action is DELETE.
        """
+        exp_trvsl = self.current_traversal
+        if self.status == self.FAILED:
+            self.current_traversal = ''
+
+        prev_tmpl_id = None
         if (self.prev_raw_template_id is not None and
                 self.status != self.FAILED):
             prev_tmpl_id = self.prev_raw_template_id
             self.prev_raw_template_id = None
-            stack_id = self.store()
-            if stack_id is None:
-                # Failed concurrent update
-                LOG.warning(_LW("Failed to store stack %(name)s with traversal"
-                                " ID %(trvsl_id)s, aborting stack purge"),
-                            {'name': self.name,
-                             'trvsl_id': self.current_traversal})
-                return
+
+        stack_id = self.store(exp_trvsl=exp_trvsl)
+        if stack_id is None:
+            # Failed concurrent update
+            LOG.warning(_LW("Failed to store stack %(name)s with traversal ID "
+                            "%(trvsl_id)s, aborting stack purge"),
+                        {'name': self.name,
+                         'trvsl_id': self.current_traversal})
+            return
+
+        if prev_tmpl_id is not None:
             raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
 
         sync_point.delete_all(self.context, self.id, self.current_traversal)
