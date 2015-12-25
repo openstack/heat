@@ -162,6 +162,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             properties.Schema.BOOLEAN,
             _('Whether allow the volume to be attached more than once.'),
             support_status=support.SupportStatus(version='6.0.0'),
+            default=False
         ),
     }
 
@@ -298,9 +299,26 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         # if we update in handle_create(), maybe the volume still in
         # creating, then cinder will raise an exception
         if complete:
+            self._store_config_default_properties()
             self._update_read_only(self.properties[self.READ_ONLY])
 
         return complete
+
+    def _store_config_default_properties(self, attributes=None):
+        """Method for storing default values of properties in resource data.
+
+        Some properties have default values, specified in project configuration
+        file, so cannot be hardcoded into properties_schema, but should be
+        stored for further using. So need to get created resource and take
+        required property's value.
+        """
+        if attributes is None:
+            attributes = self._show_resource()
+
+        if attributes.get('volume_type') is not None:
+            self.data_set(self.VOLUME_TYPE, attributes['volume_type'])
+        else:
+            self.data_delete(self.VOLUME_TYPE)
 
     def _extend_volume(self, new_size):
         try:
@@ -620,6 +638,28 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             if key not in ignore_props and value is not None)
         props[self.BACKUP_ID] = backup_id
         return defn.freeze(properties=props)
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        volume_reality = {}
+
+        if (resource_data.get(self.METADATA) and
+                resource_data.get(self.METADATA).get(
+                    self.READ_ONLY) is not None):
+            read_only = resource_data.get(self.METADATA).pop(self.READ_ONLY)
+            volume_reality.update({self.READ_ONLY: read_only})
+
+        old_vt = self.data().get(self.VOLUME_TYPE)
+        new_vt = resource_data.get(self.VOLUME_TYPE)
+        if old_vt != new_vt:
+            volume_reality.update({self.VOLUME_TYPE: new_vt})
+            self._store_config_default_properties(dict(volume_type=new_vt))
+
+        props_keys = [self.SIZE, self.NAME, self.DESCRIPTION,
+                      self.METADATA, self.BACKUP_ID]
+        for key in props_keys:
+            volume_reality.update({key: resource_data.get(key)})
+
+        return volume_reality
 
 
 class CinderVolumeAttachment(vb.BaseVolumeAttachment):

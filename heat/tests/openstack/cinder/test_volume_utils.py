@@ -78,6 +78,9 @@ class BaseVolumeTest(common.HeatTestCase):
 
     def create_volume(self, t, stack, resource_name):
         rsrc = self.get_volume(t, stack, resource_name)
+        if isinstance(rsrc, os_vol.CinderVolume):
+            self.patchobject(rsrc, '_store_config_default_properties')
+
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
