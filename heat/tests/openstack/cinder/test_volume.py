@@ -191,7 +191,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
                                                 'update_readonly_flag')
-        update_readonly_mock(fv.id, False).return_value(None)
+        update_readonly_mock.return_value = None
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
@@ -206,6 +206,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         }
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume')
+
+        update_readonly_mock.assert_called_once_with(fv.id, False)
 
         self.m.VerifyAll()
 
@@ -659,7 +661,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
                                                 'update_readonly_flag')
-        update_readonly_mock(fv.id, True).return_value(None)
+        update_readonly_mock.return_value = None
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
@@ -675,6 +677,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         scheduler.TaskRunner(rsrc.update, after)()
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+        update_readonly_mock.assert_called_once_with(fv.id, True)
 
     def test_cinder_snapshot(self):
         stack_name = 'test_cvolume_snpsht_stack'
