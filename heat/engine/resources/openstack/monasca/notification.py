@@ -82,10 +82,7 @@ class MonascaNotification(resource.Resource):
         notification = self.client().notifications.create(**args)
         self.resource_id_set(notification['id'])
 
-    def handle_update(self,
-                      prop_diff,
-                      json_snippet=None,
-                      tmpl_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         args = dict(notification_id=self.resource_id)
 
         args['name'] = (prop_diff.get(self.NAME) or

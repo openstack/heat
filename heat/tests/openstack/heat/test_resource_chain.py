@@ -186,7 +186,7 @@ class ResourceChainTests(common.HeatTestCase):
         chain = self._create_chain(TEMPLATE)
 
         # Test
-        chain.handle_update()
+        chain.handle_update(None, None, None)
 
         # Verify
         expected_tmpl = chain.child_template()
