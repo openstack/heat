@@ -158,7 +158,7 @@ class EngineClient(object):
             multiple tags using the boolean AND expression
         :param not_tags_any: count stacks not containing these tags, combine
             multiple tags using the boolean OR expression
-        :returns: a integer representing the number of matched stacks
+        :returns: an integer representing the number of matched stacks
         """
         return self.call(ctxt, self.make_msg('count_stacks',
                                              filters=filters,
