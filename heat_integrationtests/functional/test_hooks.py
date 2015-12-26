@@ -10,14 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 import yaml
 
 from heat_integrationtests.functional import functional_base
-
-
-LOG = logging.getLogger(__name__)
 
 
 class HooksTest(functional_base.FunctionalTestsBase):
