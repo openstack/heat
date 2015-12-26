@@ -729,7 +729,7 @@ outputs:
         self._wait_for_resource_status(
             stack_identifier, 'JobServerGroup', 'SUSPEND_COMPLETE')
 
-        # Send a signal and a exception will raise
+        # Send a signal and an exception will raise
         ex = self.assertRaises(exc.BadRequest,
                                self.client.resources.signal,
                                stack_identifier, 'ScaleUpPolicy')
