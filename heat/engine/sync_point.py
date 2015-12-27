@@ -35,7 +35,7 @@ def make_key(*components):
 
 
 def create(context, entity_id, traversal_id, is_update, stack_id):
-    """Creates an sync point entry in DB."""
+    """Creates a sync point entry in DB."""
     values = {'entity_id': entity_id, 'traversal_id': traversal_id,
               'is_update': is_update, 'atomic_key': 0,
               'stack_id': stack_id, 'input_data': {}}

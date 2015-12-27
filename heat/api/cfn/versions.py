@@ -13,7 +13,7 @@
 
 """Controller that returns information on the heat API versions.
 
-Now it's an subclass of module versions, because of identity with OpenStack
+Now it's a subclass of module versions, because of identity with OpenStack
 module versions.
 """
 from heat.api import versions
