@@ -20,6 +20,13 @@ from heat.engine import support
 
 
 class Secret(resource.Resource):
+    """The resource provides access to the secret/keying stored material.
+
+    A secret is a singular item that stored within Barbican. A secret is
+    anything you want it to be; however, the formal use case is a key that you
+    wish to store away from prying eyes. Secret may include private keys,
+    passwords and so on.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

@@ -21,7 +21,11 @@ from heat.engine import support
 
 
 class DesignateDomain(resource.Resource):
-    """Heat Template Resource for Designate Domain."""
+    """Heat Template Resource for Designate Domain.
+
+    Designate provides DNS-as-a-Service services for OpenStack. So, domain
+    is an realm with an identification string, unique in DNS.
+    """
 
     support_status = support.SupportStatus(
         version='5.0.0')

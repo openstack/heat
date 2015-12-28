@@ -67,6 +67,11 @@ common_gnocchi_properties_schema = {
 
 
 class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
+    """A resource allowing for the watch of some specified resource.
+
+    An alarm that evaluates threshold based on some metric for the
+    specified resource.
+    """
 
     support_status = support.SupportStatus(version='2015.1')
 
@@ -105,6 +110,11 @@ class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
 
 class CeilometerGnocchiAggregationByMetricsAlarm(
         CeilometerGnocchiResourcesAlarm):
+    """A resource that implements alarm with specified metrics.
+
+    A resource that implements alarm which allows to use specified by user
+    metrics in metrics list.
+    """
 
     support_status = support.SupportStatus(version='2015.1')
 
@@ -127,6 +137,12 @@ class CeilometerGnocchiAggregationByMetricsAlarm(
 
 class CeilometerGnocchiAggregationByResourcesAlarm(
         CeilometerGnocchiResourcesAlarm):
+    """A resource that implements alarm as an aggregation of resources alarms.
+
+    A resource that implements alarm which uses aggregation of resources alarms
+    with some condition. If state of a system is satisfied alarm condition,
+    alarm is activated.
+    """
 
     support_status = support.SupportStatus(version='2015.1')
 

@@ -32,6 +32,12 @@ from heat.scaling import template
 
 
 class InstanceGroup(stack_resource.StackResource):
+    """An instance group that can scale arbitrary instances.
+
+    A resource allowing for the creating number of defined with
+    AWS::AutoScaling::LaunchConfiguration instances. Allows to associate
+    scaled resources with loadbalancer resources.
+    """
 
     PROPERTIES = (
         AVAILABILITY_ZONES, LAUNCH_CONFIGURATION_NAME, SIZE,

@@ -24,6 +24,11 @@ class MonascaAlarmDefinition(resource.Resource):
 
     This plug-in requires python-monascaclient>=1.0.22. So to enable this
     plug-in, install this client library and restart the heat-engine.
+
+    Alarm definitions is necessary to describe and manage alarms in a
+    one-to-many relationship in order to avoid having to manually declare each
+    alarm even though they may share many common attributes and differ in only
+    one, such as hostname.
     """
 
     support_status = support.SupportStatus(

@@ -27,6 +27,15 @@ from heat.engine import support
 
 class Workflow(signal_responder.SignalResponder,
                resource.Resource):
+    """A resource that implements Mistral workflow.
+
+    Workflow represents a process that can be described in a various number of
+    ways and that can do some job interesting to the end user. Each workflow
+    consists of tasks (at least one) describing what exact steps should be made
+    during workflow execution.
+
+    For detailed description how to use Workflow, read Mistral documentation.
+    """
 
     support_status = support.SupportStatus(version='2015.1')
 

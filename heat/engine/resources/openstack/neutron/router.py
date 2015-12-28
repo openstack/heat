@@ -24,6 +24,11 @@ from heat.engine import support
 
 
 class Router(neutron.NeutronResource):
+    """A resource that implements Neutron router.
+
+    Router is a physical or virtual network device that passes network traffic
+    between different networks.
+    """
 
     required_service_extension = 'router'
 

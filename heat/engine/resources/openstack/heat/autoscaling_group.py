@@ -23,7 +23,14 @@ from heat.engine import template
 
 
 class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
-    """An autoscaling group that can scale arbitrary resources."""
+    """An autoscaling group that can scale arbitrary resources.
+
+    A resource allows to create desired count of similar resources, which
+    defined with resource property in HOT format. If there's necessity of
+    creating many of the same resources (e.g. one hundred sets of Server,
+    WaitCondition and WaitConditionHandle or even Neutron Nets),
+    AutoScalingGroup is the most convenient and easy way to do that.
+    """
 
     PROPERTIES = (
         RESOURCE, MAX_SIZE, MIN_SIZE, COOLDOWN, DESIRED_CAPACITY,

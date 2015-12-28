@@ -19,7 +19,14 @@ from heat.engine import support
 
 
 class KeystoneProject(resource.Resource):
-    """Heat Template Resource for Keystone Project."""
+    """Heat Template Resource for Keystone Project.
+
+    Projects represent the base unit of ownership in OpenStack, in that all
+    resources in OpenStack should be owned by a specific project. A project
+    itself must be owned by a specific domain, and hence all project names are
+    not globally unique, but unique to their domain. If the domain for a
+    project is not specified, then it is added to the default domain.
+    """
 
     support_status = support.SupportStatus(
         version='2015.1',

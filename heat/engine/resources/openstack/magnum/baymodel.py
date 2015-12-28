@@ -19,7 +19,11 @@ from heat.engine import support
 
 
 class BayModel(resource.Resource):
-    """A resource for the BayModel in Magnum."""
+    """A resource for the BayModel in Magnum.
+
+    BayModel is an object that stores template information about the bay which
+    is used to create new bays consistently.
+    """
 
     support_status = support.SupportStatus(version='5.0.0')
 
