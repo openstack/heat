@@ -117,6 +117,12 @@ class VolumeResizeProgress(object):
         self.size = size
 
 
+class VolumeUpdateAccessModeProgress(object):
+    def __init__(self, task_complete=False, read_only=None):
+        self.called = task_complete
+        self.read_only = read_only
+
+
 class VolumeBackupRestoreProgress(object):
     def __init__(self, vol_id, backup_id):
         self.called = False

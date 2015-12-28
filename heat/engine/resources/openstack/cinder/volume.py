@@ -286,14 +286,15 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         volume = self.client().volumes.get(self.resource_id)
         return volume._info
 
-    def handle_create(self):
-        vol_id = super(CinderVolume, self).handle_create()
-        read_only_flag = self.properties.get(self.READ_ONLY)
-        if read_only_flag is not None:
-            self.client().volumes.update_readonly_flag(vol_id,
-                                                       read_only_flag)
+    def check_create_complete(self, vol_id):
+        complete = super(CinderVolume, self).check_create_complete(vol_id)
+        # Cinder just supports update read only for volume in available,
+        # if we update in handle_create(), maybe the volume still in
+        # creating, then cinder will raise an exception
+        if complete:
+            self._update_read_only(self.properties[self.READ_ONLY])
 
-        return vol_id
+        return complete
 
     def _extend_volume(self, new_size):
         try:
@@ -302,9 +303,16 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             if self.client_plugin().is_client_exception(ex):
                 raise exception.Error(_(
                     "Failed to extend volume %(vol)s - %(err)s") % {
-                        'vol': self.resource_id, 'err': str(ex)})
+                        'vol': self.resource_id, 'err': six.text_type(ex)})
             else:
                 raise
+        return True
+
+    def _update_read_only(self, read_only_flag):
+        if read_only_flag is not None:
+            self.client().volumes.update_readonly_flag(self.resource_id,
+                                                       read_only_flag)
+
         return True
 
     def _check_extend_volume_complete(self):
@@ -360,7 +368,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         prg_resize = None
         prg_attach = None
         prg_detach = None
-        prg_backup_restore = None
+        prg_restore = None
+        prg_access = None
+
         # update the name and description for cinder volume
         if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
             vol = cinder.volumes.get(self.resource_id)
@@ -391,11 +401,15 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
                 cinder.volumes.retype(vol, new_vol_type, 'never')
         # update read_only access mode
         if self.READ_ONLY in prop_diff:
+            if not vol:
+                vol = cinder.volumes.get(self.resource_id)
             flag = prop_diff.get(self.READ_ONLY)
-            cinder.volumes.update_readonly_flag(self.resource_id, flag)
+            prg_access = progress.VolumeUpdateAccessModeProgress(
+                read_only=flag)
+            prg_detach, prg_attach = self._detach_attach_progress(vol)
         # restore the volume from backup
         if self.BACKUP_ID in prop_diff:
-            prg_backup_restore = progress.VolumeBackupRestoreProgress(
+            prg_restore = progress.VolumeBackupRestoreProgress(
                 vol_id=self.resource_id,
                 backup_id=prop_diff.get(self.BACKUP_ID))
         # extend volume size
@@ -409,23 +423,30 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
             elif new_size > vol.size:
                 prg_resize = progress.VolumeResizeProgress(size=new_size)
-                if vol.attachments:
-                    # NOTE(pshchelo):
-                    # this relies on current behavior of cinder attachments,
-                    # i.e. volume attachments is a list with len<=1,
-                    # so the volume can be attached only to single instance,
-                    # and id of attachment is the same as id of the volume
-                    # it describes, so detach/attach the same volume
-                    # will not change volume attachment id.
-                    server_id = vol.attachments[0]['server_id']
-                    device = vol.attachments[0]['device']
-                    attachment_id = vol.attachments[0]['id']
-                    prg_detach = progress.VolumeDetachProgress(
-                        server_id, vol.id, attachment_id)
-                    prg_attach = progress.VolumeAttachProgress(
-                        server_id, vol.id, device)
+                prg_detach, prg_attach = self._detach_attach_progress(vol)
 
-        return prg_backup_restore, prg_detach, prg_resize, prg_attach
+        return prg_restore, prg_detach, prg_resize, prg_access, prg_attach
+
+    def _detach_attach_progress(self, vol):
+        prg_attach = None
+        prg_detach = None
+        if vol.attachments:
+            # NOTE(pshchelo):
+            # this relies on current behavior of cinder attachments,
+            # i.e. volume attachments is a list with len<=1,
+            # so the volume can be attached only to single instance,
+            # and id of attachment is the same as id of the volume
+            # it describes, so detach/attach the same volume
+            # will not change volume attachment id.
+            server_id = vol.attachments[0]['server_id']
+            device = vol.attachments[0]['device']
+            attachment_id = vol.attachments[0]['id']
+            prg_detach = progress.VolumeDetachProgress(
+                server_id, vol.id, attachment_id)
+            prg_attach = progress.VolumeAttachProgress(
+                server_id, vol.id, device)
+
+        return prg_detach, prg_attach
 
     def _detach_volume_to_complete(self, prg_detach):
         if not prg_detach.called:
@@ -455,18 +476,17 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             return prg_attach.complete
 
     def check_update_complete(self, checkers):
-        prg_backup_restore, prg_detach, prg_resize, prg_attach = checkers
-        if prg_backup_restore:
-            if not prg_backup_restore.called:
-                prg_backup_restore.called = self._backup_restore(
-                    prg_backup_restore.vol_id,
-                    prg_backup_restore.backup_id)
+        prg_restore, prg_detach, prg_resize, prg_access, prg_attach = checkers
+        if prg_restore:
+            if not prg_restore.called:
+                prg_restore.called = self._backup_restore(
+                    prg_restore.vol_id,
+                    prg_restore.backup_id)
                 return False
-            if not prg_backup_restore.complete:
-                prg_backup_restore.complete = \
-                    self._check_backup_restore_complete()
-                return prg_backup_restore.complete and not prg_resize
-        if not prg_resize:
+            if not prg_restore.complete:
+                prg_restore.complete = self._check_backup_restore_complete()
+                return prg_restore.complete and not prg_resize
+        if not prg_resize and not prg_access:
             return True
         # detach volume
         if prg_detach:
@@ -474,12 +494,19 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
                 self._detach_volume_to_complete(prg_detach)
                 return False
         # resize volume
-        if not prg_resize.called:
-            prg_resize.called = self._extend_volume(prg_resize.size)
-            return False
-        if not prg_resize.complete:
-            prg_resize.complete = self._check_extend_volume_complete()
-            return prg_resize.complete and not prg_attach
+        if prg_resize:
+            if not prg_resize.called:
+                prg_resize.called = self._extend_volume(prg_resize.size)
+                return False
+            if not prg_resize.complete:
+                prg_resize.complete = self._check_extend_volume_complete()
+                return prg_resize.complete and not prg_attach
+        # update read_only access mode
+        if prg_access:
+            if not prg_access.called:
+                prg_access.called = self._update_read_only(
+                    prg_access.read_only)
+                return False
         # reattach volume back
         if prg_attach:
             return self._attach_volume_to_complete(prg_attach)

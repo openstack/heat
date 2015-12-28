@@ -474,62 +474,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_volume_extend_attached(self):
         stack_name = 'test_cvolume_extend_att_stack'
-        # create script
-        self.stub_VolumeConstraint_validate()
-        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
-
-        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'))
-
-        # update script
-        attachments = [{'id': 'vol-123',
-                        'device': '/dev/vdc',
-                        'server_id': u'WikiDatabase'}]
-        fv2 = vt_base.FakeVolume('in-use',
-                                 attachments=attachments, size=1)
-        self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
-
-        # detach script
-        fvd = vt_base.FakeVolume('in-use')
-        self.fc.volumes.get_server_volume(u'WikiDatabase',
-                                          'vol-123').AndReturn(fvd)
-        self.cinder_fc.volumes.get(fvd.id).AndReturn(fvd)
-        self.fc.volumes.delete_server_volume('WikiDatabase', 'vol-123')
-        self.cinder_fc.volumes.get(fvd.id).AndReturn(
-            vt_base.FakeVolume('available'))
-        self.fc.volumes.get_server_volume(u'WikiDatabase',
-                                          'vol-123').AndReturn(fvd)
-        self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
-
-        # resize script
-        self.cinder_fc.volumes.extend(fvd.id, 2)
-        self.cinder_fc.volumes.get(fvd.id).AndReturn(
-            vt_base.FakeVolume('extending'))
-        self.cinder_fc.volumes.get(fvd.id).AndReturn(
-            vt_base.FakeVolume('extending'))
-        self.cinder_fc.volumes.get(fvd.id).AndReturn(
-            vt_base.FakeVolume('available'))
-
-        # attach script
-        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
-                                               update=True)
-
-        self.m.ReplayAll()
-
-        stack = utils.parse_stack(self.t, stack_name=stack_name)
-
-        rsrc = self.create_volume(self.t, stack, 'volume')
-        self.create_attachment(self.t, stack, 'attachment')
-
-        props = copy.deepcopy(rsrc.properties.data)
-        props['size'] = 2
-        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
-
-        update_task = scheduler.TaskRunner(rsrc.update, after)
-        self.assertIsNone(update_task())
-
-        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self._update_if_attached(stack_name)
 
     def test_cinder_volume_extend_created_from_backup_with_same_size(self):
         stack_name = 'test_cvolume_extend_snapsht_stack'
@@ -661,9 +606,10 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
                                                 'update_readonly_flag')
+
         update_readonly_mock.return_value = None
-        fv_ready = vt_base.FakeVolume('available', id=fv.id)
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id, attachments=[])
+        self.cinder_fc.volumes.get(fv.id).MultipleTimes().AndReturn(fv_ready)
 
         self.m.ReplayAll()
 
@@ -679,6 +625,80 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
         update_readonly_mock.assert_called_once_with(fv.id, True)
+
+    def _update_if_attached(self, stack_name, update_type='resize'):
+        # create script
+        self.stub_VolumeConstraint_validate()
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
+
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'))
+
+        # update script
+        attachments = [{'id': 'vol-123',
+                        'device': '/dev/vdc',
+                        'server_id': u'WikiDatabase'}]
+        fv2 = vt_base.FakeVolume('in-use',
+                                 attachments=attachments, size=1)
+        self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
+
+        # detach script
+        fvd = vt_base.FakeVolume('in-use')
+        self.fc.volumes.get_server_volume(u'WikiDatabase',
+                                          'vol-123').AndReturn(fvd)
+        self.cinder_fc.volumes.get(fvd.id).AndReturn(fvd)
+        self.fc.volumes.delete_server_volume('WikiDatabase', 'vol-123')
+        self.cinder_fc.volumes.get(fvd.id).AndReturn(
+            vt_base.FakeVolume('available'))
+        self.fc.volumes.get_server_volume(u'WikiDatabase',
+                                          'vol-123').AndReturn(fvd)
+        self.fc.volumes.get_server_volume(
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
+
+        if update_type is 'access_mode':
+            # update access mode script
+            update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
+                                                    'update_readonly_flag')
+            update_readonly_mock.return_value = None
+        if update_type is 'resize':
+            # resize script
+            self.cinder_fc.volumes.extend(fvd.id, 2)
+            self.cinder_fc.volumes.get(fvd.id).AndReturn(
+                vt_base.FakeVolume('extending'))
+            self.cinder_fc.volumes.get(fvd.id).AndReturn(
+                vt_base.FakeVolume('extending'))
+            self.cinder_fc.volumes.get(fvd.id).AndReturn(
+                vt_base.FakeVolume('available'))
+        # attach script
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
+                                               update=True)
+
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        rsrc = self.create_volume(self.t, stack, 'volume')
+        self.create_attachment(self.t, stack, 'attachment')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        if update_type is 'access_mode':
+            props['read_only'] = True
+        if update_type is 'resize':
+            props['size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        update_task = scheduler.TaskRunner(rsrc.update, after)
+        self.assertIsNone(update_task())
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+        if update_type is 'access_mode':
+            update_readonly_mock.assert_called_once_with(fvd.id, True)
+
+        self.m.VerifyAll()
+
+    def test_cinder_volume_update_read_only_attached(self):
+        stack_name = 'test_cvolume_update_read_only_att_stack'
+        self._update_if_attached(stack_name, update_type='access_mode')
 
     def test_cinder_snapshot(self):
         stack_name = 'test_cvolume_snpsht_stack'
