@@ -27,8 +27,9 @@ def register_cache_configurations(conf):
 
     The procedure registers all configurations required for oslo.cache.
     It should be called before configuring of cache region
+
     :param conf: instance of heat configuration
-    :return updated heat configuration
+    :returns: updated heat configuration
     """
     # register global configurations for caching in heat
     core.configure(conf)
