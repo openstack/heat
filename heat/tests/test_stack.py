@@ -1563,7 +1563,7 @@ class StackTest(common.HeatTestCase):
         flavor = collections.namedtuple("Flavor", ["id", "name"])
         flavor.id = "1234"
         flavor.name = "dummy"
-        fc.flavors.find(id='1234').AndReturn(flavor)
+        fc.flavors.get('1234').AndReturn(flavor)
 
         self.m.ReplayAll()
 
