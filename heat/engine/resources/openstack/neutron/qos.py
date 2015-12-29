@@ -94,10 +94,10 @@ class QoSPolicy(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            props = self.prepare_update_properties(json_snippet)
+            self.prepare_update_properties(prop_diff)
             self.client().update_qos_policy(
                 self.resource_id,
-                {'policy': props})
+                {'policy': prop_diff})
 
     def _show_resource(self):
         return self.client().show_qos_policy(

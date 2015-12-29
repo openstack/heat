@@ -138,9 +138,7 @@ class ProviderNet(net.Net):
         """
         if prop_diff:
             ProviderNet.prepare_provider_properties(prop_diff)
-            if (self.NAME in prop_diff and
-                    prop_diff[self.NAME] is None):
-                prop_diff[self.NAME] = self.physical_resource_name()
+            self.prepare_update_properties(prop_diff)
             self.client().update_network(self.resource_id,
                                          {'network': prop_diff})
 

@@ -223,22 +223,22 @@ class NetworkGateway(neutron.NeutronResource):
             return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        props = self.prepare_update_properties(json_snippet)
-        connections = props.pop(self.CONNECTIONS)
+        connections = None
+        if self.CONNECTIONS in prop_diff:
+            connections = prop_diff.pop(self.CONNECTIONS)
 
         if self.DEVICES in prop_diff:
             self.handle_delete()
-            self.properties.data.update(props)
+            self.properties.data.update(prop_diff)
             self.handle_create()
             return
-        else:
-            props.pop(self.DEVICES, None)
 
-        if self.NAME in prop_diff:
+        if prop_diff:
+            self.prepare_update_properties(prop_diff)
             self.client().update_network_gateway(
-                self.resource_id, {'network_gateway': props})
+                self.resource_id, {'network_gateway': prop_diff})
 
-        if self.CONNECTIONS in prop_diff:
+        if connections:
             for connection in self.properties[self.CONNECTIONS]:
                 with self.client_plugin().ignore_not_found:
                     self.client_plugin().resolve_network(

@@ -349,14 +349,10 @@ class Subnet(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            if self.VALUE_SPECS in prop_diff:
-                self.merge_value_specs(prop_diff)
+            self.prepare_update_properties(prop_diff)
             if (self.ALLOCATION_POOLS in prop_diff and
                     prop_diff[self.ALLOCATION_POOLS] is None):
                 prop_diff[self.ALLOCATION_POOLS] = []
-            if (self.NAME in prop_diff and
-                    prop_diff[self.NAME] is None):
-                prop_diff[self.NAME] = self.physical_resource_name()
 
             # If the new value is '', set to None
             self._null_gateway_ip(prop_diff)

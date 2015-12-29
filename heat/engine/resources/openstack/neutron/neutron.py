@@ -75,24 +75,16 @@ class NeutronResource(resource.Resource):
         value_spec_props = props.pop('value_specs')
         props.update(value_spec_props)
 
-    def prepare_update_properties(self, definition):
-        """Prepares the property values for correct Neutron update call.
+    def prepare_update_properties(self, prop_diff):
+        """Prepares prop_diff values for correct neutron update call.
 
-        Prepares the property values so that they can be passed directly to
-        the Neutron update call.
-
-        Removes any properties which are not update_allowed, then processes
-        as for prepare_properties.
+        1. Merges value_specs
+        2. Defaults resource name to physical resource name if None
         """
-        p = definition.properties(self.properties_schema, self.context)
-        update_props = dict((k, v) for k, v in p.items()
-                            if p.props.get(k).schema.update_allowed and
-                            k not in self.update_exclude_properties)
-
-        props = self.prepare_properties(
-            update_props,
-            self.physical_resource_name())
-        return props
+        if 'value_specs' in prop_diff and prop_diff['value_specs']:
+            NeutronResource.merge_value_specs(prop_diff)
+        if 'name' in prop_diff and prop_diff['name'] is None:
+            prop_diff['name'] = self.physical_resource_name()
 
     @staticmethod
     def is_built(attributes):

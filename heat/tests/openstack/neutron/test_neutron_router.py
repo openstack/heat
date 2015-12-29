@@ -835,12 +835,11 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronclient.Client.update_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'router': {
-                "name": "Test Router",
                 "external_gateway_info": {
                     'network_id': '91e47a57-7508-46fe-afc9-fc454e8580e1',
                     'enable_snat': False
                 },
-                "admin_state_up": True}}
+                }}
         ).AndReturn(None)
 
         neutronclient.Client.show_router(
