@@ -179,6 +179,7 @@ resources:
          keep_result: false
          target: test
          with_items: vm_id_new in <% $.list_servers %>
+         join: all
        - name: list_machines
          action: nova.servers_list
          publish:
