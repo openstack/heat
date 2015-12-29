@@ -96,6 +96,8 @@ class InstantiationData(object):
             adopt_data = self.data[rpc_api.PARAM_ADOPT_STACK_DATA]
             try:
                 adopt_data = template_format.simple_parse(adopt_data)
+                template_format.validate_template_limit(
+                    six.text_type(adopt_data['template']))
                 return adopt_data['template']
             except (ValueError, KeyError) as ex:
                 err_reason = _('Invalid adopt data: %s') % ex
@@ -103,7 +105,10 @@ class InstantiationData(object):
         elif self.PARAM_TEMPLATE in self.data:
             template_data = self.data[self.PARAM_TEMPLATE]
             if isinstance(template_data, dict):
+                template_format.validate_template_limit(six.text_type(
+                    template_data))
                 return template_data
+
         elif self.PARAM_TEMPLATE_URL in self.data:
             url = self.data[self.PARAM_TEMPLATE_URL]
             LOG.debug('TemplateUrl %s' % url)

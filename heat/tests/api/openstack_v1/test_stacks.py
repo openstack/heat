@@ -130,6 +130,20 @@ blarg: wibble
         data = stacks.InstantiationData(body)
         self.assertRaises(webob.exc.HTTPBadRequest, data.template)
 
+    def test_template_exceeds_max_template_size(self):
+        cfg.CONF.set_override('max_template_size', 10)
+        template = json.dumps(['a'] * cfg.CONF.max_template_size)
+        body = {'template': template}
+        data = stacks.InstantiationData(body)
+        error = self.assertRaises(heat_exc.RequestLimitExceeded,
+                                  data.template)
+
+        msg = ('Request limit exceeded: Template size (%(actual_len)s '
+               'bytes) exceeds maximum allowed size (%(limit)s bytes).') % {
+                   'actual_len': len(str(template)),
+                   'limit': cfg.CONF.max_template_size}
+        self.assertEqual(msg, six.text_type(error))
+
     def test_parameters(self):
         params = {'foo': 'bar', 'blarg': 'wibble'}
         body = {'parameters': params,
