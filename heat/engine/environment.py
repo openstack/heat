@@ -244,13 +244,13 @@ class ResourceRegistry(object):
                 for res_name in list(six.iterkeys(registry)):
                     if (isinstance(registry[res_name], ResourceInfo) and
                             res_name.startswith(name[:-1])):
-                        LOG.warn(_LW('Removing %(item)s from %(path)s'), {
+                        LOG.warning(_LW('Removing %(item)s from %(path)s'), {
                             'item': res_name,
                             'path': descriptive_path})
                         del registry[res_name]
             else:
                 # delete this entry.
-                LOG.warn(_LW('Removing %(item)s from %(path)s'), {
+                LOG.warning(_LW('Removing %(item)s from %(path)s'), {
                     'item': name,
                     'path': descriptive_path})
                 registry.pop(name, None)
@@ -263,8 +263,8 @@ class ResourceRegistry(object):
                 'path': descriptive_path,
                 'was': str(registry[name].value),
                 'now': str(info.value)}
-            LOG.warn(_LW('Changing %(path)s from %(was)s to %(now)s'),
-                     details)
+            LOG.warning(_LW('Changing %(path)s from %(was)s to %(now)s'),
+                        details)
 
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:

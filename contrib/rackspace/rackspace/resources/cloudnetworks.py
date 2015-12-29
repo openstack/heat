@@ -108,8 +108,8 @@ class CloudNetwork(resource.Resource):
             try:
                 self._network = self.cloud_networks().get(self.resource_id)
             except NotFound:
-                LOG.warn(_LW("Could not find network %s but resource id is"
-                             " set."), self.resource_id)
+                LOG.warning(_LW("Could not find network %s but resource id is"
+                                " set."), self.resource_id)
         return self._network
 
     def cloud_networks(self):
@@ -139,7 +139,7 @@ class CloudNetwork(resource.Resource):
             try:
                 network.delete()
             except NetworkInUse:
-                LOG.warn(_LW("Network '%s' still in use."), network.id)
+                LOG.warning(_LW("Network '%s' still in use."), network.id)
             else:
                 self._delete_issued = True
             return False

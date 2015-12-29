@@ -147,7 +147,8 @@ class CloudServer(server.Server):
             reason = server.metadata.get('rackconnect_unprocessable_reason',
                                          None)
             if reason is not None:
-                LOG.warn(_LW("RackConnect unprocessable reason: %s"), reason)
+                LOG.warning(_LW("RackConnect unprocessable reason: %s"),
+                            reason)
 
             msg = _("RackConnect automation has completed")
             self._add_event(self.action, self.status, msg)

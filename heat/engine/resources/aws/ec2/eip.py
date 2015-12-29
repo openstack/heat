@@ -377,7 +377,8 @@ class ElasticIpAssociation(resource.Resource):
             instance_id = self.properties[self.INSTANCE_ID]
             port_id, port_rsrc = self._get_port_info(ni_id, instance_id)
             if not port_id or not port_rsrc:
-                LOG.warn(_LW('Skipping association, resource not specified'))
+                LOG.warning(_LW('Skipping association, resource not '
+                                'specified'))
                 return
 
             float_id = self.properties[self.ALLOCATION_ID]

@@ -1305,7 +1305,7 @@ class Resource(object):
                 rs = resource_objects.Resource.get_obj(self.context, self.id)
                 rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
-                LOG.warn(_LW('db error %s'), ex)
+                LOG.warning(_LW('db error %s'), ex)
 
     def _store(self, metadata=None):
         """Create the resource in the database."""
@@ -1442,7 +1442,7 @@ class Resource(object):
             atomic_key=atomic_key)
 
         if not updated_ok:
-            LOG.warn(_LW('Failed to unlock resource %s'), self.name)
+            LOG.warning(_LW('Failed to unlock resource %s'), self.name)
 
     def _resolve_all_attributes(self, attr):
         """Method for resolving all attributes.
@@ -1483,7 +1483,8 @@ class Resource(object):
                 resource = obj.get(self.resource_id)
                 return resource.to_dict()
             except AttributeError as ex:
-                LOG.warn(_LW("Resolving 'show' attribute has failed : %s"), ex)
+                LOG.warning(_LW("Resolving 'show' attribute has failed : %s"),
+                            ex)
                 return None
 
     def _resolve_attribute(self, name):
@@ -1690,8 +1691,8 @@ class Resource(object):
     def metadata_update(self, new_metadata=None):
         """No-op for resources which don't explicitly override this method."""
         if new_metadata:
-            LOG.warn(_LW("Resource %s does not implement metadata update"),
-                     self.name)
+            LOG.warning(_LW("Resource %s does not implement metadata update"),
+                        self.name)
 
     @classmethod
     def resource_to_template(cls, resource_type, template_type='cfn'):

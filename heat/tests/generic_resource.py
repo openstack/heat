@@ -39,27 +39,27 @@ class GenericResource(resource.Resource):
         return True
 
     def handle_create(self):
-        LOG.warn(_LW('Creating generic resource (Type "%s")'),
-                 self.type())
+        LOG.warning(_LW('Creating generic resource (Type "%s")'),
+                    self.type())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        LOG.warn(_LW('Updating generic resource (Type "%s")'),
-                 self.type())
+        LOG.warning(_LW('Updating generic resource (Type "%s")'),
+                    self.type())
 
     def handle_delete(self):
-        LOG.warn(_LW('Deleting generic resource (Type "%s")'),
-                 self.type())
+        LOG.warning(_LW('Deleting generic resource (Type "%s")'),
+                    self.type())
 
     def _resolve_attribute(self, name):
         return self.name
 
     def handle_suspend(self):
-        LOG.warn(_LW('Suspending generic resource (Type "%s")'),
-                 self.type())
+        LOG.warning(_LW('Suspending generic resource (Type "%s")'),
+                    self.type())
 
     def handle_resume(self):
-        LOG.warn(_LW('Resuming generic resource (Type "%s")'),
-                 self.type())
+        LOG.warning(_LW('Resuming generic resource (Type "%s")'),
+                    self.type())
 
 
 class ResWithShowAttr(GenericResource):
@@ -189,8 +189,8 @@ class SignalResource(signal_responder.SignalResponder):
         self.resource_id_set(self._get_user_id())
 
     def handle_signal(self, details=None):
-        LOG.warn(_LW('Signaled resource (Type "%(type)s") %(details)s'),
-                 {'type': self.type(), 'details': details})
+        LOG.warning(_LW('Signaled resource (Type "%(type)s") %(details)s'),
+                    {'type': self.type(), 'details': details})
 
     def _resolve_attribute(self, name):
         if self.resource_id is not None:

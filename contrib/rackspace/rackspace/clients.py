@@ -65,7 +65,7 @@ class RackspaceClientPlugin(client_plugin.ClientPlugin):
                                    tenant_id=tenant,
                                    tenant_name=tenant_name)
         if not self.pyrax.authenticated:
-            LOG.warn(_LW("Pyrax Authentication Failed."))
+            LOG.warning(_LW("Pyrax Authentication Failed."))
             raise exception.AuthorizationFailure()
         LOG.info(_LI("User %s authenticated successfully."),
                  self.context.username)

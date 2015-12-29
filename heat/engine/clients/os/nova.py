@@ -126,17 +126,17 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         try:
             server = self.client().servers.get(server_id)
         except exceptions.OverLimit as exc:
-            LOG.warn(_LW("Received an OverLimit response when "
-                         "fetching server (%(id)s) : %(exception)s"),
-                     {'id': server_id,
-                      'exception': exc})
+            LOG.warning(_LW("Received an OverLimit response when "
+                            "fetching server (%(id)s) : %(exception)s"),
+                        {'id': server_id,
+                         'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                LOG.warn(_LW("Received the following exception when "
-                         "fetching server (%(id)s) : %(exception)s"),
-                         {'id': server_id,
-                          'exception': exc})
+                LOG.warning(_LW("Received the following exception when "
+                            "fetching server (%(id)s) : %(exception)s"),
+                            {'id': server_id,
+                             'exception': exc})
             else:
                 raise
         return server
@@ -149,20 +149,20 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         try:
             server.get()
         except exceptions.OverLimit as exc:
-            LOG.warn(_LW("Server %(name)s (%(id)s) received an OverLimit "
-                         "response during server.get(): %(exception)s"),
-                     {'name': server.name,
-                      'id': server.id,
-                      'exception': exc})
+            LOG.warning(_LW("Server %(name)s (%(id)s) received an OverLimit "
+                            "response during server.get(): %(exception)s"),
+                        {'name': server.name,
+                         'id': server.id,
+                         'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                LOG.warn(_LW('Server "%(name)s" (%(id)s) received the '
-                             'following exception during server.get(): '
-                             '%(exception)s'),
-                         {'name': server.name,
-                          'id': server.id,
-                          'exception': exc})
+                LOG.warning(_LW('Server "%(name)s" (%(id)s) received the '
+                                'following exception during server.get(): '
+                                '%(exception)s'),
+                            {'name': server.name,
+                             'id': server.id,
+                             'exception': exc})
             else:
                 raise
 
@@ -533,8 +533,8 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         try:
             server = self.client().servers.get(server)
         except exceptions.NotFound as ex:
-            LOG.warn(_LW('Instance (%(server)s) not found: %(ex)s'),
-                     {'server': server, 'ex': ex})
+            LOG.warning(_LW('Instance (%(server)s) not found: %(ex)s'),
+                        {'server': server, 'ex': ex})
         else:
             for n in sorted(server.networks, reverse=True):
                 if len(server.networks[n]) > 0:

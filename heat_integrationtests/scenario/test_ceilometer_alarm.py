@@ -30,8 +30,8 @@ class CeilometerAlarmTest(scenario_base.ScenarioTestsBase):
         stack = self.client.stacks.get(stack_identifier)
         actual = self._stack_output(stack, 'asg_size')
         if actual != expected:
-            LOG.warn('check_instance_count exp:%d, act:%s' % (expected,
-                                                              actual))
+            LOG.warning('check_instance_count exp:%d, act:%s' % (expected,
+                                                                 actual))
         return actual == expected
 
     def test_alarm(self):

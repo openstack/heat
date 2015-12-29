@@ -153,10 +153,10 @@ class RequestContext(context.RequestContext):
         if self._trusts_auth_plugin:
             return self._trusts_auth_plugin
 
-        LOG.warn(_LW('Using the keystone_authtoken user as the heat '
-                     'trustee user directly is deprecated. Please add the '
-                     'trustee credentials you need to the %s section of '
-                     'your heat.conf file.') % TRUSTEE_CONF_GROUP)
+        LOG.warning(_LW('Using the keystone_authtoken user as the heat '
+                        'trustee user directly is deprecated. Please add the '
+                        'trustee credentials you need to the %s section of '
+                        'your heat.conf file.') % TRUSTEE_CONF_GROUP)
 
         cfg.CONF.import_group('keystone_authtoken',
                               'keystonemiddleware.auth_token')

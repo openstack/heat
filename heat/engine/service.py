@@ -1429,7 +1429,7 @@ class EngineService(service.Service):
 
         if cfg.CONF.heat_stack_user_role in cnxt.roles:
             if not self._authorize_stack_user(cnxt, stack, resource_name):
-                LOG.warn(_LW("Access denied to resource %s"), resource_name)
+                LOG.warning(_LW("Access denied to resource %s"), resource_name)
                 raise exception.Forbidden()
 
         if resource_name not in stack:
@@ -1691,7 +1691,7 @@ class EngineService(service.Service):
             try:
                 wrn = [w.name for w in watch_rule.WatchRule.get_all(cnxt)]
             except Exception as ex:
-                LOG.warn(_LW('show_watch (all) db error %s'), ex)
+                LOG.warning(_LW('show_watch (all) db error %s'), ex)
                 return
 
         wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
@@ -1719,7 +1719,7 @@ class EngineService(service.Service):
         try:
             wds = watch_data.WatchData.get_all(cnxt)
         except Exception as ex:
-            LOG.warn(_LW('show_metric (all) db error %s'), ex)
+            LOG.warning(_LW('show_metric (all) db error %s'), ex)
             return
 
         result = [api.format_watch_data(w) for w in wds]

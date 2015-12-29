@@ -95,7 +95,7 @@ Outputs:
         if key_header not in oc.head_account():
             swift_key = hashlib.sha224(
                 str(random.getrandbits(256))).hexdigest()[:32]
-            LOG.warn('setting swift key to %s' % swift_key)
+            LOG.warning('setting swift key to %s' % swift_key)
             oc.post_account({key_header: swift_key})
         key = oc.head_account()[key_header]
         path = '/v1/AUTH_%s/%s/%s' % (self.project_id,

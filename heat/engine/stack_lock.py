@@ -117,8 +117,8 @@ class StackLock(object):
         result = stack_lock_object.StackLock.release(self.stack_id,
                                                      self.engine_id)
         if result is True:
-            LOG.warn(_LW("Lock was already released on stack %s!"),
-                     self.stack_id)
+            LOG.warning(_LW("Lock was already released on stack %s!"),
+                        self.stack_id)
         else:
             LOG.debug("Engine %(engine)s released lock on stack "
                       "%(stack)s" % {'engine': self.engine_id,

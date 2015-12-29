@@ -57,8 +57,8 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         if self._metadata_format_ok(metadata):
             rsrc_metadata = self.metadata_get(refresh=True)
             if metadata[self.UNIQUE_ID] in rsrc_metadata:
-                LOG.warn(_LW("Overwriting Metadata item for id %s!"),
-                         metadata[self.UNIQUE_ID])
+                LOG.warning(_LW("Overwriting Metadata item for id %s!"),
+                            metadata[self.UNIQUE_ID])
             safe_metadata = {}
             for k in self.METADATA_KEYS:
                 if k == self.UNIQUE_ID:
