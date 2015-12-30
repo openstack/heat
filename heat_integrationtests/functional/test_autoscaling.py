@@ -631,16 +631,16 @@ outputs:
         md = self.client.resources.metadata(stack_identifier, 'custom_lb')
         actual_md = len(md['IPs'].split(','))
         if actual_md != expected:
-            LOG.warn('check_instance_count exp:%d, meta:%s' % (expected,
-                                                               md['IPs']))
+            LOG.warning('check_instance_count exp:%d, meta:%s' % (expected,
+                                                                  md['IPs']))
             return False
 
         stack = self.client.stacks.get(stack_identifier)
         inst_list = self._stack_output(stack, 'InstanceList')
         actual = len(inst_list.split(','))
         if actual != expected:
-            LOG.warn('check_instance_count exp:%d, act:%s' % (expected,
-                                                              inst_list))
+            LOG.warning('check_instance_count exp:%d, act:%s' % (expected,
+                                                                 inst_list))
         return actual == expected
 
     def test_scaling_meta_update(self):

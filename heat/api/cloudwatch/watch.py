@@ -199,7 +199,7 @@ class WatchController(object):
                         # Filter criteria not met, return None
                         return
                 except KeyError:
-                    LOG.warn(_LW("Invalid filter key %s, ignoring"), f)
+                    LOG.warning(_LW("Invalid filter key %s, ignoring"), f)
 
             return result
 

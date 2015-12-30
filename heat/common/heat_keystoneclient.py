@@ -246,8 +246,8 @@ class KeystoneClientV3(object):
 
     def _get_username(self, username):
         if(len(username) > 64):
-            LOG.warn(_LW("Truncating the username %s to the last 64 "
-                         "characters."), username)
+            LOG.warning(_LW("Truncating the username %s to the last 64 "
+                            "characters."), username)
         # get the last 64 characters of the username
         return username[-64:]
 

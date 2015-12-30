@@ -78,7 +78,7 @@ class OpenStackClients(object):
             client = getattr(self, method_name)()
             self._clients[name] = client
             return client
-        LOG.warn(_LW('Requested client "%s" not found'), name)
+        LOG.warning(_LW('Requested client "%s" not found'), name)
 
     @property
     def auth_token(self):

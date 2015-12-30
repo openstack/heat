@@ -105,7 +105,7 @@ class StackUser(resource.Resource):
             # compatibility with resources created before the migration
             # to stack_user.StackUser domain users.  After an appropriate
             # transitional period, this should be removed.
-            LOG.warn(_LW('Reverting to legacy user delete path'))
+            LOG.warning(_LW('Reverting to legacy user delete path'))
             try:
                 self.keystone().delete_stack_user(user_id)
             except kc_exception.NotFound:

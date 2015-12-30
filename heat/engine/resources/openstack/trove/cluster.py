@@ -166,12 +166,12 @@ class TroveCluster(resource.Resource):
             return cluster
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
-                LOG.warn(_LW("Stack %(name)s (%(id)s) received an "
-                             "OverLimit response during clusters.get():"
-                             " %(exception)s"),
-                         {'name': self.stack.name,
-                          'id': self.stack.id,
-                          'exception': exc})
+                LOG.warning(_LW("Stack %(name)s (%(id)s) received an "
+                                "OverLimit response during clusters.get():"
+                                " %(exception)s"),
+                            {'name': self.stack.name,
+                             'id': self.stack.id,
+                             'exception': exc})
                 return None
             else:
                 raise

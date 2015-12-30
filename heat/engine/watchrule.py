@@ -85,8 +85,9 @@ class WatchRule(object):
                 watch = watch_rule_objects.WatchRule.get_by_name(context,
                                                                  watch_name)
             except Exception as ex:
-                LOG.warn(_LW('WatchRule.load (%(watch_name)s) db error '
-                             '%(ex)s'), {'watch_name': watch_name, 'ex': ex})
+                LOG.warning(_LW('WatchRule.load (%(watch_name)s) db error '
+                                '%(ex)s'), {'watch_name': watch_name,
+                                            'ex': ex})
         if watch is None:
             raise exception.EntityNotFound(entity='Watch Rule',
                                            name=watch_name)
@@ -272,8 +273,8 @@ class WatchRule(object):
                 for refid in self.rule[self.ACTION_MAP[new_state]]:
                     actions.append(stk.resource_by_refid(refid).signal)
             else:
-                LOG.warn(_LW("Could not process watch state %s for stack"),
-                         new_state)
+                LOG.warning(_LW("Could not process watch state %s for stack"),
+                            new_state)
         return actions
 
     def _to_ceilometer(self, data):
@@ -355,9 +356,9 @@ class WatchRule(object):
                           % {'self_state': self.state, 'name': self.name,
                              'state': state})
             else:
-                LOG.warn(_LW("Unable to override state %(state)s for "
-                             "watch %(name)s"), {'state': self.state,
-                                                 'name': self.name})
+                LOG.warning(_LW("Unable to override state %(state)s for "
+                                "watch %(name)s"), {'state': self.state,
+                                                    'name': self.name})
         return actions
 
 

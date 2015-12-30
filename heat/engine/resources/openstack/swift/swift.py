@@ -237,7 +237,7 @@ class SwiftContainer(resource.Resource):
                 headers = self.client().head_container(self.resource_id)
             except Exception as ex:
                 if self.client_plugin().is_client_exception(ex):
-                    LOG.warn(_LW("Head container failed: %s"), ex)
+                    LOG.warning(_LW("Head container failed: %s"), ex)
                     return None
                 raise
             else:

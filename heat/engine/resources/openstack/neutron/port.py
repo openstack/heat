@@ -439,7 +439,7 @@ class Port(neutron.NeutronResource):
                         subnets.append(self.client().show_subnet(
                             subnet_id)['subnet'])
             except Exception as ex:
-                LOG.warn(_LW("Failed to fetch resource attributes: %s"), ex)
+                LOG.warning(_LW("Failed to fetch resource attributes: %s"), ex)
                 return
             return subnets
         return super(Port, self)._resolve_attribute(name)

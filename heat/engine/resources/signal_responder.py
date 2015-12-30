@@ -139,8 +139,8 @@ class SignalResponder(stack_user.StackUser):
             secret_key = self.data().get('secret_key')
 
             if not access_key or not secret_key:
-                LOG.warn(_LW('Cannot generate signed url, '
-                             'unable to create keypair'))
+                LOG.warning(_LW('Cannot generate signed url, '
+                                'unable to create keypair'))
                 return
 
         config_url = cfg.CONF.heat_waitcondition_server_url

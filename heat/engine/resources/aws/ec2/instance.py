@@ -678,11 +678,11 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         # keep the behavior as creation
         elif (old_network_ifaces and
                 (self.NETWORK_INTERFACES not in prop_diff)):
-            LOG.warn(_LW('There is no change of "%(net_interfaces)s" '
-                         'for instance %(server)s, do nothing '
-                         'when updating.'),
-                     {'net_interfaces': self.NETWORK_INTERFACES,
-                      'server': self.resource_id})
+            LOG.warning(_LW('There is no change of "%(net_interfaces)s" '
+                            'for instance %(server)s, do nothing '
+                            'when updating.'),
+                        {'net_interfaces': self.NETWORK_INTERFACES,
+                         'server': self.resource_id})
         # if the interfaces not come from property 'NetworkInterfaces',
         # the situation is somewhat complex, so to detach the old ifaces,
         # and then attach the new ones.
@@ -805,12 +805,12 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         if network_interfaces and subnet_id:
             # consider the old templates, we only to log to warn user
             # NetworkInterfaces has higher priority than SubnetId
-            LOG.warn(_LW('"%(subnet)s" will be ignored if specified '
-                         '"%(net_interfaces)s". So if you specified the '
-                         '"%(net_interfaces)s" property, '
-                         'do not specify "%(subnet)s" property.'),
-                     {'subnet': self.SUBNET_ID,
-                      'net_interfaces': self.NETWORK_INTERFACES})
+            LOG.warning(_LW('"%(subnet)s" will be ignored if specified '
+                            '"%(net_interfaces)s". So if you specified the '
+                            '"%(net_interfaces)s" property, '
+                            'do not specify "%(subnet)s" property.'),
+                        {'subnet': self.SUBNET_ID,
+                         'net_interfaces': self.NETWORK_INTERFACES})
 
     def handle_delete(self):
         # make sure to delete the port which implicit-created by heat

@@ -178,8 +178,8 @@ class StackResource(resource.Resource):
             child_template = self.child_template()
             params = self.child_params()
         except NotImplementedError:
-            LOG.warn(_LW("Preview of '%s' not yet implemented"),
-                     self.__class__.__name__)
+            LOG.warning(_LW("Preview of '%s' not yet implemented"),
+                        self.__class__.__name__)
             return self
 
         name = "%s-%s" % (self.stack.name, self.name)
