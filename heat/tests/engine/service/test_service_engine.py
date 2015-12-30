@@ -230,8 +230,10 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('oslo_service.threadgroup.ThreadGroup',
                 return_value=mock.Mock())
+    @mock.patch.object(service.EngineService, '_configure_db_conn_pool_size')
     def test_engine_service_start_in_non_convergence_mode(
             self,
+            configure_db_conn_pool_size,
             thread_group_class,
             engine_listener_class,
             thread_group_manager_class,
@@ -267,8 +269,10 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('oslo_service.threadgroup.ThreadGroup',
                 return_value=mock.Mock())
+    @mock.patch.object(service.EngineService, '_configure_db_conn_pool_size')
     def test_engine_service_start_in_convergence_mode(
             self,
+            configure_db_conn_pool_size,
             thread_group_class,
             worker_service_class,
             engine_listener_class,
@@ -380,3 +384,30 @@ class ServiceEngineTest(common.HeatTestCase):
     def test_engine_service_reset(self, setup_logging_mock):
         self.eng.reset()
         setup_logging_mock.assert_called_once_with(cfg.CONF, 'heat')
+
+    @mock.patch('oslo_messaging.Target',
+                return_value=mock.Mock())
+    @mock.patch('heat.common.messaging.get_rpc_client',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.stack_lock.StackLock.generate_engine_id',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.service.ThreadGroupManager',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.service.EngineListener',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.worker.WorkerService',
+                return_value=mock.Mock())
+    @mock.patch('oslo_service.threadgroup.ThreadGroup',
+                return_value=mock.Mock())
+    def test_engine_service_configures_connection_pool(
+            self,
+            thread_group_class,
+            worker_service_class,
+            engine_listener_class,
+            thread_group_manager_class,
+            sample_uuid_method,
+            rpc_client_class,
+            target_class):
+        self.eng.start()
+        self.assertEqual(cfg.CONF.executor_thread_pool_size,
+                         cfg.CONF.database.max_overflow)
