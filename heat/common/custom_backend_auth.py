@@ -51,7 +51,7 @@ class AuthProtocol(object):
 
         :param env: wsgi request environment
         :param start_response: wsgi response callback
-        :returns HTTPUnauthorized http response
+        :returns: HTTPUnauthorized http response
         """
         resp = webob.exc.HTTPUnauthorized(_("Backend authentication failed"),
                                           [])
