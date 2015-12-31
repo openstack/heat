@@ -46,7 +46,9 @@ class TestRequestContext(common.HeatTestCase):
                     'auth_url': 'http://xyz',
                     'aws_creds': 'blah',
                     'region_name': 'RegionOne',
-                    'user_identity': 'fooUser 456tenant'}
+                    'user_identity': 'fooUser 456tenant',
+                    'user_domain_id': None,
+                    'project_domain_id': None}
 
         super(TestRequestContext, self).setUp()
 
@@ -67,7 +69,9 @@ class TestRequestContext(common.HeatTestCase):
             trustor_user_id=self.ctx.get('trustor_user_id'),
             trust_id=self.ctx.get('trust_id'),
             user=self.ctx.get('user'),
-            region_name=self.ctx.get('region_name'))
+            region_name=self.ctx.get('region_name'),
+            user_domain_id=self.ctx.get('user_domain'),
+            project_domain_id=self.ctx.get('project_domain'))
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
         self.assertEqual(self.ctx, ctx_dict)
@@ -82,7 +86,9 @@ class TestRequestContext(common.HeatTestCase):
         ctx = context.RequestContext.from_dict(self.ctx)
 
         for k in self.ctx:
-            if k == 'user_identity':
+            if (k == 'user_identity' or
+                    k == 'user_domain_id' or
+                    k == 'project_domain_id'):
                 continue
             self.assertEqual(self.ctx.get(k), ctx.to_dict().get(k))
             override = '%s_override' % k
