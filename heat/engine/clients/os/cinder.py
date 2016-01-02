@@ -11,11 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from cinderclient import client as cc
 from cinderclient import exceptions
 from keystoneclient import exceptions as ks_exceptions
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _

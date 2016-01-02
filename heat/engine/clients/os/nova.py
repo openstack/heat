@@ -15,7 +15,6 @@ import collections
 import email
 from email.mime import multipart
 from email.mime import text
-import logging
 import os
 import pkgutil
 import string
@@ -23,6 +22,7 @@ import string
 from novaclient import client as nc
 from novaclient import exceptions
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import six
