@@ -224,8 +224,11 @@ class WorkerService(service.Service):
             propagate_check_resource(cnxt, self._rpc_client, resource_id,
                                      current_traversal, predecessors, key,
                                      None, key[1], None)
-        except sync_point.SyncPointNotFound:
-            pass
+        except exception.EntityNotFound as e:
+            if e.entity == "Sync Point":
+                pass
+            else:
+                raise
 
     def _initiate_propagate_resource(self, cnxt, resource_id,
                                      current_traversal, is_update, rsrc,
@@ -266,18 +269,22 @@ class WorkerService(service.Service):
 
             check_stack_complete(cnxt, stack, current_traversal,
                                  resource_id, deps, is_update)
-        except sync_point.SyncPointNotFound:
-            # Reload the stack to determine the current traversal, and check
-            # the SyncPoint for the current node to determine if it is ready.
-            # If it is, then retrigger the current node with the appropriate
-            # data for the latest traversal.
-            stack = parser.Stack.load(cnxt, stack_id=rsrc.stack.id)
-            if current_traversal == stack.current_traversal:
-                LOG.debug('[%s] Traversal sync point missing.',
-                          current_traversal)
-                return
+        except exception.EntityNotFound as e:
+            if e.entity == "Sync Point":
+                # Reload the stack to determine the current traversal, and
+                # check the SyncPoint for the current node to determine if
+                # it is ready. If it is, then retrigger the current node
+                # with the appropriate data for the latest traversal.
+                stack = parser.Stack.load(cnxt, stack_id=rsrc.stack.id)
+                if current_traversal == stack.current_traversal:
+                    LOG.debug('[%s] Traversal sync point missing.',
+                              current_traversal)
+                    return
 
-            self._retrigger_check_resource(cnxt, is_update, resource_id, stack)
+                self._retrigger_check_resource(cnxt, is_update,
+                                               resource_id, stack)
+            else:
+                raise
 
     @context.request_context
     def check_resource(self, cnxt, resource_id, current_traversal, data,

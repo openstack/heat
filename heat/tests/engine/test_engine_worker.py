@@ -385,7 +385,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         key = sync_point.make_key(self.resource.id,
                                   self.stack.current_traversal,
                                   self.is_update)
-        mock_pcr.side_effect = sync_point.SyncPointNotFound(key)
+        mock_pcr.side_effect = exception.EntityNotFound(entity='Sync Point',
+                                                        name=key)
         updated_stack = stack.Stack(self.ctx, self.stack.name, self.stack.t,
                                     self.stack.id,
                                     current_traversal='some_newy_trvl_uuid')
