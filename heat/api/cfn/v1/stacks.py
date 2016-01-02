@@ -166,7 +166,7 @@ class StackController(object):
                                 d.items()))
 
             def transform(attrs):
-                """Recursively replace all : with . in dict keys.
+                """Recursively replace all `:` with `.` in dict keys.
 
                 After that they are not interpreted as xml namespaces.
                 """
