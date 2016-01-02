@@ -323,7 +323,7 @@ class Workflow(signal_responder.SignalResponder,
                           ' Any numeric value - then the task will run once '
                           'at least this number of upstream tasks are '
                           'completed and corresponding conditions have '
-                          'triggered. '),
+                          'triggered.'),
                         support_status=support.SupportStatus(version='6.0.0')
                     ),
                 },
