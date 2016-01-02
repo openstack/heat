@@ -975,7 +975,7 @@ class Resource(object):
                 self.t = after
                 self.reparse()
                 self._update_stored_properties()
-        except exception.UpdateReplace as ex:
+        except exception.UpdateReplace:
             # catch all UpdateReplace expections
             try:
                 if (self.stack.action == 'ROLLBACK' and
@@ -992,7 +992,7 @@ class Resource(object):
                 failure = exception.ResourceFailure(e, self, action)
                 self.state_set(action, self.FAILED, six.text_type(failure))
                 raise failure
-            raise ex
+            raise
 
     def prepare_for_replace(self):
         """Prepare resource for replacing.

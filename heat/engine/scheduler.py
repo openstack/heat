@@ -299,9 +299,9 @@ def wrappertask(task):
                     while subtask_running:
                         try:
                             yield step
-                        except GeneratorExit as ex:
+                        except GeneratorExit:
                             subtask.close()
-                            raise ex
+                            raise
                         except:  # noqa
                             try:
                                 step = subtask.throw(*sys.exc_info())
@@ -314,9 +314,9 @@ def wrappertask(task):
                                 subtask_running = False
                 else:
                     yield
-            except GeneratorExit as ex:
+            except GeneratorExit:
                 parent.close()
-                raise ex
+                raise
             except:  # noqa
                 subtask = parent.throw(*sys.exc_info())
             else:

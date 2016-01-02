@@ -131,7 +131,7 @@ class SoftwareConfigService(service.Service):
                 LOG.info(_LI('Signal object not found: %(c)s %(o)s'), {
                     'c': container, 'o': object_name})
                 return sd
-            raise ex
+            raise
 
         lm = headers.get('last-modified')
 
@@ -154,7 +154,7 @@ class SoftwareConfigService(service.Service):
                     'Signal object not found: %(c)s %(o)s'), {
                         'c': container, 'o': object_name})
                 return sd
-            raise ex
+            raise
         if obj:
             self.signal_software_deployment(
                 cnxt, sd.id, jsonutils.loads(obj),

@@ -699,7 +699,7 @@ class Stack(collections.Mapping):
                     result = res.validate_template()
             except exception.HeatException as ex:
                 LOG.debug('%s', ex)
-                raise ex
+                raise
             except AssertionError:
                 raise
             except Exception as ex:
