@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine import constraints
@@ -1127,7 +1128,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             # stack update. This is not desirable for a server. The old
             # transport will continue to work, and the new transport may work
             # despite exceptions in the above block.
-            LOG.error("Error while updating software config transport")
+            LOG.error(_LE('Error while updating software config transport'))
             LOG.exception(e)
 
     def check_update_complete(self, updaters):

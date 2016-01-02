@@ -803,9 +803,9 @@ class EngineService(service.Service):
                 else:
                     # Nothing we can do, the failed update happened before
                     # we started storing prev_raw_template_id
-                    LOG.error("PATCH update to FAILED stack only possible if "
-                              "convergence enabled or previous template "
-                              "stored")
+                    LOG.error(_LE('PATCH update to FAILED stack only '
+                                  'possible if convergence enabled or '
+                                  'previous template stored'))
                     msg = _('PATCH update to non-COMPLETE stack')
                     raise exception.NotSupported(feature=msg)
         else:
