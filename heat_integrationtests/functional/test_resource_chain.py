@@ -83,7 +83,7 @@ class ResourceChainTests(functional_base.FunctionalTestsBase):
 
         resource_attrs = self._stack_output(stack, 'all-resource-attrs')
         self.assertTrue(resource_attrs is not None)
-        self.assertTrue(isinstance(resource_attrs, dict))
+        self.assertIsInstance(resource_attrs, dict)
         self.assertEqual(2, len(resource_attrs))
         self.assertEqual(8, len(resource_attrs['0']))
         self.assertEqual(8, len(resource_attrs['1']))
