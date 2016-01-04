@@ -37,6 +37,8 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
             'service_type': self.METERING,
             'project_name': con.tenant,
             'token': lambda: self.auth_token,
+            'user_domain_id': con.user_domain,
+            'project_domain_id': con.project_domain,
             'endpoint_type': endpoint_type,
             'os_endpoint': endpoint,
             'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
