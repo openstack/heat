@@ -117,7 +117,7 @@ class StackTag(BASE, HeatBase):
 
 
 class SyncPoint(BASE, HeatBase):
-    """Represents an syncpoint for a stack that is being worked on."""
+    """Represents a syncpoint for a stack that is being worked on."""
 
     __tablename__ = 'sync_point'
     __table_args__ = (

@@ -62,7 +62,7 @@ class ResourceTypeTest(common.HeatTestCase):
             mock_is_service_available):
         mock_is_service_available.return_value = False
         resources = self.eng.list_resource_types(self.ctx)
-        # Check for an known resource, not listed
+        # Check for a known resource, not listed
         self.assertNotIn('OS::Nova::Server', resources)
 
     def test_resource_schema(self):

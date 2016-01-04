@@ -78,7 +78,7 @@ class ZaqarQueue(resource.Resource):
         """Create a zaqar message queue."""
         queue_name = self.physical_resource_name()
         queue = self.client().queue(queue_name, auto_create=False)
-        # Zaqar client doesn't report an error if an queue with the same
+        # Zaqar client doesn't report an error if a queue with the same
         # id/name already exists, which can cause issue with stack update.
         if queue.exists():
             raise exception.Error(_('Message queue %s already exists.')

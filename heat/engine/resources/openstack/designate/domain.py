@@ -24,7 +24,7 @@ class DesignateDomain(resource.Resource):
     """Heat Template Resource for Designate Domain.
 
     Designate provides DNS-as-a-Service services for OpenStack. So, domain
-    is an realm with an identification string, unique in DNS.
+    is a realm with an identification string, unique in DNS.
     """
 
     support_status = support.SupportStatus(
