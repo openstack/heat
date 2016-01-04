@@ -1383,8 +1383,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_show(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-
-        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                        params={'resolve_outputs': True})
 
         parameters = {u'DBUsername': u'admin',
                       u'LinuxDistribution': u'F17',
@@ -1417,10 +1417,11 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('show_stack', {'stack_identity': dict(identity)})
+            ('show_stack', {'stack_identity': dict(identity),
+                            'resolve_outputs': True}),
+            version='1.20'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
-
         response = self.controller.show(req,
                                         tenant_id=identity.tenant,
                                         stack_name=identity.stack_name,
@@ -1448,17 +1449,82 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(expected, response)
         self.m.VerifyAll()
 
+    def test_show_without_resolve_outputs(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                        params={'resolve_outputs': False})
+
+        parameters = {u'DBUsername': u'admin',
+                      u'LinuxDistribution': u'F17',
+                      u'InstanceType': u'm1.large',
+                      u'DBRootPassword': u'admin',
+                      u'DBPassword': u'admin',
+                      u'DBName': u'wordpress'}
+
+        engine_resp = [
+            {
+                u'stack_identity': dict(identity),
+                u'updated_time': u'2012-07-09T09:13:11Z',
+                u'parameters': parameters,
+                u'stack_status_reason': u'Stack successfully created',
+                u'creation_time': u'2012-07-09T09:12:45Z',
+                u'stack_name': identity.stack_name,
+                u'notification_topics': [],
+                u'stack_action': u'CREATE',
+                u'stack_status': u'COMPLETE',
+                u'description': u'blah',
+                u'disable_rollback': True,
+                u'timeout_mins':60,
+                u'capabilities': [],
+            }
+        ]
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('show_stack', {'stack_identity': dict(identity),
+                            'resolve_outputs': False}),
+            version='1.20'
+        ).AndReturn(engine_resp)
+        self.m.ReplayAll()
+        response = self.controller.show(req,
+                                        tenant_id=identity.tenant,
+                                        stack_name=identity.stack_name,
+                                        stack_id=identity.stack_id)
+
+        expected = {
+            'stack': {
+                'links': [{"href": self._url(identity),
+                           "rel": "self"}],
+                'id': '6',
+                u'updated_time': u'2012-07-09T09:13:11Z',
+                u'parameters': parameters,
+                u'description': u'blah',
+                u'stack_status_reason': u'Stack successfully created',
+                u'creation_time': u'2012-07-09T09:12:45Z',
+                u'stack_name': identity.stack_name,
+                u'stack_status': u'CREATE_COMPLETE',
+                u'capabilities': [],
+                u'notification_topics': [],
+                u'disable_rollback': True,
+                u'timeout_mins': 60,
+            }
+        }
+        self.assertEqual(expected, response)
+        self.m.VerifyAll()
+
     def test_show_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
-
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('show_stack', {'stack_identity': dict(identity)})
+            ('show_stack', {'stack_identity': dict(identity),
+                            'resolve_outputs': True}),
+            version='1.20'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 

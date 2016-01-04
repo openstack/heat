@@ -407,9 +407,16 @@ class StackController(object):
     @util.identified_stack
     def show(self, req, identity):
         """Gets detailed information for a stack."""
+        params = req.params
 
+        p_name = rpc_api.RESOLVE_OUTPUTS
+        if rpc_api.RESOLVE_OUTPUTS in params:
+            resolve_outputs = self._extract_bool_param(
+                p_name, params[p_name])
+        else:
+            resolve_outputs = True
         stack_list = self.rpc_client.show_stack(req.context,
-                                                identity)
+                                                identity, resolve_outputs)
 
         if not stack_list:
             raise exc.HTTPInternalServerError()

@@ -858,7 +858,8 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.abandon_stack(self.ctx, self.stack.identifier())
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.show_stack,
-                               self.ctx, self.stack.identifier())
+                               self.ctx, self.stack.identifier(),
+                               resolve_outputs=True)
         self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         self.m.VerifyAll()
 
@@ -877,7 +878,8 @@ class StackServiceTest(common.HeatTestCase):
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.show_stack,
-                               self.ctx, non_exist_identifier)
+                               self.ctx, non_exist_identifier,
+                               resolve_outputs=True)
         self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
         self.m.VerifyAll()
 
@@ -896,7 +898,8 @@ class StackServiceTest(common.HeatTestCase):
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.show_stack,
-                               self.ctx, non_exist_identifier)
+                               self.ctx, non_exist_identifier,
+                               resolve_outputs=True)
         self.assertEqual(exception.InvalidTenant, ex.exc_info[0])
 
         self.m.VerifyAll()
@@ -910,7 +913,8 @@ class StackServiceTest(common.HeatTestCase):
                                          show_deleted=True).AndReturn(s)
         self.m.ReplayAll()
 
-        sl = self.eng.show_stack(self.ctx, self.stack.identifier())
+        sl = self.eng.show_stack(self.ctx, self.stack.identifier(),
+                                 resolve_outputs=True)
 
         self.assertEqual(1, len(sl))
 
@@ -931,7 +935,7 @@ class StackServiceTest(common.HeatTestCase):
 
     @tools.stack_context('service_describe_all_test_stack', False)
     def test_stack_describe_all(self):
-        sl = self.eng.show_stack(self.ctx, None)
+        sl = self.eng.show_stack(self.ctx, None, resolve_outputs=True)
 
         self.assertEqual(1, len(sl))
 
@@ -1103,7 +1107,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(0, len(sl))
 
     def test_stack_describe_all_empty(self):
-        sl = self.eng.show_stack(self.ctx, None)
+        sl = self.eng.show_stack(self.ctx, None, resolve_outputs=True)
 
         self.assertEqual(0, len(sl))
 

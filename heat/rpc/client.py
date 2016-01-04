@@ -38,6 +38,7 @@ class EngineClient(object):
         1.17 - Add files to validate_template
         1.18 - Add show_nested to validate_template
         1.19 - Add show_output and list_outputs for returning stack outputs
+        1.20 - Add resolve_outputs to stack show
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -172,15 +173,18 @@ class EngineClient(object):
                                              not_tags_any=not_tags_any),
                          version='1.8')
 
-    def show_stack(self, ctxt, stack_identity):
+    def show_stack(self, ctxt, stack_identity, resolve_outputs=True):
         """Returns detailed information about one or all stacks.
 
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to show, or None to
         show all
+        :param resolve_outputs: If True, stack outputs will be resolved
         """
         return self.call(ctxt, self.make_msg('show_stack',
-                                             stack_identity=stack_identity))
+                                             stack_identity=stack_identity,
+                                             resolve_outputs=resolve_outputs),
+                         version='1.20')
 
     def preview_stack(self, ctxt, stack_name, template, params, files, args):
         """Simulates a new stack using the provided template.

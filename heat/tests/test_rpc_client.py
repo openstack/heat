@@ -78,7 +78,6 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         expected_retval = 'foo' if method == 'call' else None
 
         kwargs.pop('version', None)
-
         if 'expected_message' in kwargs:
             expected_message = kwargs['expected_message']
             del kwargs['expected_message']
@@ -141,7 +140,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               stack_name='wordpress')
 
     def test_show_stack(self):
-        self._test_engine_api('show_stack', 'call', stack_identity='wordpress')
+        self._test_engine_api('show_stack', 'call', stack_identity='wordpress',
+                              resolve_outputs=True)
 
     def test_preview_stack(self):
         self._test_engine_api('preview_stack', 'call', stack_name='wordpress',
