@@ -69,7 +69,8 @@ class RequestContext(context.RequestContext):
                  read_only=False, show_deleted=False,
                  overwrite=True, trust_id=None, trustor_user_id=None,
                  request_id=None, auth_token_info=None, region_name=None,
-                 auth_plugin=None, trusts_auth_plugin=None, **kwargs):
+                 auth_plugin=None, trusts_auth_plugin=None,
+                 user_domain_id=None, project_domain_id=None, **kwargs):
         """Initialisation of the request context.
 
         :param overwrite: Set to False to ensure that the greenthread local
@@ -83,7 +84,9 @@ class RequestContext(context.RequestContext):
                                              is_admin=is_admin,
                                              read_only=read_only,
                                              show_deleted=show_deleted,
-                                             request_id=request_id)
+                                             request_id=request_id,
+                                             user_domain=user_domain_id,
+                                             project_domain=project_domain_id)
 
         self.username = username
         self.user_id = user_id
@@ -140,7 +143,9 @@ class RequestContext(context.RequestContext):
                 'request_id': self.request_id,
                 'show_deleted': self.show_deleted,
                 'region_name': self.region_name,
-                'user_identity': user_idt}
+                'user_identity': user_idt,
+                'user_domain_id': self.user_domain,
+                'project_domain_id': self.project_domain}
 
     @classmethod
     def from_dict(cls, values):
@@ -268,11 +273,14 @@ class ContextMiddleware(wsgi.Middleware):
                 aws_creds = headers.get('X-Auth-EC2-Creds')
 
             user_id = headers.get('X-User-Id')
+            user_domain_id = headers.get('X_User_Domain_Id')
             token = headers.get('X-Auth-Token')
             tenant = headers.get('X-Project-Name')
             tenant_id = headers.get('X-Project-Id')
+            project_domain_id = headers.get('X_Project_Domain_Id')
             region_name = headers.get('X-Region-Name')
             auth_url = headers.get('X-Auth-Url')
+
             roles = headers.get('X-Roles')
             if roles is not None:
                 roles = roles.split(',')
@@ -283,18 +291,21 @@ class ContextMiddleware(wsgi.Middleware):
         except Exception:
             raise exception.NotAuthenticated()
 
-        req.context = self.make_context(auth_token=token,
-                                        tenant=tenant, tenant_id=tenant_id,
-                                        aws_creds=aws_creds,
-                                        username=username,
-                                        user_id=user_id,
-                                        password=password,
-                                        auth_url=auth_url,
-                                        roles=roles,
-                                        request_id=req_id,
-                                        auth_token_info=token_info,
-                                        region_name=region_name,
-                                        auth_plugin=auth_plugin)
+        req.context = self.make_context(
+            auth_token=token,
+            tenant=tenant, tenant_id=tenant_id,
+            aws_creds=aws_creds,
+            username=username,
+            user_id=user_id,
+            password=password,
+            auth_url=auth_url,
+            roles=roles,
+            request_id=req_id,
+            auth_token_info=token_info,
+            region_name=region_name,
+            auth_plugin=auth_plugin,
+            user_domain_id=user_domain_id,
+            project_domain_id=project_domain_id)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
