@@ -1,0 +1,7 @@
+---
+upgrade:
+  - If upgrading with pre-icehouse stacks which contain resources that create
+    users (such as OS::Nova::Server, OS::Heat::SoftwareDeployment, and
+    OS::Heat::WaitConditionHandle), it is possible that the users will not be
+    removed upon stack deletion due to the removal of a legacy fallback code
+    path. In such a situation, these users will require manual removal.
