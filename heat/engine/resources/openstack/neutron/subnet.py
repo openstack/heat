@@ -271,10 +271,27 @@ class Subnet(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            translation.TranslationRule(props,
-                                        translation.TranslationRule.REPLACE,
-                                        [self.NETWORK],
-                                        value_path=[self.NETWORK_ID])
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.REPLACE,
+                [self.NETWORK],
+                value_path=[self.NETWORK_ID]),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.NETWORK],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.SUBNETPOOL],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnetpool'
+            )
         ]
 
     @classmethod
@@ -327,12 +344,9 @@ class Subnet(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        self.client_plugin().resolve_network(props, self.NETWORK,
-                                             'network_id')
+        props['network_id'] = props.pop(self.NETWORK)
         if self.SUBNETPOOL in props and props[self.SUBNETPOOL]:
-            props['subnetpool_id'] = self.client_plugin(
-                ).find_resourceid_by_name_or_id(
-                'subnetpool', props.pop('subnetpool'))
+            props['subnetpool_id'] = props.pop('subnetpool')
         self._null_gateway_ip(props)
         subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])

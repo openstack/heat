@@ -130,12 +130,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         t = self._test_subnet(u_props=update_props)
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
             'router',
             'None',
             cmd_resource=None,
@@ -188,12 +182,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         del update_props_merged['subnet']['value_specs']
 
         t = self._test_subnet(u_props=update_props_merged)
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
         stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
@@ -224,13 +212,6 @@ class NeutronSubnetTest(common.HeatTestCase):
             'name': utils.PhysName('test_stack', 'test_subnet'),
         }}
         t = self._test_subnet(u_props=update_props_name)
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
-
         stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
@@ -277,19 +258,7 @@ class NeutronSubnetTest(common.HeatTestCase):
             'subnetpool',
             'None',
             cmd_resource=None,
-        ).AndReturn('None')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnetpool',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
+        ).MultipleTimes().AndReturn('None')
         neutronclient.Client.create_subnet({
             'subnet': {
                 'network_id': u'None',
@@ -337,22 +306,15 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_subnet_deprecated(self):
-
-        t = self._test_subnet(resolve_neutron=False)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_subnet(t, stack, 'sub_net')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
             'None',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).MultipleTimes().AndReturn('None')
+        t = self._test_subnet(resolve_neutron=False)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -465,12 +427,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         return t
 
     def test_subnet_disable_dhcp(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
         neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
@@ -590,12 +546,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         }, p)
 
     def test_ipv6_subnet(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
         neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
@@ -686,6 +636,19 @@ class NeutronSubnetTest(common.HeatTestCase):
                          "supported for ipv4.", six.text_type(ex))
 
     def test_validate_both_subnetpool_cidr(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnetpool',
+            'new_pool',
+            cmd_resource=None,
+        ).AndReturn('new_pool')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnetpool',
+            'new_pool',
+            cmd_resource=None,
+        ).AndReturn('new_pool')
+        self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         props = t['resources']['sub_net']['properties']
         props['subnetpool'] = 'new_pool'
@@ -696,6 +659,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         msg = ("Cannot define the following properties at the same time: "
                "subnetpool, cidr.")
         self.assertEqual(msg, six.text_type(ex))
+        self.m.VerifyAll()
 
     def test_validate_none_subnetpool_cidr(self):
         t = template_format.parse(neutron_template)
