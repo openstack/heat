@@ -188,6 +188,8 @@ class Stack(collections.Mapping):
 
         if use_stored_context:
             self.context = self.stored_context()
+            self.context.roles = self.context.clients.client(
+                'keystone').auth_ref.role_names
 
         self.clients = self.context.clients
 

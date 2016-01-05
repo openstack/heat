@@ -170,7 +170,7 @@ def setup_keystone_mocks(mocks, stack):
     fkc = test_fakes.FakeKeystoneClient()
 
     mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-    keystone.KeystoneClientPlugin._create().AndReturn(fkc)
+    keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(fkc)
 
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
