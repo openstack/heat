@@ -38,7 +38,7 @@ resources:
   port_floating:
     type: OS::Neutron::Port
     properties:
-      network: xyz1234
+      network: abcd1234
       fixed_ips:
         - subnet: sub1234
           ip_address: 10.0.0.10
@@ -135,6 +135,13 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                          return_value=True)
 
     def test_floating_ip_validate(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('abcd1234')
+        self.m.ReplayAll()
         t = template_format.parse(neutron_floating_no_assoc_template)
         stack = utils.parse_stack(t)
         fip = stack['floating_ip']
@@ -146,6 +153,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         fip = stack['floating_ip']
         self.assertRaises(exception.ResourcePropertyDependency,
                           fip.validate)
+        self.m.VerifyAll()
 
     def test_floating_ip_router_interface(self):
         t = template_format.parse(neutron_floating_template)
@@ -160,26 +168,26 @@ class NeutronFloatingIPTest(common.HeatTestCase):
     def test_floating_ip_deprecated_router_interface(self):
         t = template_format.parse(neutron_floating_template_deprecated)
         del t['resources']['gateway']
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'abcd1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('abcd1234')
-        self._test_floating_ip(t, resolve_neutron=False)
+        self._test_floating_ip(t)
 
     def test_floating_ip_deprecated_router_gateway(self):
         t = template_format.parse(neutron_floating_template_deprecated)
         del t['resources']['router_interface']
+        self._test_floating_ip(t, r_iface=False)
+
+    def _test_floating_ip(self, tmpl, r_iface=True):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             'abcd1234',
             cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
-        self._test_floating_ip(t, resolve_neutron=False, r_iface=False)
-
-    def _test_floating_ip(self, tmpl, resolve_neutron=True, r_iface=True):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
@@ -203,14 +211,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
                 qe.NeutronClientException(status_code=404))
         self.stub_NetworkConstraint_validate()
-        if resolve_neutron:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'network',
-                'abcd1234',
-                cmd_resource=None,
-            ).MultipleTimes().AndReturn('abcd1234')
-
         stack = utils.parse_stack(tmpl)
 
         # assert the implicit dependency between the floating_ip
@@ -247,13 +247,40 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_FnGetRefId(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('abcd1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('sub1234')
+        self.m.ReplayAll()
         t = template_format.parse(neutron_floating_template)
         stack = utils.parse_stack(t)
         rsrc = stack['floating_ip']
         rsrc.resource_id = 'xyz'
         self.assertEqual('xyz', rsrc.FnGetRefId())
+        self.m.VerifyAll()
 
     def test_FnGetRefId_convergence_cache_data(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('abcd1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('sub1234')
+        self.m.ReplayAll()
         t = template_format.parse(neutron_floating_template)
         template = tmpl.Template(t)
         stack = parser.Stack(utils.dummy_context(), 'test', template,
@@ -277,12 +304,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         ).MultipleTimes().AndReturn('abcd1234')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
-            'network',
-            'xyz1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('xyz1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234',
             cmd_resource=None,
@@ -295,7 +316,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         }})
 
         neutronclient.Client.create_port({'port': {
-            'network_id': u'xyz1234',
+            'network_id': u'abcd1234',
             'fixed_ips': [
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
@@ -458,7 +479,23 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def _test_floating_dependancy(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('abcd1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'subnet_uuid',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('subnet_uuid')
+        self.m.ReplayAll()
+
     def test_floatip_port_dependency_subnet(self):
+        self._test_floating_dependancy()
         t = template_format.parse(neutron_floating_no_assoc_template)
         stack = utils.parse_stack(t)
 
@@ -468,8 +505,10 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         required_by = set(stack.dependencies.required_by(
             stack['router_interface']))
         self.assertIn(stack['floating_ip'], required_by)
+        self.m.VerifyAll()
 
     def test_floatip_port_dependency_network(self):
+        self._test_floating_dependancy()
         t = template_format.parse(neutron_floating_no_assoc_template)
         del t['resources']['port_floating']['properties']['fixed_ips']
         stack = utils.parse_stack(t)
@@ -492,22 +531,24 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             stack['router_interface']))
         self.assertIn(stack['floating_ip'], required_by)
         p_show.assert_called_once_with('net_uuid')
+        self.m.VerifyAll()
 
     def test_floatingip_create_specify_ip_address(self):
-        t = template_format.parse(neutron_floating_template)
-        props = t['resources']['floating_ip']['properties']
-        props['floating_ip_address'] = '172.24.4.98'
-        stack = utils.parse_stack(t)
-
-        self.stub_NetworkConstraint_validate()
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             'abcd1234',
             cmd_resource=None,
-        ).AndReturn('xyz1234')
+        ).MultipleTimes().AndReturn('abcd1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('sub1234')
+        self.stub_NetworkConstraint_validate()
         neutronclient.Client.create_floatingip({
-            'floatingip': {'floating_network_id': u'xyz1234',
+            'floatingip': {'floating_network_id': u'abcd1234',
                            'floating_ip_address': '172.24.4.98'}
         }).AndReturn({'floatingip': {
             'status': 'ACTIVE',
@@ -523,6 +564,10 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         }})
 
         self.m.ReplayAll()
+        t = template_format.parse(neutron_floating_template)
+        props = t['resources']['floating_ip']['properties']
+        props['floating_ip_address'] = '172.24.4.98'
+        stack = utils.parse_stack(t)
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
         self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
