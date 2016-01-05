@@ -174,7 +174,6 @@ class RequestContext(context.RequestContext):
             cfg.CONF, TRUSTEE_CONF_GROUP, trust_id=self.trust_id)
 
         if self._trusts_auth_plugin:
-            LOG.warning(_LW('SHDEBUG NOT Using the keystone_authtoken'))
             return self._trusts_auth_plugin
 
         LOG.warning(_LW('Using the keystone_authtoken user as the heat '
