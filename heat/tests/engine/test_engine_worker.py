@@ -188,9 +188,10 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
 
     @mock.patch.object(worker.WorkerService, '_try_steal_engine_lock')
     @mock.patch.object(stack.Stack, 'time_remaining')
+    @mock.patch.object(resource.Resource, 'state_set')
     def test_is_update_traversal_raise_update_inprogress(
-            self, tr, mock_tsl, mock_cru, mock_crc, mock_pcr, mock_csc,
-            mock_cid):
+            self, mock_ss, tr, mock_tsl, mock_cru, mock_crc, mock_pcr,
+            mock_csc, mock_cid):
         mock_cru.side_effect = exception.UpdateInProgress
         self.worker.engine_id = 'some-thing-else'
         mock_tsl.return_value = True
@@ -202,6 +203,9 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
                                          mock.ANY)
+        mock_ss.assert_called_once_with(self.resource.action,
+                                        resource.Resource.FAILED,
+                                        mock.ANY)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)

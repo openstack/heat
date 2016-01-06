@@ -182,6 +182,12 @@ class WorkerService(service.Service):
         except exception.UpdateInProgress:
             if self._try_steal_engine_lock(cnxt, rsrc.id):
                 rpc_data = sync_point.serialize_input_data(resource_data)
+                # set the resource state as failed
+                status_reason = ('Worker went down '
+                                 'during resource %s' % rsrc.action)
+                rsrc.state_set(rsrc.action,
+                               rsrc.FAILED,
+                               six.text_type(status_reason))
                 self._rpc_client.check_resource(cnxt,
                                                 rsrc.id,
                                                 current_traversal,
