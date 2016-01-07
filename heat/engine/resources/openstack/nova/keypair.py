@@ -23,6 +23,8 @@ from heat.engine import support
 class KeyPair(resource.Resource):
     """A resource for creating Nova key pairs.
 
+    A keypair is a ssh key that can be injected into a server on launch.
+
     **Note** that if a new key is generated setting `save_private_key` to
     `True` results in the system saving the private key which can then be
     retrieved via the `private_key` attribute of this resource.
