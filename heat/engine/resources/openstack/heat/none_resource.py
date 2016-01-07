@@ -45,7 +45,7 @@ class NoneResource(resource.Resource):
     def validate(self):
         pass
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         return None
 
 

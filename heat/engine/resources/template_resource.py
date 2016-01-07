@@ -313,7 +313,7 @@ class TemplateResource(stack_resource.StackResource):
 
         return self.nested().identifier().arn()
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         stack = self.nested()
         if stack is None:
             return None

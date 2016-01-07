@@ -151,7 +151,7 @@ class ResourceChain(stack_resource.StackResource):
     def child_params(self):
         return {}
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         if key.startswith('resource.'):
             return grouputils.get_nested_attrs(self, key, False, *path)
 

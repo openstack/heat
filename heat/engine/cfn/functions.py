@@ -190,7 +190,7 @@ class GetAtt(function.Function):
 
         attr = function.resolve(self._attribute)
         from heat.engine import resource
-        if (type(res).FnGetAtt == resource.Resource.FnGetAtt and
+        if (type(res).get_attribute == resource.Resource.get_attribute and
                 attr not in six.iterkeys(res.attributes_schema)):
             raise exception.InvalidTemplateAttribute(
                 resource=self._resource_name, key=attr)

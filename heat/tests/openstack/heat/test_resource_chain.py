@@ -15,6 +15,7 @@ import copy
 import mock
 
 from heat.common.exception import StackValidationFailed
+from heat.common import grouputils
 from heat.engine.resources.openstack.heat import resource_chain
 from heat.tests import common
 from heat.tests import utils
@@ -205,3 +206,22 @@ class ResourceChainTests(common.HeatTestCase):
         snip = self.stack.t.resource_definitions(self.stack)['test-chain']
         chain = resource_chain.ResourceChain('test', snip, self.stack)
         return chain
+
+    @mock.patch.object(grouputils, 'get_rsrc_id')
+    def test_get_attribute(self, mock_get_rsrc_id):
+        stack = utils.parse_stack(TEMPLATE)
+        mock_get_rsrc_id.side_effect = ['0', '1']
+        rsrc = stack['test-chain']
+        self.assertEqual(['0', '1'], rsrc.FnGetAtt(rsrc.REFS))
+
+    def test_get_attribute_convg(self):
+        cache_data = {'test-chain': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'attrs': {'refs': ['rsrc1', 'rsrc2']}
+        }}
+        stack = utils.parse_stack(TEMPLATE, cache_data=cache_data)
+        rsrc = stack['test-chain']
+        self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))

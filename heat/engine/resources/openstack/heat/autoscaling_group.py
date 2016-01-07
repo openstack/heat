@@ -162,7 +162,7 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
                      self)._create_template(num_instances, num_replace,
                                             template_version=template_version)
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         if key == self.CURRENT_SIZE:
             return grouputils.get_size(self)
         if path:
