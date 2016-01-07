@@ -24,7 +24,7 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = [exc, api_exc]
 
-    service_types = [METERING] = ['metering']
+    service_types = [METERING, ALARMING] = ['metering', 'alarming']
 
     def _create(self):
 
@@ -32,6 +32,8 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.METERING,
                                 endpoint_type=endpoint_type)
+        aodh_endpoint = self.url_for(service_type=self.ALARMING,
+                                     endpoint_type=endpoint_type)
         args = {
             'auth_url': con.auth_url,
             'service_type': self.METERING,
@@ -44,7 +46,8 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
             'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
             'cert_file': self._get_client_option(CLIENT_NAME, 'cert_file'),
             'key_file': self._get_client_option(CLIENT_NAME, 'key_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
+            'aodh_endpoint': aodh_endpoint
         }
 
         return cc.get_client('2', **args)
