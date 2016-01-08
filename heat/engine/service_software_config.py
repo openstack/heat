@@ -21,6 +21,7 @@ import requests
 import six
 from six.moves.urllib import parse as urlparse
 
+from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
@@ -109,8 +110,10 @@ class SoftwareConfigService(service.Service):
             json_md = jsonutils.dumps(md)
             requests.put(metadata_put_url, json_md)
         if metadata_queue_id:
+            project = sd.stack_user_project_id
+            token = self._get_user_token(cnxt, rs, project)
             zaqar_plugin = cnxt.clients.client_plugin('zaqar')
-            zaqar = zaqar_plugin.create_for_tenant(sd.stack_user_project_id)
+            zaqar = zaqar_plugin.create_for_tenant(project, token)
             queue = zaqar.queue(metadata_queue_id)
             queue.post({'body': md, 'ttl': zaqar_plugin.DEFAULT_TTL})
 
@@ -160,9 +163,23 @@ class SoftwareConfigService(service.Service):
         return software_deployment_object.SoftwareDeployment.get_by_id(
             cnxt, sd.id)
 
+    def _get_user_token(self, cnxt, rs, project):
+        user = password = None
+        for rd in rs.data:
+            if rd.key == 'password':
+                password = crypt.decrypt(rd.decrypt_method, rd.value)
+            if rd.key == 'user_id':
+                user = rd.value
+        keystone = cnxt.clients.client('keystone')
+        return keystone.stack_domain_user_token(
+            user_id=user, project_id=project, password=password)
+
     def _refresh_zaqar_software_deployment(self, cnxt, sd, deploy_queue_id):
+        rs = db_api.resource_get_by_physical_resource_id(cnxt, sd.server_id)
+        project = sd.stack_user_project_id
+        token = self._get_user_token(cnxt, rs, project)
         zaqar_plugin = cnxt.clients.client_plugin('zaqar')
-        zaqar = zaqar_plugin.create_for_tenant(sd.stack_user_project_id)
+        zaqar = zaqar_plugin.create_for_tenant(project, token)
         queue = zaqar.queue(deploy_queue_id)
 
         messages = list(queue.pop())

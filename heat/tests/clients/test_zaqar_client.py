@@ -33,9 +33,11 @@ class ZaqarClientPluginTests(common.HeatTestCase):
     def test_create_for_tenant(self):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('zaqar')
-        client = plugin.create_for_tenant('other_tenant')
+        client = plugin.create_for_tenant('other_tenant', 'token')
         self.assertEqual('other_tenant',
                          client.conf['auth_opts']['options']['os_project_id'])
+        self.assertEqual('token',
+                         client.conf['auth_opts']['options']['os_auth_token'])
 
     def test_event_sink(self):
         context = utils.dummy_context()

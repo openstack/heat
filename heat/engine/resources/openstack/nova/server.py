@@ -588,7 +588,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self.data_set('metadata_queue_id', queue_id)
             zaqar_plugin = self.client_plugin('zaqar')
             zaqar = zaqar_plugin.create_for_tenant(
-                self.stack.stack_user_project_id)
+                self.stack.stack_user_project_id, self._user_token())
             queue = zaqar.queue(queue_id)
             queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
             occ.update({'zaqar': {
@@ -1309,16 +1309,16 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             return
         client_plugin = self.client_plugin('zaqar')
         zaqar = client_plugin.create_for_tenant(
-            self.stack.stack_user_project_id)
+            self.stack.stack_user_project_id, self._user_token())
         with client_plugin.ignore_not_found:
             zaqar.queue(queue_id).delete()
         self.data_delete('metadata_queue_id')
 
     def _delete(self):
         if self.user_data_software_config():
+            self._delete_queue()
             self._delete_user()
             self._delete_temp_url()
-            self._delete_queue()
 
         # remove internal and external ports
         self._delete_internal_ports()
