@@ -121,9 +121,10 @@ class NeutronSubnetTest(common.HeatTestCase):
             'enable_dhcp': True,
             'host_routes': [{'destination': '192.168.1.0/24',
                              'nexthop': '194.168.1.2'}],
-            "allocation_pools": [
-                {"start": "10.0.3.20", "end": "10.0.3.100"},
-                {"start": "10.0.3.110", "end": "10.0.3.200"}]}}
+            'gateway_ip': '10.0.3.105',
+            'allocation_pools': [
+                {'start': '10.0.3.20', 'end': '10.0.3.100'},
+                {'start': '10.0.3.110', 'end': '10.0.3.200'}]}}
 
         t = self._test_subnet(u_props=update_props)
         neutronV20.find_resourceid_by_name_or_id(

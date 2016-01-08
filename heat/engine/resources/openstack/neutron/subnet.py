@@ -137,9 +137,12 @@ class Subnet(neutron.NeutronResource):
         ),
         GATEWAY_IP: properties.Schema(
             properties.Schema.STRING,
-            _('The gateway IP address. Set to any of [ null | ~ | "" ] to '
-              'create the subnet without a gateway. If omitted, the first IP '
-              'address within the subnet is assigned to the gateway.'),
+            _('The gateway IP address. Set to any of [ null | ~ | "" ] '
+              'to create/update a subnet without a gateway. '
+              'If omitted when creation, neutron will assign the first '
+              'free IP address within the subnet to the gateway '
+              'automatically. If remove this from template when update, '
+              'the old gateway IP address will be detached.'),
             update_allowed=True
         ),
         ENABLE_DHCP: properties.Schema(
@@ -354,6 +357,10 @@ class Subnet(neutron.NeutronResource):
             if (self.NAME in prop_diff and
                     prop_diff[self.NAME] is None):
                 prop_diff[self.NAME] = self.physical_resource_name()
+
+            # If the new value is '', set to None
+            self._null_gateway_ip(prop_diff)
+
             self.client().update_subnet(
                 self.resource_id, {'subnet': prop_diff})
 
