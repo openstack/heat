@@ -15,7 +15,7 @@ import json
 import random
 
 from oslo_log import log as logging
-import requests
+
 from six.moves.urllib import parse
 from swiftclient import utils as swiftclient_utils
 import yaml
@@ -76,49 +76,36 @@ Outputs:
 
     def setUp(self):
         super(AwsStackTest, self).setUp()
-        self.object_container_name = AwsStackTest.__name__
+        self.object_container_name = test.rand_name()
         self.project_id = self.identity_client.auth_ref.project_id
-        self.object_client.put_container(self.object_container_name)
-        self.nested_name = '%s.yaml' % test.rand_name()
+        self.swift_key = hashlib.sha224(
+            str(random.getrandbits(256))).hexdigest()[:32]
+        key_header = 'x-container-meta-temp-url-key'
+        self.object_client.put_container(self.object_container_name,
+                                         {key_header: self.swift_key})
+        self.addCleanup(self.object_client.delete_container,
+                        self.object_container_name)
 
-    def publish_template(self, name, contents):
+    def publish_template(self, contents, cleanup=True):
         oc = self.object_client
 
         # post the object
-        oc.put_object(self.object_container_name, name, contents)
-        # TODO(asalkeld) see if this is causing problems.
-        # self.addCleanup(self.object_client.delete_object,
-        #                self.object_container_name, name)
-
-        # make the tempurl
-        key_header = 'x-account-meta-temp-url-key'
-        if key_header not in oc.head_account():
-            swift_key = hashlib.sha224(
-                str(random.getrandbits(256))).hexdigest()[:32]
-            LOG.warning('setting swift key to %s' % swift_key)
-            oc.post_account({key_header: swift_key})
-        key = oc.head_account()[key_header]
+        oc.put_object(self.object_container_name, 'template.yaml', contents)
+        if cleanup:
+            self.addCleanup(oc.delete_object,
+                            self.object_container_name,
+                            'template.yaml')
         path = '/v1/AUTH_%s/%s/%s' % (self.project_id,
-                                      self.object_container_name, name)
+                                      self.object_container_name,
+                                      'template.yaml')
         timeout = self.conf.build_timeout * 10
         tempurl = swiftclient_utils.generate_temp_url(path, timeout,
-                                                      key, 'GET')
+                                                      self.swift_key, 'GET')
         sw_url = parse.urlparse(oc.url)
-        full_url = '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
-
-        def download():
-            r = requests.get(full_url)
-            LOG.info('GET: %s -> %s' % (full_url, r.status_code))
-            return r.status_code == requests.codes.ok
-
-        # make sure that the object is available.
-        test.call_until_true(self.conf.build_timeout,
-                             self.conf.build_interval, download)
-
-        return full_url
+        return '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
 
     def test_nested_stack_create(self):
-        url = self.publish_template(self.nested_name, self.nested_template)
+        url = self.publish_template(self.nested_template)
         self.template = self.test_template.replace('the.yaml', url)
         stack_identifier = self.stack_create(template=self.template)
         stack = self.client.stacks.get(stack_identifier)
@@ -126,7 +113,7 @@ Outputs:
         self.assertEqual('bar', self._stack_output(stack, 'output_foo'))
 
     def test_nested_stack_create_with_timeout(self):
-        url = self.publish_template(self.nested_name, self.nested_template)
+        url = self.publish_template(self.nested_template)
         self.template = self.test_template.replace('the.yaml', url)
         timeout_template = yaml.load(self.template)
         props = timeout_template['Resources']['the_nested']['Properties']
@@ -139,8 +126,7 @@ Outputs:
         self.assertEqual('bar', self._stack_output(stack, 'output_foo'))
 
     def test_nested_stack_adopt_ok(self):
-        url = self.publish_template(self.nested_name,
-                                    self.nested_with_res_template)
+        url = self.publish_template(self.nested_with_res_template)
         self.template = self.test_template.replace('the.yaml', url)
         adopt_data = {
             "resources": {
@@ -166,8 +152,7 @@ Outputs:
         self.assertEqual('goopie', self._stack_output(stack, 'output_foo'))
 
     def test_nested_stack_adopt_fail(self):
-        url = self.publish_template(self.nested_name,
-                                    self.nested_with_res_template)
+        url = self.publish_template(self.nested_with_res_template)
         self.template = self.test_template.replace('the.yaml', url)
         adopt_data = {
             "resources": {
@@ -187,7 +172,7 @@ Outputs:
         self.assertEqual('ADOPT_FAILED', rsrc.resource_status)
 
     def test_nested_stack_update(self):
-        url = self.publish_template(self.nested_name, self.nested_template)
+        url = self.publish_template(self.nested_template)
         self.template = self.test_template.replace('the.yaml', url)
         stack_identifier = self.stack_create(template=self.template)
         original_nested_id = self.assert_resource_is_a_stack(
@@ -197,8 +182,8 @@ Outputs:
 
         new_template = yaml.load(self.template)
         props = new_template['Resources']['the_nested']['Properties']
-        props['TemplateURL'] = self.publish_template(self.nested_name,
-                                                     self.update_template)
+        props['TemplateURL'] = self.publish_template(self.update_template,
+                                                     cleanup=False)
 
         self.update_stack(stack_identifier, new_template)
 
@@ -211,7 +196,7 @@ Outputs:
         self.assertEqual('foo', self._stack_output(updt_stack, 'output_foo'))
 
     def test_nested_stack_suspend_resume(self):
-        url = self.publish_template(self.nested_name, self.nested_template)
+        url = self.publish_template(self.nested_template)
         self.template = self.test_template.replace('the.yaml', url)
         stack_identifier = self.stack_create(template=self.template)
         self.stack_suspend(stack_identifier)
