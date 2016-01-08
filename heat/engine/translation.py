@@ -38,12 +38,17 @@ class TranslationRule(object):
            another element of this property, value_name must be defined.
     - DELETE. This rule allows to delete some property. If property has list
            type, then deleting affects value in all list elements.
+    - RESOLVE. This rule allows to resolve some property using client and
+           the finder function. Finders may require an additional entity key.
     """
 
-    RULE_KEYS = (ADD, REPLACE, DELETE) = ('Add', 'Replace', 'Delete')
+    RULE_KEYS = (ADD, REPLACE,
+                 DELETE, RESOLVE) = ('Add', 'Replace',
+                                     'Delete', 'Resolve')
 
     def __init__(self, properties, rule, source_path, value=None,
-                 value_name=None, value_path=None):
+                 value_name=None, value_path=None, client_plugin=None,
+                 finder=None, entity=None):
         """Add new rule for translating mechanism.
 
         :param properties: properties of resource
@@ -54,6 +59,10 @@ class TranslationRule(object):
         :param value_name: value_name which used for replacing properties
                inside list-type properties.
         :param value_path: path to value, which should be used for translation.
+        :param client_plugin: client plugin that would be used to resolve
+        :param finder: finder method of the client plugin
+        :param entity: some generic finders require an entity to resolve ex.
+               neutron finder function.
         """
         self.properties = properties
         self.rule = rule
@@ -61,6 +70,9 @@ class TranslationRule(object):
         self.value = value or None
         self.value_name = value_name
         self.value_path = value_path
+        self.client_plugin = client_plugin
+        self.finder = finder
+        self.entity = entity
 
         self.validate()
 
@@ -84,13 +96,17 @@ class TranslationRule(object):
                                'elements.'))
         elif self.rule == self.ADD and not isinstance(self.value, list):
             raise ValueError(_('value must be list type when rule is Add.'))
+        elif (self.rule == self.RESOLVE and not (self.client_plugin
+                                                 or self.finder)):
+            raise ValueError(_('client_plugin and finder should be specified '
+                               'for Resolve rule'))
 
     def execute_rule(self):
         try:
-            (source_key, source_data) = self.get_data_from_source_path(
+            (source_key, source_data) = self._get_data_from_source_path(
                 self.source_path)
             if self.value_path:
-                (value_key, value_data) = self.get_data_from_source_path(
+                (value_key, value_data) = self._get_data_from_source_path(
                     self.value_path)
                 value = (value_data[value_key]
                          if value_data and value_data.get(value_key)
@@ -101,7 +117,8 @@ class TranslationRule(object):
         except AttributeError:
             return
 
-        if (source_data is None or (self.rule != self.DELETE and
+        if (source_data is None or (self.rule not in (self.DELETE,
+                                                      self.RESOLVE) and
                                     (value is None and
                                      self.value_name is None and
                                      (value_data is None or
@@ -109,45 +126,16 @@ class TranslationRule(object):
             return
 
         if self.rule == TranslationRule.ADD:
-            if isinstance(source_data, list):
-                source_data.extend(value)
-            else:
-                raise ValueError(_('Add rule must be used only for '
-                                   'lists.'))
+            self._exec_add(source_key, source_data, value)
         elif self.rule == TranslationRule.REPLACE:
-            if isinstance(source_data, list):
-                for item in source_data:
-                    if item.get(self.value_name) and item.get(source_key):
-                        raise ValueError(_('Cannot use %(key)s and '
-                                           '%(name)s at the same time.')
-                                         % dict(key=source_key,
-                                                name=self.value_name))
-                    elif item.get(self.value_name) is not None:
-                        item[source_key] = item[self.value_name]
-                        del item[self.value_name]
-                    elif value is not None:
-                        item[source_key] = value
-            else:
-                if (source_data and source_data.get(source_key) and
-                        value_data and value_data.get(value_key)):
-                    raise ValueError(_('Cannot use %(key)s and '
-                                       '%(name)s at the same time.')
-                                     % dict(key=source_key,
-                                            name=value_key))
-                source_data[source_key] = value
-                # If value defined with value_path, need to delete value_path
-                # property data after it's replacing.
-                if value_data and value_data.get(value_key):
-                    del value_data[value_key]
+            self._exec_replace(source_key, source_data,
+                               value_key, value_data, value)
+        elif self.rule == TranslationRule.RESOLVE:
+            self._exec_resolve(source_key, source_data)
         elif self.rule == TranslationRule.DELETE:
-            if isinstance(source_data, list):
-                for item in source_data:
-                    if item.get(source_key) is not None:
-                        del item[source_key]
-            else:
-                del source_data[source_key]
+            self._exec_delete(source_key, source_data, value)
 
-    def get_data_from_source_path(self, path):
+    def _get_data_from_source_path(self, path):
         def get_props(props, key):
             props = props.get(key)
             if props.schema.schema is not None:
@@ -190,7 +178,8 @@ class TranslationRule(object):
                 else:
                     source_key = key
             elif data.get(key) is None:
-                if (self.rule == TranslationRule.DELETE or
+                if (self.rule in (TranslationRule.DELETE,
+                                  TranslationRule.RESOLVE) or
                         (self.rule == TranslationRule.REPLACE and
                          self.value_name)):
                     return None, None
@@ -204,3 +193,68 @@ class TranslationRule(object):
                 data = data.get(key)
                 props = get_props(props, key)
         return source_key, data
+
+    def _exec_add(self, source_key, source_data, value):
+        if isinstance(source_data, list):
+            source_data.extend(value)
+        else:
+            raise ValueError(_('Add rule must be used only for '
+                               'lists.'))
+
+    def _exec_replace(self, source_key, source_data,
+                      value_key, value_data, value):
+        if isinstance(source_data, list):
+            for item in source_data:
+                if item.get(self.value_name) and item.get(source_key):
+                    raise ValueError(_('Cannot use %(key)s and '
+                                       '%(name)s at the same time.')
+                                     % dict(key=source_key,
+                                            name=self.value_name))
+                elif item.get(self.value_name) is not None:
+                    item[source_key] = item[self.value_name]
+                    del item[self.value_name]
+                elif value is not None:
+                    item[source_key] = value
+        else:
+            if (source_data and source_data.get(source_key) and
+                    value_data and value_data.get(value_key)):
+                raise ValueError(_('Cannot use %(key)s and '
+                                   '%(name)s at the same time.')
+                                 % dict(key=source_key,
+                                        name=value_key))
+            source_data[source_key] = value
+            # If value defined with value_path, need to delete value_path
+            # property data after it's replacing.
+            if value_data and value_data.get(value_key):
+                del value_data[value_key]
+
+    def _exec_resolve(self, source_key, source_data):
+
+        def resolve_and_find(source_data, source_value):
+            if isinstance(source_value, cfn_funcs.ResourceRef):
+                return
+            if isinstance(source_value, function.Function):
+                source_value = function.resolve(source_value)
+            if source_value:
+                finder = getattr(self.client_plugin, self.finder)
+                if self.entity:
+                    value = finder(self.entity, source_value)
+                else:
+                    value = finder(source_value)
+                source_data[source_key] = value
+
+        if isinstance(source_data, list):
+            for item in source_data:
+                source_value = item.get(source_key)
+                resolve_and_find(item, source_value)
+        else:
+            source_value = source_data.get(source_key)
+            resolve_and_find(source_data, source_value)
+
+    def _exec_delete(self, source_key, source_data, value):
+        if isinstance(source_data, list):
+            for item in source_data:
+                if item.get(source_key) is not None:
+                    del item[source_key]
+        else:
+            del source_data[source_key]
