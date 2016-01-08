@@ -17,6 +17,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class VPNService(neutron.NeutronResource):
@@ -144,15 +145,15 @@ class VPNService(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
             ),
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.ROUTER],
                 value_path=[self.ROUTER_ID]
             )

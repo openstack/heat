@@ -21,6 +21,7 @@ from heat.engine.resources.openstack.neutron import neutron
 from heat.engine.resources.openstack.neutron import port
 from heat.engine.resources.openstack.neutron import router
 from heat.engine import support
+from heat.engine import translation
 
 
 class FloatingIP(neutron.NeutronResource):
@@ -131,9 +132,9 @@ class FloatingIP(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.FLOATING_NETWORK],
                 value_path=[self.FLOATING_NETWORK_ID]
             )

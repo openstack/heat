@@ -23,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class NetworkGateway(neutron.NeutronResource):
@@ -149,9 +150,9 @@ class NetworkGateway(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.CONNECTIONS, self.NETWORK],
                 value_name=self.NETWORK_ID
             )

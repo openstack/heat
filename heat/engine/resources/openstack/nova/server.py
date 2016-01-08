@@ -34,6 +34,7 @@ from heat.engine.resources.openstack.nova import server_network_mixin
 from heat.engine.resources import scheduler_hints as sh
 from heat.engine.resources import stack_user
 from heat.engine import support
+from heat.engine import translation
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
@@ -545,9 +546,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
     entity = 'servers'
 
     def translation_rules(self, props):
-        return [properties.TranslationRule(
+        return [translation.TranslationRule(
             props,
-            properties.TranslationRule.REPLACE,
+            translation.TranslationRule.REPLACE,
             source_path=[self.NETWORKS, self.NETWORK_ID],
             value_name=self.NETWORK_UUID)]
 

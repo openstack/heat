@@ -20,6 +20,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class Subnet(neutron.NeutronResource):
@@ -270,10 +271,10 @@ class Subnet(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(props,
-                                       properties.TranslationRule.REPLACE,
-                                       [self.NETWORK],
-                                       value_path=[self.NETWORK_ID])
+            translation.TranslationRule(props,
+                                        translation.TranslationRule.REPLACE,
+                                        [self.NETWORK],
+                                        value_path=[self.NETWORK_ID])
         ]
 
     @classmethod
