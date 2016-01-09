@@ -20,7 +20,6 @@
 
 import abc
 import errno
-import logging as std_logging
 import os
 import signal
 import sys
@@ -256,7 +255,7 @@ def get_socket(conf, default_port):
 class WritableLogger(object):
     """A thin wrapper that responds to `write` and logs."""
 
-    def __init__(self, LOG, level=std_logging.DEBUG):
+    def __init__(self, LOG, level=logging.DEBUG):
         self.LOG = LOG
         self.level = level
 

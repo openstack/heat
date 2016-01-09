@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import os
 import sys
 
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from heat import version
 

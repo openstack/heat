@@ -12,7 +12,6 @@
 #    under the License.
 
 """Routines for configuring Heat."""
-import logging as sys_logging
 import os
 
 from eventlet.green import socket
@@ -438,7 +437,7 @@ def load_paste_app(app_name=None):
         # Log the options used when starting if we're in debug mode...
         if cfg.CONF.debug:
             cfg.CONF.log_opt_values(logging.getLogger(app_name),
-                                    sys_logging.DEBUG)
+                                    logging.DEBUG)
 
         return app
     except (LookupError, ImportError) as e:

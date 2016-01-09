@@ -13,7 +13,7 @@
 
 import copy
 import fixtures
-import logging
+from oslo_log import log as logging
 import time
 
 from keystoneclient import exceptions as kc_exceptions
