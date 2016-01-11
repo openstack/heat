@@ -293,7 +293,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.19'
+    RPC_API_VERSION = '1.20'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -468,20 +468,24 @@ class EngineService(service.Service):
         return s
 
     @context.request_context
-    def show_stack(self, cnxt, stack_identity):
+    def show_stack(self, cnxt, stack_identity, resolve_outputs=True):
         """Return detailed information about one or all stacks.
 
         :param cnxt: RPC context.
         :param stack_identity: Name of the stack you want to show, or None
             to show all
+        :param resolve_outputs: If True, outputs for given stack/stacks will
+            be resolved
         """
         if stack_identity is not None:
             db_stack = self._get_stack(cnxt, stack_identity, show_deleted=True)
-            stacks = [parser.Stack.load(cnxt, stack=db_stack)]
+            stacks = [parser.Stack.load(cnxt, stack=db_stack,
+                                        resolve_data=resolve_outputs)]
         else:
-            stacks = parser.Stack.load_all(cnxt)
+            stacks = parser.Stack.load_all(cnxt, resolve_data=resolve_outputs)
 
-        return [api.format_stack(stack) for stack in stacks]
+        return [api.format_stack(
+            stack, resolve_outputs=resolve_outputs) for stack in stacks]
 
     def get_revision(self, cnxt):
         return cfg.CONF.revision['heat_revision']

@@ -390,6 +390,14 @@ class FormatTest(common.HeatTestCase):
         info = api.format_stack(self.stack)
         self.assertEqual('foobar', info[rpc_api.STACK_OUTPUTS])
 
+    @mock.patch.object(api, 'format_stack_outputs')
+    def test_format_stack_without_resolving_outputs(self, mock_fmt_outputs):
+        mock_fmt_outputs.return_value = 'foobar'
+        self.stack.action = 'CREATE'
+        self.stack.status = 'COMPLETE'
+        info = api.format_stack(self.stack, resolve_outputs=False)
+        self.assertIsNone(info.get(rpc_api.STACK_OUTPUTS))
+
     def test_format_stack_outputs(self):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',

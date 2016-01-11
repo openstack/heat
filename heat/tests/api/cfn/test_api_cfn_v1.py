@@ -221,7 +221,9 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': None})
+            dummy_req.context, ('show_stack', {'stack_identity': None,
+                                               'resolve_outputs': True}),
+            version='1.20'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -243,7 +245,9 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': None})
+            dummy_req.context, ('show_stack', {'stack_identity': None,
+                                               'resolve_outputs': True}),
+            version='1.20'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -298,7 +302,9 @@ class CfnStackControllerTest(common.HeatTestCase):
         ).AndReturn(identity)
         rpc_client.EngineClient.call(
             dummy_req.context,
-            ('show_stack', {'stack_identity': identity})
+            ('show_stack', {'stack_identity': identity,
+                            'resolve_outputs': True}),
+            version='1.20'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -387,7 +393,9 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             dummy_req.context,
-            ('show_stack', {'stack_identity': identity})
+            ('show_stack', {'stack_identity': identity,
+                            'resolve_outputs': True}),
+            version='1.20'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -446,7 +454,9 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': identity})
+            dummy_req.context, ('show_stack', {'stack_identity': identity,
+                                               'resolve_outputs': True},),
+            version='1.20'
         ).AndRaise(heat_exception.InvalidTenant(target='test',
                                                 actual='test'))
 
@@ -469,7 +479,9 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
         ).AndReturn(identity)
         rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': identity})
+            dummy_req.context, ('show_stack', {'stack_identity': identity,
+                                               'resolve_outputs': True}),
+            version='1.20'
         ).AndRaise(AttributeError())
 
         self.m.ReplayAll()

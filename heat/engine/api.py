@@ -204,7 +204,7 @@ def format_stack_output(stack, outputs, k, resolve_value=True):
     return result
 
 
-def format_stack(stack, preview=False):
+def format_stack(stack, preview=False, resolve_outputs=True):
     """Return a representation of the given stack.
 
     Return a representation of the given stack that matches the API output
@@ -239,7 +239,8 @@ def format_stack(stack, preview=False):
         info.update(update_info)
 
     # allow users to view the outputs of stacks
-    if stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS:
+    if (stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS
+            and resolve_outputs):
         info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack,
                                                            stack.outputs,
                                                            resolve_value=True)
