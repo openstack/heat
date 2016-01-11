@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
 from oslo_log import log as logging
@@ -207,9 +209,13 @@ class SoftwareConfigService(service.Service):
 
     def create_software_deployment(self, cnxt, server_id, config_id,
                                    input_values, action, status,
-                                   status_reason, stack_user_project_id):
+                                   status_reason, stack_user_project_id,
+                                   deployment_id=None):
 
+        if deployment_id is None:
+            deployment_id = str(uuid.uuid4())
         sd = software_deployment_object.SoftwareDeployment.create(cnxt, {
+            'id': deployment_id,
             'config_id': config_id,
             'server_id': server_id,
             'input_values': input_values,
