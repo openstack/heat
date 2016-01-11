@@ -156,10 +156,19 @@ class TemplateResourceInfo(ResourceInfo):
 
     def get_class(self, files=None):
         from heat.engine.resources import template_resource
+        if files and self.template_name in files:
+            data = files[self.template_name]
+        else:
+            if self.user_resource:
+                allowed_schemes = template_resource.REMOTE_SCHEMES
+            else:
+                allowed_schemes = template_resource.LOCAL_SCHEMES
+            data = template_resource.TemplateResource.get_template_file(
+                self.template_name,
+                allowed_schemes)
         env = self.registry.environment
-        return template_resource.generate_class(str(self.name),
-                                                self.template_name,
-                                                env, files=files)
+        return template_resource.generate_class_from_template(str(self.name),
+                                                              data, env)
 
     def get_class_to_instantiate(self):
         from heat.engine.resources import template_resource

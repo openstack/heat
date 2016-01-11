@@ -31,15 +31,6 @@ REMOTE_SCHEMES = ('http', 'https')
 LOCAL_SCHEMES = ('file',)
 
 
-def generate_class(name, template_name, env, files=None):
-    data = None
-    if files is not None:
-        data = files.get(template_name)
-    if data is None:
-        data = TemplateResource.get_template_file(template_name, LOCAL_SCHEMES)
-    return generate_class_from_template(name, data, env)
-
-
 def generate_class_from_template(name, data, env):
     tmpl = template.Template(template_format.parse(data))
     props, attrs = TemplateResource.get_schemas(tmpl, env.param_defaults)

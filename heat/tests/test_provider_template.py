@@ -665,7 +665,11 @@ class ProviderTemplateTest(common.HeatTestCase):
 
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": test_templ_name}}}}
-        env = environment.Environment(env_str)
+        global_env = environment.Environment({}, user_env=False)
+        global_env.load(env_str)
+        with mock.patch('heat.engine.resources._environment',
+                        global_env):
+            env = environment.Environment({})
         cls = env.get_class('OS::ResourceType', 'fred')
         self.assertNotEqual(template_resource.TemplateResource, cls)
         self.assertTrue(issubclass(cls, template_resource.TemplateResource))
