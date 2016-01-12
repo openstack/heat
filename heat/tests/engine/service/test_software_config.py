@@ -20,6 +20,7 @@ from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
 import six
 
+from heat.common import crypt
 from heat.common import exception
 from heat.common import template_format
 from heat.db import api as db_api
@@ -692,7 +693,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         res_upd.assert_called_once_with(
             self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 
-        plugin.assert_called_once_with('project1')
+        plugin.assert_called_once_with('project1', mock.ANY)
         zaqar_client.queue.assert_called_once_with('6789')
         queue.post.assert_called_once_with(
             {'body': result_metadata, 'ttl': 3600})
@@ -815,8 +816,29 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'signal_software_deployment')
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       'metadata_software_deployments')
+    @mock.patch.object(db_api, 'resource_update')
+    @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(zaqar.ZaqarClientPlugin, 'create_for_tenant')
-    def test_refresh_zaqar_software_deployment(self, plugin, ssd):
+    def test_refresh_zaqar_software_deployment(self, plugin, res_get, res_upd,
+                                               md_sd, ssd):
+        rs = mock.Mock()
+        rs.rsrc_metadata = {}
+        rs.id = '1234'
+        rs.atomic_key = 1
+        rd1 = mock.Mock()
+        rd1.key = 'user'
+        rd1.value = 'user1'
+        rd2 = mock.Mock()
+        rd2.key = 'password'
+        rd2.decrypt_method, rd2.value = crypt.encrypt('pass1')
+        rs.data = [rd1, rd2]
+        res_get.return_value = rs
+
+        res_upd.return_value = 1
+        deployments = {'deploy': 'this'}
+        md_sd.return_value = deployments
         config = self._create_software_config(inputs=[
             {
                 'name': 'deploy_signal_transport',
