@@ -127,6 +127,18 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         update_args = {'name': 'update'}
         self._test_update(update_args)
 
+    def test_volume_type_handle_update_is_public(self):
+        prop_diff = {'is_public': True, "projects": []}
+        self.patchobject(self.volume_type_access, 'list')
+        volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
+        self.my_volume_type.resource_id = volume_type_id
+        self.my_volume_type.handle_update(json_snippet=None,
+                                          tmpl_diff=None,
+                                          prop_diff=prop_diff)
+        self.volume_types.update.assert_called_once_with(
+            volume_type_id, is_public=True)
+        self.volume_type_access.list.assert_not_called()
+
     def test_volume_type_handle_update_metadata(self):
         new_keys = {'volume_backend_name': 'lvmdriver',
                     'capabilities:replication': 'True'}
@@ -135,7 +147,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
 
     def test_volume_type_update_projects(self):
         self.my_volume_type.resource_id = '8aeaa446459a4d3196bc573fc252800b'
-        prop_diff = {'projects': ['id2', 'id3']}
+        prop_diff = {'projects': ['id2', 'id3'], 'is_public': False}
 
         class Access(object):
             def __init__(self, idx, project):
