@@ -43,12 +43,13 @@ class KeystonePasswordAuthProtocol(object):
         # Determine tenant id from path.
         tenant = env.get('PATH_INFO').split('/')[1]
         auth_url = env.get('HTTP_X_AUTH_URL')
-
+        user_domain_id = env.get('HTTP_X_USER_DOMAIN_ID')
         if not tenant:
             return self._reject_request(env, start_response, auth_url)
         try:
             ctx = context.RequestContext(username=username, password=password,
                                          tenant_id=tenant, auth_url=auth_url,
+                                         user_domain_id=user_domain_id,
                                          is_admin=False)
             auth_ref = ctx.auth_plugin.get_access(self.session)
         except (keystone_exceptions.Unauthorized,

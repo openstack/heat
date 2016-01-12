@@ -187,7 +187,7 @@ class RequestContext(context.RequestContext):
         self._trusts_auth_plugin = v3.Password(
             username=cfg.CONF.keystone_authtoken.admin_user,
             password=cfg.CONF.keystone_authtoken.admin_password,
-            user_domain_id='default',
+            user_domain_id=self.user_domain,
             auth_url=self.keystone_v3_endpoint,
             trust_id=self.trust_id)
         return self._trusts_auth_plugin
@@ -212,7 +212,7 @@ class RequestContext(context.RequestContext):
             return v3.Password(username=self.username,
                                password=self.password,
                                project_id=self.tenant_id,
-                               user_domain_id='default',
+                               user_domain_id=self.user_domain,
                                auth_url=self.keystone_v3_endpoint)
 
         LOG.error(_LE("Keystone v3 API connection failed, no password "

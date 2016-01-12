@@ -126,7 +126,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
             auth_url=self.config['auth_uri'],
             password='goodpassword',
             project_id='tenant_id1',
-            user_domain_id='default',
+            user_domain_id='domain1',
             username='user_name1').AndReturn(mock_auth)
 
         m = mock_auth.get_access(mox.IsA(ks_session.Session))
@@ -138,6 +138,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'goodpassword'
         req.headers['X_AUTH_URL'] = self.config['auth_uri']
+        req.headers['X_USER_DOMAIN_ID'] = 'domain1'
         self.middleware(req.environ, self._start_fake_response)
         self.m.VerifyAll()
 
@@ -148,7 +149,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         ks_v3_auth.Password(auth_url=self.config['auth_uri'],
                             password='goodpassword',
                             project_id='tenant_id1',
-                            user_domain_id='default',
+                            user_domain_id='domain1',
                             username='user_name1').AndReturn(mock_auth)
 
         m = mock_auth.get_access(mox.IsA(ks_session.Session))
@@ -162,6 +163,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'goodpassword'
         req.headers['X_AUTH_URL'] = self.config['auth_uri']
+        req.headers['X_USER_DOMAIN_ID'] = 'domain1'
         self.middleware(req.environ, self._start_fake_response)
         self.m.VerifyAll()
 
@@ -171,7 +173,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         m = ks_v3_auth.Password(auth_url=self.config['auth_uri'],
                                 password='badpassword',
                                 project_id='tenant_id1',
-                                user_domain_id='default',
+                                user_domain_id='domain1',
                                 username='user_name1')
         m.AndRaise(keystone_exc.Unauthorized(401))
 
@@ -180,6 +182,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'badpassword'
         req.headers['X_AUTH_URL'] = self.config['auth_uri']
+        req.headers['X_USER_DOMAIN_ID'] = 'domain1'
         self.middleware(req.environ, self._start_fake_response)
         self.m.VerifyAll()
         self.assertEqual(401, self.response_status)

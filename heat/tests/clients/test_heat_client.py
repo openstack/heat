@@ -115,7 +115,7 @@ class KeystoneClientTest(common.HeatTestCase):
                                     username='test_username',
                                     password='password',
                                     project_id=project_id or 'test_tenant_id',
-                                    user_domain_id='default')
+                                    user_domain_id='adomain123')
 
         elif method == 'trust':
             p = ks_auth.load_from_conf_options(cfg.CONF,
@@ -459,6 +459,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx = utils.dummy_context()
         ctx.auth_token = None
         ctx.trust_id = None
+        ctx.user_domain = 'adomain123'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         client = heat_ks_client.client
         self.assertIsNotNone(client)
