@@ -178,19 +178,18 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                  err=exc.StackValidationFailed,
                  err_msg='Property configs not assigned')
         ),
-        # do not test until bug #1350840
-        # (
-        #     'empty_configs',
-        #     dict(snippet='''
-        #          component:
-        #            type: OS::Heat::SoftwareComponent
-        #            properties:
-        #              configs:
-        #          ''',
-        #          err=exception.StackValidationFailed,
-        #          err_msg='configs length (0) is out of range '
-        #                  '(min: 1, max: None)')
-        # ),
+        (
+            'empty_configs',
+            dict(snippet='''
+                 component:
+                   type: OS::Heat::SoftwareComponent
+                   properties:
+                     configs:
+                 ''',
+                 err=exc.StackValidationFailed,
+                 err_msg='resources.component.properties.configs: '
+                         'length (0) is out of range (min: 1, max: None)')
+        ),
         (
             'invalid_configs',
             dict(snippet='''
