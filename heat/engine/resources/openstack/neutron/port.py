@@ -185,7 +185,14 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.AllowedValues(['REPLACE_ALWAYS', 'AUTO']),
             ],
-            update_allowed=True
+            update_allowed=True,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='6.0.0',
+                message=_('Replacement policy used to work around flawed '
+                          'nova/neutron port interaction which has been '
+                          'fixed since Liberty.'),
+                previous_status=support.SupportStatus(version='2014.2'))
         ),
     }
 
