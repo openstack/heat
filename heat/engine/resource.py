@@ -857,8 +857,8 @@ class Resource(object):
         if self.status == self.FAILED:
             raise exception.UpdateReplace(self)
 
-        if check_init_complete and \
-                (self.action == self.INIT and self.status == self.COMPLETE):
+        if check_init_complete and (self.action == self.INIT
+                                    and self.status == self.COMPLETE):
             raise exception.UpdateReplace(self)
 
         if prev_resource is not None:
@@ -897,9 +897,9 @@ class Resource(object):
         with self.lock(engine_id):
             new_temp = template.Template.load(self.context, template_id)
             new_res_def = new_temp.resource_definitions(new_stack)[self.name]
-            if self.stack.action == self.stack.ROLLBACK and \
-                    self.stack.status == self.stack.IN_PROGRESS \
-                    and self.replaced_by:
+            action_rollback = self.stack.action == self.stack.ROLLBACK
+            status_in_progress = self.stack.status == self.stack.IN_PROGRESS
+            if action_rollback and status_in_progress and self.replaced_by:
                 self.restore_prev_rsrc(convergence=True)
             runner = scheduler.TaskRunner(self.update, new_res_def)
             try:
@@ -1314,9 +1314,9 @@ class Resource(object):
     def _store(self, metadata=None):
         """Create the resource in the database."""
 
-        properties_data_encrypted, properties_data = \
+        properties_data_encrypted, properties_data = (
             resource_objects.Resource.encrypt_properties_data(
-                self._stored_properties_data)
+                self._stored_properties_data))
         if not self.root_stack_id:
             self.root_stack_id = self.stack.root_stack_id()
         try:
@@ -1360,9 +1360,9 @@ class Resource(object):
         self.status = status
         self.status_reason = reason
 
-        properties_data_encrypted, properties_data = \
+        properties_data_encrypted, properties_data = (
             resource_objects.Resource.encrypt_properties_data(
-                self._stored_properties_data)
+                self._stored_properties_data))
         data = {
             'action': self.action,
             'status': self.status,

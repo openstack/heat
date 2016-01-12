@@ -85,8 +85,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_create_container_name(self, mock_put):
         # Setup
-        self.t['Resources']['SwiftContainer']['Properties']['name'] = \
-            'the_name'
+        res_prop = self.t['Resources']['SwiftContainer']['Properties']
+        res_prop['name'] = 'the_name'
         stack = utils.parse_stack(self.t)
 
         # Test
@@ -310,8 +310,8 @@ class SwiftTest(common.HeatTestCase):
                                       mock_delete_container):
         # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
-            = True
+        res_prop = self.t['Resources']['SwiftContainer']['Properties']
+        res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
 
         get_return_values = [
@@ -344,8 +344,8 @@ class SwiftTest(common.HeatTestCase):
                                                 mock_delete_container):
         # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
-            = True
+        res_prop = self.t['Resources']['SwiftContainer']['Properties']
+        res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
 
         mock_get.return_value = ({'name': container_name},
@@ -376,8 +376,8 @@ class SwiftTest(common.HeatTestCase):
                                                   mock_delete_object):
         # Setup
         container_name = utils.PhysName('test_stack', 'test_resource')
-        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
-            = True
+        res_prop = self.t['Resources']['SwiftContainer']['Properties']
+        res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
 
         mock_get.return_value = ({'name': container_name},
@@ -419,8 +419,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_check(self, mock_put, mock_get):
         # Setup
-        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
-            = True
+        res_prop = self.t['Resources']['SwiftContainer']['Properties']
+        res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
 
         # Test
@@ -434,8 +434,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_check_fail(self, mock_put, mock_get):
         # Setup
-        self.t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] \
-            = True
+        res_prop = self.t['Resources']['SwiftContainer']['Properties']
+        res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
 
         mock_get.side_effect = Exception('boom')

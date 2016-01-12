@@ -16,8 +16,8 @@ from oslo_serialization import jsonutils
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine.resources.aws.cfn.wait_condition_handle \
-    import WaitConditionHandle
+from heat.engine.resources.aws.cfn.wait_condition_handle import (
+    WaitConditionHandle)
 from heat.engine.resources.aws.ec2 import instance
 from heat.engine.resources.openstack.nova.server import Server
 from heat.engine.scheduler import TaskRunner

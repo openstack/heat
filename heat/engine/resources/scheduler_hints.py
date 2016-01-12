@@ -31,12 +31,11 @@ class SchedulerHintsMixin(object):
         if cfg.CONF.stack_scheduler_hints:
             if scheduler_hints is None:
                 scheduler_hints = {}
-            scheduler_hints[self.HEAT_ROOT_STACK_ID] = \
-                self.stack.root_stack_id()
-            scheduler_hints[self.HEAT_STACK_ID] = self.stack.id
-            scheduler_hints[self.HEAT_STACK_NAME] = self.stack.name
-            scheduler_hints[self.HEAT_PATH_IN_STACK] = \
-                self.stack.path_in_stack()
+            stack = self.stack
+            scheduler_hints[self.HEAT_ROOT_STACK_ID] = stack.root_stack_id()
+            scheduler_hints[self.HEAT_STACK_ID] = stack.id
+            scheduler_hints[self.HEAT_STACK_NAME] = stack.name
+            scheduler_hints[self.HEAT_PATH_IN_STACK] = stack.path_in_stack()
             scheduler_hints[self.HEAT_RESOURCE_NAME] = self.name
             scheduler_hints[self.HEAT_RESOURCE_UUID] = self.uuid
         return scheduler_hints

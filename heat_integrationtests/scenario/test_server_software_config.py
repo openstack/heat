@@ -37,7 +37,8 @@ file {'output_result':
   mode    => 0644,
   content => "The file /tmp/$::bar contains $::foo for server \
 $::deploy_server_id during $::deploy_action",
-}'''
+}
+'''
 
 
 class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):

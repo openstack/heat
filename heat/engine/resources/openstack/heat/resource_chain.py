@@ -120,8 +120,8 @@ class ResourceChain(stack_resource.StackResource):
             # nested_stack.strict_validate = False
             nested_stack.validate()
         except Exception as ex:
-            msg = _('Failed to validate nested template: %s') % \
-                six.text_type(ex)
+            msg = (_('Failed to validate nested template: %s')
+                   % six.text_type(ex))
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):

@@ -52,8 +52,8 @@ class CinderEncryptedVolumeTypeTest(common.HeatTestCase):
         self.cinderclient = mock.MagicMock()
         self.my_encrypted_vol_type.client = cinder
         cinder.return_value = self.cinderclient
-        self.volume_encryption_types = \
-            self.cinderclient.volume_encryption_types
+        self.volume_encryption_types = (
+            self.cinderclient.volume_encryption_types)
 
     def test_resource_mapping(self):
         mapping = encrypted_volume_type.resource_mapping()
