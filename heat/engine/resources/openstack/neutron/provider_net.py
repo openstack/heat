@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -105,13 +103,19 @@ class ProviderNet(net.Net):
         props['provider:' + key] = props.pop(key)
 
     @staticmethod
-    def prepare_provider_properties(self, props):
-        self.add_provider_extension(props, self.PROVIDER_NETWORK_TYPE)
-
-        self.add_provider_extension(props, self.PROVIDER_PHYSICAL_NETWORK)
-
-        if self.PROVIDER_SEGMENTATION_ID in six.iterkeys(props):
-            self.add_provider_extension(props, self.PROVIDER_SEGMENTATION_ID)
+    def prepare_provider_properties(props):
+        if ProviderNet.PROVIDER_NETWORK_TYPE in props:
+            ProviderNet.add_provider_extension(
+                props,
+                ProviderNet.PROVIDER_NETWORK_TYPE)
+        if ProviderNet.PROVIDER_PHYSICAL_NETWORK in props:
+            ProviderNet.add_provider_extension(
+                props,
+                ProviderNet.PROVIDER_PHYSICAL_NETWORK)
+        if ProviderNet.PROVIDER_SEGMENTATION_ID in props:
+            ProviderNet.add_provider_extension(
+                props,
+                ProviderNet.PROVIDER_SEGMENTATION_ID)
 
     def handle_create(self):
         """Creates the resource with provided properties.
@@ -122,7 +126,7 @@ class ProviderNet(net.Net):
             self.properties,
             self.physical_resource_name())
 
-        self.prepare_provider_properties(self, props)
+        ProviderNet.prepare_provider_properties(props)
 
         prov_net = self.client().create_network({'network': props})['network']
         self.resource_id_set(prov_net['id'])
@@ -132,11 +136,13 @@ class ProviderNet(net.Net):
 
         Adds 'provider:' extension to the required properties during update.
         """
-        props = self.prepare_update_properties(json_snippet)
-
-        self.prepare_provider_properties(self, props)
-
-        self.client().update_network(self.resource_id, {'network': props})
+        if prop_diff:
+            ProviderNet.prepare_provider_properties(prop_diff)
+            if (self.NAME in prop_diff and
+                    prop_diff[self.NAME] is None):
+                prop_diff[self.NAME] = self.physical_resource_name()
+            self.client().update_network(self.resource_id,
+                                         {'network': prop_diff})
 
 
 def resource_mapping():

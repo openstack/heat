@@ -150,12 +150,15 @@ class NeutronProviderNetTest(common.HeatTestCase):
         neutronclient.Client.update_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'network': {
-                'shared': True,
-                'name': 'prov_net',
-                'admin_state_up': True,
                 'provider:network_type': 'vlan',
                 'provider:physical_network': 'physnet_1',
                 'provider:segmentation_id': '102'
+            }}).AndReturn(None)
+
+        neutronclient.Client.update_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'name': utils.PhysName('test_stack', 'provider_net')
             }}).AndReturn(None)
 
         self.m.ReplayAll()
@@ -165,15 +168,18 @@ class NeutronProviderNetTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        props = {
-            "name": "prov_net",
-            "shared": True,
-            "admin_state_up": True,
+        prop_diff = {
             "network_type": "vlan",
             "physical_network": "physnet_1",
             "segmentation_id": "102"
         }
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                      props)
+                                                      prop_diff)
+        self.assertIsNone(rsrc.handle_update(update_snippet, {}, prop_diff))
+
+        # name=None
+        self.assertIsNone(rsrc.handle_update(update_snippet, {},
+                                             {'name': None}))
+        # no prop_diff
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, {}))
         self.m.VerifyAll()
