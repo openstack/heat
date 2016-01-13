@@ -34,6 +34,7 @@ class ServerNetworkMixin(object):
         net_id = network.get(self.NETWORK_ID)
         port = network.get(self.NETWORK_PORT)
         subnet = network.get(self.NETWORK_SUBNET)
+        fixed_ip = network.get(self.NETWORK_FIXED_IP)
 
         if (net_id is None and port is None
            and net_uuid is None and subnet is None):
@@ -66,6 +67,12 @@ class ServerNetworkMixin(object):
                           id=self.NETWORK_ID,
                           network=network[self.NETWORK_ID],
                           server=self.name))
+
+        # Nova doesn't allow specify ip and port at the same time
+        if fixed_ip and port:
+            raise exception.ResourcePropertyConflict(
+                "/".join([self.NETWORKS, self.NETWORK_FIXED_IP]),
+                "/".join([self.NETWORKS, self.NETWORK_PORT]))
 
     def _validate_belonging_subnet_to_net(self, network):
         if network.get(self.NETWORK_PORT) is None and self.is_using_neutron():
