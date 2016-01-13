@@ -624,9 +624,10 @@ class WatchRuleTest(common.HeatTestCase):
         self.assertEqual(['DummyAction'], actions)
         self.assertTrue(mock_get_resource.call_count > 0)
 
-    @mock.patch('ceilometerclient.client.AuthPlugin.redirect_to_aodh_endpoint')
+    @mock.patch('ceilometerclient.openstack.common.apiclient.'
+                'client.HTTPClient.client_request')
     @mock.patch('heat.engine.stack.Stack.resource_by_refid')
-    def test_to_ceilometer(self, mock_get_resource, mock_redirect):
+    def test_to_ceilometer(self, mock_get_resource, mock_client_request):
         # Setup
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmDescription': u'test alarm',
