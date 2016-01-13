@@ -19,7 +19,7 @@ from heat.tests import utils
 from senlinclient.common import exc
 
 
-class SenlinClientPluginTests(common.HeatTestCase):
+class SenlinClientPluginTest(common.HeatTestCase):
 
     def test_cluster_get(self):
         context = utils.dummy_context()

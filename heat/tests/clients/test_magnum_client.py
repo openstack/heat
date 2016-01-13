@@ -20,7 +20,7 @@ from heat.tests import utils
 magnum_client = importutils.try_import('magnumclient.v1.client')
 
 
-class MagnumClientPluginTests(common.HeatTestCase):
+class MagnumClientPluginTest(common.HeatTestCase):
 
     @testtools.skipIf(magnum_client is None, 'Tests the magnum client')
     def test_create(self):

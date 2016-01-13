@@ -22,11 +22,11 @@ from heat.tests import common
 from heat.tests import utils
 
 
-class GlanceUtilsTests(common.HeatTestCase):
+class GlanceUtilsTest(common.HeatTestCase):
     """Basic tests for :module:'heat.engine.resources.clients.os.glance'."""
 
     def setUp(self):
-        super(GlanceUtilsTests, self).setUp()
+        super(GlanceUtilsTest, self).setUp()
         self.glance_client = mock.MagicMock()
         con = utils.dummy_context()
         c = con.clients

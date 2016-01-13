@@ -23,11 +23,11 @@ from heat.tests import common
 from heat.tests import utils
 
 
-class SaharaUtilsTests(common.HeatTestCase):
+class SaharaUtilsTest(common.HeatTestCase):
     """Basic tests :module:'heat.engine.resources.clients.os.sahara'."""
 
     def setUp(self):
-        super(SaharaUtilsTests, self).setUp()
+        super(SaharaUtilsTest, self).setUp()
         self.sahara_client = mock.MagicMock()
         con = utils.dummy_context()
         c = con.clients

@@ -40,10 +40,10 @@ TEMPLATE = {
 }
 
 
-class ResourceChainTests(common.HeatTestCase):
+class ResourceChainTest(common.HeatTestCase):
 
     def setUp(self):
-        super(ResourceChainTests, self).setUp()
+        super(ResourceChainTest, self).setUp()
 
         self.stack = None  # hold on to stack to prevent weakref cleanup
 

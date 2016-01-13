@@ -26,7 +26,7 @@ resources:
 '''
 
 
-class LifecyclePluginUtilsTests(common.HeatTestCase):
+class LifecyclePluginUtilsTest(common.HeatTestCase):
     """Basic tests for :module:'heat.common.lifecycle_plugin_utils'.
 
     Basic tests for the helper methods in
@@ -34,10 +34,10 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
     """
 
     def setUp(self):
-        super(LifecyclePluginUtilsTests, self).setUp()
+        super(LifecyclePluginUtilsTest, self).setUp()
 
     def tearDown(self):
-        super(LifecyclePluginUtilsTests, self).tearDown()
+        super(LifecyclePluginUtilsTest, self).tearDown()
         lifecycle_plugin_utils.pp_class_instances = None
 
     def mock_lcp_class_map(self, lcp_mappings):

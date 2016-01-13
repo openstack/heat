@@ -142,7 +142,7 @@ resources:
 '''
 
 
-class MetadataRefreshTests(common.HeatTestCase):
+class MetadataRefreshTest(common.HeatTestCase):
 
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
@@ -201,10 +201,10 @@ class MetadataRefreshTests(common.HeatTestCase):
         return tmp['/tmp/random_file']['content']
 
 
-class WaitConditionMetadataUpdateTests(common.HeatTestCase):
+class WaitConditionMetadataUpdateTest(common.HeatTestCase):
 
     def setUp(self):
-        super(WaitConditionMetadataUpdateTests, self).setUp()
+        super(WaitConditionMetadataUpdateTest, self).setUp()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -286,7 +286,7 @@ class WaitConditionMetadataUpdateTests(common.HeatTestCase):
         self.assertEqual(2, mock_check.call_count)
 
 
-class MetadataRefreshServerTests(common.HeatTestCase):
+class MetadataRefreshServerTest(common.HeatTestCase):
 
     @mock.patch.object(Server, 'handle_create')
     @mock.patch.object(Server, 'check_create_complete')

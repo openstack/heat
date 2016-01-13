@@ -19,7 +19,7 @@ from heat.tests import common
 from heat.tests import utils
 
 
-class ZaqarClientPluginTests(common.HeatTestCase):
+class ZaqarClientPluginTest(common.HeatTestCase):
 
     def test_create(self):
         context = utils.dummy_context()

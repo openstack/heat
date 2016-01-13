@@ -15,10 +15,10 @@ from heat.engine.clients import progress
 from heat.tests import common
 
 
-class ServerUpdateProgressObjectTests(common.HeatTestCase):
+class ServerUpdateProgressObjectTest(common.HeatTestCase):
 
     def setUp(self):
-        super(ServerUpdateProgressObjectTests, self).setUp()
+        super(ServerUpdateProgressObjectTest, self).setUp()
         self.server_id = '1234'
         self.handler = 'test'
 
