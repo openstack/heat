@@ -15,6 +15,8 @@
 
 """Stack object."""
 
+import six
+
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
@@ -95,7 +97,7 @@ class Stack(
     def get_by_name_and_owner_id(cls, context, stack_name, owner_id):
         db_stack = db_api.stack_get_by_name_and_owner_id(
             context,
-            stack_name,
+            six.text_type(stack_name),
             owner_id
         )
         if not db_stack:
@@ -105,7 +107,7 @@ class Stack(
 
     @classmethod
     def get_by_name(cls, context, stack_name):
-        db_stack = db_api.stack_get_by_name(context, stack_name)
+        db_stack = db_api.stack_get_by_name(context, six.text_type(stack_name))
         if not db_stack:
             return None
         stack = cls._from_db_object(context, cls(context), db_stack)

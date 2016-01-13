@@ -1077,8 +1077,20 @@ class StackTest(common.HeatTestCase):
                        'test/stack', 'test\stack', 'test::stack', 'test;stack',
                        'test~stack', '#test']
         for stack_name in stack_names:
-            self.assertRaises(exception.StackValidationFailed, stack.Stack,
-                              self.ctx, stack_name, self.tmpl)
+            ex = self.assertRaises(
+                exception.StackValidationFailed, stack.Stack,
+                self.ctx, stack_name, self.tmpl)
+            self.assertIn("Invalid stack name %s must contain" % stack_name,
+                          six.text_type(ex))
+
+    def test_stack_name_invalid_type(self):
+        stack_names = [{"bad": 123}, ["no", "lists"]]
+        for stack_name in stack_names:
+            ex = self.assertRaises(
+                exception.StackValidationFailed, stack.Stack,
+                self.ctx, stack_name, self.tmpl)
+            self.assertIn("Invalid stack name %s, must be a string"
+                          % stack_name, six.text_type(ex))
 
     def test_resource_state_get_att(self):
         tmpl = {

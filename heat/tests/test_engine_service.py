@@ -469,6 +469,18 @@ class StackServiceTest(common.HeatTestCase):
             ctx2,
             self.stack.name))
 
+    @tools.stack_context('service_badname_test_stack', False)
+    def test_stack_by_name_badname(self):
+        # If a bad name type, such as a map, is passed, we should just return
+        # None, as it's converted to a string, which won't match any name
+        ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
+        self.assertIsNone(stack_object.Stack.get_by_name(
+            ctx,
+            {'notallowed': self.stack.name}))
+        self.assertIsNone(stack_object.Stack.get_by_name_and_owner_id(
+            ctx,
+            {'notallowed': self.stack.name}, 'owner'))
+
     @tools.stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
         self.m.StubOutWithMock(parser.Stack, '_from_db')
