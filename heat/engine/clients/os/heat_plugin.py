@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
+
 from heatclient import client as hc
 from heatclient import exc
 
@@ -76,3 +78,21 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
         heat_cfn_url = self.url_for(service_type=self.CLOUDFORMATION,
                                     endpoint_type=endpoint_type)
         return heat_cfn_url
+
+    def get_cfn_metadata_server_url(self):
+        # Historically, we've required heat_metadata_server_url set in
+        # heat.conf, which simply points to the heat-api-cfn endpoint in
+        # most cases, so fall back to looking in the catalog when not set
+        config_url = cfg.CONF.heat_metadata_server_url
+        if config_url is None:
+            config_url = self.get_heat_cfn_url()
+        # Backwards compatibility, previous heat_metadata_server_url
+        # values didn't have to include the version path suffix
+        # Also, we always added a trailing "/" in nova/server.py,
+        # which looks not required by os-collect-config, but maintain
+        # to avoid any risk other folks have scripts which expect it.
+        if '/v1' not in config_url:
+            config_url += '/v1'
+        if config_url and config_url[-1] != "/":
+            config_url += '/'
+        return config_url

@@ -599,8 +599,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 'queue_id': queue_id}})
 
         elif self.transport_poll_server_cfn(props):
+            heat_client_plugin = self.stack.clients.client_plugin('heat')
+            config_url = heat_client_plugin.get_cfn_metadata_server_url()
             occ.update({'cfn': {
-                'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
+                'metadata_url': config_url,
                 'access_key_id': self.access_key,
                 'secret_access_key': self.secret_key,
                 'stack_name': self.stack.name,
