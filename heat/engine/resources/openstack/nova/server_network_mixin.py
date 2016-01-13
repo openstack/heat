@@ -13,14 +13,20 @@
 
 import itertools
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import netutils
+import retrying
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
+
 from heat.engine import resource
 
 from heat.engine.resources.openstack.neutron import port as neutron_port
+
+LOG = logging.getLogger(__name__)
 
 
 class ServerNetworkMixin(object):
@@ -195,7 +201,6 @@ class ServerNetworkMixin(object):
     def _build_nics(self, networks):
         if not networks:
             return None
-
         nics = []
 
         for idx, net in enumerate(networks):
@@ -414,22 +419,23 @@ class ServerNetworkMixin(object):
             [('external_ports', port)
              for port in self._data_get_ports('external_ports')]))
         for port_type, port in port_data:
-            # store port fixed_ips for restoring after failed update
-            port_details = self.client('neutron').show_port(port['id'])['port']
-            fixed_ips = port_details.get('fixed_ips', [])
-            data[port_type].append({'id': port['id'], 'fixed_ips': fixed_ips})
+            data[port_type].append({'id': port['id']})
 
-        if data.get('internal_ports'):
-            self.data_set('internal_ports',
-                          jsonutils.dumps(data['internal_ports']))
-        if data.get('external_ports'):
-            self.data_set('external_ports',
-                          jsonutils.dumps(data['external_ports']))
-        # reset fixed_ips for these ports by setting for each of them
-        # fixed_ips to []
+        # detach the ports from the server
+        server_id = self.resource_id
         for port_type, port in port_data:
-            self.client('neutron').update_port(
-                port['id'], {'port': {'fixed_ips': []}})
+            self.client_plugin().interface_detach(server_id, port['id'])
+            try:
+                if self.client_plugin().check_interface_detach(
+                        server_id, port['id']):
+                    LOG.info(_LI('Detach interface %(port)s successful '
+                                 'from server %(server)s when prepare '
+                                 'for replace.')
+                             % {'port': port['id'],
+                                'server': server_id})
+            except retrying.RetryError:
+                raise exception.InterfaceDetachFailed(
+                    port=port['id'], server=server_id)
 
     def restore_ports_after_rollback(self, convergence):
         if not self.is_using_neutron():
@@ -453,16 +459,42 @@ class ServerNetworkMixin(object):
             existing_server._data_get_ports(),
             existing_server._data_get_ports('external_ports')
         )
-        for port in port_data:
-            # reset fixed_ips to [] for new resource
-            self.client('neutron').update_port(port['id'],
-                                               {'port': {'fixed_ips': []}})
 
-        # restore ip for old port
+        existing_server_id = existing_server.resource_id
+        for port in port_data:
+            # detach the ports from current resource
+            self.client_plugin().interface_detach(
+                existing_server_id, port['id'])
+            try:
+                if self.client_plugin().check_interface_detach(
+                        existing_server_id, port['id']):
+                    LOG.info(_LI('Detach interface %(port)s successful from '
+                                 'server %(server)s when restore after '
+                                 'rollback.')
+                             % {'port': port['id'],
+                                'server': existing_server_id})
+            except retrying.RetryError:
+                raise exception.InterfaceDetachFailed(
+                    port=port['id'], server=existing_server_id)
+
+        # attach the ports for old resource
         prev_port_data = itertools.chain(
             prev_server._data_get_ports(),
             prev_server._data_get_ports('external_ports'))
+
+        prev_server_id = prev_server.resource_id
+
         for port in prev_port_data:
-            fixed_ips = port['fixed_ips']
-            self.client('neutron').update_port(
-                port['id'], {'port': {'fixed_ips': fixed_ips}})
+            self.client_plugin().interface_attach(prev_server_id,
+                                                  port['id'])
+            try:
+                if self.client_plugin().check_interface_attach(
+                        prev_server_id, port['id']):
+                    LOG.info(_LI('Attach interface %(port)s successful to '
+                                 'server %(server)s when restore after '
+                                 'rollback.')
+                             % {'port': port['id'],
+                                'server': prev_server_id})
+            except retrying.RetryError:
+                raise exception.InterfaceAttachFailed(
+                    port=port['id'], server=prev_server_id)

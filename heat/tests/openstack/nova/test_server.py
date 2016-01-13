@@ -4266,8 +4266,6 @@ class ServerInternalPortTest(common.HeatTestCase):
                                             'delete_port')
         self.port_show = self.patchobject(neutronclient.Client,
                                           'show_port')
-        self.port_update = self.patchobject(neutronclient.Client,
-                                            'update_port')
 
     def _return_template_stack_and_rsrc_defn(self, stack_name, temp):
         templ = template.Template(template_format.parse(temp),
@@ -4822,105 +4820,118 @@ class ServerInternalPortTest(common.HeatTestCase):
         self.assertEqual({'port_type': 'external_ports'},
                          update_data.call_args_list[1][1])
 
+    def test_prepare_ports_for_replace_detach_failed(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
+
+        class Fake(object):
+            def interface_list(self):
+                return [iface(1122)]
+        iface = collections.namedtuple('iface', ['port_id'])
+
+        server.resource_id = 'ser-11'
+        port_ids = [{'id': 1122}]
+
+        server._data = {"internal_ports": jsonutils.dumps(port_ids)}
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'fetch_server')
+        nova.NovaClientPlugin.fetch_server.side_effect = [Fake()] * 10
+
+        exc = self.assertRaises(exception.InterfaceDetachFailed,
+                                server.prepare_for_replace)
+        self.assertIn('Failed to detach interface (1122) from server '
+                      '(ser-11)',
+                      six.text_type(exc))
+
     def test_prepare_ports_for_replace(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
             'test', tmpl_server_with_network_id)
+        server.resource_id = 'test_server'
         port_ids = [{'id': 1122}, {'id': 3344}]
         external_port_ids = [{'id': 5566}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
-        data_set = self.patchobject(server, 'data_set')
-
-        port1_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet1',
-                'ip_address': '41.41.41.41'
-            }
-        }
-        port2_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet2',
-                'ip_address': '42.42.42.42'
-            }
-        }
-        port3_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet3',
-                'ip_address': '43.43.43.43'
-            }
-        }
-        self.port_show.side_effect = [{'port': port1_fixed_ip},
-                                      {'port': port2_fixed_ip},
-                                      {'port': port3_fixed_ip}]
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
+                         return_value=True)
 
         server.prepare_for_replace()
 
-        # check, that data was updated
-        port_ids[0].update(port1_fixed_ip)
-        port_ids[1].update(port2_fixed_ip)
-        external_port_ids[0].update(port3_fixed_ip)
-
-        expected_data = jsonutils.dumps(port_ids)
-        expected_external_data = jsonutils.dumps(external_port_ids)
-        data_set.assert_has_calls([
-            mock.call('internal_ports', expected_data),
-            mock.call('external_ports', expected_external_data)])
-
-        # check, that all ip were removed from ports
-        empty_fixed_ips = {'port': {'fixed_ips': []}}
-        self.port_update.assert_has_calls([
-            mock.call(1122, empty_fixed_ips),
-            mock.call(3344, empty_fixed_ips),
-            mock.call(5566, empty_fixed_ips)])
+        # check, that the ports were detached from server
+        nova.NovaClientPlugin.interface_detach.assert_has_calls([
+            mock.call('test_server', 1122),
+            mock.call('test_server', 3344),
+            mock.call('test_server', 5566)])
 
     def test_restore_ports_after_rollback(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
             'test', tmpl_server_with_network_id)
+        server.resource_id = 'existing_server'
         port_ids = [{'id': 1122}, {'id': 3344}]
         external_port_ids = [{'id': 5566}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
-        port1_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet1',
-                'ip_address': '41.41.41.41'
-            }
-        }
-        port2_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet2',
-                'ip_address': '42.42.42.42'
-            }
-        }
-        port3_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet3',
-                'ip_address': '43.43.43.43'
-            }
-        }
-        port_ids[0].update(port1_fixed_ip)
-        port_ids[1].update(port2_fixed_ip)
-        external_port_ids[0].update(port3_fixed_ip)
+
         # add data to old server in backup stack
         old_server = mock.Mock()
+        old_server.resource_id = 'old_server'
         stack._backup_stack = mock.Mock()
         stack._backup_stack().resources.get.return_value = old_server
         old_server._data_get_ports.side_effect = [port_ids, external_port_ids]
 
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
+                         return_value=True)
+        self.patchobject(nova.NovaClientPlugin, 'interface_attach')
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_attach',
+                         return_value=True)
+
         server.restore_prev_rsrc()
 
-        # check, that all ip were removed from new_ports
-        empty_fixed_ips = {'port': {'fixed_ips': []}}
-        self.port_update.assert_has_calls([
-            mock.call(1122, empty_fixed_ips),
-            mock.call(3344, empty_fixed_ips),
-            mock.call(5566, empty_fixed_ips)])
+        # check, that ports were detached from new server
+        nova.NovaClientPlugin.interface_detach.assert_has_calls([
+            mock.call('existing_server', 1122),
+            mock.call('existing_server', 3344),
+            mock.call('existing_server', 5566)])
 
-        # check, that all ip were restored for old_ports
-        self.port_update.assert_has_calls([
-            mock.call(1122, {'port': port1_fixed_ip}),
-            mock.call(3344, {'port': port2_fixed_ip}),
-            mock.call(5566, {'port': port3_fixed_ip})])
+        # check, that ports were attached to old server
+        nova.NovaClientPlugin.interface_attach.assert_has_calls([
+            mock.call('old_server', 1122),
+            mock.call('old_server', 3344),
+            mock.call('old_server', 5566)])
+
+    def test_restore_ports_after_rollback_attach_failed(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
+        server.resource_id = 'existing_server'
+        port_ids = [{'id': 1122}, {'id': 3344}]
+        server._data = {"internal_ports": jsonutils.dumps(port_ids)}
+
+        # add data to old server in backup stack
+        old_server = mock.Mock()
+        old_server.resource_id = 'old_server'
+        stack._backup_stack = mock.Mock()
+        stack._backup_stack().resources.get.return_value = old_server
+        old_server._data_get_ports.side_effect = [port_ids, []]
+
+        class Fake(object):
+            def interface_list(self):
+                return [iface(1122)]
+        iface = collections.namedtuple('iface', ['port_id'])
+
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
+                         return_value=True)
+        self.patchobject(nova.NovaClientPlugin, 'interface_attach')
+        self.patchobject(nova.NovaClientPlugin, 'fetch_server')
+        # need to mock 11 times: 1 for port 1122, 10 for port 3344
+        nova.NovaClientPlugin.fetch_server.side_effect = [Fake()] * 11
+
+        exc = self.assertRaises(exception.InterfaceAttachFailed,
+                                server.restore_prev_rsrc)
+        self.assertIn('Failed to attach interface (3344) to server '
+                      '(old_server)',
+                      six.text_type(exc))
 
     def test_restore_ports_after_rollback_convergence(self):
         t = template_format.parse(tmpl_server_with_network_id)
@@ -4929,14 +4940,17 @@ class ServerInternalPortTest(common.HeatTestCase):
 
         # mock resource from previous template
         prev_rsrc = stack['server']
-        prev_rsrc.resource_id = 'prev-rsrc'
         # store in db
         prev_rsrc.state_set(prev_rsrc.UPDATE, prev_rsrc.COMPLETE)
+        prev_rsrc.resource_id = 'prev_rsrc'
 
         # mock resource from existing template, store in db, and set _data
-        existing_rsrc = stack['server']
+        resource_defns = stack.t.resource_definitions(stack)
+        existing_rsrc = servers.Server('server', resource_defns['server'],
+                                       stack)
+        existing_rsrc.stack = stack
         existing_rsrc.current_template_id = stack.t.id
-        existing_rsrc.resource_id = 'existing-rsrc'
+        existing_rsrc.resource_id = 'existing_rsrc'
         existing_rsrc.state_set(existing_rsrc.UPDATE, existing_rsrc.COMPLETE)
 
         port_ids = [{'id': 1122}, {'id': 3344}]
@@ -4948,47 +4962,26 @@ class ServerInternalPortTest(common.HeatTestCase):
         # mock previous resource was replaced by existing resource
         prev_rsrc.replaced_by = existing_rsrc.id
 
-        port1_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet1',
-                'ip_address': '41.41.41.41'
-            }
-        }
-        port2_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet2',
-                'ip_address': '42.42.42.42'
-            }
-        }
-        port3_fixed_ip = {
-            'fixed_ips': {
-                'subnet_id': 'test_subnet3',
-                'ip_address': '43.43.43.43'
-            }
-        }
-        port_ids[0].update(port1_fixed_ip)
-        port_ids[1].update(port2_fixed_ip)
-        external_port_ids[0].update(port3_fixed_ip)
-        # add data to old server
-        prev_rsrc._data = {
-            "internal_ports": jsonutils.dumps(port_ids),
-            "external_ports": jsonutils.dumps(external_port_ids)
-        }
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
+                         return_value=True)
+        self.patchobject(nova.NovaClientPlugin, 'interface_attach')
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_attach',
+                         return_value=True)
 
         prev_rsrc.restore_prev_rsrc(convergence=True)
 
-        # check, that all ip were removed from new_ports
-        empty_fixed_ips = {'port': {'fixed_ips': []}}
-        self.port_update.assert_has_calls([
-            mock.call(1122, empty_fixed_ips),
-            mock.call(3344, empty_fixed_ips),
-            mock.call(5566, empty_fixed_ips)])
+        # check, that ports were detached from existing server
+        nova.NovaClientPlugin.interface_detach.assert_has_calls([
+            mock.call('existing_rsrc', 1122),
+            mock.call('existing_rsrc', 3344),
+            mock.call('existing_rsrc', 5566)])
 
-        # check, that all ip were restored for old_ports
-        self.port_update.assert_has_calls([
-            mock.call(1122, {'port': port1_fixed_ip}),
-            mock.call(3344, {'port': port2_fixed_ip}),
-            mock.call(5566, {'port': port3_fixed_ip})])
+        # check, that ports were attached to old server
+        nova.NovaClientPlugin.interface_attach.assert_has_calls([
+            mock.call('prev_rsrc', 1122),
+            mock.call('prev_rsrc', 3344),
+            mock.call('prev_rsrc', 5566)])
 
     def test_store_external_ports_os_interface_not_installed(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(

@@ -289,3 +289,7 @@ class ClientPlugin(object):
 
 def retry_if_connection_err(exception):
     return isinstance(exception, requests.ConnectionError)
+
+
+def retry_if_result_is_false(result):
+    return result is False

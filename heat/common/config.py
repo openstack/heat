@@ -131,6 +131,11 @@ engine_opts = [
                help=_('Number of times to retry when a client encounters an '
                       'expected intermittent error. Set to 0 to disable '
                       'retries.')),
+    cfg.IntOpt('max_interface_check_attempts',
+               min=1,
+               default=10,
+               help=_('Number of times to check whether an interface has '
+                      'been attached or detached.')),
     cfg.IntOpt('event_purge_batch_size',
                default=10,
                help=_("Controls how many events will be pruned whenever a "
