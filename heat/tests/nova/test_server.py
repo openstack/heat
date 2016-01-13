@@ -1371,12 +1371,16 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_ImageConstraint_validate()
         self.stub_NetworkConstraint_validate()
         self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
-        self.assertIsNone(server.validate())
+        error = self.assertRaises(exception.ResourcePropertyConflict,
+                                  server.validate)
+        self.assertEqual("Cannot define the following properties at the same "
+                         "time: networks/fixed_ip, networks/port.",
+                         six.text_type(error))
         self.m.VerifyAll()
 
     def test_server_validate_with_uuid_fixed_ip(self):
