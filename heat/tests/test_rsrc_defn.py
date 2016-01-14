@@ -12,7 +12,6 @@
 #    under the License.
 
 import six
-import warnings
 
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
@@ -212,17 +211,8 @@ class ResourceDefinitionSnippetTest(common.HeatTestCase):
 
     def test_resource_snippet(self):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', **self.defn)
-        with warnings.catch_warnings(record=True) as ws:
-            warnings.filterwarnings('always')
 
-            # Work around http://bugs.python.org/issue4180
-            getattr(rsrc_defn, '__warningregistry__', {}).clear()
+        exp_result = {'Type': 'SomeType'}
+        exp_result.update(self.expected)
 
-            exp_result = {'Type': 'SomeType'}
-            exp_result.update(self.expected)
-
-            self.assertEqual(exp_result, rd)
-
-            self.assertTrue(ws)
-            for warn in ws:
-                self.assertTrue(issubclass(warn.category, DeprecationWarning))
+        self.assertEqual(exp_result, rd)

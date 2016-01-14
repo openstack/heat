@@ -20,23 +20,6 @@ from heat.tests import common
 
 
 class SchemaTest(common.HeatTestCase):
-    def test_warn_required_with_default(self):
-        msg = ("Option 'required=True' should not be used with any 'default' "
-               "value \(wibble\)")
-        with self.assertWarnsRegex(UserWarning, msg):
-            constraints.Schema(constraints.Schema.STRING, 'A string',
-                               default='wibble', required=True)
-
-    def test_without_warn_only_default(self):
-        constraints.Schema(constraints.Schema.STRING, 'A string',
-                           default='wibble')
-        self.assertEqual(0, len(self.warnings.captures))
-
-    def test_without_warn_only_required(self):
-        constraints.Schema(constraints.Schema.STRING, 'A string',
-                           required=True)
-        self.assertEqual(0, len(self.warnings.captures))
-
     def test_range_schema(self):
         d = {'range': {'min': 5, 'max': 10}, 'description': 'a range'}
         r = constraints.Range(5, 10, description='a range')
