@@ -72,15 +72,6 @@ class StackUser(resource.Resource):
         user_id = self.data().get('user_id')
         if user_id:
             return user_id
-        else:
-            # FIXME(shardy): This is a legacy hack for backwards compatibility
-            # remove after an appropriate transitional period...
-            # Assume this is a resource that was created with
-            # a previous version of heat and that the resource_id
-            # is the user_id
-            if self.resource_id:
-                self.data_set('user_id', self.resource_id)
-                return self.resource_id
 
     def handle_delete(self):
         self._delete_user()
