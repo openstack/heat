@@ -982,6 +982,43 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertIsNotNone(self.deployment.handle_resume())
         self.assertIsNotNone(self.deployment.handle_delete())
 
+    def test_handle_unused_action_for_component(self):
+        self._create_stack(self.template)
+
+        config = {
+            'id': '48e8ade1-9196-42d5-89a2-f709fde42632',
+            'group': 'component',
+            'name': 'myconfig',
+            'config': {
+                'configs': [
+                    {
+                        'actions': ['CREATE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    }
+                ]
+            },
+            'options': {},
+            'inputs': [{
+                'name': 'foo',
+                'type': 'String',
+                'default': 'baa',
+            }, {
+                'name': 'bar',
+                'type': 'String',
+                'default': 'baz',
+            }],
+            'outputs': [],
+        }
+        self.rpc_client.show_software_config.return_value = config
+        sd = self.mock_deployment()
+
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.deployment.resource_id = sd['id']
+
+        self.assertIsNotNone(self.deployment.handle_create())
+        self.assertIsNone(self.deployment.handle_delete())
+
     def test_get_temp_url(self):
         dep_data = {}
 

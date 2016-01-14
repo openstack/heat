@@ -248,9 +248,13 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         else:
             config = {}
 
-        if (action not in self.properties[self.DEPLOY_ACTIONS]
-                and not config.get(
-                    rpc_api.SOFTWARE_CONFIG_GROUP) == 'component'):
+        if config.get(rpc_api.SOFTWARE_CONFIG_GROUP) == 'component':
+            valid_actions = set()
+            for conf in config['config']['configs']:
+                valid_actions.update(conf['actions'])
+            if action not in valid_actions:
+                return
+        elif action not in self.properties[self.DEPLOY_ACTIONS]:
             return
 
         props = self._build_properties(
