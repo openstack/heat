@@ -27,14 +27,14 @@ from heat.tests import fakes as test_fakes
 from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
-wp_template = '''
+wp_template = u'''
 heat_template_version: 2014-10-16
 description: WordPress
 parameters:
   KeyName:
     description: KeyName
     type: string
-    default: test
+    default: test\u2042
 resources:
   WebServer:
     type: AWS::EC2::Instance
