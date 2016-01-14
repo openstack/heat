@@ -108,7 +108,7 @@ class KeystoneGroup(resource.Resource,
 
     def handle_delete(self):
         if self.resource_id is not None:
-            with self.client_plugin.ignore_not_found:
+            with self.client_plugin().ignore_not_found:
                 self.client().groups.delete(self.resource_id)
 
 
