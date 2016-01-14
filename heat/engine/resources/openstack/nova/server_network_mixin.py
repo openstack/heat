@@ -401,31 +401,38 @@ class ServerNetworkMixin(object):
         # were mentioned above
         for idx, net in enumerate(new_nets):
             handler_kwargs = {'port_id': None,
-                              'net_id': self._get_network_id(net),
+                              'net_id': None,
                               'fip': None}
-            if handler_kwargs['net_id']:
-                handler_kwargs['fip'] = net.get('fixed_ip')
+
             if net.get(self.NETWORK_PORT):
                 handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
             elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
                 handler_kwargs['port_id'] = self._create_internal_port(net,
                                                                        idx)
+
+            if not handler_kwargs['port_id']:
+                handler_kwargs['net_id'] = self._get_network_id(net)
+            if handler_kwargs['net_id']:
+                handler_kwargs['fip'] = net.get('fixed_ip')
+
             floating_ip = net.get(self.NETWORK_FLOATING_IP)
-            self.update_floating_ip_association(floating_ip, handler_kwargs)
+            if floating_ip:
+                flip_associate = {'port_id': handler_kwargs.get('port_id')}
+                if net.get('fixed_ip'):
+                    flip_associate['fixed_ip_address'] = net.get('fixed_ip')
+
+                self.update_floating_ip_association(floating_ip,
+                                                    flip_associate)
 
             add_nets.append(handler_kwargs)
 
         return remove_ports, add_nets
 
-    def update_floating_ip_association(self, floating_ip, handler_kwargs):
-        if floating_ip:
-            if self.is_using_neutron() and handler_kwargs.get('port_id'):
-                body = {'port_id': handler_kwargs['port_id']}
-                if handler_kwargs.get('fip'):
-                    body['fixed_ip_address'] = handler_kwargs['fip']
-                self._floating_ip_neutron_associate(floating_ip, body)
-            elif not self.is_using_neutron():
-                self._floating_ip_nova_associate(floating_ip)
+    def update_floating_ip_association(self, floating_ip, flip_associate):
+        if self.is_using_neutron() and flip_associate.get('port_id'):
+            self._floating_ip_neutron_associate(floating_ip, flip_associate)
+        elif not self.is_using_neutron():
+            self._floating_ip_nova_associate(floating_ip)
 
     def prepare_ports_for_replace(self):
         if not self.is_using_neutron():
