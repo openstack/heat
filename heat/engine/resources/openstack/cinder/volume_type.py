@@ -59,6 +59,7 @@ class CinderVolumeType(resource.Resource):
             _('Whether the volume type is accessible to the public.'),
             default=True,
             support_status=support.SupportStatus(version='5.0.0'),
+            update_allowed=True
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
@@ -106,11 +107,15 @@ class CinderVolumeType(resource.Resource):
         """Update the name, description and metadata for volume type."""
 
         update_args = {}
-        # Update the name, description of cinder volume type
+        # Update the name, description, is_public of cinder volume type
+        is_public = self.properties[self.IS_PUBLIC]
         if self.DESCRIPTION in prop_diff:
             update_args['description'] = prop_diff.get(self.DESCRIPTION)
         if self.NAME in prop_diff:
             update_args['name'] = prop_diff.get(self.NAME)
+        if self.IS_PUBLIC in prop_diff:
+            is_public = prop_diff.get(self.IS_PUBLIC)
+            update_args['is_public'] = is_public
         if update_args:
             self.client().volume_types.update(self.resource_id, **update_args)
         # Update the key-value pairs of cinder volume type.
@@ -122,7 +127,7 @@ class CinderVolumeType(resource.Resource):
             if new_keys is not None:
                 volume_type.set_keys(new_keys)
         # Update the projects access for volume type
-        if self.PROJECTS in prop_diff:
+        if self.PROJECTS in prop_diff and not is_public:
             old_access_list = self.cinder().volume_type_access.list(
                 self.resource_id)
             old_projects = [ac._info['project_id'] for ac in old_access_list]
