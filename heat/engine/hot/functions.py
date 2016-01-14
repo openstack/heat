@@ -305,7 +305,7 @@ class ReplaceJson(Replace):
                                                'value': value})
                 else:
                     raise TypeError(_('"%s" params must be strings, numbers, '
-                                      'list or map. ') % self.fn_name)
+                                      'list or map.') % self.fn_name)
 
             return string.replace(placeholder, six.text_type(value))
 

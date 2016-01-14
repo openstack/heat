@@ -483,7 +483,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
               '{"public": [ip1, ip2...], "private": [ip3, ip4], '
               '"public_uuid": [ip1, ip2...], "private_uuid": [ip3, ip4]}. '
               'Each network will have two keys in dict, they are network '
-              'name and network id. '),
+              'name and network id.'),
             type=attributes.Schema.MAP
         ),
         FIRST_ADDRESS: attributes.Schema(

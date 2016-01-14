@@ -52,7 +52,7 @@ class ManilaShareType(resource.Resource):
         DRIVER_HANDLES_SHARE_SERVERS: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Required extra specification. '
-              'Defines if share drivers handles share servers. '),
+              'Defines if share drivers handles share servers.'),
             required=True,
         ),
         EXTRA_SPECS: properties.Schema(
