@@ -132,11 +132,11 @@ class S3Bucket(resource.Resource):
 
         con = self.context
         ac = self.properties[self.ACCESS_CONTROL]
-        tenant_username = '%s:%s' % (con.tenant, con.username)
+        tenant_username = '%s:%s' % (con.project_name, con.username)
         if ac in ('PublicRead', 'PublicReadWrite'):
             headers['X-Container-Read'] = '.r:*'
         elif ac == 'AuthenticatedRead':
-            headers['X-Container-Read'] = con.tenant
+            headers['X-Container-Read'] = con.project_name
         else:
             headers['X-Container-Read'] = tenant_username
 

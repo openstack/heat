@@ -92,12 +92,12 @@ class KeystoneClientV2(object):
             auth_kwargs['trust_id'] = self.context.trust_id
             auth_kwargs['tenant_id'] = self.context.tenant_id
         elif self.context.auth_token is not None:
-            kwargs['tenant_name'] = self.context.tenant
+            kwargs['tenant_name'] = self.context.project_name
             kwargs['token'] = self.context.auth_token
         elif self.context.password is not None:
             kwargs['username'] = self.context.username
             kwargs['password'] = self.context.password
-            kwargs['tenant_name'] = self.context.tenant
+            kwargs['tenant_name'] = self.context.project_name
             kwargs['tenant_id'] = self.context.tenant_id
         else:
             LOG.error(_LE("Keystone v2 API connection failed, no password "
