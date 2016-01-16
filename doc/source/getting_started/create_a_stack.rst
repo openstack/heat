@@ -101,7 +101,7 @@ Note: The list operation will show no running stack.::
 
 You can explore other heat commands by refering to the
 `Heat chapter
-<http://docs.openstack.org/cli-reference/content/heatclient_commands.html>`_
+<http://docs.openstack.org/cli-reference/heat.html>`_
 of the `OpenStack Command-Line Interface Reference
-<http://docs.openstack.org/cli-reference/content/index.html>`_ then read
+<http://docs.openstack.org/cli-reference/index.html>`_ then read
 the :ref:`template-guide` and start authoring your own templates.
