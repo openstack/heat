@@ -36,7 +36,7 @@ class HeatException(Exception):
     """Base Heat Exception.
 
     To correctly use this class, inherit from it and define a 'msg_fmt'
-    property. That msg_fmt will get printf'd with the keyword arguments
+    property. That msg_fmt will get formatted with the keyword arguments
     provided to the constructor.
     """
     message = _("An unknown exception occurred.")
