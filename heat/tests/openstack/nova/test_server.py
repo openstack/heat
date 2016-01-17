@@ -458,7 +458,7 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'img_name_err'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        # create an server with non exist image name
+        # create a server with non exist image name
         tmpl['Resources']['WebServer']['Properties']['image'] = 'Slackware'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -486,7 +486,7 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'img_dup_err'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        # create an server with a non unique image name
+        # create a server with a non unique image name
         tmpl['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -513,7 +513,7 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'img_id_err'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        # create an server with non exist image Id
+        # create a server with non exist image Id
         tmpl['Resources']['WebServer']['Properties']['image'] = '1'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -1183,7 +1183,7 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'srv_val_bootvol'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        # create an server with bootable volume
+        # create a server with bootable volume
         web_server = tmpl.t['Resources']['WebServer']
         del web_server['Properties']['image']
 
@@ -1314,7 +1314,7 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
         network_name = 'public'
-        # create an server with 'uuid' and 'network' properties
+        # create a server with 'uuid' and 'network' properties
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'uuid': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
               'network': network_name}])
@@ -1349,7 +1349,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_with_only_fixed_ip(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        # create an server with 'uuid' and 'network' properties
+        # create a server with 'uuid' and 'network' properties
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'fixed_ip': '10.0.0.99'}])
 
