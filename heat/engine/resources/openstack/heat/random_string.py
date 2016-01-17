@@ -154,7 +154,7 @@ class RandomString(resource.Resource):
         SALT: properties.Schema(
             properties.Schema.STRING,
             _('Value which can be set or changed on stack update to trigger '
-              'the resource for replacement with a new random string . The '
+              'the resource for replacement with a new random string. The '
               'salt value itself is ignored by the random generator.')
         ),
     }

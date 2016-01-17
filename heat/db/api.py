@@ -19,7 +19,7 @@ Usage:
     >>> db.event_get(context, event_id)
     # Event object received
 
-The underlying driver is loaded . SQLAlchemy is currently the only
+The underlying driver is loaded. SQLAlchemy is currently the only
 supported backend.
 """
 
