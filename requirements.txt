@@ -2,15 +2,15 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
-pbr>=1.6
-Babel>=1.3
+pbr>=1.6 # Apache-2.0
+Babel>=1.3 # BSD
 croniter>=0.3.4 # MIT License
-cryptography>=1.0 # Apache-2.0
-eventlet>=0.17.4
-greenlet>=0.3.2
-keystonemiddleware>=4.0.0
-lxml>=2.3
-netaddr!=0.7.16,>=0.7.12
+cryptography>=1.0 # BSD/Apache-2.0
+eventlet>=0.17.4 # MIT
+greenlet>=0.3.2 # MIT
+keystonemiddleware>=4.0.0 # Apache-2.0
+lxml>=2.3 # BSD
+netaddr!=0.7.16,>=0.7.12 # BSD
 oslo.cache>=0.8.0 # Apache-2.0
 oslo.config>=3.2.0 # Apache-2.0
 oslo.concurrency>=2.3.0 # Apache-2.0
@@ -25,35 +25,35 @@ oslo.reports>=0.6.0 # Apache-2.0
 oslo.serialization>=1.10.0 # Apache-2.0
 oslo.service>=1.0.0 # Apache-2.0
 oslo.utils>=3.2.0 # Apache-2.0
-osprofiler>=0.3.1 # Apache-2.0
-oslo.versionedobjects>=0.13.0
-PasteDeploy>=1.5.0
-pycrypto>=2.6
-python-barbicanclient>=3.3.0
-python-ceilometerclient>=2.0.0
-python-cinderclient>=1.3.1
-python-designateclient>=1.5.0
-python-glanceclient>=1.2.0
-python-heatclient>=0.6.0
-python-keystoneclient!=1.8.0,>=1.6.0
-python-magnumclient>=0.2.1
-python-manilaclient>=1.3.0
-python-mistralclient>=1.0.0
-python-neutronclient>=2.6.0
-python-novaclient!=2.33.0,>=2.29.0
-python-openstackclient>=2.0.0
-python-saharaclient>=0.10.0
-python-senlinclient>=0.1.7
-python-swiftclient>=2.2.0
-python-troveclient>=1.2.0
-python-zaqarclient>=0.3.0
-pytz>=2013.6
-PyYAML>=3.1.0
-requests!=2.9.0,>=2.8.1
-Routes!=2.0,!=2.1,>=1.12.3;python_version=='2.7'
-Routes!=2.0,>=1.12.3;python_version!='2.7'
-six>=1.9.0
-SQLAlchemy<1.1.0,>=1.0.10
-sqlalchemy-migrate>=0.9.6
+osprofiler>=0.4.0 # Apache-2.0
+oslo.versionedobjects>=0.13.0 # Apache-2.0
+PasteDeploy>=1.5.0 # MIT
+pycrypto>=2.6 # Public Domain
+python-barbicanclient>=3.3.0 # Apache-2.0
+python-ceilometerclient>=2.2.1 # Apache-2.0
+python-cinderclient>=1.3.1 # Apache-2.0
+python-designateclient>=1.5.0 # Apache-2.0
+python-glanceclient>=1.2.0 # Apache-2.0
+python-heatclient>=0.6.0 # Apache-2.0
+python-keystoneclient!=1.8.0,>=1.6.0 # Apache-2.0
+python-magnumclient>=0.2.1 # Apache-2.0
+python-manilaclient>=1.3.0 # Apache-2.0
+python-mistralclient>=1.0.0 # Apache-2.0
+python-neutronclient>=2.6.0 # Apache-2.0
+python-novaclient!=2.33.0,>=2.29.0 # Apache-2.0
+python-openstackclient>=2.0.0 # Apache-2.0
+python-saharaclient>=0.10.0 # Apache-2.0
+python-senlinclient>=0.1.7 # Apache-2.0
+python-swiftclient>=2.2.0 # Apache-2.0
+python-troveclient>=1.2.0 # Apache-2.0
+python-zaqarclient>=0.3.0 # Apache-2.0
+pytz>=2013.6 # MIT
+PyYAML>=3.1.0 # MIT
+requests!=2.9.0,>=2.8.1 # Apache-2.0
+Routes!=2.0,!=2.1,>=1.12.3;python_version=='2.7' # MIT
+Routes!=2.0,>=1.12.3;python_version!='2.7' # MIT
+six>=1.9.0 # MIT
+SQLAlchemy<1.1.0,>=1.0.10 # MIT
+sqlalchemy-migrate>=0.9.6 # Apache-2.0
 stevedore>=1.5.0 # Apache-2.0
-WebOb>=1.2.3
+WebOb>=1.2.3 # MIT
