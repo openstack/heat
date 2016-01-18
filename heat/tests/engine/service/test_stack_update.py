@@ -786,6 +786,19 @@ resources:
             section_contents = [x for x in result[section]]
             self.assertEqual([], section_contents)
 
+    def test_stack_update_preview_replaced_type(self):
+        # new template with a different type for web_server
+        new_tmpl = self.old_tmpl.replace('OS::Nova::Server', 'OS::Heat::None')
+
+        result = self._test_stack_update_preview(self.old_tmpl, new_tmpl)
+
+        replaced = [x for x in result['replaced']][0]
+        self.assertEqual('web_server', replaced['resource_name'])
+        empty_sections = ('added', 'deleted', 'unchanged', 'updated')
+        for section in empty_sections:
+            section_contents = [x for x in result[section]]
+            self.assertEqual([], section_contents)
+
     def test_stack_update_preview_updated(self):
         # new template changes to flavor of server
         new_tmpl = self.old_tmpl.replace('m1.large', 'm1.small')

@@ -238,6 +238,11 @@ class StackUpdate(object):
             updated_props = updated_res.frozen_definition().properties(
                 updated_res.properties_schema, updated_res.context)
 
+            # type comparison must match that in _process_new_resource_update
+            if type(current_res) is not type(updated_res):
+                replaced_keys.append(key)
+                continue
+
             try:
                 if current_res._needs_update(updated_res.frozen_definition(),
                                              current_res.frozen_definition(),
