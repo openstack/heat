@@ -112,6 +112,23 @@ resources:
       network: 12345
 '''
 
+server_with_sw_config_personality = """
+heat_template_version: 2014-10-16
+resources:
+  swconfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: |
+        #!/bin/bash
+        echo -e "test"
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.small
+      personality: { /tmp/test: { get_attr: [swconfig, config]}}
+"""
+
 
 class ServersTest(common.HeatTestCase):
     def setUp(self):
@@ -2982,6 +2999,24 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual('The contents of personality file "/fake/path1" '
                          'is larger than the maximum allowed personality '
                          'file size (10240 bytes).', six.text_type(exc))
+        self.m.VerifyAll()
+
+    def test_server_validate_personality_get_attr_return_none(self):
+        stack_name = 'srv_val'
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name, server_with_sw_config_personality)
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['server'], stack)
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
         self.m.VerifyAll()
 
     def test_resolve_attribute_server_not_found(self):
