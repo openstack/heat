@@ -1,4 +1,4 @@
-# German translations for heat.
+# Translations template for heat.
 # Copyright (C) 2015 ORGANIZATION
 # This file is distributed under the same license as the heat project.
 #
@@ -10,18 +10,19 @@
 # Tom Cocozzello <tjcocozz@us.ibm.com>, 2015. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.dev128\n"
+"Project-Id-Version: heat 6.0.0.0b2.dev223\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-10-22 06:02+0000\n"
+"POT-Creation-Date: 2016-01-17 12:10+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2015-09-25 02:58+0000\n"
 "Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
 "Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: Babel 2.0\n"
+"X-Generator: Zanata 3.7.3\n"
 "Language-Team: German\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
 
 #, python-format
 msgid "\"%%s\" is not a valid keyword inside a %s definition"
@@ -783,10 +784,6 @@ msgstr "Attribut %(attr)s für Fassade %(type)s fehlt in Provider"
 msgid "Audit status of this firewall policy."
 msgstr "Prüfstatus dieser Firewallrichtlinie."
 
-#, python-format
-msgid "Auth service at URL %(url)s not found."
-msgstr "Authentifizierungsservice unter URL %(url)s nicht gefunden."
-
 msgid "Authentication Endpoint URI."
 msgstr "Authentifizierungendpunkt-URI."
 
@@ -984,12 +981,6 @@ msgid ""
 msgstr ""
 "Konfigurationsscript oder Manifest, das angibt, welche Konfiguration "
 "durchgeführt wird. "
-
-#, python-format
-msgid "Connect error/bad request to Auth service at URL %(url)s."
-msgstr ""
-"Verbindungsfehler/fehlerhafte Anforderung an Authentifizierungsservice unter "
-"URL %(url)s."
 
 msgid "Connection info for this network gateway."
 msgstr "Verbindungsinformationen für dieses Netzgateway."
@@ -1361,13 +1352,6 @@ msgstr ""
 "Richtlinieneinstellung in Neutron beschränkt die Verwendung dieser "
 "Eigenschaft ausschließlich auf Benutzer mit Verwaltungsaufgaben."
 
-msgid ""
-"Enables engine with convergence architecture. All stacks with this option "
-"will be created using convergence engine ."
-msgstr ""
-"Ermöglicht Konvergenzarchitektur für Engine. Alle Stacks mit dieser Option "
-"werden mithilfe einer Konvergenzengine erstellt."
-
 msgid "Encapsulation mode for the ipsec policy."
 msgstr "Kapselungsmodus für die IPSec-Richtlinie. "
 
@@ -1433,14 +1417,6 @@ msgid ""
 "request. Parameters are often specific to installed hardware or extensions."
 msgstr ""
 "Zusätzliche Parameter zum Einschließen in das Objekt \"floatingip\" der "
-"Erstellungsanforderung. Oft gelten Parameter nur für die jeweilige "
-"installierte Hardware oder die jeweiligen installierten Erweiterungen. "
-
-msgid ""
-"Extra parameters to include in the \"network\" object in the creation "
-"request. Parameters are often specific to installed hardware or extensions."
-msgstr ""
-"Zusätzliche Parameter zum Einschließen in das Objekt \"network\" der "
 "Erstellungsanforderung. Oft gelten Parameter nur für die jeweilige "
 "installierte Hardware oder die jeweiligen installierten Erweiterungen. "
 
@@ -1859,14 +1835,6 @@ msgstr ""
 "%(example)s"
 
 #, python-format
-msgid ""
-"Incorrect auth strategy, expected \"%(expected)s\" but received "
-"\"%(received)s\""
-msgstr ""
-"Falsche Authentifizierungsstrategie. Erwartet wurde \"%(expected)s\", "
-"empfangen wurde jedoch \"%(received)s\""
-
-#, python-format
 msgid "Index to \"%s\" must be a string"
 msgstr "Index für \"%s\" muss eine Zeichenfolge sein"
 
@@ -2087,10 +2055,6 @@ msgstr "IP-Version für das Teilnetz. "
 
 msgid "Ip_version for this firewall rule."
 msgstr "Ip_version für diese Firewallregel."
-
-#, python-format
-msgid "Items to join must be strings %s"
-msgstr "Zu verknüpfende Elemente müssen Zeichenfolgen %s sein"
 
 #, python-format
 msgid ""
@@ -2372,10 +2336,6 @@ msgstr ""
 msgid "Maximum raw byte size of any template."
 msgstr "Maximale unformatierte Bytegröße einer beliebigen Vorlage."
 
-#, python-format
-msgid "Maximum redirects (%(redirects)s) was exceeded."
-msgstr "Das Maximum an Umleitungen (%(redirects)s) wurde überschritten."
-
 msgid "Maximum resources per stack exceeded."
 msgstr "Maximale Anzahl an Ressourcen pro Stack überschritten. "
 
@@ -2436,15 +2396,6 @@ msgstr "Fehlender Parametertyp für Parameter: %s"
 #, python-format
 msgid "Missing required credential: %(required)s"
 msgstr "Erforderlicher Berechtigungsnachweis fehlt: %(required)s"
-
-#, python-format
-msgid ""
-"Multiple 'image' service matches for region %(region)s. This generally means "
-"that a region is required and you have not supplied one."
-msgstr ""
-"Mehrere 'image'-Serviceübereinstimmungen für Region %(region)s. Dies weist "
-"im Allgemeinen darauf hin, dass eine Region erforderlich ist und dass Sie "
-"keine angegeben haben."
 
 msgid "Multiple actions specified"
 msgstr "Mehrere Aktionen angegeben"
@@ -2696,15 +2647,6 @@ msgstr "Netzschnittstellen-ID, die dieser EIP zuzuordnen ist. "
 
 msgid "Network interfaces to associate with instance."
 msgstr "Netzschnittstellen zum Zuordnen zur Instanz. "
-
-#, python-format
-msgid ""
-"Network this port belongs to. If you plan to use current port to assign "
-"Floating IP, you should specify %(fixed_ips)s with %(subnet)s"
-msgstr ""
-"Netz, zu dem dieser Port gehört. Wenn Sie planen, den aktuellen Port für die "
-"Zuweisung einer dynamischen IP-Adresse zu verwenden, sollten Sie "
-"%(fixed_ips)s  mit %(subnet)s angeben"
 
 msgid "Network to allocate floating IP from."
 msgstr "Netz, aus dem die dynamische IP-Adresse zuzuordnen ist."
@@ -3094,16 +3036,9 @@ msgstr ""
 msgid "Rebuilding server failed, status '%s'"
 msgstr "Wiederherstellung des Servers fehlgeschlagen, Status '%s'"
 
-msgid "Received invalid HTTP redirect."
-msgstr "Ungültige HTTP-Umleitung erhalten."
-
 #, python-format
 msgid "Recursion depth exceeds %d."
 msgstr "Verschachtelungstiefe überschreitet %d."
-
-#, python-format
-msgid "Redirecting to %(uri)s for authorization."
-msgstr "Umleitung auf %(uri)s für Autorisierung."
 
 msgid ""
 "Ref structure that contains the ID of the VPC on which you want to create "
@@ -3316,10 +3251,6 @@ msgstr "Servername."
 
 msgid "Server to assign floating IP to."
 msgstr "Server, dem die dynamische IP-Adresse zugeordnet werden soll. "
-
-#, python-format
-msgid "Service %(service_id)s not found"
-msgstr "Dienst %(service_id)s nicht gefunden"
 
 msgid "Service misconfigured"
 msgstr "Dienst falsch konfiguriert"
@@ -3601,10 +3532,6 @@ msgstr "Der DNS-Name des LoadBalancer."
 msgid "The DNS name of the specified bucket."
 msgstr "Der DNS-Name des angegebenen Buckets. "
 
-#, python-format
-msgid "The Flavor ID (%(flavor_id)s) could not be found."
-msgstr "Die Versions-ID (%(flavor_id)s) konnte nicht gefunden werden."
-
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr ""
 "Die für Anforderungen durch den Monitor des Typs HTTP verwendete HTTP-"
@@ -3714,14 +3641,6 @@ msgid "The IP version, which is 4 or 6."
 msgstr "Die IP-Version, welche 4 oder 6 ist."
 
 #, python-format
-msgid "The Key (%(key_name)s) could not be found."
-msgstr "Der Schlüssel (%(key_name)s) konnte nicht gefunden werden."
-
-#, python-format
-msgid "The Nova network (%(network)s) could not be found."
-msgstr "Das Nova-Netz (%(network)s) konnte nicht gefunden werden."
-
-#, python-format
 msgid "The Parameter (%(key)s) has no attributes."
 msgstr "Der Parameter (%(key)s) hat keine Attribute."
 
@@ -3742,10 +3661,6 @@ msgid "The Resource %s requires replacement."
 msgstr "Die Ressource %s muss ersetzt werden."
 
 #, python-format
-msgid "The Resource (%(resource_id)s) could not be found."
-msgstr "Die Ressource (%(resource_id)s) konnte nicht gefunden werden."
-
-#, python-format
 msgid ""
 "The Resource (%(resource_name)s) could not be found in Stack %(stack_name)s."
 msgstr ""
@@ -3757,10 +3672,6 @@ msgid "The Resource (%(resource_name)s) is not available."
 msgstr "Die Ressource (%(resource_name)s) ist nicht verfügbar."
 
 #, python-format
-msgid "The Resource Type (%(type_name)s) could not be found."
-msgstr "Der Ressourcentyp (%(type_name)s) konnte nicht gefunden werden."
-
-#, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr ""
 "Die Schattenkopie (%(snapshot)s) für Stack (%(stack)s) konnte nicht gefunden "
@@ -3770,15 +3681,8 @@ msgstr ""
 msgid "The Stack (%(stack_name)s) already exists."
 msgstr "Der Stack (%(stack_name)s) ist bereits vorhanden."
 
-#, python-format
-msgid "The Stack (%(stack_name)s) could not be found."
-msgstr "Der Stack (%(stack_name)s) konnte nicht gefunden werden."
-
 msgid "The Template must be a JSON or YAML document."
 msgstr "Die Vorlage muss ein JSON- oder YAML-Dokument sein."
-
-msgid "The URI was too long."
-msgstr "Die URI war zu lang."
 
 msgid ""
 "The URL of a template that specifies the stack to be created as a resource."
@@ -3997,15 +3901,6 @@ msgstr "Die zu verwendende Version. "
 #, python-format
 msgid "The function %s is not supported in this version of HOT."
 msgstr "Die Funktion %s wird in dieser Version von HOT nicht unterstützt."
-
-msgid ""
-"The gateway IP address. Set to any of [ null | ~ | \"\" ] to create the "
-"subnet without a gateway. If omitted, the first IP address within the subnet "
-"is assigned to the gateway."
-msgstr ""
-"Die Gateway-IP-Adresse. Auf einen der folgenden Werte gesetzt [ null | ~ | "
-"\"\" ], um das Teilnetz ohne Gateway zu erstellen. Bei Auslassung wird die "
-"erste IP-Adresse im Teilnetz dem Gateway zugewiesen."
 
 msgid "The host from the container URL."
 msgstr "Der Host aus der Container-URL."
@@ -4725,9 +4620,6 @@ msgstr ""
 "werden.\n"
 "Abgerufen: %(e)r"
 
-msgid "Unable to locate config file"
-msgstr "Konfigurationsdatei kann nicht gefunden werden"
-
 #, python-format
 msgid "Unexpected action %(action)s"
 msgstr "Unerwartete Aktion %(action)s"
@@ -4935,15 +4827,6 @@ msgstr "Der Wert muss gültige JSON sein: %s"
 #, python-format
 msgid "Value must match pattern: %s"
 msgstr "Wert muss Muster entsprechen: %s"
-
-msgid ""
-"Value which can be set or changed on stack update to trigger the resource "
-"for replacement with a new random string . The salt value itself is ignored "
-"by the random generator."
-msgstr ""
-"Wert, der bei der Stackaktualisierung festgelegt oder geändert werden kann, "
-"um auszulösen, dass die Ressource eine neue, zufällige Zeichenfolge "
-"einsetzt. Der Saltwert selbst wird vom Zufallsgenerator ignoriert. "
 
 #, python-format
 msgid "Version %(objver)s of %(objname)s is not supported"
