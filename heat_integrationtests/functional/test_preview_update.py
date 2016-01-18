@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 from heat_integrationtests.functional import functional_base
 
 test_template_one_resource = {
@@ -57,12 +56,9 @@ test_template_two_resource = {
 
 class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
 
-    def setUp(self):
-        super(UpdatePreviewStackTest, self).setUp()
+    def test_add_resource(self):
         self.stack_identifier = self.stack_create(
             template=test_template_one_resource)
-
-    def test_add_resource(self):
         result = self.preview_update_stack(self.stack_identifier,
                                            test_template_two_resource)
         changes = result['resource_changes']
@@ -78,6 +74,8 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
             self.assertEqual([], changes[section])
 
     def test_no_change(self):
+        self.stack_identifier = self.stack_create(
+            template=test_template_one_resource)
         result = self.preview_update_stack(self.stack_identifier,
                                            test_template_one_resource)
         changes = result['resource_changes']
@@ -90,6 +88,8 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
             self.assertEqual([], changes[section])
 
     def test_update_resource(self):
+        self.stack_identifier = self.stack_create(
+            template=test_template_one_resource)
         test_template_updated_resource = {
             'heat_template_version': '2013-05-23',
             'description': 'Test template to create one instance.',
@@ -118,19 +118,8 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
             self.assertEqual([], changes[section])
 
     def test_replaced_resource(self):
-        orig_template = {
-            'heat_template_version': '2013-05-23',
-            'description': 'Test template to create one instance.',
-            'resources': {
-                'test1': {
-                    'type': 'OS::Heat::TestResource',
-                    'properties': {
-                        'update_replace': False,
-                    }
-                }
-            }
-        }
-
+        self.stack_identifier = self.stack_create(
+            template=test_template_one_resource)
         new_template = {
             'heat_template_version': '2013-05-23',
             'description': 'Test template to create one instance.',
@@ -144,8 +133,7 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
             }
         }
 
-        stack_identifier = self.stack_create(template=orig_template)
-        result = self.preview_update_stack(stack_identifier, new_template)
+        result = self.preview_update_stack(self.stack_identifier, new_template)
         changes = result['resource_changes']
 
         replaced = changes['replaced'][0]['resource_name']
@@ -156,9 +144,9 @@ class UpdatePreviewStackTest(functional_base.FunctionalTestsBase):
             self.assertEqual([], changes[section])
 
     def test_delete_resource(self):
-        stack_identifier = self.stack_create(
+        self.stack_identifier = self.stack_create(
             template=test_template_two_resource)
-        result = self.preview_update_stack(stack_identifier,
+        result = self.preview_update_stack(self.stack_identifier,
                                            test_template_one_resource)
         changes = result['resource_changes']
 
