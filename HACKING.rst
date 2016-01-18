@@ -41,3 +41,12 @@ run --parallel` will run it in parallel (this is the default incantation tox
 uses.) More information about testr can be found at:
 http://wiki.openstack.org/testr
 
+
+Heat Specific Commandments
+--------------------------
+
+- [Heat301] Use LOG.warning() rather than LOG.warn().
+- [Heat302] Python 3: do not use dict.iteritems.
+- [Heat303] Python 3: do not use dict.iterkeys.
+- [Heat304] Python 3: do not use dict.itervalues.
+
