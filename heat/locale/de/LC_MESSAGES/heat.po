@@ -1,4 +1,4 @@
-# German translations for heat.
+# Translations template for heat.
 # Copyright (C) 2015 ORGANIZATION
 # This file is distributed under the same license as the heat project.
 #
@@ -10,18 +10,19 @@
 # Tom Cocozzello <tjcocozz@us.ibm.com>, 2015. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.1.dev1\n"
+"Project-Id-Version: heat 5.0.1.dev80\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-10-22 06:03+0000\n"
+"POT-Creation-Date: 2016-01-14 13:28+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2015-09-25 02:58+0000\n"
 "Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
 "Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: Babel 2.0\n"
+"X-Generator: Zanata 3.7.3\n"
 "Language-Team: German\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
 
 #, python-format
 msgid "\"%%s\" is not a valid keyword inside a %s definition"
@@ -2089,10 +2090,6 @@ msgid "Ip_version for this firewall rule."
 msgstr "Ip_version für diese Firewallregel."
 
 #, python-format
-msgid "Items to join must be strings %s"
-msgstr "Zu verknüpfende Elemente müssen Zeichenfolgen %s sein"
-
-#, python-format
 msgid ""
 "JSON body size (%(len)s bytes) exceeds maximum allowed size (%(limit)s "
 "bytes)."
@@ -2696,15 +2693,6 @@ msgstr "Netzschnittstellen-ID, die dieser EIP zuzuordnen ist. "
 
 msgid "Network interfaces to associate with instance."
 msgstr "Netzschnittstellen zum Zuordnen zur Instanz. "
-
-#, python-format
-msgid ""
-"Network this port belongs to. If you plan to use current port to assign "
-"Floating IP, you should specify %(fixed_ips)s with %(subnet)s"
-msgstr ""
-"Netz, zu dem dieser Port gehört. Wenn Sie planen, den aktuellen Port für die "
-"Zuweisung einer dynamischen IP-Adresse zu verwenden, sollten Sie "
-"%(fixed_ips)s  mit %(subnet)s angeben"
 
 msgid "Network to allocate floating IP from."
 msgstr "Netz, aus dem die dynamische IP-Adresse zuzuordnen ist."
