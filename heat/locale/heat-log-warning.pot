@@ -1,43 +1,43 @@
 # Translations template for heat.
-# Copyright (C) 2015 ORGANIZATION
+# Copyright (C) 2016 ORGANIZATION
 # This file is distributed under the same license as the heat project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2016.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 5.0.0.0b4.dev19\n"
+"Project-Id-Version: heat 6.0.0.0b2.dev223\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-05 06:03+0000\n"
+"POT-Creation-Date: 2016-01-18 06:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
+"Generated-By: Babel 2.2.0\n"
 
 #: heat/api/cloudwatch/watch.py:202
 #, python-format
 msgid "Invalid filter key %s, ignoring"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:290
+#: heat/api/openstack/v1/stacks.py:312
 #, python-format
 msgid "Old Engine Version: %s"
 msgstr ""
 
-#: heat/common/config.py:318
+#: heat/common/config.py:336
 msgid ""
 "stack_user_domain_id or stack_user_domain_name not set in heat.conf "
 "falling back to using default"
 msgstr ""
 
-#: heat/common/config.py:332
+#: heat/common/config.py:350
 msgid "Please update auth_encryption_key to be 32 characters."
 msgstr ""
 
-#: heat/common/context.py:165
+#: heat/common/context.py:179
 #, python-format
 msgid ""
 "Using the keystone_authtoken user as the heat trustee user directly is "
@@ -45,95 +45,100 @@ msgid ""
 " of your heat.conf file."
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:250
+#: heat/common/heat_keystoneclient.py:249
 #, python-format
 msgid "Truncating the username %s to the last 64 characters."
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:425
+#: heat/common/heat_keystoneclient.py:424
 #, python-format
 msgid "Unable to get details for project %s, not deleting"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:430
+#: heat/common/heat_keystoneclient.py:429
 msgid "Not deleting non heat-domain project"
 msgstr ""
 
-#: heat/common/profiler.py:35
+#: heat/common/profiler.py:36
 msgid ""
 "OSProfiler is enabled.\n"
 "It means that person who knows any of hmac_keys that are specified in "
-"/etc/heat/api-paste.ini can trace his requests. \n"
+"/etc/heat/heat.conf can trace his requests. \n"
 "In real life only operator can read this file so there is no security "
 "issue. Note that even if person can trigger profiler, only admin user can"
 " retrieve trace information.\n"
 "To disable OSprofiler set in heat.conf:\n"
 "[profiler]\n"
-"enabled=false"
+"profiler_enabled=false"
 msgstr ""
 
-#: heat/common/wsgi.py:434
+#: heat/common/wsgi.py:426
 #, python-format
 msgid "Unrecognised child %s"
 msgstr ""
 
-#: heat/common/wsgi.py:917
+#: heat/common/wsgi.py:903
 msgid "Unable to serialize exception response"
 msgstr ""
 
-#: heat/engine/attributes.py:177 heat/engine/attributes.py:183
-#: heat/engine/attributes.py:188 heat/engine/attributes.py:193
-#: heat/engine/attributes.py:200
+#: heat/engine/attributes.py:168 heat/engine/attributes.py:175
+#: heat/engine/attributes.py:181 heat/engine/attributes.py:187
+#: heat/engine/attributes.py:195
 #, python-format
 msgid "Attribute %(name)s is not of type %(att_type)s"
 msgstr ""
 
-#: heat/engine/environment.py:242 heat/engine/environment.py:248
+#: heat/engine/environment.py:271 heat/engine/environment.py:277
 #, python-format
 msgid "Removing %(item)s from %(path)s"
 msgstr ""
 
-#: heat/engine/environment.py:261
+#: heat/engine/environment.py:290
 #, python-format
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:1231
+#: heat/engine/resource.py:935
 #, python-format
-msgid "db error %s"
+msgid "Resource cannot be updated with it's live state in case of error: %s"
 msgstr ""
 
 #: heat/engine/resource.py:1312
 #, python-format
+msgid "db error %s"
+msgstr ""
+
+#: heat/engine/resource.py:1398
+#, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1360
+#: heat/engine/resource.py:1450
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1397
+#: heat/engine/resource.py:1491
 #, python-format
 msgid "Resolving 'show' attribute has failed : %s"
 msgstr ""
 
-#: heat/engine/resource.py:1586
+#: heat/engine/resource.py:1724
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:1303
+#: heat/engine/service.py:1433
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1568
+#: heat/engine/service.py:1695
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1597
+#: heat/engine/service.py:1723
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -143,16 +148,44 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:320
+#: heat/engine/stack.py:368
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
-#: heat/engine/stack_lock.py:119
+#: heat/engine/stack.py:795
+#, python-format
+msgid ""
+"Failed to set state of stack %(name)s with traversal ID %(trvsl_id)s, to "
+"%(action)s_%(status)s"
+msgstr ""
+
+#: heat/engine/stack.py:1110 heat/engine/stack.py:1136
+#, python-format
+msgid ""
+"Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
+"stack %(action)s"
+msgstr ""
+
+#: heat/engine/stack.py:1181
+#, python-format
+msgid ""
+"Failed to store stack %(name)s with traversal ID %(trvsl_id)s, not "
+"trigerring rollback."
+msgstr ""
+
+#: heat/engine/stack.py:1874
+#, python-format
+msgid ""
+"Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
+"stack purge"
+msgstr ""
+
+#: heat/engine/stack_lock.py:120
 #, python-format
 msgid "Lock was already released on stack %s!"
 msgstr ""
 
-#: heat/engine/watchrule.py:86
+#: heat/engine/watchrule.py:88
 #, python-format
 msgid "WatchRule.load (%(watch_name)s) db error %(ex)s"
 msgstr ""
@@ -162,64 +195,59 @@ msgstr ""
 msgid "Could not process watch state %s for stack"
 msgstr ""
 
-#: heat/engine/watchrule.py:360
+#: heat/engine/watchrule.py:359
 #, python-format
 msgid "Unable to override state %(state)s for watch %(name)s"
 msgstr ""
 
-#: heat/engine/clients/__init__.py:70
+#: heat/engine/clients/__init__.py:81
 #, python-format
 msgid "Requested client \"%s\" not found"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:116
-#, python-format
-msgid "Server (%(server)s) not found: %(ex)s"
-msgstr ""
-
-#: heat/engine/clients/os/nova.py:132
+#: heat/engine/clients/os/nova.py:130
 #, python-format
 msgid ""
 "Received an OverLimit response when fetching server (%(id)s) : "
 "%(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:139
+#: heat/engine/clients/os/nova.py:137
 #, python-format
 msgid ""
 "Received the following exception when fetching server (%(id)s) : "
 "%(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:155
+#: heat/engine/clients/os/nova.py:153
 #, python-format
 msgid ""
 "Server %(name)s (%(id)s) received an OverLimit response during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:163
+#: heat/engine/clients/os/nova.py:161
 #, python-format
 msgid ""
 "Server \"%(name)s\" (%(id)s) received the following exception during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:529
+#: heat/engine/clients/os/nova.py:526
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/resources/signal_responder.py:105
+#: heat/engine/resources/signal_responder.py:142
 msgid "Cannot generate signed url, unable to create keypair"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:182
+#: heat/engine/resources/stack_resource.py:181
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
 
-#: heat/engine/resources/stack_user.py:106
+#: heat/engine/resources/stack_user.py:99
 msgid "Reverting to legacy user delete path"
 msgstr ""
 
@@ -228,18 +256,18 @@ msgstr ""
 msgid "Overwriting Metadata item for id %s!"
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/eip.py:407
+#: heat/engine/resources/aws/ec2/eip.py:380
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/instance.py:679
+#: heat/engine/resources/aws/ec2/instance.py:681
 #, python-format
 msgid ""
 "There is no change of \"%(net_interfaces)s\" for instance %(server)s, do "
 "nothing when updating."
 msgstr ""
 
-#: heat/engine/resources/aws/ec2/instance.py:810
+#: heat/engine/resources/aws/ec2/instance.py:808
 #, python-format
 msgid ""
 "\"%(subnet)s\" will be ignored if specified \"%(net_interfaces)s\". So if"
@@ -247,56 +275,56 @@ msgid ""
 "\"%(subnet)s\" property."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:409
+#: heat/engine/resources/openstack/neutron/port.py:442
 #, python-format
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/swift/swift.py:241
+#: heat/engine/resources/openstack/swift/swift.py:240
 #, python-format
 msgid "Head container failed: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:373
-#, python-format
-msgid ""
-"Stack %(name)s (%(id)s) received an OverLimit response during "
-"instance.get(): %(exception)s"
-msgstr ""
-
-#: heat/engine/resources/openstack/trove/trove_cluster.py:168
+#: heat/engine/resources/openstack/trove/cluster.py:169
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
 "clusters.get(): %(exception)s"
 msgstr ""
 
-#: heat/tests/generic_resource.py:44
+#: heat/engine/resources/openstack/trove/os_database.py:369
+#, python-format
+msgid ""
+"Stack %(name)s (%(id)s) received an OverLimit response during "
+"instance.get(): %(exception)s"
+msgstr ""
+
+#: heat/tests/generic_resource.py:42
 #, python-format
 msgid "Creating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:48
+#: heat/tests/generic_resource.py:46
 #, python-format
 msgid "Updating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:52
+#: heat/tests/generic_resource.py:50
 #, python-format
 msgid "Deleting generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:59
+#: heat/tests/generic_resource.py:57
 #, python-format
 msgid "Suspending generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:63
+#: heat/tests/generic_resource.py:61
 #, python-format
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:166
+#: heat/tests/generic_resource.py:192
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
