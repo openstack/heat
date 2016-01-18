@@ -184,10 +184,14 @@ class RequestContext(context.RequestContext):
         cfg.CONF.import_group('keystone_authtoken',
                               'keystonemiddleware.auth_token')
 
+        trustee_user_domain = 'default'
+        if 'user_domain_id' in cfg.CONF.keystone_authtoken:
+            trustee_user_domain = cfg.CONF.keystone_authtoken.user_domain_id
+
         self._trusts_auth_plugin = v3.Password(
             username=cfg.CONF.keystone_authtoken.admin_user,
             password=cfg.CONF.keystone_authtoken.admin_password,
-            user_domain_id=self.user_domain,
+            user_domain_id=trustee_user_domain,
             auth_url=self.keystone_v3_endpoint,
             trust_id=self.trust_id)
         return self._trusts_auth_plugin
