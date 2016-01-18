@@ -27,7 +27,6 @@ if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
 fi
 
 echo -e 'notification_driver=messagingv2\n' >> $localconf
-echo -e 'num_engine_workers=4\n' >> $localconf
 echo -e 'hidden_stack_tags=hidden\n' >> $localconf
 echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf
 
