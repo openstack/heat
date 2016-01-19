@@ -322,6 +322,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
             'create_software_deployment', 'call',
             server_id='9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             config_id='48e8ade1-9196-42d5-89a2-f709fde42632',
+            deployment_id='86729f02-4648-44d8-af44-d0ec65b6abc9',
             stack_user_project_id='65728b74-cfe7-4f17-9c15-11d4f686e591',
             input_values={},
             action='INIT',

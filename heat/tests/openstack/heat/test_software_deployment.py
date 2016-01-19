@@ -294,7 +294,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def mock_deployment(self):
         sd = {
-            'id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2'
         }
         self.rpc_client.create_software_deployment.return_value = sd
@@ -305,11 +304,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.mock_software_config()
         derived_sc = self.mock_derived_software_config()
-        sd = self.mock_deployment()
+        self.mock_deployment()
 
         self.deployment.handle_create()
 
-        self.assertEqual(sd['id'], self.deployment.resource_id)
         self.assertEqual({
             'config': 'the config',
             'group': 'Test::Group',
@@ -363,6 +361,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual(
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
+             'deployment_id': self.deployment.resource_id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -371,11 +370,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_handle_create_without_config(self):
         self._create_stack(self.template_no_config)
-        sd = self.mock_deployment()
+        self.mock_deployment()
         derived_sc = self.mock_derived_software_config()
         self.deployment.handle_create()
 
-        self.assertEqual(sd['id'], self.deployment.resource_id)
         call_arg = self.rpc_client.create_software_config.call_args[1]
         call_arg['inputs'] = sorted(
             call_arg['inputs'], key=lambda k: k['name'])
@@ -426,6 +424,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual(
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
+             'deployment_id': self.deployment.resource_id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -437,11 +436,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.mock_software_component()
         derived_sc = self.mock_derived_software_config()
-        sd = self.mock_deployment()
+        self.mock_deployment()
 
         self.deployment.handle_create()
 
-        self.assertEqual(sd['id'], self.deployment.resource_id)
         self.assertEqual({
             'config': {
                 'configs': [
@@ -523,6 +521,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual(
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
+             'deployment_id': self.deployment.resource_id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -534,13 +533,13 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.mock_software_config()
         derived_sc = self.mock_derived_software_config()
-        sd = self.mock_deployment()
+        self.mock_deployment()
 
         self.deployment.handle_create()
-        self.assertEqual(sd['id'], self.deployment.resource_id)
         self.assertEqual(
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
+             'deployment_id': self.deployment.resource_id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'IN_PROGRESS',
@@ -623,11 +622,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.mock_deployment()
         self.rpc_client.show_software_deployment.return_value = sd
 
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         self.deployment.handle_delete()
         self.deployment.check_delete_complete()
         self.assertEqual(
-            (self.ctx, sd['id']),
+            (self.ctx, self.deployment.resource_id),
             self.rpc_client.delete_software_deployment.call_args[0])
 
     def test_handle_delete_resource_id_is_None(self):
@@ -643,7 +642,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
 
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
 
         self.rpc_client.show_software_deployment.return_value = sd
         self.rpc_client.update_software_deployment.return_value = sd
@@ -698,11 +697,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         # otherwise the sd data will residue in db
         self._create_stack(self.template)
         sd = self.mock_deployment()
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         self.rpc_client.show_software_deployment.return_value = sd
         self.assertTrue(self.deployment.check_delete_complete())
         self.assertEqual(
-            (self.ctx, sd['id']),
+            (self.ctx, self.deployment.resource_id),
             self.rpc_client.delete_software_deployment.call_args[0])
 
     def test_handle_update(self):
@@ -713,7 +712,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         rsrc = self.stack['deployment_mysql']
 
         self.rpc_client.show_software_deployment.return_value = sd
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
         prop_diff = {
             'config': config_id,
@@ -730,7 +729,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             self.rpc_client.show_software_config.call_args[0])
 
         self.assertEqual(
-            (self.ctx, sd['id']),
+            (self.ctx, self.deployment.resource_id),
             self.rpc_client.show_software_deployment.call_args[0])
 
         self.assertEqual(
@@ -753,7 +752,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.mock_deployment()
 
         self.rpc_client.show_software_deployment.return_value = sd
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
 
         # first, handle the suspend
         self.deployment.handle_suspend()
@@ -942,7 +941,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         rsrc = self.stack['deployment_mysql']
 
         self.rpc_client.show_software_deployment.return_value = sd
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
         prop_diff = {'config': config_id}
         props = copy.copy(rsrc.properties.data)
@@ -967,7 +966,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         rsrc = self.stack['deployment_mysql']
 
         self.rpc_client.show_software_deployment.return_value = sd
-        self.deployment.resource_id = sd['id']
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
         prop_diff = {'config': config_id}
         props = copy.copy(rsrc.properties.data)
@@ -1014,7 +1013,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.mock_deployment()
 
         self.rpc_client.show_software_deployment.return_value = sd
-        self.deployment.resource_id = sd['id']
 
         self.assertIsNotNone(self.deployment.handle_create())
         self.assertIsNone(self.deployment.handle_delete())

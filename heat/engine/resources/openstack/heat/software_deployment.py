@@ -13,6 +13,7 @@
 
 import copy
 import six
+import uuid
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -263,12 +264,14 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             action)
 
         if self.resource_id is None:
+            resource_id = str(uuid.uuid4())
+            self.resource_id_set(resource_id)
             sd = self.rpc_client().create_software_deployment(
                 self.context,
+                deployment_id=resource_id,
                 server_id=self.properties[SoftwareDeployment.SERVER],
                 stack_user_project_id=self.stack.stack_user_project_id,
                 **props)
-            self.resource_id_set(sd[rpc_api.SOFTWARE_DEPLOYMENT_ID])
         else:
             sd = self.rpc_client().show_software_deployment(
                 self.context, self.resource_id)

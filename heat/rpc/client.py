@@ -39,6 +39,7 @@ class EngineClient(object):
         1.18 - Add show_nested to validate_template
         1.19 - Add show_output and list_outputs for returning stack outputs
         1.20 - Add resolve_outputs to stack show
+        1.21 - Add deployment_id to create_software_deployment
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -623,12 +624,14 @@ class EngineClient(object):
     def create_software_deployment(self, cnxt, server_id, config_id=None,
                                    input_values=None, action='INIT',
                                    status='COMPLETE', status_reason='',
-                                   stack_user_project_id=None):
+                                   stack_user_project_id=None,
+                                   deployment_id=None):
         input_values = input_values or {}
         return self.call(cnxt, self.make_msg(
             'create_software_deployment',
             server_id=server_id,
             config_id=config_id,
+            deployment_id=deployment_id,
             input_values=input_values,
             action=action,
             status=status,
