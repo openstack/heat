@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    A new ``OS::Neutron:AddressScope`` resource that helps in
+    managing the lifecycle of neutron address scope.
+    Availability of this resource depends on availability of
+    neutron ``address-scope`` API extension. This resource can
+    be associated with multiple subnet pools in a one-to-many
+    relationship. The subnet pools under an address scope must
+    not overlap.
