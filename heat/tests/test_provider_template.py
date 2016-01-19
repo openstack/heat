@@ -613,7 +613,11 @@ class ProviderTemplateTest(common.HeatTestCase):
 
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": test_templ_name}}}}
-        env = environment.Environment(env_str)
+        global_env = environment.Environment({}, user_env=False)
+        global_env.load(env_str)
+        with mock.patch('heat.engine.resources._environment',
+                        global_env):
+            env = environment.Environment({})
         cls = env.get_class('OS::ResourceType', 'fred')
         self.assertNotEqual(template_resource.TemplateResource, cls)
         self.assertTrue(issubclass(cls, template_resource.TemplateResource))
@@ -639,10 +643,6 @@ class ProviderTemplateTest(common.HeatTestCase):
             test_templ = test_templ_file.read()
         self.assertTrue(test_templ, "Empty test template")
         self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('file',)
-                     ).AndRaise(urlfetch.URLFetchError(
-                         _('Failed to retrieve template')))
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https')).AndReturn(test_templ)
         parsed_test_templ = template_format.parse(test_templ)

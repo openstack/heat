@@ -989,8 +989,6 @@ class EngineService(service.Service):
         """
         try:
             resource_class = resources.global_env().get_class(type_name)
-        except exception.StackValidationFailed:
-            raise exception.ResourceTypeNotFound(type_name=type_name)
         except exception.NotFound as ex:
             raise exception.StackValidationFailed(message=ex.message)
 
@@ -1021,8 +1019,6 @@ class EngineService(service.Service):
         try:
             return resources.global_env().get_class(
                 type_name).resource_to_template(type_name)
-        except exception.StackValidationFailed:
-            raise exception.ResourceTypeNotFound(type_name=type_name)
         except exception.NotFound as ex:
             raise exception.StackValidationFailed(message=ex.message)
 

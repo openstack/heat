@@ -112,6 +112,12 @@ class ResourceInfo(object):
     def matches(self, resource_type):
         return False
 
+    def get_class(self):
+        raise NotImplemented
+
+    def get_class_to_instantiate(self):
+        return self.get_class()
+
     def __str__(self):
         return '[%s](User:%s) %s -> %s' % (self.description,
                                            self.user_resource,
@@ -140,10 +146,20 @@ class TemplateResourceInfo(ResourceInfo):
 
     def get_class(self):
         from heat.engine.resources import template_resource
+        if self.user_resource:
+            allowed_schemes = template_resource.REMOTE_SCHEMES
+        else:
+            allowed_schemes = template_resource.LOCAL_SCHEMES
+        data = template_resource.TemplateResource.get_template_file(
+            self.template_name,
+            allowed_schemes)
         env = self.registry.environment
-        return template_resource.generate_class(str(self.name),
-                                                self.template_name,
-                                                env)
+        return template_resource.generate_class_from_template(str(self.name),
+                                                              data, env)
+
+    def get_class_to_instantiate(self):
+        from heat.engine.resources import template_resource
+        return template_resource.TemplateResource
 
 
 class MapResourceInfo(ResourceInfo):
@@ -398,6 +414,13 @@ class ResourceRegistry(object):
                 return match
 
     def get_class(self, resource_type, resource_name=None):
+        info = self.get_resource_info(resource_type,
+                                      resource_name=resource_name)
+        if info is None:
+            raise exception.ResourceTypeNotFound(type_name=resource_type)
+        return info.get_class()
+
+    def get_class_to_instantiate(self, resource_type, resource_name=None):
         if resource_type == "":
             msg = _('Resource "%s" has no type') % resource_name
             raise exception.StackValidationFailed(message=msg)
@@ -414,7 +437,7 @@ class ResourceRegistry(object):
         if info is None:
             msg = _("Unknown resource Type : %s") % resource_type
             raise exception.StackValidationFailed(message=msg)
-        return info.get_class()
+        return info.get_class_to_instantiate()
 
     def as_dict(self):
         """Return user resources in a dict format."""
@@ -520,6 +543,10 @@ class Environment(object):
 
     def get_class(self, resource_type, resource_name=None):
         return self.registry.get_class(resource_type, resource_name)
+
+    def get_class_to_instantiate(self, resource_type, resource_name=None):
+        return self.registry.get_class_to_instantiate(resource_type,
+                                                      resource_name)
 
     def get_types(self, support_status=None):
         return self.registry.get_types(support_status)
