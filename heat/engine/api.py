@@ -204,7 +204,7 @@ def format_stack(stack, preview=False):
         rpc_api.STACK_CREATION_TIME: created_time.isoformat(),
         rpc_api.STACK_UPDATED_TIME: updated_time,
         rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO(?) Not implemented yet
-        rpc_api.STACK_PARAMETERS: stack.parameters.map(str),
+        rpc_api.STACK_PARAMETERS: stack.parameters.map(six.text_type),
         rpc_api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         rpc_api.STACK_TMPL_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         rpc_api.STACK_CAPABILITIES: [],   # TODO(?) Not implemented yet
