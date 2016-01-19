@@ -11,6 +11,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from debtcollector import removals
 from oslo_config import cfg
 from oslo_middleware import ssl
 
@@ -22,6 +23,10 @@ ssl_middleware_opts = [
                     "the original request protocol scheme was, even if it was "
                     "removed by an SSL terminator proxy.")
 ]
+
+
+removals.removed_module(__name__,
+                        "oslo_middleware.http_proxy_to_wsgi")
 
 
 class SSLMiddleware(ssl.SSLMiddleware):
