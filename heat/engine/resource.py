@@ -128,15 +128,10 @@ class Resource(object):
             # Call is already for a subclass, so pass it through
             ResourceClass = cls
         else:
-            from heat.engine.resources import template_resource
-
             registry = stack.env.registry
-            try:
-                ResourceClass = registry.get_class(definition.resource_type,
-                                                   resource_name=name,
-                                                   files=stack.t.files)
-            except exception.NotFound:
-                ResourceClass = template_resource.TemplateResource
+            ResourceClass = registry.get_class_to_instantiate(
+                definition.resource_type,
+                resource_name=name)
 
             assert issubclass(ResourceClass, Resource)
 
