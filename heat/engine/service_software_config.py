@@ -118,10 +118,8 @@ class SoftwareConfigService(service.Service):
             requests.put(metadata_put_url, json_md)
         if metadata_queue_id:
             project = stack_user_project_id
-            token = self._get_user_token(cnxt, rs, project)
+            queue = self._get_zaqar_queue(cnxt, rs, project, metadata_queue_id)
             zaqar_plugin = cnxt.clients.client_plugin('zaqar')
-            zaqar = zaqar_plugin.create_for_tenant(project, token)
-            queue = zaqar.queue(metadata_queue_id)
             queue.post({'body': md, 'ttl': zaqar_plugin.DEFAULT_TTL})
 
     def _refresh_swift_software_deployment(self, cnxt, sd, deploy_signal_id):
@@ -170,24 +168,32 @@ class SoftwareConfigService(service.Service):
         return software_deployment_object.SoftwareDeployment.get_by_id(
             cnxt, sd.id)
 
-    def _get_user_token(self, cnxt, rs, project):
-        user = password = None
+    def _get_zaqar_queue(self, cnxt, rs, project, queue_name):
+        user = password = signed_url_data = None
         for rd in rs.data:
             if rd.key == 'password':
                 password = crypt.decrypt(rd.decrypt_method, rd.value)
             if rd.key == 'user_id':
                 user = rd.value
-        keystone = cnxt.clients.client('keystone')
-        return keystone.stack_domain_user_token(
-            user_id=user, project_id=project, password=password)
+            if rd.key == 'zaqar_queue_signed_url_data':
+                signed_url_data = jsonutils.loads(rd.value)
+        zaqar_plugin = cnxt.clients.client_plugin('zaqar')
+        if signed_url_data is None:
+            keystone = cnxt.clients.client('keystone')
+            token = keystone.stack_domain_user_token(
+                user_id=user, project_id=project, password=password)
+            zaqar = zaqar_plugin.create_for_tenant(project, token)
+        else:
+            signed_url_data.pop('project')
+            zaqar = zaqar_plugin.create_from_signed_url(project,
+                                                        **signed_url_data)
+
+        return zaqar.queue(queue_name)
 
     def _refresh_zaqar_software_deployment(self, cnxt, sd, deploy_queue_id):
-        rs = db_api.resource_get_by_physical_resource_id(cnxt, sd.server_id)
+        rs = db_api.resource_get_by_physical_resource_id(cnxt, sd.id)
         project = sd.stack_user_project_id
-        token = self._get_user_token(cnxt, rs, project)
-        zaqar_plugin = cnxt.clients.client_plugin('zaqar')
-        zaqar = zaqar_plugin.create_for_tenant(project, token)
-        queue = zaqar.queue(deploy_queue_id)
+        queue = self._get_zaqar_queue(cnxt, rs, project, deploy_queue_id)
 
         messages = list(queue.pop())
         if messages:

@@ -17,7 +17,7 @@ from heat.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
-from zaqarclient.queues.v1 import client as zaqarclient
+from zaqarclient.queues.v2 import client as zaqarclient
 from zaqarclient.transport import errors as zaqar_errors
 
 from heat.engine.clients import client_plugin
@@ -53,9 +53,22 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
         conf = {'auth_opts': auth_opts}
         endpoint = self.url_for(service_type=self.MESSAGING)
 
-        client = zaqarclient.Client(url=endpoint, conf=conf, version=1.1)
+        return zaqarclient.Client(url=endpoint, conf=conf, version=2)
 
-        return client
+    def create_from_signed_url(self, project_id, paths, expires, methods,
+                               signature):
+        opts = {
+            'paths': paths,
+            'expires': expires,
+            'methods': methods,
+            'signature': signature,
+            'os_project_id': project_id,
+        }
+        auth_opts = {'backend': 'signed-url',
+                     'options': opts}
+        conf = {'auth_opts': auth_opts}
+        endpoint = self.url_for(service_type=self.MESSAGING)
+        return zaqarclient.Client(url=endpoint, conf=conf, version=2)
 
     def is_not_found(self, ex):
         return isinstance(ex, zaqar_errors.ResourceNotFound)

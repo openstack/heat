@@ -14,6 +14,7 @@
 import datetime
 import uuid
 
+import mock
 import mox
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
@@ -480,7 +481,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
         signal = json.loads(handle.FnGetAtt('signal'))
         self.assertIn('alarm_url', signal)
 
-    def test_getatt_signal_zaqar(self):
+    @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
+    def test_getatt_signal_zaqar(self, mock_signed_url):
         handle = self._create_heat_handle(
             template=test_template_heat_waithandle_zaqar)
         self.assertIsNone(handle.FnGetAtt('token'))

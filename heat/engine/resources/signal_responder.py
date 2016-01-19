@@ -290,6 +290,14 @@ class SignalResponder(stack_user.StackUser):
             self._create_user()
 
         queue_id = self.physical_resource_name()
+        zaqar_plugin = self.client_plugin('zaqar')
+        zaqar = zaqar_plugin.create_for_tenant(
+            self.stack.stack_user_project_id, self._user_token())
+        queue = zaqar.queue(queue_id)
+        signed_url_data = queue.signed_url(
+            ['messages'], methods=['GET', 'DELETE'])
+        self.data_set('zaqar_queue_signed_url_data',
+                      jsonutils.dumps(signed_url_data))
         self.data_set('zaqar_signal_queue_id', queue_id)
         return queue_id
 
