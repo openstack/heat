@@ -132,8 +132,8 @@ class ResourceChainTests(common.HeatTestCase):
 
         # Setup
         tmpl_def = copy.deepcopy(TEMPLATE)
-        res_list = \
-            tmpl_def['resources']['test-chain']['properties']['resources']
+        tmpl_res_prop = tmpl_def['resources']['test-chain']['properties']
+        res_list = tmpl_res_prop['resources']
         res_list.append('OS::Heat::RandomString')
 
         # Test
@@ -148,8 +148,8 @@ class ResourceChainTests(common.HeatTestCase):
     def test_validate_fake_resource_type(self):
         # Setup
         tmpl_def = copy.deepcopy(TEMPLATE)
-        res_list = \
-            tmpl_def['resources']['test-chain']['properties']['resources']
+        tmpl_res_prop = tmpl_def['resources']['test-chain']['properties']
+        res_list = tmpl_res_prop['resources']
         res_list.append('foo')
 
         # Test

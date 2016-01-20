@@ -1447,8 +1447,8 @@ class LoadBalancerTest(common.HeatTestCase):
             'intermediateCertificate': '', 'secureTrafficOnly': False}
         ssl_termination_api = copy.deepcopy(ssl_termination_template)
         lb_name = list(six.iterkeys(template['Resources']))[0]
-        template['Resources'][lb_name]['Properties']['sslTermination'] = \
-            ssl_termination_template
+        template['Resources'][lb_name]['Properties']['sslTermination'] = (
+            ssl_termination_template)
         # The SSL termination config is done post-creation, so no need
         # to modify self.expected_body
         rsrc, fake_lb = self._mock_loadbalancer(template,

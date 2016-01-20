@@ -136,8 +136,8 @@ class ServerNetworkMixin(object):
                             is None):
                         del pair[
                             neutron_port.Port.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS]
-                kwargs[neutron_port.Port.ALLOWED_ADDRESS_PAIRS] = \
-                    allowed_address_pairs
+                port_address_pairs = neutron_port.Port.ALLOWED_ADDRESS_PAIRS
+                kwargs[port_address_pairs] = allowed_address_pairs
 
         return kwargs
 
@@ -393,8 +393,8 @@ class ServerNetworkMixin(object):
 
         # In case of convergence, during rollback, the previous rsrc is
         # already selected and is being acted upon.
-        prev_server = self if convergence else \
-            self.stack._backup_stack().resources.get(self.name)
+        backup_res = self.stack._backup_stack().resources.get(self.name)
+        prev_server = self if convergence else backup_res
 
         if convergence:
             rsrc, rsrc_owning_stack, stack = resource.Resource.load(

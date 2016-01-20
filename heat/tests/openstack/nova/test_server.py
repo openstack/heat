@@ -928,8 +928,8 @@ class ServersTest(common.HeatTestCase):
         return metadata_url, server
 
     def test_server_create_software_config_poll_temp_url(self):
-        metadata_url, server = \
-            self._server_create_software_config_poll_temp_url()
+        metadata_url, server = (
+            self._server_create_software_config_poll_temp_url())
 
         self.assertEqual({
             'os-collect-config': {
@@ -942,8 +942,8 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_create_software_config_poll_temp_url_metadata(self):
         md = {'os-collect-config': {'polling_interval': 10}}
-        metadata_url, server = \
-            self._server_create_software_config_poll_temp_url(md=md)
+        metadata_url, server = (
+            self._server_create_software_config_poll_temp_url(md=md))
 
         self.assertEqual({
             'os-collect-config': {
