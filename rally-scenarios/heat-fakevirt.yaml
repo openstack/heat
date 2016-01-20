@@ -36,3 +36,40 @@
         users:
           tenants: 1
           users_per_tenant: 1
+
+  {% for s in ("create_stack_and_show_output_new", "create_stack_and_show_output_old") %}
+  CustomHeatBenchmark.{{s}}:
+    -
+      args:
+        template_path: "~/.rally/extra/rg_template_with_outputs.yaml"
+        output_key: "val1"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}
+
+  {% for s in ("create_stack_and_list_output_new", "create_stack_and_list_output_old") %}
+  CustomHeatBenchmark.{{s}}:
+    -
+      args:
+        template_path: "~/.rally/extra/rg_template_with_outputs.yaml"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}
