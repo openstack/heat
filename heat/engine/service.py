@@ -294,7 +294,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.27'
+    RPC_API_VERSION = '1.28'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -1247,6 +1247,19 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
         if s:
             return s.raw_template.template
+        return None
+
+    @context.request_context
+    def get_environment(self, cnxt, stack_identity):
+        """Returns the environment for an existing stack.
+
+        :param cnxt: RPC context
+        :param stack_identity: identifies the stack
+        :rtype: dict
+        """
+        s = self._get_stack(cnxt, stack_identity, show_deleted=True)
+        if s:
+            return s.raw_template.environment
         return None
 
     @context.request_context

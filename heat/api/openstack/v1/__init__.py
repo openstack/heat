@@ -170,7 +170,8 @@ class API(wsgi.Router):
                     {
                         'name': 'stack_lookup_subpath',
                         'url': '/stacks/{stack_name}/'
-                               '{path:resources|events|template|actions}',
+                               '{path:resources|events|template|actions'
+                               '|environment}',
                         'action': 'lookup',
                         'method': 'GET'
                     },
@@ -191,6 +192,12 @@ class API(wsgi.Router):
                         'name': 'stack_lookup',
                         'url': '/stacks/{stack_name}/{stack_id}/template',
                         'action': 'template',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_lookup',
+                        'url': '/stacks/{stack_name}/{stack_id}/environment',
+                        'action': 'environment',
                         'method': 'GET'
                     },
 

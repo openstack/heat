@@ -1068,6 +1068,35 @@ class StackServiceTest(common.HeatTestCase):
         outputs = self.eng.list_outputs(self.ctx, mock.ANY)
         self.assertEqual([], outputs)
 
+    def test_get_environment(self):
+        # Setup
+        t = template_format.parse(tools.wp_template)
+        env = {'parameters': {'KeyName': 'EnvKey'}}
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(self.ctx, 'get_env_stack', tmpl)
+
+        mock_get_stack = self.patchobject(self.eng, '_get_stack')
+        mock_get_stack.return_value = mock.MagicMock()
+        mock_get_stack.return_value.raw_template.environment = env
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+
+        # Test
+        found = self.eng.get_environment(self.ctx, stack.identifier())
+
+        # Verify
+        self.assertEqual(env, found)
+
+    def test_get_environment_no_env(self):
+        # Setup
+        exc = exception.EntityNotFound(entity='stack', name='missing')
+        self.patchobject(self.eng, '_get_stack', side_effect=exc)
+
+        # Test
+        self.assertRaises(dispatcher.ExpectedException,
+                          self.eng.get_environment,
+                          self.ctx,
+                          'irrelevant')
+
     def test_stack_show_output(self):
         t = template_format.parse(tools.wp_template)
         t['outputs'] = {'test': {'value': 'first', 'description': 'sec'},

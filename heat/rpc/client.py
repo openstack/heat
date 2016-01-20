@@ -48,6 +48,7 @@ class EngineClient(object):
         1.25 - list_stack_resource filter update
         1.26 - Add mark_unhealthy
         1.27 - Add check_software_deployment
+        1.28 - Add environment_show call
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -371,6 +372,19 @@ class EngineClient(object):
         """
         return self.call(ctxt, self.make_msg('get_template',
                                              stack_identity=stack_identity))
+
+    def get_environment(self, context, stack_identity):
+        """Returns the environment for an existing stack.
+
+        :param context: RPC context
+        :param stack_identity: identifies the stack
+        :rtype: dict
+        """
+
+        return self.call(context,
+                         self.make_msg('get_environment',
+                                       stack_identity=stack_identity),
+                         version='1.28')
 
     def delete_stack(self, ctxt, stack_identity, cast=True):
         """Deletes a given stack.

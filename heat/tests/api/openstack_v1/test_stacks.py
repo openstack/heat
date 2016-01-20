@@ -1680,6 +1680,49 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(template, response)
         self.m.VerifyAll()
 
+    def test_get_environment(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'environment', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
+        env = {'parameters': {'Foo': 'bar'}}
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('get_environment', {'stack_identity': dict(identity)},),
+            version='1.28',
+        ).AndReturn(env)
+        self.m.ReplayAll()
+
+        response = self.controller.environment(req, tenant_id=identity.tenant,
+                                               stack_name=identity.stack_name,
+                                               stack_id=identity.stack_id)
+
+        self.assertEqual(env, response)
+        self.m.VerifyAll()
+
+    def test_get_environment_no_env(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'environment', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('get_environment', {'stack_identity': dict(identity)},),
+            version='1.28',
+        ).AndReturn(None)
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.environment,
+                          req,
+                          tenant_id=identity.tenant,
+                          stack_name=identity.stack_name,
+                          stack_id=identity.stack_id)
+
+        self.m.VerifyAll()
+
     def test_get_template_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'template', False)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
