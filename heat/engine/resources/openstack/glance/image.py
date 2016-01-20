@@ -58,7 +58,8 @@ class GlanceImage(resource.Resource):
               'and means no limit on the disk size.'),
             constraints=[
                 constraints.Range(min=0),
-            ]
+            ],
+            default=0
         ),
         MIN_RAM: properties.Schema(
             properties.Schema.INTEGER,
@@ -66,12 +67,14 @@ class GlanceImage(resource.Resource):
               'is 0 if not specified and means no limit on the ram size.'),
             constraints=[
                 constraints.Range(min=0),
-            ]
+            ],
+            default=0
         ),
         PROTECTED: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Whether the image can be deleted. If the value is True, '
-              'the image is protected and cannot be deleted.')
+              'the image is protected and cannot be deleted.'),
+            default=False
         ),
         DISK_FORMAT: properties.Schema(
             properties.Schema.STRING,
