@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import mock
 from oslo_config import cfg
 import six
@@ -22,6 +23,7 @@ from heat.common import template_format
 from heat.engine.clients.os import senlin
 from heat.engine.resources.openstack.senlin import cluster as sc
 from heat.engine import scheduler
+from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 from senlinclient.common import exc
@@ -148,6 +150,69 @@ class SenlinClusterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
         expected = 'Error: resources.senlin-cluster: oops'
         self.assertEqual(expected, six.text_type(ex))
+
+    def test_cluster_update_profile(self):
+        cluster = self._create_cluster(self.t)
+        new_t = copy.deepcopy(self.t)
+        props = new_t['resources']['senlin-cluster']['properties']
+        props['profile'] = 'new_profile'
+        props['name'] = 'new_name'
+        rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
+        new_cluster = rsrc_defns['senlin-cluster']
+        self.senlin_mock.update_cluster.return_value = mock.Mock(
+            location='/actions/fake-action')
+        self.senlin_mock.get_action.return_value = mock.Mock(
+            status='SUCCEEDED')
+        scheduler.TaskRunner(cluster.update, new_cluster)()
+        self.assertEqual((cluster.UPDATE, cluster.COMPLETE), cluster.state)
+        cluster_update_kwargs = {
+            'profile_id': 'new_profile',
+            'name': 'new_name'
+        }
+        self.senlin_mock.update_cluster.assert_called_once_with(
+            cluster.resource_id, **cluster_update_kwargs)
+        self.senlin_mock.get_action.assert_called_once_with(
+            'fake-action')
+
+    def test_cluster_update_desire_capacity(self):
+        cluster = self._create_cluster(self.t)
+        new_t = copy.deepcopy(self.t)
+        props = new_t['resources']['senlin-cluster']['properties']
+        props['desired_capacity'] = 10
+        rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
+        new_cluster = rsrc_defns['senlin-cluster']
+        self.senlin_mock.cluster_resize.return_value = {
+            'action': 'fake-action'}
+        self.senlin_mock.get_action.return_value = mock.Mock(
+            status='SUCCEEDED')
+        scheduler.TaskRunner(cluster.update, new_cluster)()
+        self.assertEqual((cluster.UPDATE, cluster.COMPLETE), cluster.state)
+        cluster_resize_kwargs = {
+            'adjustment_type': 'EXACT_CAPACITY',
+            'number': 10
+        }
+        self.senlin_mock.cluster_resize.assert_called_once_with(
+            cluster.resource_id, **cluster_resize_kwargs)
+        self.senlin_mock.get_action.assert_called_once_with(
+            'fake-action')
+
+    def test_cluster_update_failed(self):
+        cluster = self._create_cluster(self.t)
+        new_t = copy.deepcopy(self.t)
+        props = new_t['resources']['senlin-cluster']['properties']
+        props['desired_capacity'] = 3
+        rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
+        update_snippet = rsrc_defns['senlin-cluster']
+        self.senlin_mock.cluster_resize.return_value = {
+            'action': 'fake-action'}
+        self.senlin_mock.get_action.return_value = mock.Mock(
+            status='FAILED', status_reason='Unknown')
+        exc = self.assertRaises(
+            exception.ResourceFailure,
+            scheduler.TaskRunner(cluster.update, update_snippet))
+        self.assertEqual('ResourceInError: resources.senlin-cluster: '
+                         'Went to status FAILED due to "Unknown"',
+                         six.text_type(exc))
 
     def test_cluster_resolve_attribute(self):
         excepted_show = {
