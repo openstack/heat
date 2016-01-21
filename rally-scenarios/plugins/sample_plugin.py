@@ -24,12 +24,12 @@ Rally concepts https://wiki.openstack.org/wiki/Rally/Concepts
 """
 
 
-from rally.benchmark.scenarios import base
+from rally.plugins.openstack import scenario
 
 
-class HeatPlugin(base.Scenario):
+class HeatPlugin(scenario.OpenStackScenario):
 
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def list_benchmark(self, container_format,
                             image_location, disk_format, **kwargs):
         """Get heatclient and do whatever."""
