@@ -512,9 +512,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         self.assertEqual('DEPLOY', updated['action'])
         self.assertEqual('WAITING', updated['status'])
 
-        sd = software_deployment_object.SoftwareDeployment.get_by_id(
-            self.ctx, deployment_id)
-        mock_push.assert_called_once_with(self.ctx, server_id, sd)
+        mock_push.assert_called_once_with(self.ctx, server_id, None)
 
     def test_update_software_deployment_fields(self):
 
@@ -544,7 +542,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         check_software_deployment_updated(status='COMPLETE')
         check_software_deployment_updated(status_reason='Done!')
 
-    def test_delete_software_deployment(self):
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       '_push_metadata_software_deployments')
+    def test_delete_software_deployment(self, pmsd):
         deployment_id = str(uuid.uuid4())
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.engine.delete_software_deployment,
@@ -554,11 +554,19 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         deployment = self._create_software_deployment()
         self.assertIsNotNone(deployment)
         deployment_id = deployment['id']
+
         deployments = self.engine.list_software_deployments(
             self.ctx, server_id=None)
         deployment_ids = [x['id'] for x in deployments]
         self.assertIn(deployment_id, deployment_ids)
         self.engine.delete_software_deployment(self.ctx, deployment_id)
+
+        # assert one call for the create, and one for the delete
+        pmsd.assert_has_calls([
+            mock.call(self.ctx, deployment['server_id'], None),
+            mock.call(self.ctx, deployment['server_id'], None)
+        ])
+
         deployments = self.engine.list_software_deployments(
             self.ctx, server_id=None)
         deployment_ids = [x['id'] for x in deployments]
@@ -673,8 +681,6 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         rs.data = [rd]
         res_get.return_value = rs
         res_upd.return_value = 1
-        sd = mock.Mock()
-        sd.stack_user_project_id = 'project1'
         queue = mock.Mock()
         zaqar_client = mock.Mock()
         plugin.return_value = zaqar_client
@@ -689,7 +695,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         }
 
         self.engine.software_config._push_metadata_software_deployments(
-            self.ctx, '1234', sd)
+            self.ctx, '1234', 'project1')
         res_upd.assert_called_once_with(
             self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 

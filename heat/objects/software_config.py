@@ -37,6 +37,11 @@ class SoftwareConfig(base.VersionedObject,
 
     @staticmethod
     def _from_db_object(context, config, db_config):
+
+        # SoftwareDeployment._from_db_object may attempt to load a None config
+        if db_config is None:
+            return None
+
         for field in config.fields:
             config[field] = db_config[field]
         config._context = context
