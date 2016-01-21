@@ -171,10 +171,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertIndexExists(engine, table, index)
 
         t = utils.get_table(engine, table)
-        index_columns = None
+        index_columns = []
         for idx in t.indexes:
             if idx.name == index:
-                index_columns = six.iterkeys(idx.columns)
+                for ix in idx.columns:
+                    index_columns.append(ix.name)
                 break
 
         self.assertEqual(sorted(members), sorted(index_columns))
@@ -740,6 +741,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             if r.id >= 960 and r.id <= 962:
                 root_stack_id = '9a6a3ddb-2219-452c-8fec-a4977f8fe474'
                 self.assertEqual(root_stack_id, r.root_stack_id)
+
+    def _check_071(self, engine, data):
+        self.assertIndexExists(engine, 'stack', 'ix_stack_owner_id')
+        self.assertIndexMembers(engine, 'stack', 'ix_stack_owner_id',
+                                ['owner_id'])
 
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,

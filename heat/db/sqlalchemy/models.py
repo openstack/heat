@@ -166,7 +166,7 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
     user_creds_id = sqlalchemy.Column(
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('user_creds.id'))
-    owner_id = sqlalchemy.Column(sqlalchemy.String(36))
+    owner_id = sqlalchemy.Column(sqlalchemy.String(36), index=True)
     parent_resource_name = sqlalchemy.Column(sqlalchemy.String(255))
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
