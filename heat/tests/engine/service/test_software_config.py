@@ -29,6 +29,7 @@ from heat.engine.clients.os import zaqar
 from heat.engine import service
 from heat.engine import service_software_config
 from heat.objects import resource as resource_objects
+from heat.objects import software_config as software_config_object
 from heat.objects import software_deployment as software_deployment_object
 from heat.tests import common
 from heat.tests.engine import tools
@@ -85,6 +86,18 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         options = options or {}
         return self.engine.create_software_config(
             self.ctx, group, name, config, inputs, outputs, options)
+
+    def _create_dummy_config_object(self):
+        obj_config = software_config_object.SoftwareConfig()
+        obj_config['id'] = str(uuid.uuid4())
+        obj_config['name'] = 'myconfig'
+        obj_config['group'] = 'mygroup'
+        obj_config['config'] = {'config': 'hello world',
+                                'inputs': [],
+                                'outputs': [],
+                                'options': {}}
+        obj_config['created_at'] = timeutils.utcnow()
+        return obj_config
 
     def assert_status_reason(self, expected, actual):
         expected_dict = dict((i.split(' : ') for i in expected.split(', ')))
@@ -274,6 +287,15 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         metadata = self.engine.metadata_software_deployments(
             ctx, server_id=server_id)
         self.assertEqual(0, len(metadata))
+
+        # assert None config is filtered out
+        obj_conf = self._create_dummy_config_object()
+        side_effect = [obj_conf, obj_conf, None]
+        self.patchobject(software_config_object.SoftwareConfig,
+                         '_from_db_object', side_effect=side_effect)
+        metadata = self.engine.metadata_software_deployments(
+            self.ctx, server_id=server_id)
+        self.assertEqual(2, len(metadata))
 
     def test_show_software_deployment(self):
         deployment_id = str(uuid.uuid4())
