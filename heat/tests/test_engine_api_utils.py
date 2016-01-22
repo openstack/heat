@@ -98,6 +98,12 @@ class FormatTest(common.HeatTestCase):
                          formatted[rpc_api.RES_UPDATED_TIME])
         self.assertEqual(res.INIT, formatted[rpc_api.RES_ACTION])
 
+    def test_format_stack_resource_no_attrs(self):
+        res = self.stack['generic1']
+        formatted = api.format_stack_resource(res, True, with_attr=False)
+        self.assertNotIn(rpc_api.RES_SCHEMA_ATTRIBUTES, formatted)
+        self.assertIn(rpc_api.RES_METADATA, formatted)
+
     def test_format_stack_resource_has_been_deleted(self):
         # assume the stack and resource have been deleted,
         # to test the resource's action inherit from stack
