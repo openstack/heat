@@ -31,12 +31,14 @@ class BayModel(resource.Resource):
         NAME, IMAGE, FLAVOR, MASTER_FLAVOR, KEYPAIR,
         EXTERNAL_NETWORK, FIXED_NETWORK, DNS_NAMESERVER,
         DOCKER_VOLUME_SIZE, SSH_AUTHORIZED_KEY, COE, NETWORK_DRIVER,
-        HTTP_PROXY, HTTPS_PROXY, NO_PROXY, LABELS, TLS_DISABLED
+        HTTP_PROXY, HTTPS_PROXY, NO_PROXY, LABELS, TLS_DISABLED, PUBLIC,
+        REGISTRY_ENABLED
     ) = (
         'name', 'image', 'flavor', 'master_flavor', 'keypair',
         'external_network', 'fixed_network', 'dns_nameserver',
         'docker_volume_size', 'ssh_authorized_key', 'coe', 'network_driver',
-        'http_proxy', 'https_proxy', 'no_proxy', 'labels', 'tls_disabled'
+        'http_proxy', 'https_proxy', 'no_proxy', 'labels', 'tls_disabled',
+        'public', 'registry_enabled'
     )
 
     properties_schema = {
@@ -113,7 +115,7 @@ class BayModel(resource.Resource):
             properties.Schema.STRING,
             _('The Container Orchestration Engine for this bay model.'),
             constraints=[
-                constraints.AllowedValues(['kubernetes', 'swarm'])
+                constraints.AllowedValues(['kubernetes', 'swarm', 'mesos'])
             ],
             required=True
         ),
@@ -148,11 +150,22 @@ class BayModel(resource.Resource):
         ),
         TLS_DISABLED: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Disable TLS in the Bay.'),
+            _('Disable TLS in the bay.'),
             default=False,
             support_status=support.SupportStatus(version='6.0.0')
         ),
-
+        PUBLIC: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Make the baymodel public.'),
+            default=False,
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
+        REGISTRY_ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Enable the docker registry in the bay.'),
+            default=False,
+            support_status=support.SupportStatus(version='6.0.0')
+        )
     }
 
     default_client_name = 'magnum'
@@ -185,6 +198,10 @@ class BayModel(resource.Resource):
             args['labels'] = self.properties[self.LABELS]
         if self.properties[self.TLS_DISABLED]:
             args['tls_disabled'] = self.properties[self.TLS_DISABLED]
+        if self.properties[self.PUBLIC]:
+            args['public'] = self.properties[self.PUBLIC]
+        if self.properties[self.REGISTRY_ENABLED]:
+            args['registry_enabled'] = self.properties[self.REGISTRY_ENABLED]
 
         bm = self.client().baymodels.create(**args)
         self.resource_id_set(bm.uuid)
