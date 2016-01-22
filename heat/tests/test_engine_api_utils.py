@@ -84,7 +84,7 @@ class FormatTest(common.HeatTestCase):
         resource_details_keys = resource_keys.union(set((
             rpc_api.RES_DESCRIPTION,
             rpc_api.RES_METADATA,
-            rpc_api.RES_SCHEMA_ATTRIBUTES,
+            rpc_api.RES_ATTRIBUTES,
         )))
 
         formatted = api.format_stack_resource(res, True)
@@ -101,7 +101,7 @@ class FormatTest(common.HeatTestCase):
     def test_format_stack_resource_no_attrs(self):
         res = self.stack['generic1']
         formatted = api.format_stack_resource(res, True, with_attr=False)
-        self.assertNotIn(rpc_api.RES_SCHEMA_ATTRIBUTES, formatted)
+        self.assertNotIn(rpc_api.RES_ATTRIBUTES, formatted)
         self.assertIn(rpc_api.RES_METADATA, formatted)
 
     def test_format_stack_resource_has_been_deleted(self):
@@ -129,7 +129,7 @@ class FormatTest(common.HeatTestCase):
         res = self.stack['generic1']
 
         formatted = api.format_stack_resource(res, True, with_props=True)
-        formatted_props = formatted[rpc_api.RES_SCHEMA_PROPERTIES]
+        formatted_props = formatted[rpc_api.RES_PROPERTIES]
         self.assertEqual('formatted_res_props', formatted_props)
 
     @mock.patch.object(api, 'format_resource_attributes')
@@ -138,7 +138,7 @@ class FormatTest(common.HeatTestCase):
         res = self.stack['generic1']
 
         formatted = api.format_stack_resource(res, True, with_attr=['a', 'b'])
-        formatted_attrs = formatted[rpc_api.RES_SCHEMA_ATTRIBUTES]
+        formatted_attrs = formatted[rpc_api.RES_ATTRIBUTES]
         self.assertEqual('formatted_resource_attrs', formatted_attrs)
 
     def test_format_resource_attributes(self):
