@@ -26,6 +26,7 @@
 
 import glob
 import os
+import subprocess
 import sys
 import tempfile
 
@@ -182,8 +183,10 @@ html_theme_options = {
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'
-git_cmd = "git log --pretty=format:'%ad, commit %h' --date=local -n1"
-html_last_updated_fmt = os.popen(git_cmd).read()
+git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h'", "--date=local",
+           "-n1"]
+html_last_updated_fmt = subprocess.Popen(
+    git_cmd, stdout=subprocess.PIPE).communicate()[0]
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
