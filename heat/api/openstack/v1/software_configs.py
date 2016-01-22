@@ -45,8 +45,8 @@ class SoftwareConfigController(object):
 
     def _index(self, req, tenant_safe=True):
         whitelist = {
-            'limit': 'single',
-            'marker': 'single'
+            'limit': util.PARAM_TYPE_SINGLE,
+            'marker': util.PARAM_TYPE_SINGLE
         }
         params = util.get_allowed_params(req.params, whitelist)
         scs = self.rpc_client.list_software_configs(req.context,

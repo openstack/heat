@@ -190,29 +190,29 @@ class StackController(object):
         filter_whitelist = {
             # usage of keys in this list are not encouraged, please use
             # rpc_api.STACK_KEYS instead
-            'id': 'mixed',
-            'status': 'mixed',
-            'name': 'mixed',
-            'action': 'mixed',
-            'tenant': 'mixed',
-            'username': 'mixed',
-            'owner_id': 'mixed',
+            'id': util.PARAM_TYPE_MIXED,
+            'status': util.PARAM_TYPE_MIXED,
+            'name': util.PARAM_TYPE_MIXED,
+            'action': util.PARAM_TYPE_MIXED,
+            'tenant': util.PARAM_TYPE_MIXED,
+            'username': util.PARAM_TYPE_MIXED,
+            'owner_id': util.PARAM_TYPE_MIXED,
         }
         whitelist = {
-            'limit': 'single',
-            'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
-            'show_deleted': 'single',
-            'show_nested': 'single',
-            'show_hidden': 'single',
-            'tags': 'single',
-            'tags_any': 'single',
-            'not_tags': 'single',
-            'not_tags_any': 'single',
+            'limit': util.PARAM_TYPE_SINGLE,
+            'marker': util.PARAM_TYPE_SINGLE,
+            'sort_dir': util.PARAM_TYPE_SINGLE,
+            'sort_keys': util.PARAM_TYPE_MULTI,
+            'show_deleted': util.PARAM_TYPE_SINGLE,
+            'show_nested': util.PARAM_TYPE_SINGLE,
+            'show_hidden': util.PARAM_TYPE_SINGLE,
+            'tags': util.PARAM_TYPE_SINGLE,
+            'tags_any': util.PARAM_TYPE_SINGLE,
+            'not_tags': util.PARAM_TYPE_SINGLE,
+            'not_tags_any': util.PARAM_TYPE_SINGLE,
         }
         params = util.get_allowed_params(req.params, whitelist)
-        stack_keys = dict.fromkeys(rpc_api.STACK_KEYS, 'mixed')
+        stack_keys = dict.fromkeys(rpc_api.STACK_KEYS, util.PARAM_TYPE_MIXED)
         unsupported = (
             rpc_api.STACK_ID,  # not user visible
             rpc_api.STACK_CAPABILITIES,  # not supported
@@ -536,7 +536,7 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        whitelist = {'show_nested': 'single'}
+        whitelist = {'show_nested': util.PARAM_TYPE_SINGLE}
         params = util.get_allowed_params(req.params, whitelist)
 
         show_nested = False

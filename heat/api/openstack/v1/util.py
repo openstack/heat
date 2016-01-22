@@ -72,6 +72,13 @@ def make_link(req, identity, relationship='self'):
     return {'href': make_url(req, identity), 'rel': relationship}
 
 
+PARAM_TYPES = (
+    PARAM_TYPE_SINGLE, PARAM_TYPE_MULTI, PARAM_TYPE_MIXED
+) = (
+    'single', 'multi', 'mixed'
+)
+
+
 def get_allowed_params(params, whitelist):
     """Extract from ``params`` all entries listed in ``whitelist``.
 
@@ -88,12 +95,14 @@ def get_allowed_params(params, whitelist):
     allowed_params = {}
 
     for key, get_type in six.iteritems(whitelist):
+        assert get_type in PARAM_TYPES
+
         value = None
-        if get_type == 'single':
+        if get_type == PARAM_TYPE_SINGLE:
             value = params.get(key)
-        elif get_type == 'multi':
+        elif get_type == PARAM_TYPE_MULTI:
             value = params.getall(key)
-        elif get_type == 'mixed':
+        elif get_type == PARAM_TYPE_MIXED:
             value = params.getall(key)
             if isinstance(value, list) and len(value) == 1:
                 value = value.pop()

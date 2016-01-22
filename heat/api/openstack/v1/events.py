@@ -102,16 +102,16 @@ class EventController(object):
     def index(self, req, identity, resource_name=None):
         """Lists summary information for all events."""
         whitelist = {
-            'limit': 'single',
-            'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'limit': util.PARAM_TYPE_SINGLE,
+            'marker': util.PARAM_TYPE_SINGLE,
+            'sort_dir': util.PARAM_TYPE_SINGLE,
+            'sort_keys': util.PARAM_TYPE_MULTI,
         }
         filter_whitelist = {
-            'resource_status': 'mixed',
-            'resource_action': 'mixed',
-            'resource_name': 'mixed',
-            'resource_type': 'mixed',
+            'resource_status': util.PARAM_TYPE_MIXED,
+            'resource_action': util.PARAM_TYPE_MIXED,
+            'resource_name': util.PARAM_TYPE_MIXED,
+            'resource_type': util.PARAM_TYPE_MIXED,
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
