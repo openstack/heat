@@ -34,6 +34,7 @@ nova flavor-create m1.heat_micro 453 128 0 1
 curl http://tarballs.openstack.org/heat-test-image/fedora-heat-test-image.qcow2 | glance image-create --name fedora-heat-test-image --disk-format qcow2 --container-format bare --visibility public
 iniset heat_integrationtests.conf DEFAULT image_ref fedora-heat-test-image
 iniset heat_integrationtests.conf DEFAULT boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
+iniset heat_integrationtests.conf DEFAULT heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
 iniset heat_integrationtests.conf DEFAULT minimal_image_ref cirros-0.3.4-x86_64-uec
 
 # Add scenario tests to skip

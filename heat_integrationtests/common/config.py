@@ -120,7 +120,10 @@ IntegrationTestGroup = [
     cfg.IntOpt('sighup_timeout',
                default=30,
                help="Timeout in seconds to wait for adding or removing child"
-                    "process after receiving of sighup signal")
+                    "process after receiving of sighup signal"),
+    cfg.StrOpt('heat-config-notify-script',
+               default=('heat-config-notify'),
+               help="Path to the script heat-config-notify"),
 ]
 
 

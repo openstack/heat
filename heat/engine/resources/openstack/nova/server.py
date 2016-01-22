@@ -591,13 +591,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             zaqar = zaqar_plugin.create_for_tenant(
                 self.stack.stack_user_project_id, self._user_token())
             queue = zaqar.queue(queue_id)
-            queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
             occ.update({'zaqar': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
                 'queue_id': queue_id}})
+            queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
 
         elif self.transport_poll_server_cfn(props):
             occ.update({'cfn': {

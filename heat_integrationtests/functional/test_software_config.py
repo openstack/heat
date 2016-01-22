@@ -10,10 +10,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import timeutils
+import json
+import os
 import requests
+import subprocess
+import tempfile
 import time
 import yaml
+
+from oslo_utils import timeutils
 
 from heat_integrationtests.common import exceptions
 from heat_integrationtests.functional import functional_base
@@ -145,3 +150,104 @@ properties:
             sigurl = iv.get('deploy_signal_id')
             requests.post(sigurl, data='{}',
                           headers={'content-type': None})
+
+
+class ZaqarSignalTransportTest(functional_base.FunctionalTestsBase):
+    server_template = '''
+heat_template_version: "2013-05-23"
+
+parameters:
+  flavor:
+    type: string
+  image:
+    type: string
+  network:
+    type: string
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: image}
+      flavor: {get_param: flavor}
+      user_data_format: SOFTWARE_CONFIG
+      software_config_transport: ZAQAR_MESSAGE
+      networks: [{network: {get_param: network}}]
+  config:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: echo 'foo'
+  deployment:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      config: {get_resource: config}
+      server: {get_resource: server}
+      signal_transport: ZAQAR_SIGNAL
+
+outputs:
+  data:
+    value: {get_attr: [deployment, deploy_stdout]}
+'''
+
+    conf_template = '''
+[zaqar]
+user_id = %(user_id)s
+password = %(password)s
+project_id = %(project_id)s
+auth_url = %(auth_url)s
+queue_id = %(queue_id)s
+    '''
+
+    def test_signal_queues(self):
+        parms = {'flavor': self.conf.minimal_instance_type,
+                 'network': self.conf.fixed_network_name,
+                 'image': self.conf.minimal_image_ref}
+        stack_identifier = self.stack_create(
+            parameters=parms,
+            template=self.server_template,
+            expected_status=None)
+        metadata = self.wait_for_deploy_metadata_set(stack_identifier)
+        config = metadata['os-collect-config']['zaqar']
+        conf_content = self.conf_template % config
+        fd, temp_path = tempfile.mkstemp()
+        os.write(fd, conf_content)
+        os.close(fd)
+        cmd = ['os-collect-config', '--one-time',
+               '--config-file=%s' % temp_path, 'zaqar']
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        stdout_value = proc.communicate()[0]
+        data = json.loads(stdout_value)
+        self.assertEqual(config, data['zaqar']['os-collect-config']['zaqar'])
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        stdout_value = proc.communicate()[0]
+        data = json.loads(stdout_value)
+
+        fd, temp_path = tempfile.mkstemp()
+        os.write(fd, json.dumps(data['zaqar']['deployments'][0]))
+        os.close(fd)
+        cmd = ['python', self.conf.heat_config_notify_script, temp_path]
+        proc = subprocess.Popen(cmd,
+                                stderr=subprocess.PIPE,
+                                stdin=subprocess.PIPE)
+        proc.communicate(json.dumps({'deploy_stdout': 'here!'}))
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        stack = self.client.stacks.get(stack_identifier)
+        self.assertEqual('here!', stack.outputs[0]['output_value'])
+
+    def wait_for_deploy_metadata_set(self, stack):
+        build_timeout = self.conf.build_timeout
+        build_interval = self.conf.build_interval
+
+        start = timeutils.utcnow()
+        while timeutils.delta_seconds(start,
+                                      timeutils.utcnow()) < build_timeout:
+            server_metadata = self.client.resources.metadata(
+                stack, 'server')
+            if server_metadata.get('deployments'):
+                return server_metadata
+            time.sleep(build_interval)
+
+        message = ('Deployment resources failed to be created within '
+                   'the required time (%s s).' %
+                   (build_timeout))
+        raise exceptions.TimeoutException(message)
