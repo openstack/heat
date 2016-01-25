@@ -116,16 +116,20 @@ class Stack(
     @classmethod
     def get_all(cls, context, *args, **kwargs):
         db_stacks = db_api.stack_get_all(context, *args, **kwargs)
-        stacks = [cls._from_db_object(context, cls(context), db_stack)
-                  for db_stack in db_stacks]
-        return stacks
+        for db_stack in db_stacks:
+            try:
+                yield cls._from_db_object(context, cls(context), db_stack)
+            except exception.NotFound:
+                pass
 
     @classmethod
     def get_all_by_owner_id(cls, context, owner_id):
         db_stacks = db_api.stack_get_all_by_owner_id(context, owner_id)
-        stacks = [cls._from_db_object(context, cls(context), db_stack)
-                  for db_stack in db_stacks]
-        return stacks
+        for db_stack in db_stacks:
+            try:
+                yield cls._from_db_object(context, cls(context), db_stack)
+            except exception.NotFound:
+                pass
 
     @classmethod
     def count_all(cls, context, **kwargs):
