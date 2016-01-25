@@ -290,8 +290,6 @@ class SignalResponder(stack_user.StackUser):
             self._create_user()
 
         queue_id = self.physical_resource_name()
-        zaqar = self.client('zaqar')
-        zaqar.queue(queue_id).ensure_exists()
         self.data_set('zaqar_signal_queue_id', queue_id)
         return queue_id
 
@@ -299,8 +297,10 @@ class SignalResponder(stack_user.StackUser):
         queue_id = self.data().get('zaqar_signal_queue_id')
         if not queue_id:
             return
-        zaqar = self.client('zaqar')
-        with self.client_plugin('zaqar').ignore_not_found:
+        zaqar_plugin = self.client_plugin('zaqar')
+        zaqar = zaqar_plugin.create_for_tenant(
+            self.stack.stack_user_project_id, self._user_token())
+        with zaqar_plugin.ignore_not_found:
             zaqar.queue(queue_id).delete()
         self.data_delete('zaqar_signal_queue_id')
 
@@ -379,7 +379,9 @@ class SignalResponder(stack_user.StackUser):
             swift_client.delete_object(self.stack.id, object_name)
 
     def _service_zaqar_signal(self):
-        zaqar = self.client('zaqar')
+        zaqar_plugin = self.client_plugin('zaqar')
+        zaqar = zaqar_plugin.create_for_tenant(
+            self.stack.stack_user_project_id, self._user_token())
         try:
             queue = zaqar.queue(self._get_zaqar_signal_queue_id())
         except Exception as ex:
