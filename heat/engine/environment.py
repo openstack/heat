@@ -17,7 +17,6 @@ import glob
 import itertools
 import os.path
 import re
-import warnings
 
 from oslo_config import cfg
 from oslo_log import log
@@ -302,7 +301,7 @@ class ResourceRegistry(object):
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:
                 if info.value.support_status.message is not None:
-                    warnings.warn(six.text_type(
+                    LOG.warning(_LW("%s"), six.text_type(
                         info.value.support_status.message))
 
         info.user_resource = (self.global_registry is not None)

@@ -16,7 +16,6 @@ import datetime
 import itertools
 import os
 import socket
-import warnings
 
 import eventlet
 from oslo_config import cfg
@@ -318,12 +317,11 @@ class EngineService(service.Service):
         self.resource_enforcer = policy.ResourceEnforcer()
 
         if cfg.CONF.trusts_delegated_roles:
-            warnings.warn('The default value of "trusts_delegated_roles" '
-                          'option in heat.conf is changed to [] in Kilo '
-                          'and heat will delegate all roles of trustor. '
-                          'Please keep the same if you do not want to '
-                          'delegate subset roles when upgrading.',
-                          Warning)
+            LOG.warning(_LW('The default value of "trusts_delegated_roles" '
+                            'option in heat.conf is changed to [] in Kilo '
+                            'and heat will delegate all roles of trustor. '
+                            'Please keep the same if you do not want to '
+                            'delegate subset roles when upgrading.'))
 
     def create_periodic_tasks(self):
         LOG.debug("Starting periodic watch tasks pid=%s" % os.getpid())

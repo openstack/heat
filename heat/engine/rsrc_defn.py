@@ -14,14 +14,15 @@ import collections
 import copy
 import itertools
 import operator
-import warnings
-
+from oslo_log import log
 import six
 
 from heat.common import exception
+from heat.common.i18n import _LW
 from heat.engine import function
 from heat.engine import properties
 
+LOG = log.getLogger(__name__)
 
 __all__ = ['ResourceDefinition']
 
@@ -292,7 +293,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
     ResourceDefinitionCore as soon as M release.
     """
 
-    _deprecation_msg = (
+    _deprecation_msg = _LW(
         'Reading the ResourceDefinition as if it were a snippet of a '
         'CloudFormation template is deprecated, and the ability to treat it '
         'as such will be removed in the future. Resource plugins should use '
@@ -325,7 +326,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
         """
-        warnings.warn(self._deprecation_msg, DeprecationWarning)
+        LOG.warning(self._deprecation_msg)
 
         yield TYPE
         if self._properties is not None:
@@ -347,7 +348,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
         """
-        warnings.warn(self._deprecation_msg, DeprecationWarning)
+        LOG.warning(self._deprecation_msg)
 
         if key == TYPE:
             return self.resource_type
@@ -376,7 +377,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
 
     def __hash__(self):
         """Return a hash of the ResourceDefinition object."""
-        warnings.warn(self._deprecation_msg, DeprecationWarning)
+        LOG.warning(self._deprecation_msg)
         return super(ResourceDefinition, self).__hash__()
 
     def __len__(self):
@@ -385,7 +386,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
         """
-        warnings.warn(self._deprecation_msg, DeprecationWarning)
+        LOG.warning(self._deprecation_msg)
 
         return len(list(iter(self)))
 
