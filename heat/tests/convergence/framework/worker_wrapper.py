@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from heat.engine import worker
 from heat.tests.convergence.framework import message_processor
 from heat.tests.convergence.framework import message_queue
@@ -28,7 +30,7 @@ class Worker(message_processor.MessageProcessor):
                        current_traversal, data,
                        is_update, adopt_stack_data):
         worker.WorkerService("fake_host", "fake_topic",
-                             "fake_engine", "tgm").check_resource(
+                             "fake_engine", mock.Mock()).check_resource(
                                  ctxt, resource_id,
                                  current_traversal,
                                  data, is_update,
