@@ -81,10 +81,14 @@ class SoftwareConfigService(service.Service):
             raise ValueError(_('server_id must be specified'))
         all_sd = software_deployment_object.SoftwareDeployment.get_all(
             cnxt, server_id)
+
+        # filter out the sds with None config
+        flt_sd = six.moves.filterfalse(lambda sd: sd.config is None,
+                                       all_sd)
         # sort the configs by config name, to give the list of metadata a
         # deterministic and controllable order.
-        all_sd_s = sorted(all_sd, key=lambda sd: sd.config.name)
-        result = [api.format_software_config(sd.config) for sd in all_sd_s]
+        flt_sd_s = sorted(flt_sd, key=lambda sd: sd.config.name)
+        result = [api.format_software_config(sd.config) for sd in flt_sd_s]
         return result
 
     @oslo_db_api.wrap_db_retry(max_retries=10, retry_on_request=True)
