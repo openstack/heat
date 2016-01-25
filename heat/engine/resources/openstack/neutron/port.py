@@ -125,7 +125,6 @@ class Port(neutron.NeutronResource):
         FIXED_IPS: properties.Schema(
             properties.Schema.LIST,
             _('Desired IPs for this port.'),
-            default=[],
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
@@ -188,9 +187,9 @@ class Port(neutron.NeutronResource):
     extra_properties_schema = {
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
-            _('Extra parameters to include in the "port" object in the '
-              'creation request.'),
-            default={}
+            _('Extra parameters to include in the request.'),
+            default={},
+            update_allowed=True
         ),
         ADMIN_STATE_UP: properties.Schema(
             properties.Schema.BOOLEAN,
@@ -380,37 +379,46 @@ class Port(neutron.NeutronResource):
         self.resource_id_set(port['id'])
 
     def _prepare_port_properties(self, props, prepare_for_update=False):
-        for fixed_ip in props.get(self.FIXED_IPS, []):
-            for key, value in list(fixed_ip.items()):
-                if value is None:
-                    fixed_ip.pop(key)
-            if fixed_ip.get(self.FIXED_IP_SUBNET):
-                self.client_plugin().resolve_subnet(
-                    fixed_ip, self.FIXED_IP_SUBNET, 'subnet_id')
+        if self.FIXED_IPS in props:
+            fixed_ips = props[self.FIXED_IPS]
+            if fixed_ips:
+                for fixed_ip in fixed_ips:
+                    for key, value in list(fixed_ip.items()):
+                        if value is None:
+                            fixed_ip.pop(key)
+                    if fixed_ip.get(self.FIXED_IP_SUBNET):
+                        self.client_plugin().resolve_subnet(
+                            fixed_ip, self.FIXED_IP_SUBNET, 'subnet_id')
+            else:
+                props[self.FIXED_IPS] = []
         # delete empty MAC addresses so that Neutron validation code
         # wouldn't fail as it not accepts Nones
-        for pair in props.get(self.ALLOWED_ADDRESS_PAIRS, []):
-            if (self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS in pair and
-                    pair[self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS] is None):
-                del pair[self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS]
-
+        if self.ALLOWED_ADDRESS_PAIRS in props:
+            address_pairs = props[self.ALLOWED_ADDRESS_PAIRS]
+            if address_pairs:
+                for pair in address_pairs:
+                    if (self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS in pair
+                        and pair[
+                            self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS] is None):
+                        del pair[self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS]
+            else:
+                props[self.ALLOWED_ADDRESS_PAIRS] = []
         # if without 'security_groups', don't set the 'security_groups'
         # property when creating, neutron will create the port with the
         # 'default' securityGroup. If has the 'security_groups' and the
         # value is [], which means to create the port without securityGroup.
-        if props.get(self.SECURITY_GROUPS) is not None:
-            props[self.SECURITY_GROUPS] = self.client_plugin(
-            ).get_secgroup_uuids(props.get(self.SECURITY_GROUPS))
-        else:
-            # And the update should has the same behavior.
-            if prepare_for_update:
+        if self.SECURITY_GROUPS in props:
+            if props.get(self.SECURITY_GROUPS) is not None:
                 props[self.SECURITY_GROUPS] = self.client_plugin(
-                ).get_secgroup_uuids(['default'])
+                ).get_secgroup_uuids(props.get(self.SECURITY_GROUPS))
+            else:
+                # And the update should has the same behavior.
+                if prepare_for_update:
+                    props[self.SECURITY_GROUPS] = self.client_plugin(
+                    ).get_secgroup_uuids(['default'])
 
-        if not props[self.FIXED_IPS]:
-            del(props[self.FIXED_IPS])
-
-        del(props[self.REPLACEMENT_POLICY])
+        if self.REPLACEMENT_POLICY in props:
+            del(props[self.REPLACEMENT_POLICY])
 
     def _show_resource(self):
         return self.client().show_port(
@@ -466,16 +474,19 @@ class Port(neutron.NeutronResource):
             check_init_complete)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        props = self.prepare_update_properties(json_snippet)
-
-        self._prepare_port_properties(props, prepare_for_update=True)
-        qos_policy = props.pop(self.QOS_POLICY, None)
-        if self.QOS_POLICY in prop_diff:
-            props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
-                qos_policy) if qos_policy else None
-
-        LOG.debug('updating port with %s' % props)
-        self.client().update_port(self.resource_id, {'port': props})
+        if prop_diff:
+            if self.VALUE_SPECS in prop_diff:
+                self.merge_value_specs(prop_diff)
+            if self.QOS_POLICY in prop_diff:
+                qos_policy = prop_diff.pop(self.QOS_POLICY)
+                prop_diff['qos_policy_id'] = self.client_plugin(
+                    ).get_qos_policy_id(qos_policy) if qos_policy else None
+            if (self.NAME in prop_diff and
+                    prop_diff[self.NAME] is None):
+                prop_diff[self.NAME] = self.physical_resource_name()
+            self._prepare_port_properties(prop_diff, prepare_for_update=True)
+            LOG.debug('updating port with %s' % prop_diff)
+            self.client().update_port(self.resource_id, {'port': prop_diff})
 
     def check_update_complete(self, *args):
         attributes = self._show_resource()

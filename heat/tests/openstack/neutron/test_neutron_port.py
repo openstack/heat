@@ -11,17 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import mock
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 from oslo_serialization import jsonutils
+import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import neutron
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -413,105 +412,6 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_create_and_update_port(self):
-        props = {'network_id': u'net1234',
-                 'name': utils.PhysName('test_stack', 'port'),
-                 'admin_state_up': True,
-                 'device_owner': u'network:dhcp'}
-        policy_id = '8a2f582a-e1cd-480f-b85d-b02631c10656'
-        new_props = props.copy()
-        new_props['name'] = "new_name"
-        new_props['security_groups'] = [
-            '8a2f582a-e1cd-480f-b85d-b02631c10656']
-        new_props['device_id'] = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        new_props['device_owner'] = 'network:router_interface'
-        new_props_update = new_props.copy()
-        new_props_update.pop('network_id')
-        new_props_update['qos_policy_id'] = policy_id
-        new_props['qos_policy'] = policy_id
-
-        new_props1 = new_props.copy()
-        new_props1.pop('security_groups')
-        new_props1['qos_policy'] = None
-        new_props_update1 = new_props_update.copy()
-        new_props_update1['security_groups'] = [
-            '0389f747-7785-4757-b7bb-2ab07e4b09c3']
-        new_props_update1['qos_policy_id'] = None
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'net1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('net1234')
-        neutronclient.Client.create_port(
-            {'port': props}
-        ).AndReturn({'port': {
-            "status": "BUILD",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-        neutronclient.Client.show_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).MultipleTimes(
-        ).AndReturn({'port': {
-            "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "fixed_ips": {
-                "subnet_id": "d0e971a6-a6b4-4f4c-8c88-b75e9c120b7e",
-                "ip_address": "10.0.0.2"
-            }
-        }})
-
-        self.patchobject(neutron.NeutronClientPlugin, 'get_qos_policy_id')
-        neutron.NeutronClientPlugin.get_qos_policy_id.return_value = policy_id
-        self.stub_QoSPolicyConstraint_validate()
-        neutronclient.Client.update_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'port': new_props_update}
-        ).AndReturn(None)
-
-        fake_groups_list = {
-            'security_groups': [
-                {
-                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
-                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
-                    'name': 'default',
-                    'security_group_rules': [],
-                    'description': 'no protocol'
-                }
-            ]
-        }
-        self.m.StubOutWithMock(neutronclient.Client, 'list_security_groups')
-        neutronclient.Client.list_security_groups().AndReturn(
-            fake_groups_list)
-        neutronclient.Client.update_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'port': new_props_update1}
-        ).AndReturn(None)
-
-        self.m.ReplayAll()
-
-        # create port
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
-        stack = utils.parse_stack(t)
-
-        port = stack['port']
-        scheduler.TaskRunner(port.create)()
-
-        # update port
-        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
-                                                      new_props)
-        scheduler.TaskRunner(port.update, update_snippet)()
-
-        # update again to test port without security group
-        # and without qos_policy
-        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
-                                                      new_props1)
-        scheduler.TaskRunner(port.update, update_snippet)()
-
-        self.m.VerifyAll()
-
     def test_port_needs_update(self):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
@@ -784,102 +684,6 @@ class NeutronPortTest(common.HeatTestCase):
         self.assertIn(log_msg, self.LOG.output)
         self.m.VerifyAll()
 
-    def test_vnic_create_update(self):
-        port_prop = {
-            'network_id': u'net1234',
-            'fixed_ips': [
-                {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
-            ],
-            'name': utils.PhysName('test_stack', 'port'),
-            'admin_state_up': True,
-            'device_owner': 'network:dhcp',
-            'binding:vnic_type': 'direct'
-        }
-        new_port_prop = port_prop.copy()
-        new_port_prop['binding:vnic_type'] = 'normal'
-        new_port_prop['name'] = "new_name"
-        new_port_prop['security_groups'] = [
-            '8a2f582a-e1cd-480f-b85d-b02631c10656']
-        new_port_prop.pop('network_id')
-
-        prop_update = copy.deepcopy(new_port_prop)
-        new_port_prop['replacement_policy'] = 'AUTO'
-        new_port_prop['network'] = u'net1234'
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'net1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('net1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub1234')
-        neutronclient.Client.create_port({'port': port_prop}).AndReturn(
-            {'port': {
-                "status": "BUILD",
-                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}})
-        neutronclient.Client.show_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({'port': {
-            "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-        self.stub_SubnetConstraint_validate()
-        self.stub_NetworkConstraint_validate()
-        neutronclient.Client.update_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'port': prop_update}
-        ).AndReturn(None)
-        neutronclient.Client.show_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({'port': {
-            "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        prop_update2 = copy.deepcopy(prop_update)
-        prop_update2['binding:vnic_type'] = 'direct'
-        neutronclient.Client.update_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'port': prop_update2}
-        ).AndReturn(None)
-
-        neutronclient.Client.show_port(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({'port': {
-            "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties']['binding:vnic_type'] = 'direct'
-        stack = utils.parse_stack(t)
-        port = stack['port']
-        scheduler.TaskRunner(port.create)()
-        self.assertEqual('direct', port.properties['binding:vnic_type'])
-
-        # update to normal
-        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
-                                                      new_port_prop)
-        new_port_prop2 = copy.deepcopy(new_port_prop)
-        scheduler.TaskRunner(port.update, update_snippet)()
-        self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
-        self.assertEqual('normal', port.properties['binding:vnic_type'])
-
-        # update back to direct
-        new_port_prop2['binding:vnic_type'] = 'direct'
-        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
-                                                      new_port_prop2)
-        scheduler.TaskRunner(port.update, update_snippet)()
-        self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
-        self.assertEqual('direct', port.properties['binding:vnic_type'])
-
-        self.m.VerifyAll()
-
     def test_prepare_for_replace_port_not_created(self):
         t = template_format.parse(neutron_port_template)
         stack = utils.parse_stack(t)
@@ -995,3 +799,128 @@ class NeutronPortTest(common.HeatTestCase):
         n_client.update_port.assert_has_calls([
             mock.call(existing_rsrc.resource_id, expected_existing_props),
             mock.call(prev_rsrc.resource_id, expected_prev_props)])
+
+
+class UpdatePortTest(common.HeatTestCase):
+    scenarios = [
+        ('with_secgrp', dict(secgrp=['8a2f582a-e1cd-480f-b85d-b02631c10656'],
+                             name='test',
+                             value_specs={},
+                             fixed_ips=None,
+                             addr_pair=None,
+                             vnic_type=None)),
+        ('with_no_name', dict(secgrp=['8a2f582a-e1cd-480f-b85d-b02631c10656'],
+                              name=None,
+                              value_specs={},
+                              fixed_ips=None,
+                              addr_pair=None,
+                              vnic_type=None)),
+        ('with_empty_values', dict(secgrp=[],
+                                   name='test',
+                                   value_specs={},
+                                   fixed_ips=[],
+                                   addr_pair=[],
+                                   vnic_type=None)),
+        ('with_fixed_ips', dict(secgrp=None,
+                                value_specs={},
+                                fixed_ips=[
+                                    {"subnet_id": "d0e971a6-a6b4-4f4c",
+                                     "ip_address": "10.0.0.2"}],
+                                addr_pair=None,
+                                vnic_type=None)),
+        ('with_addr_pair', dict(secgrp=None,
+                                value_specs={},
+                                fixed_ips=None,
+                                addr_pair=[{'ip_address': '10.0.3.21',
+                                            'mac_address': '00-B0-D0-86'}],
+                                vnic_type=None)),
+
+        ('with_value_specs', dict(secgrp=None,
+                                  value_specs={'binding:vnic_type': 'direct'},
+                                  fixed_ips=None,
+                                  addr_pair=None,
+                                  vnic_type=None)),
+        ('normal_vnic', dict(secgrp=None,
+                             value_specs={},
+                             fixed_ips=None,
+                             addr_pair=None,
+                             vnic_type='normal')),
+        ('direct_vnic', dict(secgrp=None,
+                             value_specs={},
+                             fixed_ips=None,
+                             addr_pair=None,
+                             vnic_type='direct')),
+        ('with_all', dict(secgrp=['8a2f582a-e1cd-480f-b85d-b02631c10656'],
+                          value_specs={},
+                          fixed_ips=[
+                              {"subnet_id": "d0e971a6-a6b4-4f4c",
+                               "ip_address": "10.0.0.2"}],
+                          addr_pair=[{'ip_address': '10.0.3.21',
+                                      'mac_address': '00-B0-D0-86-BB-F7'}],
+                          vnic_type='normal')),
+
+        ]
+
+    def test_update_port(self):
+        self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
+                         return_value='net1234')
+        create_port = self.patchobject(neutronclient.Client, 'create_port')
+        update_port = self.patchobject(neutronclient.Client, 'update_port')
+        fake_groups_list = {
+            'security_groups': [
+                {
+                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
+                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
+                    'name': 'default',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                }
+            ]
+        }
+        self.patchobject(neutronclient.Client, 'list_security_groups',
+                         return_value=fake_groups_list)
+
+        props = {'network_id': u'net1234',
+                 'name': utils.PhysName('test_stack', 'port'),
+                 'admin_state_up': True,
+                 'device_owner': u'network:dhcp'}
+
+        update_props = props.copy()
+        update_props['security_groups'] = self.secgrp
+        update_props['value_specs'] = self.value_specs
+        update_props['fixed_ips'] = self.fixed_ips
+        update_props['allowed_address_pairs'] = self.addr_pair
+        update_props['binding:vnic_type'] = self.vnic_type
+
+        update_dict = update_props.copy()
+
+        if update_props['security_groups'] is None:
+            update_dict['security_groups'] = ['default']
+
+        if update_props['name'] is None:
+            update_dict['name'] = utils.PhysName('test_stack', 'test_subnet')
+
+        value_specs = update_dict.pop('value_specs')
+        if value_specs:
+            for value_spec in six.iteritems(value_specs):
+                update_dict[value_spec[0]] = value_spec[1]
+
+        # create port
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        self.assertIsNone(scheduler.TaskRunner(port.handle_create)())
+        create_port.assset_called_once_with(props)
+        # update port
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      update_props)
+        self.assertIsNone(scheduler.TaskRunner(port.handle_update,
+                                               update_snippet, {},
+                                               update_props)())
+
+        update_port.assset_called_once_with(update_dict)
+        # update with empty prop_diff
+        scheduler.TaskRunner(port.handle_update, update_snippet, {}, {})()
+        self.assertEqual(1, update_port.call_count)
