@@ -78,11 +78,9 @@ outputs:
         self.assertEqual(remote_resources, self.list_resources(remote_id))
 
     def test_stack_create_bad_region(self):
-        stack_name = self._stack_rand_name()
         tmpl_bad_region = self.template.replace('RegionOne', 'DARKHOLE')
         files = {'remote_stack.yaml': self.remote_template}
         kwargs = {
-            'stack_name': stack_name,
             'template': tmpl_bad_region,
             'files': files
         }
@@ -94,10 +92,9 @@ outputs:
         self.assertEqual(error_msg, six.text_type(ex))
 
     def test_stack_resource_validation_fail(self):
-        stack_name = self._stack_rand_name()
         tmpl_bad_format = self.remote_template.replace('resources', 'resource')
         files = {'remote_stack.yaml': tmpl_bad_format}
-        kwargs = {'stack_name': stack_name, 'files': files}
+        kwargs = {'files': files}
         ex = self.assertRaises(exc.HTTPBadRequest, self.stack_create, **kwargs)
 
         error_msg = ('ERROR: Failed validating stack template using Heat '
