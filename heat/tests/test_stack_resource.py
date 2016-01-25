@@ -19,7 +19,6 @@ from oslo_config import cfg
 from oslo_messaging import exceptions as msg_exceptions
 from oslo_serialization import jsonutils
 import six
-import testtools
 
 from heat.common import exception
 from heat.common import template_format
@@ -206,20 +205,6 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_stack.delete(abandon=True)
 
         self.assertEqual(0, delete_nested.call_count)
-
-    @testtools.skipIf(six.PY3, "needs a separate change")
-    def test_implementation_signature(self):
-        self.parent_resource.child_template = mock.Mock(
-            return_value=self.simple_template)
-        sig1, sig2 = self.parent_resource.implementation_signature()
-        self.assertEqual('7b0eaabb5b82b9e90804d42e0bb739035588cb797'
-                         '82427770646686ca2235028', sig1)
-        self.assertEqual('8fa647d036b8f36909386e1e1004539dfae7a8e88'
-                         'c24aac0d85399e881421301', sig2)
-        self.parent_stack.t.files["foo"] = "bar"
-        sig1a, sig2a = self.parent_resource.implementation_signature()
-        self.assertEqual(sig1, sig1a)
-        self.assertNotEqual(sig2, sig2a)
 
     def test_propagated_files(self):
         """Test passing of the files map in the top level to the child.
