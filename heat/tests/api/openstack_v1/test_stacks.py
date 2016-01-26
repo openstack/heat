@@ -2103,6 +2103,29 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_export(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'export', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s/export' %
+                        identity)
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        # Engine returns json data
+        expected = {"name": "test", "id": "123"}
+        rpc_client.EngineClient.call(
+            req.context,
+            ('export_stack', {'stack_identity': dict(identity)}),
+            version='1.22'
+        ).AndReturn(expected)
+        self.m.ReplayAll()
+
+        ret = self.controller.export(req,
+                                     tenant_id=identity.tenant,
+                                     stack_name=identity.stack_name,
+                                     stack_id=identity.stack_id)
+        self.assertEqual(expected, ret)
+        self.m.VerifyAll()
+
     def test_abandon(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'abandon', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')

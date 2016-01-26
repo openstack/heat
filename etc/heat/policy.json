@@ -41,6 +41,7 @@
     "stacks:create": "rule:deny_stack_user",
     "stacks:delete": "rule:deny_stack_user",
     "stacks:detail": "rule:deny_stack_user",
+    "stacks:export": "rule:deny_stack_user",
     "stacks:generate_template": "rule:deny_stack_user",
     "stacks:global_index": "rule:deny_everybody",
     "stacks:index": "rule:deny_stack_user",
