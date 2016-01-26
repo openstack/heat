@@ -520,10 +520,8 @@ resources:
                  'image': self.conf.minimal_image_ref,
                  'network': self.conf.fixed_network_name,
                  'user_data': ''}
-        name = self._stack_rand_name()
 
         stack_identifier = self.stack_create(
-            stack_name=name,
             template=self.update_userdata_template,
             parameters=parms
         )
