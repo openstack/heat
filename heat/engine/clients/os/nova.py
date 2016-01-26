@@ -356,12 +356,14 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                             'cfn-watch-server', 'x-cfninitdata'))
 
         if is_cfntools:
-            attachments.append((cfg.CONF.heat_metadata_server_url,
+            heat_client_plugin = self.context.clients.client_plugin('heat')
+            cfn_md_url = heat_client_plugin.get_cfn_metadata_server_url()
+            attachments.append((cfn_md_url,
                                 'cfn-metadata-server', 'x-cfninitdata'))
 
             # Create a boto config which the cfntools on the host use to know
             # where the cfn and cw API's are to be accessed
-            cfn_url = urlparse.urlparse(cfg.CONF.heat_metadata_server_url)
+            cfn_url = urlparse.urlparse(cfn_md_url)
             cw_url = urlparse.urlparse(cfg.CONF.heat_watch_server_url)
             is_secure = cfg.CONF.instance_connection_is_secure
             vcerts = cfg.CONF.instance_connection_https_validate_certificates

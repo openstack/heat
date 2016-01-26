@@ -28,6 +28,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
@@ -747,14 +748,16 @@ class ServersTest(common.HeatTestCase):
         else:
             return server
 
-    def test_server_create_software_config(self):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
+    def test_server_create_software_config(self, fake_url):
+        fake_url.return_value = 'the-cfn-url'
         server = self._server_create_software_config()
 
         self.assertEqual({
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': '/v1/',
+                    'metadata_url': 'the-cfn-url/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'software_config_s'
@@ -763,15 +766,17 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
-    def test_server_create_software_config_metadata(self):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
+    def test_server_create_software_config_metadata(self, fake_url):
         md = {'os-collect-config': {'polling_interval': 10}}
+        fake_url.return_value = 'the-cfn-url'
         server = self._server_create_software_config(md=md)
 
         self.assertEqual({
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': '/v1/',
+                    'metadata_url': 'the-cfn-url/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'software_config_s'
@@ -1603,7 +1608,9 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual({'test': 456}, server.metadata_get())
         self.m.VerifyAll()
 
-    def test_server_update_metadata_software_config(self):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
+    def test_server_update_metadata_software_config(self, fake_url):
+        fake_url.return_value = 'the-cfn-url'
         server, ud_tmpl = self._server_create_software_config(
             stack_name='update_meta_sc', ret_tmpl=True)
 
@@ -1611,7 +1618,7 @@ class ServersTest(common.HeatTestCase):
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': '/v1/',
+                    'metadata_url': 'the-cfn-url/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'
@@ -1634,8 +1641,10 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(expected_md, server.metadata_get())
         self.m.VerifyAll()
 
-    def test_server_update_metadata_software_config_merge(self):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
+    def test_server_update_metadata_software_config_merge(self, fake_url):
         md = {'os-collect-config': {'polling_interval': 10}}
+        fake_url.return_value = 'the-cfn-url'
         server, ud_tmpl = self._server_create_software_config(
             stack_name='update_meta_sc', ret_tmpl=True,
             md=md)
@@ -1644,7 +1653,7 @@ class ServersTest(common.HeatTestCase):
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': '/v1/',
+                    'metadata_url': 'the-cfn-url/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'
@@ -1668,8 +1677,10 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(expected_md, server.metadata_get())
         self.m.VerifyAll()
 
-    def test_server_update_software_config_transport(self):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
+    def test_server_update_software_config_transport(self, fake_url):
         md = {'os-collect-config': {'polling_interval': 10}}
+        fake_url.return_value = 'the-cfn-url'
         server = self._server_create_software_config(
             stack_name='update_meta_sc', md=md)
 
@@ -1677,7 +1688,7 @@ class ServersTest(common.HeatTestCase):
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': '/v1/',
+                    'metadata_url': 'the-cfn-url/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'

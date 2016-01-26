@@ -73,18 +73,32 @@ class ClientsTest(common.HeatTestCase):
         obj._get_client_option.return_value = result
         self.assertEqual(result, obj.get_heat_url())
 
-    def test_clients_get_heat_cfn_url(self):
+    def _client_cfn_url(self):
         con = mock.Mock()
         c = clients.Clients(con)
         con.clients = c
-
         obj = c.client_plugin('heat')
         obj._get_client_option = mock.Mock()
         obj._get_client_option.return_value = None
         obj.url_for = mock.Mock(name="url_for")
-        heat_cfn_url = "http://0.0.0.0:8000/v1"
-        obj.url_for.return_value = heat_cfn_url
-        self.assertEqual(heat_cfn_url, obj.get_heat_cfn_url())
+        obj.url_for.return_value = "http://0.0.0.0:8000/v1/"
+        return obj
+
+    def test_clients_get_heat_cfn_url(self):
+        obj = self._client_cfn_url()
+        self.assertEqual("http://0.0.0.0:8000/v1/", obj.get_heat_cfn_url())
+
+    def test_clients_get_heat_cfn_metadata_url(self):
+        obj = self._client_cfn_url()
+        self.assertEqual("http://0.0.0.0:8000/v1/",
+                         obj.get_cfn_metadata_server_url())
+
+    def test_clients_get_heat_cfn_metadata_url_conf(self):
+        cfg.CONF.set_override('heat_metadata_server_url',
+                              'http://server.test:123')
+        obj = self._client_cfn_url()
+        self.assertEqual("http://server.test:123/v1/",
+                         obj.get_cfn_metadata_server_url())
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat(self, mock_call):

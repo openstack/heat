@@ -38,8 +38,10 @@ service_opts = [
                default=60,
                help=_('Seconds between running periodic tasks.')),
     cfg.StrOpt('heat_metadata_server_url',
-               default="",
-               help=_('URL of the Heat metadata server.')),
+               help=_('URL of the Heat metadata server. '
+                      'NOTE: Setting this is only needed if you require '
+                      'instances to use a different endpoint than in the '
+                      'keystone catalog')),
     cfg.StrOpt('heat_waitcondition_server_url',
                help=_('URL of the Heat waitcondition server.')),
     cfg.StrOpt('heat_watch_server_url',
