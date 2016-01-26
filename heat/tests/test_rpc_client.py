@@ -376,3 +376,9 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api(
             'show_output', 'call', stack_identity=self.identity,
             output_key='test', version='1.19')
+
+    def test_export_stack(self):
+        self._test_engine_api('export_stack',
+                              'call',
+                              stack_identity=self.identity,
+                              version='1.22')
