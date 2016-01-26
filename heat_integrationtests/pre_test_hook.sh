@@ -19,5 +19,4 @@ localconf=$BASE/new/devstack/local.conf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path
 echo -e '[[post-config|$HEAT_CONF]]\n[DEFAULT]\n' >> $localconf
 echo -e 'notification_driver=messagingv2\n' >> $localconf
-echo -e 'num_engine_workers=2\n' >> $localconf
 echo -e 'plugin_dirs=$HEAT_DIR/heat_integrationtests/common/test_resources\n' >> $localconf
