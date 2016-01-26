@@ -291,6 +291,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             u'physical_resource_id':
             u'a3455d8c-9f88-404d-a85b-5315293e67de',
             u'resource_type': u'AWS::EC2::Instance',
+            u'attributes': {u'foo': 'bar'},
             u'metadata': {u'ensureRunning': u'true'}
         }
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
@@ -323,6 +324,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'physical_resource_id':
                 u'a3455d8c-9f88-404d-a85b-5315293e67de',
                 u'resource_type': u'AWS::EC2::Instance',
+                u'attributes': {u'foo': 'bar'},
             }
         }
 
@@ -354,6 +356,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             u'physical_resource_id':
             u'a3455d8c-9f88-404d-a85b-5315293e67de',
             u'resource_type': u'AWS::EC2::Instance',
+            u'attributes': {u'foo': 'bar'},
             u'metadata': {u'ensureRunning': u'true'},
             u'nested_stack_id': dict(nested_stack_identity)
         }
@@ -572,7 +575,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context,
             ('describe_stack_resource',
              {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
+              'with_attr': False}),
             version='1.2'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
@@ -603,7 +606,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context,
             ('describe_stack_resource',
              {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
+              'with_attr': False}),
             version='1.2'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
@@ -636,7 +639,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context,
             ('describe_stack_resource',
              {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
+              'with_attr': False}),
             version='1.2'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()

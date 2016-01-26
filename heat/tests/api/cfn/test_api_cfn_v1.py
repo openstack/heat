@@ -1326,7 +1326,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
-            'with_attr': None,
+            'with_attr': False,
         }
         rpc_client.EngineClient.call(
             dummy_req.context, ('describe_stack_resource', args), version='1.2'
@@ -1391,7 +1391,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
-            'with_attr': None,
+            'with_attr': False,
         }
         rpc_client.EngineClient.call(
             dummy_req.context, ('describe_stack_resource', args), version='1.2'
