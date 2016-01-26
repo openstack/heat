@@ -197,7 +197,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         self.my_volume_type.resource_id = volume_type_id
         volume_type = mock.Mock()
-        volume_type._info = {'vtype': 'info'}
+        volume_type.to_dict = lambda: {'vtype': 'info'}
         self.volume_types.get.return_value = volume_type
         self.assertEqual({'vtype': 'info'},
                          self.my_volume_type.FnGetAtt('show'))

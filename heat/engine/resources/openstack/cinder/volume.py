@@ -289,11 +289,6 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
                 return vol.description
         return six.text_type(getattr(vol, name))
 
-    # TODO(huangtianhua): remove this method when bug #1479641 is fixed.
-    def _show_resource(self):
-        volume = self.client().volumes.get(self.resource_id)
-        return volume._info
-
     def check_create_complete(self, vol_id):
         complete = super(CinderVolume, self).check_create_complete(vol_id)
         # Cinder just supports update read only for volume in available,

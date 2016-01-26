@@ -98,7 +98,7 @@ class CinderEncryptedVolumeTypeTest(common.HeatTestCase):
         volume_type_id = '01bd581d-33fe-4d6d-bd7b-70ae076d39fb'
         self.my_encrypted_vol_type.resource_id = volume_type_id
         volume_type = mock.Mock()
-        volume_type._info = {'vtype': 'info'}
+        volume_type.to_dict = lambda: {'vtype': 'info'}
         self.volume_encryption_types.get.return_value = volume_type
         self.assertEqual({'vtype': 'info'},
                          self.my_encrypted_vol_type.FnGetAtt('show'))
