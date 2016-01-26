@@ -24,6 +24,11 @@ class NeutronResource(resource.Resource):
 
     default_client_name = 'neutron'
 
+    # Subclasses provide a list of properties which, although
+    # update_allowed in the schema, should be excluded from the
+    # call to neutron, because they are handled in _needs_update
+    update_exclude_properties = []
+
     def validate(self):
         '''
         Validate any of the provided params
@@ -91,7 +96,8 @@ class NeutronResource(resource.Resource):
         '''
         p = definition.properties(self.properties_schema, self.context)
         update_props = dict((k, v) for k, v in p.items()
-                            if p.props.get(k).schema.update_allowed)
+                            if p.props.get(k).schema.update_allowed and
+                            k not in self.update_exclude_properties)
 
         props = self.prepare_properties(
             update_props,
