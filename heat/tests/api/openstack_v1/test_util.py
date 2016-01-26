@@ -27,7 +27,7 @@ class TestGetAllowedParams(common.HeatTestCase):
         req = wsgi.Request({})
         self.params = req.params.copy()
         self.params.add('foo', 'foo value')
-        self.whitelist = {'foo': 'single'}
+        self.whitelist = {'foo': util.PARAM_TYPE_SINGLE}
 
     def test_returns_empty_dict(self):
         self.whitelist = {}
@@ -36,7 +36,7 @@ class TestGetAllowedParams(common.HeatTestCase):
         self.assertEqual({}, result)
 
     def test_only_adds_whitelisted_params_if_param_exists(self):
-        self.whitelist = {'foo': 'single'}
+        self.whitelist = {'foo': util.PARAM_TYPE_SINGLE}
         self.params.clear()
 
         result = util.get_allowed_params(self.params, self.whitelist)
@@ -54,7 +54,7 @@ class TestGetAllowedParams(common.HeatTestCase):
         self.assertEqual('foo value', result['foo'])
 
     def test_handles_multiple_value_params(self):
-        self.whitelist = {'foo': 'multi'}
+        self.whitelist = {'foo': util.PARAM_TYPE_MULTI}
         self.params.add('foo', 'foo value 2')
 
         result = util.get_allowed_params(self.params, self.whitelist)
@@ -63,7 +63,7 @@ class TestGetAllowedParams(common.HeatTestCase):
         self.assertIn('foo value 2', result['foo'])
 
     def test_handles_mixed_value_param_with_multiple_entries(self):
-        self.whitelist = {'foo': 'mixed'}
+        self.whitelist = {'foo': util.PARAM_TYPE_MIXED}
         self.params.add('foo', 'foo value 2')
 
         result = util.get_allowed_params(self.params, self.whitelist)
@@ -72,15 +72,15 @@ class TestGetAllowedParams(common.HeatTestCase):
         self.assertIn('foo value 2', result['foo'])
 
     def test_handles_mixed_value_param_with_single_entry(self):
-        self.whitelist = {'foo': 'mixed'}
+        self.whitelist = {'foo': util.PARAM_TYPE_MIXED}
 
         result = util.get_allowed_params(self.params, self.whitelist)
         self.assertEqual('foo value', result['foo'])
 
-    def test_ignores_bogus_whitelist_items(self):
+    def test_bogus_whitelist_items(self):
         self.whitelist = {'foo': 'blah'}
-        result = util.get_allowed_params(self.params, self.whitelist)
-        self.assertNotIn('foo', result)
+        self.assertRaises(AssertionError, util.get_allowed_params,
+                          self.params, self.whitelist)
 
 
 class TestPolicyEnforce(common.HeatTestCase):

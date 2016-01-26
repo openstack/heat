@@ -38,7 +38,7 @@ class SoftwareDeploymentController(object):
     def index(self, req):
         """List software deployments."""
         whitelist = {
-            'server_id': 'single',
+            'server_id': util.PARAM_TYPE_SINGLE,
         }
         params = util.get_allowed_params(req.params, whitelist)
         sds = self.rpc_client.list_software_deployments(req.context, **params)
