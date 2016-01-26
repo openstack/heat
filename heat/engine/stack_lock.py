@@ -124,6 +124,14 @@ class StackLock(object):
                       "%(stack)s" % {'engine': self.engine_id,
                                      'stack': self.stack_id})
 
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
+        return False
+
     @contextlib.contextmanager
     def thread_lock(self, retry=True):
         """Acquire a lock and release it only if there is an exception.

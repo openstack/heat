@@ -161,6 +161,32 @@ class StackLockTest(common.HeatTestCase):
         mock_steal.assert_has_calls(
             [mock.call(self.stack_id, 'fake-engine-id', self.engine_id)] * 2)
 
+    def test_context_mgr_exception(self):
+        stack_lock_object.StackLock.create = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
+
+        def check_lock():
+            with slock:
+                self.assertEqual(1,
+                                 stack_lock_object.StackLock.create.call_count)
+                raise self.TestThreadLockException
+        self.assertRaises(self.TestThreadLockException, check_lock)
+        self.assertEqual(1, stack_lock_object.StackLock.release.call_count)
+
+    def test_context_mgr_noexception(self):
+        stack_lock_object.StackLock.create = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
+
+        with slock:
+            self.assertEqual(1,
+                             stack_lock_object.StackLock.create.call_count)
+
+        self.assertEqual(1, stack_lock_object.StackLock.release.call_count)
+
     def test_thread_lock_context_mgr_exception_acquire_success(self):
         stack_lock_object.StackLock.create = mock.Mock(return_value=None)
         stack_lock_object.StackLock.release = mock.Mock(return_value=None)
