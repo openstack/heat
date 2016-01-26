@@ -358,6 +358,7 @@ class FormatTest(common.HeatTestCase):
             'stack_status': 'IN_PROGRESS',
             'stack_status_reason': '',
             'stack_user_project_id': None,
+            'outputs': [],
             'template_description': 'No description',
             'timeout_mins': None,
             'tags': None,
