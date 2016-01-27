@@ -4,44 +4,16 @@
 # From heat_integrationtests.common.config
 #
 
-# Username to use for API requests. (string value)
-#username = <None>
-
-# API key to use when authenticating. (string value)
-#password = <None>
-
-# Tenant name to use for API requests. (string value)
-#tenant_name = <None>
-
-# Full URI of the OpenStack Identity API (Keystone), v2 (string value)
-#auth_url = <None>
-
-# The region name to us (string value)
-#region = <None>
-
-# Instance type for tests. Needs to be big enough for a full OS plus the test
-# workload (string value)
-#instance_type = <None>
-
-# Instance type enough for simplest cases. (string value)
-#minimal_instance_type = <None>
-
-# Name of image to use for tests which boot servers. (string value)
-#image_ref = <None>
-
-# Name of existing keypair to launch servers with. (string value)
-#keypair_name = <None>
-
-# Name of minimal (e.g cirros) image to use when launching test instances.
-# (string value)
-#minimal_image_ref = <None>
-
-# Identity API version to be used for authentication for API tests. (string
-# value)
-#auth_version = v2
+# List of scenario test class or class.method names to skip ex.
+# NeutronLoadBalancerTest, CeilometerAlarmTest.test_alarm (list value)
+#skip_scenario_test_list = <None>
 
 # Set to True if using self-signed SSL certificates. (boolean value)
 #disable_ssl_certificate_validation = false
+
+# Timeout in seconds to wait for adding or removing childprocess after
+# receiving of sighup signal (integer value)
+#sighup_timeout = 30
 
 # Time in seconds between build status checks. (integer value)
 #build_interval = 4
@@ -49,60 +21,88 @@
 # Timeout in seconds to wait for a stack to build. (integer value)
 #build_timeout = 1200
 
+# Default size in GB for volumes created by volumes tests (integer value)
+#volume_size = 1
+
 # Network used for SSH connections. (string value)
 #network_for_ssh = heat-net
+
+# Timeout in seconds to wait for connectivity to server. (integer value)
+#connectivity_timeout = 120
 
 # Visible fixed network name  (string value)
 #fixed_network_name = heat-net
 
+# Username to use for API requests. (string value)
+#username = <None>
+
 # Visible floating network name  (string value)
 #floating_network_name = public
+
+# API key to use when authenticating. (string value)
+#password = <None>
 
 # Path to environment file which defines the resource type
 # Heat::InstallConfigAgent. Needs to be appropriate for the image_ref. (string
 # value)
 #boot_config_env = heat_integrationtests/scenario/templates/boot_config_none_env.yaml
 
+# Tenant name to use for API requests. (string value)
+#tenant_name = <None>
+
 # Visible fixed sub-network name  (string value)
 #fixed_subnet_name = heat-subnet
+
+# Full URI of the OpenStack Identity API (Keystone), v2 (string value)
+#auth_url = <None>
 
 # Timeout in seconds to wait for authentication to succeed. (integer value)
 #ssh_timeout = 300
 
+# The region name to us (string value)
+#region = <None>
+
 # IP version used for SSH connections. (integer value)
 #ip_version_for_ssh = 4
+
+# Instance type for tests. Needs to be big enough for a full OS plus the test
+# workload (string value)
+#instance_type = <None>
 
 # Timeout in seconds to wait for output from ssh channel. (integer value)
 #ssh_channel_timeout = 60
 
+# Instance type enough for simplest cases. (string value)
+#minimal_instance_type = <None>
+
 # The mask bits for tenant ipv4 subnets (integer value)
 #tenant_network_mask_bits = 28
+
+# Name of image to use for tests which boot servers. (string value)
+#image_ref = <None>
+
+# List of stack actions in tests to skip ex. ABANDON, ADOPT, SUSPEND, RESUME
+# (list value)
+#skip_test_stack_action_list = <None>
 
 # Skip all scenario tests (boolean value)
 #skip_scenario_tests = false
 
+# Name of existing keypair to launch servers with. (string value)
+#keypair_name = <None>
+
 # Skip all functional tests (boolean value)
 #skip_functional_tests = false
+
+# Name of minimal (e.g cirros) image to use when launching test instances.
+# (string value)
+#minimal_image_ref = <None>
 
 # List of functional test class or class.method names to skip ex.
 # AutoscalingGroupTest,InstanceGroupBasicTest.test_size_updates_work (list
 # value)
 #skip_functional_test_list = <None>
 
-# List of scenario test class or class.method names to skip ex.
-# NeutronLoadBalancerTest, CeilometerAlarmTest.test_alarm (list value)
-#skip_scenario_test_list = <None>
-
-# List of stack actions in tests to skip ex. ABANDON, ADOPT, SUSPEND, RESUME
-# (list value)
-#skip_test_stack_action_list = <None>
-
-# Default size in GB for volumes created by volumes tests (integer value)
-#volume_size = 1
-
-# Timeout in seconds to wait for connectivity to server. (integer value)
-#connectivity_timeout = 120
-
-# Timeout in seconds to wait for adding or removing childprocess after
-# receiving of sighup signal (integer value)
-#sighup_timeout = 30
+# Identity API version to be used for authentication for API tests. (string
+# value)
+#auth_version = v2
