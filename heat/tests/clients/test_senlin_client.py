@@ -44,5 +44,6 @@ class ProfileConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("PROFILE_ID", self.ctx))
 
     def test_validate_false(self):
-        self.mock_get_profile.side_effect = exc.HTTPNotFound
+        self.mock_get_profile.side_effect = exc.sdkexc.ResourceNotFound(
+            'PROFILE_ID')
         self.assertFalse(self.constraint.validate("PROFILE_ID", self.ctx))

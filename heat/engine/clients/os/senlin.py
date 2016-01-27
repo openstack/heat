@@ -37,12 +37,12 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         return client.Client(self.VERSION, **args)
 
     def is_not_found(self, ex):
-        return isinstance(ex, exc.HTTPNotFound)
+        return isinstance(ex, exc.sdkexc.ResourceNotFound)
 
 
 class ProfileConstraint(constraints.BaseCustomConstraint):
 
-    expected_exceptions = (exc.HTTPNotFound,)
+    expected_exceptions = (exc.sdkexc.ResourceNotFound,)
 
     def validate_with_client(self, client, profile):
         client.client(CLIENT_NAME).get_profile(profile)

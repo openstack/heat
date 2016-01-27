@@ -137,7 +137,7 @@ class SenlinClusterTest(common.HeatTestCase):
     def test_cluster_delete_success(self):
         cluster = self._create_cluster(self.t)
         self.senlin_mock.get_cluster.side_effect = [
-            exc.HTTPNotFound(),
+            exc.sdkexc.ResourceNotFound('SenlinCluster'),
         ]
         scheduler.TaskRunner(cluster.delete)()
         self.senlin_mock.delete_cluster.assert_called_once_with(
