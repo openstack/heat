@@ -295,11 +295,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             return True
         elif status == SoftwareDeployment.FAILED:
             status_reason = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS_REASON]
-            message = _("Deployment to server "
-                        "failed: %s") % status_reason
-            LOG.error(message)
-            exc = exception.Error(message)
-            raise exc
+            message = _("Deployment to server failed: %s") % status_reason
+            LOG.info(message)
+            raise exception.Error(message)
 
     def empty_config(self):
         return ''
