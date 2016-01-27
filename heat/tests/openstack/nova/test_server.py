@@ -2507,7 +2507,12 @@ class ServersTest(common.HeatTestCase):
                           {'v4-fixed-ip': '192.0.2.0', 'net-id': None}],
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '192.0.2.0'}]))
-
+        self.assertEqual([{'port-id': 'aaaabbbb', 'net-id': None},
+                          {'port-id': 'aaaabbbb', 'net-id': None}],
+                         server._build_nics([{'port': 'aaaabbbb',
+                                              'fixed_ip': '192.0.2.0'},
+                                             {'port': 'aaaabbbb',
+                                              'fixed_ip': '2002::2'}]))
         self.assertEqual([{'port-id': 'aaaabbbb', 'net-id': None},
                           {'v6-fixed-ip': '2002::2', 'net-id': None}],
                          server._build_nics([{'port': 'aaaabbbb'},
