@@ -434,7 +434,7 @@ resources to be combined into a single Cloud-init_ multi-part message:
           parts:
           - config: {get_resource: boot_config}
           - config: {get_resource: boot_script}
-          - config: {get_resource: other_config}
+          - config: {get_param: other_config}
 
       server:
         type: OS::Nova::Server
