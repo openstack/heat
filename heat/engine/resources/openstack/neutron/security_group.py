@@ -221,7 +221,6 @@ class SecurityGroup(neutron.NeutronResource):
                         self.client_plugin().ignore_not_found(ex)
 
     def handle_delete(self):
-
         if self.resource_id is None:
             return
 
@@ -230,18 +229,20 @@ class SecurityGroup(neutron.NeutronResource):
             self.client().delete_security_group(self.resource_id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        props = self.prepare_update_properties(json_snippet)
-        rules = props.pop(self.RULES, [])
-
-        self.client().update_security_group(
-            self.resource_id, {'security_group': props})
-
         # handle rules changes by:
         # * deleting all rules
         # * restoring the default egress rules
         # * creating new rules
-        self._delete_rules()
-        self._create_rules(self.default_egress_rules)
+        rules = None
+        if self.RULES in prop_diff:
+            rules = prop_diff.pop(self.RULES)
+            self._delete_rules()
+            self._create_rules(self.default_egress_rules)
+
+        if prop_diff:
+            self.prepare_update_properties(prop_diff)
+            self.client().update_security_group(
+                self.resource_id, {'security_group': prop_diff})
         if rules:
             self._create_rules(rules)
 

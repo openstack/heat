@@ -209,8 +209,7 @@ class Router(neutron.NeutronResource):
                     if subnet_net == external_gw_net:
                         deps += (self, res)
 
-    def prepare_properties(self, properties, name):
-        props = super(Router, self).prepare_properties(properties, name)
+    def _resolve_gateway(self, props):
         gateway = props.get(self.EXTERNAL_GATEWAY)
         if gateway:
             self.client_plugin().resolve_network(
@@ -231,7 +230,7 @@ class Router(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-
+        self._resolve_gateway(props)
         l3_agent_ids = self._get_l3_agent_list(props)
 
         router = self.client().create_router({'router': props})['router']
@@ -257,19 +256,17 @@ class Router(neutron.NeutronResource):
             return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        props = self.prepare_update_properties(json_snippet)
-        l3_agent_ids = self._get_l3_agent_list(props)
-        if l3_agent_ids:
+        if self.EXTERNAL_GATEWAY in prop_diff:
+            self._resolve_gateway(prop_diff)
+
+        if self.L3_AGENT_IDS in prop_diff or self.L3_AGENT_ID in prop_diff:
+            l3_agent_ids = self._get_l3_agent_list(prop_diff)
             self._replace_agent(l3_agent_ids)
 
-        if self.L3_AGENT_IDS in prop_diff:
-            del prop_diff[self.L3_AGENT_IDS]
-        if self.L3_AGENT_ID in prop_diff:
-            del prop_diff[self.L3_AGENT_ID]
-
-        if len(prop_diff) > 0:
+        if prop_diff:
+            self.prepare_update_properties(prop_diff)
             self.client().update_router(
-                self.resource_id, {'router': props})
+                self.resource_id, {'router': prop_diff})
 
     def _replace_agent(self, l3_agent_ids=None):
         ret = self.client().list_l3_agent_hosting_routers(

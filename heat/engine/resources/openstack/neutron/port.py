@@ -475,15 +475,11 @@ class Port(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            if self.VALUE_SPECS in prop_diff:
-                self.merge_value_specs(prop_diff)
+            self.prepare_update_properties(prop_diff)
             if self.QOS_POLICY in prop_diff:
                 qos_policy = prop_diff.pop(self.QOS_POLICY)
                 prop_diff['qos_policy_id'] = self.client_plugin(
                     ).get_qos_policy_id(qos_policy) if qos_policy else None
-            if (self.NAME in prop_diff and
-                    prop_diff[self.NAME] is None):
-                prop_diff[self.NAME] = self.physical_resource_name()
             self._prepare_port_properties(prop_diff, prepare_for_update=True)
             LOG.debug('updating port with %s' % prop_diff)
             self.client().update_port(self.resource_id, {'port': prop_diff})

@@ -130,8 +130,7 @@ class Firewall(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            if self.VALUE_SPECS in prop_diff:
-                self.merge_value_specs(prop_diff)
+            self.prepare_update_properties(prop_diff)
             self.client().update_firewall(
                 self.resource_id, {'firewall': prop_diff})
 
