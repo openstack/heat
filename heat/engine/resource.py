@@ -370,14 +370,18 @@ class Resource(object):
                             % {'a': action, 'h': hook})
             self.trigger_hook(hook)
             LOG.info(_LI('Reached hook on %s'), six.text_type(self))
-        while self.has_hook(hook) and self.status != self.FAILED:
-            try:
-                yield
-            except Exception:
-                self.clear_hook(hook)
-                self._add_event(
-                    self.action, self.status,
-                    "Failure occurred while waiting.")
+
+            while self.has_hook(hook) and self.status != self.FAILED:
+                try:
+                    yield
+                except BaseException as exc:
+                    self.clear_hook(hook)
+                    self._add_event(
+                        self.action, self.status,
+                        "Failure occurred while waiting.")
+                    if (isinstance(exc, AssertionError) or
+                            not isinstance(exc, Exception)):
+                        raise
 
     def has_nested(self):
         # common resources have not nested, StackResource overrides it
