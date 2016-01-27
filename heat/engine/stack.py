@@ -1199,6 +1199,14 @@ class Stack(collections.Mapping):
         LOG.info(_LI('convergence_dependencies: %s'),
                  self.convergence_dependencies)
 
+        # Delete all the snapshots before starting delete operation
+        if self.action == self.DELETE:
+            snapshots = snapshot_object.Snapshot.get_all(self.context,
+                                                         self.id)
+            for snapshot in snapshots:
+                self.delete_snapshot(snapshot)
+                snapshot_object.Snapshot.delete(self.context, snapshot.id)
+
         # create sync_points for resources in DB
         for rsrc_id, is_update in self.convergence_dependencies:
             sync_point.create(self.context, rsrc_id,
