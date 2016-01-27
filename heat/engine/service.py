@@ -1617,7 +1617,7 @@ class EngineService(service.Service):
                         tenant_safe=False,
                         eager_load=True)
                     if s.status != parser.Stack.IN_PROGRESS:
-                        lock.release()
+                        lock.release(stack_id)
                         continue
 
                 stk = parser.Stack.load(cnxt, stack=s,
