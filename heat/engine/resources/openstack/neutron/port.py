@@ -390,7 +390,13 @@ class Port(neutron.NeutronResource):
                         self.client_plugin().resolve_subnet(
                             fixed_ip, self.FIXED_IP_SUBNET, 'subnet_id')
             else:
-                props[self.FIXED_IPS] = []
+                # Passing empty list would have created a port without
+                # fixed_ips during CREATE and released the existing
+                # fixed_ips during UPDATE (default neutron behaviour).
+                # However, for backward compatibility we will let neutron
+                # assign ip for CREATE and leave the assigned ips during
+                # UPDATE by not passing it. ref bug #1538473.
+                del props[self.FIXED_IPS]
         # delete empty MAC addresses so that Neutron validation code
         # wouldn't fail as it not accepts Nones
         if self.ALLOWED_ADDRESS_PAIRS in props:

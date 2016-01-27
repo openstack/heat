@@ -888,7 +888,8 @@ class UpdatePortTest(common.HeatTestCase):
         update_props = props.copy()
         update_props['security_groups'] = self.secgrp
         update_props['value_specs'] = self.value_specs
-        update_props['fixed_ips'] = self.fixed_ips
+        if self.fixed_ips:
+            update_props['fixed_ips'] = self.fixed_ips
         update_props['allowed_address_pairs'] = self.addr_pair
         update_props['binding:vnic_type'] = self.vnic_type
 
