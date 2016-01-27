@@ -77,7 +77,8 @@ resources:
   router:
     type: OS::Neutron::Router
     properties:
-      l3_agent_id: 792ff887-6c85-4a56-b518-23f24fa65581
+      l3_agent_ids:
+        - 792ff887-6c85-4a56-b518-23f24fa65581
 
   router_interface:
     type: OS::Neutron::RouterInterface
