@@ -44,11 +44,11 @@ class TestResource(resource.Resource):
     PROPERTIES = (
         VALUE, UPDATE_REPLACE, FAIL,
         CLIENT_NAME, ENTITY_NAME,
-        WAIT_SECS, ACTION_WAIT_SECS
+        WAIT_SECS, ACTION_WAIT_SECS, ATTR_WAIT_SECS,
     ) = (
         'value', 'update_replace', 'fail',
         'client_name', 'entity_name',
-        'wait_secs', 'action_wait_secs'
+        'wait_secs', 'action_wait_secs', 'attr_wait_secs',
     )
 
     ATTRIBUTES = (
@@ -58,6 +58,13 @@ class TestResource(resource.Resource):
     )
 
     properties_schema = {
+        ATTR_WAIT_SECS: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Number value for timeout during resolving output value.'),
+            default=0,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
         VALUE: properties.Schema(
             properties.Schema.STRING,
             _('The input string to be stored.'),
@@ -227,6 +234,7 @@ class TestResource(resource.Resource):
         return False
 
     def _resolve_attribute(self, name):
+        eventlet.sleep(self.properties[self.ATTR_WAIT_SECS])
         if name == self.OUTPUT:
             return self.data().get('value')
 
