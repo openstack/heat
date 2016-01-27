@@ -60,8 +60,9 @@ class nokeyTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             'CentOS 5.2').MultipleTimes().AndReturn(1)
 
         # need to resolve the template functions

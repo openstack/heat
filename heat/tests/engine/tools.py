@@ -175,8 +175,9 @@ def setup_keystone_mocks(mocks, stack):
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
                                     imageId_output=744):
-    mocks.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-    glance.GlanceClientPlugin.get_image_id(
+    mocks.StubOutWithMock(glance.GlanceClientPlugin,
+                          'find_image_by_name_or_id')
+    glance.GlanceClientPlugin.find_image_by_name_or_id(
         imageId_input).MultipleTimes().AndReturn(imageId_output)
 
 

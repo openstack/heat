@@ -196,7 +196,8 @@ class SaharaCluster(resource.Resource):
         image_id = (self.properties[self.IMAGE_ID] or
                     self.properties[self.IMAGE])
         if image_id:
-            image_id = self.client_plugin('glance').get_image_id(image_id)
+            image_id = self.client_plugin(
+                'glance').find_image_by_name_or_id(image_id)
 
         # check that image is provided in case when
         # cluster template is missing one

@@ -76,15 +76,15 @@ class CloudServersTest(common.HeatTestCase):
         resource._register_class("OS::Nova::Server",
                                  cloud_server.CloudServer)
 
-    def _mock_get_image_id_success(self, imageId):
+    def _mock_find_image_by_name_or_id_success(self, imageId):
         self.mock_get_image = mock.Mock()
         self.ctx.clients.client_plugin(
-            'glance').get_image_id = self.mock_get_image
+            'glance').find_image_by_name_or_id = self.mock_get_image
         self.mock_get_image.return_value = imageId
 
     def _stub_server_validate(self, server, imageId_input, image_id):
         # stub glance image validate
-        self._mock_get_image_id_success(image_id)
+        self._mock_find_image_by_name_or_id_success(image_id)
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
@@ -472,7 +472,7 @@ class CloudServersTest(common.HeatTestCase):
         mock_servers_create = mock.Mock(return_value=return_server)
         self.fc.servers.create = mock_servers_create
         image_id = mock.ANY
-        self._mock_get_image_id_success(image_id)
+        self._mock_find_image_by_name_or_id_success(image_id)
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).MultipleTimes(
         ).AndReturn(return_server)

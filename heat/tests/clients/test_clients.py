@@ -15,6 +15,7 @@ from ceilometerclient import exc as ceil_exc
 from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
+from glanceclient.openstack.common.apiclient import exceptions as g_a_exc
 from heatclient import client as heatclient
 from heatclient import exc as heat_exc
 from keystoneclient.auth.identity import v3
@@ -501,13 +502,21 @@ class TestIsNotFound(common.HeatTestCase):
             exception=lambda: cinder_exc.ClientException(
                 code=409, message='conflict'),
         )),
-        ('glance_not_found', dict(
+        ('glance_not_found_1', dict(
             is_not_found=True,
             is_over_limit=False,
             is_client_exception=True,
             is_conflict=False,
             plugin='glance',
-            exception=lambda: glance_exc.HTTPNotFound(details='gone'),
+            exception=lambda: g_a_exc.NotFound(),
+        )),
+        ('glance_not_found_2', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='glance',
+            exception=lambda: glance_exc.HTTPNotFound(),
         )),
         ('glance_exception', dict(
             is_not_found=False,
@@ -525,13 +534,21 @@ class TestIsNotFound(common.HeatTestCase):
             plugin='glance',
             exception=lambda: glance_exc.HTTPOverLimit(details='over'),
         )),
-        ('glance_conflict', dict(
+        ('glance_conflict_1', dict(
             is_not_found=False,
             is_over_limit=False,
             is_client_exception=True,
             is_conflict=True,
             plugin='glance',
-            exception=lambda: glance_exc.HTTPConflict(),
+            exception=lambda: g_a_exc.Conflict(),
+        )),
+        ('glance_conflict_1', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=True,
+            plugin='glance',
+            exception=lambda: glance_exc.Conflict(),
         )),
         ('heat_not_found', dict(
             is_not_found=True,

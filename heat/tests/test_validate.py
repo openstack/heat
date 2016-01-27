@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient import exc as glance_exceptions
 import mock
 from oslo_messaging.rpc import dispatcher
 import six
@@ -915,13 +914,16 @@ class ValidateTest(common.HeatTestCase):
         self.engine = service.EngineService('a', 't')
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _mock_get_image_id_fail(self, image_id, exp):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(image_id).AndRaise(exp)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
+            image_id).AndRaise(exp)
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
@@ -1422,10 +1424,8 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_glance_client_exception)
         template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
-
-        self.m.StubOutWithMock(self.gc.images, 'list')
-        self.gc.images.list().AndRaise(
-            glance_exceptions.ClientException(500))
+        self.m.StubOutWithMock(self.gc.images, 'get')
+        self.gc.images.get('image_name').AndRaise(glance.exc.HTTPNotFound())
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
         glance.GlanceClientPlugin._create().AndReturn(self.gc)
         self.stub_FlavorConstraint_validate()

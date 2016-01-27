@@ -47,7 +47,8 @@ class SaharaImageTest(common.HeatTestCase):
         self.client = mock.Mock()
         self.patchobject(image.SaharaImageRegistry, 'client',
                          return_value=self.client)
-        self.patchobject(glance.GlanceClientPlugin, 'get_image_id',
+        self.patchobject(glance.GlanceClientPlugin,
+                         'find_image_by_name_or_id',
                          return_value='12345')
 
     def _create_resource(self, name, snippet, stack):

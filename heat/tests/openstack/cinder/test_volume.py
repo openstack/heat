@@ -151,8 +151,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             image_id).MultipleTimes().AndReturn(image_id)
 
         self.cinder_fc.volumes.create(

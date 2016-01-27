@@ -510,7 +510,8 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
 
         image_name = self.properties[self.IMAGE_ID]
 
-        image_id = self.client_plugin('glance').get_image_id(image_name)
+        image_id = self.client_plugin(
+            'glance').find_image_by_name_or_id(image_name)
 
         flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
 

@@ -215,7 +215,8 @@ class ScalingGroupTest(common.HeatTestCase):
         self.patchobject(auto_scale.Group, 'auto_scale',
                          return_value=self.fake_auto_scale)
         # mock nova and glance client methods to satisfy contraints
-        mock_im = self.patchobject(glance.GlanceClientPlugin, 'get_image_id')
+        mock_im = self.patchobject(glance.GlanceClientPlugin,
+                                   'find_image_by_name_or_id')
         mock_im.return_value = 'image-ref'
         mock_fl = self.patchobject(nova.NovaClientPlugin,
                                    'find_flavor_by_name_or_id')

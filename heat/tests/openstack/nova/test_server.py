@@ -282,13 +282,16 @@ class ServersTest(common.HeatTestCase):
         return fake_interface(port, mac, ip)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _mock_get_image_id_fail(self, image_id, exp):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(image_id).AndRaise(exp)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
+            image_id).AndRaise(exp)
 
     def _mock_get_keypair_success(self, keypair_input, keypair):
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'get_keypair')
@@ -466,9 +469,7 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('Slackware',
-                                     exception.EntityNotFound(
-                                         entity='Image',
-                                         name='Slackware'))
+                                     glance.exceptions.NotFound())
         self.stub_FlavorConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.m.ReplayAll()
@@ -478,7 +479,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(
             "StackValidationFailed: resources.WebServer: Property error: "
             "WebServer.Properties.image: Error validating value 'Slackware': "
-            "The Image (Slackware) could not be found.",
+            "Not Found (HTTP 404)",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -494,8 +495,7 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('CentOS 5.2',
-                                     exception.PhysicalResourceNameAmbiguity(
-                                         name='CentOS 5.2'))
+                                     glance.exceptions.NoUniqueMatch())
         self.stub_FlavorConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.m.ReplayAll()
@@ -503,9 +503,9 @@ class ServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: resources.WebServer: Property error: '
-            'WebServer.Properties.image: Multiple physical '
-            'resources were found with name (CentOS 5.2).',
+            "StackValidationFailed: resources.WebServer: Property error: "
+            "WebServer.Properties.image: "
+            "Error validating value 'CentOS 5.2': ",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -521,8 +521,7 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('1',
-                                     exception.EntityNotFound(
-                                         entity='Image', name='1'))
+                                     glance.exceptions.NotFound())
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
@@ -532,7 +531,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(
             "StackValidationFailed: resources.WebServer: Property error: "
             "WebServer.Properties.image: Error validating value '1': "
-            "The Image (1) could not be found.",
+            "Not Found (HTTP 404)",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -3666,7 +3665,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(glance.ImageConstraint, "validate")
         # verify that validate gets invoked exactly once for update
-        ex = exception.EntityNotFound(entity='Image', name='Update Image')
+        ex = glance.exceptions.NotFound()
         glance.ImageConstraint.validate('Update Image',
                                         mox.IgnoreArg()).AndRaise(ex)
         self.m.ReplayAll()
@@ -3679,8 +3678,7 @@ class ServersTest(common.HeatTestCase):
         err = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual('StackValidationFailed: resources.my_server: '
                          'Property error: '
-                         'WebServer.Properties.image: The Image '
-                         '(Update Image) could not be found.',
+                         'WebServer.Properties.image: Not Found (HTTP 404)',
                          six.text_type(err))
         self.m.VerifyAll()
 
@@ -3774,10 +3772,11 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(return_server.id).AndReturn(return_server)
 
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin,
+                               'find_image_by_name_or_id')
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             'F17-x86_64-gold').MultipleTimes().AndReturn(744)
-        glance.GlanceClientPlugin.get_image_id(
+        glance.GlanceClientPlugin.find_image_by_name_or_id(
             'CentOS 5.2').MultipleTimes().AndReturn(1)
 
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
@@ -3822,7 +3821,8 @@ class ServersTest(common.HeatTestCase):
         mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
         mock_plugin.return_value = self.fc
 
-        get_image = self.patchobject(glance.GlanceClientPlugin, 'get_image_id')
+        get_image = self.patchobject(glance.GlanceClientPlugin,
+                                     'find_image_by_name_or_id')
         get_image.return_value = 744
 
         return_server = self.fc.servers.list()[1]
@@ -3867,7 +3867,8 @@ class ServersTest(common.HeatTestCase):
         mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
         mock_plugin.return_value = self.fc
 
-        get_image = self.patchobject(glance.GlanceClientPlugin, 'get_image_id')
+        get_image = self.patchobject(glance.GlanceClientPlugin,
+                                     'find_image_by_name_or_id')
         get_image.return_value = 744
 
         return_server = self.fc.servers.list()[1]
