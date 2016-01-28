@@ -79,9 +79,14 @@ class Firewall(neutron.NeutronResource):
             _('Whether this firewall should be shared across all tenants. '
               'NOTE: The default policy setting in Neutron restricts usage '
               'of this property to administrative users only.'),
-            default=False,
             update_allowed=True,
-            support_status=support.SupportStatus(version='2015.1'),
+            support_status=support.SupportStatus(
+                status=support.UNSUPPORTED,
+                message=_('There is no such option during 5.0.0, so need to '
+                          'make this property unsupported while it not used.'),
+                version='6.0.0',
+                previous_status=support.SupportStatus(version='2015.1')
+            )
         ),
     }
 
@@ -105,6 +110,13 @@ class Firewall(neutron.NeutronResource):
         ),
         SHARED_ATTR: attributes.Schema(
             _('Shared status of this firewall.'),
+            support_status=support.SupportStatus(
+                status=support.UNSUPPORTED,
+                message=_('There is no such option during 5.0.0, so need to '
+                          'make this attribute unsupported, otherwise error '
+                          'will raised.'),
+                version='6.0.0'
+            ),
             type=attributes.Schema.STRING
         ),
         STATUS: attributes.Schema(
@@ -141,6 +153,12 @@ class Firewall(neutron.NeutronResource):
             self.client_plugin().ignore_not_found(ex)
         else:
             return True
+
+    def _resolve_attribute(self, name):
+        if name == self.SHARED_ATTR:
+            return ('This attribute is currently unsupported in neutron '
+                    'firewall resource.')
+        return super(Firewall, self)._resolve_attribute(name)
 
 
 class FirewallPolicy(neutron.NeutronResource):
