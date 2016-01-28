@@ -3265,8 +3265,9 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                 definition=definition,
                 stack=mock_stack)
 
-            msg = ('Service sample does not have required endpoint in service'
-                   ' catalog for the resource type UnavailableResourceType')
+            msg = ('HEAT-E99001 Service sample does not have required endpoint'
+                   ' in service catalog for the resource type'
+                   ' UnavailableResourceType')
             self.assertEqual(msg,
                              six.text_type(ex),
                              'invalid exception message')
