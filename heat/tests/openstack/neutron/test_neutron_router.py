@@ -36,7 +36,8 @@ resources:
   router:
     type: OS::Neutron::Router
     properties:
-      l3_agent_id: 792ff887-6c85-4a56-b518-23f24fa65581
+      l3_agent_ids:
+       - 792ff887-6c85-4a56-b518-23f24fa65581
 
   router_interface:
     type: OS::Neutron::RouterInterface
@@ -49,6 +50,16 @@ resources:
     properties:
       router_id: { get_resource: router }
       network: net1234
+'''
+
+hidden_property_router_template = '''
+heat_template_version: 2015-04-30
+description: Template to test router related Neutron resources
+resources:
+  router:
+    type: OS::Neutron::Router
+    properties:
+      l3_agent_id: 792ff887-6c85-4a56-b518-23f24fa65581
 '''
 
 neutron_external_gateway_template = '''
@@ -155,6 +166,14 @@ class NeutronRouterTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
+
+    def test_router_hidden_property_translation(self):
+        t = template_format.parse(hidden_property_router_template)
+        stack = utils.parse_stack(t)
+        rsrc = stack['router']
+        self.assertIsNone(rsrc.properties['l3_agent_id'])
+        self.assertEqual([u'792ff887-6c85-4a56-b518-23f24fa65581'],
+                         rsrc.properties['l3_agent_ids'])
 
     def test_router_validate_distribute_l3_agents(self):
         t = template_format.parse(neutron_template)
