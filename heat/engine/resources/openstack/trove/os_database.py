@@ -27,7 +27,13 @@ LOG = logging.getLogger(__name__)
 
 
 class OSDBInstance(resource.Resource):
-    """OpenStack cloud database instance resource."""
+    """OpenStack cloud database instance resource.
+
+    Trove is Database as a Service for OpenStack. It's designed to run entirely
+    on OpenStack, with the goal of allowing users to quickly and easily utilize
+    the features of a relational or non-relational database without the burden
+    of handling complex administrative tasks.
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

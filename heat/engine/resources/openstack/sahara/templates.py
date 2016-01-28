@@ -35,6 +35,13 @@ SAHARA_NAME_REGEX = (r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]"
 
 
 class SaharaNodeGroupTemplate(resource.Resource):
+    """A resource for managing Sahara node group templates.
+
+    A Node Group Template describes a group of nodes within cluster. It
+    contains a list of hadoop processes that will be launched on each instance
+    in a group. Also a Node Group Template may provide node scoped
+    configurations for those processes.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 
@@ -352,6 +359,19 @@ class SaharaNodeGroupTemplate(resource.Resource):
 
 
 class SaharaClusterTemplate(resource.Resource):
+    """A resource for managing Sahara cluster templates.
+
+    A Cluster Template is designed to bring Node Group Templates together to
+    form a Cluster. A Cluster Template defines what Node Groups will be
+    included and how many instances will be created in each. Some data
+    processing framework configurations can not be applied to a single node,
+    but to a whole Cluster. A user can specify these kinds of configurations in
+    a Cluster Template. Sahara enables users to specify which processes should
+    be added to an anti-affinity group within a Cluster Template. If a process
+    is included into an anti-affinity group, it means that VMs where this
+    process is going to be launched should be scheduled to different hardware
+    hosts.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

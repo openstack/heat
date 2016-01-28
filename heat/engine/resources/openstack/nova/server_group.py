@@ -18,7 +18,11 @@ from heat.engine import support
 
 
 class ServerGroup(resource.Resource):
-    """A resource for managing a Nova server group."""
+    """A resource for managing a Nova server group.
+
+    Server groups allow you to make sure instances (VM/VPS) are on the same
+    hypervisor host or on a different one.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

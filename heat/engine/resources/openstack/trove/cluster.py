@@ -27,6 +27,10 @@ LOG = logging.getLogger(__name__)
 
 
 class TroveCluster(resource.Resource):
+    """A resource for managing Trove clusters.
+
+    A Cluster is an opaque cluster used to store Database clusters.
+    """
 
     support_status = support.SupportStatus(version='2015.1')
 

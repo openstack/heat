@@ -43,6 +43,11 @@ LOG = logging.getLogger(__name__)
 
 class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
              server_network_mixin.ServerNetworkMixin):
+    """A resource for managing Nova instances.
+
+    A Server resource manages the running virtual machine instance within an
+    OpenStack cloud.
+    """
 
     PROPERTIES = (
         NAME, IMAGE, BLOCK_DEVICE_MAPPING, BLOCK_DEVICE_MAPPING_V2,

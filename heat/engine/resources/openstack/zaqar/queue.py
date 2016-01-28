@@ -20,6 +20,13 @@ from heat.engine import support
 
 
 class ZaqarQueue(resource.Resource):
+    """A resource for managing Zaqar queues.
+
+    Queue is a logical entity that groups messages. Ideally a queue is created
+    per work type. For example, if you want to compress files, you would create
+    a queue dedicated for this job. Any application that reads from this queue
+    would only compress files.
+    """
 
     default_client_name = "zaqar"
 

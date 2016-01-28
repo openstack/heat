@@ -27,6 +27,11 @@ LOG = logging.getLogger(__name__)
 
 
 class SwiftContainer(resource.Resource):
+    """A resource for managing Swift containers.
+
+    A container defines a namespace for objects. An object with the same
+    name in two different containers represents two different objects.
+    """
     PROPERTIES = (
         NAME, X_CONTAINER_READ, X_CONTAINER_WRITE, X_CONTAINER_META,
         X_ACCOUNT_META, PURGE_ON_DELETE,
