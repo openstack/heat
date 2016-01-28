@@ -101,6 +101,8 @@ class ResourceController(object):
 
         whitelist = {'with_attr': 'multi'}
         params = util.get_allowed_params(req.params, whitelist)
+        if 'with_attr' not in params:
+            params['with_attr'] = None
         res = self.rpc_client.describe_stack_resource(req.context,
                                                       identity,
                                                       resource_name,

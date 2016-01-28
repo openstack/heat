@@ -336,7 +336,7 @@ class EngineClient(object):
                                              sort_dir=sort_dir))
 
     def describe_stack_resource(self, ctxt, stack_identity, resource_name,
-                                with_attr=None):
+                                with_attr=False):
         """
         Get detailed resource information about a particular resource.
         :param ctxt: RPC context.

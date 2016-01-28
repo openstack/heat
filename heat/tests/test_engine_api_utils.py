@@ -96,6 +96,12 @@ class FormatTest(common.HeatTestCase):
         formatted = api.format_stack_resource(res, False)
         self.assertEqual(resource_keys, set(formatted.keys()))
 
+    def test_format_stack_resource_no_attrs(self):
+        res = self.stack['generic1']
+        formatted = api.format_stack_resource(res, True, with_attr=False)
+        self.assertNotIn(rpc_api.RES_SCHEMA_ATTRIBUTES, formatted)
+        self.assertIn(rpc_api.RES_METADATA, formatted)
+
     @mock.patch.object(api, 'format_resource_properties')
     def test_format_stack_resource_with_props(self, mock_format_props):
         mock_format_props.return_value = 'formatted_res_props'
