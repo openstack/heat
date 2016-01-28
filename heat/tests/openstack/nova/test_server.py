@@ -364,8 +364,6 @@ class ServersTest(common.HeatTestCase):
                          server.FnGetAtt('addresses')['private'][0]['addr'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('networks')['private'][0])
-        self.assertIn(
-            server.FnGetAtt('first_address'), (private_ip, public_ip))
 
         self.assertEqual(return_server._info, server.FnGetAtt('show'))
         self.assertEqual('sample-server2', server.FnGetAtt('instance_name'))
@@ -451,8 +449,6 @@ class ServersTest(common.HeatTestCase):
                          server.FnGetAtt('addresses')['private'][0]['addr'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('networks')['private'][0])
-        self.assertIn(
-            server.FnGetAtt('first_address'), (private_ip, public_ip))
 
         self.assertEqual(server_name, server.FnGetAtt('name'))
 
@@ -2584,7 +2580,6 @@ class ServersTest(common.HeatTestCase):
 
         self.assertEqual({'empty_net': []}, server.FnGetAtt('addresses'))
         self.assertEqual({'empty_net': []}, server.FnGetAtt('networks'))
-        self.assertEqual('', server.FnGetAtt('first_address'))
         self.m.VerifyAll()
 
     def test_build_block_device_mapping(self):

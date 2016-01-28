@@ -319,7 +319,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
           },
         "outputs": {
             "instance_ip": {
-                "Value": { "get_attr": "[my_instance, first_address]" }
+                "Value": { "get_attr": "[my_instance, networks]" }
             }
           }
         }'''
