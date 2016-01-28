@@ -219,6 +219,7 @@ class CloudLoadBalancer(resource.Resource):
                     ),
                     NODE_TYPE: properties.Schema(
                         properties.Schema.STRING,
+                        default='PRIMARY',
                         constraints=[
                             constraints.AllowedValues(['PRIMARY',
                                                        'SECONDARY']),
@@ -226,6 +227,7 @@ class CloudLoadBalancer(resource.Resource):
                     ),
                     NODE_WEIGHT: properties.Schema(
                         properties.Schema.NUMBER,
+                        default=1,
                         constraints=[
                             constraints.Range(1, 100),
                         ]
