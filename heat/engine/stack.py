@@ -646,6 +646,8 @@ class Stack(collections.Mapping):
                     (r.CREATE, r.COMPLETE),
                     (r.RESUME, r.IN_PROGRESS),
                     (r.RESUME, r.COMPLETE),
+                    (r.SUSPEND, r.IN_PROGRESS),
+                    (r.SUSPEND, r.COMPLETE),
                     (r.UPDATE, r.IN_PROGRESS),
                     (r.UPDATE, r.COMPLETE)) and r.FnGetRefId() == refid:
                 return r
