@@ -567,11 +567,57 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
     entity = 'servers'
 
     def translation_rules(self, props):
-        return [translation.TranslationRule(
-            props,
-            translation.TranslationRule.REPLACE,
-            source_path=[self.NETWORKS, self.NETWORK_ID],
-            value_name=self.NETWORK_UUID)]
+        rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.REPLACE,
+                source_path=[self.NETWORKS, self.NETWORK_ID],
+                value_name=self.NETWORK_UUID),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                source_path=[self.FLAVOR],
+                client_plugin=self.client_plugin('nova'),
+                finder='find_flavor_by_name_or_id'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                source_path=[self.IMAGE],
+                client_plugin=self.client_plugin('glance'),
+                finder='find_image_by_name_or_id'),
+        ]
+        if self.is_using_neutron():
+            rules.extend([
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    source_path=[self.NETWORKS, self.NETWORK_ID],
+                    client_plugin=self.client_plugin('neutron'),
+                    finder='find_resourceid_by_name_or_id',
+                    entity='network'),
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    source_path=[self.NETWORKS, self.NETWORK_SUBNET],
+                    client_plugin=self.client_plugin('neutron'),
+                    finder='find_resourceid_by_name_or_id',
+                    entity='subnet'),
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    source_path=[self.NETWORKS, self.NETWORK_PORT],
+                    client_plugin=self.client_plugin('neutron'),
+                    finder='find_resourceid_by_name_or_id',
+                    entity='port')])
+        else:
+            rules.extend([
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    source_path=[self.NETWORKS, self.NETWORK_ID],
+                    client_plugin=self.client_plugin('nova'),
+                    finder='get_nova_network_id')])
+        return rules
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
@@ -771,16 +817,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             instance_user=None,
             user_data_format=user_data_format)
 
-        flavor = self.properties[self.FLAVOR]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
-
-        image = self.properties[self.IMAGE]
-        if image:
-            image = self.client_plugin(
-                'glance').find_image_by_name_or_id(image)
-
-        flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
-
         instance_meta = self.properties[self.METADATA]
         if instance_meta is not None:
             instance_meta = self.client_plugin().meta_serialize(
@@ -799,13 +836,15 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         admin_pass = self.properties[self.ADMIN_PASS] or None
         personality_files = self.properties[self.PERSONALITY]
         key_name = self.properties[self.KEY_NAME]
+        flavor = self.properties[self.FLAVOR]
+        image = self.properties[self.IMAGE]
 
         server = None
         try:
             server = self.client().servers.create(
                 name=self._server_name(),
                 image=image,
-                flavor=flavor_id,
+                flavor=flavor,
                 key_name=key_name,
                 security_groups=security_groups,
                 userdata=userdata,
@@ -1028,10 +1067,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     def _update_flavor(self, prop_diff):
         flavor = prop_diff[self.FLAVOR]
-        flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
-        handler_args = {'args': (flavor_id,)}
-        checker_args = {'args': (flavor_id, flavor)}
-
+        handler_args = checker_args = {'args': (flavor,)}
         prg_resize = progress.ServerUpdateProgress(self.resource_id,
                                                    'resize',
                                                    handler_extra=handler_args,
@@ -1045,8 +1081,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
             self.properties[self.IMAGE_UPDATE_POLICY])
         image = prop_diff[self.IMAGE]
-        image_id = self.client_plugin(
-            'glance').find_image_by_name_or_id(image)
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
         password = (prop_diff.get(self.ADMIN_PASS) or
@@ -1055,7 +1089,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                   'preserve_ephemeral': preserve_ephemeral}
         prg = progress.ServerUpdateProgress(self.resource_id,
                                             'rebuild',
-                                            handler_extra={'args': (image_id,),
+                                            handler_extra={'args': (image,),
                                                            'kwargs': kwargs})
         return prg
 

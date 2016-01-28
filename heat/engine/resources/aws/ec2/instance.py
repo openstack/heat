@@ -630,7 +630,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         flavor = prop_diff[self.INSTANCE_TYPE]
         flavor_id = self.client_plugin().find_flavor_by_name_or_id(flavor)
         handler_args = {'args': (flavor_id,)}
-        checker_args = {'args': (flavor_id, flavor)}
+        checker_args = {'args': (flavor_id,)}
 
         prg_resize = progress.ServerUpdateProgress(self.resource_id,
                                                    'resize',
