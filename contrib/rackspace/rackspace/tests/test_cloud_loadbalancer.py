@@ -343,7 +343,8 @@ class LoadBalancerTest(common.HeatTestCase):
         self.lb_name = 'test-clb'
         self.expected_body = {
             "nodes": [FakeNode(address=u"166.78.103.141", port=80,
-                               condition=u"ENABLED")],
+                               condition=u"ENABLED", type=u"PRIMARY",
+                               weight=1)],
             "protocol": u'HTTP',
             "port": 80,
             "virtual_ips": [FakeVirtualIP(type=u"PUBLIC", ipVersion=u"IPV6")],
@@ -812,18 +813,24 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template['Properties']['nodes'] = [
             {"addresses": ["166.78.103.141"],
              "port": 80,
-             "condition": "ENABLED"},
+             "condition": "ENABLED",
+             "type": "PRIMARY",
+             "weight": 1},
             {"addresses": [expected_ip],
              "port": 80,
-             "condition": "ENABLED"}]
+             "condition": "ENABLED",
+             "type": "PRIMARY",
+             "weight": 1}]
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
         rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb)
         fake_lb1 = copy.deepcopy(fake_lb)
         fake_lb1.nodes = [
-            FakeNode(address=u"172.168.1.4", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"166.78.103.141", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"172.168.1.4", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"166.78.103.141", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
         ]
         rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb1)
 
@@ -831,7 +838,8 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb.add_nodes([
             fake_lb.Node(address=expected_ip,
                          port=80,
-                         condition='ENABLED')])
+                         condition='ENABLED',
+                         type="PRIMARY", weight=1)])
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
@@ -870,9 +878,12 @@ class LoadBalancerTest(common.HeatTestCase):
                                                 self.lb_name,
                                                 self.expected_body)
         current_nodes = [
-            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"3.3.3.3", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"3.3.3.3", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1)
         ]
         fake_lb.nodes = current_nodes
         fake_lb.tracker = "fake_lb"
@@ -882,9 +893,12 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         expected_ip = '4.4.4.4'
         update_template['Properties']['nodes'] = [
-            {"addresses": ["1.1.1.1"], "port": 80, "condition": "ENABLED"},
-            {"addresses": ["2.2.2.2"], "port": 80, "condition": "DISABLED"},
-            {"addresses": [expected_ip], "port": 80, "condition": "ENABLED"},
+            {"addresses": ["1.1.1.1"], "port": 80, "condition": "ENABLED",
+             "type": "PRIMARY", "weight": 1},
+            {"addresses": ["2.2.2.2"], "port": 80, "condition": "DISABLED",
+             "type": "PRIMARY", "weight": 1},
+            {"addresses": [expected_ip], "port": 80, "condition": "ENABLED",
+             "type": "PRIMARY", "weight": 1}
         ]
 
         self.m.UnsetStubs()
@@ -901,10 +915,14 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb2 = copy.deepcopy(fake_lb1)
         fake_lb2.status = "ACTIVE"
         fake_lb2.nodes = [
-            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"3.3.3.3", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"4.4.4.4", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"3.3.3.3", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"4.4.4.4", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
         ]
         fake_lb2.tracker = "fake_lb2"
 
@@ -916,9 +934,12 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb3 = copy.deepcopy(fake_lb2)
         fake_lb3.status = "ACTIVE"
         fake_lb3.nodes = [
-            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"4.4.4.4", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"4.4.4.4", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1)
         ]
         fake_lb3.tracker = "fake_lb3"
 
@@ -930,9 +951,12 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb4 = copy.deepcopy(fake_lb3)
         fake_lb4.status = "ACTIVE"
         fake_lb4.nodes = [
-            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED"),
-            FakeNode(address=u"2.2.2.2", port=80, condition=u"DISABLED"),
-            FakeNode(address=u"4.4.4.4", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"2.2.2.2", port=80, condition=u"DISABLED",
+                     type="PRIMARY", weight=1),
+            FakeNode(address=u"4.4.4.4", port=80, condition=u"ENABLED",
+                     type="PRIMARY", weight=1)
         ]
         fake_lb4.tracker = "fake_lb4"
 
@@ -2028,10 +2052,14 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template['Properties']['nodes'] = [
             {"addresses": ["166.78.103.141"],
              "port": 80,
-             "condition": "DRAINING"},
+             "condition": "DRAINING",
+             "type": "PRIMARY",
+             "weight": 1},
             {"addresses": [expected_ip],
              "port": 80,
-             "condition": "DRAINING"}]
+             "condition": "DRAINING",
+             "type": "PRIMARY",
+             "weight": 1}]
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -2042,14 +2070,15 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb1.add_nodes([
             fake_lb1.Node(address=expected_ip,
                           port=80,
-                          condition='DRAINING')])
+                          condition='DRAINING',
+                          type="PRIMARY", weight=1)])
 
         fake_lb2 = copy.deepcopy(fake_lb)
         fake_lb2.nodes = [
             FakeNode(address=u"166.78.103.141", port=80,
-                     condition=u"DRAINING"),
+                     condition=u"DRAINING", type="PRIMARY", weight=1),
             FakeNode(address=u"172.168.1.4", port=80,
-                     condition=u"DRAINING"),
+                     condition=u"DRAINING", type="PRIMARY", weight=1),
         ]
         rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb2)
 
@@ -2071,10 +2100,14 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template['Properties']['nodes'] = [
             {"addresses": ["166.78.103.141"],
              "port": 80,
-             "condition": "ENABLED"},
+             "condition": "ENABLED",
+             "type": "PRIMARY",
+             "weight": 1},
             {"addresses": ["166.78.103.141"],
              "port": 81,
-             "condition": "ENABLED"}]
+             "condition": "ENABLED",
+             "type": "PRIMARY",
+             "weight": 1}]
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -2085,18 +2118,55 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb1.add_nodes([
             fake_lb1.Node(address="166.78.103.141",
                           port=81,
-                          condition='ENABLED')])
+                          condition='ENABLED',
+                          type="PRIMARY", weight=1)])
         fake_lb1.tracker = "fake_lb1"
 
         fake_lb2 = copy.deepcopy(fake_lb)
         fake_lb2.nodes = [
             FakeNode(address=u"166.78.103.141", port=80,
-                     condition=u"ENABLED"),
+                     condition=u"ENABLED", type="PRIMARY", weight=1),
             FakeNode(address=u"166.78.103.141", port=81,
-                     condition=u"ENABLED"),
+                     condition=u"ENABLED", type="PRIMARY", weight=1),
         ]
         fake_lb2.tracker = "fake_lb2"
         rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb2)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_nodes_defaults(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = list(six.iterkeys(template['Resources']))[0]
+        tmpl_node = template['Resources'][lb_name]['Properties']['nodes'][0]
+        tmpl_node['type'] = "PRIMARY"
+        tmpl_node['condition'] = "ENABLED"
+        tmpl_node['weight'] = 1
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['nodes'] = [FakeNode(address=u"166.78.103.141", port=80,
+                                           condition=u"ENABLED",
+                                           type="PRIMARY", weight=1)]
+
+        rsrc, fake_lb = self._mock_loadbalancer(template,
+                                                self.lb_name,
+                                                expected_body)
+        fake_lb.nodes = self.expected_body['nodes']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['nodes'] = [
+            {"addresses": ["166.78.103.141"],
+             "port": 80}]
+
+        self.m.UnsetStubs()
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        fake_lb1 = copy.deepcopy(fake_lb)
+        rsrc.clb.get(mox.IgnoreArg()).MultipleTimes().AndReturn(fake_lb1)
+
+        self.m.StubOutWithMock(fake_lb1, 'add_nodes')
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
