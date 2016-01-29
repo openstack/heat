@@ -42,13 +42,9 @@ resources:
                           "Sahara resources availability.")
 
     def _is_sahara_deployed(self):
-        keystone = self.identity_client
         try:
-            keystone.service_catalog.url_for(
-                attr='region',
-                filter_value=self.conf.region,
-                service_type='data-processing',
-                endpoint_type='publicURL')
+            self.identity_client.get_endpoint_url('data-processing',
+                                                  self.conf.region)
         except keystoneclient.exceptions.EndpointNotFound:
             return False
         return True

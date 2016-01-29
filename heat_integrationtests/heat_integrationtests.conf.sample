@@ -22,7 +22,13 @@
 # Full URI of the OpenStack Identity API (Keystone), v2 (string value)
 #auth_url = <None>
 
-# The region name to us (string value)
+# User domain name, if keystone v3 auth_urlis used (string value)
+#user_domain_name = <None>
+
+# Project domain name, if keystone v3 auth_urlis used (string value)
+#project_domain_name = <None>
+
+# The region name to use (string value)
 #region = <None>
 
 # Instance type for tests. Needs to be big enough for a full OS plus the test
@@ -48,6 +54,9 @@
 
 # Set to True if using self-signed SSL certificates. (boolean value)
 #disable_ssl_certificate_validation = false
+
+# CA certificate to pass for servers that have https endpoint. (string value)
+#ca_file = <None>
 
 # Time in seconds between build status checks. (integer value)
 #build_interval = 4
