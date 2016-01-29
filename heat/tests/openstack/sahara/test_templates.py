@@ -149,7 +149,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
             'hadoop_version': '2.3.0',
             'flavor_id': 'someflavorid',
             'description': "",
-            'volumes_per_node': None,
+            'volumes_per_node': 0,
             'volumes_size': None,
             'volume_type': 'lvm',
             'security_groups': None,
@@ -260,6 +260,75 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.ngt_mgr.update.assert_called_once_with('some_ng_id', **args)
         self.assertEqual((ngt.UPDATE, ngt.COMPLETE), ngt.state)
 
+    def test_get_live_state(self):
+        ngt = self._create_ngt(self.t)
+        resp = mock.MagicMock()
+        resp.to_dict.return_value = {
+            'volume_local_to_instance': False,
+            'availability_zone': None,
+            'updated_at': None,
+            'use_autoconfig': True,
+            'volumes_per_node': 0,
+            'id': '6157755e-dfd3-45b4-a445-36588e5f75ad',
+            'security_groups': None,
+            'shares': None,
+            'node_configs': {},
+            'auto_security_group': False,
+            'volumes_availability_zone': None,
+            'description': '',
+            'volume_mount_prefix': '/volumes/disk',
+            'plugin_name': 'vanilla',
+            'floating_ip_pool': None,
+            'is_default': False,
+            'image_id': None,
+            'volumes_size': 0,
+            'is_proxy_gateway': False,
+            'is_public': False,
+            'hadoop_version': '2.7.1',
+            'name': 'cluster-nodetemplate-jlgzovdaivn',
+            'tenant_id': '221b4f51e9bd4f659845f657a3051a46',
+            'created_at': '2016-01-29T11:08:46',
+            'volume_type': None,
+            'is_protected': False,
+            'node_processes': ['namenode'],
+            'flavor_id': '2'}
+
+        self.ngt_mgr.get.return_value = resp
+        # Simulate replace translation rule execution.
+        ngt.properties.data['flavor'] = '1'
+
+        reality = ngt.get_live_state(ngt.properties)
+        expected = {
+            'volume_local_to_instance': False,
+            'availability_zone': None,
+            'use_autoconfig': True,
+            'volumes_per_node': 0,
+            'security_groups': None,
+            'shares': None,
+            'node_configs': {},
+            'auto_security_group': False,
+            'volumes_availability_zone': None,
+            'description': '',
+            'plugin_name': 'vanilla',
+            'floating_ip_pool': None,
+            'image_id': None,
+            'volumes_size': 0,
+            'is_proxy_gateway': False,
+            'hadoop_version': '2.7.1',
+            'name': 'cluster-nodetemplate-jlgzovdaivn',
+            'volume_type': None,
+            'node_processes': ['namenode'],
+            'flavor': '2'
+        }
+
+        self.assertEqual(expected, reality)
+
+        # Make sure that old flavor will return when ids are equal - simulate
+        # replace translation rule execution.
+        ngt.properties.data['flavor'] = '2'
+        reality = ngt.get_live_state(ngt.properties)
+        self.assertEqual('2', reality.get('flavor'))
+
 
 class SaharaClusterTemplateTest(common.HeatTestCase):
     def setUp(self):
@@ -355,3 +424,73 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         }
         self.ct_mgr.update.assert_called_once_with('some_ct_id', **args)
         self.assertEqual((ct.UPDATE, ct.COMPLETE), ct.state)
+
+    def test_ct_get_live_state(self):
+        ct = self._create_ct(self.t)
+        resp = mock.MagicMock()
+        resp.to_dict.return_value = {
+            'neutron_management_network': 'public',
+            'description': '',
+            'cluster_configs': {},
+            'created_at': '2016-01-29T11:45:47',
+            'default_image_id': None,
+            'updated_at': None,
+            'plugin_name': 'vanilla',
+            'shares': None,
+            'is_default': False,
+            'is_protected': False,
+            'use_autoconfig': True,
+            'anti_affinity': [],
+            'tenant_id': '221b4f51e9bd4f659845f657a3051a46',
+            'node_groups': [{'volume_local_to_instance': False,
+                             'availability_zone': None,
+                             'updated_at': None,
+                             'node_group_template_id': '1234',
+                             'volumes_per_node': 0,
+                             'id': '48c356f6-bbe1-4b26-a90a-f3d543c2ea4c',
+                             'security_groups': None,
+                             'shares': None,
+                             'node_configs': {},
+                             'auto_security_group': False,
+                             'volumes_availability_zone': None,
+                             'volume_mount_prefix': '/volumes/disk',
+                             'floating_ip_pool': None,
+                             'image_id': None,
+                             'volumes_size': 0,
+                             'is_proxy_gateway': False,
+                             'count': 1,
+                             'name': 'test',
+                             'created_at': '2016-01-29T11:45:47',
+                             'volume_type': None,
+                             'node_processes': ['namenode'],
+                             'flavor_id': '2',
+                             'use_autoconfig': True}],
+            'is_public': False,
+            'hadoop_version': '2.7.1',
+            'id': 'c07b8c63-b944-47f9-8588-085547a45c1b',
+            'name': 'cluster-template-ykokor6auha4'}
+
+        self.ct_mgr.get.return_value = resp
+
+        reality = ct.get_live_state(ct.properties)
+        expected = {
+            'neutron_management_network': 'public',
+            'description': '',
+            'cluster_configs': {},
+            'default_image_id': None,
+            'plugin_name': 'vanilla',
+            'shares': None,
+            'anti_affinity': [],
+            'node_groups': [{'node_group_template_id': '1234',
+                             'count': 1,
+                             'name': 'test'}],
+            'hadoop_version': '2.7.1',
+            'name': 'cluster-template-ykokor6auha4'
+        }
+
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        expected_node_group = sorted(expected.pop('node_groups'))
+        reality_node_group = sorted(reality.pop('node_groups'))
+        for i in range(len(expected_node_group)):
+            self.assertEqual(expected_node_group[i], reality_node_group[i])
+        self.assertEqual(expected, reality)

@@ -118,6 +118,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             constraints=[
                 constraints.Range(min=0),
             ],
+            default=0,
             update_allowed=True
         ),
         VOLUMES_SIZE: properties.Schema(
@@ -350,6 +351,17 @@ class SaharaNodeGroupTemplate(resource.Resource):
                       self.name,
                       self.stack.t.get_section_name('properties')],
                 message=msg)
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(SaharaNodeGroupTemplate, self).parse_live_resource_data(
+            resource_properties, resource_data)
+
+        for group in result[self.SHARES] or []:
+            remove_keys = set(group.keys()) - set(self._SHARE_KEYS)
+            for key in remove_keys:
+                del group[key]
+        result[self.FLAVOR] = resource_data.get('flavor_id')
+        return result
 
 
 class SaharaClusterTemplate(resource.Resource):
@@ -586,6 +598,20 @@ class SaharaClusterTemplate(resource.Resource):
             self.properties[self.PLUGIN_NAME],
             self.properties[self.HADOOP_VERSION]
         )
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(SaharaClusterTemplate, self).parse_live_resource_data(
+            resource_properties, resource_data)
+
+        for group in result[self.NODE_GROUPS] or []:
+            remove_keys = set(group.keys()) - set(self._NODE_GROUP_KEYS)
+            for key in remove_keys:
+                del group[key]
+        for group in result[self.SHARES] or []:
+            remove_keys = set(group.keys()) - set(self._SHARE_KEYS)
+            for key in remove_keys:
+                del group[key]
+        return result
 
 
 def resource_mapping():
