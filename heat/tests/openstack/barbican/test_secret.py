@@ -29,7 +29,6 @@ resources:
     type: OS::Barbican::Secret
     properties:
       name: foobar-secret
-      secret_type: opaque
 '''
 
 
