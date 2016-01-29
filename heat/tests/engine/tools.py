@@ -222,8 +222,8 @@ def setup_mocks(mocks, stack, mock_image_constraint=True,
     return fc
 
 
-def setup_stack(stack_name, ctx, create_res=True):
-    stack = get_stack(stack_name, ctx)
+def setup_stack(stack_name, ctx, create_res=True, convergence=False):
+    stack = get_stack(stack_name, ctx, convergence=convergence)
     stack.store()
     if create_res:
         m = mox.Mox()
@@ -250,7 +250,7 @@ def clean_up_stack(stack, delete_res=True):
         m.UnsetStubs()
 
 
-def stack_context(stack_name, create_res=True):
+def stack_context(stack_name, create_res=True, convergence=False):
     """Decorator for creating and deleting stack.
 
     Decorator which creates a stack by using the test case's context and
@@ -263,7 +263,8 @@ def stack_context(stack_name, create_res=True):
             def create_stack():
                 ctx = getattr(test_case, 'ctx', None)
                 if ctx is not None:
-                    stack = setup_stack(stack_name, ctx, create_res)
+                    stack = setup_stack(stack_name, ctx,
+                                        create_res, convergence)
                     setattr(test_case, 'stack', stack)
 
             def delete_stack():
