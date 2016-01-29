@@ -102,9 +102,15 @@ class FakeAutoScale(object):
 
     def replace_launch_config(self, group_id, **kwargs):
         """Update the launch configuration on a scaling group."""
-        allowed = ['launch_config_type', 'server_name', 'image', 'flavor',
-                   'disk_config', 'metadata', 'personality', 'networks',
-                   'load_balancers', 'key_name', 'user_data', 'config_drive']
+        if kwargs.get('launch_config_type') == 'launch_server':
+            allowed = ['launch_config_type', 'server_name', 'image', 'flavor',
+                       'disk_config', 'metadata', 'personality', 'networks',
+                       'load_balancers', 'key_name', 'user_data',
+                       'config_drive']
+        elif kwargs.get('launch_config_type') == 'launch_stack':
+            allowed = ['launch_config_type', 'template', 'template_url',
+                       'disable_rollback', 'environment', 'files',
+                       'parameters', 'timeout_mins']
         self._check_args(kwargs, allowed)
         self._get_group(group_id).kwargs = kwargs
 
@@ -171,7 +177,7 @@ class FakeAutoScale(object):
 
 class ScalingGroupTest(common.HeatTestCase):
 
-    group_template = template_format.parse('''
+    server_template = template_format.parse('''
     HeatTemplateFormatVersion: "2012-12-12"
     Description: "Rackspace Auto Scale"
     Parameters: {}
@@ -207,6 +213,53 @@ class ScalingGroupTest(common.HeatTestCase):
 
     ''')
 
+    stack_template = template_format.parse('''
+    HeatTemplateFormatVersion: "2012-12-12"
+    Description: "Rackspace Auto Scale"
+    Parameters: {}
+    Resources:
+        my_group:
+            Type: Rackspace::AutoScale::Group
+            Properties:
+                groupConfiguration:
+                    name: "My Group"
+                    cooldown: 60
+                    minEntities: 1
+                    maxEntities: 25
+                    metadata:
+                        group: metadata
+                launchConfiguration:
+                  type: launch_stack
+                  args:
+                    stack:
+                      template:
+                        heat_template_version: 2015-10-15
+                        description: This is a Heat template
+                        parameters:
+                          image:
+                            default: cirros-0.3.4-x86_64-uec
+                            type: string
+                          flavor:
+                            default: m1.tiny
+                            type: string
+                        resources:
+                          rand:
+                            type: OS::Heat::RandomString
+                      disable_rollback: False
+                      environment:
+                        parameters:
+                          image: Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)
+                        resource_registry:
+                          Heat::InstallConfigAgent:
+                            https://myhost.com/bootconfig.yaml
+                      files:
+                        fileA.yaml: Contents of the file
+                        file:///usr/fileB.template: Contents of the file
+                      parameters:
+                        flavor: 4 GB Performance
+                      timeout_mins: 30
+    ''')
+
     def setUp(self):
         super(ScalingGroupTest, self).setUp()
         for res_name, res_class in auto_scale.resource_mapping().items():
@@ -222,14 +275,16 @@ class ScalingGroupTest(common.HeatTestCase):
                                    'find_flavor_by_name_or_id')
         mock_fl.return_value = 'flavor-ref'
 
-    def _setup_test_stack(self):
-        self.stack = utils.parse_stack(self.group_template)
+    def _setup_test_stack(self, template=None):
+        if template is None:
+            template = self.server_template
+        self.stack = utils.parse_stack(template)
         self.stack.create()
         self.assertEqual(
             ('CREATE', 'COMPLETE'), self.stack.state,
             self.stack.status_reason)
 
-    def test_group_create(self):
+    def test_group_create_server(self):
         """Creating a group passes all the correct arguments to pyrax.
 
         Also saves the group ID as the resource ID.
@@ -262,6 +317,62 @@ class ScalingGroupTest(common.HeatTestCase):
                         'contents': u'dGVzdCBjb250ZW50'}],
                 'server_name': u'autoscaled-server'},
             self.fake_auto_scale.groups['0'].kwargs)
+
+        resource = self.stack['my_group']
+        self.assertEqual('0', resource.FnGetRefId())
+
+    def test_group_create_stack(self):
+        """Creating a group passes all the correct arguments to pyrax.
+
+        Also saves the group ID as the resource ID.
+        """
+        self._setup_test_stack(self.stack_template)
+        self.assertEqual(1, len(self.fake_auto_scale.groups))
+        self.assertEqual(
+            {
+                'cooldown': 60,
+                'min_entities': 1,
+                'max_entities': 25,
+                'group_metadata': {'group': 'metadata'},
+                'name': 'My Group',
+                'launch_config_type': u'launch_stack',
+                'template': {
+                    'heat_template_version': '2015-10-15',
+                    'description': 'This is a Heat template',
+                    'parameters': {
+                        'flavor': {
+                            'default': 'm1.tiny',
+                            'type': 'string'},
+                        'image': {
+                            'default': 'cirros-0.3.4-x86_64-uec',
+                            'type': 'string'}},
+                    'resources': {
+                        'rand': {'type': u'OS::Heat::RandomString'}
+                    }
+                },
+                'template_url': None,
+                'disable_rollback': False,
+                'environment': {
+                    'parameters': {
+                        'image':
+                        'Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)',
+                    },
+                    'resource_registry': {
+                        'Heat::InstallConfigAgent': ('https://myhost.com/'
+                                                     'bootconfig.yaml')
+                    }
+                },
+                'files': {
+                    'fileA.yaml': 'Contents of the file',
+                    'file:///usr/fileB.template': 'Contents of the file'
+                },
+                'parameters': {
+                    'flavor': '4 GB Performance',
+                },
+                'timeout_mins': 30,
+            },
+            self.fake_auto_scale.groups['0'].kwargs
+        )
 
         resource = self.stack['my_group']
         self.assertEqual('0', resource.FnGetRefId())
@@ -366,7 +477,7 @@ Resources:
         self.assertEqual(
             5, self.fake_auto_scale.groups['0'].kwargs['min_entities'])
 
-    def test_update_launch_config(self):
+    def test_update_launch_config_server(self):
         """Updates the launchConfigresults section.
 
         Updates the launchConfigresults section in a template results in a
@@ -388,6 +499,24 @@ Resources:
         self.assertEqual(
             [{'loadBalancerId': 1, 'port': 80}],
             self.fake_auto_scale.groups['0'].kwargs['load_balancers'])
+
+    def test_update_launch_config_stack(self):
+        self._setup_test_stack(self.stack_template)
+
+        resource = self.stack['my_group']
+        uprops = copy.deepcopy(dict(resource.properties.data))
+        lcargs = uprops['launchConfiguration']['args']
+        lcargs['stack']['timeout_mins'] = 60
+        new_template = rsrc_defn.ResourceDefinition(resource.name,
+                                                    resource.type(),
+                                                    uprops)
+
+        scheduler.TaskRunner(resource.update, new_template)()
+
+        self.assertEqual(1, len(self.fake_auto_scale.groups))
+        self.assertEqual(
+            60,
+            self.fake_auto_scale.groups['0'].kwargs['timeout_mins'])
 
     def test_delete(self):
         """Deleting a ScalingGroup resource invokes pyrax API to delete it."""
@@ -786,3 +915,305 @@ class AutoScaleGroupValidationTests(common.HeatTestCase):
         asg = auto_scale.Group("test", rsrcdef, self.mockstack)
 
         self.assertIsNone(asg.validate())
+
+    def test_validate_launch_stack(self, mock_client, mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_stack",
+                "args": {
+                    "stack": {
+                        'template': {
+                            'heat_template_version': '2015-10-15',
+                            'description': 'This is a Heat template',
+                            'parameters': {
+                                'flavor': {
+                                    'default': 'm1.tiny',
+                                    'type': 'string'},
+                                'image': {
+                                    'default': 'cirros-0.3.4-x86_64-uec',
+                                    'type': 'string'}},
+                            'resources': {
+                                'rand': {'type': u'OS::Heat::RandomString'}
+                            }
+                        },
+                        'template_url': None,
+                        'disable_rollback': False,
+                        'environment': {
+                            'parameters': {
+                                'image':
+                                'Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)',
+                            },
+                            'resource_registry': {
+                                'Heat::InstallConfigAgent': (
+                                    'https://myhost.com/bootconfig.yaml')
+                            }
+                        },
+                        'files': {
+                            'fileA.yaml': 'Contents of the file',
+                            'file:///usr/fileB.yaml': 'Contents of the file'
+                        },
+                        'parameters': {
+                            'flavor': '4 GB Performance',
+                        },
+                        'timeout_mins': 30,
+                    }
+                }
+            }
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        self.assertIsNone(asg.validate())
+
+    def test_validate_launch_server_and_stack(self, mock_client, mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_server",
+                "args": {
+                    "server": {
+                        "name": "sdfsdf",
+                        "flavorRef": "ffdgdf",
+                        "imageRef": "image-ref",
+                        },
+                    "stack": {
+                        'template': {
+                            'heat_template_version': '2015-10-15',
+                            'description': 'This is a Heat template',
+                            'parameters': {
+                                'flavor': {
+                                    'default': 'm1.tiny',
+                                    'type': 'string'},
+                                'image': {
+                                    'default': 'cirros-0.3.4-x86_64-uec',
+                                    'type': 'string'}},
+                            'resources': {
+                                'rand': {'type': u'OS::Heat::RandomString'}
+                            }
+                        },
+                        'template_url': None,
+                        'disable_rollback': False,
+                        'environment': {
+                            'parameters': {
+                                'image':
+                                'Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)',
+                            },
+                            'resource_registry': {
+                                'Heat::InstallConfigAgent': (
+                                    'https://myhost.com/bootconfig.yaml')
+                            }
+                        },
+                        'files': {
+                            'fileA.yaml': 'Contents of the file',
+                            'file:///usr/fileB.yaml': 'Contents of the file'
+                        },
+                        'parameters': {
+                            'flavor': '4 GB Performance',
+                        },
+                        'timeout_mins': 30,
+                    }
+                }
+            }
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, asg.validate)
+        self.assertIn(
+            'Must provide one of server or stack in launchConfiguration',
+            six.text_type(error))
+
+    def test_validate_no_launch_server_or_stack(self, mock_client,
+                                                mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_server",
+                "args": {}
+            }
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, asg.validate)
+        self.assertIn(
+            'Must provide one of server or stack in launchConfiguration',
+            six.text_type(error))
+
+    def test_validate_stack_template_and_template_url(self, mock_client,
+                                                      mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_server",
+                "args": {
+                    "stack": {
+                        'template': {
+                            'heat_template_version': '2015-10-15',
+                            'description': 'This is a Heat template',
+                            'parameters': {
+                                'flavor': {
+                                    'default': 'm1.tiny',
+                                    'type': 'string'},
+                                'image': {
+                                    'default': 'cirros-0.3.4-x86_64-uec',
+                                    'type': 'string'}},
+                            'resources': {
+                                'rand': {'type': 'OS::Heat::RandomString'}
+                            }
+                        },
+                        'template_url': 'https://myhost.com/template.yaml',
+                    }
+                }
+            }
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, asg.validate)
+        self.assertIn(
+            'Must provide one of template or template_url',
+            six.text_type(error))
+
+    def test_validate_stack_no_template_or_template_url(self, mock_client,
+                                                        mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_server",
+                "args": {
+                    "stack": {
+                        'disable_rollback': False,
+                        'environment': {
+                            'parameters': {
+                                'image':
+                                'Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)',
+                            },
+                            'resource_registry': {
+                                'Heat::InstallConfigAgent': (
+                                    'https://myhost.com/bootconfig.yaml')
+                            }
+                        },
+                        'files': {
+                            'fileA.yaml': 'Contents of the file',
+                            'file:///usr/fileB.yaml': 'Contents of the file'
+                        },
+                        'parameters': {
+                            'flavor': '4 GB Performance',
+                        },
+                        'timeout_mins': 30,
+                    }
+                }
+            }
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, asg.validate)
+        self.assertIn(
+            'Must provide one of template or template_url',
+            six.text_type(error))
+
+    def test_validate_invalid_template(self, mock_client, mock_plugin):
+        asg_properties = {
+            "groupConfiguration": {
+                "name": "My Group",
+                "cooldown": 60,
+                "minEntities": 1,
+                "maxEntities": 25,
+                "metadata": {
+                    "group": "metadata",
+                },
+            },
+            "launchConfiguration": {
+                "type": "launch_stack",
+                "args": {
+                    "stack": {
+                        'template': {
+                            'SJDADKJAJKLSheat_template_version': '2015-10-15',
+                            'description': 'This is a Heat template',
+                            'parameters': {
+                                'flavor': {
+                                    'default': 'm1.tiny',
+                                    'type': 'string'},
+                                'image': {
+                                    'default': 'cirros-0.3.4-x86_64-uec',
+                                    'type': 'string'}},
+                            'resources': {
+                                'rand': {'type': u'OS::Heat::RandomString'}
+                            }
+                        },
+                        'template_url': None,
+                        'disable_rollback': False,
+                        'environment': {'Foo': 'Bar'},
+                        'files': {
+                            'fileA.yaml': 'Contents of the file',
+                            'file:///usr/fileB.yaml': 'Contents of the file'
+                        },
+                        'parameters': {
+                            'flavor': '4 GB Performance',
+                        },
+                        'timeout_mins': 30,
+                    }
+                }
+            }
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", auto_scale.Group, properties=asg_properties)
+        asg = auto_scale.Group("test", rsrcdef, self.mockstack)
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, asg.validate)
+        self.assertIn(
+            'Encountered error while loading template:',
+            six.text_type(error))
