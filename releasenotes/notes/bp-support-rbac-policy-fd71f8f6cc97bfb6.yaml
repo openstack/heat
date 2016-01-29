@@ -1,0 +1,6 @@
+---
+features:
+  - OS::Neutron::RBACPolicy resource plugin is added to support
+   RBAC policy, which is used to manage RBAC policy in Neutron.
+   This resource creates and manages Neutron RBAC policy, which
+   allows to share Neutron networks to subsets of tenants.
