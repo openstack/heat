@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
+from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
@@ -41,8 +43,50 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
 
 
 class ProfileConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exc.sdkexc.ResourceNotFound,)
+    # If name is not unique, will raise exc.sdkexc.HttpException
+    expected_exceptions = (exc.sdkexc.HttpException,)
 
     def validate_with_client(self, client, profile):
         client.client(CLIENT_NAME).get_profile(profile)
+
+
+class ClusterConstraint(constraints.BaseCustomConstraint):
+    #  If name is not unique, will raise exc.sdkexc.HttpException
+    expected_exceptions = (exc.sdkexc.HttpException,)
+
+    def validate_with_client(self, client, value):
+        client.client(CLIENT_NAME).get_cluster(value)
+
+
+class ProfileTypeConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.StackValidationFailed,)
+
+    def validate_with_client(self, client, value):
+        senlin_client = client.client(CLIENT_NAME)
+        type_list = senlin_client.profile_types()
+        names = [pt['name'] for pt in type_list]
+        if value not in names:
+            not_found_message = (
+                _("Unable to find senlin profile type '%(pt)s', "
+                  "available profile types are %(pts)s.") %
+                {'pt': value, 'pts': names}
+            )
+            raise exception.StackValidationFailed(message=not_found_message)
+
+
+class PolicyTypeConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.StackValidationFailed,)
+
+    def validate_with_client(self, client, value):
+        senlin_client = client.client(CLIENT_NAME)
+        type_list = senlin_client.policy_types()
+        names = [pt['name'] for pt in type_list]
+        if value not in names:
+            not_found_message = (
+                _("Unable to find senlin policy type '%(pt)s', "
+                  "available policy types are %(pts)s.") %
+                {'pt': value, 'pts': names}
+            )
+            raise exception.StackValidationFailed(message=not_found_message)
