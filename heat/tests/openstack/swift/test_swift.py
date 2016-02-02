@@ -350,10 +350,10 @@ class SwiftTest(common.HeatTestCase):
 
         mock_get.return_value = ({'name': container_name},
                                  [{'name': 'test_object'}])
-        mock_delete_object.side_effect =\
-            sc.ClientException('object-is-gone', http_status=404)
-        mock_delete_container.side_effect =\
-            sc.ClientException('container-is-gone', http_status=404)
+        mock_delete_object.side_effect = sc.ClientException('object-is-gone',
+                                                            http_status=404)
+        mock_delete_container.side_effect = sc.ClientException(
+            'container-is-gone', http_status=404)
 
         # Test
         container = self._create_container(stack)
@@ -382,8 +382,8 @@ class SwiftTest(common.HeatTestCase):
 
         mock_get.return_value = ({'name': container_name},
                                  [{'name': 'test_object'}])
-        mock_delete_object.side_effect =\
-            sc.ClientException('object-delete-failure')
+        mock_delete_object.side_effect = (
+            sc.ClientException('object-delete-failure'))
 
         # Test
         container = self._create_container(stack)

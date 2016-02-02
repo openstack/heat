@@ -446,8 +446,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
         swift_plugin.SwiftClientPlugin.client().AndReturn(mock_swift)
         swift_plugin.SwiftClientPlugin.get_temp_url(mox.IgnoreArg(),
                                                     mox.IgnoreArg(),
-                                                    mox.IgnoreArg())\
-            .AndReturn('foo')
+                                                    mox.IgnoreArg()
+                                                    ).AndReturn('foo')
 
         self.m.ReplayAll()
 
