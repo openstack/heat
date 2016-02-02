@@ -293,3 +293,39 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.assertEqual('3', net.FnGetAtt('cidr'))
         self.assertEqual('5', net.FnGetAtt('ip_version'))
         self.assertEqual('6', net.FnGetAtt('network_type'))
+
+    def test_get_live_state(self):
+        net = self._create_network('share_network', self.rsrc_defn,
+                                   self.stack)
+
+        value = mock.MagicMock()
+        value.to_dict.return_value = {
+            'name': 'test',
+            'segmentation_id': '123',
+            'created_at': '2016-02-02T18:40:24.000000',
+            'neutron_subnet_id': None,
+            'updated_at': None,
+            'network_type': None,
+            'neutron_net_id': '4321',
+            'ip_version': None,
+            'nova_net_id': None,
+            'cidr': None,
+            'project_id': '221b4f51e9bd4f659845f657a3051a46',
+            'id': '4000d1c7-1017-4ea2-a4a1-951d8b63857a',
+            'description': None}
+
+        self.client.share_networks.get.return_value = value
+        self.client.security_services.list.return_value = [mock.Mock(id='6'),
+                                                           mock.Mock(id='7')]
+
+        reality = net.get_live_state(net.properties)
+        expected = {
+            'name': 'test',
+            'neutron_subnet': None,
+            'neutron_network': '4321',
+            'nova_network': None,
+            'description': None,
+            'security_services': ['6', '7']
+        }
+
+        self.assertEqual(expected, reality)

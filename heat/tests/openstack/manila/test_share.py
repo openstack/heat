@@ -76,14 +76,12 @@ class ManilaShareTest(common.HeatTestCase):
         self.stack = utils.parse_stack(tmp, stack_name=stack_name)
         res_def = self.stack.t.resource_definitions(self.stack)["test_share"]
         share = mshare.ManilaShare("test_share", res_def, self.stack)
+        self.patchobject(share, 'data_set')
 
         # replace clients and plugins with mocks
         mock_client = mock.MagicMock()
         client = mock.MagicMock(return_value=mock_client)
         share.client = client
-        mock_plugin = mock.MagicMock()
-        client_plugin = mock.MagicMock(return_value=mock_plugin)
-        share.client_plugin = client_plugin
 
         return share
 
@@ -233,3 +231,51 @@ class ManilaShareTest(common.HeatTestCase):
             exception.StackValidationFailed,
             ".* \"domain\" is not an allowed value \[ip, user, cert, cephx\]",
             stack.validate)
+
+    def test_get_live_state(self):
+        share = self._create_share("share")
+
+        value = mock.MagicMock()
+        value.to_dict.return_value = {
+            'status': 'available',
+            'size': 1,
+            'description': None,
+            'share_proto': 'NFS',
+            'name': 'testshare',
+            'share_type': 'default',
+            'availability_zone': 'nova',
+            'created_at': '2016-02-04T10:20:52.000000',
+            'export_location': 'dummy',
+            'share_network_id': '5f0a3c90-36ef-4e92-8142-06afd6be2881',
+            'export_locations': ['dummy'],
+            'share_server_id': 'fcb9d90d-76e6-466f-a0cb-23e254ccc16c',
+            'host': 'ubuntu@generic1#GENERIC1',
+            'volume_type': 'default',
+            'snapshot_id': None,
+            'is_public': False,
+            'project_id': '221b4f51e9bd4f659845f657a3051a46',
+            'id': '3a68e59d-11c1-4da4-a102-03fc9448613e',
+            'metadata': {}}
+
+        share.client().shares.get.return_value = value
+        share.client().shares.access_list.return_value = [
+            {'access_to': '0.0.0.0', 'access_type': 'ip', 'access_level': 'r'}]
+        share.data = mock.MagicMock(return_value={'share_type': 'default'})
+
+        reality = share.get_live_state(share.properties)
+        expected = {
+            'description': None,
+            'name': 'testshare',
+            'is_public': False,
+            'metadata': {},
+            'access_rules': [{'access_to': '0.0.0.0',
+                              'access_type': 'ip',
+                              'access_level': 'r'}]}
+
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        exp_rules = expected.pop('access_rules')
+        real_rules = reality.pop('access_rules')
+        self.assertEqual([set(rule.items()) for rule in exp_rules],
+                         real_rules)
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])
