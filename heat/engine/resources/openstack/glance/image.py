@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -125,6 +126,17 @@ class GlanceImage(resource.Resource):
         else:
             image = self.glance().images.get(self.resource_id)
             return dict(image)
+
+    def validate(self):
+        super(GlanceImage, self).validate()
+        container_format = self.properties[self.CONTAINER_FORMAT]
+        if (container_format in ['ami', 'ari', 'aki']
+                and self.properties[self.DISK_FORMAT] != container_format):
+            msg = _("Invalid mix of disk and container formats. When "
+                    "setting a disk or container format to one of 'aki', "
+                    "'ari', or 'ami', the container and disk formats must "
+                    "match.")
+            raise exception.StackValidationFailed(message=msg)
 
 
 def resource_mapping():
