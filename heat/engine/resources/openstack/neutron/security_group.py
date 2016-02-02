@@ -143,6 +143,10 @@ class SecurityGroup(neutron.NeutronResource):
         {"direction": "egress", "ethertype": "IPv6"}
     ]
 
+    def _show_resource(self):
+        return self.client().show_security_group(
+            self.resource_id)['security_group']
+
     def validate(self):
         super(SecurityGroup, self).validate()
         if self.properties[self.NAME] == 'default':
