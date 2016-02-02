@@ -67,8 +67,9 @@ class SaharaClusterTest(common.HeatTestCase):
                          'find_image_by_name_or_id'
                          ).return_value = 'some_image_id'
         self.patchobject(neutron.NeutronClientPlugin, '_create')
-        self.patchobject(neutron.NeutronClientPlugin, 'find_neutron_resource'
-                         ).return_value = 'some_network_id'
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
+                         return_value='some_network_id')
         self.sahara_mock = mock.MagicMock()
         self.patchobject(sahara.SaharaClientPlugin, '_create'
                          ).return_value = self.sahara_mock

@@ -43,7 +43,7 @@ class RBACPolicyTest(common.HeatTestCase):
         self.rbac.client = mock.MagicMock()
         self.rbac.client.return_value = self.neutron_client
 
-        self.rbac.client_plugin().find_neutron_resource = (
+        self.rbac.client_plugin().find_resourceid_by_name_or_id = (
             mock.MagicMock(return_value='123'))
         props = {
             "action": "access_as_shared",

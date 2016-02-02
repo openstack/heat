@@ -282,10 +282,12 @@ class SaharaNodeGroupTemplate(resource.Resource):
             'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
             'shares': self.properties[self.SHARES]
         }
-        if props['floating_ip_pool'] and self.is_using_neutron():
+        floating_ip_pool = props['floating_ip_pool']
+        if floating_ip_pool and self.is_using_neutron():
             props['floating_ip_pool'] = self.client_plugin(
-                'neutron').find_neutron_resource(
-                    self.properties, self.FLOATING_IP_POOL, 'network')
+                'neutron').find_resourceid_by_name_or_id(
+                'network',
+                floating_ip_pool)
         return props
 
     def handle_create(self):
@@ -312,14 +314,16 @@ class SaharaNodeGroupTemplate(resource.Resource):
         if pool:
             if self.is_using_neutron():
                 try:
-                    self.client_plugin('neutron').find_neutron_resource(
-                        self.properties, self.FLOATING_IP_POOL, 'network')
+                    self.client_plugin(
+                        'neutron').find_resourceid_by_name_or_id('network',
+                                                                 pool)
                 except Exception as ex:
                     if (self.client_plugin('neutron').is_not_found(ex)
                             or self.client_plugin('neutron').is_no_unique(ex)):
                         err_msg = encodeutils.exception_to_unicode(ex)
                         raise exception.StackValidationFailed(message=err_msg)
                     raise
+
             else:
                 try:
                     self.client('nova').floating_ip_pools.find(name=pool)
@@ -551,14 +555,15 @@ class SaharaClusterTemplate(resource.Resource):
             'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
             'shares': self.properties[self.SHARES]
         }
-        if props['net_id']:
+        net_id = props['net_id']
+        if net_id:
             if self.is_using_neutron():
                 props['net_id'] = self.client_plugin(
-                    'neutron').find_neutron_resource(
-                    self.properties, self.MANAGEMENT_NETWORK, 'network')
+                    'neutron').find_resourceid_by_name_or_id('network',
+                                                             net_id)
             else:
                 props['net_id'] = self.client_plugin(
-                    'nova').get_nova_network_id(props['net_id'])
+                    'nova').get_nova_network_id(net_id)
         return props
 
     def handle_create(self):

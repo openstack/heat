@@ -462,10 +462,12 @@ class Port(neutron.NeutronResource):
         # Switching between name and ID is OK, provided the value resolves
         # to the same network.  If the network changes, port is replaced.
         if self.NETWORK in changed_properties_set:
-            after_id = self.client_plugin().find_neutron_resource(
-                after_props, self.NETWORK, 'network')
-            before_id = self.client_plugin().find_neutron_resource(
-                before_props, self.NETWORK, 'network')
+            before_id = self.client_plugin().find_resourceid_by_name_or_id(
+                'network',
+                before_props[self.NETWORK])
+            after_id = self.client_plugin().find_resourceid_by_name_or_id(
+                'network',
+                after_props[self.NETWORK])
             changed_properties_set.remove(self.NETWORK)
             return before_id != after_id
 
