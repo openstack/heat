@@ -95,6 +95,17 @@ class TestOrder(common.HeatTestCase):
                                 'foo',
                                 snippet, self.stack)
 
+    def test_validate_non_certificate_order(self):
+        snippet = copy.deepcopy(self.res_template)
+        del snippet['Properties']['bit_length']
+        del snippet['Properties']['algorithm']
+        res = self._create_resource('test', snippet, self.stack)
+        msg = ("Properties algorithm and bit_length are required for "
+               "key type of order.")
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                msg,
+                                res.validate)
+
     def test_attributes(self):
         mock_order = mock.Mock()
         mock_order.status = 'test-status'

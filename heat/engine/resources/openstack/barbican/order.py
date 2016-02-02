@@ -55,6 +55,12 @@ class Order(resource.Resource):
         'certificate', 'intermediates', 'container_ref'
     )
 
+    ORDER_TYPES = (
+        KEY, ASYMMETRIC, CERTIFICATE
+    ) = (
+        'key', 'asymmetric', 'certificate'
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -73,11 +79,13 @@ class Order(resource.Resource):
         ),
         ALGORITHM: properties.Schema(
             properties.Schema.STRING,
-            _('The algorithm type used to generate the secret.'),
+            _('The algorithm type used to generate the secret. '
+              'Required for key and asymmetric types of order.'),
         ),
         BIT_LENGTH: properties.Schema(
             properties.Schema.INTEGER,
-            _('The bit-length of the secret.'),
+            _('The bit-length of the secret. Required for key and '
+              'asymmetric types of order.'),
         ),
         MODE: properties.Schema(
             properties.Schema.STRING,
@@ -88,9 +96,7 @@ class Order(resource.Resource):
             properties.Schema.STRING,
             _('The type of the order.'),
             constraints=[
-                constraints.AllowedValues([
-                    'key', 'asymmetric', 'certificate'
-                ]),
+                constraints.AllowedValues(ORDER_TYPES),
             ],
             required=True,
             support_status=support.SupportStatus(version='5.0.0'),
@@ -181,6 +187,17 @@ class Order(resource.Resource):
         # NOTE(pshchelo): order_ref is HATEOAS reference, i.e a string
         # need not to be fixed re LP bug #1393268
         return order_ref
+
+    def validate(self):
+        if self.properties[self.TYPE] != self.CERTIFICATE:
+            if (self.properties[self.ALGORITHM] is None
+                    or self.properties[self.BIT_LENGTH] is None):
+                msg = _("Properties %(algorithm)s and %(bit_length)s are "
+                        "required for %(type)s type of order.") % {
+                            'algorithm': self.ALGORITHM,
+                            'bit_length': self.BIT_LENGTH,
+                            'type': self.properties[self.TYPE]}
+                raise exception.StackValidationFailed(message=msg)
 
     def check_create_complete(self, order_href):
         order = self.client().orders.get(order_href)
