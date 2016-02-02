@@ -241,12 +241,12 @@ class ResourceWithDefaultClientNameExt(resource.Resource):
 
 
 class ResourceWithFnGetAttType(GenericResource):
-    def FnGetAtt(self, name):
+    def get_attribute(self, name):
         pass
 
 
 class ResourceWithFnGetRefIdType(ResourceWithProps):
-    def FnGetRefId(self):
+    def get_reference_id(self):
         return 'ID-%s' % self.name
 
 

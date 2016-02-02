@@ -286,6 +286,23 @@ Resources:
         nested_stack = stack['the_nested']
         self.assertEqual('the_nested_convg_mock', nested_stack.FnGetRefId())
 
+    def test_get_attribute(self):
+        tmpl = template_format.parse(self.test_template)
+        ctx = utils.dummy_context('test_username', 'aaaa', 'password')
+        stack = parser.Stack(ctx, 'test',
+                             template.Template(tmpl))
+        stack.store()
+
+        stack_res = stack['the_nested']
+        stack_res._store()
+
+        nested_t = template_format.parse(self.nested_template)
+        nested_stack = parser.Stack(ctx, 'test',
+                                    template.Template(nested_t))
+        nested_stack.store()
+        stack_res.nested = mock.Mock(return_value=nested_stack)
+        self.assertEqual('bar', stack_res.FnGetAtt('Outputs.Foo'))
+
 
 class ResDataResource(generic_rsrc.GenericResource):
     def handle_create(self):

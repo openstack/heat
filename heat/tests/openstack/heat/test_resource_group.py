@@ -769,6 +769,25 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
                           'resource.2')
 
+    @mock.patch.object(grouputils, 'get_rsrc_id')
+    def test_get_attribute(self, mock_get_rsrc_id):
+        stack = utils.parse_stack(template)
+        mock_get_rsrc_id.side_effect = ['0', '1']
+        rsrc = stack['group1']
+        self.assertEqual(['0', '1'], rsrc.FnGetAtt(rsrc.REFS))
+
+    def test_get_attribute_convg(self):
+        cache_data = {'group1': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'attrs': {'refs': ['rsrc1', 'rsrc2']}
+        }}
+        stack = utils.parse_stack(template, cache_data=cache_data)
+        rsrc = stack['group1']
+        self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))
+
     def _create_dummy_stack(self, template_data=template, expect_count=2,
                             expect_attrs=None):
         stack = utils.parse_stack(template_data)
@@ -779,6 +798,7 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         for resc in range(expect_count):
             res = str(resc)
             fake_res[res] = mock.Mock()
+            fake_res[res].stack = stack
             fake_res[res].FnGetRefId.return_value = 'ID-%s' % res
             if res in expect_attrs:
                 fake_res[res].FnGetAtt.return_value = expect_attrs[res]

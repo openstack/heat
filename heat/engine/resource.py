@@ -1572,6 +1572,11 @@ class Resource(object):
         return (self.action, self.status)
 
     def get_reference_id(self):
+        """Default implementation for function get_resource.
+
+        This may be overridden by resource plugins to add extra
+        logic specific to the resource implementation.
+        """
         if self.resource_id is not None:
             return six.text_type(self.resource_id)
         else:
@@ -1593,6 +1598,20 @@ class Resource(object):
         else:
             return Resource.get_reference_id(self)
 
+    def get_attribute(self, key, *path):
+        """Default implementation for function get_attr and Fn::GetAtt.
+
+        This may be overridden by resource plugins to add extra
+        logic specific to the resource implementation.
+        """
+        try:
+            attribute = self.attributes[key]
+        except KeyError:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
+
+        return attributes.select_from_attribute(attribute, path)
+
     def FnGetAtt(self, key, *path):
         """For the intrinsic function Fn::GetAtt.
 
@@ -1608,14 +1627,7 @@ class Resource(object):
             attribute = self.stack.cache_data_resource_attribute(
                 self.name, complex_key)
             return attribute
-        else:
-            try:
-                attribute = self.attributes[key]
-            except KeyError:
-                raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                         key=key)
-
-            return attributes.select_from_attribute(attribute, path)
+        return self.get_attribute(key, *path)
 
     def FnGetAtts(self):
         """For the intrinsic function get_attr which returns all attributes.

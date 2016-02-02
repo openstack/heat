@@ -511,7 +511,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.context, self.resource_id, details,
             timeutils.utcnow().isoformat())
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         """Resource attributes map to deployment outputs values."""
         sd = self.rpc_client().show_software_deployment(
             self.context, self.resource_id)
@@ -638,7 +638,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
                                             'OS::Heat::SoftwareDeployment',
                                             props, None)
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         rg = super(SoftwareDeploymentGroup, self)
         if key == self.STDOUTS:
             n_attr = SoftwareDeployment.STDOUT
@@ -651,7 +651,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
             # including arbitrary outputs, so we can't validate here
             n_attr = key
 
-        rg_attr = rg.FnGetAtt(rg.ATTR_ATTRIBUTES, n_attr)
+        rg_attr = rg.get_attribute(rg.ATTR_ATTRIBUTES, n_attr)
         return attributes.select_from_attribute(rg_attr, path)
 
 

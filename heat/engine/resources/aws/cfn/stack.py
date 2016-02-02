@@ -80,7 +80,7 @@ class NestedStack(stack_resource.StackResource):
                                          self.properties[self.TIMEOUT_IN_MINS],
                                          adopt_data=resource_adopt_data)
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         if key and not key.startswith('Outputs.'):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)

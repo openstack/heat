@@ -428,6 +428,28 @@ class StackResourceTest(StackResourceBaseTest):
         self._test_validate_unknown_resource_type(stack_name, tmpl,
                                                   'my_autoscaling_group')
 
+    def test_get_attribute_autoscaling(self):
+        t = template_format.parse(heat_autoscaling_group_template)
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(utils.dummy_context(), 'test_att', tmpl)
+        rsrc = stack['my_autoscaling_group']
+        self.assertEqual(0, rsrc.FnGetAtt(rsrc.CURRENT_SIZE))
+
+    def test_get_attribute_autoscaling_convg(self):
+        t = template_format.parse(heat_autoscaling_group_template)
+        tmpl = templatem.Template(t)
+        cache_data = {'my_autoscaling_group': {
+            'uuid': mock.ANY,
+            'id': mock.ANY,
+            'action': 'CREATE',
+            'status': 'COMPLETE',
+            'attrs': {'current_size': 4}
+        }}
+        stack = parser.Stack(utils.dummy_context(), 'test_att', tmpl,
+                             cache_data=cache_data)
+        rsrc = stack['my_autoscaling_group']
+        self.assertEqual(4, rsrc.FnGetAtt(rsrc.CURRENT_SIZE))
+
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',

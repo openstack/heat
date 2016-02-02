@@ -408,7 +408,7 @@ class ResourceGroup(stack_resource.StackResource):
         checkers[0].start()
         return checkers
 
-    def FnGetAtt(self, key, *path):
+    def get_attribute(self, key, *path):
         if key.startswith("resource."):
             return grouputils.get_nested_attrs(self, key, False, *path)
 
