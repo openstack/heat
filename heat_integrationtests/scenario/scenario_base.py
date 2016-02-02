@@ -18,7 +18,7 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
 
     def setUp(self):
         super(ScenarioTestsBase, self).setUp()
-        self.check_skip_test()
+        self.check_skip()
 
         self.client = self.orchestration_client
         self.sub_dir = 'templates'
@@ -58,7 +58,7 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
 
         return stack_id
 
-    def check_skip_test(self):
+    def check_skip(self):
         test_cls_name = self.__class__.__name__
         test_method_name = '.'.join([test_cls_name, self._testMethodName])
         test_skipped = (self.conf.skip_scenario_test_list and (

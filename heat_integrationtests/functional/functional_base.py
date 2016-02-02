@@ -17,10 +17,10 @@ class FunctionalTestsBase(test.HeatIntegrationTest):
 
     def setUp(self):
         super(FunctionalTestsBase, self).setUp()
-        self.check_skip_test()
+        self.check_skip()
         self.client = self.orchestration_client
 
-    def check_skip_test(self):
+    def check_skip(self):
         test_cls_name = self.__class__.__name__
         test_method_name = '.'.join([test_cls_name, self._testMethodName])
         test_skipped = (self.conf.skip_functional_test_list and (
