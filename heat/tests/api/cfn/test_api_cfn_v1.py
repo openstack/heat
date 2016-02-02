@@ -535,13 +535,14 @@ class CfnStackControllerTest(common.HeatTestCase):
               'template': self.template,
               'params': engine_parms,
               'files': {},
+              'environment_files': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.8'
+            version='1.23'
         ).AndRaise(failure)
 
     def _stub_rpc_create_stack_call_success(self, stack_name, engine_parms,
@@ -563,13 +564,14 @@ class CfnStackControllerTest(common.HeatTestCase):
               'template': self.template,
               'params': engine_parms,
               'files': {},
+              'environment_files': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.8'
+            version='1.23'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -877,7 +879,9 @@ class CfnStackControllerTest(common.HeatTestCase):
               'template': self.template,
               'params': engine_parms,
               'files': {},
-              'args': engine_args})
+              'environment_files': None,
+              'args': engine_args}),
+            version='1.23'
         ).AndReturn(identity)
 
         self.m.ReplayAll()
@@ -1095,8 +1099,9 @@ class CfnStackControllerTest(common.HeatTestCase):
         rpc_client.EngineClient.call(
             dummy_req.context,
             ('validate_template', {'template': json_template, 'params': None,
-                                   'files': None, 'show_nested': False}),
-            version='1.18'
+                                   'files': None, 'environment_files': None,
+                                   'show_nested': False}),
+            version='1.23'
         ).AndReturn(response)
         self.m.ReplayAll()
 

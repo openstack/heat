@@ -49,6 +49,7 @@ class InstantiationData(object):
         PARAM_USER_PARAMS,
         PARAM_ENVIRONMENT,
         PARAM_FILES,
+        PARAM_ENVIRONMENT_FILES,
     ) = (
         'stack_name',
         'template',
@@ -56,6 +57,7 @@ class InstantiationData(object):
         'parameters',
         'environment',
         'files',
+        'environment_files',
     )
 
     def __init__(self, data, patch=False):
@@ -144,6 +146,9 @@ class InstantiationData(object):
 
     def files(self):
         return self.data.get(self.PARAM_FILES, {})
+
+    def environment_files(self):
+        return self.data.get(self.PARAM_ENVIRONMENT_FILES, None)
 
     def args(self):
         """Get any additional arguments supplied by the user."""
@@ -346,12 +351,15 @@ class StackController(object):
 
         data = InstantiationData(body)
         args = self.prepare_args(data)
-        result = self.rpc_client.preview_stack(req.context,
-                                               data.stack_name(),
-                                               data.template(),
-                                               data.environment(),
-                                               data.files(),
-                                               args)
+        result = self.rpc_client.preview_stack(
+            req.context,
+            data.stack_name(),
+            data.template(),
+            data.environment(),
+            data.files(),
+            args,
+            environment_files=data.environment_files()
+        )
 
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
@@ -372,12 +380,14 @@ class StackController(object):
         data = InstantiationData(body)
 
         args = self.prepare_args(data)
-        result = self.rpc_client.create_stack(req.context,
-                                              data.stack_name(),
-                                              data.template(),
-                                              data.environment(),
-                                              data.files(),
-                                              args)
+        result = self.rpc_client.create_stack(
+            req.context,
+            data.stack_name(),
+            data.template(),
+            data.environment(),
+            data.files(),
+            args,
+            environment_files=data.environment_files())
 
         formatted_stack = stacks_view.format_stack(
             req,
@@ -444,12 +454,14 @@ class StackController(object):
         data = InstantiationData(body)
 
         args = self.prepare_args(data)
-        self.rpc_client.update_stack(req.context,
-                                     identity,
-                                     data.template(),
-                                     data.environment(),
-                                     data.files(),
-                                     args)
+        self.rpc_client.update_stack(
+            req.context,
+            identity,
+            data.template(),
+            data.environment(),
+            data.files(),
+            args,
+            environment_files=data.environment_files())
 
         raise exc.HTTPAccepted()
 
@@ -463,12 +475,14 @@ class StackController(object):
         data = InstantiationData(body, patch=True)
 
         args = self.prepare_args(data)
-        self.rpc_client.update_stack(req.context,
-                                     identity,
-                                     data.template(),
-                                     data.environment(),
-                                     data.files(),
-                                     args)
+        self.rpc_client.update_stack(
+            req.context,
+            identity,
+            data.template(),
+            data.environment(),
+            data.files(),
+            args,
+            environment_files=data.environment_files())
 
         raise exc.HTTPAccepted()
 
@@ -484,7 +498,8 @@ class StackController(object):
             data.template(),
             data.environment(),
             data.files(),
-            args)
+            args,
+            environment_files=data.environment_files())
 
         return {'resource_changes': changes}
 
@@ -500,7 +515,8 @@ class StackController(object):
             data.template(),
             data.environment(),
             data.files(),
-            args)
+            args,
+            environment_files=data.environment_files())
 
         return {'resource_changes': changes}
 
@@ -553,11 +569,13 @@ class StackController(object):
             params[p_name] = self._extract_bool_param(p_name, params[p_name])
             show_nested = params[p_name]
 
-        result = self.rpc_client.validate_template(req.context,
-                                                   data.template(),
-                                                   data.environment(),
-                                                   files=data.files(),
-                                                   show_nested=show_nested)
+        result = self.rpc_client.validate_template(
+            req.context,
+            data.template(),
+            data.environment(),
+            files=data.files(),
+            environment_files=data.environment_files(),
+            show_nested=show_nested)
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])

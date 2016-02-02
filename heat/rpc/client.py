@@ -41,6 +41,7 @@ class EngineClient(object):
         1.20 - Add resolve_outputs to stack show
         1.21 - Add deployment_id to create_software_deployment
         1.22 - Add support for stack export
+        1.23 - Add environment_files to create/update/preview/validate
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -188,7 +189,8 @@ class EngineClient(object):
                                              resolve_outputs=resolve_outputs),
                          version='1.20')
 
-    def preview_stack(self, ctxt, stack_name, template, params, files, args):
+    def preview_stack(self, ctxt, stack_name, template, params, files,
+                      args, environment_files=None):
         """Simulates a new stack using the provided template.
 
         Note that at this stage the template has already been fetched from the
@@ -200,13 +202,20 @@ class EngineClient(object):
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
+        :param environment_files: optional ordered list of environment file
+               names included in the files dict
+        :type  environment_files: list or None
         """
         return self.call(ctxt,
                          self.make_msg('preview_stack', stack_name=stack_name,
                                        template=template,
-                                       params=params, files=files, args=args))
+                                       params=params, files=files,
+                                       environment_files=environment_files,
+                                       args=args),
+                         version='1.23')
 
-    def create_stack(self, ctxt, stack_name, template, params, files, args):
+    def create_stack(self, ctxt, stack_name, template, params, files,
+                     args, environment_files=None):
         """Creates a new stack using the template provided.
 
         Note that at this stage the template has already been fetched from the
@@ -218,11 +227,15 @@ class EngineClient(object):
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
+        :param environment_files: optional ordered list of environment file
+               names included in the files dict
+        :type  environment_files: list or None
         """
         return self._create_stack(ctxt, stack_name, template, params, files,
-                                  args)
+                                  args, environment_files=environment_files)
 
-    def _create_stack(self, ctxt, stack_name, template, params, files, args,
+    def _create_stack(self, ctxt, stack_name, template, params, files,
+                      args, environment_files=None,
                       owner_id=None, nested_depth=0, user_creds_id=None,
                       stack_user_project_id=None, parent_resource_name=None):
         """Internal interface for engine-to-engine communication via RPC.
@@ -239,16 +252,17 @@ class EngineClient(object):
         return self.call(
             ctxt, self.make_msg('create_stack', stack_name=stack_name,
                                 template=template,
-                                params=params, files=files, args=args,
-                                owner_id=owner_id,
+                                params=params, files=files,
+                                environment_files=environment_files,
+                                args=args, owner_id=owner_id,
                                 nested_depth=nested_depth,
                                 user_creds_id=user_creds_id,
                                 stack_user_project_id=stack_user_project_id,
                                 parent_resource_name=parent_resource_name),
-            version='1.8')
+            version='1.23')
 
     def update_stack(self, ctxt, stack_identity, template, params,
-                     files, args):
+                     files, args, environment_files=None):
         """Updates an existing stack based on the provided template and params.
 
         Note that at this stage the template has already been fetched from the
@@ -260,16 +274,22 @@ class EngineClient(object):
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
+        :param environment_files: optional ordered list of environment file
+               names included in the files dict
+        :type  environment_files: list or None
         """
-        return self.call(ctxt, self.make_msg('update_stack',
-                                             stack_identity=stack_identity,
-                                             template=template,
-                                             params=params,
-                                             files=files,
-                                             args=args))
+        return self.call(ctxt,
+                         self.make_msg('update_stack',
+                                       stack_identity=stack_identity,
+                                       template=template,
+                                       params=params,
+                                       files=files,
+                                       environment_files=environment_files,
+                                       args=args),
+                         version='1.23')
 
     def preview_update_stack(self, ctxt, stack_identity, template, params,
-                             files, args):
+                             files, args, environment_files=None):
         """Returns the resources that would be changed in an update.
 
         Based on the provided template and parameters.
@@ -282,6 +302,9 @@ class EngineClient(object):
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
+        :param environment_files: optional ordered list of environment file
+               names included in the files dict
+        :type  environment_files: list or None
         """
         return self.call(ctxt,
                          self.make_msg('preview_update_stack',
@@ -289,26 +312,31 @@ class EngineClient(object):
                                        template=template,
                                        params=params,
                                        files=files,
+                                       environment_files=environment_files,
                                        args=args,
                                        ),
-                         version='1.15')
+                         version='1.23')
 
     def validate_template(self, ctxt, template, params=None, files=None,
-                          show_nested=False):
+                          environment_files=None, show_nested=False):
         """Uses the stack parser to check the validity of a template.
 
         :param ctxt: RPC context.
         :param template: Template of stack you want to create.
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment/template.
+        :param environment_files: ordered list of environment file names
+               included in the files dict
         :param show_nested: if True nested templates will be validated
         """
-        return self.call(ctxt, self.make_msg('validate_template',
-                                             template=template,
-                                             params=params,
-                                             files=files,
-                                             show_nested=show_nested),
-                         version='1.18')
+        return self.call(ctxt,
+                         self.make_msg('validate_template',
+                                       template=template,
+                                       params=params,
+                                       files=files,
+                                       environment_files=environment_files,
+                                       show_nested=show_nested),
+                         version='1.23')
 
     def authenticated_to_backend(self, ctxt):
         """Validate the credentials in the RPC context.

@@ -862,6 +862,7 @@ class WithTemplateTest(StackResourceBaseTest):
             {'disable_rollback': True,
              'adopt_stack_data': adopt_data_str,
              'timeout_mins': self.timeout_mins},
+            None,
             stack_user_project_id='aprojectid',
             parent_resource_name='test',
             user_creds_id='uc123',

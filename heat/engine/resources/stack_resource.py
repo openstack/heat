@@ -300,6 +300,7 @@ class StackResource(resource.Resource):
                 child_env.user_env_as_dict(),
                 parsed_template.files,
                 args,
+                None,
                 owner_id=self.stack.id,
                 user_creds_id=self.stack.user_creds_id,
                 stack_user_project_id=stack_user_project_id,

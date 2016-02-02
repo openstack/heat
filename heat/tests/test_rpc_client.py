@@ -148,6 +148,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               template={u'Foo': u'bar'},
                               params={u'InstanceType': u'm1.xlarge'},
                               files={u'a_file': u'the contents'},
+                              environment_files=['foo.yaml'],
                               args={'timeout_mins': u'30'})
 
     def test_create_stack(self):
@@ -155,6 +156,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                       template={u'Foo': u'bar'},
                       params={u'InstanceType': u'm1.xlarge'},
                       files={u'a_file': u'the contents'},
+                      environment_files=['foo.yaml'],
                       args={'timeout_mins': u'30'})
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['owner_id'] = None
@@ -172,6 +174,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               template={u'Foo': u'bar'},
                               params={u'InstanceType': u'm1.xlarge'},
                               files={},
+                              environment_files=['foo.yaml'],
                               args=mock.ANY)
 
     def test_preview_update_stack(self):
@@ -180,6 +183,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               template={u'Foo': u'bar'},
                               params={u'InstanceType': u'm1.xlarge'},
                               files={},
+                              environment_files=['foo.yaml'],
                               args=mock.ANY)
 
     def test_get_template(self):
@@ -199,6 +203,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               template={u'Foo': u'bar'},
                               params={u'Egg': u'spam'},
                               files=None,
+                              environment_files=['foo.yaml'],
                               show_nested=False)
 
     def test_list_resource_types(self):
