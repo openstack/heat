@@ -1389,8 +1389,8 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
-        self.assertIn(_('One of the properties "network", "port", "uuid" or '
-                        '"subnet" should be set for the specified network of '
+        self.assertIn(_('One of the properties "network", "port" or "subnet" '
+                        'should be set for the specified network of '
                         'server "%s".') % server.name,
                       six.text_type(ex))
         self.m.VerifyAll()
@@ -2565,12 +2565,9 @@ class ServersTest(common.HeatTestCase):
                           {'v6-fixed-ip': '2002::2', 'net-id': None}],
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '2002::2'}]))
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
-                         return_value='1234abcd')
-        self.assertEqual([{'net-id': '1234abcd'}],
-                         server._build_nics([{'uuid': '1234abcd'}]))
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
                          server._build_nics(
@@ -3308,14 +3305,16 @@ class ServersTest(common.HeatTestCase):
 
         net = {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
                'fixed_ip': '1.2.3.4'}
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032')
         net_id = server._get_network_id(net)
         self.assertEqual('f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', net_id)
 
         net = {'network': 'private_net',
                'fixed_ip': '1.2.3.4'}
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032')
         net_id = server._get_network_id(net)
         self.assertEqual('f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', net_id)
@@ -3416,14 +3415,13 @@ class ServersTest(common.HeatTestCase):
             self.create_old_net(
                 net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
                 ip='',
-                port='',
-                uuid='')]
+                port='')]
         new_nets = [
             {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
              'fixed_ip': None,
              'port': None,
-             'uuid': None,
              'subnet': None,
+             'uuid': None,
              'port_extra_properties': None,
              'floating_ip': None}]
         new_nets_copy = copy.deepcopy(new_nets)
@@ -3459,7 +3457,7 @@ class ServersTest(common.HeatTestCase):
             self.create_fake_iface('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
                                    nets[1]['network'], nets[1]['fixed_ip']),
             self.create_fake_iface('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-                                   nets[4]['uuid'], nets[4]['fixed_ip'])]
+                                   nets[4]['network'], nets[4]['fixed_ip'])]
         # all networks should get port id
         expected = [
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -3498,9 +3496,9 @@ class ServersTest(common.HeatTestCase):
              'floating_ip': None,
              'network': None}]
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='gggggggg-1111-1111-1111-gggggggggggg')
-
         server.update_networks_matching_iface_port(nets, interfaces)
         self.assertEqual(expected, nets)
 
@@ -3573,7 +3571,8 @@ class ServersTest(common.HeatTestCase):
         return_server.interface_attach(None, new_networks[0]['network'],
                                        new_networks[0]['fixed_ip']).AndReturn(
                                            None)
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         self.stub_NetworkConstraint_validate()
         self.m.ReplayAll()
@@ -3609,7 +3608,8 @@ class ServersTest(common.HeatTestCase):
         return_server.interface_detach(
             'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa').AndReturn(None)
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value=None)
 
         self.m.StubOutWithMock(return_server, 'interface_attach')
@@ -3676,7 +3676,8 @@ class ServersTest(common.HeatTestCase):
         return_server.interface_detach(
             poor_interfaces[3].port_id).InAnyOrder().AndReturn(None)
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach(
@@ -3722,7 +3723,8 @@ class ServersTest(common.HeatTestCase):
                                    '31.32.33.34')
         ]
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         return_server.interface_list().AndReturn(poor_interfaces)
 
@@ -3775,7 +3777,8 @@ class ServersTest(common.HeatTestCase):
                                    '31.32.33.34')
         ]
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
         return_server.interface_list().AndReturn(poor_interfaces)
@@ -3940,7 +3943,8 @@ class ServersTest(common.HeatTestCase):
         glance.GlanceClientPlugin.find_image_by_name_or_id(
             'CentOS 5.2').MultipleTimes().AndReturn(1)
 
-        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         self.stub_NetworkConstraint_validate()
         self.fc.servers.get(return_server.id).AndReturn(return_server)
@@ -4245,7 +4249,7 @@ class ServerInternalPortTest(common.HeatTestCase):
         t, stack, server = self._return_template_stack_and_rsrc_defn('test',
                                                                      tmpl)
 
-        self.resolve.side_effect = ['4321', '1234']
+        self.resolve.side_effect = ['4321', '4321', '1234']
         self.patchobject(server, '_validate_belonging_subnet_to_net')
         self.port_create.return_value = {'port': {'id': '111222'}}
         data_set = self.patchobject(resource.Resource, 'data_set')

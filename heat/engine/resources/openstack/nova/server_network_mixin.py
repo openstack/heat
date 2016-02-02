@@ -19,7 +19,6 @@ from oslo_utils import netutils
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import resource
 
 from heat.engine.resources.openstack.neutron import port as neutron_port
@@ -30,43 +29,20 @@ LOG = logging.getLogger(__name__)
 class ServerNetworkMixin(object):
 
     def _validate_network(self, network):
-        net_uuid = network.get(self.NETWORK_UUID)
         net_id = network.get(self.NETWORK_ID)
         port = network.get(self.NETWORK_PORT)
         subnet = network.get(self.NETWORK_SUBNET)
         fixed_ip = network.get(self.NETWORK_FIXED_IP)
 
-        if (net_id is None and port is None
-           and net_uuid is None and subnet is None):
-            msg = _('One of the properties "%(id)s", "%(port_id)s", '
-                    '"%(uuid)s" or "%(subnet)s" should be set for the '
+        if net_id is None and port is None and subnet is None:
+            msg = _('One of the properties "%(id)s", "%(port_id)s" '
+                    'or "%(subnet)s" should be set for the '
                     'specified network of server "%(server)s".'
                     '') % dict(id=self.NETWORK_ID,
                                port_id=self.NETWORK_PORT,
-                               uuid=self.NETWORK_UUID,
                                subnet=self.NETWORK_SUBNET,
                                server=self.name)
             raise exception.StackValidationFailed(message=msg)
-
-        if net_uuid and net_id:
-            msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
-                    'to the network "%(network)s" for the server '
-                    '"%(server)s". The "%(uuid)s" property is deprecated. '
-                    'Use only "%(id)s" property.'
-                    '') % dict(uuid=self.NETWORK_UUID,
-                               id=self.NETWORK_ID,
-                               network=network[self.NETWORK_ID],
-                               server=self.name)
-            raise exception.StackValidationFailed(message=msg)
-        elif net_uuid:
-            LOG.info(_LI('For the server "%(server)s" the "%(uuid)s" '
-                         'property is set to network "%(network)s". '
-                         '"%(uuid)s" property is deprecated. Use '
-                         '"%(id)s"  property instead.'),
-                     dict(uuid=self.NETWORK_UUID,
-                          id=self.NETWORK_ID,
-                          network=network[self.NETWORK_ID],
-                          server=self.name))
 
         if port and not self.is_using_neutron():
             msg = _('Property "%s" is supported only for '
@@ -88,7 +64,7 @@ class ServerNetworkMixin(object):
             if (subnet is not None and net is not None):
                 subnet_net = self.client_plugin(
                     'neutron').network_id_from_subnet_id(
-                    self._get_subnet_id(network))
+                    self._get_subnet_id(subnet))
                 if subnet_net != net:
                     msg = _('Specified subnet %(subnet)s does not belongs to '
                             'network %(network)s.') % {
@@ -119,7 +95,7 @@ class ServerNetworkMixin(object):
         if fixed_ip:
             body['ip_address'] = fixed_ip
         if subnet:
-            body['subnet_id'] = self._get_subnet_id(net_data)
+            body['subnet_id'] = self._get_subnet_id(subnet)
         # we should add fixed_ips only if subnet or ip were provided
         if body:
             kwargs.update({'fixed_ips': [body]})
@@ -296,28 +272,24 @@ class ServerNetworkMixin(object):
         return not_updated_nets
 
     def _get_network_id(self, net):
-        # network and network_id properties can be used interchangeably
-        # if move the same value from one properties to another, it should
-        # not change anything, i.e. it will be the same port/interface
-        net_id = (net.get(self.NETWORK_UUID) or
-                  net.get(self.NETWORK_ID) or None)
-
+        net_id = net.get(self.NETWORK_ID) or None
+        subnet = net.get(self.NETWORK_SUBNET) or None
         if net_id:
             if self.is_using_neutron():
                 net_id = self.client_plugin(
-                    'neutron').resolve_network(
-                    net, self.NETWORK_ID, self.NETWORK_UUID)
+                    'neutron').find_resourceid_by_name_or_id('network',
+                                                             net_id)
             else:
                 net_id = self.client_plugin(
                     'nova').get_nova_network_id(net_id)
-        elif net.get(self.NETWORK_SUBNET):
+        elif subnet:
             net_id = self.client_plugin('neutron').network_id_from_subnet_id(
-                self._get_subnet_id(net))
+                self._get_subnet_id(subnet))
         return net_id
 
-    def _get_subnet_id(self, net):
-        return self.client_plugin('neutron').find_neutron_resource(
-            net, self.NETWORK_SUBNET, 'subnet')
+    def _get_subnet_id(self, subnet):
+        return self.client_plugin('neutron').find_resourceid_by_name_or_id(
+            'subnet', subnet)
 
     def update_networks_matching_iface_port(self, nets, interfaces):
 
