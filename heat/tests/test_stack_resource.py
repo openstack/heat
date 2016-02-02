@@ -843,11 +843,15 @@ class WithTemplateTest(StackResourceBaseTest):
         if self.adopt_data:
             adopt_data_str = json.dumps(self.adopt_data)
         rpcc.return_value._create_stack.assert_called_once_with(
-            self.ctx, res_name, self.empty_temp.t, child_env, {},
-            {'disable_rollback': True,
-             'adopt_stack_data': adopt_data_str,
-             'timeout_mins': self.timeout_mins},
-            None,
+            self.ctx,
+            stack_name=res_name,
+            template=self.empty_temp.t,
+            params=child_env,
+            files={},
+            args={'disable_rollback': True,
+                  'adopt_stack_data': adopt_data_str,
+                  'timeout_mins': self.timeout_mins},
+            environment_files=None,
             stack_user_project_id='aprojectid',
             parent_resource_name='test',
             user_creds_id='uc123',
@@ -877,9 +881,12 @@ class WithTemplateTest(StackResourceBaseTest):
             self.empty_temp, user_params=self.params,
             timeout_mins=self.timeout_mins)
         rpcc.return_value.update_stack.assert_called_once_with(
-            self.ctx, {'stack_identifier': 'stack-identifier'},
-            self.empty_temp.t, child_env, {},
-            {'timeout_mins': self.timeout_mins})
+            self.ctx,
+            stack_identity={'stack_identifier': 'stack-identifier'},
+            template=self.empty_temp.t,
+            params=child_env,
+            files={},
+            args={'timeout_mins': self.timeout_mins})
 
 
 class RaiseLocalException(StackResourceBaseTest):
