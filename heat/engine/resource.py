@@ -919,6 +919,7 @@ class Resource(object):
         after_props = after.properties(self.properties_schema,
                                        self.context)
         self.translate_properties(after_props)
+        self.translate_properties(before_props)
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_PRE_UPDATE)
