@@ -427,15 +427,6 @@ class Resource(object):
         else:
             return ri.name == resource_type
 
-    def implementation_signature(self):
-        """Return a tuple defining the implementation.
-
-        This should be broken down into a definition and an
-        implementation version.
-        """
-
-        return (self.__class__.__name__, self.support_status.version)
-
     def identifier(self):
         """Return an identifier for this resource."""
         return identifier.ResourceIdentifier(resource_name=self.name,
@@ -864,15 +855,6 @@ class Resource(object):
         if check_init_complete and (self.action == self.INIT
                                     and self.status == self.COMPLETE):
             raise exception.UpdateReplace(self)
-
-        if prev_resource is not None:
-            cur_class_def, cur_ver = self.implementation_signature()
-            prev_class_def, prev_ver = prev_resource.implementation_signature()
-
-            if prev_class_def != cur_class_def:
-                raise exception.UpdateReplace(self.name)
-            if prev_ver != cur_ver:
-                return True
 
         if before != after.freeze():
             return True

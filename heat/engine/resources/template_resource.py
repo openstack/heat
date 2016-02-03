@@ -178,10 +178,6 @@ class TemplateResource(stack_resource.StackResource):
         self._get_resource_info(definition)
         self._generate_schema(definition)
 
-    def implementation_signature(self):
-        self._generate_schema(self.t)
-        return super(TemplateResource, self).implementation_signature()
-
     def template_data(self):
         # we want to have the latest possible template.
         # 1. look in files
