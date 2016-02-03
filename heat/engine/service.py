@@ -1650,7 +1650,7 @@ class EngineService(service.Service):
         self.resource_enforcer.enforce_stack(stack)
         snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
             cnxt, snapshot_id, s)
-        # FIXME(pas-ha) has to be ammended to deny restoring stacks
+        # FIXME(pas-ha) has to be amended to deny restoring stacks
         # that have disallowed for current user
 
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,

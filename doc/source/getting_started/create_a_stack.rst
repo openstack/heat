@@ -99,7 +99,7 @@ Note: The list operation will show no running stack.::
     $ heat stack-delete teststack
     $ heat stack-list
 
-You can explore other heat commands by refering to the
+You can explore other heat commands by referring to the
 `Heat chapter
 <http://docs.openstack.org/cli-reference/heat.html>`_
 of the `OpenStack Command-Line Interface Reference
