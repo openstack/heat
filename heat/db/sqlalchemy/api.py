@@ -48,7 +48,7 @@ def get_facade():
 
     if not _facade:
         _facade = db_session.EngineFacade.from_config(CONF)
-        if CONF.profiler.profiler_enabled:
+        if CONF.profiler.enabled:
             if CONF.profiler.trace_sqlalchemy:
                 osprofiler.sqlalchemy.add_tracing(sqlalchemy,
                                                   _facade.get_engine(),

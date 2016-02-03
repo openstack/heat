@@ -17,6 +17,7 @@ import os
 from eventlet.green import socket
 from oslo_config import cfg
 from oslo_log import log as logging
+from osprofiler import opts as profiler
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -244,16 +245,6 @@ rpc_opts = [
                       'It is not necessarily a hostname, FQDN, '
                       'or IP address.'))]
 
-profiler_group = cfg.OptGroup('profiler')
-profiler_opts = [
-    cfg.BoolOpt("profiler_enabled", default=False,
-                help=_('If False fully disable profiling feature.')),
-    cfg.BoolOpt("trace_sqlalchemy", default=False,
-                help=_("If False do not trace SQL requests.")),
-    cfg.StrOpt("hmac_keys", default="SECRET_KEY",
-               help=_("Secret key to use to sign tracing messages."))
-]
-
 auth_password_group = cfg.OptGroup('auth_password')
 auth_password_opts = [
     cfg.BoolOpt('multi_cloud',
@@ -362,7 +353,7 @@ def list_opts():
     yield paste_deploy_group.name, paste_deploy_opts
     yield auth_password_group.name, auth_password_opts
     yield revision_group.name, revision_opts
-    yield profiler_group.name, profiler_opts
+    yield profiler.list_opts()[0]
     yield 'clients', default_clients_opts
 
     for client in ('nova', 'swift', 'neutron', 'cinder',
@@ -380,7 +371,7 @@ def list_opts():
 cfg.CONF.register_group(paste_deploy_group)
 cfg.CONF.register_group(auth_password_group)
 cfg.CONF.register_group(revision_group)
-cfg.CONF.register_group(profiler_group)
+profiler.set_defaults(cfg.CONF)
 
 for group, opts in list_opts():
     cfg.CONF.register_opts(opts, group=group)
