@@ -177,6 +177,21 @@ class GlanceImageTest(common.HeatTestCase):
         error_msg = 'Property location not assigned'
         self._test_validate(image, error_msg)
 
+    def test_invalid_disk_container_mix(self):
+        tpl = template_format.parse(image_template_validate)
+        stack = parser.Stack(
+            self.ctx, 'glance_image_stack_validate',
+            template.Template(tpl)
+        )
+        image = stack['image']
+        image.t['Properties']['disk_format'] = 'raw'
+        image.t['Properties']['container_format'] = 'ari'
+        error_msg = ("Invalid mix of disk and container formats. When "
+                     "setting a disk or container format to one of 'aki', "
+                     "'ari', or 'ami', the container and disk formats must "
+                     "match.")
+        self._test_validate(image, error_msg)
+
     def test_image_handle_create(self):
         value = mock.MagicMock()
         image_id = '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
