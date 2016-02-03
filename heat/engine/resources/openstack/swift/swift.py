@@ -256,6 +256,40 @@ class SwiftContainer(resource.Resource):
     def _show_resource(self):
         return self.client().head_container(self.resource_id)
 
+    def get_live_resource_data(self):
+        resource_data = super(SwiftContainer, self).get_live_resource_data()
+        account_data = self.client().head_account()
+        resource_data['account_data'] = account_data
+        return resource_data
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        swift_reality = {}
+        # swift container name can't be updated
+        swift_reality.update({self.NAME: resource_properties.get(self.NAME)})
+        # PURGE_ON_DELETE property is used only on the heat side and isn't
+        # passed to swift, so update it from existing resource properties
+        swift_reality.update({self.PURGE_ON_DELETE: resource_properties.get(
+            self.PURGE_ON_DELETE)})
+        swift_reality.update({self.X_CONTAINER_META: {}})
+        swift_reality.update({self.X_ACCOUNT_META: {}})
+        for key in [self.X_CONTAINER_READ, self.X_CONTAINER_WRITE]:
+            swift_reality.update({key: resource_data.get(key.lower())})
+        for key in resource_properties.get(self.X_CONTAINER_META):
+            prefixed_key = "%(prefix)s-%(key)s" % {
+                'prefix': self.X_CONTAINER_META.lower(),
+                'key': key.lower()}
+            if prefixed_key in resource_data:
+                swift_reality[self.X_CONTAINER_META].update(
+                    {key: resource_data[prefixed_key]})
+        for key in resource_properties.get(self.X_ACCOUNT_META):
+            prefixed_key = "%(prefix)s-%(key)s" % {
+                'prefix': self.X_ACCOUNT_META.lower(),
+                'key': key.lower()}
+            if prefixed_key in resource_data['account_data']:
+                swift_reality[self.X_ACCOUNT_META].update(
+                    {key: resource_data['account_data'][prefixed_key]})
+        return swift_reality
+
 
 def resource_mapping():
     return {

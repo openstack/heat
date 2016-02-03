@@ -467,3 +467,24 @@ class SwiftTest(common.HeatTestCase):
         stack = utils.parse_stack(self.t, cache_data=cache_data)
         rsrc = stack['SwiftContainer']
         self.assertEqual('xyz_convg', rsrc.FnGetRefId())
+
+    @mock.patch('swiftclient.client.Connection.head_account')
+    @mock.patch('swiftclient.client.Connection.head_container')
+    @mock.patch('swiftclient.client.Connection.put_container')
+    def test_parse_live_resource_data(self, mock_put, mock_container,
+                                      mock_account):
+        stack = utils.parse_stack(self.t)
+        container = self._create_container(
+            stack, definition_name="SwiftContainerWebsite")
+        mock_container.return_value = {
+            'x-container-read': '.r:*',
+            'x-container-meta-web-index': 'index.html',
+            'x-container-meta-web-error': 'error.html',
+            'x-container-meta-login': 'login.html'
+        }
+        mock_account.return_value = {}
+        live_state = container.parse_live_resource_data(
+            container.properties, container.get_live_resource_data())
+        # live state properties values should be equal to current resource
+        # properties values
+        self.assertEqual(dict(container.properties.items()), live_state)
