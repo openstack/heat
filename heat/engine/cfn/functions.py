@@ -402,8 +402,8 @@ class Replace(function.Function):
         super(Replace, self).__init__(stack, fn_name, args)
 
         self._mapping, self._string = self._parse_args()
-
-        if not isinstance(self._mapping, collections.Mapping):
+        if not isinstance(self._mapping,
+                          (collections.Mapping, function.Function)):
             raise TypeError(_('"%s" parameters must be a mapping') %
                             self.fn_name)
 
