@@ -613,6 +613,29 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertRaises(TypeError, self.resolve, snippet, tmpl)
 
+    def test_str_replace_ref_get_param(self):
+        """Test str_replace referencing parameters."""
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2015-04-30
+        parameters:
+          p_template:
+            type: string
+            default: foo-replaceme
+          p_params:
+            type: json
+            default:
+              replaceme: success
+        ''')
+        snippet = {'str_replace':
+                   {'template': {'get_param': 'p_template'},
+                    'params': {'get_param': 'p_params'}}}
+        snippet_resolved = 'foo-success'
+
+        tmpl = template.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
+
     def test_get_file(self):
         """Test get_file function."""
 
