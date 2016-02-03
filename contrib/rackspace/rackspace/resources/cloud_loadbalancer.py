@@ -789,6 +789,7 @@ class CloudLoadBalancer(resource.Resource):
         return False
 
     def _access_list_needs_update(self, old, new):
+        old = [{key: al[key] for key in self._ACCESS_LIST_KEYS} for al in old]
         old = set([frozenset(s.items()) for s in old])
         new = set([frozenset(s.items()) for s in new])
         return old != new
