@@ -935,6 +935,7 @@ class Resource(object):
         after_props = after.properties(self.properties_schema,
                                        self.context)
         self.translate_properties(after_props)
+        self.translate_properties(before_props)
 
         if cfg.CONF.observe_on_update and before_props:
             if not self.resource_id:
