@@ -33,6 +33,7 @@ resources:
       driver_handles_share_servers: True
       extra_specs: {"test":"test"}
       is_public: False
+      snapshot_support: True
 """
 
 
@@ -75,7 +76,7 @@ class ManilaShareTypeTest(common.HeatTestCase):
         self.assertEqual("type_id", share_type.resource_id)
         share_type.client().share_types.create.assert_called_once_with(
             name="test_share_type", spec_driver_handles_share_servers=True,
-            is_public=False)
+            is_public=False, spec_snapshot_support=True)
         fake_share_type.set_keys.assert_called_once_with({"test": "test"})
         self.assertEqual('share_types', share_type.entity)
 
