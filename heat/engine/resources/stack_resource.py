@@ -264,22 +264,12 @@ class StackResource(resource.Resource):
             timeout_mins = self.stack.timeout_mins
         stack_user_project_id = self.stack.stack_user_project_id
 
-        if user_params is None:
-            user_params = self.child_params()
-        child_env = environment.get_child_environment(
-            self.stack.env,
-            user_params,
-            child_resource_name=self.name,
-            item_to_remove=self.resource_info)
-
-        new_nested_depth = self._child_nested_depth()
-        parsed_template = self._child_parsed_template(child_template,
-                                                      child_env)
+        kwargs = self._stack_kwargs(user_params, child_template)
 
         adopt_data_str = None
         if adopt_data is not None:
             if 'environment' not in adopt_data:
-                adopt_data['environment'] = child_env.user_env_as_dict()
+                adopt_data['environment'] = kwargs['params']
             if 'template' not in adopt_data:
                 if isinstance(child_template, template.Template):
                     adopt_data['template'] = child_template.t
@@ -290,24 +280,42 @@ class StackResource(resource.Resource):
         args = {rpc_api.PARAM_TIMEOUT: timeout_mins,
                 rpc_api.PARAM_DISABLE_ROLLBACK: True,
                 rpc_api.PARAM_ADOPT_STACK_DATA: adopt_data_str}
+        kwargs.update({
+            'stack_name': name,
+            'args': args,
+            'environment_files': None,
+            'owner_id': self.stack.id,
+            'user_creds_id': self.stack.user_creds_id,
+            'stack_user_project_id': stack_user_project_id,
+            'nested_depth': self._child_nested_depth(),
+            'parent_resource_name': self.name
+        })
         try:
-            result = self.rpc_client()._create_stack(
-                self.context,
-                name,
-                parsed_template.t,
-                child_env.user_env_as_dict(),
-                parsed_template.files,
-                args,
-                None,
-                owner_id=self.stack.id,
-                user_creds_id=self.stack.user_creds_id,
-                stack_user_project_id=stack_user_project_id,
-                nested_depth=new_nested_depth,
-                parent_resource_name=self.name)
+            result = self.rpc_client()._create_stack(self.context, **kwargs)
         except Exception as ex:
             self.raise_local_exception(ex)
 
         self.resource_id_set(result['stack_id'])
+
+    def _stack_kwargs(self, user_params, child_template):
+
+        if user_params is None:
+            user_params = self.child_params()
+        if child_template is None:
+            child_template = self.child_template()
+        child_env = environment.get_child_environment(
+            self.stack.env,
+            user_params,
+            child_resource_name=self.name,
+            item_to_remove=self.resource_info)
+
+        parsed_template = self._child_parsed_template(child_template,
+                                                      child_env)
+        return {
+            'template': parsed_template.t,
+            'params': child_env.user_env_as_dict(),
+            'files': parsed_template.files
+        }
 
     def raise_local_exception(self, ex):
         if (isinstance(ex, exception.ActionInProgress) and
@@ -405,30 +413,17 @@ class StackResource(resource.Resource):
         if timeout_mins is None:
             timeout_mins = self.stack.timeout_mins
 
-        if user_params is None:
-            user_params = self.child_params()
-
-        child_env = environment.get_child_environment(
-            self.stack.env,
-            user_params,
-            child_resource_name=self.name,
-            item_to_remove=self.resource_info)
-        parsed_template = self._child_parsed_template(child_template,
-                                                      child_env)
-
+        kwargs = self._stack_kwargs(user_params, child_template)
         cookie = {'previous': {
             'updated_at': nested_stack.updated_time,
             'state': nested_stack.state}}
 
-        args = {rpc_api.PARAM_TIMEOUT: timeout_mins}
+        kwargs.update({
+            'stack_identity': dict(nested_stack.identifier()),
+            'args': {rpc_api.PARAM_TIMEOUT: timeout_mins}
+        })
         try:
-            self.rpc_client().update_stack(
-                self.context,
-                dict(nested_stack.identifier()),
-                parsed_template.t,
-                child_env.user_env_as_dict(),
-                parsed_template.files,
-                args)
+            self.rpc_client().update_stack(self.context, **kwargs)
         except Exception as ex:
             LOG.exception(_LE('update_stack'))
             self.raise_local_exception(ex)
