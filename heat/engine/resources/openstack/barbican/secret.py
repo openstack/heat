@@ -48,6 +48,12 @@ class Secret(resource.Resource):
         'status', 'decrypted_payload',
     )
 
+    _SECRET_TYPES = (
+        SYMMETRIC, PUBLIC, PRIVATE, CERTIFICATE, PASSPHRASE, OPAQUE
+    ) = (
+        'symmetric', 'public', 'private', 'certificate', 'passphrase', 'opaque'
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -61,12 +67,10 @@ class Secret(resource.Resource):
             properties.Schema.STRING,
             _('The type of the secret.'),
             constraints=[
-                constraints.AllowedValues([
-                    'symmetric', 'public', 'private', 'certificate',
-                    'passphrase', 'opaque'
-                ]),
+                constraints.AllowedValues(_SECRET_TYPES),
             ],
             support_status=support.SupportStatus(version='5.0.0'),
+            default=OPAQUE
         ),
         PAYLOAD_CONTENT_TYPE: properties.Schema(
             properties.Schema.STRING,
