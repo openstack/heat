@@ -480,6 +480,7 @@ class Port(neutron.NeutronResource):
             check_init_complete)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        prop_diff.pop(self.NETWORK, None)
         if prop_diff:
             self.prepare_update_properties(prop_diff)
             if self.QOS_POLICY in prop_diff:
