@@ -359,6 +359,7 @@ class Resource(object):
     def metadata_set(self, metadata):
         if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
+        LOG.debug('Setting metadata for %s', six.text_type(self))
         rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
