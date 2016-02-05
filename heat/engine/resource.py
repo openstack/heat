@@ -1646,6 +1646,9 @@ class Resource(object):
     def signal(self, details=None, need_check=True):
         """Signal the resource.
 
+        Returns True if the metadata for all resources in the stack needs to
+        be regenerated as a result of the signal, False if it should not be.
+
         Subclasses should provide a handle_signal() method to implement the
         signal. The base-class raise an exception if no handler is implemented.
         """
@@ -1654,8 +1657,9 @@ class Resource(object):
             self._signal_check_hook(details)
         if details and 'unset_hook' in details:
             self._unset_hook(details)
-            return
+            return False
         self._handle_signal(details)
+        return self.signal_needs_metadata_updates
 
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         if prop_diff:

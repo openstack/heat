@@ -505,7 +505,8 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertTrue(rsrc.requires_deferred_auth)
 
-        rsrc.signal(details=test_d)
+        result = rsrc.signal(details=test_d)
+        self.assertTrue(result)
 
         self.m.VerifyAll()
 

@@ -1412,7 +1412,7 @@ class StackServiceTest(common.HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
 
         self.m.StubOutWithMock(res.Resource, 'signal')
-        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(None)
+        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(True)
         self.m.StubOutWithMock(res.Resource, 'metadata_update')
         # this will be called once for the Random resource
         res.Resource.metadata_update().AndReturn(None)
@@ -1432,15 +1432,13 @@ class StackServiceTest(common.HeatTestCase):
         stack.store()
         stack.create()
 
-        res.Resource.signal_needs_metadata_updates = False
-
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
         self.m.StubOutWithMock(res.Resource, 'signal')
-        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(None)
+        res.Resource.signal(mox.IgnoreArg(), False).AndReturn(False)
         # this will never be called
         self.m.StubOutWithMock(res.Resource, 'metadata_update')
         self.m.ReplayAll()
@@ -1450,7 +1448,6 @@ class StackServiceTest(common.HeatTestCase):
                                  'WebServerScaleDownPolicy', None,
                                  sync_call=True)
         self.m.VerifyAll()
-        res.Resource.signal_needs_metadata_updates = True
 
     def test_stack_list_all_empty(self):
         sl = self.eng.list_stacks(self.ctx)
