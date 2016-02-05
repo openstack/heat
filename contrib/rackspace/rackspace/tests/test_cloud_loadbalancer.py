@@ -680,6 +680,10 @@ class LoadBalancerTest(common.HeatTestCase):
                         'type': 'ALLOW'},
                        {'address': '172.165.3.43',
                         'type': 'DENY'}]
+        api_access_list = [{"address": '192.168.1.1/0', 'id': 1234,
+                            'type': 'ALLOW'},
+                           {'address': '172.165.3.43', 'id': 3422,
+                            'type': 'DENY'}]
 
         template = self._set_template(self.lb_template,
                                       accessList=access_list)
@@ -688,7 +692,7 @@ class LoadBalancerTest(common.HeatTestCase):
                                                 self.expected_body)
         self.m.StubOutWithMock(fake_lb, 'get_access_list')
         fake_lb.get_access_list().AndReturn([])
-        fake_lb.get_access_list().AndReturn(access_list)
+        fake_lb.get_access_list().AndReturn(api_access_list)
 
         self.m.StubOutWithMock(fake_lb, 'add_access_list')
         fake_lb.add_access_list(access_list)
