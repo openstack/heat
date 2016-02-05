@@ -1,0 +1,8 @@
+---
+features:
+  - Template validation is improved to ignore the given set of error codes. For
+    example, heat will report template as invalid one, if it does not find any
+    required OpenStack services in the cloud deployment and while authoring
+    the template, user might wants to avoid such scenarios, so that (s)he could
+    create valid template without bothering about run-time environments. Please
+    refer the API documentation of validate template for more details.
