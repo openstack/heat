@@ -3070,12 +3070,13 @@ class ResourceAvailabilityTest(common.HeatTestCase):
             ['test_type']
         )
         mock_client_plugin.has_extension = mock.Mock(
-            side_effect=Exception("error"))
+            side_effect=exception.AuthorizationFailure())
         mock_client_plugin_method.return_value = mock_client_plugin
 
-        self.assertFalse(
-            generic_rsrc.ResourceWithDefaultClientNameExt.is_service_available(
-                context=mock.Mock()))
+        self.assertRaises(
+            exception.AuthorizationFailure,
+            generic_rsrc.ResourceWithDefaultClientNameExt.is_service_available,
+            context=mock.Mock())
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3112,8 +3113,8 @@ class ResourceAvailabilityTest(common.HeatTestCase):
             service_name=(generic_rsrc.ResourceWithDefaultClientName
                           .default_client_name))
 
-    def test_service_not_deployed_throws_exception(self):
-        """Test raising exception when the service is not deployed.
+    def test_service_not_available_returns_false(self):
+        """Test when the service is not in service catalog.
 
         When the service is not deployed, make sure resource is throwing
         ResourceTypeUnavailable exception.
@@ -3138,9 +3139,45 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                 definition=definition,
                 stack=mock_stack)
 
-            msg = ('HEAT-E99001 Service sample does not have required endpoint'
-                   ' in service catalog for the resource type'
-                   ' UnavailableResourceType')
+            msg = ('HEAT-E99001 Service sample is not available for resource '
+                   'type UnavailableResourceType, reason: '
+                   'Service endpoint not in service catalog.')
+            self.assertEqual(msg,
+                             six.text_type(ex),
+                             'invalid exception message')
+
+            # Make sure is_service_available is called on the right class
+            mock_method.assert_called_once_with(mock_stack.context)
+
+    def test_service_not_available_throws_exception(self):
+        """Test for other exceptions when checking for service availability
+
+        Ex. when client throws an error, make sure resource is throwing
+        ResourceTypeUnavailable that contains the orginal exception message.
+        """
+        with mock.patch.object(
+                generic_rsrc.ResourceWithDefaultClientName,
+                'is_service_available') as mock_method:
+            mock_method.side_effect = exception.AuthorizationFailure()
+
+            definition = rsrc_defn.ResourceDefinition(
+                name='Test Resource',
+                resource_type='UnavailableResourceType')
+
+            mock_stack = mock.MagicMock()
+            mock_stack.service_check_defer = False
+
+            ex = self.assertRaises(
+                exception.ResourceTypeUnavailable,
+                generic_rsrc.ResourceWithDefaultClientName.__new__,
+                cls=generic_rsrc.ResourceWithDefaultClientName,
+                name='test_stack',
+                definition=definition,
+                stack=mock_stack)
+
+            msg = ('HEAT-E99001 Service sample is not available for resource '
+                   'type UnavailableResourceType, reason: '
+                   'Authorization failed.')
             self.assertEqual(msg,
                              six.text_type(ex),
                              'invalid exception message')

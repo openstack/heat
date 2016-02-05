@@ -33,8 +33,8 @@ LOG = logging.getLogger(__name__)
 
 # TODO(kanagaraj-manickam): Expose this to user via REST API
 ERROR_CODE_MAP = {
-    '99001': _("Service %(service_name)s does not have required endpoint in "
-               "service catalog for the resource type %(resource_type)s")
+    '99001': _("Service %(service_name)s is not available for resource "
+               "type %(resource_type)s, reason: %(reason)s")
 }
 
 

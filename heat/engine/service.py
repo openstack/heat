@@ -1322,11 +1322,19 @@ class EngineService(service.Service):
         if resource_class.support_status.status == support.HIDDEN:
             raise exception.NotSupported(type_name)
 
-        if not resource_class.is_service_available(cnxt):
+        try:
+            svc_available = resource_class.is_service_available(cnxt)
+        except Exception as exc:
             raise exception.ResourceTypeUnavailable(
                 service_name=resource_class.default_client_name,
-                resource_type=type_name
-            )
+                resource_type=type_name,
+                reason=six.text_type(exc))
+        else:
+            if not svc_available:
+                raise exception.ResourceTypeUnavailable(
+                    service_name=resource_class.default_client_name,
+                    resource_type=type_name,
+                    reason='Service endpoint not in service catalog.')
 
         def properties_schema():
             for name, schema_dict in resource_class.properties_schema.items():

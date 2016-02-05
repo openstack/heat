@@ -150,14 +150,23 @@ class Resource(object):
 
     @classmethod
     def _validate_service_availability(cls, context, resource_type):
-        if not cls.is_service_available(context):
+        try:
+            svc_available = cls.is_service_available(context)
+        except Exception as exc:
             ex = exception.ResourceTypeUnavailable(
+                resource_type=resource_type,
                 service_name=cls.default_client_name,
-                resource_type=resource_type
-                )
-            LOG.info(six.text_type(ex))
-
+                reason=six.text_type(exc))
+            LOG.exception(exc)
             raise ex
+        else:
+            if not svc_available:
+                ex = exception.ResourceTypeUnavailable(
+                    resource_type=resource_type,
+                    service_name=cls.default_client_name,
+                    reason='Service endpoint not in service catalog.')
+                LOG.info(six.text_type(ex))
+                raise ex
 
     def _init_attributes(self):
         """The method that defines attribute initialization for a resource.
@@ -558,31 +567,26 @@ class Resource(object):
         # resources as they are implemented within the engine.
         if cls.default_client_name is None:
             return True
+        client_plugin = clients.Clients(context).client_plugin(
+            cls.default_client_name)
 
-        try:
-            client_plugin = clients.Clients(context).client_plugin(
-                cls.default_client_name)
+        service_types = client_plugin.service_types
+        if not service_types:
+            return True
 
-            service_types = client_plugin.service_types
-            if not service_types:
-                return True
-
-            # NOTE(kanagaraj-manickam): if one of the service_type does
-            # exist in the keystone, then considered it as available.
-            for service_type in service_types:
-                endpoint_exists = client_plugin.does_endpoint_exist(
-                    service_type=service_type,
-                    service_name=cls.default_client_name)
-                if endpoint_exists:
-                    req_extension = cls.required_service_extension
-                    is_ext_available = (
-                        not req_extension or client_plugin.has_extension(
-                            req_extension))
-                    if is_ext_available:
-                        return True
-        except Exception as ex:
-            LOG.exception(ex)
-
+        # NOTE(kanagaraj-manickam): if one of the service_type does
+        # exist in the keystone, then considered it as available.
+        for service_type in service_types:
+            endpoint_exists = client_plugin.does_endpoint_exist(
+                service_type=service_type,
+                service_name=cls.default_client_name)
+            if endpoint_exists:
+                req_extension = cls.required_service_extension
+                is_ext_available = (
+                    not req_extension or client_plugin.has_extension(
+                        req_extension))
+                if is_ext_available:
+                    return True
         return False
 
     def keystone(self):
