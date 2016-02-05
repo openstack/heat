@@ -3394,6 +3394,15 @@ class TestLiveStateUpdate(common.HeatTestCase):
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         return res
 
+    def _clean_tests_after_resource_live_state(self, res):
+        """Revert changes for correct work of other tests.
+
+        Need to revert changes of resource properties schema for correct work
+        of other tests.
+        """
+        for prop in six.itervalues(res.properties.props):
+            prop.schema.update_allowed = False
+
     def test_update_resource_live_state(self):
         res = self._prepare_resource_live_state()
         res.resource_id = self.resource_id
@@ -3415,10 +3424,37 @@ class TestLiveStateUpdate(common.HeatTestCase):
                              side_effect=[self.live_state])
             self.assertRaises(self.expected,
                               scheduler.TaskRunner(res.update, utmpl))
-        # NOTE(prazumovsky): need to revert changes of resource properties
-        # schema for correct work of other tests.
-        for prop in six.itervalues(res.properties.props):
-            prop.schema.update_allowed = False
+        self._clean_tests_after_resource_live_state(res)
+
+    def test_get_live_resource_data_success(self):
+        res = self._prepare_resource_live_state()
+        res.resource_id = self.resource_id
+        res._show_resource = mock.MagicMock(return_value={'a': 'b'})
+        self.assertEqual({'a': 'b'}, res.get_live_resource_data())
+        self._clean_tests_after_resource_live_state(res)
+
+    def test_get_live_resource_data_not_found(self):
+        res = self._prepare_resource_live_state()
+        res.resource_id = self.resource_id
+        res._show_resource = mock.MagicMock(
+            side_effect=[exception.NotFound()])
+        res.client_plugin = mock.MagicMock()
+        res.client_plugin().is_not_found = mock.MagicMock(return_value=True)
+        ex = self.assertRaises(exception.EntityNotFound,
+                               res.get_live_resource_data)
+        self.assertEqual('The Resource (test_resource) could not be found.',
+                         six.text_type(ex))
+        self._clean_tests_after_resource_live_state(res)
+
+    def test_get_live_resource_data_other_error(self):
+        res = self._prepare_resource_live_state()
+        res.resource_id = self.resource_id
+        res._show_resource = mock.MagicMock(
+            side_effect=[exception.Forbidden()])
+        res.client_plugin = mock.MagicMock()
+        res.client_plugin().is_not_found = mock.MagicMock(return_value=False)
+        self.assertRaises(exception.Forbidden, res.get_live_resource_data)
+        self._clean_tests_after_resource_live_state(res)
 
 
 class ResourceUpdateRestrictionTest(common.HeatTestCase):

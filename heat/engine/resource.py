@@ -1592,13 +1592,41 @@ class Resource(object):
                             ex)
                 return None
 
+    def get_live_resource_data(self):
+        """Default implementation; can be overridden by resources.
+
+        Get resource data and handle it with exceptions.
+        """
+        try:
+            resource_data = self._show_resource()
+        except Exception as ex:
+            if self.client_plugin().is_not_found(ex):
+                raise exception.EntityNotFound(
+                    entity='Resource', name=self.name)
+            raise ex
+        return resource_data
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        """Default implementation; can be overridden by resources.
+
+        Parse resource data for using it in updating properties with live
+        state.
+        :param resource_properties: properties of stored resource plugin.
+        :param resource_data: data from current live state of a resource.
+        """
+        return {}
+
     def get_live_state(self, resource_properties):
         """Default implementation; should be overridden by resources.
 
         :param resource_properties: resource's object of Properties class.
         :returns: dict of resource's real state of properties.
         """
-        return {}
+        resource_data = self.get_live_resource_data()
+        if resource_data is None:
+            return {}
+        return self.parse_live_resource_data(resource_properties,
+                                             resource_data)
 
     def _update_properties_with_live_state(self, resource_properties,
                                            live_properties):
