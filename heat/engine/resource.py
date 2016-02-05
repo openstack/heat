@@ -140,16 +140,24 @@ class Resource(object):
 
             assert issubclass(ResourceClass, Resource)
 
-        if not ResourceClass.is_service_available(stack.context):
-            ex = exception.ResourceTypeUnavailable(
-                service_name=ResourceClass.default_client_name,
-                resource_type=definition.resource_type
+        if not stack.service_check_defer:
+            ResourceClass._validate_service_availability(
+                stack.context,
+                definition.resource_type
             )
+
+        return super(Resource, cls).__new__(ResourceClass)
+
+    @classmethod
+    def _validate_service_availability(cls, context, resource_type):
+        if not cls.is_service_available(context):
+            ex = exception.ResourceTypeUnavailable(
+                service_name=cls.default_client_name,
+                resource_type=resource_type
+                )
             LOG.info(six.text_type(ex))
 
             raise ex
-
-        return super(Resource, cls).__new__(ResourceClass)
 
     def _init_attributes(self):
         """The method that defines attribute initialization for a resource.
@@ -1138,6 +1146,12 @@ class Resource(object):
         in an overridden validate() such as accessing properties
         may not work.
         """
+        if self.stack.service_check_defer:
+            self._validate_service_availability(
+                self.stack.context,
+                self.t.resource_type
+            )
+
         function.validate(self.t)
         self.validate_deletion_policy(self.t.deletion_policy())
         self.t.update_policy(self.update_policy_schema,

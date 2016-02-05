@@ -3128,6 +3128,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                 resource_type='UnavailableResourceType')
 
             mock_stack = mock.MagicMock()
+            mock_stack.service_check_defer = False
 
             ex = self.assertRaises(
                 exception.ResourceTypeUnavailable,

@@ -14,6 +14,7 @@
 import mock
 from oslo_messaging.rpc import dispatcher
 import six
+import webob
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -1668,3 +1669,38 @@ class ValidateTest(common.HeatTestCase):
                                t,
                                {})
         self.assertEqual(exception.ResourceTypeUnavailable, ex.exc_info[0])
+
+    def test_validate_with_ignorable_errors(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2015-10-15
+            resources:
+              my_instance:
+                type: AWS::EC2::Instance
+            """)
+        engine = service.EngineService('a', 't')
+        self.mock_is_service_available.return_value = False
+
+        res = dict(engine.validate_template(
+            self.ctx,
+            t,
+            {},
+            ignorable_errors=[exception.ResourceTypeUnavailable.error_code]))
+        expected = {'Description': 'No description', 'Parameters': {}}
+        self.assertEqual(expected, res)
+
+    def test_validate_with_ignorable_errors_invalid_error_code(self):
+        engine = service.EngineService('a', 't')
+
+        invalide_error_code = '123456'
+        invalid_codes = ['99001', invalide_error_code]
+        res = engine.validate_template(
+            self.ctx,
+            mock.MagicMock(),
+            {},
+            ignorable_errors=invalid_codes)
+
+        msg = _("Invalid codes in ignore_errors : %s") % [invalide_error_code]
+        ex = webob.exc.HTTPBadRequest(explanation=msg)
+        self.assertIsInstance(res, webob.exc.HTTPBadRequest)
+        self.assertEqual(ex.explanation, res.explanation)

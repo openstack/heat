@@ -292,7 +292,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.23'
+    RPC_API_VERSION = '1.24'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -995,7 +995,8 @@ class EngineService(service.Service):
 
     @context.request_context
     def validate_template(self, cnxt, template, params=None, files=None,
-                          environment_files=None, show_nested=False):
+                          environment_files=None, show_nested=False,
+                          ignorable_errors=None):
         """Check the validity of a template.
 
         Checks, so far as we can, that a template is valid, and returns
@@ -1010,11 +1011,24 @@ class EngineService(service.Service):
                names included in the files dict
         :type  environment_files: list or None
         :param show_nested: if True, any nested templates will be checked
+        :param ignorable_errors: List of error_code to be ignored as part of
+        validation
         """
         LOG.info(_LI('validate_template'))
         if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
+
+        service_check_defer = False
+        if ignorable_errors:
+            invalid_codes = (set(ignorable_errors) -
+                             set(exception.ERROR_CODE_MAP.keys()))
+            if invalid_codes:
+                msg = (_("Invalid codes in ignore_errors : %s") %
+                       list(invalid_codes))
+                return webob.exc.HTTPBadRequest(explanation=msg)
+
+            service_check_defer = True
 
         env = environment.Environment(params)
         tmpl = templatem.Template(template, files=files, env=env)
@@ -1024,10 +1038,12 @@ class EngineService(service.Service):
             return {'Error': six.text_type(ex)}
 
         stack_name = 'dummy'
-        stack = parser.Stack(cnxt, stack_name, tmpl, strict_validate=False)
-        stack.resource_validate = False
+        stack = parser.Stack(cnxt, stack_name, tmpl,
+                             strict_validate=False,
+                             resource_validate=False,
+                             service_check_defer=service_check_defer)
         try:
-            stack.validate()
+            stack.validate(ignorable_errors=ignorable_errors)
         except exception.StackValidationFailed as ex:
             return {'Error': six.text_type(ex)}
 

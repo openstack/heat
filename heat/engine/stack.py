@@ -120,7 +120,8 @@ class Stack(collections.Mapping):
                  use_stored_context=False, username=None,
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
-                 current_deps=None, cache_data=None, resource_validate=True):
+                 current_deps=None, cache_data=None, resource_validate=True,
+                 service_check_defer=False):
 
         """Initialise the Stack.
 
@@ -192,6 +193,12 @@ class Stack(collections.Mapping):
         # at all, thus we can't yet reference property values such as is
         # commonly done in plugin validate() methods
         self.resource_validate = resource_validate
+
+        # service_check_defer can be used to defer the validation of service
+        # availability for a given resource, which helps to create the resource
+        # dependency tree completely when respective service is not available,
+        # especially during template_validate
+        self.service_check_defer = service_check_defer
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -671,7 +678,7 @@ class Stack(collections.Mapping):
         return handler and handler(resource_name)
 
     @profiler.trace('Stack.validate', hide_args=False)
-    def validate(self):
+    def validate(self, ignorable_errors=None):
         """Validates the stack."""
         # TODO(sdake) Should return line number of invalid reference
 
@@ -706,7 +713,10 @@ class Stack(collections.Mapping):
                     result = res.validate_template()
             except exception.HeatException as ex:
                 LOG.debug('%s', ex)
-                raise
+                if ignorable_errors and ex.error_code in ignorable_errors:
+                    result = None
+                else:
+                    raise ex
             except AssertionError:
                 raise
             except Exception as ex:
