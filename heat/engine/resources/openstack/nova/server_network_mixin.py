@@ -68,6 +68,11 @@ class ServerNetworkMixin(object):
                           network=network[self.NETWORK_ID],
                           server=self.name))
 
+        if port and not self.is_using_neutron():
+            msg = _('Property "%s" is supported only for '
+                    'Neutron.') % self.NETWORK_PORT
+            raise exception.StackValidationFailed(message=msg)
+
         # Nova doesn't allow specify ip and port at the same time
         if fixed_ip and port:
             raise exception.ResourcePropertyConflict(

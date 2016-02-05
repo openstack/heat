@@ -1400,6 +1400,30 @@ class ServersTest(common.HeatTestCase):
                          six.text_type(error))
         self.m.VerifyAll()
 
+    def test_server_validate_with_port_not_using_neutron(self):
+        stack_name = 'with_port_in_nova_network'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        tmpl['Resources']['WebServer']['Properties']['networks'] = (
+            [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}])
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('validate_port_in_nova_network',
+                                resource_defns['WebServer'], stack)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_ImageConstraint_validate()
+        self.stub_NetworkConstraint_validate()
+        self.stub_PortConstraint_validate()
+        self.patchobject(server, 'is_using_neutron', return_value=False)
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  server.validate)
+        self.assertEqual('Property "port" is supported only for Neutron.',
+                         six.text_type(error))
+        self.m.VerifyAll()
+
     def test_server_validate_with_uuid_fixed_ip(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)
