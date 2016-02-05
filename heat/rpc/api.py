@@ -20,14 +20,14 @@ PARAM_KEYS = (
     PARAM_CLEAR_PARAMETERS, PARAM_GLOBAL_TENANT, PARAM_LIMIT,
     PARAM_NESTED_DEPTH, PARAM_TAGS, PARAM_SHOW_HIDDEN, PARAM_TAGS_ANY,
     PARAM_NOT_TAGS, PARAM_NOT_TAGS_ANY, TEMPLATE_TYPE, PARAM_WITH_DETAIL,
-    RESOLVE_OUTPUTS
+    RESOLVE_OUTPUTS, PARAM_IGNORE_ERRORS
 ) = (
     'timeout_mins', 'disable_rollback', 'adopt_stack_data',
     'show_deleted', 'show_nested', 'existing',
     'clear_parameters', 'global_tenant', 'limit',
     'nested_depth', 'tags', 'show_hidden', 'tags_any',
     'not_tags', 'not_tags_any', 'template_type', 'with_detail',
-    'resolve_outputs',
+    'resolve_outputs', 'ignore_errors'
 )
 
 STACK_KEYS = (
