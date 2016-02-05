@@ -1480,9 +1480,9 @@ class EngineService(service.Service):
 
         def _resource_signal(stack, rsrc, details, need_check):
             LOG.debug("signaling resource %s:%s" % (stack.name, rsrc.name))
-            rsrc.signal(details, need_check)
+            needs_metadata_updates = rsrc.signal(details, need_check)
 
-            if not rsrc.signal_needs_metadata_updates:
+            if not needs_metadata_updates:
                 return
 
             # Refresh the metadata for all other resources, since signals can

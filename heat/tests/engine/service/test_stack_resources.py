@@ -424,7 +424,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
         s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
 
         mock_get.return_value = s
-        mock_signal.return_value = None
+        mock_signal.return_value = True
         # this will be called once for the Random resource
         mock_update.return_value = None
 
@@ -451,8 +451,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
         stk.create()
         s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         mock_get.return_value = s
-        mock_signal.return_value = None
-        res.Resource.signal_needs_metadata_updates = False
+        mock_signal.return_value = False
 
         self.eng.resource_signal(self.ctx,
                                  dict(self.stack.identifier()),
@@ -463,8 +462,6 @@ class StackResourcesServiceTest(common.HeatTestCase):
         mock_signal.assert_called_once_with(mock.ANY, False)
         # this will never be called
         self.assertEqual(0, mock_update.call_count)
-
-        res.Resource.signal_needs_metadata_updates = True
 
     def test_lazy_load_resources(self):
         stack_name = 'lazy_load_test'

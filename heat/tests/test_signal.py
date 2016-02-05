@@ -516,8 +516,9 @@ class SignalTest(common.HeatTestCase):
         self.assertTrue(rsrc.requires_deferred_auth)
 
         # Test
-        rsrc.signal(details=test_d)
+        result = rsrc.signal(details=test_d)
         mock_handle.assert_called_once_with(test_d)
+        self.assertTrue(result)
 
     @mock.patch.object(generic_resource.SignalResource, '_add_event')
     @mock.patch.object(generic_resource.SignalResource, 'handle_signal')
