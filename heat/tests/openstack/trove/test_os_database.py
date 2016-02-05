@@ -535,7 +535,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.assertEqual(expected_msg, six.text_type(ex))
         self.m.VerifyAll()
 
-    def test_osdatabase_prop_validation_implicit_version_fail(self):
+    def test_osdatabase_prop_validation_implicit_version(self):
         t = template_format.parse(db_template)
         t['Resources']['MySqlCloudDB']['Properties'][
             'datastore_type'] = 'mysql'
@@ -549,13 +549,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         ).AndReturn([FakeVersion(), FakeVersion('MariaDB-5.0')])
         self.m.ReplayAll()
 
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               instance.validate)
-        expected_msg = ("Multiple active datastore versions exist for "
-                        "datastore type mysql. "
-                        "Explicit datastore version must be provided. "
-                        "Allowed versions are MariaDB-5.5, MariaDB-5.0.")
-        self.assertEqual(expected_msg, six.text_type(ex))
+        self.assertIsNone(instance.validate())
         self.m.VerifyAll()
 
     def test_osdatabase_prop_validation_net_with_port_fail(self):
