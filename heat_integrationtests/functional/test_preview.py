@@ -43,7 +43,7 @@ parameters:
     def setUp(self):
         super(StackPreviewTest, self).setUp()
         self.client = self.orchestration_client
-        self.project_id = self.identity_client.auth_ref.project_id
+        self.project_id = self.identity_client.project_id
 
     def _assert_resource(self, res, stack_name):
         self.assertEqual(stack_name, res['stack_name'])
