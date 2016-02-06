@@ -1056,11 +1056,11 @@ include a list of ports given as a parameter
           rules:
             repeat:
               for_each:
-                %port%: { get_param: ports }
+                <%port%>: { get_param: ports }
               template:
                 protocol: tcp
-                port_range_min: %port%
-                port_range_max: %port%
+                port_range_min: <%port%>
+                port_range_max: <%port%>
 
 The following example demonstrates how the use of multiple lists enables the
 security group to also include parameterized protocols
@@ -1085,11 +1085,11 @@ security group to also include parameterized protocols
           rules:
             repeat:
               for_each:
-                %port%: { get_param: ports }
-                %protocol%: { get_param: protocols }
+                <%port%>: { get_param: ports }
+                <%protocol%>: { get_param: protocols }
               template:
-                protocol: %protocol%
-                port_range_min: %port%
+                protocol: <%protocol%>
+                port_range_min: <%port%>
 
 Note how multiple entries in the ``for_each`` argument are equivalent to
 nested for-loops in most programming languages.
