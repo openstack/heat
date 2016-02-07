@@ -259,6 +259,6 @@ class StackUpdate(object):
                 set(updated_keys + replaced_keys))),
             'updated': updated_keys,
             'replaced': replaced_keys,
-            'added': added_keys,
-            'deleted': deleted_keys,
+            'added': list(added_keys),
+            'deleted': list(deleted_keys),
         }

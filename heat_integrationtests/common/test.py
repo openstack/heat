@@ -392,7 +392,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
     def preview_update_stack(self, stack_identifier, template,
                              environment=None, files=None, parameters=None,
-                             tags=None, disable_rollback=True):
+                             tags=None, disable_rollback=True,
+                             show_nested=False):
         env = environment or {}
         env_files = files or {}
         parameters = parameters or {}
@@ -406,7 +407,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             disable_rollback=disable_rollback,
             parameters=parameters,
             environment=env,
-            tags=tags
+            tags=tags,
+            show_nested=show_nested
         )
 
     def assert_resource_is_a_stack(self, stack_identifier, res_name,
