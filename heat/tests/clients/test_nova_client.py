@@ -20,6 +20,7 @@ from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 from oslo_serialization import jsonutils as json
+from oslo_utils import encodeutils
 import six
 
 from heat.common import exception
@@ -624,7 +625,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
 
         urls = self.nova_plugin.get_console_urls(self.server)
         e = self.assertRaises(exc, urls.__getitem__, self.console_type)
-        self.assertIn('spam', e.message)
+        self.assertIn('spam', encodeutils.exception_to_unicode(e))
         self.console_method.assert_called_once_with(self.console_type)
 
     def test_get_console_urls_reraises_other(self):

@@ -36,6 +36,7 @@ from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_utils import encodeutils
 from oslo_utils import importutils
 from paste import deploy
 import routes
@@ -957,7 +958,8 @@ def translate_exception(exc, locale):
     if isinstance(exc, exception.HeatException):
         exc.message = i18n.translate(exc.message, locale)
     else:
-        exc.message = i18n.translate(six.text_type(exc), locale)
+        err_msg = encodeutils.exception_to_unicode(exc)
+        exc.message = i18n.translate(err_msg, locale)
 
     if isinstance(exc, webob.exc.HTTPError):
         exc.explanation = i18n.translate(exc.explanation, locale)

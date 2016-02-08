@@ -153,6 +153,22 @@ class SqlAlchemyTest(common.HeatTestCase):
 
         self.assertTrue(mock_events_paginate_query.called)
 
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_events_filter_invalid_sort_key(self, mock_paginate_query):
+        query = mock.Mock()
+
+        class InvalidSortKey(db_api.utils.InvalidSortKey):
+            @property
+            def message(_):
+                self.fail("_events_paginate_query() should not have tried to "
+                          "access .message attribute - it's deprecated in "
+                          "oslo.db and removed from base Exception in Py3K.")
+
+        mock_paginate_query.side_effect = InvalidSortKey()
+        self.assertRaises(exception.Invalid,
+                          db_api._events_filter_and_page_query,
+                          self.ctx, query, sort_keys=['foo'])
+
     @mock.patch.object(db_api.db_filters, 'exact_filter')
     def test_filter_and_page_query_handles_no_filters(self, mock_db_filter):
         query = mock.Mock()
@@ -255,7 +271,14 @@ class SqlAlchemyTest(common.HeatTestCase):
         query = mock.Mock()
         model = mock.Mock()
 
-        mock_paginate_query.side_effect = db_api.utils.InvalidSortKey()
+        class InvalidSortKey(db_api.utils.InvalidSortKey):
+            @property
+            def message(_):
+                self.fail("_paginate_query() should not have tried to access "
+                          ".message attribute - it's deprecated in oslo.db "
+                          "and removed from base Exception class in Py3K.")
+
+        mock_paginate_query.side_effect = InvalidSortKey()
         self.assertRaises(exception.Invalid, db_api._paginate_query,
                           self.ctx, query, model, sort_keys=['foo'])
 

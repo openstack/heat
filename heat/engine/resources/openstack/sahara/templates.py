@@ -17,6 +17,7 @@ import re
 import six
 
 from oslo_log import log as logging
+from oslo_utils import encodeutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -316,16 +317,16 @@ class SaharaNodeGroupTemplate(resource.Resource):
                 except Exception as ex:
                     if (self.client_plugin('neutron').is_not_found(ex)
                             or self.client_plugin('neutron').is_no_unique(ex)):
-                        raise exception.StackValidationFailed(
-                            message=ex.message)
+                        err_msg = encodeutils.exception_to_unicode(ex)
+                        raise exception.StackValidationFailed(message=err_msg)
                     raise
             else:
                 try:
                     self.client('nova').floating_ip_pools.find(name=pool)
                 except Exception as ex:
                     if self.client_plugin('nova').is_not_found(ex):
-                        raise exception.StackValidationFailed(
-                            message=ex.message)
+                        err_msg = encodeutils.exception_to_unicode(ex)
+                        raise exception.StackValidationFailed(message=err_msg)
                     raise
 
         self.client_plugin().validate_hadoop_version(

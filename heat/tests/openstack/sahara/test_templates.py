@@ -202,7 +202,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.patchobject(nova.NovaClientPlugin,
                          '_create').return_value = nova_mock
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
-        self.assertEqual('Not found', six.text_type(ex))
+        self.assertEqual('Not found (HTTP 404)', six.text_type(ex))
 
     def test_validate_flavor_constraint_return_false(self):
         self.t['resources']['node-group']['properties'].pop('floating_ip_pool')
