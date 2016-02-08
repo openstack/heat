@@ -166,10 +166,9 @@ class ResourceTypeTest(common.HeatTestCase):
                                    self.eng.resource_schema,
                                    self.ctx,
                                    type_name)
-
-            msg = ('HEAT-E99001 Service sample does not have required endpoint'
-                   ' in service catalog for the resource type'
-                   ' ResourceWithDefaultClientName')
+            msg = ('HEAT-E99001 Service sample is not available for resource '
+                   'type ResourceWithDefaultClientName, reason: '
+                   'Service endpoint not in service catalog.')
             self.assertEqual(msg,
                              six.text_type(ex),
                              'invalid exception message')
