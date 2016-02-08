@@ -2872,11 +2872,13 @@ class ResourceHookTest(common.HeatTestCase):
                           res.signal, {'unset_hook': 'unknown_hook'})
         self.assertFalse(res.clear_hook.called)
 
-        res.signal({'unset_hook': 'pre-create'})
+        result = res.signal({'unset_hook': 'pre-create'})
         res.clear_hook.assert_called_with('pre-create')
+        self.assertFalse(result)
 
-        res.signal({'unset_hook': 'pre-update'})
+        result = res.signal({'unset_hook': 'pre-update'})
         res.clear_hook.assert_called_with('pre-update')
+        self.assertFalse(result)
 
         res.has_hook = mock.Mock(return_value=False)
         self.assertRaises(exception.InvalidBreakPointHook,
