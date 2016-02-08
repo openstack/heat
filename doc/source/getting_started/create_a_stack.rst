@@ -60,6 +60,12 @@ Which will respond::
     | (uuid)                               | teststack | CREATE_IN_PROGRESS | (timestamp)          |
     +--------------------------------------+-----------+--------------------+----------------------+
 
+
+.. note::
+   Link on Heat template presented in command above should reference on RAW
+   template. In case if it be a "html" page with template, Heat will return
+   an error.
+
 List stacks
 ~~~~~~~~~~~
 List the stacks in your tenant::
