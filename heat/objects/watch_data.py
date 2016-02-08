@@ -18,10 +18,14 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 
 
-class WatchData(base.VersionedObject, base.VersionedObjectDictCompat):
+class WatchData(
+        heat_base.HeatObject,
+        base.VersionedObjectDictCompat,
+):
 
     fields = {
         'id': fields.IntegerField(),

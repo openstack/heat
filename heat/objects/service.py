@@ -18,11 +18,14 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 
 
-class Service(base.VersionedObject,
-              base.VersionedObjectDictCompat,
-              base.ComparableVersionedObject):
+class Service(
+        heat_base.HeatObject,
+        base.VersionedObjectDictCompat,
+        base.ComparableVersionedObject,
+):
     fields = {
         'id': fields.StringField(),
         'engine_id': fields.StringField(),

@@ -19,12 +19,15 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 
 
 @base.VersionedObjectRegistry.register
-class UserCreds(base.VersionedObject,
-                base.VersionedObjectDictCompat,
-                base.ComparableVersionedObject):
+class UserCreds(
+        heat_base.HeatObject,
+        base.VersionedObjectDictCompat,
+        base.ComparableVersionedObject,
+):
     fields = {
         'id': fields.StringField(),
         'created_at': fields.DateTimeField(read_only=True),

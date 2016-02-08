@@ -18,10 +18,14 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.db import api as db_api
+from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 
 
-class Event(base.VersionedObject, base.VersionedObjectDictCompat):
+class Event(
+        heat_base.HeatObject,
+        base.VersionedObjectDictCompat,
+):
     fields = {
         'id': fields.IntegerField(),
         'stack_id': fields.StringField(),
