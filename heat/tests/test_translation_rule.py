@@ -15,6 +15,7 @@ import mock
 import six
 
 from heat.common import exception
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.hot import functions as hot_funcs
 from heat.engine import parameters
 from heat.engine import properties
@@ -32,7 +33,9 @@ class TestTranslationRule(common.HeatTestCase):
                 r,
                 ['any'],
                 ['value'] if r == 'Add' else 'value',
-                'value_name' if r == 'Replace' else None)
+                'value_name' if r == 'Replace' else None,
+                'client_plugin' if r == 'Resolve' else None,
+                'finder' if r == 'Resolve' else None)
             self.assertEqual(rule.properties, props)
             self.assertEqual(rule.rule, r)
             if r == 'Add':
@@ -60,7 +63,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 mock.ANY,
                                 mock.ANY)
         self.assertEqual('There is no rule EatTheCookie. List of allowed '
-                         'rules is: Add, Replace, Delete.',
+                         'rules is: Add, Replace, Delete, Resolve.',
                          six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
@@ -445,6 +448,186 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertIsNone(props.get('far'))
+
+    def _test_resolve_rule(self, is_list=False):
+        class FakeClientPlugin(object):
+            def find_name_id(self, entity=None,
+                             src_value='far'):
+                if entity == 'rose':
+                    return 'pink'
+                return 'yellow'
+
+        if is_list:
+            schema = {
+                'far': properties.Schema(
+                    properties.Schema.LIST,
+                    schema=properties.Schema(
+                        properties.Schema.MAP,
+                        schema={
+                            'red': properties.Schema(
+                                properties.Schema.STRING
+                            )
+                        }
+                    )
+                )}
+        else:
+            schema = {
+                'far': properties.Schema(properties.Schema.STRING)
+            }
+        return FakeClientPlugin(), schema
+
+    def test_resolve_rule_list_populated(self):
+        client_plugin, schema = self._test_resolve_rule(is_list=True)
+        data = {
+            'far': [{'red': 'blue'},
+                    {'red': 'roses'}],
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far', 'red'],
+            client_plugin=client_plugin,
+            finder='find_name_id'
+            )
+        rule.execute_rule()
+        self.assertEqual([{'red': 'yellow'}, {'red': 'yellow'}],
+                         props.get('far'))
+
+    def test_resolve_rule_list_with_function(self):
+        client_plugin, schema = self._test_resolve_rule(is_list=True)
+        join_func = cfn_funcs.Join(None,
+                                   'Fn::Join', ['.', ['bar', 'baz']])
+        data = {
+            'far': [{'red': 'blue'},
+                    {'red': join_func}],
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far', 'red'],
+            client_plugin=client_plugin,
+            finder='find_name_id'
+            )
+        rule.execute_rule()
+        self.assertEqual([{'red': 'yellow'}, {'red': 'yellow'}],
+                         props.get('far'))
+
+    def test_resolve_rule_list_with_ref(self):
+        client_plugin, schema = self._test_resolve_rule(is_list=True)
+
+        class rsrc(object):
+            action = INIT = "INIT"
+
+        class DummyStack(dict):
+            pass
+
+        stack = DummyStack(another_res=rsrc())
+        ref = cfn_funcs.ResourceRef(stack, 'get_resource',
+                                    'another_res')
+        data = {
+            'far': [{'red': ref}],
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far', 'red'],
+            client_plugin=client_plugin,
+            finder='find_name_id'
+            )
+        rule.execute_rule()
+        self.assertEqual(data, props.data)
+
+    def test_resolve_rule_list_empty(self):
+        client_plugin, schema = self._test_resolve_rule(is_list=True)
+        data = {
+            'far': [],
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far', 'red'],
+            client_plugin=client_plugin,
+            finder='find_name_id'
+            )
+        rule.execute_rule()
+        self.assertEqual([], props.get('far'))
+
+    def test_resolve_rule_other(self):
+        client_plugin, schema = self._test_resolve_rule()
+        data = {'far': 'one'}
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far'],
+            client_plugin=client_plugin,
+            finder='find_name_id')
+
+        rule.execute_rule()
+        self.assertEqual('yellow', props.get('far'))
+
+    def test_resolve_rule_other_with_ref(self):
+        client_plugin, schema = self._test_resolve_rule()
+
+        class rsrc(object):
+            action = INIT = "INIT"
+
+        class DummyStack(dict):
+            pass
+
+        stack = DummyStack(another_res=rsrc())
+        ref = cfn_funcs.ResourceRef(stack, 'get_resource',
+                                    'another_res')
+        data = {'far': ref}
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far'],
+            client_plugin=client_plugin,
+            finder='find_name_id')
+
+        rule.execute_rule()
+        self.assertEqual(data, props.data)
+
+    def test_resolve_rule_other_with_function(self):
+        client_plugin, schema = self._test_resolve_rule()
+        join_func = cfn_funcs.Join(None,
+                                   'Fn::Join', ['.', ['bar', 'baz']])
+        data = {'far': join_func}
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far'],
+            client_plugin=client_plugin,
+            finder='find_name_id')
+
+        rule.execute_rule()
+        self.assertEqual(data, props.data)
+
+    def test_resolve_rule_other_with_entity(self):
+        client_plugin, schema = self._test_resolve_rule()
+        data = {'far': 'one'}
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far'],
+            client_plugin=client_plugin,
+            finder='find_name_id',
+            entity='rose')
+
+        rule.execute_rule()
+        self.assertEqual('pink', props.get('far'))
 
     def test_property_json_param_correct_translation(self):
         """Test case when property with sub-schema takes json param."""
