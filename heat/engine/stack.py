@@ -1213,6 +1213,12 @@ class Stack(collections.Mapping):
                         self.prev_raw_template_id):
                     # Current resource is otherwise a good candidate
                     candidate = ext_rsrc
+                elif candidate is None:
+                    # In multiple concurrent updates, if candidate is not
+                    # found in current/previous template, it could be found
+                    # in old tmpl.
+                    candidate = ext_rsrc
+
         return candidate
 
     def _update_or_store_resources(self):
