@@ -12,22 +12,21 @@
 
 import os
 
-import ceilometerclient.client
-import cinderclient.client
-import heatclient.client
+from ceilometerclient import client as ceilometer_client
+from cinderclient import client as cinder_client
+from heatclient import client as heat_client
 from keystoneclient.auth.identity.generic import password
-import keystoneclient.client
-import keystoneclient.exceptions
+from keystoneclient import exceptions as kc_exceptions
 from keystoneclient import session
-import neutronclient.v2_0.client
-import novaclient.client
-import swiftclient
+from neutronclient.v2_0 import client as neutron_client
+from novaclient import client as nova_client
+from swiftclient import client as swift_client
 
 
 class KeystoneWrapperClient(object):
     """Wrapper object for keystone client
 
-    This Wraps keystone client,so we can encpasulate certain
+    This wraps keystone client, so we can encpasulate certain
     added properties like auth_token, project_id etc.
     """
     def __init__(self, auth_plugin, verify=True):
@@ -92,10 +91,10 @@ class ClientManager(object):
             if endpoint is None:
                 endpoint = self.identity_client.get_endpoint_url(
                     'orchestration', self.conf.region)
-        except keystoneclient.exceptions.EndpointNotFound:
+        except kc_exceptions.EndpointNotFound:
             return None
         else:
-            return heatclient.client.Client(
+            return heat_client.Client(
                 self.HEATCLIENT_VERSION,
                 endpoint,
                 token=token,
@@ -134,7 +133,7 @@ class ClientManager(object):
         )
 
         # Create our default Nova client to use in testing
-        return novaclient.client.Client(
+        return nova_client.Client(
             self.NOVACLIENT_VERSION,
             *client_args,
             service_type='compute',
@@ -147,7 +146,7 @@ class ClientManager(object):
     def _get_network_client(self):
         dscv = self.conf.disable_ssl_certificate_validation
 
-        return neutronclient.v2_0.client.Client(
+        return neutron_client.Client(
             username=self.conf.username,
             password=self.conf.password,
             tenant_name=self.conf.tenant_name,
@@ -160,7 +159,7 @@ class ClientManager(object):
         region = self.conf.region
         endpoint_type = 'publicURL'
         dscv = self.conf.disable_ssl_certificate_validation
-        return cinderclient.client.Client(
+        return cinder_client.Client(
             self.CINDERCLIENT_VERSION,
             self.conf.username,
             self.conf.password,
@@ -183,7 +182,7 @@ class ClientManager(object):
             'os_options': {'endpoint_type': 'publicURL'},
             'insecure': dscv,
         }
-        return swiftclient.client.Connection(**args)
+        return swift_client.Connection(**args)
 
     def _get_metering_client(self):
         dscv = self.conf.disable_ssl_certificate_validation
@@ -191,7 +190,7 @@ class ClientManager(object):
         try:
             endpoint = self.identity_client.get_endpoint_url('metering',
                                                              self.conf.region)
-        except keystoneclient.exceptions.EndpointNotFound:
+        except kc_exceptions.EndpointNotFound:
             return None
         else:
             args = {
@@ -211,5 +210,5 @@ class ClientManager(object):
                     {'user_domain_name': domain,
                      'project_domain_name': domain})
 
-            return ceilometerclient.client.Client(self.CEILOMETER_VERSION,
-                                                  endpoint, **args)
+            return ceilometer_client.Client(self.CEILOMETER_VERSION,
+                                            endpoint, **args)
