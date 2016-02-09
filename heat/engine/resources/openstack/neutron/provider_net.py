@@ -29,9 +29,11 @@ class ProviderNet(net.Net):
     PROPERTIES = (
         NAME, PROVIDER_NETWORK_TYPE, PROVIDER_PHYSICAL_NETWORK,
         PROVIDER_SEGMENTATION_ID, ADMIN_STATE_UP, SHARED,
+        ROUTER_EXTERNAL,
     ) = (
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
+        'router_external',
     )
 
     ATTRIBUTES = (
@@ -71,6 +73,13 @@ class ProviderNet(net.Net):
             _('Whether this network should be shared across all tenants.'),
             default=True,
             update_allowed=True
+        ),
+        ROUTER_EXTERNAL: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Whether the network contains an external router.'),
+            default=False,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='6.0.0')
         ),
     }
 
@@ -116,6 +125,9 @@ class ProviderNet(net.Net):
             ProviderNet.add_provider_extension(
                 props,
                 ProviderNet.PROVIDER_SEGMENTATION_ID)
+
+        if ProviderNet.ROUTER_EXTERNAL in props:
+            props['router:external'] = props.pop(ProviderNet.ROUTER_EXTERNAL)
 
     def handle_create(self):
         """Creates the resource with provided properties.

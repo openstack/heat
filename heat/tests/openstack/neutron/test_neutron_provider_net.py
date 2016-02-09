@@ -37,6 +37,7 @@ resources:
       network_type: vlan
       physical_network: physnet_1
       segmentation_id: 101
+      router_external: False
       shared: true
 '''
 
@@ -50,6 +51,7 @@ stpna = {
         "provider:network_type": "vlan",
         "provider:physical_network": "physnet_1",
         "provider:segmentation_id": "101",
+        "router:external": False,
         "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
         "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
     }
@@ -79,6 +81,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
                 'provider:network_type': 'vlan',
                 'provider:physical_network': 'physnet_1',
                 'provider:segmentation_id': '101',
+                'router:external': False,
                 'shared': True}
         }).AndReturn(stpnb)
 
@@ -152,7 +155,8 @@ class NeutronProviderNetTest(common.HeatTestCase):
             {'network': {
                 'provider:network_type': 'vlan',
                 'provider:physical_network': 'physnet_1',
-                'provider:segmentation_id': '102'
+                'provider:segmentation_id': '102',
+                'router:external': 'True'
             }}).AndReturn(None)
 
         neutronclient.Client.update_network(
@@ -169,9 +173,10 @@ class NeutronProviderNetTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         prop_diff = {
-            "network_type": "vlan",
-            "physical_network": "physnet_1",
-            "segmentation_id": "102"
+            'network_type': 'vlan',
+            'physical_network': 'physnet_1',
+            'segmentation_id': '102',
+            'router_external': 'True'
         }
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       prop_diff)
