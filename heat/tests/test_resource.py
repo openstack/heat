@@ -3115,6 +3115,24 @@ class ResourceAvailabilityTest(common.HeatTestCase):
             service_name=(generic_rsrc.ResourceWithDefaultClientName
                           .default_client_name))
 
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_service_not_installed_required_extension(
+            self,
+            mock_client_plugin_method):
+        """Test availability of resource when the client is not installed.
+
+        When the client is not installed, we can't create the resource properly
+        so raise a proper exception for information.
+        """
+        mock_client_plugin_method.return_value = None
+
+        self.assertRaises(
+            exception.ClientNotAvailable,
+            generic_rsrc.ResourceWithDefaultClientNameExt.is_service_available,
+            context=mock.Mock())
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+
     def test_service_not_available_returns_false(self):
         """Test when the service is not in service catalog.
 

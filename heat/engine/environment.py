@@ -526,7 +526,10 @@ class ResourceRegistry(object):
             if cnxt is None:
                 return True
 
-            return cls.get_class().is_service_available(cnxt)
+            try:
+                return cls.get_class().is_service_available(cnxt)
+            except Exception:
+                return False
 
         def not_hidden_matches(cls):
             return cls.get_class().support_status.status != support.HIDDEN

@@ -571,6 +571,10 @@ class Resource(object):
         client_plugin = clients.Clients(context).client_plugin(
             cls.default_client_name)
 
+        if not client_plugin:
+            raise exception.ClientNotAvailable(
+                client_name=cls.default_client_name)
+
         service_types = client_plugin.service_types
         if not service_types:
             return True

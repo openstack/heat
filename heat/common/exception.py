@@ -240,6 +240,10 @@ class ResourceNotAvailable(HeatException):
     msg_fmt = _("The Resource (%(resource_name)s) is not available.")
 
 
+class ClientNotAvailable(HeatException):
+    msg_fmt = _("The client (%(client_name)s) is not available.")
+
+
 class WatchRuleNotFound(EntityNotFound):
     """Keep this for AWS compatiblility."""
     msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
