@@ -1140,11 +1140,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_get_zaqar_queue(self):
         dep_data = {}
 
-        zc = mock.MagicMock()
-        zcc = self.patch(
-            'heat.engine.clients.os.zaqar.ZaqarClientPlugin._create')
-        zcc.return_value = zc
-
         self._create_stack(self.template_zaqar_signal)
 
         def data_set(key, value, redact=False):
@@ -1158,16 +1153,16 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.action = self.deployment.CREATE
 
         queue_id = self.deployment._get_zaqar_signal_queue_id()
-        self.assertEqual(2, len(zc.queue.mock_calls))
-        self.assertEqual(queue_id, zc.queue.mock_calls[0][1][0])
         self.assertEqual(queue_id, dep_data['zaqar_signal_queue_id'])
 
         self.assertEqual(queue_id,
                          self.deployment._get_zaqar_signal_queue_id())
 
-    def test_delete_zaqar_queue(self):
+    @mock.patch.object(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+    def test_delete_zaqar_queue(self, zcc):
         queue_id = str(uuid.uuid4())
         dep_data = {
+            'password': 'password',
             'zaqar_signal_queue_id': queue_id
         }
         self._create_stack(self.template_zaqar_signal)
@@ -1176,8 +1171,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.data = mock.Mock(return_value=dep_data)
 
         zc = mock.MagicMock()
-        zcc = self.patch(
-            'heat.engine.clients.os.zaqar.ZaqarClientPlugin._create')
         zcc.return_value = zc
 
         self.deployment.id = 23
