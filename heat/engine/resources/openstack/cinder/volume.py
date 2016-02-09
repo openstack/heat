@@ -25,6 +25,7 @@ from heat.engine import properties
 from heat.engine.resources import scheduler_hints as sh
 from heat.engine.resources import volume_base as vb
 from heat.engine import support
+from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
 
@@ -231,9 +232,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.IMAGE],
                 value_path=[self.IMAGE_REF]
             )

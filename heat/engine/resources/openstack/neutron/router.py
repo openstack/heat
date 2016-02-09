@@ -21,6 +21,7 @@ from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import support
+from heat.engine import translation
 
 
 class Router(neutron.NeutronResource):
@@ -165,14 +166,14 @@ class Router(neutron.NeutronResource):
     def translation_rules(self, props):
         if props.get(self.L3_AGENT_ID):
             return [
-                properties.TranslationRule(
+                translation.TranslationRule(
                     props,
-                    properties.TranslationRule.ADD,
+                    translation.TranslationRule.ADD,
                     [self.L3_AGENT_IDS],
                     [props.get(self.L3_AGENT_ID)]),
-                properties.TranslationRule(
+                translation.TranslationRule(
                     props,
-                    properties.TranslationRule.DELETE,
+                    translation.TranslationRule.DELETE,
                     [self.L3_AGENT_ID]
                 )
             ]
@@ -368,21 +369,21 @@ class RouterInterface(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.PORT],
                 value_path=[self.PORT_ID]
             ),
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.ROUTER],
                 value_path=[self.ROUTER_ID]
             ),
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
             )
@@ -482,9 +483,9 @@ class RouterGateway(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.NETWORK],
                 value_path=[self.NETWORK_ID]
             )

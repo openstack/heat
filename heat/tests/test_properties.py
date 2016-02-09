@@ -25,6 +25,7 @@ from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
+from heat.engine import translation
 from heat.tests import common
 
 
@@ -1887,9 +1888,9 @@ class PropertiesValidationTest(common.HeatTestCase):
 class TestTranslationRule(common.HeatTestCase):
 
     def test_translation_rule(self):
-        for r in properties.TranslationRule.RULE_KEYS:
+        for r in translation.TranslationRule.RULE_KEYS:
             props = properties.Properties({}, {})
-            rule = properties.TranslationRule(
+            rule = translation.TranslationRule(
                 props,
                 r,
                 ['any'],
@@ -1909,13 +1910,14 @@ class TestTranslationRule(common.HeatTestCase):
     def test_invalid_translation_rule(self):
         props = properties.Properties({}, {})
         exc = self.assertRaises(ValueError,
-                                properties.TranslationRule, 'proppy', mock.ANY,
+                                translation.TranslationRule,
+                                'proppy', mock.ANY,
                                 mock.ANY)
         self.assertEqual('Properties must be Properties type. '
                          'Found %s.' % str, six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
-                                properties.TranslationRule,
+                                translation.TranslationRule,
                                 props,
                                 'EatTheCookie',
                                 mock.ANY,
@@ -1925,27 +1927,27 @@ class TestTranslationRule(common.HeatTestCase):
                          six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
-                                properties.TranslationRule,
+                                translation.TranslationRule,
                                 props,
-                                properties.TranslationRule.ADD,
+                                translation.TranslationRule.ADD,
                                 'networks.network',
                                 'value')
         self.assertEqual('source_path should be a list with path instead of '
                          '%s.' % str, six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
-                                properties.TranslationRule,
+                                translation.TranslationRule,
                                 props,
-                                properties.TranslationRule.ADD,
+                                translation.TranslationRule.ADD,
                                 [],
                                 mock.ANY)
         self.assertEqual('source_path must be non-empty list with path.',
                          six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
-                                properties.TranslationRule,
+                                translation.TranslationRule,
                                 props,
-                                properties.TranslationRule.ADD,
+                                translation.TranslationRule.ADD,
                                 ['any'],
                                 mock.ANY,
                                 'value_name')
@@ -1953,9 +1955,9 @@ class TestTranslationRule(common.HeatTestCase):
                          six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
-                                properties.TranslationRule,
+                                translation.TranslationRule,
                                 props,
-                                properties.TranslationRule.ADD,
+                                translation.TranslationRule.ADD,
                                 ['any'],
                                 'value')
         self.assertEqual('value must be list type when rule is Add.',
@@ -1986,10 +1988,11 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.ADD,
-                                          ['far'],
-                                          [{'red': props.get('bar')}])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.ADD,
+            ['far'],
+            [{'red': props.get('bar')}])
         rule.execute_rule()
 
         self.assertIn({'red': 'dak'}, props.get('far'))
@@ -2016,10 +2019,11 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.ADD,
-                                          ['far'],
-                                          [{'red': props.get('bar')}])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.ADD,
+            ['far'],
+            [{'red': props.get('bar')}])
         rule.execute_rule()
 
         self.assertEqual([{'red': 'dak'}], props.get('far'))
@@ -2044,10 +2048,11 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.ADD,
-                                          ['far'],
-                                          [props.get('bar')])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.ADD,
+            ['far'],
+            [props.get('bar')])
         exc = self.assertRaises(ValueError, rule.execute_rule)
 
         self.assertEqual('Add rule must be used only for lists.',
@@ -2073,10 +2078,11 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'red'],
-                                          props.get('bar'))
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'red'],
+            props.get('bar'))
         rule.execute_rule()
 
         self.assertEqual({'red': 'dak'}, props.get('far'))
@@ -2100,10 +2106,11 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'red'],
-                                          props.get('bar'))
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'red'],
+            props.get('bar'))
         rule.execute_rule()
 
         self.assertEqual({'red': 'dak'}, props.get('far'))
@@ -2132,10 +2139,11 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'red'],
-                                          props.get('bar'))
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'red'],
+            props.get('bar'))
         rule.execute_rule()
 
         self.assertEqual([{'red': 'dak'}, {'red': 'dak'}], props.get('far'))
@@ -2163,11 +2171,12 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'red'],
-                                          None,
-                                          'blue')
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'red'],
+            None,
+            'blue')
         rule.execute_rule()
 
         self.assertEqual([{'red': 'white', 'blue': None},
@@ -2184,10 +2193,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['bar'],
-                                          props.get('far'))
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['bar'],
+            props.get('far'))
         rule.execute_rule()
 
         self.assertEqual('one', props.get('bar'))
@@ -2203,10 +2213,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['bar'],
-                                          value_path=['far'])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['bar'],
+            value_path=['far'])
         ex = self.assertRaises(ValueError, rule.execute_rule)
         self.assertEqual('Cannot use bar and far at the same time.',
                          six.text_type(ex))
@@ -2221,10 +2232,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['bar'],
-                                          value_path=['far'])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['bar'],
+            value_path=['far'])
         rule.execute_rule()
 
         self.assertEqual('one', props.get('bar'))
@@ -2240,10 +2252,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['bar'],
-                                          props.get('far'))
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['bar'],
+            props.get('far'))
         rule.execute_rule()
 
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -2271,9 +2284,10 @@ class TestTranslationRule(common.HeatTestCase):
         }
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.DELETE,
-                                          ['far', 'red'])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.DELETE,
+            ['far', 'red'])
         rule.execute_rule()
 
         self.assertEqual([{'red': None}, {'red': None}], props.get('far'))
@@ -2287,9 +2301,10 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.DELETE,
-                                          ['far'])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.DELETE,
+            ['far'])
         rule.execute_rule()
 
         self.assertIsNone(props.get('far'))
@@ -2325,10 +2340,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'bar'],
-                                          value_path=['far', 'dar'])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'bar'],
+            value_path=['far', 'dar'])
 
         rule.execute_rule()
 
@@ -2368,10 +2384,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'bar'],
-                                          value_name='dar')
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'bar'],
+            value_name='dar')
 
         rule.execute_rule()
 
@@ -2407,10 +2424,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.ADD,
-                                          ['far'],
-                                          [props.get('boo')])
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.ADD,
+            ['far'],
+            [props.get('boo')])
         rule.execute_rule()
 
         self.assertEqual(['white', 'roses', 'chrysanthemums'],
@@ -2450,10 +2468,11 @@ class TestTranslationRule(common.HeatTestCase):
 
         props = properties.Properties(schema, data)
 
-        rule = properties.TranslationRule(props,
-                                          properties.TranslationRule.REPLACE,
-                                          ['far', 'bar'],
-                                          value_name='dar')
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'bar'],
+            value_name='dar')
 
         rule.execute_rule()
 

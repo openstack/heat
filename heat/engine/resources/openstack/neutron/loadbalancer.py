@@ -22,6 +22,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class HealthMonitor(neutron.NeutronResource):
@@ -394,9 +395,9 @@ class Pool(neutron.NeutronResource):
 
     def translation_rules(self, props):
         return [
-            properties.TranslationRule(
+            translation.TranslationRule(
                 props,
-                properties.TranslationRule.REPLACE,
+                translation.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
             )

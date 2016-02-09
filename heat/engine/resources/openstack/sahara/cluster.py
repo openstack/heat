@@ -23,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
 
@@ -179,9 +180,9 @@ class SaharaCluster(resource.Resource):
     entity = 'clusters'
 
     def translation_rules(self, props):
-        return [properties.TranslationRule(
+        return [translation.TranslationRule(
             props,
-            properties.TranslationRule.REPLACE,
+            translation.TranslationRule.REPLACE,
             [self.IMAGE_ID],
             value_path=[self.IMAGE]
         )]

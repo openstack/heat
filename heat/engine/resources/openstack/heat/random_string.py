@@ -23,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class RandomString(resource.Resource):
@@ -181,16 +182,16 @@ class RandomString(resource.Resource):
     def translation_rules(self, props):
         if props.get(self.SEQUENCE):
             return [
-                properties.TranslationRule(
+                translation.TranslationRule(
                     props,
-                    properties.TranslationRule.ADD,
+                    translation.TranslationRule.ADD,
                     [self.CHARACTER_CLASSES],
                     [{self.CHARACTER_CLASSES_CLASS: props.get(
                         self.SEQUENCE),
                         self.CHARACTER_CLASSES_MIN: 1}]),
-                properties.TranslationRule(
+                translation.TranslationRule(
                     props,
-                    properties.TranslationRule.DELETE,
+                    translation.TranslationRule.DELETE,
                     [self.SEQUENCE]
                 )
             ]
