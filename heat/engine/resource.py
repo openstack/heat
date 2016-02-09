@@ -492,10 +492,24 @@ class Resource(object):
             if psv.immutable():
                 immutable_set.add(psk)
 
+        def prop_changed(key):
+            try:
+                before = before_props.get(key)
+            except ValueError as exc:
+                # We shouldn't get here usually, but there is a known issue
+                # with template resources and new parameters in non-convergence
+                # stacks (see bug 1543685). The error should be harmless
+                # because we're on the before properties, which have presumably
+                # already been validated.
+                LOG.warning(_LW('Ignoring error in old property value '
+                                '%(prop_name)s: %(msg)s'),
+                            {'prop_name': key, 'msg': six.text_type(exc)})
+                return True
+
+            return before != after_props.get(key)
+
         # Create a set of keys which differ (or are missing/added)
-        changed_properties_set = set(k for k in after_props
-                                     if before_props.get(k) !=
-                                     after_props.get(k))
+        changed_properties_set = set(k for k in after_props if prop_changed(k))
 
         # Create a list of updated properties offending property immutability
         update_replace_forbidden = [k for k in changed_properties_set
