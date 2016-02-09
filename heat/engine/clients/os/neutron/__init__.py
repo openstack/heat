@@ -162,3 +162,38 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
                     else:
                         raise exception.PhysicalResourceNameAmbiguity(name=sg)
         return seclist
+
+    def _resove_resource_path(self, resource):
+        """Returns sfc resource path."""
+
+        if resource == 'port_pair':
+            RESOURCE_PATH = "/sfc/port_pairs"
+            return RESOURCE_PATH
+
+    def create_sfc_resource(self, resource, props):
+        """Returns created sfc resource record."""
+
+        path = self._resove_resource_path(resource)
+        record = self.client().create_ext(path, {resource: props}
+                                          ).get(resource)
+        return record
+
+    def update_sfc_resource(self, resource, prop_diff, resource_id):
+        """Returns updated sfc resource record."""
+
+        path = self._resove_resource_path(resource)
+        return self.client().update_ext(path + '/%s', self.resource_id,
+                                        {resource: prop_diff})
+
+    def delete_sfc_resource(self, resource, resource_id):
+        """deletes sfc resource record and returns status"""
+
+        path = self._resove_resource_path(resource)
+        return self.client().delete_ext(path + '/%s', self.resource_id)
+
+    def show_sfc_resource(self, resource, resource_id):
+        """returns specific sfc resource record"""
+
+        path = self._resove_resource_path(resource)
+        return self.client().show_ext(path + '/%s', self.resource_id
+                                      ).get(resource)
