@@ -908,15 +908,13 @@ class AllocTest(common.HeatTestCase):
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
         self.create_eip(t, stack, 'IPAddress')
-        before_props = {'InstanceId': {'Ref': 'WebServer'},
-                        'EIP': '11.0.0.1'}
-        after_props = {'InstanceId': {'Ref': 'WebServer2'},
+        after_props = {'InstanceId': '5678',
                        'EIP': '11.0.0.2'}
         before = self.create_association(t, stack, 'IPAssoc')
         after = rsrc_defn.ResourceDefinition(before.name, before.type(),
                                              after_props)
-        self.assertRaises(exception.UpdateReplace, before._needs_update,
-                          after, before, after_props, before_props, None)
+        updater = scheduler.TaskRunner(before.update, after)
+        self.assertRaises(exception.UpdateReplace, updater)
 
     def test_update_association_with_NetworkInterfaceId_or_InstanceId(self):
         self.mock_create_floatingip()

@@ -1038,30 +1038,22 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         return updaters
 
-    def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource, check_init_complete=True):
-        result = super(Server, self)._needs_update(
-            after, before, after_props, before_props, prev_resource,
-            check_init_complete=check_init_complete)
-
-        prop_diff = self.update_template_diff_properties(after_props,
-                                                         before_props)
-
-        if self.FLAVOR in prop_diff:
+    def needs_replace_with_prop_diff(self, changed_properties_set,
+                                     after_props, before_props):
+        """Needs replace based on prop_diff """
+        if self.FLAVOR in changed_properties_set:
             flavor_update_policy = (
-                prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
-                self.properties[self.FLAVOR_UPDATE_POLICY])
+                after_props.get(self.FLAVOR_UPDATE_POLICY) or
+                before_props.get(self.FLAVOR_UPDATE_POLICY))
             if flavor_update_policy == 'REPLACE':
-                raise exception.UpdateReplace(self.name)
+                return True
 
-        if self.IMAGE in prop_diff:
+        if self.IMAGE in changed_properties_set:
             image_update_policy = (
-                prop_diff.get(self.IMAGE_UPDATE_POLICY) or
-                self.properties[self.IMAGE_UPDATE_POLICY])
+                after_props.get(self.IMAGE_UPDATE_POLICY) or
+                before_props.get(self.IMAGE_UPDATE_POLICY))
             if image_update_policy == 'REPLACE':
-                raise exception.UpdateReplace(self.name)
-
-        return result
+                return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:

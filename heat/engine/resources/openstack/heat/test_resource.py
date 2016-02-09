@@ -16,7 +16,6 @@ import eventlet
 from oslo_utils import timeutils
 import six
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
@@ -157,21 +156,10 @@ class TestResource(resource.Resource):
 
         return timeutils.utcnow(), self._wait_secs()
 
-    def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource, check_init_complete=True):
-        result = super(TestResource, self)._needs_update(
-            after, before, after_props, before_props, prev_resource,
-            check_init_complete=check_init_complete)
-
-        prop_diff = self.update_template_diff_properties(after_props,
-                                                         before_props)
-
-        if self.UPDATE_REPLACE in prop_diff:
-            update_replace = prop_diff.get(self.UPDATE_REPLACE)
-            if update_replace:
-                raise exception.UpdateReplace(self.name)
-
-        return result
+    def needs_replace_with_prop_diff(self, changed_properties_set,
+                                     after_props, before_props):
+        if self.UPDATE_REPLACE in changed_properties_set:
+            return bool(after_props.get(self.UPDATE_REPLACE))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self.properties = json_snippet.properties(self.properties_schema,

@@ -517,6 +517,12 @@ class Resource(object):
                           'res': self.type(), 'name': self.name}
             raise exception.NotSupported(feature=mesg)
 
+        if changed_properties_set and self.needs_replace_with_prop_diff(
+                changed_properties_set,
+                after_props,
+                before_props):
+            raise exception.UpdateReplace(self)
+
         if not changed_properties_set.issubset(update_allowed_set):
             raise exception.UpdateReplace(self.name)
 
@@ -860,6 +866,19 @@ class Resource(object):
                 resource_data.get('resource_data'),
                 resource_data.get('metadata'))
 
+    def needs_replace(self, after_props):
+        """Mandatory replace based on certain properties."""
+        return False
+
+    def needs_replace_with_prop_diff(self, changed_properties_set,
+                                     after_props, before_props):
+        """Needs replace based on prop_diff."""
+        return False
+
+    def needs_replace_with_tmpl_diff(self, tmpl_diff):
+        """Needs replace based on tmpl_diff."""
+        return False
+
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
         if self.status == self.FAILED:
@@ -867,6 +886,9 @@ class Resource(object):
 
         if check_init_complete and (self.action == self.INIT
                                     and self.status == self.COMPLETE):
+            raise exception.UpdateReplace(self)
+
+        if self.needs_replace(after_props):
             raise exception.UpdateReplace(self)
 
         if before != after.freeze():
@@ -968,10 +990,15 @@ class Resource(object):
             self.updated_time = datetime.utcnow()
             with self._action_recorder(action, exception.UpdateReplace):
                 after_props.validate()
+
                 tmpl_diff = self.update_template_diff(function.resolve(after),
                                                       before)
+                if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
+                    raise exception.UpdateReplace(self)
+
                 prop_diff = self.update_template_diff_properties(after_props,
                                                                  before_props)
+
                 yield self.action_handler_task(action,
                                                args=[after, tmpl_diff,
                                                      prop_diff])

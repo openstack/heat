@@ -21,11 +21,6 @@ class NeutronResource(resource.Resource):
 
     default_client_name = 'neutron'
 
-    # Subclasses provide a list of properties which, although
-    # update_allowed in the schema, should be excluded from the
-    # call to neutron, because they are handled in _needs_update
-    update_exclude_properties = []
-
     def validate(self):
         """Validate any of the provided params."""
         res = super(NeutronResource, self).validate()

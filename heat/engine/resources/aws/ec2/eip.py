@@ -406,26 +406,16 @@ class ElasticIpAssociation(resource.Resource):
                                              port_id=None,
                                              ignore_not_found=True)
 
-    def _needs_update(self, after, before, after_props, before_props,
-                      prev_resource, check_init_complete=True):
-        result = super(ElasticIpAssociation, self)._needs_update(
-            after, before, after_props, before_props, prev_resource,
-            check_init_complete=check_init_complete)
-
-        prop_diff = self.update_template_diff_properties(after_props,
-                                                         before_props)
-
-        # according to aws doc, when update allocation_id or eip,
-        # if you also change the InstanceId or NetworkInterfaceId,
-        # should go to Replacement flow
-        if self.ALLOCATION_ID in prop_diff or self.EIP in prop_diff:
-            instance_id = prop_diff.get(self.INSTANCE_ID)
-            ni_id = prop_diff.get(self.NETWORK_INTERFACE_ID)
-
-            if instance_id or ni_id:
-                raise exception.UpdateReplace(self.name)
-
-        return result
+    def needs_replace_with_prop_diff(self, changed_properties_set,
+                                     after_props, before_props):
+        if (self.ALLOCATION_ID in changed_properties_set or
+                self.EIP in changed_properties_set):
+            instance_id, ni_id = None, None
+            if self.INSTANCE_ID in changed_properties_set:
+                instance_id = after_props.get(self.INSTANCE_ID)
+            if self.NETWORK_INTERFACE_ID in changed_properties_set:
+                ni_id = after_props.get(self.NETWORK_INTERFACE_ID)
+            return bool(instance_id or ni_id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
