@@ -930,6 +930,46 @@ class Resource(object):
                 update_tmpl_id_and_requires()
                 raise
 
+    def preview_update(self, after, before, after_props, before_props,
+                       prev_resource, check_init_complete=False):
+        """Simulates update without actually updating the resource.
+
+        Raises UpdateReplace, if replacement is required or returns True,
+        if in-place update is required.
+        """
+        if self._needs_update(after, before, after_props, before_props,
+                              prev_resource, check_init_complete):
+            tmpl_diff = self.update_template_diff(function.resolve(after),
+                                                  before)
+            if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
+                raise exception.UpdateReplace(self)
+
+            self.update_template_diff_properties(after_props,
+                                                 before_props)
+            return True
+
+    def _check_restricted_actions(self, actions, after, before,
+                                  after_porps, before_props,
+                                  prev_resource):
+        """Checks for restricted actions.
+
+        Raises ResourceActionRestricted, if the resource requires update
+        or replace and the required action is restricted.
+
+        Else, Raises UpdateReplace, if replacement is required or returns
+        True, if in-place update is required.
+        """
+        try:
+            if self.preview_update(after, before, after_porps, before_props,
+                                   prev_resource, check_init_complete=True):
+                if 'update' in actions:
+                    raise exception.ResourceActionRestricted(action='update')
+                return True
+        except exception.UpdateReplace:
+            if 'replace' in actions:
+                raise exception.ResourceActionRestricted(action='replace')
+            raise
+
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
         """Return a task to update the resource.
@@ -974,9 +1014,21 @@ class Resource(object):
             self.UPDATE, environment.HOOK_PRE_UPDATE)
 
         try:
-            if not self._needs_update(after, before, after_props, before_props,
-                                      prev_resource):
-                return
+            registry = self.stack.env.registry
+            restr_actions = registry.get_rsrc_restricted_actions(self.name)
+            if restr_actions:
+                if not self._check_restricted_actions(restr_actions,
+                                                      after, before,
+                                                      after_props,
+                                                      before_props,
+                                                      prev_resource):
+                    return
+            else:
+                if not self._needs_update(after, before,
+                                          after_props, before_props,
+                                          prev_resource):
+                    return
+
             if not cfg.CONF.convergence_engine:
                 if (self.action, self.status) in (
                         (self.CREATE, self.IN_PROGRESS),
@@ -988,6 +1040,7 @@ class Resource(object):
             LOG.info(_LI('updating %s'), six.text_type(self))
 
             self.updated_time = datetime.utcnow()
+
             with self._action_recorder(action, exception.UpdateReplace):
                 after_props.validate()
 
@@ -1006,8 +1059,14 @@ class Resource(object):
                 self.t = after
                 self.reparse()
                 self._update_stored_properties()
+
+        except exception.ResourceActionRestricted as ae:
+            # catch all ResourceActionRestricted exceptions
+            failure = exception.ResourceFailure(ae, self, action)
+            self._add_event(action, self.FAILED, six.text_type(ae))
+            raise failure
         except exception.UpdateReplace:
-            # catch all UpdateReplace expections
+            # catch all UpdateReplace exceptions
             try:
                 if (self.stack.action == 'ROLLBACK' and
                         self.stack.status == 'IN_PROGRESS' and

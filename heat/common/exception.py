@@ -236,6 +236,10 @@ class InvalidBreakPointHook(HeatException):
     msg_fmt = _("%(message)s")
 
 
+class InvalidRestrictedAction(HeatException):
+    msg_fmt = _("%(message)s")
+
+
 class ResourceNotAvailable(HeatException):
     msg_fmt = _("The Resource (%(resource_name)s) is not available.")
 
@@ -310,6 +314,10 @@ class NotSupported(HeatException):
 
 class ResourceActionNotSupported(HeatException):
     msg_fmt = _("%(action)s is not supported for resource.")
+
+
+class ResourceActionRestricted(HeatException):
+    msg_fmt = _("%(action)s is restricted for resource.")
 
 
 class ResourcePropertyConflict(HeatException):

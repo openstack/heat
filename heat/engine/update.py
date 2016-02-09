@@ -132,32 +132,47 @@ class StackUpdate(object):
 
         yield new_res.create()
 
+    def _check_replace_restricted(self, res):
+        registry = res.stack.env.registry
+        restricted_actions = registry.get_rsrc_restricted_actions(res.name)
+        existing_res = self.existing_stack[res.name]
+        if 'replace' in restricted_actions:
+            ex = exception.ResourceActionRestricted(action='replace')
+            failure = exception.ResourceFailure(ex, existing_res,
+                                                existing_res.UPDATE)
+            existing_res._add_event(existing_res.UPDATE, existing_res.FAILED,
+                                    six.text_type(ex))
+            raise failure
+
     @scheduler.wrappertask
     def _process_new_resource_update(self, new_res):
         res_name = new_res.name
 
-        if (res_name in self.existing_stack and
-                type(self.existing_stack[res_name]) is type(new_res)):
-            existing_res = self.existing_stack[res_name]
-            try:
-                yield self._update_in_place(existing_res,
-                                            new_res)
-            except exception.UpdateReplace:
-                pass
-            else:
-                # Save updated resource definition to backup stack
-                # cause it allows the backup stack resources to be synchronized
-                LOG.debug("Backing up updated Resource %s" % res_name)
-                definition = existing_res.t.reparse(self.previous_stack,
-                                                    existing_res.stack.t)
-                self.previous_stack.t.add_resource(definition)
-                self.previous_stack.t.store(self.previous_stack.context)
+        if res_name in self.existing_stack:
+            if type(self.existing_stack[res_name]) is type(new_res):
+                existing_res = self.existing_stack[res_name]
+                try:
+                    yield self._update_in_place(existing_res,
+                                                new_res)
+                except exception.UpdateReplace:
+                    pass
+                else:
+                    # Save updated resource definition to backup stack
+                    # cause it allows the backup stack resources to be
+                    # synchronized
+                    LOG.debug("Backing up updated Resource %s" % res_name)
+                    definition = existing_res.t.reparse(self.previous_stack,
+                                                        existing_res.stack.t)
+                    self.previous_stack.t.add_resource(definition)
+                    self.previous_stack.t.store(self.previous_stack.context)
 
-                LOG.info(_LI("Resource %(res_name)s for stack %(stack_name)s "
-                             "updated"),
-                         {'res_name': res_name,
-                          'stack_name': self.existing_stack.name})
-                return
+                    LOG.info(_LI("Resource %(res_name)s for stack "
+                                 "%(stack_name)s updated"),
+                             {'res_name': res_name,
+                              'stack_name': self.existing_stack.name})
+                    return
+            else:
+                self._check_replace_restricted(new_res)
 
         yield self._create_resource(new_res)
 
@@ -244,12 +259,10 @@ class StackUpdate(object):
                 continue
 
             try:
-                if current_res._needs_update(updated_res.frozen_definition(),
-                                             current_res.frozen_definition(),
-                                             updated_props, current_props,
-                                             None, check_init_complete=False):
-                    current_res.update_template_diff_properties(updated_props,
-                                                                current_props)
+                if current_res.preview_update(updated_res.frozen_definition(),
+                                              current_res.frozen_definition(),
+                                              updated_props, current_props,
+                                              None):
                     updated_keys.append(key)
             except exception.UpdateReplace:
                 replaced_keys.append(key)
