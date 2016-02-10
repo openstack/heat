@@ -309,8 +309,9 @@ def format_stack_resource(resource, detail=True, with_props=False,
     if detail:
         res[rpc_api.RES_DESCRIPTION] = resource.t.description
         res[rpc_api.RES_METADATA] = resource.metadata_get()
-        res[rpc_api.RES_SCHEMA_ATTRIBUTES] = format_resource_attributes(
-            resource, with_attr)
+        if with_attr is not False:
+            res[rpc_api.RES_SCHEMA_ATTRIBUTES] = format_resource_attributes(
+                resource, with_attr)
 
     if with_props:
         res[rpc_api.RES_SCHEMA_PROPERTIES] = format_resource_properties(
