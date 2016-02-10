@@ -131,18 +131,14 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.update_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1', update_props)
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -191,10 +187,12 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -227,11 +225,13 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -260,7 +260,7 @@ class NeutronSubnetTest(common.HeatTestCase):
                     {"start": "10.0.3.20", "end": "10.0.3.150"}],
                 "host_routes": [
                     {"destination": "10.0.4.0/24", "nexthop": "10.0.3.20"}],
-                "subnetpool_id": "None",
+                "subnetpool_id": 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 "prefixlen": 24,
                 "dns_nameservers": ["8.8.8.8"],
                 "enable_dhcp": True,
@@ -268,33 +268,33 @@ class NeutronSubnetTest(common.HeatTestCase):
                 "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
                 "ip_version": 4,
                 "name": "name",
-                "network_id": "None",
+                "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
                 "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
             }
         }
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnetpool',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnetpool',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.create_subnet({
             'subnet': {
-                'network_id': u'None',
+                'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'name': 'mysubnet',
-                'subnetpool_id': 'None',
+                'subnetpool_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'prefixlen': 24,
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
@@ -322,12 +322,14 @@ class NeutronSubnetTest(common.HeatTestCase):
         t = template_format.parse(neutron_template)
         del t['resources']['sub_net']['properties']['cidr']
         t['resources']['sub_net']['properties'][
-            'subnetpool'] = 'None'
+            'subnetpool'] = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         t['resources']['sub_net']['properties'][
             'prefixlen'] = 24
         t['resources']['sub_net']['properties'][
             'name'] = 'mysubnet'
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -337,22 +339,17 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_subnet_deprecated(self):
-
-        t = self._test_subnet(resolve_neutron=False)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_subnet(t, stack, 'sub_net')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            'None',
-            cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        t = self._test_subnet(resolve_neutron=False)
+        stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -385,7 +382,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
-                'network_id': u'None',
+                'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
@@ -468,13 +465,13 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
-                'network_id': u'None',
+                'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
@@ -535,6 +532,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         t = template_format.parse(neutron_template)
         t['resources']['sub_net']['properties']['enable_dhcp'] = 'False'
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
 
         self.m.ReplayAll()
@@ -593,13 +592,13 @@ class NeutronSubnetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
-            'None',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
-                'network_id': u'None',
+                'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'dns_nameservers': [u'2001:4860:4860::8844'],
                 'ip_version': 6,
                 'enable_dhcp': True,
@@ -637,6 +636,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props['cidr'] = 'fdfa:6a50:d22b::/64'
         props['dns_nameservers'] = ['2001:4860:4860::8844']
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
 
         scheduler.TaskRunner(rsrc.create)()
@@ -650,6 +651,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props['host_routes'] = [{'destination': 'invalid_cidr',
                                  'nexthop': '10.0.3.20'}]
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['sub_net']
         ex = self.assertRaises(exception.StackValidationFailed,
                                rsrc.validate)
@@ -666,6 +669,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props['ipv6_ra_mode'] = 'slaac'
         props['ip_version'] = 6
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['sub_net']
         ex = self.assertRaises(exception.StackValidationFailed,
                                rsrc.validate)
@@ -679,6 +684,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props['ipv6_ra_mode'] = 'slaac'
         props['ip_version'] = 4
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['sub_net']
         ex = self.assertRaises(exception.StackValidationFailed,
                                rsrc.validate)
@@ -690,6 +697,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props = t['resources']['sub_net']['properties']
         props['subnetpool'] = 'new_pool'
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['sub_net']
         ex = self.assertRaises(exception.ResourcePropertyConflict,
                                rsrc.validate)
@@ -702,6 +711,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props = t['resources']['sub_net']['properties']
         del props['cidr']
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['sub_net']
         ex = self.assertRaises(exception.PropertyUnspecifiedError,
                                rsrc.validate)
@@ -714,6 +725,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         props = t['resources']['sub_net']['properties']
         props['prefixlen'] = '24'
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['sub_net']
         ex = self.assertRaises(exception.ResourcePropertyConflict,
                                rsrc.validate)
@@ -737,6 +750,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         """
         t = template_format.parse(template)
         stack = utils.parse_stack(t)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['subnet']
         stack.create()
 

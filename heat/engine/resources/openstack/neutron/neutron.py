@@ -101,7 +101,7 @@ class NeutronResource(resource.Resource):
         return attributes[name]
 
     def get_reference_id(self):
-        return six.text_type(self.resource_id)
+        return self.resource_id
 
     def _not_found_in_call(self, func, *args, **kwargs):
         try:

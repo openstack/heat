@@ -166,7 +166,7 @@ class FloatingIP(neutron.NeutronResource):
                     if not fixed_ips:
                         p_net = (resource.properties.get(port.Port.NETWORK) or
                                  resource.properties.get(port.Port.NETWORK_ID))
-                        if p_net and p_net != 'None':
+                        if p_net:
                             subnets = self.client().show_network(p_net)[
                                 'network']['subnets']
                             return subnet in subnets
@@ -184,8 +184,8 @@ class FloatingIP(neutron.NeutronResource):
                     resource.properties.get(router.RouterInterface.SUBNET) or
                     resource.properties.get(router.RouterInterface.SUBNET_ID))
                 # during create we have only unresolved value for functions, so
-                # cat not use None value for building correct dependencies
-                if interface_subnet != 'None':
+                # can not use None value for building correct dependencies
+                if interface_subnet:
                     for d in deps.graph()[self]:
                         if port_on_subnet(d, interface_subnet):
                             deps += (self, resource)
