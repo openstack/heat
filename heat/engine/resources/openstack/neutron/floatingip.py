@@ -25,6 +25,15 @@ from heat.engine import translation
 
 
 class FloatingIP(neutron.NeutronResource):
+    """A resource for managing Neutron floating ips.
+
+    Floating IP addresses can change their association between routers by
+    action of the user.  One of the most common use cases for floating IPs is
+    to provide public IP addresses to a private cloud, where there are a
+    limited number of IP addresses available. Another is for a public cloud
+    user to have a "static" IP address that can be reassigned when an instance
+    is upgraded or moved.
+    """
     PROPERTIES = (
         FLOATING_NETWORK_ID, FLOATING_NETWORK, VALUE_SPECS,
         PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
@@ -253,6 +262,11 @@ class FloatingIP(neutron.NeutronResource):
 
 
 class FloatingIPAssociation(neutron.NeutronResource):
+    """A resource for associating floating ips and ports.
+
+    This resource allows associating a floating IP to a port with at least one
+    IP address to associate with this floating IP.
+    """
     PROPERTIES = (
         FLOATINGIP_ID, PORT_ID, FIXED_IP_ADDRESS,
     ) = (

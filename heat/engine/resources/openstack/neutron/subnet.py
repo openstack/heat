@@ -24,6 +24,13 @@ from heat.engine import translation
 
 
 class Subnet(neutron.NeutronResource):
+    """A resource for managing Neutron subnets.
+
+    A subnet represents an IP address block that can be used for assigning IP
+    addresses to virtual instances. Each subnet must have a CIDR and must be
+    associated with a network. IPs can be either selected from the whole subnet
+    CIDR, or from "allocation pools" that can be specified by the user.
+    """
 
     PROPERTIES = (
         NETWORK_ID, NETWORK, SUBNETPOOL, PREFIXLEN, CIDR,

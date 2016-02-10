@@ -290,6 +290,10 @@ class Router(neutron.NeutronResource):
 
 
 class RouterInterface(neutron.NeutronResource):
+    """A resource for managing Neutron router interfaces.
+
+    Router interfaces associate routers with existing subnets or ports.
+    """
 
     required_service_extension = 'router'
 

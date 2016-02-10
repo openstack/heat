@@ -27,6 +27,13 @@ from heat.engine import support
 
 
 class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
+    """Resource for managing instance signals.
+
+    The main points of this resource are:
+      - have no dependencies (so the instance can reference it).
+      - create credentials to allow for signalling from the instance.
+      - handle signals from the instance, validate and store result.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

@@ -20,7 +20,12 @@ from heat.engine import support
 
 
 class Firewall(neutron.NeutronResource):
-    """A resource for the Firewall resource in Neutron FWaaS."""
+    """A resource for the Firewall resource in Neutron FWaaS.
+
+    Resource for using the Neutron firewall implementation. Firewall is a
+    network security system that monitors and controls the incoming and
+    outgoing network traffic based on predetermined security rules.
+    """
 
     required_service_extension = 'fwaas'
 
@@ -144,7 +149,11 @@ class Firewall(neutron.NeutronResource):
 
 
 class FirewallPolicy(neutron.NeutronResource):
-    """A resource for the FirewallPolicy resource in Neutron FWaaS."""
+    """A resource for the FirewallPolicy resource in Neutron FWaaS.
+
+    FirewallPolicy resource is an ordered collection of firewall rules. A
+    firewall policy can be shared across tenants.
+    """
 
     required_service_extension = 'fwaas'
 
@@ -251,7 +260,12 @@ class FirewallPolicy(neutron.NeutronResource):
 
 
 class FirewallRule(neutron.NeutronResource):
-    """A resource for the FirewallRule resource in Neutron FWaaS."""
+    """A resource for the FirewallRule resource in Neutron FWaaS.
+
+    FirewallRule represents a collection of attributes like ports,
+    ip addresses etc. which define match criteria and action (allow, or deny)
+    that needs to be taken on the matched data traffic.
+    """
 
     required_service_extension = 'fwaas'
 

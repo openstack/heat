@@ -20,7 +20,16 @@ from heat.engine import support
 
 
 class MeteringLabel(neutron.NeutronResource):
-    """A resource for creating neutron metering label."""
+    """A resource for creating neutron metering label.
+
+    The idea is to meter this at the L3 routers levels. The point is to allow
+    operators to configure IP ranges and to assign a label to them. For example
+    we will be able to set two labels; one for the internal traffic, and the
+    other one for the external traffic. Each label will measure the traffic for
+    a specific set of IP range. Then, bandwidth measurement will be sent for
+    each label to the Oslo notification system and could be collected by
+    Ceilometer.
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 
@@ -93,7 +102,11 @@ class MeteringLabel(neutron.NeutronResource):
 
 
 class MeteringRule(neutron.NeutronResource):
-    """A resource to create rule for some label."""
+    """A resource to create rule for some label.
+
+    Resource for allowing specified label to measure the traffic for a specific
+    set of ip range.
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

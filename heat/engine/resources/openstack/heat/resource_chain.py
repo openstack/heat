@@ -35,17 +35,6 @@ class ResourceChain(stack_resource.StackResource):
     The ``concurrent`` property controls if the resources will be created
     concurrently. If omitted or set to false, each resource will be treated
     as having a dependency on the resource before it in the list.
-
-    Example::
-
-      resources:
-        MyChainResource:
-          type: OS::Heat::ResourceChain
-          properties:
-            resources: <list> # resource types to add to the chain's stack
-            concurrent: <boolean>  # optional; default is false
-            resource_properties:
-              # properties to pass each template in the chain
     """
 
     support_status = support.SupportStatus(version='6.0.0')

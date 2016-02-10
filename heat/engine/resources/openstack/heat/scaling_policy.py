@@ -36,6 +36,9 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
     **Note** while it may incidentally support
     `AWS::AutoScaling::AutoScalingGroup` for now, please don't use it for that
     purpose and use `AWS::AutoScaling::ScalingPolicy` instead.
+
+    Resource to manage scaling for `OS::Heat::AutoScalingGroup`, i.e. define
+    which metric should be scaled and scaling adjustment, set cooldown etc.
     """
     PROPERTIES = (
         AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
