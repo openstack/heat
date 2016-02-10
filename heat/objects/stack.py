@@ -199,7 +199,6 @@ class Stack(
         if db_stack is None:
             message = _('No stack exists with id "%s"') % str(self.id)
             raise exception.NotFound(message)
-        db_stack.refresh()
         return self.__class__._from_db_object(
             self._context,
             self,
