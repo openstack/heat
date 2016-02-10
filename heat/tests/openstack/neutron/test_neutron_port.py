@@ -515,12 +515,6 @@ class NeutronPortTest(common.HeatTestCase):
                 "ip_address": "10.0.0.2"
             }
         }})
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'net5678',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('net5678')
 
         call_dict = copy.deepcopy(props)
         call_dict['security_groups'] = [
@@ -541,6 +535,12 @@ class NeutronPortTest(common.HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
         neutronclient.Client.update_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'port': {'fixed_ips': []}}

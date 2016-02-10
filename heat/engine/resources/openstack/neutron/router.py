@@ -164,17 +164,8 @@ class Router(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
-        rules = [
-            translation.TranslationRule(
-                props,
-                translation.TranslationRule.RESOLVE,
-                [self.EXTERNAL_GATEWAY, self.EXTERNAL_GATEWAY_NETWORK],
-                client_plugin=self.client_plugin(),
-                finder='find_resourceid_by_name_or_id',
-                entity='network')
-            ]
         if props.get(self.L3_AGENT_ID):
-            rules.extend([
+            return [
                 translation.TranslationRule(
                     props,
                     translation.TranslationRule.ADD,
@@ -184,8 +175,8 @@ class Router(neutron.NeutronResource):
                     props,
                     translation.TranslationRule.DELETE,
                     [self.L3_AGENT_ID]
-                )])
-        return rules
+                )
+            ]
 
     def validate(self):
         super(Router, self).validate()
@@ -222,7 +213,8 @@ class Router(neutron.NeutronResource):
     def _resolve_gateway(self, props):
         gateway = props.get(self.EXTERNAL_GATEWAY)
         if gateway:
-            gateway['network_id'] = gateway.pop(self.EXTERNAL_GATEWAY_NETWORK)
+            self.client_plugin().resolve_network(
+                gateway, self.EXTERNAL_GATEWAY_NETWORK, 'network_id')
             if gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT] is None:
                 del gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT]
         return props
@@ -394,33 +386,7 @@ class RouterInterface(neutron.NeutronResource):
                 translation.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
-            ),
-            translation.TranslationRule(
-                props,
-                translation.TranslationRule.RESOLVE,
-                [self.PORT],
-                client_plugin=self.client_plugin(),
-                finder='find_resourceid_by_name_or_id',
-                entity='port'
-            ),
-            translation.TranslationRule(
-                props,
-                translation.TranslationRule.RESOLVE,
-                [self.ROUTER],
-                client_plugin=self.client_plugin(),
-                finder='find_resourceid_by_name_or_id',
-                entity='router'
-            ),
-            translation.TranslationRule(
-                props,
-                translation.TranslationRule.RESOLVE,
-                [self.SUBNET],
-                client_plugin=self.client_plugin(),
-                finder='find_resourceid_by_name_or_id',
-                entity='subnet'
             )
-
-
         ]
 
     def validate(self):
@@ -440,12 +406,15 @@ class RouterInterface(neutron.NeutronResource):
                                                      self.PORT)
 
     def handle_create(self):
-        router_id = dict(self.properties).get(self.ROUTER)
+        router_id = self.client_plugin().resolve_router(
+            dict(self.properties), self.ROUTER, 'router_id')
         key = 'subnet_id'
-        value = dict(self.properties).get(self.SUBNET)
+        value = self.client_plugin().resolve_subnet(
+            dict(self.properties), self.SUBNET, key)
         if not value:
             key = 'port_id'
-            value = dict(self.properties).get(self.PORT)
+            value = self.client_plugin().resolve_port(
+                dict(self.properties), self.PORT, key)
         self.client().add_interface_router(
             router_id,
             {key: value})
@@ -519,16 +488,7 @@ class RouterGateway(neutron.NeutronResource):
                 translation.TranslationRule.REPLACE,
                 [self.NETWORK],
                 value_path=[self.NETWORK_ID]
-            ),
-            translation.TranslationRule(
-                props,
-                translation.TranslationRule.RESOLVE,
-                [self.NETWORK],
-                client_plugin=self.client_plugin(),
-                finder='find_resourceid_by_name_or_id',
-                entity='network'
             )
-
         ]
 
     def add_dependencies(self, deps):
@@ -559,7 +519,8 @@ class RouterGateway(neutron.NeutronResource):
 
     def handle_create(self):
         router_id = self.properties[self.ROUTER_ID]
-        network_id = dict(self.properties).get(self.NETWORK)
+        network_id = self.client_plugin().resolve_network(
+            dict(self.properties), self.NETWORK, 'network_id')
         self.client().add_gateway_router(
             router_id,
             {'network_id': network_id})
