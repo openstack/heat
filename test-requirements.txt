@@ -7,12 +7,12 @@ hacking<0.11,>=0.10.0
 bandit>=0.17.3 # Apache-2.0
 coverage>=3.6 # Apache-2.0
 kombu>=3.0.7 # BSD
-mock>=1.2 # BSD
+mock>=1.2;python_version<'3.3' # BSD
 mox3>=0.7.0 # Apache-2.0
 PyMySQL>=0.6.2 # MIT License
 oslosphinx!=3.4.0,>=2.5.0 # Apache-2.0
 oslotest>=1.10.0 # Apache-2.0
-paramiko>=1.13.0 # LGPL
+paramiko>=1.16.0 # LGPL
 qpid-python;python_version=='2.7' # Apache-2.0
 psycopg2>=2.5 # LGPL/ZPL
 sphinx!=1.2.0,!=1.3b1,<1.3,>=1.1.2 # BSD
