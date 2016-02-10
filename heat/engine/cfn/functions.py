@@ -402,10 +402,6 @@ class Replace(function.Function):
 
         self._mapping, self._string = self._parse_args()
 
-        if not isinstance(self._mapping, collections.Mapping):
-            raise TypeError(_('"%s" parameters must be a mapping') %
-                            self.fn_name)
-
     def _parse_args(self):
 
         example = ('{"%s": '
