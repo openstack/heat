@@ -1,0 +1,4 @@
+---
+features:
+  - A new ``OS::Keystone::Region`` resource that helps in
+    managing the lifecycle of keystone region.
