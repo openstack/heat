@@ -334,15 +334,15 @@ def construct_input_data(rsrc, curr_stack):
     for attr in attributes:
         try:
             if isinstance(attr, six.string_types):
-                resolved_attributes[attr] = rsrc.FnGetAtt(attr)
+                resolved_attributes[attr] = rsrc.get_attribute(attr)
             else:
-                resolved_attributes[attr] = rsrc.FnGetAtt(*attr)
+                resolved_attributes[attr] = rsrc.get_attribute(*attr)
         except exception.InvalidTemplateAttribute as ita:
             LOG.info(six.text_type(ita))
 
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
-                  'reference_id': rsrc.FnGetRefId(),
+                  'reference_id': rsrc.get_reference_id(),
                   'attrs': resolved_attributes,
                   'status': rsrc.status,
                   'action': rsrc.action,
