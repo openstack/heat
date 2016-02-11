@@ -25,6 +25,7 @@ import testtools
 from heat.common import context
 from heat.common import messaging
 from heat.common import policy
+from heat.engine.clients.os import barbican
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
@@ -296,4 +297,8 @@ class HeatTestCase(testscenarios.WithScenarios,
 
     def stub_ProviderConstraint_validate(self):
         validate = self.patchobject(neutron.ProviderConstraint, 'validate')
+        validate.return_value = True
+
+    def stub_SecretConstraint_validate(self):
+        validate = self.patchobject(barbican.SecretConstraint, 'validate')
         validate.return_value = True
