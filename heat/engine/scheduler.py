@@ -318,7 +318,10 @@ def wrappertask(task):
                 parent.close()
                 raise
             except:  # noqa
-                subtask = parent.throw(*sys.exc_info())
+                try:
+                    subtask = parent.throw(*sys.exc_info())
+                except StopIteration:
+                    return
             else:
                 try:
                     subtask = next(parent)
