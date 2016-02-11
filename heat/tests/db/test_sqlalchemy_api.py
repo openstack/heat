@@ -2256,6 +2256,28 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.resource_get_all_by_stack,
                           self.ctx, self.stack2.id)
 
+    def test_resource_get_all_active_by_stack(self):
+        values = [
+            {'name': 'res1', 'action': rsrc.Resource.DELETE,
+             'status': rsrc.Resource.COMPLETE},
+            {'name': 'res2', 'action': rsrc.Resource.DELETE,
+             'status': rsrc.Resource.IN_PROGRESS},
+            {'name': 'res3', 'action': rsrc.Resource.UPDATE,
+             'status': rsrc.Resource.IN_PROGRESS},
+            {'name': 'res4', 'action': rsrc.Resource.UPDATE,
+             'status': rsrc.Resource.COMPLETE},
+            {'name': 'res5', 'action': rsrc.Resource.INIT,
+             'status': rsrc.Resource.COMPLETE},
+            {'name': 'res6'},
+        ]
+        [create_resource(self.ctx, self.stack, **val) for val in values]
+
+        resources = db_api.resource_get_all_active_by_stack(self.ctx,
+                                                            self.stack.id)
+        self.assertEqual(5, len(resources))
+        for rsrc_id, res in resources.items():
+            self.assertIn(res.name, ['res2', 'res3', 'res4', 'res5', 'res6'])
+
 
 class DBAPIStackLockTest(common.HeatTestCase):
     def setUp(self):

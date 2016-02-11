@@ -131,7 +131,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     is_update, None))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
-    def _mock_convg_db_update_requires(self, key_id=False):
+    def _mock_convg_db_update_requires(self):
         """Updates requires column of resources.
 
         Required for testing the generation of convergence dependency graph
@@ -144,8 +144,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     rsrc_id, is_update))
                 requires[rsrc_id] = list({id for id, is_update in reqs})
 
-        rsrcs_db = resource_objects.Resource.get_all_by_stack(
-            self.stack.context, self.stack.id, key_id=key_id)
+        rsrcs_db = resource_objects.Resource.get_all_active_by_stack(
+            self.stack.context, self.stack.id)
 
         for rsrc_id, rsrc in rsrcs_db.items():
             if rsrc.id in requires:
@@ -172,7 +172,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         # rsrc.requires. Mock the same behavior here.
         self.stack = stack
         with mock.patch.object(
-                parser.Stack, '_db_resources_get',
+                parser.Stack, 'db_active_resources_get',
                 side_effect=self._mock_convg_db_update_requires):
             curr_stack.converge_stack(template=template2, action=stack.UPDATE)
 
@@ -297,7 +297,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         # rsrc.requires. Mock the same behavior here.
         self.stack = stack
         with mock.patch.object(
-                parser.Stack, '_db_resources_get',
+                parser.Stack, 'db_active_resources_get',
                 side_effect=self._mock_convg_db_update_requires):
             curr_stack.converge_stack(template=template2, action=stack.DELETE)
 
