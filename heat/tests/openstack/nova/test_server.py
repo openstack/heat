@@ -305,9 +305,6 @@ class ServersTest(common.HeatTestCase):
         self.stub_VolumeConstraint_validate()
 
     def test_subnet_dependency(self):
-        self.resolve = self.patchobject(neutronV20,
-                                        'find_resourceid_by_name_or_id')
-        self.resolve.return_value = '12345'
         template, stack = self._setup_test_stack('subnet-test',
                                                  subnet_template)
         server_rsrc = stack['server']
@@ -318,9 +315,6 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(subnet_rsrc, deps[3])
 
     def test_subnet_nodeps(self):
-        self.resolve = self.patchobject(neutronV20,
-                                        'find_resourceid_by_name_or_id')
-        self.resolve.return_value = '12345'
         template, stack = self._setup_test_stack('subnet-test',
                                                  no_subnet_template)
         server_rsrc = stack['server']
