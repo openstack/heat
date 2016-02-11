@@ -273,6 +273,15 @@ class HeatActionInProgressError(HeatAPIException):
                    "in progress")
 
 
+class HeatRequestLimitExceeded(HeatAPIException):
+
+    """Payload size of the request exceeds maximum allowed size."""
+
+    code = 400
+    title = 'RequestLimitExceeded'
+    explanation = _("Payload exceeds maximum allowed size")
+
+
 def map_remote_error(ex):
     """Map rpc_common.RemoteError exceptions to HeatAPIException subclasses.
 
@@ -306,6 +315,7 @@ def map_remote_error(ex):
     denied_errors = ('Forbidden', 'NotAuthorized')
     already_exists_errors = ('StackExists')
     invalid_action_errors = ('ActionInProgress',)
+    request_limit_exceeded = ('RequestLimitExceeded')
 
     ex_type = ex.__class__.__name__
 
@@ -320,6 +330,8 @@ def map_remote_error(ex):
         return AlreadyExistsError(detail=six.text_type(ex))
     elif ex_type in invalid_action_errors:
         return HeatActionInProgressError(detail=six.text_type(ex))
+    elif ex_type in request_limit_exceeded:
+        return HeatRequestLimitExceeded(detail=six.text_type(ex))
     else:
         # Map everything else to internal server error for now
         return HeatInternalFailureError(detail=six.text_type(ex))
