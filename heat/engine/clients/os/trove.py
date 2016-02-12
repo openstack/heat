@@ -67,15 +67,6 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
                                 'dsversion': datastore_version,
                                 'allowed': ', '.join(allowed_version_names)}
                     raise exception.StackValidationFailed(message=msg)
-            else:
-                if len(allowed_versions) > 1:
-                    msg = _("Multiple active datastore versions exist for "
-                            "datastore type %(dstype)s. "
-                            "Explicit datastore version must be provided. "
-                            "Allowed versions are %(allowed)s.") % {
-                                'dstype': datastore_type,
-                                'allowed': ', '.join(allowed_version_names)}
-                    raise exception.StackValidationFailed(message=msg)
         else:
             if datastore_version:
                 msg = _("Not allowed - %(dsver)s without %(dstype)s.") % {
