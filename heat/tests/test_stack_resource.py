@@ -25,6 +25,8 @@ from heat.common import template_format
 from heat.engine.resources import stack_resource
 from heat.engine import stack as parser
 from heat.engine import template as templatem
+from heat.objects import stack as stack_object
+from heat.objects import stack_lock
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -452,24 +454,9 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.resource_id = 319
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id,
-                          show_deleted=False,
-                          force_reload=False).AndReturn('s')
+                          self.parent_resource.resource_id).AndReturn('s')
         self.m.ReplayAll()
         self.parent_resource.nested()
-        self.m.VerifyAll()
-
-    def test_load_nested_force_reload(self):
-        self.parent_resource._nested = 'write-over-me'
-        self.parent_resource.resource_id = 319
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id,
-                          show_deleted=False,
-                          force_reload=True).AndReturn('ok')
-        self.m.ReplayAll()
-        self.parent_resource.nested(force_reload=True)
-        self.assertEqual('ok', self.parent_resource._nested)
         self.m.VerifyAll()
 
     def test_load_nested_non_exist(self):
@@ -477,9 +464,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.resource_id = '90-8'
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id,
-                          show_deleted=False,
-                          force_reload=False).AndRaise(
+                          self.parent_resource.resource_id).AndRaise(
             exception.NotFound)
         self.m.ReplayAll()
 
@@ -489,32 +474,6 @@ class StackResourceTest(StackResourceBaseTest):
     def test_load_nested_cached(self):
         self.parent_resource._nested = 'gotthis'
         self.assertEqual('gotthis', self.parent_resource.nested())
-
-    def test_load_nested_force_reload_ok(self):
-        self.parent_resource._nested = mock.MagicMock()
-        self.parent_resource.resource_id = '90-8'
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id,
-                          show_deleted=False,
-                          force_reload=True).AndReturn('s')
-        self.m.ReplayAll()
-        st = self.parent_resource.nested(force_reload=True)
-        self.assertEqual('s', st)
-        self.m.VerifyAll()
-
-    def test_load_nested_force_reload_none(self):
-        self.parent_resource._nested = mock.MagicMock()
-        self.parent_resource.resource_id = '90-8'
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id,
-                          show_deleted=False,
-                          force_reload=True).AndRaise(
-            exception.NotFound)
-        self.m.ReplayAll()
-        self.assertIsNone(self.parent_resource.nested(force_reload=True))
-        self.m.VerifyAll()
 
     def test_delete_nested_none_nested_stack(self):
         self.parent_resource._nested = None
@@ -713,22 +672,18 @@ class StackResourceAttrTest(StackResourceBaseTest):
 
 class StackResourceCheckCompleteTest(StackResourceBaseTest):
     scenarios = [
-        ('create', dict(action='create', show_deleted=False)),
-        ('update', dict(action='update', show_deleted=False)),
-        ('suspend', dict(action='suspend', show_deleted=False)),
-        ('resume', dict(action='resume', show_deleted=False)),
-        ('delete', dict(action='delete', show_deleted=True)),
+        ('create', dict(action='create')),
+        ('update', dict(action='update')),
+        ('suspend', dict(action='suspend')),
+        ('resume', dict(action='resume')),
+        ('delete', dict(action='delete')),
     ]
 
     def setUp(self):
         super(StackResourceCheckCompleteTest, self).setUp()
-        self.nested = mock.MagicMock()
-        self.nested.name = 'nested-stack'
-        self.parent_resource.nested = mock.MagicMock(return_value=self.nested)
-        self.parent_resource._nested = self.nested
-        setattr(self.nested, self.action.upper(), self.action.upper())
-        self.nested.action = self.action.upper()
-        self.nested.COMPLETE = 'COMPLETE'
+        self.status = [self.action.upper(), None, None, None]
+        self.mock_status = self.patchobject(stack_object.Stack, 'get_status')
+        self.mock_status.return_value = self.status
 
     def test_state_ok(self):
         """Test case when check_create_complete should return True.
@@ -736,12 +691,17 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         check_create_complete should return True create task is
         done and the nested stack is in (<action>,COMPLETE) state.
         """
-        self.nested.status = 'COMPLETE'
+        self.mock_lock = self.patchobject(stack_lock.StackLock,
+                                          'get_engine_id')
+        self.mock_lock.return_value = None
+        self.status[1] = 'COMPLETE'
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
         self.assertIs(True, complete(None))
-        self.parent_resource.nested.assert_called_once_with(
-            show_deleted=self.show_deleted, force_reload=True)
+        self.mock_status.assert_called_once_with(
+            self.parent_resource.context, self.parent_resource.resource_id)
+        self.mock_lock.assert_called_once_with(
+            self.parent_resource.resource_id)
 
     def test_state_err(self):
         """Test case when check_create_complete should raise error.
@@ -749,20 +709,20 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         check_create_complete should raise error when create task is
         done but the nested stack is not in (<action>,COMPLETE) state
         """
-        self.nested.status = 'FAILED'
+        self.status[1] = 'FAILED'
         reason = ('Resource %s failed: ValueError: '
                   'resources.%s: broken on purpose' % (
                       self.action.upper(),
                       'child_res'))
         exp_path = 'resources.test.resources.child_res'
         exp = 'ValueError: %s: broken on purpose' % exp_path
-        self.nested.status_reason = reason
+        self.status[2] = reason
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
         exc = self.assertRaises(exception.ResourceFailure, complete, None)
         self.assertEqual(exp, six.text_type(exc))
-        self.parent_resource.nested.assert_called_once_with(
-            show_deleted=self.show_deleted, force_reload=True)
+        self.mock_status.assert_called_once_with(
+            self.parent_resource.context, self.parent_resource.resource_id)
 
     def test_state_unknown(self):
         """Test case when check_create_complete should raise error.
@@ -770,30 +730,29 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         check_create_complete should raise error when create task is
         done but the nested stack is not in (<action>,COMPLETE) state
         """
-        self.nested.status = 'WTF'
-        self.nested.status_reason = 'broken on purpose'
+        self.status[1] = 'WTF'
+        self.status[2] = 'broken on purpose'
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
         self.assertRaises(exception.ResourceUnknownStatus, complete, None)
-        self.parent_resource.nested.assert_called_once_with(
-            show_deleted=self.show_deleted, force_reload=True)
+        self.mock_status.assert_called_once_with(
+            self.parent_resource.context, self.parent_resource.resource_id)
 
     def test_in_progress(self):
-        self.nested.status = 'IN_PROGRESS'
+        self.status[1] = 'IN_PROGRESS'
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
         self.assertFalse(complete(None))
-        self.parent_resource.nested.assert_called_once_with(
-            show_deleted=self.show_deleted, force_reload=True)
+        self.mock_status.assert_called_once_with(
+            self.parent_resource.context, self.parent_resource.resource_id)
 
     def test_update_not_started(self):
         if self.action != 'update':
             # only valid for updates at the moment.
             return
 
-        self.nested.status = 'COMPLETE'
-        self.nested.state = ('UPDATE', 'COMPLETE')
-        self.nested.updated_time = 'test'
+        self.status[1] = 'COMPLETE'
+        self.status[3] = 'test'
         cookie = {'previous': {'state': ('UPDATE', 'COMPLETE'),
                                'updated_at': 'test'}}
 
@@ -801,16 +760,16 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
                            'check_%s_complete' % self.action)
 
         self.assertFalse(complete(cookie=cookie))
-        self.parent_resource.nested.assert_called_once_with(
-            show_deleted=self.show_deleted, force_reload=True)
+        self.mock_status.assert_called_once_with(
+            self.parent_resource.context, self.parent_resource.resource_id)
 
     def test_wrong_action(self):
-        self.nested.action = 'COMPLETE'
+        self.status[0] = 'COMPLETE'
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
         self.assertFalse(complete(None))
-        self.parent_resource.nested.assert_called_once_with(
-            show_deleted=self.show_deleted, force_reload=True)
+        self.mock_status.assert_called_once_with(
+            self.parent_resource.context, self.parent_resource.resource_id)
 
 
 class WithTemplateTest(StackResourceBaseTest):
