@@ -12,6 +12,7 @@
 #    under the License.
 
 import croniter
+import eventlet
 import netaddr
 import pytz
 import six
@@ -21,6 +22,12 @@ from oslo_utils import timeutils
 
 from heat.common.i18n import _
 from heat.engine import constraints
+
+
+class TestConstraintDelay(constraints.BaseCustomConstraint):
+
+    def validate_with_client(self, client, value):
+        eventlet.sleep(value)
 
 
 class IPConstraint(constraints.BaseCustomConstraint):

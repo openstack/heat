@@ -20,3 +20,15 @@
         users:
           tenants: 10
           users_per_tenant: 3
+
+    -
+      args:
+        template_path: "~/.rally/extra/rg_template_with_constraint.yaml"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
