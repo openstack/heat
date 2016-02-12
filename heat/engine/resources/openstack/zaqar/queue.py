@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
@@ -85,26 +84,10 @@ class ZaqarQueue(resource.Resource):
         """Create a zaqar message queue."""
         queue_name = self.physical_resource_name()
         queue = self.client().queue(queue_name, auto_create=False)
-        # Zaqar client doesn't report an error if a queue with the same
-        # id/name already exists, which can cause issue with stack update.
-        if queue.exists():
-            raise exception.Error(_('Message queue %s already exists.')
-                                  % queue_name)
-        queue.ensure_exists()
+        metadata = self.properties.get('metadata')
+        if metadata:
+            queue.metadata(new_meta=metadata)
         self.resource_id_set(queue_name)
-        return queue_name
-
-    def check_create_complete(self, queue_name):
-        """Set metadata of the newly created queue."""
-        queue = self.client().queue(queue_name, auto_create=False)
-        if queue.exists():
-            metadata = self.properties.get('metadata')
-            if metadata:
-                queue.metadata(new_meta=metadata)
-            return True
-        else:
-            raise exception.Error(_('Message queue %s creation failed.')
-                                  % queue_name)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update queue metadata."""

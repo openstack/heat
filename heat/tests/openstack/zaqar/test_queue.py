@@ -63,12 +63,6 @@ class FakeQueue(object):
         self._auto_create = auto_create
         self._exists = False
 
-    def exists(self):
-        return self._exists
-
-    def ensure_exists(self):
-        self._exists = True
-
     def metadata(self, new_meta=None):
         pass
 
@@ -101,13 +95,6 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc, 'queue')
         self.fc.queue(queue.physical_resource_name(),
                       auto_create=False).AndReturn(fake_q)
-        self.m.StubOutWithMock(fake_q, 'exists')
-        fake_q.exists().AndReturn(False)
-        self.m.StubOutWithMock(fake_q, 'ensure_exists')
-        fake_q.ensure_exists()
-        self.fc.queue(queue.physical_resource_name(),
-                      auto_create=False).AndReturn(fake_q)
-        fake_q.exists().AndReturn(True)
         self.m.StubOutWithMock(fake_q, 'metadata')
         fake_q.metadata(new_meta=queue.properties.get('metadata'))
 
@@ -118,56 +105,6 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.assertEqual('http://127.0.0.1:8888/v1/queues/myqueue',
                          queue.FnGetAtt('href'))
 
-        self.m.VerifyAll()
-
-    def test_create_existing_queue(self):
-        t = template_format.parse(wp_template)
-        self.parse_stack(t)
-
-        queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'client')
-        queue.client().MultipleTimes().AndReturn(self.fc)
-
-        fake_q = FakeQueue("myqueue", auto_create=False)
-        self.m.StubOutWithMock(self.fc, 'queue')
-        self.fc.queue("myqueue", auto_create=False).AndReturn(fake_q)
-        self.m.StubOutWithMock(fake_q, 'exists')
-        fake_q.exists().AndReturn(True)
-        self.m.ReplayAll()
-
-        err = self.assertRaises(exception.ResourceFailure,
-                                scheduler.TaskRunner(queue.create))
-        self.assertEqual("Error: resources.MyQueue2: "
-                         "Message queue myqueue already exists.",
-                         six.text_type(err))
-        self.m.VerifyAll()
-
-    def test_create_failed(self):
-        t = template_format.parse(wp_template)
-        self.parse_stack(t)
-
-        queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'client')
-        queue.client().MultipleTimes().AndReturn(self.fc)
-
-        fake_q = FakeQueue("myqueue", auto_create=False)
-        self.m.StubOutWithMock(self.fc, 'queue')
-        self.fc.queue("myqueue", auto_create=False).AndReturn(fake_q)
-        self.m.StubOutWithMock(fake_q, 'exists')
-        fake_q.exists().AndReturn(False)
-        self.m.StubOutWithMock(fake_q, 'ensure_exists')
-        self.fc.queue(queue.physical_resource_name(),
-                      auto_create=False).AndReturn(fake_q)
-        fake_q.ensure_exists()
-        fake_q.exists().AndReturn(False)
-
-        self.m.ReplayAll()
-
-        err = self.assertRaises(exception.ResourceFailure,
-                                scheduler.TaskRunner(queue.create))
-        self.assertEqual("Error: resources.MyQueue2: "
-                         "Message queue myqueue creation failed.",
-                         six.text_type(err))
         self.m.VerifyAll()
 
     def test_delete(self):
