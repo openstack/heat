@@ -11,12 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+LOG = logging.getLogger(__name__)
 
 
 class CronTrigger(resource.Resource):
@@ -131,6 +135,20 @@ class CronTrigger(resource.Resource):
         if hasattr(cron_trigger, 'to_dict'):
             super(CronTrigger, self)._show_resource()
         return cron_trigger._data
+
+    def get_live_state(self, resource_properties):
+        # Currently mistral just deletes cron trigger that was executed
+        # (i.e. remaining execution is reached zero). In this case we can't
+        # found the cron trigger by mistral api. Suppose that live state of
+        # cron trigger is equal to the state stored in heat, otherwise we may
+        # go through undesirable update-replace. This behaviour might be
+        # changed after
+        # https://blueprints.launchpad.net/mistral/+spec/mistral-cron-trigger-life-cycle
+        # will be merged.
+        LOG.warning(_LW("get_live_state isn't implemented for this type of "
+                        "resource due to specific behaviour of cron trigger "
+                        "in mistral."))
+        return {}
 
 
 def resource_mapping():
