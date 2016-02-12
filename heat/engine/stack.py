@@ -842,10 +842,11 @@ class Stack(collections.Mapping):
         self.status = status
         self.status_reason = reason
 
-        if self.convergence and action in (self.UPDATE, self.DELETE,
-                                           self.CREATE, self.ADOPT):
-            # if convergence and stack operation is create/update/delete,
-            # stack lock is not used, hence persist state
+        if self.convergence and action in (
+                self.UPDATE, self.DELETE, self.CREATE,
+                self.ADOPT, self.ROLLBACK):
+            # if convergence and stack operation is create/update/rollback/
+            # delete, stack lock is not used, hence persist state
             updated = self._persist_state()
             if not updated:
                 # Possibly failed concurrent update
