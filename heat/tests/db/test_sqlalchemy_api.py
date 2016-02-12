@@ -2345,6 +2345,15 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertEqual({}, db_api.resource_get_all_by_root_stack(
             self.ctx, self.stack2.id))
 
+    def test_resource_purge_deleted_by_stack(self):
+        val = {'name': 'res1', 'action': rsrc.Resource.DELETE,
+               'status': rsrc.Resource.COMPLETE}
+        resource = create_resource(self.ctx, self.stack, **val)
+
+        db_api.resource_purge_deleted(self.ctx, self.stack.id)
+        self.assertRaises(exception.NotFound, db_api.resource_get,
+                          self.ctx, resource.id)
+
 
 class DBAPIStackLockTest(common.HeatTestCase):
     def setUp(self):

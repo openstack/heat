@@ -194,6 +194,13 @@ def resource_get_all(context):
     return results
 
 
+def resource_purge_deleted(context, stack_id):
+    filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
+    query = context.session.query(models.Resource.id)
+    result = query.filter_by(**filters)
+    result.delete()
+
+
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     session = context.session
