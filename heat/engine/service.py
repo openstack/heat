@@ -368,6 +368,7 @@ class EngineService(service.Service):
         self._client = rpc_messaging.get_rpc_client(
             version=self.RPC_API_VERSION)
 
+        self._configure_db_conn_pool_size()
         self.service_manage_cleanup()
         self.manage_thread_grp = threadgroup.ThreadGroup()
         self.manage_thread_grp.add_timer(cfg.CONF.periodic_interval,
@@ -375,6 +376,18 @@ class EngineService(service.Service):
         self.manage_thread_grp.add_thread(self.reset_stack_status)
 
         super(EngineService, self).start()
+
+    def _configure_db_conn_pool_size(self):
+        # bug #1491185
+        # Set the DB max_overflow to match the thread pool size.
+        # The overflow connections are automatically closed when they are
+        # not used; setting it is better than setting DB max_pool_size.
+        worker_pool_size = cfg.CONF.executor_thread_pool_size
+        # Update max_overflow only if it is not adequate
+        if ((cfg.CONF.database.max_overflow is None) or
+                (cfg.CONF.database.max_overflow < worker_pool_size)):
+            cfg.CONF.set_override('max_overflow', worker_pool_size,
+                                  group='database')
 
     def _stop_rpc_server(self):
         # Stop rpc connection at first for preventing new requests
