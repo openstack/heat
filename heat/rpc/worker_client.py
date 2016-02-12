@@ -27,6 +27,7 @@ class WorkerClient(object):
         1.0 - Initial version.
         1.1 - Added check_resource.
         1.2 - Add adopt data argument to check_resource.
+        1.3 - Added cancel_check_resource API.
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -56,3 +57,19 @@ class WorkerClient(object):
                       current_traversal=current_traversal, data=data,
                       is_update=is_update, adopt_stack_data=adopt_stack_data),
                   version='1.2')
+
+    def cancel_check_resource(self, ctxt, stack_id, engine_id):
+        """Send check-resource cancel message.
+
+        Sends a cancel message to given heat engine worker.
+        """
+
+        _client = messaging.get_rpc_client(
+            topic=worker_api.TOPIC,
+            version=self.BASE_RPC_API_VERSION,
+            server=engine_id)
+
+        method, kwargs = self.make_msg('cancel_check_resource',
+                                       stack_id=stack_id)
+        cl = _client.prepare(version='1.3')
+        cl.cast(ctxt, method, **kwargs)

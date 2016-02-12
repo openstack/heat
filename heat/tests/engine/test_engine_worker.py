@@ -25,7 +25,7 @@ class WorkerServiceTest(common.HeatTestCase):
 
     def test_make_sure_rpc_version(self):
         self.assertEqual(
-            '1.2',
+            '1.3',
             worker.WorkerService.RPC_API_VERSION,
             ('RPC version is changed, please update this test to new version '
              'and make sure additional test cases are added for RPC APIs '
@@ -52,7 +52,7 @@ class WorkerServiceTest(common.HeatTestCase):
         # Make sure target is called with proper parameters
         target_class.assert_called_once_with(
             version=worker.WorkerService.RPC_API_VERSION,
-            server=self.worker.host,
+            server=self.worker.engine_id,
             topic=self.worker.topic)
 
         # Make sure rpc server creation with proper target
