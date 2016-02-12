@@ -1245,7 +1245,7 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=st)
         self.resource_enforcer.enforce_stack(stack)
 
-        if stack.convergence:
+        if stack.convergence and cfg.CONF.convergence_engine:
             template = templatem.Template.create_empty_template()
             stack.converge_stack(template=template, action=stack.DELETE)
             return
