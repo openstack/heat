@@ -14,6 +14,7 @@
 """Resources for Rackspace Auto Scale."""
 
 import copy
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -22,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import template as templatem
 
 try:
     from pyrax.exceptions import Forbidden
@@ -74,9 +76,11 @@ class Group(resource.Resource):
     _LAUNCH_CONFIG_ARGS_KEYS = (
         LAUNCH_CONFIG_ARGS_LOAD_BALANCERS,
         LAUNCH_CONFIG_ARGS_SERVER,
+        LAUNCH_CONFIG_ARGS_STACK,
     ) = (
         'loadBalancers',
         'server',
+        'stack',
     )
 
     _LAUNCH_CONFIG_ARGS_LOAD_BALANCER_KEYS = (
@@ -115,6 +119,24 @@ class Group(resource.Resource):
         'uuid',
     )
 
+    _LAUNCH_CONFIG_ARGS_STACK_KEYS = (
+        LAUNCH_CONFIG_ARGS_STACK_TEMPLATE,
+        LAUNCH_CONFIG_ARGS_STACK_TEMPLATE_URL,
+        LAUNCH_CONFIG_ARGS_STACK_DISABLE_ROLLBACK,
+        LAUNCH_CONFIG_ARGS_STACK_ENVIRONMENT,
+        LAUNCH_CONFIG_ARGS_STACK_FILES,
+        LAUNCH_CONFIG_ARGS_STACK_PARAMETERS,
+        LAUNCH_CONFIG_ARGS_STACK_TIMEOUT_MINS
+    ) = (
+        'template',
+        'template_url',
+        'disable_rollback',
+        'environment',
+        'files',
+        'parameters',
+        'timeout_mins'
+    )
+
     _launch_configuration_args_schema = {
         LAUNCH_CONFIG_ARGS_LOAD_BALANCERS: properties.Schema(
             properties.Schema.LIST,
@@ -141,6 +163,7 @@ class Group(resource.Resource):
             properties.Schema.MAP,
             _('Server creation arguments, as accepted by the Cloud Servers '
               'server creation API.'),
+            required=False,
             schema={
                 LAUNCH_CONFIG_ARGS_SERVER_NAME: properties.Schema(
                     properties.Schema.STRING,
@@ -211,8 +234,49 @@ class Group(resource.Resource):
                       'key-based authentication to the server.')
                 ),
             },
-            required=True
         ),
+        LAUNCH_CONFIG_ARGS_STACK: properties.Schema(
+            properties.Schema.MAP,
+            _('The attributes that Auto Scale uses to create a new stack. The '
+              'attributes that you specify for the stack entity apply to all '
+              'new stacks in the scaling group. Note the stack arguments are '
+              'directly passed to Heat when creating a stack.'),
+            schema={
+                LAUNCH_CONFIG_ARGS_STACK_TEMPLATE: properties.Schema(
+                    properties.Schema.MAP,
+                    _('The template that describes the stack. Either the '
+                      'template or template_url property must be specified.'),
+                ),
+                LAUNCH_CONFIG_ARGS_STACK_TEMPLATE_URL: properties.Schema(
+                    properties.Schema.STRING,
+                    _('A URI to a template. Either the template or '
+                      'template_url property must be specified.')
+                ),
+                LAUNCH_CONFIG_ARGS_STACK_DISABLE_ROLLBACK: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _('Keep the resources that have been created if the stack '
+                      'fails to create. Defaults to True.'),
+                    default=True
+                ),
+                LAUNCH_CONFIG_ARGS_STACK_ENVIRONMENT: properties.Schema(
+                    properties.Schema.MAP,
+                    _('The environment for the stack.'),
+                ),
+                LAUNCH_CONFIG_ARGS_STACK_FILES: properties.Schema(
+                    properties.Schema.MAP,
+                    _('The contents of files that the template references.')
+                ),
+                LAUNCH_CONFIG_ARGS_STACK_PARAMETERS: properties.Schema(
+                    properties.Schema.MAP,
+                    _('Key/value pairs of the parameters and their values to '
+                      'pass to the parameters in the template.')
+                ),
+                LAUNCH_CONFIG_ARGS_STACK_TIMEOUT_MINS: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('The stack creation timeout in minutes.')
+                )
+            }
+        )
     }
 
     properties_schema = {
@@ -256,17 +320,18 @@ class Group(resource.Resource):
             schema={
                 LAUNCH_CONFIG_ARGS: properties.Schema(
                     properties.Schema.MAP,
-                    _('Type-specific server launching arguments.'),
+                    _('Type-specific launch arguments.'),
                     schema=_launch_configuration_args_schema,
                     required=True
                 ),
                 LAUNCH_CONFIG_TYPE: properties.Schema(
                     properties.Schema.STRING,
-                    _('Launch configuration method. Only launch_server '
-                      'is currently supported.'),
+                    _('Launch configuration method. Only launch_server and '
+                      'launch_stack are currently supported.'),
                     required=True,
                     constraints=[
-                        constraints.AllowedValues(['launch_server']),
+                        constraints.AllowedValues(['launch_server',
+                                                   'launch_stack']),
                     ]
                 ),
             },
@@ -287,8 +352,7 @@ class Group(resource.Resource):
             max_entities=groupconf[self.GROUP_CONFIGURATION_MAX_ENTITIES],
             metadata=groupconf.get(self.GROUP_CONFIGURATION_METADATA, None))
 
-    def _get_launch_config_args(self, launchconf):
-        """Get the launchConfiguration-related pyrax arguments."""
+    def _get_launch_config_server_args(self, launchconf):
         lcargs = launchconf[self.LAUNCH_CONFIG_ARGS]
         server_args = lcargs[self.LAUNCH_CONFIG_ARGS_SERVER]
         lb_args = lcargs.get(self.LAUNCH_CONFIG_ARGS_LOAD_BALANCERS)
@@ -329,6 +393,30 @@ class Group(resource.Resource):
             load_balancers=lbs,
             key_name=server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_KEY_NAME),
         )
+
+    def _get_launch_config_stack_args(self, launchconf):
+        lcargs = launchconf[self.LAUNCH_CONFIG_ARGS]
+        stack_args = lcargs[self.LAUNCH_CONFIG_ARGS_STACK]
+        return dict(
+            launch_config_type=launchconf[self.LAUNCH_CONFIG_TYPE],
+            template=stack_args[self.LAUNCH_CONFIG_ARGS_STACK_TEMPLATE],
+            template_url=stack_args[
+                self.LAUNCH_CONFIG_ARGS_STACK_TEMPLATE_URL],
+            disable_rollback=stack_args[
+                self.LAUNCH_CONFIG_ARGS_STACK_DISABLE_ROLLBACK],
+            environment=stack_args[self.LAUNCH_CONFIG_ARGS_STACK_ENVIRONMENT],
+            files=stack_args[self.LAUNCH_CONFIG_ARGS_STACK_FILES],
+            parameters=stack_args[self.LAUNCH_CONFIG_ARGS_STACK_PARAMETERS],
+            timeout_mins=stack_args[self.LAUNCH_CONFIG_ARGS_STACK_TIMEOUT_MINS]
+        )
+
+    def _get_launch_config_args(self, launchconf):
+        """Get the launchConfiguration-related pyrax arguments."""
+        if launchconf[self.LAUNCH_CONFIG_ARGS].get(
+                self.LAUNCH_CONFIG_ARGS_SERVER):
+            return self._get_launch_config_server_args(launchconf)
+        else:
+            return self._get_launch_config_stack_args(launchconf)
 
     def _get_create_args(self):
         """Get pyrax-style arguments for creating a scaling group."""
@@ -406,6 +494,19 @@ class Group(resource.Resource):
         super(Group, self).validate()
         launchconf = self.properties[self.LAUNCH_CONFIGURATION]
         lcargs = launchconf[self.LAUNCH_CONFIG_ARGS]
+
+        server_args = lcargs.get(self.LAUNCH_CONFIG_ARGS_SERVER)
+        st_args = lcargs.get(self.LAUNCH_CONFIG_ARGS_STACK)
+
+        # launch_server and launch_stack are required and mutually exclusive.
+        if ((not server_args and not st_args) or
+                (server_args and st_args)):
+            msg = (_('Must provide one of %(server)s or %(stack)s in %(conf)s')
+                   % {'server': self.LAUNCH_CONFIG_ARGS_SERVER,
+                      'stack': self.LAUNCH_CONFIG_ARGS_STACK,
+                      'conf': self.LAUNCH_CONFIGURATION})
+            raise exception.StackValidationFailed(msg)
+
         lb_args = lcargs.get(self.LAUNCH_CONFIG_ARGS_LOAD_BALANCERS)
         lbs = copy.deepcopy(lb_args)
         for lb in lbs:
@@ -416,6 +517,26 @@ class Group(resource.Resource):
                 if not self._check_rackconnect_v3_pool_exists(lb_id):
                     msg = _('Could not find RackConnectV3 pool '
                             'with id %s') % (lb_id)
+                    raise exception.StackValidationFailed(msg)
+
+        if st_args:
+            st_tmpl = st_args.get(self.LAUNCH_CONFIG_ARGS_STACK_TEMPLATE)
+            st_tmpl_url = st_args.get(
+                self.LAUNCH_CONFIG_ARGS_STACK_TEMPLATE_URL)
+            st_env = st_args.get(self.LAUNCH_CONFIG_ARGS_STACK_ENVIRONMENT)
+            # template and template_url are required and mutually exclusive.
+            if ((not st_tmpl and not st_tmpl_url) or
+                    (st_tmpl and st_tmpl_url)):
+                msg = _('Must provide one of template or template_url.')
+                raise exception.StackValidationFailed(msg)
+
+            if st_tmpl:
+                st_files = st_args.get(self.LAUNCH_CONFIG_ARGS_STACK_FILES)
+                try:
+                    templatem.Template(st_tmpl, files=st_files, env=st_env)
+                except Exception as exc:
+                    msg = (_('Encountered error while loading template: %s') %
+                           six.text_type(exc))
                     raise exception.StackValidationFailed(msg)
 
     def auto_scale(self):
