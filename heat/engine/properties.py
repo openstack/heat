@@ -534,21 +534,27 @@ class Properties(collections.Mapping):
             if schema.default is not None:
                 yield hot_param.HOTParamSchema.DEFAULT, schema.default
 
-            for constraint in schema.constraints:
-                if (isinstance(constraint, constr.Length) or
-                        isinstance(constraint, constr.Range)):
+            def constraint_items(constraint):
+
+                def range_min_max(constraint):
                     if constraint.min is not None:
                         yield hot_param.MIN, constraint.min
                     if constraint.max is not None:
                         yield hot_param.MAX, constraint.max
+
+                if isinstance(constraint, constr.Length):
+                    yield hot_param.LENGTH, dict(range_min_max(constraint))
+                elif isinstance(constraint, constr.Range):
+                    yield hot_param.RANGE, dict(range_min_max(constraint))
                 elif isinstance(constraint, constr.AllowedValues):
                     yield hot_param.ALLOWED_VALUES, list(constraint.allowed)
                 elif isinstance(constraint, constr.AllowedPattern):
                     yield hot_param.ALLOWED_PATTERN, constraint.pattern
 
-            if schema.type == schema.BOOLEAN:
-                yield hot_param.ALLOWED_VALUES, ['True', 'true',
-                                                 'False', 'false']
+            if schema.constraints:
+                yield (hot_param.HOTParamSchema.CONSTRAINTS,
+                       [dict(constraint_items(constraint)) for constraint
+                        in schema.constraints])
 
         return dict(param_items())
 
