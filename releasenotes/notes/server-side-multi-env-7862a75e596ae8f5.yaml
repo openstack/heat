@@ -1,0 +1,8 @@
+---
+features:
+  - Multiple environment files may be passed to the server in the
+    files dictionary along with an ordered list of the environment file
+    names. The server will generate the stack's environment from the
+    provided files rather than requiring the client to merge the environments
+    together. This is optional; the existing interface to pass in the
+    already resolved environment is still present.
