@@ -23,6 +23,7 @@ from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import six
 import sqlalchemy
+from sqlalchemy import func
 from sqlalchemy import orm
 from sqlalchemy.orm import aliased as orm_aliased
 from sqlalchemy.orm import session as orm_session
@@ -759,7 +760,8 @@ def _events_filter_and_page_query(context, query,
 
 
 def event_count_all_by_stack(context, stack_id):
-    return _query_all_by_stack(context, stack_id).count()
+    query = model_query(context, func.count(models.Event.id))
+    return query.filter_by(stack_id=stack_id).scalar()
 
 
 def _delete_event_rows(context, stack_id, limit):
