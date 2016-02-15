@@ -58,22 +58,22 @@ resources:
         - 8.8.8.8
 
   router:
-   type: OS::Neutron::Router
-   properties:
-     l3_agent_ids:
-       - 792ff887-6c85-4a56-b518-23f24fa65581
+    type: OS::Neutron::Router
+    properties:
+      l3_agent_ids:
+        - 792ff887-6c85-4a56-b518-23f24fa65581
 
   router_interface:
     type: OS::Neutron::RouterInterface
     properties:
-      router_id: { get_resource: router }
-      subnet: { get_resource : subnet }
+      router_id: {get_resource: router}
+      subnet: {get_resource : subnet}
 
   gateway:
     type: OS::Neutron::RouterGateway
     properties:
-      router_id: { get_resource : router }
-      network: { get_resource : network }
+      router_id: {get_resource: router}
+      network: {get_resource : network}
 '''
 
 
@@ -106,9 +106,9 @@ class NeutronNetTest(common.HeatTestCase):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
-            'None',
+            '792ff887-6c85-4a56-b518-23f24fa65581',
             cmd_resource=None,
-        ).AndReturn('None')
+        ).MultipleTimes().AndReturn('792ff887-6c85-4a56-b518-23f24fa65581')
 
         # Create script
         neutronclient.Client.create_network({
@@ -279,6 +279,9 @@ class NeutronNetTest(common.HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
+        self.patchobject(stack['router'], 'FnGetRefId',
+                         return_value='792ff887-6c85-4a56-b518-23f24fa65581')
+
         rsrc = self.create_net(t, stack, 'network')
 
         # assert the implicit dependency between the gateway and the interface

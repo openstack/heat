@@ -175,7 +175,7 @@ class MeteringRuleTest(common.HeatTestCase):
     def create_metering_label_rule(self):
         neutronclient.Client.create_metering_label_rule({
             'metering_label_rule': {
-                'metering_label_id': 'None',
+                'metering_label_id': '1234',
                 'remote_ip_prefix': '10.0.3.0/24',
                 'direction': 'ingress',
                 'excluded': False}
@@ -183,6 +183,8 @@ class MeteringRuleTest(common.HeatTestCase):
 
         snippet = template_format.parse(metering_template)
         self.stack = utils.parse_stack(snippet)
+        self.patchobject(self.stack['label'], 'FnGetRefId',
+                         return_value='1234')
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return metering.MeteringRule(
             'rule', resource_defns['rule'], self.stack)
@@ -197,7 +199,7 @@ class MeteringRuleTest(common.HeatTestCase):
     def test_create_failed(self):
         neutronclient.Client.create_metering_label_rule({
             'metering_label_rule': {
-                'metering_label_id': 'None',
+                'metering_label_id': '1234',
                 'remote_ip_prefix': '10.0.3.0/24',
                 'direction': 'ingress',
                 'excluded': False}
@@ -206,6 +208,8 @@ class MeteringRuleTest(common.HeatTestCase):
 
         snippet = template_format.parse(metering_template)
         stack = utils.parse_stack(snippet)
+        self.patchobject(stack['label'], 'FnGetRefId',
+                         return_value='1234')
         resource_defns = stack.t.resource_definitions(stack)
         rsrc = metering.MeteringRule(
             'rule', resource_defns['rule'], stack)
@@ -262,7 +266,7 @@ class MeteringRuleTest(common.HeatTestCase):
         neutronclient.Client.show_metering_label_rule('5678').MultipleTimes(
         ).AndReturn(
             {'metering_label_rule':
-                {'metering_label_id': 'None',
+                {'metering_label_id': '1234',
                  'remote_ip_prefix': '10.0.3.0/24',
                  'direction': 'ingress',
                  'excluded': False}})
