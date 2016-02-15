@@ -902,6 +902,15 @@ class Resource(object):
         except ValueError:
             return True
 
+    def _check_for_convergence_replace(self, restricted_actions):
+        if 'replace' in restricted_actions:
+            ex = exception.ResourceActionRestricted(action='replace')
+            failure = exception.ResourceFailure(ex, self, self.UPDATE)
+            self._add_event(self.UPDATE, self.FAILED, six.text_type(ex))
+            raise failure
+        else:
+            raise exception.UpdateReplace(self.name)
+
     def update_convergence(self, template_id, resource_data, engine_id,
                            timeout, new_stack):
         """Update the resource synchronously.
@@ -919,12 +928,16 @@ class Resource(object):
             )
 
         with self.lock(engine_id):
+            registry = new_stack.env.registry
             new_res_def = new_stack.t.resource_definitions(
                 new_stack)[self.name]
-            new_res_type = new_stack.env.registry.get_class_to_instantiate(
+            new_res_type = registry.get_class_to_instantiate(
                 new_res_def.resource_type, resource_name=self.name)
+            restricted_actions = registry.get_rsrc_restricted_actions(
+                self.name)
+
             if type(self) is not new_res_type:
-                raise exception.UpdateReplace(self.name)
+                self._check_for_convergence_replace(restricted_actions)
 
             action_rollback = self.stack.action == self.stack.ROLLBACK
             status_in_progress = self.stack.status == self.stack.IN_PROGRESS
