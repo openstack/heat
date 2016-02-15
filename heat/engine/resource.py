@@ -323,10 +323,10 @@ class Resource(object):
         new_rs = resource_objects.Resource.create(self.context, rs)
 
         # 2. update the current resource to be replaced_by the one above.
-        rs = resource_objects.Resource.get_obj(self.context, self.id)
         self.replaced_by = new_rs.id
-        rs.update_and_save({'status': self.COMPLETE,
-                            'replaced_by': self.replaced_by})
+        resource_objects.Resource.update_by_id(
+            self.context, self.id,
+            {'status': self.COMPLETE, 'replaced_by': self.replaced_by})
         return new_rs.id
 
     def reparse(self):
@@ -369,8 +369,8 @@ class Resource(object):
         if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
         LOG.debug('Setting metadata for %s', six.text_type(self))
-        rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
-        rs.update_and_save({'rsrc_metadata': metadata})
+        resource_objects.Resource.update_by_id(
+            self.stack.context, self.id, {'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
 
     @classmethod
@@ -1406,8 +1406,8 @@ class Resource(object):
         self.resource_id = inst
         if self.id is not None:
             try:
-                rs = resource_objects.Resource.get_obj(self.context, self.id)
-                rs.update_and_save({'nova_instance': self.resource_id})
+                resource_objects.Resource.update_by_id(
+                    self.context, self.id, {'nova_instance': self.resource_id})
             except Exception as ex:
                 LOG.warning(_LW('db error %s'), ex)
 
@@ -1487,8 +1487,8 @@ class Resource(object):
 
         if self.id is not None:
             try:
-                rs = resource_objects.Resource.get_obj(self.context, self.id)
-                rs.update_and_save(data)
+                resource_objects.Resource.update_by_id(self.context, self.id,
+                                                       data)
             except Exception as ex:
                 LOG.error(_LE('DB error %s'), ex)
             else:
