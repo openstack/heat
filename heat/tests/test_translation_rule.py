@@ -876,6 +876,123 @@ class TestTranslationRule(common.HeatTestCase):
         self.assertIn({'bar': ['shar', 'man'], 'car': 'man'}, props.get('far'))
         self.assertIn({'bar': ['first'], 'car': 'first'}, props.get('far'))
 
+    def test_replace_rule_map_with_custom_value_path(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    'red': properties.Schema(
+                        properties.Schema.STRING
+                    )
+                }
+            ),
+            'bar': properties.Schema(
+                properties.Schema.MAP
+            )}
+
+        data = {
+            'far': {},
+            'bar': {'red': 'dak'}
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'red'],
+            value_path=['bar'],
+            custom_value_path=['red']
+        )
+        rule.execute_rule()
+
+        self.assertEqual({'red': 'dak'}, props.get('far'))
+        self.assertEqual({}, props.get('bar'))
+
+    def test_replace_rule_list_with_custom_value_path(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.STRING
+                        ),
+                        'blue': properties.Schema(
+                            properties.Schema.MAP
+                        )
+                    }
+                )
+            )}
+
+        data = {
+            'far': [{'blue': {'black': {'white': 'daisy'}}},
+                    {'red': 'roses'}]
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['far', 'red'],
+            value_name='blue',
+            custom_value_path=['black', 'white']
+        )
+        rule.execute_rule()
+
+        self.assertEqual([{'red': 'daisy', 'blue': {'black': {}}},
+                          {'blue': None, 'red': 'roses'}],
+                         props.get('far'))
+
+    def test_add_rule_list_with_custom_value_path(self):
+        schema = {
+            'far': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'red': properties.Schema(
+                            properties.Schema.LIST,
+                            schema=properties.Schema(properties.Schema.STRING)
+                        ),
+                        'blue': properties.Schema(
+                            properties.Schema.MAP
+                        )
+                    }
+                )
+            )}
+
+        data = {
+            'far': [{'blue': {'black': {'white': 'daisy', 'check': ['one']}}},
+                    {'red': ['roses']}]
+        }
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.ADD,
+            ['far', 'red'],
+            value_name='blue',
+            custom_value_path=['black', 'check']
+        )
+        rule.execute_rule()
+
+        self.assertEqual([{'red': ['one'],
+                           'blue': {'black': {'white': 'daisy',
+                                              'check': ['one']}}},
+                          {'blue': None, 'red': ['roses']}],
+                         props.get('far'))
+
+        # check whether if data will contain list-type property to add
+        data = {
+            'far': [{'red': ['roses'], 'blue': {'black': {'check': ['two']}}}]}
+        props = properties.Properties(schema, data)
+        rule.properties = props
+        rule.execute_rule()
+        self.assertEqual([{'red': ['roses', 'two'],
+                           'blue': {'black': {'check': ['two']}}}],
+                         props.get('far'))
+
     def test_list_list_error_translation_rule(self):
         schema = {
             'far': properties.Schema(
