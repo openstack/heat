@@ -80,3 +80,8 @@ class StackTagList(
     @classmethod
     def delete(cls, context, stack_id):
         db_api.stack_tags_delete(context, stack_id)
+
+    @classmethod
+    def from_db_object(cls, context, db_tags):
+        if db_tags is not None:
+            return base.obj_make_list(context, cls(), StackTag, db_tags)
