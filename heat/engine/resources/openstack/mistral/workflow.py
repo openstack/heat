@@ -599,7 +599,7 @@ class Workflow(signal_responder.SignalResponder,
             return {self.NAME: self.resource_id,
                     self.INPUT: self.properties.get(self.INPUT)}
 
-        elif name == self.ALARM_URL:
+        elif name == self.ALARM_URL and self.resource_id is not None:
             return six.text_type(self._get_ec2_signed_url())
 
     # TODO(tlashchova): remove this method when mistralclient>1.0.0 is used.

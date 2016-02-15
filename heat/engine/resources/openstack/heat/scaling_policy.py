@@ -190,6 +190,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                 self.properties[self.SCALING_ADJUSTMENT]))
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         if name == self.ALARM_URL:
             return six.text_type(self._get_ec2_signed_url())
         elif name == self.SIGNAL_URL:
