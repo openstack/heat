@@ -1072,10 +1072,15 @@ class StackTest(common.HeatTestCase):
         self.assertIsInstance(stk, stack.Stack)
 
     def test_stack_name_invalid(self):
+        gt_255_chars = ('abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+                        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+                        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+                        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+                        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuv')
         stack_names = ['_foo', '1bad', '.kcats', 'test stack', ' teststack',
                        '^-^', '"stack"', '1234', 'cat|dog', '$(foo)',
                        'test/stack', 'test\stack', 'test::stack', 'test;stack',
-                       'test~stack', '#test']
+                       'test~stack', '#test', gt_255_chars]
         for stack_name in stack_names:
             ex = self.assertRaises(
                 exception.StackValidationFailed, stack.Stack,

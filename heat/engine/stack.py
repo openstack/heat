@@ -136,10 +136,11 @@ class Stack(collections.Mapping):
 
         def _validate_stack_name(name):
             try:
-                if not re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", name):
+                if not re.match("[a-zA-Z][a-zA-Z0-9_.-]{0,254}$", name):
                     message = _('Invalid stack name %s must contain '
                                 'only alphanumeric or \"_-.\" characters, '
-                                'must start with alpha') % name
+                                'must start with alpha and must be 255 '
+                                'characters or less.') % name
                     raise exception.StackValidationFailed(message=message)
             except TypeError:
                 message = _('Invalid stack name %s, must be a string') % name
