@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
+from oslo_utils import encodeutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import six
@@ -398,7 +399,8 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
     except utils.InvalidSortKey as exc:
-        raise exception.Invalid(reason=exc.message)
+        err_msg = encodeutils.exception_to_unicode(exc)
+        raise exception.Invalid(reason=err_msg)
     return query
 
 
@@ -736,7 +738,8 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
     except utils.InvalidSortKey as exc:
-        raise exception.Invalid(reason=exc.message)
+        err_msg = encodeutils.exception_to_unicode(exc)
+        raise exception.Invalid(reason=err_msg)
 
     return query
 
