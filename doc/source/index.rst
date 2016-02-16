@@ -77,6 +77,7 @@ Developing Heat
     developing_guides/schedulerhints
     developing_guides/gmr
     developing_guides/supportstatus
+    developing_guides/rally_on_gates
 
 API Documentation
 ========================
