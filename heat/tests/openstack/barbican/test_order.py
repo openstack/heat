@@ -106,6 +106,41 @@ class TestOrder(common.HeatTestCase):
                                 msg,
                                 res.validate)
 
+    def test_key_order_validation_fail(self):
+        snippet = copy.deepcopy(self.res_template)
+        snippet['Properties']['pass_phrase'] = "something"
+        res = self._create_resource('test', snippet, self.stack)
+        msg = ("Unexpected properties: pass_phrase. Only these properties "
+               "are allowed for key type of order: algorithm, "
+               "bit_length, expiration, mode, name, payload_content_type.")
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                msg,
+                                res.validate)
+
+    def test_certificate_validation_fail(self):
+        snippet = copy.deepcopy(self.res_template)
+        snippet['Properties']['type'] = 'certificate'
+        res = self._create_resource('test', snippet, self.stack)
+        msg = ("Unexpected properties: algorithm, bit_length, mode. Only "
+               "these properties are allowed for certificate type of order: "
+               "ca_id, name, profile, request_data, request_type, "
+               "source_container_ref, subject_dn.")
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                msg,
+                                res.validate)
+
+    def test_asymmetric_order_validation_fail(self):
+        snippet = copy.deepcopy(self.res_template)
+        snippet['Properties']['type'] = 'asymmetric'
+        snippet['Properties']['subject_dn'] = 'asymmetric'
+        res = self._create_resource('test', snippet, self.stack)
+        msg = ("Unexpected properties: subject_dn. Only these properties are "
+               "allowed for asymmetric type of order: algorithm, bit_length, "
+               "expiration, mode, name, pass_phrase, payload_content_type")
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                msg,
+                                res.validate)
+
     def test_attributes(self):
         mock_order = mock.Mock()
         mock_order.status = 'test-status'

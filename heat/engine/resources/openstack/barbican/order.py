@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -61,6 +63,22 @@ class Order(resource.Resource):
         'key', 'asymmetric', 'certificate'
     )
 
+    # full-cmc is declared but not yet supported in barbican
+    REQUEST_TYPES = (
+        STORED_KEY, SIMPLE_CMC, CUSTOM
+    ) = (
+        'stored-key', 'simple-cmc', 'custom'
+    )
+
+    ALLOWED_PROPERTIES_FOR_TYPE = {
+        KEY: [NAME, ALGORITHM, BIT_LENGTH, MODE, PAYLOAD_CONTENT_TYPE,
+              EXPIRATION],
+        ASYMMETRIC: [NAME, ALGORITHM, BIT_LENGTH, MODE, PASS_PHRASE,
+                     PAYLOAD_CONTENT_TYPE, EXPIRATION],
+        CERTIFICATE: [NAME, REQUEST_TYPE, SUBJECT_DN, SOURCE_CONTAINER_REF,
+                      CA_ID, PROFILE, REQUEST_DATA]
+    }
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -105,6 +123,7 @@ class Order(resource.Resource):
             properties.Schema.STRING,
             _('The type of the certificate request.'),
             support_status=support.SupportStatus(version='5.0.0'),
+            constraints=[constraints.AllowedValues(REQUEST_TYPES)]
         ),
         SUBJECT_DN: properties.Schema(
             properties.Schema.STRING,
@@ -128,12 +147,13 @@ class Order(resource.Resource):
         ),
         REQUEST_DATA: properties.Schema(
             properties.Schema.STRING,
-            _('The content of the CSR.'),
+            _('The content of the CSR. Only for certificate orders.'),
             support_status=support.SupportStatus(version='5.0.0'),
         ),
         PASS_PHRASE: properties.Schema(
             properties.Schema.STRING,
-            _('The passphrase the created key.'),
+            _('The passphrase the created key. Can be set only '
+              'for asymmetric type of order.'),
             support_status=support.SupportStatus(version='5.0.0'),
         ),
     }
@@ -189,6 +209,7 @@ class Order(resource.Resource):
         return order_ref
 
     def validate(self):
+        super(Order, self).validate()
         if self.properties[self.TYPE] != self.CERTIFICATE:
             if (self.properties[self.ALGORITHM] is None
                     or self.properties[self.BIT_LENGTH] is None):
@@ -198,6 +219,19 @@ class Order(resource.Resource):
                             'bit_length': self.BIT_LENGTH,
                             'type': self.properties[self.TYPE]}
                 raise exception.StackValidationFailed(message=msg)
+        declared_props = sorted([k for k, v in six.iteritems(
+            self.properties) if k != self.TYPE and v is not None])
+        allowed_props = sorted(self.ALLOWED_PROPERTIES_FOR_TYPE[
+            self.properties[self.TYPE]])
+        diff = sorted(set(declared_props) - set(allowed_props))
+        if diff:
+            msg = _("Unexpected properties: %(unexpected)s. Only these "
+                    "properties are allowed for %(type)s type of order: "
+                    "%(allowed)s.") % {
+                        'unexpected': ', '.join(diff),
+                        'type': self.properties[self.TYPE],
+                        'allowed': ', '.join(allowed_props)}
+            raise exception.StackValidationFailed(message=msg)
 
     def check_create_complete(self, order_href):
         order = self.client().orders.get(order_href)
