@@ -1,6 +1,8 @@
 ---
   HeatStacks.create_and_list_stack:
     -
+      args:
+        template_path: "~/.rally/extra/default.yaml"
       runner:
         type: "constant"
         times: 2000
@@ -12,6 +14,8 @@
 
   HeatStacks.create_and_delete_stack:
     -
+      args:
+        template_path: "~/.rally/extra/default.yaml"
       runner:
         type: "constant"
         times: 200
