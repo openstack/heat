@@ -35,8 +35,11 @@ class StackWatchTest(common.HeatTestCase):
 
         self.ctx = utils.dummy_context(tenant_id='stack_watch_test_tenant')
         self.eng = service.EngineService('a-host', 'a-topic')
-        self.eng.create_periodic_tasks()
         # self.eng.engine_id = 'engine-fake-uuid'
+
+    def _create_periodic_tasks(self):
+        self.eng.create_periodic_tasks()
+        self.eng.manage_thread_grp.wait()
 
     @mock.patch.object(service_stack_watch.StackWatch, 'start_watch_task')
     @mock.patch.object(stack_object.Stack, 'get_all')
@@ -49,7 +52,7 @@ class StackWatchTest(common.HeatTestCase):
         start_watch_task.return_value = None
 
         self.eng.thread_group_mgr = None
-        self.eng.create_periodic_tasks()
+        self._create_periodic_tasks()
 
         mock_get_all.assert_called_once_with(mock.ANY, tenant_safe=False,
                                              show_hidden=True)
@@ -162,6 +165,7 @@ class StackWatchTest(common.HeatTestCase):
     @tools.stack_context('service_show_watch_state_test_stack')
     @mock.patch.object(stack.Stack, 'resource_by_refid')
     def test_set_watch_state(self, mock_ref):
+        self._create_periodic_tasks()
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmActions': [u'WebServerRestartPolicy'],
