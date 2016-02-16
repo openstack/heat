@@ -3153,9 +3153,9 @@ class ServersTest(common.HeatTestCase):
 
     def create_old_net(self, port=None, net=None,
                        ip=None, uuid=None, subnet=None,
-                       port_extra_properties=None):
+                       port_extra_properties=None, floating_ip=None):
         return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid,
-                'subnet': subnet,
+                'subnet': subnet, 'floating_ip': floating_ip,
                 'port_extra_properties': port_extra_properties}
 
     def create_fake_iface(self, port, net, ip):
@@ -3240,7 +3240,7 @@ class ServersTest(common.HeatTestCase):
             old_nets_copy = copy.deepcopy(old_nets)
             for net in new_nets_copy:
                 for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
-                            'port_extra_properties'):
+                            'port_extra_properties', 'floating_ip'):
                     net.setdefault(key)
 
             matched_nets = server._exclude_not_updated_networks(old_nets,
@@ -3271,7 +3271,7 @@ class ServersTest(common.HeatTestCase):
         old_nets_copy = copy.deepcopy(old_nets)
         for net in new_nets_copy:
             for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
-                        'port_extra_properties'):
+                        'port_extra_properties', 'floating_ip'):
                 net.setdefault(key)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3295,7 +3295,8 @@ class ServersTest(common.HeatTestCase):
              'port': None,
              'uuid': None,
              'subnet': None,
-             'port_extra_properties': None}]
+             'port_extra_properties': None,
+             'floating_ip': None}]
         new_nets_copy = copy.deepcopy(new_nets)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3336,6 +3337,7 @@ class ServersTest(common.HeatTestCase):
              'network': None,
              'fixed_ip': None,
              'subnet': None,
+             'floating_ip': None,
              'port_extra_properties': None,
              'uuid': None},
             {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
@@ -3343,24 +3345,28 @@ class ServersTest(common.HeatTestCase):
              'fixed_ip': '1.2.3.4',
              'subnet': None,
              'port_extra_properties': None,
+             'floating_ip': None,
              'uuid': None},
             {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': None,
              'subnet': None,
              'port_extra_properties': None,
+             'floating_ip': None,
              'uuid': None},
             {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
              'network': None,
              'fixed_ip': None,
              'subnet': None,
              'port_extra_properties': None,
+             'floating_ip': None,
              'uuid': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
              'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '5.6.7.8',
              'subnet': None,
              'port_extra_properties': None,
+             'floating_ip': None,
              'network': None}]
 
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
@@ -4297,6 +4303,208 @@ class ServerInternalPortTest(common.HeatTestCase):
         data_set.assert_has_calls((
             mock.call('internal_ports', '[]'),
             mock.call('internal_ports', '[{"id": "1122"}, {"id": "5566"}]')))
+
+    def test_calculate_networks_nova_with_fipa(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+                  subnet: 1234
+                  fixed_ip: 127.0.0.1
+                  floating_ip: 1199
+                - network: 8765
+                  subnet: 5678
+                  fixed_ip: 127.0.0.2
+        """
+
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+
+        # NOTE(prazumovsky): this method update old_net and new_net with
+        # interfaces' ports. Because of uselessness of checking this method,
+        # we can afford to give port as part of calculate_networks args.
+        self.patchobject(server, 'update_networks_matching_iface_port')
+        self.patchobject(server.client_plugin(), 'get_nova_network_id',
+                         side_effect=['4321', '8765'])
+
+        self.patchobject(server, 'is_using_neutron', return_value=False)
+        self.patchobject(resource.Resource, 'data_set')
+
+        FakeFIP = collections.namedtuple('FakeFip', ['ip'])
+        self.patchobject(server.client().floating_ips, 'get',
+                         side_effect=[FakeFIP('192.168.0.1'),
+                                      FakeFIP('192.168.0.2'),
+                                      FakeFIP('192.168.0.1')])
+        fipa = self.patchobject(server.client().servers, 'add_floating_ip')
+        fip_disa = self.patchobject(server.client().servers,
+                                    'remove_floating_ip')
+        server.resource_id = '1234567890'
+
+        old_net = [{'network': '4321',
+                    'subnet': '1234',
+                    'fixed_ip': '127.0.0.1',
+                    'floating_ip': '1199'},
+                   {'network': '8765',
+                    'subnet': '5678',
+                    'fixed_ip': '127.0.0.2'}]
+
+        new_net = [{'network': '8765',
+                    'subnet': '5678',
+                    'fixed_ip': '127.0.0.2',
+                    'floating_ip': '11910'},
+                   {'network': '0912',
+                    'subnet': '9021',
+                    'fixed_ip': '127.0.0.1',
+                    'floating_ip': '1199'}]
+
+        server.calculate_networks(old_net, new_net, [])
+
+        fip_disa.assert_called_once_with('1234567890',
+                                         '192.168.0.1')
+        fipa.assert_has_calls((
+            mock.call('1234567890', '192.168.0.2'),
+            mock.call('1234567890', '192.168.0.1')
+        ))
+
+    def test_calculate_networks_internal_ports_with_fipa(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+                  subnet: 1234
+                  fixed_ip: 127.0.0.1
+                  floating_ip: 1199
+                - network: 8765
+                  subnet: 5678
+                  fixed_ip: 127.0.0.2
+                  floating_ip: 9911
+        """
+
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+
+        # NOTE(prazumovsky): this method update old_net and new_net with
+        # interfaces' ports. Because of uselessness of checking this method,
+        # we can afford to give port as part of calculate_networks args.
+        self.patchobject(server, 'update_networks_matching_iface_port')
+
+        server._data = {'internal_ports': '[{"id": "1122"}]'}
+        self.port_create.return_value = {'port': {'id': '5566'}}
+        self.patchobject(resource.Resource, 'data_set')
+        self.resolve.side_effect = ['0912', '9021']
+
+        fipa = self.patchobject(neutronclient.Client, 'update_floatingip',
+                                side_effect=[neutronclient.exceptions.NotFound,
+                                             '9911',
+                                             '11910',
+                                             '1199'])
+
+        old_net = [{'network': '4321',
+                    'subnet': '1234',
+                    'fixed_ip': '127.0.0.1',
+                    'port': '1122',
+                    'floating_ip': '1199'},
+                   {'network': '8765',
+                    'subnet': '5678',
+                    'fixed_ip': '127.0.0.2',
+                    'port': '3344',
+                    'floating_ip': '9911'}]
+
+        new_net = [{'network': '8765',
+                    'subnet': '5678',
+                    'fixed_ip': '127.0.0.2',
+                    'port': '3344',
+                    'floating_ip': '11910'},
+                   {'network': '0912',
+                    'subnet': '9021',
+                    'fixed_ip': '127.0.0.1',
+                    'floating_ip': '1199',
+                    'port': '1122'}]
+
+        server.calculate_networks(old_net, new_net, [])
+
+        fipa.assert_has_calls((
+            mock.call('1199', {'floatingip': {'port_id': None}}),
+            mock.call('9911', {'floatingip': {'port_id': None}}),
+            mock.call('11910',
+                      {'floatingip': {'port_id': '3344',
+                                      'fixed_ip_address': '127.0.0.2'}}),
+            mock.call('1199',
+                      {'floatingip': {'port_id': '1122',
+                                      'fixed_ip_address': '127.0.0.1'}})
+        ))
+
+    def test_delete_fipa_with_exception_not_found_neutron(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+                  subnet: 1234
+                  fixed_ip: 127.0.0.1
+                  floating_ip: 1199
+                - network: 8765
+                  subnet: 5678
+                  fixed_ip: 127.0.0.2
+                  floating_ip: 9911
+        """
+
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+        delete_flip = mock.MagicMock(
+            side_effect=[neutron.exceptions.NotFound(404)])
+        server.client('neutron').update_floatingip = delete_flip
+
+        self.assertIsNone(server._floating_ip_disassociate('flip123'))
+        self.assertEqual(1, delete_flip.call_count)
+
+    def test_delete_fipa_with_exception_not_found_nova(self):
+        tmpl = """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+                  subnet: 1234
+                  fixed_ip: 127.0.0.1
+                  floating_ip: 1199
+                - network: 8765
+                  subnet: 5678
+                  fixed_ip: 127.0.0.2
+                  floating_ip: 9911
+        """
+
+        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
+                                                                     tmpl)
+        self.patchobject(server, 'is_using_neutron', return_value=False)
+        flip = mock.MagicMock()
+        flip.ip = 'flip123'
+        server.client().floating_ips = flip
+        server.client().servers.remove_floating_ip = mock.MagicMock(
+            side_effect=[nova_exceptions.NotFound(404)])
+
+        self.assertIsNone(server._floating_ip_disassociate('flip123'))
 
     def test_delete_internal_ports(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(

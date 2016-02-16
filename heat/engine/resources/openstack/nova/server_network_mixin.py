@@ -232,6 +232,7 @@ class ServerNetworkMixin(object):
                 nic_info['port-id'] = net[self.NETWORK_PORT]
             elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
                 nic_info['port-id'] = self._create_internal_port(net, idx)
+
             # if nic_info including 'port-id', do not set ip for nic
             if not nic_info.get('port-id'):
                 if net.get(self.NETWORK_FIXED_IP):
@@ -240,8 +241,46 @@ class ServerNetworkMixin(object):
                         nic_info['v6-fixed-ip'] = ip
                     else:
                         nic_info['v4-fixed-ip'] = ip
+
+            if net.get(self.NETWORK_FLOATING_IP) and nic_info.get('port-id'):
+                floating_ip_data = {'port_id': nic_info['port-id']}
+                if net.get(self.NETWORK_FIXED_IP):
+                    floating_ip_data.update(
+                        {'fixed_ip_address':
+                            net.get(self.NETWORK_FIXED_IP)})
+                self._floating_ip_neutron_associate(
+                    net.get(self.NETWORK_FLOATING_IP), floating_ip_data)
+
             nics.append(nic_info)
         return nics
+
+    def _floating_ip_neutron_associate(self, floating_ip, floating_ip_data):
+        if self.is_using_neutron():
+            self.client('neutron').update_floatingip(
+                floating_ip, {'floatingip': floating_ip_data})
+
+    def _floating_ip_nova_associate(self, floating_ip):
+        fl_ip = self.client().floating_ips.get(floating_ip)
+        if fl_ip and self.resource_id:
+            self.client().servers.add_floating_ip(self.resource_id, fl_ip.ip)
+
+    def _floating_ips_disassociate(self):
+        networks = self.properties[self.NETWORKS] or []
+        for network in networks:
+            floating_ip = network.get(self.NETWORK_FLOATING_IP)
+            if floating_ip is not None:
+                self._floating_ip_disassociate(floating_ip)
+
+    def _floating_ip_disassociate(self, floating_ip):
+        if self.is_using_neutron():
+            with self.client_plugin('neutron').ignore_not_found:
+                self.client('neutron').update_floatingip(
+                    floating_ip, {'floatingip': {'port_id': None}})
+        else:
+            with self.client_plugin().ignore_conflict_and_not_found:
+                fl_ip = self.client().floating_ips.get(floating_ip)
+                self.client().servers.remove_floating_ip(self.resource_id,
+                                                         fl_ip.ip)
 
     def _exclude_not_updated_networks(self, old_nets, new_nets):
         # make networks similar by adding None vlues for not used keys
@@ -349,6 +388,9 @@ class ServerNetworkMixin(object):
                         # if we have internal port with such id, remove it
                         # instantly.
                         self._delete_internal_port(net.get(self.NETWORK_PORT))
+                if net.get(self.NETWORK_FLOATING_IP):
+                    self._floating_ip_disassociate(
+                        net.get(self.NETWORK_FLOATING_IP))
 
         handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
         # if new_nets is None, we should attach first free port,
@@ -368,10 +410,22 @@ class ServerNetworkMixin(object):
             elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
                 handler_kwargs['port_id'] = self._create_internal_port(net,
                                                                        idx)
+            floating_ip = net.get(self.NETWORK_FLOATING_IP)
+            self.update_floating_ip_association(floating_ip, handler_kwargs)
 
             add_nets.append(handler_kwargs)
 
         return remove_ports, add_nets
+
+    def update_floating_ip_association(self, floating_ip, handler_kwargs):
+        if floating_ip:
+            if self.is_using_neutron() and handler_kwargs.get('port_id'):
+                body = {'port_id': handler_kwargs['port_id']}
+                if handler_kwargs.get('fip'):
+                    body['fixed_ip_address'] = handler_kwargs['fip']
+                self._floating_ip_neutron_associate(floating_ip, body)
+            elif not self.is_using_neutron():
+                self._floating_ip_nova_associate(floating_ip)
 
     def prepare_ports_for_replace(self):
         if not self.is_using_neutron():
