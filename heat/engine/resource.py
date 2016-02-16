@@ -19,6 +19,7 @@ import weakref
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
+from oslo_utils import reflection
 import six
 
 from heat.common import exception
@@ -505,16 +506,17 @@ class Resource(object):
         return dict((k, after_props.get(k)) for k in changed_properties_set)
 
     def __str__(self):
+        class_name = reflection.get_class_name(self, fully_qualified=False)
         if self.stack.id:
             if self.resource_id:
-                text = '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
+                text = '%s "%s" [%s] %s' % (class_name, self.name,
                                             self.resource_id,
                                             six.text_type(self.stack))
             else:
-                text = '%s "%s" %s' % (self.__class__.__name__, self.name,
+                text = '%s "%s" %s' % (class_name, self.name,
                                        six.text_type(self.stack))
         else:
-            text = '%s "%s"' % (self.__class__.__name__, self.name)
+            text = '%s "%s"' % (class_name, self.name)
         return six.text_type(text)
 
     def dep_attrs(self, resource_name):

@@ -16,6 +16,7 @@
 
 """Heat API exception subclasses - maps API response errors to AWS Errors."""
 
+from oslo_utils import reflection
 import six
 import webob.exc
 
@@ -307,7 +308,7 @@ def map_remote_error(ex):
     already_exists_errors = ('StackExists')
     invalid_action_errors = ('ActionInProgress',)
 
-    ex_type = ex.__class__.__name__
+    ex_type = reflection.get_class_name(ex, fully_qualified=False)
 
     if ex_type.endswith('_Remote'):
         ex_type = ex_type[:-len('_Remote')]

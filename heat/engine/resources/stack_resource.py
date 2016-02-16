@@ -16,6 +16,7 @@ import json
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
+from oslo_utils import reflection
 import six
 
 from heat.common import exception
@@ -176,8 +177,8 @@ class StackResource(resource.Resource):
             child_template = self.child_template()
             params = self.child_params()
         except NotImplementedError:
-            LOG.warning(_LW("Preview of '%s' not yet implemented"),
-                        self.__class__.__name__)
+            class_name = reflection.get_class_name(self, fully_qualified=False)
+            LOG.warning(_LW("Preview of '%s' not yet implemented"), class_name)
             return self
 
         name = "%s-%s" % (self.stack.name, self.name)
@@ -317,7 +318,8 @@ class StackResource(resource.Resource):
             # finish
             return
 
-        if not ex.__class__.__name__.endswith('_Remote'):
+        class_name = reflection.get_class_name(ex, fully_qualified=False)
+        if not class_name.endswith('_Remote'):
             raise ex
 
         full_message = six.text_type(ex)

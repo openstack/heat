@@ -18,6 +18,7 @@ import re
 from oslo_cache import core
 from oslo_config import cfg
 from oslo_log import log
+from oslo_utils import reflection
 from oslo_utils import strutils
 import six
 
@@ -612,8 +613,8 @@ class BaseCustomConstraint(object):
                 return False
             else:
                 return True
-
-        cache_value_prefix = "{0}:{1}".format(self.__class__.__name__,
+        class_name = reflection.get_class_name(self, fully_qualified=False)
+        cache_value_prefix = "{0}:{1}".format(class_name,
                                               six.text_type(context.tenant_id))
         validation_result = check_cache_or_validate_value(
             cache_value_prefix, value)

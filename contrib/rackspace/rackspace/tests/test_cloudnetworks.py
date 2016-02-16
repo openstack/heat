@@ -14,6 +14,7 @@
 import uuid
 
 import mock
+from oslo_utils import reflection
 import six
 
 from heat.common import exception
@@ -103,8 +104,9 @@ class CloudNetworkTest(common.HeatTestCase):
                                  cloudnetworks.CloudNetwork)
 
     def _parse_stack(self):
+        class_name = reflection.get_class_name(self, fully_qualified=False)
         self.stack = utils.parse_stack(self._template,
-                                       stack_name=self.__class__.__name__)
+                                       stack_name=class_name)
 
     def _setup_stack(self, mock_client, *args):
         self.fake_cnw = FakeClient(*args)

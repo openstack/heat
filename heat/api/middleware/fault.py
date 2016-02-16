@@ -18,12 +18,13 @@
 
 Inspired by Cinder's faultwrapper.
 """
-import six
 
 import sys
 import traceback
 
 from oslo_config import cfg
+from oslo_utils import reflection
+import six
 import webob
 
 from heat.common import exception
@@ -115,7 +116,7 @@ class FaultWrapper(wsgi.Middleware):
             ex = ex.exc
             webob_exc = ex
 
-        ex_type = ex.__class__.__name__
+        ex_type = reflection.get_class_name(ex, fully_qualified=False)
 
         is_remote = ex_type.endswith('_Remote')
         if is_remote:

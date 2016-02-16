@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import reflection
+
 import heat.api.openstack.v1 as api_v1
 from heat.tests import common
 
@@ -23,8 +25,9 @@ class RoutesTest(common.HeatTestCase):
         route = mapper.match(path, {'REQUEST_METHOD': method})
         self.assertIsNotNone(route)
         self.assertEqual(action, route['action'])
-        self.assertEqual(
-            controller, route['controller'].controller.__class__.__name__)
+        class_name = reflection.get_class_name(route['controller'].controller,
+                                               fully_qualified=False)
+        self.assertEqual(controller, class_name)
         del(route['action'])
         del(route['controller'])
         self.assertEqual(params, route)
