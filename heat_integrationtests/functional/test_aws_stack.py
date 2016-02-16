@@ -115,7 +115,7 @@ Outputs:
     def test_nested_stack_create_with_timeout(self):
         url = self.publish_template(self.nested_template)
         self.template = self.test_template.replace('the.yaml', url)
-        timeout_template = yaml.load(self.template)
+        timeout_template = yaml.safe_load(self.template)
         props = timeout_template['Resources']['the_nested']['Properties']
         props['TimeoutInMinutes'] = '50'
 
@@ -142,7 +142,7 @@ Outputs:
                 }
             },
             "environment": {"parameters": {}},
-            "template": yaml.load(self.template)
+            "template": yaml.safe_load(self.template)
         }
 
         stack_identifier = self.stack_adopt(adopt_data=json.dumps(adopt_data))
@@ -163,7 +163,7 @@ Outputs:
                 }
             },
             "environment": {"parameters": {}},
-            "template": yaml.load(self.template)
+            "template": yaml.safe_load(self.template)
         }
 
         stack_identifier = self.stack_adopt(adopt_data=json.dumps(adopt_data),
@@ -180,7 +180,7 @@ Outputs:
         stack = self.client.stacks.get(stack_identifier)
         self.assertEqual('bar', self._stack_output(stack, 'output_foo'))
 
-        new_template = yaml.load(self.template)
+        new_template = yaml.safe_load(self.template)
         props = new_template['Resources']['the_nested']['Properties']
         props['TemplateURL'] = self.publish_template(self.update_template,
                                                      cleanup=False)

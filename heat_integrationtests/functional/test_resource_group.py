@@ -419,7 +419,7 @@ outputs:
         super(ResourceGroupAdoptTest, self).setUp()
 
     def _yaml_to_json(self, yaml_templ):
-        return yaml.load(yaml_templ)
+        return yaml.safe_load(yaml_templ)
 
     def test_adopt(self):
         data = {
@@ -455,7 +455,7 @@ outputs:
                 }
             },
             "environment": {"parameters": {}},
-            "template": yaml.load(self.main_template)
+            "template": yaml.safe_load(self.main_template)
         }
         stack_identifier = self.stack_adopt(
             adopt_data=json.dumps(data))
@@ -556,7 +556,7 @@ resources:
         Simple rolling update with no conflict in batch size
         and minimum instances in service.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '1'
@@ -575,7 +575,7 @@ resources:
         Simple rolling update replace with no conflict in batch size
         and minimum instances in service.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '1'
@@ -594,7 +594,7 @@ resources:
 
         Simple rolling update with reduced size.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '1'
@@ -613,7 +613,7 @@ resources:
 
         Simple rolling update with increased size.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '1'
@@ -632,7 +632,7 @@ resources:
 
         Update  with capacity adjustment with enough resources.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '8'
@@ -652,7 +652,7 @@ resources:
         Rolling update with capacity adjustment due to conflict in
         batch size and minimum instances in service.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '8'
@@ -671,7 +671,7 @@ resources:
         Rolling Update with a huge batch size(more than
         current size).
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '0'
@@ -689,7 +689,7 @@ resources:
         Rolling Update with a huge number of minimum instances
         in service.
         """
-        updt_template = yaml.load(copy.deepcopy(self.template))
+        updt_template = yaml.safe_load(copy.deepcopy(self.template))
         grp = updt_template['resources']['random_group']
         policy = grp['update_policy']['rolling_update']
         policy['min_in_service'] = '20'
