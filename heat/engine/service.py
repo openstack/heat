@@ -332,18 +332,31 @@ class EngineService(service.Service):
         self.stack_watch = service_stack_watch.StackWatch(
             self.thread_group_mgr)
 
-        # Create a periodic_watcher_task per-stack
-        admin_context = context.get_admin_context()
-        stacks = stack_object.Stack.get_all(
-            admin_context,
-            tenant_safe=False,
-            show_hidden=True)
-        for s in stacks:
-            self.stack_watch.start_watch_task(s.id, admin_context)
+        def create_watch_tasks():
+            while True:
+                try:
+                    # Create a periodic_watcher_task per-stack
+                    admin_context = context.get_admin_context()
+                    stacks = stack_object.Stack.get_all(
+                        admin_context,
+                        tenant_safe=False,
+                        show_hidden=True)
+                    for s in stacks:
+                        self.stack_watch.start_watch_task(s.id, admin_context)
+                    LOG.info(_LI("Watch tasks created"))
+                    return
+                except Exception as e:
+                    LOG.error(_LE("Watch task creation attempt failed, %s"), e)
+                    eventlet.sleep(5)
+
+        if self.manage_thread_grp is None:
+            self.manage_thread_grp = threadgroup.ThreadGroup()
+        self.manage_thread_grp.add_thread(create_watch_tasks)
 
     def start(self):
         self.engine_id = stack_lock.StackLock.generate_engine_id()
-        self.thread_group_mgr = ThreadGroupManager()
+        if self.thread_group_mgr is None:
+            self.thread_group_mgr = ThreadGroupManager()
         self.listener = EngineListener(self.host, self.engine_id,
                                        self.thread_group_mgr)
         LOG.debug("Starting listener for engine %s" % self.engine_id)
@@ -370,7 +383,8 @@ class EngineService(service.Service):
 
         self._configure_db_conn_pool_size()
         self.service_manage_cleanup()
-        self.manage_thread_grp = threadgroup.ThreadGroup()
+        if self.manage_thread_grp is None:
+            self.manage_thread_grp = threadgroup.ThreadGroup()
         self.manage_thread_grp.add_timer(cfg.CONF.periodic_interval,
                                          self.service_manage_report)
         self.manage_thread_grp.add_thread(self.reset_stack_status)
