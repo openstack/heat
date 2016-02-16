@@ -64,3 +64,25 @@ class CreateServerTest(functional_base.FunctionalTestsBase):
             parameters=parms)
         networks = self.get_outputs(stack_identifier, 'networks')
         self.assertEqual(['11.11.11.11'], networks['my_net'])
+
+    def test_create_update_server_with_subnet(self):
+        parms = {'flavor': self.conf.minimal_instance_type,
+                 'image': self.conf.minimal_image_ref}
+        template = server_with_sub_fixed_ip_template.replace(
+            'fixed_ip: 11.11.11.11', 'fixed_ip: 11.11.11.22')
+        stack_identifier = self.stack_create(
+            template=template,
+            stack_name='create_server_with_sub_ip',
+            parameters=parms)
+        networks = self.get_outputs(stack_identifier, 'networks')
+        self.assertEqual(['11.11.11.22'], networks['my_net'])
+
+        # update the server only with subnet, we won't pass
+        # both port_id and net_id to attach interface, then update success
+        template_only_subnet = template.replace(
+            'fixed_ip: 11.11.11.22', '')
+        self.update_stack(stack_identifier,
+                          template_only_subnet,
+                          parameters=parms)
+        new_networks = self.get_outputs(stack_identifier, 'networks')
+        self.assertNotEqual(['11.11.11.22'], new_networks['my_net'])
