@@ -299,7 +299,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.33'
+    RPC_API_VERSION = '1.34'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -2220,6 +2220,41 @@ class EngineService(service.Service):
         result = [service_utils.format_service(srv)
                   for srv in service_objects.Service.get_all(cnxt)]
         return result
+
+    @context.request_context
+    def migrate_convergence_1(self, ctxt, stack_id):
+        parent_stack = parser.Stack.load(ctxt,
+                                         stack_id=stack_id,
+                                         show_deleted=False)
+        if parent_stack.convergence:
+            LOG.info(_LI("Convergence was already enabled for stack %s"),
+                     stack_id)
+            return
+        db_stacks = stack_object.Stack.get_all_by_root_owner_id(
+            ctxt, parent_stack.id)
+        stacks = [parser.Stack.load(ctxt, stack_id=st.id,
+                                    stack=st) for st in db_stacks]
+        stacks.append(parent_stack)
+        locks = []
+        try:
+            for st in stacks:
+                lock = stack_lock.StackLock(ctxt, st.id, self.engine_id)
+                lock.acquire()
+                locks.append(lock)
+            sess = ctxt.session
+            sess.begin(subtransactions=True)
+            try:
+                for st in stacks:
+                    if not st.convergence:
+                        st.service_check_defer = True
+                        st.migrate_to_convergence()
+                sess.commit()
+            except Exception:
+                sess.rollback()
+                raise
+        finally:
+            for lock in locks:
+                lock.release()
 
     def service_manage_report(self):
         cnxt = context.get_admin_context()

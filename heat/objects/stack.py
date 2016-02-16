@@ -15,10 +15,9 @@
 
 """Stack object."""
 
-import six
-
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -139,6 +138,16 @@ class Stack(
     @classmethod
     def get_all_by_owner_id(cls, context, owner_id):
         db_stacks = db_api.stack_get_all_by_owner_id(context, owner_id)
+        for db_stack in db_stacks:
+            try:
+                yield cls._from_db_object(context, cls(context), db_stack)
+            except exception.NotFound:
+                pass
+
+    @classmethod
+    def get_all_by_root_owner_id(cls, context, root_owner_id):
+        db_stacks = db_api.stack_get_all_by_root_owner_id(context,
+                                                          root_owner_id)
         for db_stack in db_stacks:
             try:
                 yield cls._from_db_object(context, cls(context), db_stack)
