@@ -320,6 +320,8 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
 
         return super(ResourceDefinition, self).__eq__(other)
 
+    __hash__ = ResourceDefinitionCore.__hash__
+
     def __iter__(self):
         """Iterate over the available CFN template keys.
 
@@ -374,11 +376,6 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
                 return self.description
 
         raise KeyError(key)
-
-    def __hash__(self):
-        """Return a hash of the ResourceDefinition object."""
-        LOG.warning(self._deprecation_msg)
-        return super(ResourceDefinition, self).__hash__()
 
     def __len__(self):
         """Return the number of available CFN template keys.
