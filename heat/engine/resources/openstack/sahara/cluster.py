@@ -187,12 +187,6 @@ class SaharaCluster(resource.Resource):
             value_path=[self.IMAGE]
         )]
 
-    def _validate_depr_keys(self, properties, key, depr_key):
-        value = properties.get(key)
-        depr_value = properties.get(depr_key)
-        if value and depr_value:
-            raise exception.ResourcePropertyConflict(value, depr_value)
-
     def _cluster_name(self):
         name = self.properties[self.NAME]
         if name:
@@ -203,8 +197,7 @@ class SaharaCluster(resource.Resource):
         plugin_name = self.properties[self.PLUGIN_NAME]
         hadoop_version = self.properties[self.HADOOP_VERSION]
         cluster_template_id = self.properties[self.CLUSTER_TEMPLATE_ID]
-        image_id = (self.properties[self.IMAGE_ID] or
-                    self.properties[self.IMAGE])
+        image_id = self.properties[self.IMAGE_ID]
         if image_id:
             image_id = self.client_plugin(
                 'glance').find_image_by_name_or_id(image_id)
@@ -216,7 +209,7 @@ class SaharaCluster(resource.Resource):
         if cluster_template.default_image_id is None and not image_id:
             msg = _("%(img)s must be provided: Referenced cluster template "
                     "%(tmpl)s has no default_image_id defined.") % {
-                        'img': self.IMAGE, 'tmpl': cluster_template_id}
+                        'img': self.IMAGE_ID, 'tmpl': cluster_template_id}
             raise exception.StackValidationFailed(message=msg)
 
         key_name = self.properties[self.KEY_NAME]
@@ -282,7 +275,6 @@ class SaharaCluster(resource.Resource):
         if res:
             return res
 
-        self._validate_depr_keys(self.properties, self.IMAGE_ID, self.IMAGE)
         # check if running on neutron and MANAGEMENT_NETWORK missing
         if (self.is_using_neutron() and
                 not self.properties[self.MANAGEMENT_NETWORK]):

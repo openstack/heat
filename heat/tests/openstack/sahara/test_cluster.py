@@ -174,7 +174,7 @@ class SaharaClusterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(cluster.create))
         self.assertIsInstance(ex.exc, exception.StackValidationFailed)
-        self.assertIn("image must be provided: "
+        self.assertIn("default_image_id must be provided: "
                       "Referenced cluster template some_cluster_template_id "
                       "has no default_image_id defined.",
                       six.text_type(ex.message))
