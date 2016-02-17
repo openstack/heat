@@ -27,6 +27,20 @@ class SenlinClientPluginTests(common.HeatTestCase):
         client = plugin.client()
         self.assertIsNotNone(client.clusters)
 
+    def test_generate_spec(self):
+        context = utils.dummy_context()
+        plugin = context.clients.client_plugin('senlin')
+        props = {'foo': 'bar'}
+        expect_spec = {
+            'type': 'os.heat.stack',
+            'version': '1.0',
+            'properties': {
+                'foo': 'bar'
+            }
+        }
+        self.assertEqual(expect_spec, plugin.generate_spec(
+            'os.heat.stack-1.0', props))
+
 
 class ProfileConstraintTest(common.HeatTestCase):
 

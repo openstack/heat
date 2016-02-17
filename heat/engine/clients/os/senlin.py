@@ -38,6 +38,11 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         }
         return client.Client(self.VERSION, **args)
 
+    def generate_spec(self, spec_type, spec_props):
+        spec = {'properties': spec_props}
+        spec['type'], spec['version'] = spec_type.split('-')
+        return spec
+
     def is_not_found(self, ex):
         return isinstance(ex, exc.sdkexc.ResourceNotFound)
 
