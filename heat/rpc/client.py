@@ -43,6 +43,7 @@ class EngineClient(object):
         1.22 - Add support for stack export
         1.23 - Add environment_files to create/update/preview/validate
         1.24 - Adds ignorable_errors to validate_template
+        1.25 - list_stack_resoure filter update
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -503,20 +504,23 @@ class EngineClient(object):
                                              resource_name=resource_name))
 
     def list_stack_resources(self, ctxt, stack_identity,
-                             nested_depth=0, with_detail=False):
+                             nested_depth=0, with_detail=False,
+                             filters=None):
         """List the resources belonging to a stack.
 
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param nested_depth: Levels of nested stacks of which list resources.
         :param with_detail: show detail for resoruces in list.
+        :param filters: a dict with attribute:value to search the resources
         """
         return self.call(ctxt,
                          self.make_msg('list_stack_resources',
                                        stack_identity=stack_identity,
                                        nested_depth=nested_depth,
-                                       with_detail=with_detail),
-                         version='1.12')
+                                       with_detail=with_detail,
+                                       filters=filters),
+                         version='1.25')
 
     def stack_suspend(self, ctxt, stack_identity):
         return self.call(ctxt, self.make_msg('stack_suspend',

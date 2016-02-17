@@ -38,6 +38,7 @@ from heat.engine import service
 from heat.engine import stack
 from heat.engine import template
 from heat.objects import raw_template as raw_template_object
+from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
 from heat.objects import stack_tag as stack_tag_object
 from heat.objects import user_creds as ucreds_object
@@ -219,7 +220,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(1, self.stack.total_resources(self.stack.id))
         self.assertEqual(1, self.stack.total_resources())
 
-    def test_iter_resources(self):
+    def test_iter_resources_with_nested(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
                {'A': {'Type': 'StackResourceType'},
@@ -244,6 +245,36 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(2, len(first_level_resources))
         all_resources = list(self.stack.iter_resources(1))
         self.assertEqual(5, len(all_resources))
+
+    @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
+    @mock.patch('heat.engine.resource.Resource')
+    def test_iter_resources_with_filters(self, mock_resource, mock_db_call):
+        mock_rsc = mock.MagicMock()
+        mock_rsc.name = 'A'
+        mock_db_call.return_value = {'A': mock_rsc}
+        mock_resource.return_value = mock_rsc
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'StackResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg')
+
+        all_resources = list(self.stack.iter_resources(
+            filters=dict(name=['A'])
+        ))
+
+        # Verify, the db query is called with expected filter
+        mock_db_call.assert_called_once_with(self.ctx,
+                                             self.stack.id,
+                                             True,
+                                             dict(name=['A']))
+        # Make sure it returns only one resource.
+        self.assertEqual(1, len(all_resources))
+
+        # And returns the resource A
+        self.assertEqual('A', all_resources[0].name)
 
     @mock.patch.object(stack.Stack, 'db_resource_get')
     def test_iter_resources_cached(self, mock_drg):

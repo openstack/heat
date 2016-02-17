@@ -75,8 +75,9 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             ('list_stack_resources', {'stack_identity': stack_identity,
                                       'nested_depth': 0,
                                       'with_detail': False,
+                                      'filters': {}
                                       }),
-            version='1.12'
+            version='1.25'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -114,8 +115,9 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context,
             ('list_stack_resources', {'stack_identity': stack_identity,
                                       'nested_depth': 0,
-                                      'with_detail': False}),
-            version='1.12'
+                                      'with_detail': False,
+                                      'filters': {}}),
+            version='1.25'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 
@@ -143,8 +145,9 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context,
             ('list_stack_resources', {'stack_identity': stack_identity,
                                       'nested_depth': 99,
-                                      'with_detail': False}),
-            version='1.12'
+                                      'with_detail': False,
+                                      'filters': {}}),
+            version='1.25'
         ).AndReturn([])
         self.m.ReplayAll()
 
@@ -238,8 +241,9 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context,
             ('list_stack_resources', {'stack_identity': stack_identity,
                                       'nested_depth': 0,
-                                      'with_detail': True}),
-            version='1.12'
+                                      'with_detail': True,
+                                      'filters': {}}),
+            version='1.25'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 

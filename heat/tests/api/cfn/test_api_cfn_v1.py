@@ -1635,8 +1635,9 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context,
             ('list_stack_resources', {'stack_identity': identity,
                                       'nested_depth': 0,
-                                      'with_detail': False}),
-            version='1.12'
+                                      'with_detail': False,
+                                      'filters': None}),
+            version='1.25'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()

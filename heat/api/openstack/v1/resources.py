@@ -94,6 +94,16 @@ class ResourceController(object):
     @util.identified_stack
     def index(self, req, identity):
         """Lists information for all resources."""
+
+        whitelist = {
+            'type': 'mixed',
+            'status': 'mixed',
+            'name': 'mixed',
+            'action': 'mixed',
+            'id': 'mixed',
+            'physical_resource_id': 'mixed'
+        }
+
         nested_depth = self._extract_to_param(req,
                                               rpc_api.PARAM_NESTED_DEPTH,
                                               param_utils.extract_int,
@@ -103,10 +113,13 @@ class ResourceController(object):
                                              param_utils.extract_bool,
                                              default=False)
 
+        params = util.get_allowed_params(req.params, whitelist)
+
         res_list = self.rpc_client.list_stack_resources(req.context,
                                                         identity,
                                                         nested_depth,
-                                                        with_detail)
+                                                        with_detail,
+                                                        filters=params)
 
         return {'resources': [format_resource(req, res) for res in res_list]}
 

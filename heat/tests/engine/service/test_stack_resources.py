@@ -246,7 +246,8 @@ class StackResourcesServiceTest(common.HeatTestCase):
         resources = self.eng.list_stack_resources(self.ctx,
                                                   self.stack.identifier(),
                                                   2)
-        self.stack.iter_resources.assert_called_once_with(2)
+        self.stack.iter_resources.assert_called_once_with(2,
+                                                          filters=None)
 
     @mock.patch.object(stack.Stack, 'load')
     @tools.stack_context('service_resources_list_test_stack_with_max_depth')
@@ -258,7 +259,8 @@ class StackResourcesServiceTest(common.HeatTestCase):
                                                   self.stack.identifier(),
                                                   99)
         max_depth = cfg.CONF.max_nested_stack_depth
-        self.stack.iter_resources.assert_called_once_with(max_depth)
+        self.stack.iter_resources.assert_called_once_with(max_depth,
+                                                          filters=None)
 
     @mock.patch.object(stack.Stack, 'load')
     def test_stack_resources_list_deleted_stack(self, mock_load):
