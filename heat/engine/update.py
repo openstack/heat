@@ -16,6 +16,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _LI
+from heat.common.i18n import repr_wraper
 from heat.engine import dependencies
 from heat.engine import scheduler
 from heat.objects import resource as resource_objects
@@ -23,6 +24,7 @@ from heat.objects import resource as resource_objects
 LOG = logging.getLogger(__name__)
 
 
+@repr_wraper
 class StackUpdate(object):
     """A Task to perform the update of an existing stack to a new template."""
 

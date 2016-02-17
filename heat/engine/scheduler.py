@@ -16,12 +16,14 @@ import types
 
 import eventlet
 from oslo_log import log as logging
+from oslo_utils import encodeutils
 from oslo_utils import excutils
 import six
 from six import reraise as raise_
 
 from heat.common.i18n import _
 from heat.common.i18n import _LI
+from heat.common.i18n import repr_wraper
 from heat.common import timeutils
 
 LOG = logging.getLogger(__name__)
@@ -40,10 +42,10 @@ def task_description(task):
     if name is not None and isinstance(task, (types.MethodType,
                                               types.FunctionType)):
         if getattr(task, '__self__', None) is not None:
-            return '%s from %s' % (name, task.__self__)
+            return '%s from %s' % (six.text_type(name), task.__self__)
         else:
             return six.text_type(name)
-    return repr(task)
+    return encodeutils.safe_decode(repr(task))
 
 
 class Timeout(BaseException):
@@ -331,6 +333,7 @@ def wrappertask(task):
     return wrapper
 
 
+@repr_wraper
 class DependencyTaskGroup(object):
     """Task which manages group of subtasks that have ordering dependencies."""
 
@@ -369,7 +372,7 @@ class DependencyTaskGroup(object):
     def __repr__(self):
         """Return a string representation of the task."""
         text = '%s(%s)' % (type(self).__name__, self.name)
-        return six.text_type(text)
+        return text
 
     def __call__(self):
         """Return a co-routine which runs the task group."""
