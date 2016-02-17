@@ -1,0 +1,6 @@
+---
+features:
+    - A stack can be searched for resources based on their name, status,
+      type, action, id and physcial_resource_id. And this feature is enabled
+      both in REST API and CLI. For more details, please refer orchestration
+      API document and heat CLI user guide.
