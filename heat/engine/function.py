@@ -123,8 +123,7 @@ class Function(object):
             return NotImplemented
         return not eq
 
-    def __hash__(self):
-        return id(self)
+    __hash__ = None
 
 
 def resolve(snippet):

@@ -85,7 +85,7 @@ class ResourceDefinitionCore(object):
 
         if deletion_policy is not None:
             assert deletion_policy in self.DELETION_POLICIES
-            self._hash ^= hash(deletion_policy)
+            self._hash ^= _hash_data(deletion_policy)
 
         if update_policy is not None:
             assert isinstance(update_policy, (collections.Mapping,
