@@ -36,6 +36,7 @@
     "resource:index": "rule:deny_stack_user",
     "resource:metadata": "",
     "resource:signal": "",
+    "resource:mark_unhealthy": "rule:deny_stack_user",
     "resource:show": "rule:deny_stack_user",
     "stacks:abandon": "rule:deny_stack_user",
     "stacks:create": "rule:deny_stack_user",

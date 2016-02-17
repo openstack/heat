@@ -320,6 +320,12 @@ class API(wsgi.Router):
                         'url': '/resources/{resource_name}/signal',
                         'action': 'signal',
                         'method': 'POST'
+                    },
+                    {
+                        'name': 'resource_mark_unhealthy',
+                        'url': '/resources/{resource_name}',
+                        'action': 'mark_unhealthy',
+                        'method': 'PATCH'
                     }
                 ])
 

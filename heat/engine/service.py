@@ -294,7 +294,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.25'
+    RPC_API_VERSION = '1.26'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -1642,6 +1642,50 @@ class EngineService(service.Service):
             else:
                 self.thread_group_mgr.start(stack.id, _resource_signal,
                                             stack, rsrc, details, False)
+
+    @context.request_context
+    def resource_mark_unhealthy(self, cnxt, stack_identity, resource_name,
+                                mark_unhealthy, resource_status_reason=None):
+        """Mark the resource as healthy or unhealthy.
+
+           Put the resource in CHECK_FAILED state if 'mark_unhealthy'
+           is true. Put the resource in CHECK_COMPLETE if 'mark_unhealthy'
+           is false and the resource is in CHECK_FAILED state.
+           Otherwise, make no change.
+
+        :param mark_unhealthy: indicates whether the resource is unhealthy.
+        :param resource_status_reason: reason for health change.
+        """
+        def lock(rsrc):
+            if rsrc.stack.convergence:
+                return rsrc.lock(self.engine_id)
+            else:
+                return stack_lock.StackLock(cnxt,
+                                            rsrc.stack.id,
+                                            self.engine_id)
+
+        s = self._get_stack(cnxt, stack_identity)
+        stack = parser.Stack.load(cnxt, stack=s)
+        if resource_name not in stack:
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
+
+        if not isinstance(mark_unhealthy, bool):
+            raise exception.Invalid(reason="mark_unhealthy is not a boolean")
+
+        rsrc = stack[resource_name]
+        reason = (resource_status_reason or
+                  "state changed by resource_mark_unhealthy api")
+        try:
+            with lock(rsrc):
+                if mark_unhealthy:
+                    rsrc.state_set(rsrc.CHECK, rsrc.FAILED, reason=reason)
+                elif rsrc.state == (rsrc.CHECK, rsrc.FAILED):
+                    rsrc.state_set(rsrc.CHECK, rsrc.COMPLETE, reason=reason)
+
+        except exception.UpdateInProgress:
+            raise exception.ActionInProgress(stack_name=stack.name,
+                                             action=stack.action)
 
     @context.request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
