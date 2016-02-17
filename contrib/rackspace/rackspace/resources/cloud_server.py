@@ -60,17 +60,34 @@ class CloudServer(server.Server):
         {
             server.Server.USER_DATA_FORMAT: properties.Schema(
                 properties.Schema.STRING,
-                _('How the user_data should be formatted for the server. For '
-                  'HEAT_CFNTOOLS, the user_data is bundled as part of the '
-                  'heat-cfntools cloud-init boot configuration data. For RAW '
-                  'the user_data is passed to Nova unmodified. '
+                _('How the user_data should be formatted for the server. '
+                  'For RAW the user_data is passed to Nova unmodified. '
                   'For SOFTWARE_CONFIG user_data is bundled as part of the '
                   'software config data, and metadata is derived from any '
                   'associated SoftwareDeployment resources.'),
                 default=server.Server.RAW,
                 constraints=[
-                    constraints.AllowedValues(
-                        server.Server._SOFTWARE_CONFIG_FORMATS),
+                    constraints.AllowedValues([
+                        server.Server.RAW, server.Server.SOFTWARE_CONFIG
+                    ])
+                ]
+            ),
+        }
+    )
+    properties_schema.update(
+        {
+            server.Server.SOFTWARE_CONFIG_TRANSPORT: properties.Schema(
+                properties.Schema.STRING,
+                _('How the server should receive the metadata required for '
+                  'software configuration. POLL_TEMP_URL is the only '
+                  'supported transport on Rackspace Cloud. This property is '
+                  'retained for compatability.'),
+                default=server.Server.POLL_TEMP_URL,
+                update_allowed=True,
+                constraints=[
+                    constraints.AllowedValues([
+                        server.Server.POLL_TEMP_URL
+                    ])
                 ]
             ),
         }
@@ -82,9 +99,11 @@ class CloudServer(server.Server):
         self._rack_connect_started_event_sent = False
 
     def _config_drive(self):
+        user_data_format = self.properties.get(self.USER_DATA_FORMAT, "")
+        is_sw_config = user_data_format == self.SOFTWARE_CONFIG
         user_data = self.properties.get(self.USER_DATA)
         config_drive = self.properties.get(self.CONFIG_DRIVE)
-        if user_data or config_drive:
+        if config_drive or is_sw_config or user_data:
             return True
         else:
             return False
