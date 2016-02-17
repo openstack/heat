@@ -230,6 +230,13 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
         """
+        return self._find_flavor_id(self.context.tenant_id,
+                                    flavor)
+
+    @os_client.MEMOIZE_FINDER
+    def _find_flavor_id(self, tenant_id, flavor):
+        # tenant id in the signature is used for the memoization key,
+        # that would differentiate similar resource names across tenants.
         return self.get_flavor(flavor).id
 
     def get_flavor(self, flavor_identifier):
@@ -672,7 +679,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         else:
             return False
 
-    @os_client.MEMOIZE
+    @os_client.MEMOIZE_EXTENSIONS
     def _list_extensions(self):
         extensions = self.client().list_extensions.show_all()
         return set(extension.alias for extension in extensions)

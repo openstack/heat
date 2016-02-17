@@ -16,6 +16,7 @@ from glanceclient import exc
 from glanceclient.openstack.common.apiclient import exceptions
 
 from heat.engine.clients import client_plugin
+from heat.engine.clients import os as os_client
 from heat.engine import constraints
 
 CLIENT_NAME = 'glance'
@@ -83,6 +84,13 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         :param image_identifier: image name or a UUID-like identifier
         :returns: the id of the requested :image_identifier:
         """
+        return self._find_image_id(self.context.tenant_id,
+                                   image_identifier)
+
+    @os_client.MEMOIZE_FINDER
+    def _find_image_id(self, tenant_id, image_identifier):
+        # tenant id in the signature is used for the memoization key,
+        # that would differentiate similar resource names across tenants.
         return self.get_image(image_identifier).id
 
     def get_image(self, image_identifier):

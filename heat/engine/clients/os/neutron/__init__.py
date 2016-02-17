@@ -74,10 +74,19 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       cmd_resource=None):
+        return self._find_resource_id(self.context.tenant_id,
+                                      resource, name_or_id,
+                                      cmd_resource)
+
+    @os_client.MEMOIZE_FINDER
+    def _find_resource_id(self, tenant_id,
+                          resource, name_or_id, cmd_resource):
+        # tenant id in the signature is used for the memoization key,
+        # that would differentiate similar resource names across tenants.
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), resource, name_or_id, cmd_resource=cmd_resource)
 
-    @os_client.MEMOIZE
+    @os_client.MEMOIZE_EXTENSIONS
     def _list_extensions(self):
         extensions = self.client().list_extensions().get('extensions')
         return set(extension.get('alias') for extension in extensions)
