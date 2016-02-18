@@ -46,6 +46,10 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
     def is_not_found(self, ex):
         return isinstance(ex, exc.sdkexc.ResourceNotFound)
 
+    def is_bad_request(self, ex):
+        return (isinstance(ex, exc.sdkexc.HttpException) and
+                ex.http_status == 400)
+
 
 class ProfileConstraint(constraints.BaseCustomConstraint):
     # If name is not unique, will raise exc.sdkexc.HttpException

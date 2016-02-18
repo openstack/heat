@@ -27,19 +27,14 @@ class SenlinClientPluginTests(common.HeatTestCase):
         client = plugin.client()
         self.assertIsNotNone(client.clusters)
 
-    def test_generate_spec(self):
+    def test_is_bad_request(self):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('senlin')
-        props = {'foo': 'bar'}
-        expect_spec = {
-            'type': 'os.heat.stack',
-            'version': '1.0',
-            'properties': {
-                'foo': 'bar'
-            }
-        }
-        self.assertEqual(expect_spec, plugin.generate_spec(
-            'os.heat.stack-1.0', props))
+        self.assertTrue(plugin.is_bad_request(
+            exc.sdkexc.HttpException(http_status=400)))
+        self.assertFalse(plugin.is_bad_request(Exception))
+        self.assertFalse(plugin.is_bad_request(
+            exc.sdkexc.HttpException(http_status=404)))
 
 
 class ProfileConstraintTest(common.HeatTestCase):
