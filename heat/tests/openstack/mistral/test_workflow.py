@@ -742,7 +742,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         return execution
 
     def verify_create_params(self, wf_yaml):
-        wf = yaml.load(wf_yaml)["create_vm"]
+        wf = yaml.safe_load(wf_yaml)["create_vm"]
         self.assertEqual(['on_error'], wf["task-defaults"]["on-error"])
 
         tasks = wf['tasks']

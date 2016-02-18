@@ -602,7 +602,7 @@ Outputs:
         super(TemplateResourceAdoptTest, self).setUp()
 
     def _yaml_to_json(self, yaml_templ):
-        return yaml.load(yaml_templ)
+        return yaml.safe_load(yaml_templ)
 
     def test_abandon(self):
         stack_identifier = self.stack_create(
@@ -635,7 +635,7 @@ Outputs:
                 }
             },
             "environment": {"parameters": {}},
-            "template": yaml.load(self.main_template)
+            "template": yaml.safe_load(self.main_template)
         }
 
         stack_identifier = self.stack_adopt(

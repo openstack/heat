@@ -67,7 +67,7 @@ class RBACPolicyTest(common.HeatTestCase):
         self.neutron_client.create_rbac_policy.assert_called_with(expected)
 
     def test_validate_invalid_action(self):
-        tpl = yaml.load(inline_templates.RBAC_TEMPLATE)
+        tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
         tpl['resources']['rbac']['properties']['action'] = 'access_as_external'
         self._create_stack(tmpl=yaml.dump(tpl))
         msg = "Invalid action access_as_external for object type network."
@@ -75,7 +75,7 @@ class RBACPolicyTest(common.HeatTestCase):
                                 self.rbac.validate)
 
     def test_validate_invalid_type(self):
-        tpl = yaml.load(inline_templates.RBAC_TEMPLATE)
+        tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
         tpl['resources']['rbac']['properties']['object_type'] = 'networks'
         self._create_stack(tmpl=yaml.dump(tpl))
         msg = "Invalid object_type: networks. "

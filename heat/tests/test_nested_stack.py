@@ -365,7 +365,7 @@ Outputs:
         self.stack.store()
 
         self.patchobject(urlfetch, 'get', return_value=self.nested_template)
-        self.nested_parsed = yaml.load(self.nested_template)
+        self.nested_parsed = yaml.safe_load(self.nested_template)
         self.nested_params = {"KeyName": "foo"}
         self.defn = rsrc_defn.ResourceDefinition(
             'test_t_res',
