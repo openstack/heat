@@ -232,7 +232,7 @@ class ScalingGroupTest(common.HeatTestCase):
                   type: launch_stack
                   args:
                     stack:
-                      template:
+                      template: |
                         heat_template_version: 2015-10-15
                         description: This is a Heat template
                         parameters:
@@ -336,20 +336,20 @@ class ScalingGroupTest(common.HeatTestCase):
                 'group_metadata': {'group': 'metadata'},
                 'name': 'My Group',
                 'launch_config_type': u'launch_stack',
-                'template': {
-                    'heat_template_version': '2015-10-15',
-                    'description': 'This is a Heat template',
-                    'parameters': {
-                        'flavor': {
-                            'default': 'm1.tiny',
-                            'type': 'string'},
-                        'image': {
-                            'default': 'cirros-0.3.4-x86_64-uec',
-                            'type': 'string'}},
-                    'resources': {
-                        'rand': {'type': u'OS::Heat::RandomString'}
-                    }
-                },
+                'template': (
+                    '''heat_template_version: 2015-10-15
+description: This is a Heat template
+parameters:
+  image:
+    default: cirros-0.3.4-x86_64-uec
+    type: string
+  flavor:
+    default: m1.tiny
+    type: string
+resources:
+  rand:
+    type: OS::Heat::RandomString
+'''),
                 'template_url': None,
                 'disable_rollback': False,
                 'environment': {
@@ -931,20 +931,20 @@ class AutoScaleGroupValidationTests(common.HeatTestCase):
                 "type": "launch_stack",
                 "args": {
                     "stack": {
-                        'template': {
-                            'heat_template_version': '2015-10-15',
-                            'description': 'This is a Heat template',
-                            'parameters': {
-                                'flavor': {
-                                    'default': 'm1.tiny',
-                                    'type': 'string'},
-                                'image': {
-                                    'default': 'cirros-0.3.4-x86_64-uec',
-                                    'type': 'string'}},
-                            'resources': {
-                                'rand': {'type': u'OS::Heat::RandomString'}
-                            }
-                        },
+                        'template': (
+                            '''heat_template_version: 2015-10-15
+description: This is a Heat template
+parameters:
+  image:
+    default: cirros-0.3.4-x86_64-uec
+    type: string
+  flavor:
+    default: m1.tiny
+    type: string
+resources:
+  rand:
+    type: OS::Heat::RandomString
+'''),
                         'template_url': None,
                         'disable_rollback': False,
                         'environment': {
@@ -995,20 +995,20 @@ class AutoScaleGroupValidationTests(common.HeatTestCase):
                         "imageRef": "image-ref",
                         },
                     "stack": {
-                        'template': {
-                            'heat_template_version': '2015-10-15',
-                            'description': 'This is a Heat template',
-                            'parameters': {
-                                'flavor': {
-                                    'default': 'm1.tiny',
-                                    'type': 'string'},
-                                'image': {
-                                    'default': 'cirros-0.3.4-x86_64-uec',
-                                    'type': 'string'}},
-                            'resources': {
-                                'rand': {'type': u'OS::Heat::RandomString'}
-                            }
-                        },
+                        'template': (
+                            '''heat_template_version: 2015-10-15
+description: This is a Heat template
+parameters:
+  image:
+    default: cirros-0.3.4-x86_64-uec
+    type: string
+  flavor:
+    default: m1.tiny
+    type: string
+resources:
+  rand:
+    type: OS::Heat::RandomString
+'''),
                         'template_url': None,
                         'disable_rollback': False,
                         'environment': {
@@ -1086,20 +1086,20 @@ class AutoScaleGroupValidationTests(common.HeatTestCase):
                 "type": "launch_server",
                 "args": {
                     "stack": {
-                        'template': {
-                            'heat_template_version': '2015-10-15',
-                            'description': 'This is a Heat template',
-                            'parameters': {
-                                'flavor': {
-                                    'default': 'm1.tiny',
-                                    'type': 'string'},
-                                'image': {
-                                    'default': 'cirros-0.3.4-x86_64-uec',
-                                    'type': 'string'}},
-                            'resources': {
-                                'rand': {'type': 'OS::Heat::RandomString'}
-                            }
-                        },
+                        'template': (
+                            '''heat_template_version: 2015-10-15
+description: This is a Heat template
+parameters:
+  image:
+    default: cirros-0.3.4-x86_64-uec
+    type: string
+  flavor:
+    default: m1.tiny
+    type: string
+resources:
+  rand:
+    type: OS::Heat::RandomString
+'''),
                         'template_url': 'https://myhost.com/template.yaml',
                     }
                 }
@@ -1179,20 +1179,20 @@ class AutoScaleGroupValidationTests(common.HeatTestCase):
                 "type": "launch_stack",
                 "args": {
                     "stack": {
-                        'template': {
-                            'SJDADKJAJKLSheat_template_version': '2015-10-15',
-                            'description': 'This is a Heat template',
-                            'parameters': {
-                                'flavor': {
-                                    'default': 'm1.tiny',
-                                    'type': 'string'},
-                                'image': {
-                                    'default': 'cirros-0.3.4-x86_64-uec',
-                                    'type': 'string'}},
-                            'resources': {
-                                'rand': {'type': u'OS::Heat::RandomString'}
-                            }
-                        },
+                        'template': (
+                            '''SJDADKJAJKLSheat_template_version: 2015-10-15
+description: This is a Heat template
+parameters:
+  image:
+    default: cirros-0.3.4-x86_64-uec
+    type: string
+  flavor:
+    default: m1.tiny
+    type: string
+resources:
+  rand:
+    type: OS::Heat::RandomString
+'''),
                         'template_url': None,
                         'disable_rollback': False,
                         'environment': {'Foo': 'Bar'},
