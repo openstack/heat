@@ -16,13 +16,16 @@ from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine import resource
 
-#
-# Notes: Now this resource is actually associated with an AWS user resource,
-# not any OS:: resource though it is registered under the OS namespace below
-#
-
 
 class AccessPolicy(resource.Resource):
+    """Resource for defining which resources can be accessed by users.
+
+    NOTE: Now this resource is actually associated with an AWS user resource,
+    not any OS:: resource though it is registered under the OS namespace below.
+
+    Resource for defining resources that users are allowed to access by the
+    DescribeStackResource API.
+    """
     PROPERTIES = (
         ALLOWED_RESOURCES,
     ) = (

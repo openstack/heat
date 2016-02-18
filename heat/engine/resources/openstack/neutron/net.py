@@ -20,6 +20,12 @@ from heat.engine import support
 
 
 class Net(neutron.NeutronResource):
+    """A resource for managing Neutron net.
+
+    A network is a virtual isolated layer-2 broadcast domain which is typically
+    reserved to the tenant who created it, unless the network has been
+    explicitly configured to be shared.
+    """
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
         DHCP_AGENT_IDS, PORT_SECURITY_ENABLED, QOS_POLICY,

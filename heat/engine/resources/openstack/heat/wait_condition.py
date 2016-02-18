@@ -29,6 +29,14 @@ LOG = logging.getLogger(__name__)
 
 
 class HeatWaitCondition(resource.Resource):
+    """Resource for handling signals received by WaitConditionHandle.
+
+    Resource takes WaitConditionHandle and starts to create. Resource is in
+    CREATE_IN_PROGRESS status until WaitConditionHandle doesn't receive
+    sufficient number of successful signals (this number can be specified with
+    count property) and successfully creates after that, or fails due to
+    timeout.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
 

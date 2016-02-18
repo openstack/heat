@@ -21,6 +21,11 @@ from heat.engine import support
 
 
 class ProviderNet(net.Net):
+    """A resource for managing Neutron provider networks.
+
+    Provider networks specify details of physical realisation of the existing
+    network.
+    """
 
     required_service_extension = 'provider'
 
@@ -47,7 +52,7 @@ class ProviderNet(net.Net):
         PROVIDER_NETWORK_TYPE: properties.Schema(
             properties.Schema.STRING,
             _('A string specifying the provider network type for the '
-                'network.'),
+              'network.'),
             update_allowed=True,
             required=True,
             constraints=[
@@ -57,14 +62,14 @@ class ProviderNet(net.Net):
         PROVIDER_PHYSICAL_NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('A string specifying physical network mapping for the '
-                'network.'),
+              'network.'),
             update_allowed=True,
             required=True,
         ),
         PROVIDER_SEGMENTATION_ID: properties.Schema(
             properties.Schema.STRING,
             _('A string specifying the segmentation id for the '
-                'network.'),
+              'network.'),
             update_allowed=True
         ),
         ADMIN_STATE_UP: net.Net.properties_schema[ADMIN_STATE_UP],

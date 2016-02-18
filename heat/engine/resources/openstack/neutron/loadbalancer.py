@@ -26,7 +26,18 @@ from heat.engine import translation
 
 
 class HealthMonitor(neutron.NeutronResource):
-    """A resource for managing health monitors for loadbalancers in Neutron."""
+    """A resource for managing health monitors for loadbalancers in Neutron.
+
+    A health monitor is used to determine whether or not back-end members of
+    the VIP's pool are usable for processing a request. A pool can have several
+    health monitors associated with it. There are different types of health
+    monitors supported by the OpenStack LBaaS service:
+
+      - PING: used to ping the members using ICMP.
+      - TCP: used to connect to the members using TCP.
+      - HTTP: used to send an HTTP request to the member.
+      - HTTPS: used to send a secure HTTP request to the member.
+    """
 
     required_service_extension = 'lbaas'
 
@@ -174,7 +185,14 @@ class HealthMonitor(neutron.NeutronResource):
 
 
 class Pool(neutron.NeutronResource):
-    """A resource for managing load balancer pools in Neutron."""
+    """A resource for managing load balancer pools in Neutron.
+
+    A load balancing pool is a logical set of devices, such as web servers,
+    that you group together to receive and process traffic. The loadbalancing
+    function chooses a member of the pool according to the configured load
+    balancing method to handle the new requests or connections received on the
+    VIP address. There is only one pool for a VIP.
+    """
 
     required_service_extension = 'lbaas'
 
@@ -554,7 +572,10 @@ class Pool(neutron.NeutronResource):
 
 
 class PoolMember(neutron.NeutronResource):
-    """A resource to handle loadbalancer members."""
+    """A resource to handle loadbalancer members.
+
+    A pool member represents the application running on backend server.
+    """
 
     required_service_extension = 'lbaas'
 
@@ -679,7 +700,11 @@ class PoolMember(neutron.NeutronResource):
 
 
 class LoadBalancer(resource.Resource):
-    """A resource to link a neutron pool with servers."""
+    """A resource to link a neutron pool with servers.
+
+    A loadbalancer allows linking a neutron pool with specified servers to some
+    port.
+    """
 
     required_service_extension = 'lbaas'
 

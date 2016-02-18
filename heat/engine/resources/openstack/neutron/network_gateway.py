@@ -27,7 +27,10 @@ from heat.engine import translation
 
 
 class NetworkGateway(neutron.NeutronResource):
-    """Network Gateway resource in Neutron Network Gateway."""
+    """Network Gateway resource in Neutron Network Gateway.
+
+    Resource for connecting internal networks with specified devices.
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 

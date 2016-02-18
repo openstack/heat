@@ -21,7 +21,11 @@ from heat.engine import translation
 
 
 class VPNService(neutron.NeutronResource):
-    """A resource for VPN service in Neutron."""
+    """A resource for VPN service in Neutron.
+
+    VPN service is a high level object that associates VPN with a specific
+    subnet and router.
+    """
 
     required_service_extension = 'vpnaas'
 
@@ -187,7 +191,11 @@ class VPNService(neutron.NeutronResource):
 
 
 class IPsecSiteConnection(neutron.NeutronResource):
-    """A resource for IPsec site connection in Neutron."""
+    """A resource for IPsec site connection in Neutron.
+
+    This resource has details for the site-to-site IPsec connection, including
+    the peer CIDRs, MTU, peer address, DPD settings and status.
+    """
 
     required_service_extension = 'vpnaas'
 
@@ -431,7 +439,12 @@ class IPsecSiteConnection(neutron.NeutronResource):
 
 
 class IKEPolicy(neutron.NeutronResource):
-    """A resource for IKE policy in Neutron."""
+    """A resource for IKE policy in Neutron.
+
+    The Internet Key Exchange policy identifyies the authentication and
+    encryption algorithm used during phase one and phase two negotiation of a
+    VPN connection.
+    """
 
     required_service_extension = 'vpnaas'
 
@@ -599,7 +612,11 @@ class IKEPolicy(neutron.NeutronResource):
 
 
 class IPsecPolicy(neutron.NeutronResource):
-    """A resource for IPsec policy in Neutron."""
+    """A resource for IPsec policy in Neutron.
+
+    The IP security policy specifying the authentication and encryption
+    algorithm, and encapsulation mode used for the established VPN connection.
+    """
 
     required_service_extension = 'vpnaas'
 

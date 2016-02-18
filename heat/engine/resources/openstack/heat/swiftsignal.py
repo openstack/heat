@@ -50,6 +50,11 @@ class SwiftSignalTimeout(exception.Error):
 
 
 class SwiftSignalHandle(resource.Resource):
+    """Resource for managing signals from Swift resources.
+
+    This resource is same as WaitConditionHandle, but designed for using by
+    Swift resources.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
     default_client_name = "swift"
@@ -137,6 +142,11 @@ class SwiftSignalHandle(resource.Resource):
 
 
 class SwiftSignal(resource.Resource):
+    """Resource for handling signals received by SwiftSignalHandle.
+
+    This resource handles signals received by SwiftSignalHandle and
+    is same as WaitCondition resource.
+    """
 
     support_status = support.SupportStatus(version='2014.2')
     default_client_name = "swift"
