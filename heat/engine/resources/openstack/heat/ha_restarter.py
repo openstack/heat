@@ -100,7 +100,7 @@ class Restarter(signal_responder.SignalResponder):
     def _resolve_attribute(self, name):
         """Resolves the resource's attributes.
 
-        heat extension: "AlarmUrl" returns the url to post to the policy
+        Heat extension: "AlarmUrl" returns the url to post to the policy
         when there is an alarm.
         """
         if name == self.ALARM_URL and self.resource_id is not None:

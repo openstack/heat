@@ -470,12 +470,12 @@ class Port(neutron.NeutronResource):
         return super(Port, self)._resolve_attribute(name)
 
     def needs_replace(self, after_props):
-        """Mandatory replace based on props """
+        """Mandatory replace based on props."""
         return after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS'
 
     def needs_replace_with_prop_diff(self, changed_properties_set,
                                      after_props, before_props):
-        """Needs replace based on prop_diff """
+        """Needs replace based on prop_diff."""
         # Switching between name and ID is OK, provided the value resolves
         # to the same network.  If the network changes, port is replaced.
         if self.NETWORK in changed_properties_set:

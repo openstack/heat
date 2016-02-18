@@ -373,7 +373,7 @@ class InstanceGroup(stack_resource.StackResource):
     def _resolve_attribute(self, name):
         """Resolves the resource's attributes.
 
-        heat extension: "InstanceList" returns comma delimited list of server
+        Heat extension: "InstanceList" returns comma delimited list of server
         ip addresses.
         """
         if name == self.INSTANCE_LIST:

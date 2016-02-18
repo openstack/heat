@@ -1062,7 +1062,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     def needs_replace_with_prop_diff(self, changed_properties_set,
                                      after_props, before_props):
-        """Needs replace based on prop_diff """
+        """Needs replace based on prop_diff."""
         if self.FLAVOR in changed_properties_set:
             flavor_update_policy = (
                 after_props.get(self.FLAVOR_UPDATE_POLICY) or
