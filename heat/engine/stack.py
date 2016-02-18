@@ -1348,6 +1348,7 @@ class Stack(collections.Mapping):
         existing_params = environment.Environment({env_fmt.PARAMETERS:
                                                   self.t.env.params})
         previous_template_id = None
+        should_rollback = False
         try:
             update_task = update.StackUpdate(
                 self, newstack, backup_stack,
@@ -1388,14 +1389,17 @@ class Stack(collections.Mapping):
         except scheduler.Timeout:
             self.status = self.FAILED
             self.status_reason = 'Timed out'
-        except (ForcedCancel, exception.ResourceFailure) as e:
+        except (ForcedCancel, Exception) as e:
             # If rollback is enabled when resource failure occurred,
             # we do another update, with the existing template,
             # so we roll back to the original state
-            if self._update_exception_handler(
-                    exc=e, action=action, update_task=update_task):
+            should_rollback = self._update_exception_handler(e, action,
+                                                             update_task)
+            if should_rollback:
                 yield self.update_task(oldstack, action=self.ROLLBACK)
-                return
+        except BaseException as e:
+            with excutils.save_and_reraise_exception():
+                self._update_exception_handler(e, action, update_task)
         else:
             LOG.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
@@ -1405,29 +1409,33 @@ class Stack(collections.Mapping):
             self.t = newstack.t
             template_outputs = self.t[self.t.OUTPUTS]
             self.outputs = self.resolve_static_data(template_outputs)
+        finally:
+            if should_rollback:
+                # Already handled in rollback task
+                return
 
-        # Don't use state_set to do only one update query and avoid race
-        # condition with the COMPLETE status
-        self.action = action
+            # Don't use state_set to do only one update query and avoid race
+            # condition with the COMPLETE status
+            self.action = action
 
-        self._send_notification_and_add_event()
-        if self.status == self.FAILED:
-            # Since template was incrementally updated based on existing and
-            # new stack resources, we should have user params of both.
-            existing_params.load(newstack.t.env.user_env_as_dict())
-            self.t.env = existing_params
-            self.t.store(self.context)
-            backup_stack.t.env = existing_params
-            backup_stack.t.store(self.context)
-        self.store()
+            self._send_notification_and_add_event()
+            if self.status == self.FAILED:
+                # Since template was incrementally updated based on existing
+                # and new stack resources, we should have user params of both.
+                existing_params.load(newstack.t.env.user_env_as_dict())
+                self.t.env = existing_params
+                self.t.store(self.context)
+                backup_stack.t.env = existing_params
+                backup_stack.t.store(self.context)
+            self.store()
 
-        if previous_template_id is not None:
-            raw_template_object.RawTemplate.delete(self.context,
-                                                   previous_template_id)
+            if previous_template_id is not None:
+                raw_template_object.RawTemplate.delete(self.context,
+                                                       previous_template_id)
 
-        lifecycle_plugin_utils.do_post_ops(self.context, self,
-                                           newstack, action,
-                                           (self.status == self.FAILED))
+            lifecycle_plugin_utils.do_post_ops(self.context, self,
+                                               newstack, action,
+                                               (self.status == self.FAILED))
 
     def _update_exception_handler(self, exc, action, update_task):
         """Handle exceptions in update_task.
@@ -1445,8 +1453,10 @@ class Stack(collections.Mapping):
         if isinstance(exc, ForcedCancel):
             update_task.updater.cancel_all()
             return exc.with_rollback or not self.disable_rollback
-
-        return not self.disable_rollback
+        elif isinstance(exc, exception.ResourceFailure):
+            return not self.disable_rollback
+        else:
+            return False
 
     def _message_parser(self, message):
         if message == rpc_api.THREAD_CANCEL:
