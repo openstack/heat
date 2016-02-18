@@ -511,7 +511,7 @@ class EngineClient(object):
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param nested_depth: Levels of nested stacks of which list resources.
-        :param with_detail: show detail for resoruces in list.
+        :param with_detail: show detail for resources in list.
         :param filters: a dict with attribute:value to search the resources
         """
         return self.call(ctxt,
