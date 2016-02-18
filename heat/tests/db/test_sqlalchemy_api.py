@@ -13,11 +13,13 @@
 
 import datetime
 import json
+import time
 import uuid
 
 import mock
 import mox
 from oslo_config import cfg
+from oslo_db import exception as db_exception
 from oslo_utils import timeutils
 import six
 
@@ -2201,6 +2203,14 @@ class DBAPIStackLockTest(common.HeatTestCase):
         observed = db_api.stack_lock_release(self.stack.id, UUID2)
         self.assertTrue(observed)
 
+    @mock.patch.object(time, 'sleep')
+    def test_stack_lock_retry_on_deadlock(self, sleep):
+        with mock.patch('sqlalchemy.orm.Session.add',
+                        side_effect=db_exception.DBDeadlock) as mock_add:
+            self.assertRaises(db_exception.DBDeadlock,
+                              db_api.stack_lock_create, self.stack.id, UUID1)
+            self.assertEqual(4, mock_add.call_count)
+
 
 class DBAPIResourceDataTest(common.HeatTestCase):
     def setUp(self):
@@ -2834,6 +2844,18 @@ class DBAPISyncPointTest(common.HeatTestCase):
             self.ctx, self.stack.id, self.stack.current_traversal, True
         )
         self.assertIsNone(ret_sync_point_stack)
+
+    @mock.patch.object(time, 'sleep')
+    def test_syncpoint_create_deadlock(self, sleep):
+        with mock.patch('sqlalchemy.orm.Session.add',
+                        side_effect=db_exception.DBDeadlock) as add:
+            for res in self.resources:
+                self.assertRaises(db_exception.DBDeadlock,
+                                  create_sync_point,
+                                  self.ctx, entity_id=str(res.id),
+                                  stack_id=self.stack.id,
+                                  traversal_id=self.stack.current_traversal)
+            self.assertEqual(len(self.resources) * 4, add.call_count)
 
 
 class DBAPICryptParamsPropsTest(common.HeatTestCase):

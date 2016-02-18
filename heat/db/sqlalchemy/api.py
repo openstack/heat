@@ -16,6 +16,7 @@ import datetime
 import sys
 
 from oslo_config import cfg
+from oslo_db import api as oslo_db_api
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
@@ -550,6 +551,8 @@ def stack_delete(context, stack_id):
     session.flush()
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def stack_lock_create(stack_id, engine_id):
     session = get_session()
     with session.begin():
@@ -1154,6 +1157,8 @@ def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
     return rows_deleted
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def sync_point_create(context, values):
     values['entity_id'] = str(values['entity_id'])
     sync_point_ref = models.SyncPoint()
