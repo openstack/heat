@@ -99,10 +99,10 @@ class SubnetPool(neutron.NeutronResource):
         ),
         IS_DEFAULT: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Whether this is default IPv4/IPv6 subnet pool.'
-              'There can only be one default subnet pool for each IP family.'
+            _('Whether this is default IPv4/IPv6 subnet pool. '
+              'There can only be one default subnet pool for each IP family. '
               'Note that the default policy setting restricts administrative '
-              'users to set this to True'),
+              'users to set this to True.'),
             default=False,
             update_allowed=True,
         ),

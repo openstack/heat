@@ -70,20 +70,20 @@ class KeystoneRoleAssignmentMixin(object):
                 schema={
                     ROLE: properties.Schema(
                         properties.Schema.STRING,
-                        _('Keystone role'),
+                        _('Keystone role.'),
                         required=True,
                         constraints=([constraints.
                                      CustomConstraint('keystone.role')])
                     ),
                     PROJECT: properties.Schema(
                         properties.Schema.STRING,
-                        _('Keystone project'),
+                        _('Keystone project.'),
                         constraints=([constraints.
                                      CustomConstraint('keystone.project')])
                     ),
                     DOMAIN: properties.Schema(
                         properties.Schema.STRING,
-                        _('Keystone domain'),
+                        _('Keystone domain.'),
                         constraints=([constraints.
                                      CustomConstraint('keystone.domain')])
                     ),

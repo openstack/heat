@@ -163,7 +163,7 @@ class SwiftSignal(resource.Resource):
         TIMEOUT: properties.Schema(
             properties.Schema.NUMBER,
             description=_('The maximum number of seconds to wait for the '
-                          'resource to signal completion.  Once the timeout '
+                          'resource to signal completion. Once the timeout '
                           'is reached, creation of the signal resource will '
                           'fail.'),
             required=True,

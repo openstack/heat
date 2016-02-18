@@ -93,13 +93,13 @@ class TestResource(resource.Resource):
         UPDATE_REPLACE: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Value which can be set to trigger update replace for '
-              'the particular resource'),
+              'the particular resource.'),
             update_allowed=True,
             default=False
         ),
         WAIT_SECS: properties.Schema(
             properties.Schema.NUMBER,
-            _('Seconds to wait after an action (-1 is infinite)'),
+            _('Seconds to wait after an action (-1 is infinite).'),
             update_allowed=True,
             default=0,
         ),
@@ -111,19 +111,19 @@ class TestResource(resource.Resource):
                 CREATE_WAIT_SECS: properties.Schema(
                     properties.Schema.NUMBER,
                     _('Seconds to wait after a create. '
-                      'Defaults to the global wait_secs'),
+                      'Defaults to the global wait_secs.'),
                     update_allowed=True,
                 ),
                 UPDATE_WAIT_SECS: properties.Schema(
                     properties.Schema.NUMBER,
                     _('Seconds to wait after an update. '
-                      'Defaults to the global wait_secs'),
+                      'Defaults to the global wait_secs.'),
                     update_allowed=True,
                 ),
                 DELETE_WAIT_SECS: properties.Schema(
                     properties.Schema.NUMBER,
                     _('Seconds to wait after a delete. '
-                      'Defaults to the global wait_secs'),
+                      'Defaults to the global wait_secs.'),
                     update_allowed=True,
                 ),
             }

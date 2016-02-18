@@ -45,7 +45,7 @@ common_gnocchi_properties_schema = {
     ),
     AGGREGATION_METHOD: properties.Schema(
         properties.Schema.STRING,
-        _('The aggregation method to compare to the threshold'),
+        _('The aggregation method to compare to the threshold.'),
         constraints=[
             constraints.AllowedValues(['mean', 'sum', 'last', 'max', 'min',
                                        'std', 'median', 'first', 'count']),
@@ -91,13 +91,13 @@ class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
         ),
         RESOURCE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Id of a resource'),
+            _('Id of a resource.'),
             required=True,
             update_allowed=True
         ),
         RESOURCE_TYPE: properties.Schema(
             properties.Schema.STRING,
-            _('Resource type'),
+            _('Resource type.'),
             required=True,
             update_allowed=True
         ),
@@ -162,13 +162,13 @@ class CeilometerGnocchiAggregationByResourcesAlarm(
         ),
         QUERY: properties.Schema(
             properties.Schema.STRING,
-            _('The query to filter the metrics'),
+            _('The query to filter the metrics.'),
             required=True,
             update_allowed=True
         ),
         RESOURCE_TYPE: properties.Schema(
             properties.Schema.STRING,
-            _('Resource type'),
+            _('Resource type.'),
             required=True,
             update_allowed=True
         ),

@@ -144,16 +144,16 @@ class ResourceGroup(stack_resource.StackResource):
             schema={
                 RESOURCE_DEF_TYPE: properties.Schema(
                     properties.Schema.STRING,
-                    _('The type of the resources in the group'),
+                    _('The type of the resources in the group.'),
                     required=True
                 ),
                 RESOURCE_DEF_PROPERTIES: properties.Schema(
                     properties.Schema.MAP,
-                    _('Property values for the resources in the group')
+                    _('Property values for the resources in the group.')
                 ),
                 RESOURCE_DEF_METADATA: properties.Schema(
                     properties.Schema.MAP,
-                    _('Supplied metadata for the resources in the group'),
+                    _('Supplied metadata for the resources in the group.'),
                     support_status=support.SupportStatus(version='5.0.0')
                 ),
 
@@ -163,7 +163,7 @@ class ResourceGroup(stack_resource.StackResource):
         ),
         REMOVAL_POLICIES: properties.Schema(
             properties.Schema.LIST,
-            _('Policies for removal of resources on update'),
+            _('Policies for removal of resources on update.'),
             schema=properties.Schema(
                 properties.Schema.MAP,
                 _('Policy to be processed when doing an update which '
@@ -178,11 +178,11 @@ class ResourceGroup(stack_resource.StackResource):
                           "(1) The resource name, as in the nested stack, "
                           "(2) The resource reference returned from "
                           "get_resource in a template, as available via "
-                          "the 'refs' attribute "
+                          "the 'refs' attribute. "
                           "Note this is destructive on update when specified; "
                           "even if the count is not being reduced, and once "
                           "a resource name is removed, it's name is never "
-                          "reused in subsequent updates"
+                          "reused in subsequent updates."
                           ),
                         default=[]
                     ),

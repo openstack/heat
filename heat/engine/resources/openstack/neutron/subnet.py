@@ -167,6 +167,7 @@ class Subnet(neutron.NeutronResource):
                 schema={
                     ALLOCATION_POOL_START: properties.Schema(
                         properties.Schema.STRING,
+                        _('Start address for the allocation pool.'),
                         required=True,
                         constraints=[
                             constraints.CustomConstraint('ip_addr')
@@ -174,6 +175,7 @@ class Subnet(neutron.NeutronResource):
                     ),
                     ALLOCATION_POOL_END: properties.Schema(
                         properties.Schema.STRING,
+                        _('End address for the allocation pool.'),
                         required=True,
                         constraints=[
                             constraints.CustomConstraint('ip_addr')
@@ -190,11 +192,13 @@ class Subnet(neutron.NeutronResource):
         ),
         HOST_ROUTES: properties.Schema(
             properties.Schema.LIST,
+            _('A list of host route dictionaries for the subnet.'),
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
                     ROUTE_DESTINATION: properties.Schema(
                         properties.Schema.STRING,
+                        _('The destination for static route.'),
                         required=True,
                         constraints=[
                             constraints.CustomConstraint('net_cidr')
@@ -202,6 +206,7 @@ class Subnet(neutron.NeutronResource):
                     ),
                     ROUTE_NEXTHOP: properties.Schema(
                         properties.Schema.STRING,
+                        _('The next hop for the destination.'),
                         required=True,
                         constraints=[
                             constraints.CustomConstraint('ip_addr')
