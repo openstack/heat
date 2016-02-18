@@ -70,6 +70,7 @@ Developing Heat
 .. toctree::
     :maxdepth: 1
 
+    contributing/index
     getting_started/on_devstack
     architecture
     pluginguide
