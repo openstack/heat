@@ -18,6 +18,7 @@ import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -44,10 +45,12 @@ class TestResource(resource.Resource):
         VALUE, UPDATE_REPLACE, FAIL,
         CLIENT_NAME, ENTITY_NAME,
         WAIT_SECS, ACTION_WAIT_SECS, ATTR_WAIT_SECS,
+        CONSTRAINT_PROP_SECS,
     ) = (
         'value', 'update_replace', 'fail',
         'client_name', 'entity_name',
         'wait_secs', 'action_wait_secs', 'attr_wait_secs',
+        'constraint_prop_secs',
     )
 
     ATTRIBUTES = (
@@ -57,6 +60,16 @@ class TestResource(resource.Resource):
     )
 
     properties_schema = {
+        CONSTRAINT_PROP_SECS: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Number value for delay during resolve constraint.'),
+            default=0,
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('test_constr')
+            ],
+            support_status=support.SupportStatus(version='6.0.0')
+        ),
         ATTR_WAIT_SECS: properties.Schema(
             properties.Schema.NUMBER,
             _('Number value for timeout during resolving output value.'),
