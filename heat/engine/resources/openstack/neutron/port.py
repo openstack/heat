@@ -249,8 +249,8 @@ class Port(neutron.NeutronResource):
               'To support SR-IOV PCI passthrough networking, you can request '
               'that the neutron port to be realized as normal (virtual nic), '
               'direct (pci passthrough), or macvtap '
-              '(virtual interface with a tap-like software interface). Note'
-              ' that this only works for Neutron deployments that support '
+              '(virtual interface with a tap-like software interface). Note '
+              'that this only works for Neutron deployments that support '
               'the bindings extension.'),
             constraints=[
                 constraints.AllowedValues(['normal', 'direct', 'macvtap']),

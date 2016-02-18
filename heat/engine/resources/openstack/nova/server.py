@@ -232,8 +232,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     ),
                     BLOCK_DEVICE_MAPPING_DEVICE_TYPE: properties.Schema(
                         properties.Schema.STRING,
-                        _('Device type: at the moment we can make distinction'
-                          ' only between disk and cdrom.'),
+                        _('Device type: at the moment we can make distinction '
+                          'only between disk and cdrom.'),
                         constraints=[
                             constraints.AllowedValues(['cdrom', 'disk']),
                         ],
