@@ -180,7 +180,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             type=attributes.Schema.STRING
         ),
         STATUS_CODE: attributes.Schema(
-            _("Returned status code from the configuration execution"),
+            _("Returned status code from the configuration execution."),
             type=attributes.Schema.STRING
         ),
     }

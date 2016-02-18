@@ -103,8 +103,8 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
         CURL_CLI: attributes.Schema(
             _('Convenience attribute, provides curl CLI command '
               'prefix, which can be used for signalling handle completion or '
-              'failure when signal_transport is set to TOKEN_SIGNAL.  You '
-              ' can signal success by adding '
+              'failure when signal_transport is set to TOKEN_SIGNAL. You '
+              'can signal success by adding '
               '--data-binary \'{"status": "SUCCESS"}\' '
               ', or signal failure by adding '
               '--data-binary \'{"status": "FAILURE"}\'. '
