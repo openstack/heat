@@ -4,11 +4,17 @@
 # From heat_integrationtests.common.config
 #
 
-# Username to use for API requests. (string value)
+# Username to use for non admin API requests. (string value)
 #username = <None>
 
-# API key to use when authenticating. (string value)
+# Username to use for admin API requests. (string value)
+#admin_username = <None>
+
+# Non admin API key to use when authenticating. (string value)
 #password = <None>
+
+# Admin API key to use when authenticating. (string value)
+#admin_password = <None>
 
 # Tenant name to use for API requests. (string value)
 #tenant_name = <None>
