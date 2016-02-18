@@ -72,12 +72,6 @@ class SaharaDataSourceTest(common.HeatTestCase):
         expected_state = (ds.CREATE, ds.COMPLETE)
         self.assertEqual(expected_state, ds.state)
 
-    def test_resource_mapping(self):
-        mapping = data_source.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(data_source.DataSource,
-                         mapping['OS::Sahara::DataSource'])
-
     def test_update(self):
         ds = self._create_resource('data-source', self.rsrc_defn,
                                    self.stack)

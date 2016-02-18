@@ -83,12 +83,6 @@ class KeystoneUserTest(common.HeatTestCase):
 
         return value
 
-    def test_resource_mapping(self):
-        mapping = user.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(user.KeystoneUser, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_user, user.KeystoneUser)
-
     def test_user_handle_create(self):
         mock_user = self._get_mock_user()
         self.users.create.return_value = mock_user

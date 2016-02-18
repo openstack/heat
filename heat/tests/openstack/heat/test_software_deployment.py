@@ -214,10 +214,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                          "SOFTWARE_CONFIG since there are "
                          "software deployments on it.", six.text_type(err))
 
-    def test_resource_mapping(self):
-        self._create_stack(self.template)
-        self.assertIsInstance(self.deployment, sd.SoftwareDeployment)
-
     def mock_software_config(self):
         config = {
             'id': '48e8ade1-9196-42d5-89a2-f709fde42632',

@@ -193,9 +193,3 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.assertEqual('3', net.FnGetAtt('cidr'))
         self.assertEqual('5', net.FnGetAtt('ip_version'))
         self.assertEqual('6', net.FnGetAtt('network_type'))
-
-    def test_resource_mapping(self):
-        mapping = share_network.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(share_network.ManilaShareNetwork,
-                         mapping['OS::Manila::ShareNetwork'])

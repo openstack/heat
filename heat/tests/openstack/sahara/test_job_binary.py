@@ -71,12 +71,6 @@ class SaharaJobBinaryTest(common.HeatTestCase):
         expected_state = (jb.CREATE, jb.COMPLETE)
         self.assertEqual(expected_state, jb.state)
 
-    def test_resource_mapping(self):
-        mapping = job_binary.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(job_binary.JobBinary,
-                         mapping['OS::Sahara::JobBinary'])
-
     def test_update(self):
         jb = self._create_resource('job-binary', self.rsrc_defn,
                                    self.stack)

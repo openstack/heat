@@ -14,7 +14,6 @@
 import mock
 
 from heat.common import exception as exc
-from heat.engine.resources.openstack.heat import software_config as sc
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -45,13 +44,6 @@ class SoftwareConfigTest(common.HeatTestCase):
         self.config = self.stack['config_mysql']
         self.rpc_client = mock.MagicMock()
         self.config._rpc_client = self.rpc_client
-
-    def test_resource_mapping(self):
-        mapping = sc.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(sc.SoftwareConfig,
-                         mapping['OS::Heat::SoftwareConfig'])
-        self.assertIsInstance(self.config, sc.SoftwareConfig)
 
     def test_handle_create(self):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'

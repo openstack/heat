@@ -105,9 +105,3 @@ class SaharaImageTest(common.HeatTestCase):
         value.to_dict.return_value = {'img': 'info'}
         self.client.images.get.return_value = value
         self.assertEqual({'img': 'info'}, img.FnGetAtt('show'))
-
-    def test_resource_mapping(self):
-        mapping = image.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(image.SaharaImageRegistry,
-                         mapping['OS::Sahara::ImageRegistry'])

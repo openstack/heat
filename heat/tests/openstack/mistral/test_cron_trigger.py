@@ -82,12 +82,6 @@ class MistralCronTriggerTest(common.HeatTestCase):
         expected_state = (ct.CREATE, ct.COMPLETE)
         self.assertEqual(expected_state, ct.state)
 
-    def test_resource_mapping(self):
-        mapping = cron_trigger.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(cron_trigger.CronTrigger,
-                         mapping['OS::Mistral::CronTrigger'])
-
     def test_attributes(self):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
         self.assertEqual('2015-03-01 00:00:00',

@@ -68,12 +68,6 @@ class KeystoneRegionTest(common.HeatTestCase):
 
         return value
 
-    def test_resource_mapping(self):
-        mapping = region.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(region.KeystoneRegion, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_region, region.KeystoneRegion)
-
     def test_region_handle_create(self):
         mock_region = self._get_mock_region()
         self.regions.create.return_value = mock_region

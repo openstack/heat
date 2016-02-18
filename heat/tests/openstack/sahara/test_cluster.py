@@ -158,14 +158,6 @@ class SaharaClusterTest(common.HeatTestCase):
         self.assertEqual({"cluster": "info"}, cluster.FnGetAtt('show'))
         self.assertEqual(3, self.cl_mgr.get.call_count)
 
-    def test_cluster_resource_mapping(self):
-        cluster = self._init_cluster(self.t)
-        mapping = sc.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(sc.SaharaCluster,
-                         mapping['OS::Sahara::Cluster'])
-        self.assertIsInstance(cluster, sc.SaharaCluster)
-
     def test_cluster_create_no_image_anywhere_fails(self):
         self.t['resources']['super-cluster']['properties'].pop(
             'default_image_id')

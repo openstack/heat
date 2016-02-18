@@ -168,14 +168,6 @@ class MonascaNotificationTest(common.HeatTestCase):
 
         self.assertIsNone(self.test_resource.handle_delete())
 
-    def test_resource_mapping(self):
-        mapping = notification.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(notification.MonascaNotification,
-                         mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_resource,
-                              notification.MonascaNotification)
-
     def test_resource_show_resource(self):
         mock_notification_get = self.test_client.notifications.get
         mock_notification_get.return_value = {}

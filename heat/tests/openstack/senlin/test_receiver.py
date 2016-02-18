@@ -113,12 +113,6 @@ class SenlinReceiverTest(common.HeatTestCase):
         self.senlin_mock.delete_receiver.assert_called_once_with(
             recv.resource_id)
 
-    def test_resource_mapping(self):
-        mapping = sr.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(sr.Receiver,
-                         mapping['OS::Senlin::Receiver'])
-
     def test_cluster_resolve_attribute(self):
         excepted_show = {
             'id': 'some_id',

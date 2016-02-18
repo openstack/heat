@@ -117,12 +117,6 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
         self.assertIn('Exception: resources.security_service: error',
                       six.text_type(exc))
 
-    def test_resource_mapping(self):
-        mapping = security_service.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(security_service.SecurityService,
-                         mapping['OS::Manila::SecurityService'])
-
     def test_update(self):
         ss = self._create_resource('security_service', self.rsrc_defn,
                                    self.stack)

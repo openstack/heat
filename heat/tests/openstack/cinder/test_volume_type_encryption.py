@@ -13,7 +13,6 @@
 
 import mock
 
-from heat.engine.resources.openstack.cinder import encrypted_volume_type
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -54,16 +53,6 @@ class CinderEncryptedVolumeTypeTest(common.HeatTestCase):
         cinder.return_value = self.cinderclient
         self.volume_encryption_types = (
             self.cinderclient.volume_encryption_types)
-
-    def test_resource_mapping(self):
-        mapping = encrypted_volume_type.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(encrypted_volume_type.CinderEncryptedVolumeType,
-                         mapping['OS::Cinder::EncryptedVolumeType'])
-        self.assertIsInstance(
-            self.my_encrypted_vol_type,
-            encrypted_volume_type.CinderEncryptedVolumeType
-        )
 
     def test_handle_create(self):
         value = mock.MagicMock()

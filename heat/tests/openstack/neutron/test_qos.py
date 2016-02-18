@@ -15,7 +15,6 @@ import mock
 
 from heat.common import template_format
 from heat.engine.clients.os import neutron
-from heat.engine.resources.openstack.neutron import qos
 from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
@@ -69,11 +68,6 @@ class NeutronQoSPolicyTest(common.HeatTestCase):
         self.my_qos_policy = self.stack['my_qos_policy']
         self.my_qos_policy.client = mock.MagicMock(
             return_value=self.neutronclient)
-
-    def test_resource_mapping(self):
-        mapping = qos.resource_mapping()
-        self.assertEqual(qos.QoSPolicy, mapping['OS::Neutron::QoSPolicy'])
-        self.assertIsInstance(self.my_qos_policy, qos.QoSPolicy)
 
     def test_qos_policy_handle_create(self):
         policy = {
@@ -191,14 +185,6 @@ class NeutronQoSBandwidthLimitRuleTest(common.HeatTestCase):
             'find_resourceid_by_name_or_id')
         self.policy_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         self.find_mock.return_value = self.policy_id
-
-    def test_resource_mapping(self):
-        mapping = qos.resource_mapping()
-        self.assertEqual(2, len(mapping))
-        self.assertEqual(qos.QoSBandwidthLimitRule,
-                         mapping['OS::Neutron::QoSBandwidthLimitRule'])
-        self.assertIsInstance(self.bandwidth_limit_rule,
-                              qos.QoSBandwidthLimitRule)
 
     def test_rule_handle_create(self):
         rule = {
