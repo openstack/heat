@@ -312,7 +312,10 @@ class KeystoneRoleAssignmentMixin(object):
 
 class KeystoneUserRoleAssignment(resource.Resource,
                                  KeystoneRoleAssignmentMixin):
-    """Resource for granting roles to a user."""
+    """Resource for granting roles to a user.
+
+    Resource for specifying users and their's roles.
+    """
 
     support_status = support.SupportStatus(
         version='5.0.0',
@@ -363,7 +366,10 @@ class KeystoneUserRoleAssignment(resource.Resource,
 
 class KeystoneGroupRoleAssignment(resource.Resource,
                                   KeystoneRoleAssignmentMixin):
-    """Resource for granting roles to a group."""
+    """Resource for granting roles to a group.
+
+    Resource for specifying groups and their's roles.
+    """
 
     support_status = support.SupportStatus(
         version='5.0.0',

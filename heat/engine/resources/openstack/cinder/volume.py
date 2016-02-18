@@ -643,6 +643,11 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
 
 class CinderVolumeAttachment(vb.BaseVolumeAttachment):
+    """Resource for associating volume to instance.
+
+    Resource for associating existing volume to instance. Also, the location
+    where the volume is exposed on the instance can be specified.
+    """
 
     PROPERTIES = (
         INSTANCE_ID, VOLUME_ID, DEVICE,

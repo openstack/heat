@@ -23,6 +23,10 @@ from heat.engine import support
 
 
 class ExtraRoute(neutron.NeutronResource):
+    """Resource for specifying extra routes for Neutron router.
+
+    Resource allows to specify nexthop IP and destination network for router.
+    """
 
     required_service_extension = 'extraroute'
 

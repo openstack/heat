@@ -38,7 +38,7 @@ class ResourceGroup(stack_resource.StackResource):
     """Creates one or more identically configured nested resources.
 
     In addition to the `refs` attribute, this resource implements synthetic
-    attributes that mirror those of the resources in the group.  When
+    attributes that mirror those of the resources in the group. When
     getting an attribute from this resource, however, a list of attribute
     values for each resource in the group is returned. To get attribute values
     for a single resource in the group, synthetic attributes of the form

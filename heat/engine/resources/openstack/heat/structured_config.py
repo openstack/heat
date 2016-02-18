@@ -184,6 +184,11 @@ class StructuredDeployment(sd.SoftwareDeployment):
 
 
 class StructuredDeploymentGroup(sd.SoftwareDeploymentGroup):
+    """This resource associates a group of servers with some configuration.
+
+    This resource works similar as OS::Heat::SoftwareDeploymentGroup, but for
+    structured resources.
+    """
 
     PROPERTIES = (
         SERVERS,

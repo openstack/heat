@@ -53,7 +53,7 @@ class HeatCustomGuidelines(object):
     def check_resource_descriptions(self):
         for cls in self.resources_classes:
             # check resource's description
-            #self._check_resource_description(cls)
+            self._check_resource_description(cls)
             # check properties' descriptions
             self._check_resource_schemas(cls, cls.properties_schema,
                                          'property')
