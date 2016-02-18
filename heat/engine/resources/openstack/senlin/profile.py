@@ -13,9 +13,8 @@
 #
 #    Copyright 2015 IBM Corp.
 
-from heat.common import exception
 from heat.common.i18n import _
-from heat.common import template_format
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -33,9 +32,9 @@ class Profile(resource.Resource):
     default_client_name = 'senlin'
 
     PROPERTIES = (
-        NAME, SPEC, METADATA,
+        NAME, TYPE, METADATA, PROFILE_PROPERTIES,
     ) = (
-        'name', 'spec', 'metadata',
+        'name', 'type', 'metadata', 'properties',
     )
 
     properties_schema = {
@@ -45,33 +44,32 @@ class Profile(resource.Resource):
               'is used.'),
             update_allowed=True,
         ),
-        SPEC: properties.Schema(
+        TYPE: properties.Schema(
             properties.Schema.STRING,
-            _('The spec template content for Senlin profile, should be '
-              'either in YAML or JSON format.'),
-            required=True
+            _('The type of profile.'),
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('senlin.profile_type')
+            ]
         ),
         METADATA: properties.Schema(
             properties.Schema.MAP,
             _('Metadata key-values defined for profile.'),
             update_allowed=True,
+        ),
+        PROFILE_PROPERTIES: properties.Schema(
+            properties.Schema.MAP,
+            _('Properties for profile'),
         )
     }
-
-    def __init__(self, name, definition, stack):
-        super(Profile, self).__init__(name, definition, stack)
-        self._spec = None
-
-    def _parse_spec(self, spec):
-        if self._spec is None:
-            self._spec = template_format.simple_parse(spec)
-        return self._spec
 
     def handle_create(self):
         params = {
             'name': (self.properties[self.NAME] or
                      self.physical_resource_name()),
-            'spec': self._parse_spec(self.properties[self.SPEC]),
+            'spec': self.client_plugin().generate_spec(
+                spec_type=self.properties[self.TYPE],
+                spec_props=self.properties[self.PROFILE_PROPERTIES]),
             'metadata': self.properties[self.METADATA],
         }
 
@@ -82,16 +80,6 @@ class Profile(resource.Resource):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().delete_profile(self.resource_id)
-
-    def validate(self):
-        try:
-            self._parse_spec(self.properties[self.SPEC])
-        except ValueError as ex:
-            msg = _("Failed to parse %(spec)s: %(ex)s") % {
-                'spec': self.SPEC,
-                'ex': ex
-            }
-            raise exception.StackValidationFailed(message=msg)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

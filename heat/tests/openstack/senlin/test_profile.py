@@ -14,10 +14,9 @@
 # limitations under the License.
 
 import mock
-import six
 
-from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import senlin
 from heat.engine.resources.openstack.senlin import profile as sp
 from heat.engine import scheduler
 from heat.tests import common
@@ -27,28 +26,34 @@ from heat.tests import utils
 profile_stack_template = """
 heat_template_version: 2016-04-08
 description: Senlin Profile Template
-parameters:
-  spec:
-    type: string
 resources:
   senlin-profile:
     type: OS::Senlin::Profile
     properties:
       name: SenlinProfile
-      spec:
-        get_param: spec
+      type: os.heat.stack-1.0
+      properties:
+        template:
+          heat_template_version: 2014-10-16
+          resources:
+            random:
+              type: OS::Heat::RandomString
 """
 
-profile_spec = """
-type: os.heat.stack
-version: 1.0
-properties:
-  template:
-    heat_template_version: 2014-10-16
-    resources:
-      random:
-        type: OS::Heat::RandomString
-"""
+profile_spec = {
+    'type': 'os.heat.stack',
+    'version': '1.0',
+    'properties': {
+        'template': {
+            'heat_template_version': '2014-10-16',
+            'resources': {
+                'random': {
+                    'type': 'OS::Heat::RandomString'
+                }
+            }
+        }
+    }
+}
 
 
 class FakeProfile(object):
@@ -56,7 +61,7 @@ class FakeProfile(object):
         self.id = id
         self.name = "SenlinProfile"
         self.metadata = {}
-        self.spec = spec or template_format.simple_parse(profile_spec)
+        self.spec = spec or profile_spec
 
 
 class SenlinProfileTest(common.HeatTestCase):
@@ -64,19 +69,18 @@ class SenlinProfileTest(common.HeatTestCase):
         super(SenlinProfileTest, self).setUp()
         self.senlin_mock = mock.MagicMock()
         self.patchobject(sp.Profile, 'client', return_value=self.senlin_mock)
+        self.patchobject(senlin.ProfileTypeConstraint, 'validate',
+                         return_value=True)
         self.fake_p = FakeProfile()
         self.t = template_format.parse(profile_stack_template)
 
-    def _init_profile(self, template, params):
-        self.stack = utils.parse_stack(template, params)
+    def _init_profile(self, template):
+        self.stack = utils.parse_stack(template)
         profile = self.stack['senlin-profile']
         return profile
 
     def _create_profile(self, template):
-        params = {
-            'spec': profile_spec
-        }
-        profile = self._init_profile(template, params)
+        profile = self._init_profile(template)
         self.senlin_mock.create_profile.return_value = self.fake_p
         scheduler.TaskRunner(profile.create)()
         self.assertEqual((profile.CREATE, profile.COMPLETE),
@@ -89,7 +93,7 @@ class SenlinProfileTest(common.HeatTestCase):
         expect_kwargs = {
             'name': 'SenlinProfile',
             'metadata': None,
-            'spec': template_format.simple_parse(profile_spec)
+            'spec': profile_spec
         }
         self.senlin_mock.create_profile.assert_called_once_with(
             **expect_kwargs)
@@ -109,17 +113,6 @@ class SenlinProfileTest(common.HeatTestCase):
                               prop_diff=prop_diff)
         self.senlin_mock.update_profile.assert_called_once_with(
             profile.resource_id, **prop_diff)
-
-    def test_validate_fail(self):
-        params = {
-            'spec': 'foo'
-        }
-        stack = utils.parse_stack(self.t, params)
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               stack['senlin-profile'].validate)
-        expected = ('Failed to parse spec: The template is not a '
-                    'JSON object or YAML mapping.')
-        self.assertEqual(expected, six.text_type(ex))
 
     def test_resource_mapping(self):
         mapping = sp.resource_mapping()
