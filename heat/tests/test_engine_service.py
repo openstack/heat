@@ -1123,7 +1123,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.assertEqual(0, len(sl))
 
-    def _preview_stack(self):
+    def _preview_stack(self, environment_files=None):
         res._register_class('GenericResource1', generic_rsrc.GenericResource)
         res._register_class('GenericResource2', generic_rsrc.GenericResource)
 
@@ -1138,7 +1138,8 @@ class StackServiceTest(common.HeatTestCase):
                    'SampleResource2': {'Type': 'GenericResource2'}}}
 
         return self.eng.preview_stack(self.ctx, stack_name, tpl,
-                                      params, files, args)
+                                      params, files, args,
+                                      environment_files=environment_files)
 
     def test_preview_stack_returns_a_stack(self):
         stack = self._preview_stack()
@@ -1180,6 +1181,17 @@ class StackServiceTest(common.HeatTestCase):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self._preview_stack)
         self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
+
+    @mock.patch.object(service.EngineService, '_merge_environments')
+    def test_preview_environment_files(self, mock_merge):
+        # Setup
+        environment_files = ['env_1']
+
+        # Test
+        self._preview_stack(environment_files=environment_files)
+
+        # Verify
+        mock_merge.assert_called_once_with(environment_files, None, {})
 
     @mock.patch.object(stack_object.Stack, 'get_by_name')
     def test_validate_new_stack_checks_existing_stack(self, mock_stack_get):
@@ -1389,13 +1401,13 @@ class StackServiceTest(common.HeatTestCase):
         # get parameters from adopt stack data which doesn't have it.
         args = {"adopt_stack_data": '''{}'''}
         self.eng._parse_template_and_validate_stack(
-            self.ctx, 'stack_name', template, {}, {}, args)
+            self.ctx, 'stack_name', template, {}, {}, None, args)
 
         args = {"adopt_stack_data": '''{
             "environment": {}
         }'''}
         self.eng._parse_template_and_validate_stack(
-            self.ctx, 'stack_name', template, {}, {}, args)
+            self.ctx, 'stack_name', template, {}, {}, None, args)
 
     def test_parse_adopt_stack_data_with_parameters(self):
         cfg.CONF.set_override('enable_stack_adopt', True)
@@ -1420,5 +1432,5 @@ class StackServiceTest(common.HeatTestCase):
                 }
             }}'''}
         stack = self.eng._parse_template_and_validate_stack(
-            self.ctx, 'stack_name', template, {}, {}, args)
+            self.ctx, 'stack_name', template, {}, {}, None, args)
         self.assertEqual(1, stack.parameters['volsize'])

@@ -41,7 +41,8 @@ class StackCreateTest(common.HeatTestCase):
 
     @mock.patch.object(threadgroup, 'ThreadGroup')
     @mock.patch.object(stack.Stack, 'validate')
-    def _test_stack_create(self, stack_name, mock_validate, mock_tg):
+    def _test_stack_create(self, stack_name, mock_validate, mock_tg,
+                           environment_files=None):
         mock_tg.return_value = tools.DummyThreadGroup()
 
         params = {'foo': 'bar'}
@@ -53,8 +54,10 @@ class StackCreateTest(common.HeatTestCase):
         mock_env = self.patchobject(environment, 'Environment',
                                     return_value=stk.env)
         mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
+        mock_merge = self.patchobject(self.man, '_merge_environments')
         result = self.man.create_stack(self.ctx, stack_name,
-                                       template, params, None, {})
+                                       template, params, None, {},
+                                       environment_files=environment_files)
         self.assertEqual(stk.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
@@ -67,11 +70,20 @@ class StackCreateTest(common.HeatTestCase):
                                            stack_user_project_id=None,
                                            convergence=False,
                                            parent_resource=None)
+
+        if environment_files:
+            mock_merge.assert_called_once_with(environment_files, None, params)
         mock_validate.assert_called_once_with()
 
     def test_stack_create(self):
         stack_name = 'service_create_test_stack'
         self._test_stack_create(stack_name)
+
+    def test_stack_create_with_environment_files(self):
+        stack_name = 'env_files_test_stack'
+        environment_files = ['env_1', 'env_2']
+        self._test_stack_create(stack_name,
+                                environment_files=environment_files)
 
     def test_stack_create_equals_max_per_tenant(self):
         cfg.CONF.set_override('max_stacks_per_tenant', 1)
