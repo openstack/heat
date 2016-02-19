@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import testtools
 import uuid
 
 import mock
@@ -743,12 +742,10 @@ class OSDBInstanceTest(common.HeatTestCase):
 
 @mock.patch.object(resource.Resource, "client_plugin")
 @mock.patch.object(resource.Resource, "client")
-class InstanceUpdateTests(testtools.TestCase):
+class InstanceUpdateTests(common.HeatTestCase):
 
     def setUp(self):
         super(InstanceUpdateTests, self).setUp()
-        resource._register_class("OS::Trove::Instance",
-                                 os_database.OSDBInstance)
         self._stack = mock.Mock()
         self._stack.has_cache_data.return_value = False
         self._stack.db_resource_get.return_value = None
