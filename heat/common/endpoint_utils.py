@@ -17,6 +17,8 @@ from keystoneclient import discover as ks_discover
 from oslo_config import cfg
 from oslo_utils import importutils
 
+from heat.common import config
+
 
 def get_auth_uri(v3=True):
     # Look for the keystone auth_uri in the configuration. First we
@@ -24,7 +26,11 @@ def get_auth_uri(v3=True):
     # look in [keystone_authtoken]
     if cfg.CONF.clients_keystone.auth_uri:
         discover = ks_discover.Discover(
-            auth_url=cfg.CONF.clients_keystone.auth_uri)
+            auth_url=cfg.CONF.clients_keystone.auth_uri,
+            cacert=config.get_client_option('keystone', 'ca_file'),
+            insecure=config.get_client_option('keystone', 'insecure'),
+            cert=config.get_client_option('keystone', 'cert_file'),
+            key=config.get_client_option('keystone', 'key_file'))
         return discover.url_for('3.0')
     else:
         # Import auth_token to have keystone_authtoken settings setup.

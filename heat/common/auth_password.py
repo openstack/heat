@@ -16,9 +16,9 @@
 
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient import session
-from oslo_config import cfg
 from webob import exc
 
+from heat.common import config
 from heat.common import context
 
 
@@ -106,23 +106,11 @@ class KeystonePasswordAuthProtocol(object):
         return headers
 
     def _ssl_options(self):
-        opts = {'cacert': self._get_client_option('ca_file'),
-                'insecure': self._get_client_option('insecure'),
-                'cert': self._get_client_option('cert_file'),
-                'key': self._get_client_option('key_file')}
+        opts = {'cacert': config.get_client_option('keystone', 'ca_file'),
+                'insecure': config.get_client_option('keystone', 'insecure'),
+                'cert': config.get_client_option('keystone', 'cert_file'),
+                'key': config.get_client_option('keystone', 'key_file')}
         return opts
-
-    def _get_client_option(self, option):
-        # look for the option in the [clients_keystone] section
-        # unknown options raise cfg.NoSuchOptError
-        cfg.CONF.import_opt(option, 'heat.common.config',
-                            group='clients_keystone')
-        v = getattr(cfg.CONF.clients_keystone, option)
-        if v is not None:
-            return v
-        # look for the option in the generic [clients] section
-        cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
-        return getattr(cfg.CONF.clients, option)
 
 
 def filter_factory(global_conf, **local_conf):
