@@ -41,7 +41,6 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
-from heat.engine import template
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
 from heat.objects import stack as stack_objects
@@ -920,8 +919,13 @@ class Resource(object):
             )
 
         with self.lock(engine_id):
-            new_temp = template.Template.load(self.context, template_id)
-            new_res_def = new_temp.resource_definitions(new_stack)[self.name]
+            new_res_def = new_stack.t.resource_definitions(
+                new_stack)[self.name]
+            new_res_type = new_stack.env.registry.get_class_to_instantiate(
+                new_res_def.resource_type, resource_name=self.name)
+            if type(self) is not new_res_type:
+                raise exception.UpdateReplace(self.name)
+
             action_rollback = self.stack.action == self.stack.ROLLBACK
             status_in_progress = self.stack.status == self.stack.IN_PROGRESS
             if action_rollback and status_in_progress and self.replaced_by:
