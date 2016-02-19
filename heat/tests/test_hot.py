@@ -18,6 +18,7 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine.cfn import functions as cfn_functions
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import functions as hot_functions
@@ -611,7 +612,22 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'str_replace': {'template': 'Template var1 string var2',
                                    'params': ['var1', 'foo', 'var2', 'bar']}}
 
-        self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        ex = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('parameters must be a mapping', six.text_type(ex))
+
+    def test_str_replace_invalid_param_type_init(self):
+        """Test str_replace function parameter values.
+
+        Pass parameter values of wrong type to function and verify that we get
+        a TypeError in the constructor.
+        """
+        args = [['var1', 'foo', 'var2', 'bar'],
+                'Template var1 string var2']
+        ex = self.assertRaises(
+            TypeError,
+            cfn_functions.Replace,
+            None, 'Fn::Replace', args)
+        self.assertIn('parameters must be a mapping', six.text_type(ex))
 
     def test_str_replace_ref_get_param(self):
         """Test str_replace referencing parameters."""
@@ -625,16 +641,25 @@ class HOTemplateTest(common.HeatTestCase):
             type: json
             default:
               replaceme: success
+        resources:
+          rsrc:
+            type: ResWithStringPropAndAttr
+            properties:
+              a_string:
+                str_replace:
+                  template: {get_param: p_template}
+                  params: {get_param: p_params}
+        outputs:
+          replaced:
+            value: {get_attr: [rsrc, string]}
         ''')
-        snippet = {'str_replace':
-                   {'template': {'get_param': 'p_template'},
-                    'params': {'get_param': 'p_params'}}}
-        snippet_resolved = 'foo-success'
-
         tmpl = template.Template(hot_tpl)
-        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
-
-        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('foo-success', self.stack.output('replaced'))
 
     def test_get_file(self):
         """Test get_file function."""
