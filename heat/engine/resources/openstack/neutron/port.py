@@ -270,6 +270,12 @@ class Port(neutron.NeutronResource):
         ),
     }
 
+    # Need to update properties_schema with other properties before
+    # initialisation, because resource should contain all properties before
+    # creating. Also, documentation should correctly resolves resource
+    # properties schema.
+    properties_schema.update(extra_properties_schema)
+
     attributes_schema = {
         ADMIN_STATE_UP_ATTR: attributes.Schema(
             _("The administrative state of this port."),
@@ -331,11 +337,6 @@ class Port(neutron.NeutronResource):
             support_status=support.SupportStatus(version='6.0.0'),
         ),
     }
-
-    def __init__(self, name, definition, stack):
-        """Overloaded init in case of merging two schemas to one."""
-        self.properties_schema.update(self.extra_properties_schema)
-        super(Port, self).__init__(name, definition, stack)
 
     def translation_rules(self, props):
         return [
