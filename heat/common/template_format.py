@@ -22,8 +22,6 @@ import yaml
 from heat.common import exception
 from heat.common.i18n import _
 
-cfg.CONF.import_opt('max_template_size', 'heat.common.config')
-
 if hasattr(yaml, 'CSafeLoader'):
     yaml_loader = yaml.CSafeLoader
 else:
@@ -39,6 +37,7 @@ def _construct_yaml_str(self, node):
     # Override the default string handling function
     # to always return unicode objects
     return self.construct_scalar(node)
+
 yaml_loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 # Unquoted dates like 2013-05-23 in yaml files get loaded as objects of type
 # datetime.data which causes problems in API layer when being processed by
@@ -75,16 +74,31 @@ def simple_parse(tmpl_str):
     return tpl
 
 
+def validate_template_limit(contain_str):
+    """Validate limit for the template.
+
+    Check if the contain exceeds allowed size range.
+    """
+
+    if len(contain_str) > cfg.CONF.max_template_size:
+        msg = _("Template size (%(actual_len)s bytes) exceeds maximum "
+                "allowed size (%(limit)s bytes)."
+                ) % {'actual_len': len(contain_str),
+                     'limit': cfg.CONF.max_template_size}
+        raise exception.RequestLimitExceeded(message=msg)
+
+
 def parse(tmpl_str):
     """Takes a string and returns a dict containing the parsed structure.
 
     This includes determination of whether the string is using the
     JSON or YAML format.
     """
-    if len(tmpl_str) > cfg.CONF.max_template_size:
-        msg = (_('Template exceeds maximum allowed size (%s bytes)') %
-               cfg.CONF.max_template_size)
-        raise exception.RequestLimitExceeded(message=msg)
+
+    # TODO(ricolin): Move this validation to api side.
+    # Validate nested stack template.
+    validate_template_limit(six.text_type(tmpl_str))
+
     tpl = simple_parse(tmpl_str)
     # Looking for supported version keys in the loaded template
     if not ('HeatTemplateFormatVersion' in tpl

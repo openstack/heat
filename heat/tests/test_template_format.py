@@ -97,7 +97,7 @@ class YamlMinimalTest(common.HeatTestCase):
 
     def test_long_yaml(self):
         template = {'HeatTemplateFormatVersion': '2012-12-12'}
-        config.cfg.CONF.set_override('max_template_size', 1024)
+        config.cfg.CONF.set_override('max_template_size', 10)
         template['Resources'] = ['a'] * int(
             config.cfg.CONF.max_template_size / 3)
         limit = config.cfg.CONF.max_template_size
@@ -105,8 +105,10 @@ class YamlMinimalTest(common.HeatTestCase):
         self.assertTrue(len(long_yaml) > limit)
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                template_format.parse, long_yaml)
-        msg = ('Request limit exceeded: Template exceeds maximum allowed size '
-               '(1024 bytes)')
+        msg = ('Request limit exceeded: Template size (%(actual_len)s '
+               'bytes) exceeds maximum allowed size (%(limit)s bytes).') % {
+                   'actual_len': len(str(long_yaml)),
+                   'limit': config.cfg.CONF.max_template_size}
         self.assertEqual(msg, six.text_type(ex))
 
     def test_parse_no_version_format(self):
