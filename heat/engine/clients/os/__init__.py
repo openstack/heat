@@ -16,6 +16,12 @@ from oslo_config import cfg
 
 from heat.common import cache
 
-MEMOIZE = core.get_memoization_decorator(conf=cfg.CONF,
-                                         region=cache.get_cache_region(),
-                                         group="service_extension_cache")
+MEMOIZE_EXTENSIONS = core.get_memoization_decorator(
+    conf=cfg.CONF,
+    region=cache.get_cache_region(),
+    group="service_extension_cache")
+
+MEMOIZE_FINDER = core.get_memoization_decorator(
+    conf=cfg.CONF,
+    region=cache.get_cache_region(),
+    group="resource_finder_cache")
