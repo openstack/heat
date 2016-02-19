@@ -497,8 +497,8 @@ class OSDBInstance(resource.Resource):
                                   {'ex': six.text_type(exc)})
                         return False
                     if "No change was requested" in six.text_type(exc):
-                        LOG.warn(_LW("Unexpected instance state change "
-                                     "during update. Retrying."))
+                        LOG.warning(_LW("Unexpected instance state change "
+                                        "during update. Retrying."))
                         return False
                 raise exc
         return True
