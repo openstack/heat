@@ -432,3 +432,20 @@ def load_paste_app(app_name=None):
                              "\nGot: %(e)r") % {'app_name': app_name,
                                                 'conf_file': conf_file,
                                                 'e': e})
+
+
+def get_client_option(client, option):
+    # look for the option in the [clients_${client}] section
+    # unknown options raise cfg.NoSuchOptError
+    try:
+        group_name = 'clients_' + client
+        cfg.CONF.import_opt(option, 'heat.common.config',
+                            group=group_name)
+        v = getattr(getattr(cfg.CONF, group_name), option)
+        if v is not None:
+            return v
+    except cfg.NoSuchGroupError:
+        pass  # do not error if the client is unknown
+    # look for the option in the generic [clients] section
+    cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
+    return getattr(cfg.CONF.clients, option)
