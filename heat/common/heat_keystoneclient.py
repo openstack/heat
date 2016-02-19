@@ -555,6 +555,10 @@ class KeystoneClientV3(object):
     def auth_token(self):
         return self.context.auth_plugin.get_token(self.session)
 
+    @property
+    def auth_ref(self):
+        return self.context.auth_plugin.get_access(self.session)
+
 
 class KeystoneClient(object):
 
