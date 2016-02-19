@@ -14,7 +14,7 @@
 import os
 import six
 
-from oslo_config import cfg
+from oslo_config import fixture as config_fixture
 
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
@@ -36,13 +36,8 @@ class WatchControllerTest(common.HeatTestCase):
         super(WatchControllerTest, self).setUp()
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.policy_path = self.path + "/../../policy/"
-        self.opts = [
-            cfg.StrOpt('config_dir', default=self.policy_path),
-            cfg.StrOpt('config_file', default='foo'),
-            cfg.StrOpt('project', default='heat'),
-        ]
-        cfg.CONF.register_opts(self.opts)
-        cfg.CONF.set_default('host', 'host')
+        self.fixture = self.useFixture(config_fixture.Config())
+        self.fixture.conf(args=['--config-dir', self.policy_path])
         self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
 
@@ -57,7 +52,6 @@ class WatchControllerTest(common.HeatTestCase):
 
     def tearDown(self):
         super(WatchControllerTest, self).tearDown()
-        cfg.CONF.unregister_opts(self.opts)
 
     def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string

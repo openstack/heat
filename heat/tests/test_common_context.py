@@ -15,6 +15,7 @@ import os
 
 import mock
 from oslo_config import cfg
+from oslo_config import fixture as config_fixture
 from oslo_middleware import request_id
 from oslo_policy import opts as policy_opts
 from oslo_utils import importutils
@@ -303,12 +304,8 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
 
     def setUp(self):
         super(RequestContextMiddlewareTest, self).setUp()
-        opts = [
-            cfg.StrOpt('config_dir', default=policy_path),
-            cfg.StrOpt('config_file', default='foo'),
-            cfg.StrOpt('project', default='heat'),
-        ]
-        cfg.CONF.register_opts(opts)
+        self.fixture = self.useFixture(config_fixture.Config())
+        self.fixture.conf(args=['--config-dir', policy_path])
         policy_opts.set_defaults(cfg.CONF, 'check_admin.json')
 
     def test_context_middleware(self):
