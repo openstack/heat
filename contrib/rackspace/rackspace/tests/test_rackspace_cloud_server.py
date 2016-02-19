@@ -456,7 +456,8 @@ class CloudServersTest(common.HeatTestCase):
                          'Unknown Rackspace Cloud automation status: FOO',
                          six.text_type(exc))
 
-    def _test_server_config_drive(self, user_data, config_drive, result):
+    def _test_server_config_drive(self, user_data, config_drive, result,
+                                  ud_format='RAW'):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation': 'Complete'}
         stack_name = 'no_user_data'
@@ -464,11 +465,14 @@ class CloudServersTest(common.HeatTestCase):
         properties = tmpl.t['Resources']['WebServer']['Properties']
         properties['user_data'] = user_data
         properties['config_drive'] = config_drive
+        properties['user_data_format'] = ud_format
+        properties['software_config_transport'] = "POLL_TEMP_URL"
         resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
                                           resource_defns['WebServer'], stack)
         server.metadata = {'rax_service_level_automation': 'Complete'}
         self.patchobject(server, 'store_external_ports')
+        self.patchobject(server, "_populate_deployments_metadata")
         mock_servers_create = mock.Mock(return_value=return_server)
         self.fc.servers.create = mock_servers_create
         image_id = mock.ANY
@@ -508,3 +512,7 @@ class CloudServersTest(common.HeatTestCase):
 
     def test_server_no_user_data_no_config_drive(self):
         self._test_server_config_drive(None, False, False)
+
+    def test_server_no_user_data_software_config(self):
+        self._test_server_config_drive(None, False, True,
+                                       ud_format="SOFTWARE_CONFIG")
