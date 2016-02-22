@@ -216,8 +216,9 @@ class SaharaCluster(resource.Resource):
         net_id = self.properties[self.MANAGEMENT_NETWORK]
         if net_id:
             if self.is_using_neutron():
-                net_id = self.client_plugin('neutron').find_neutron_resource(
-                    self.properties, self.MANAGEMENT_NETWORK, 'network')
+                net_id = self.client_plugin(
+                    'neutron').find_resourceid_by_name_or_id('network',
+                                                             net_id)
             else:
                 net_id = self.client_plugin('nova').get_nova_network_id(
                     net_id)

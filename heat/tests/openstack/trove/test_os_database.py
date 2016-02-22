@@ -607,10 +607,11 @@ class OSDBInstanceTest(common.HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         self._stubout_common_create()
         self.m.StubOutWithMock(neutron.NeutronClientPlugin,
-                               'find_neutron_resource')
-        neutron.NeutronClientPlugin.find_neutron_resource(
-            instance.properties.get('networks')[0],
-            'port', 'port').AndReturn('someportid')
+                               'find_resourceid_by_name_or_id')
+        neutron.NeutronClientPlugin.find_resourceid_by_name_or_id(
+            'port',
+            instance.properties.get(
+                'networks')[0]['port']).AndReturn('someportid')
 
         self.fc.instances.create('test', 1, volume={'size': 30},
                                  databases=[],
@@ -642,10 +643,11 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.stub_NetworkConstraint_validate()
         self._stubout_common_create()
         self.m.StubOutWithMock(neutron.NeutronClientPlugin,
-                               'find_neutron_resource')
-        neutron.NeutronClientPlugin.find_neutron_resource(
-            instance.properties.get('networks')[0],
-            'network', 'network').AndReturn(net_id)
+                               'find_resourceid_by_name_or_id')
+        neutron.NeutronClientPlugin.find_resourceid_by_name_or_id(
+            'network',
+            instance.properties.get(
+                'networks')[0]['network']).AndReturn(net_id)
         self.fc.instances.create('test', 1, volume={'size': 30},
                                  databases=[],
                                  users=[],

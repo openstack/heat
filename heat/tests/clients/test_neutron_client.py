@@ -42,16 +42,6 @@ class NeutronClientPluginTests(NeutronClientPluginTestCase):
                                           'find_resourceid_by_name_or_id')
         self.mock_find.return_value = 42
 
-    def test_find_neutron_resource(self):
-        props = {'net': 'test_network'}
-
-        res = self.neutron_plugin.find_neutron_resource(props, 'net',
-                                                        'network')
-        self.assertEqual(42, res)
-        self.mock_find.assert_called_once_with(self.neutron_client, 'network',
-                                               'test_network',
-                                               cmd_resource=None)
-
     def test_resolve_network(self):
         props = {'net': 'test_network'}
 

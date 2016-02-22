@@ -341,9 +341,9 @@ class OSDBInstance(resource.Resource):
             net = nic.get(self.NET)
             if net:
                 if self.is_using_neutron():
-                    net_id = (self.client_plugin(
-                        'neutron').find_neutron_resource(
-                        nic, self.NET, 'network'))
+                    net_id = self.client_plugin(
+                        'neutron').find_resourceid_by_name_or_id('network',
+                                                                 net)
                 else:
                     net_id = (self.client_plugin(
                         'nova').get_nova_network_id(net))
@@ -351,8 +351,8 @@ class OSDBInstance(resource.Resource):
             port = nic.get(self.PORT)
             if port:
                 neutron = self.client_plugin('neutron')
-                nic_dict['port-id'] = neutron.find_neutron_resource(
-                    nic, self.PORT, 'port')
+                nic_dict['port-id'] = neutron.find_resourceid_by_name_or_id(
+                    'port', port)
             ip = nic.get(self.V4_FIXED_IP)
             if ip:
                 nic_dict['v4-fixed-ip'] = ip

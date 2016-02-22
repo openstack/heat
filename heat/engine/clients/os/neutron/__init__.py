@@ -68,10 +68,6 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def is_no_unique(self, ex):
         return isinstance(ex, exceptions.NeutronClientNoUniqueMatch)
 
-    def find_neutron_resource(self, props, key, key_type):
-        return self.find_resourceid_by_name_or_id(
-            key_type, props.get(key))
-
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       cmd_resource=None):
         return self._find_resource_id(self.context.tenant_id,
@@ -97,9 +93,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     def _resolve(self, props, key, id_key, key_type):
         if props.get(key):
-            props[id_key] = self.find_neutron_resource(
-                props, key, key_type)
-            props.pop(key)
+            props[id_key] = self.find_resourceid_by_name_or_id(key_type,
+                                                               props.pop(key))
         return props[id_key]
 
     def resolve_network(self, props, net_key, net_id_key):
