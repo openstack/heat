@@ -310,7 +310,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         while timeutils.delta_seconds(start,
                                       timeutils.utcnow()) < build_timeout:
             try:
-                stack = self.client.stacks.get(stack_identifier)
+                stack = self.client.stacks.get(stack_identifier,
+                                               resolve_outputs=False)
             except heat_exceptions.HTTPNotFound:
                 if success_on_not_found:
                     return
@@ -367,7 +368,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         stack_name = stack_identifier.split('/')[0]
 
         self.updated_time[stack_identifier] = self.client.stacks.get(
-            stack_identifier).updated_time
+            stack_identifier, resolve_outputs=False).updated_time
 
         self._handle_in_progress(
             self.client.stacks.update,
@@ -439,7 +440,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         nested_identifier = '/'.join(nested_href.split('/')[-2:])
         self.assertEqual(rsrc.physical_resource_id, nested_id)
 
-        nested_stack = self.client.stacks.get(nested_id)
+        nested_stack = self.client.stacks.get(nested_id, resolve_outputs=False)
         nested_identifier2 = '%s/%s' % (nested_stack.stack_name,
                                         nested_stack.id)
         self.assertEqual(nested_identifier, nested_identifier2)
@@ -453,7 +454,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         rsrc = self.client.resources.get(stack_identifier, group_name)
         physical_resource_id = rsrc.physical_resource_id
 
-        nested_stack = self.client.stacks.get(physical_resource_id)
+        nested_stack = self.client.stacks.get(physical_resource_id,
+                                              resolve_outputs=False)
         nested_identifier = '%s/%s' % (nested_stack.stack_name,
                                        nested_stack.id)
         parent_id = stack_identifier.split("/")[-1]
@@ -495,7 +497,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         if expected_status not in ['ROLLBACK_COMPLETE'] and enable_cleanup:
             self.addCleanup(self._stack_delete, name)
 
-        stack = self.client.stacks.get(name)
+        stack = self.client.stacks.get(name, resolve_outputs=False)
         stack_identifier = '%s/%s' % (name, stack.id)
         kwargs = {'stack_identifier': stack_identifier,
                   'status': expected_status}
@@ -526,8 +528,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             adopt_stack_data=adopt_data,
         )
         self.addCleanup(self._stack_delete, name)
-
-        stack = self.client.stacks.get(name)
+        stack = self.client.stacks.get(name, resolve_outputs=False)
         stack_identifier = '%s/%s' % (name, stack.id)
         self._wait_for_stack_status(stack_identifier, wait_for_status)
         return stack_identifier
