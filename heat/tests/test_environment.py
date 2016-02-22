@@ -780,7 +780,8 @@ class ResourceRegistryTest(common.HeatTestCase):
         registry = environment.ResourceRegistry(None, {})
         msg = ('Invalid hook type "invalid-type" for resource breakpoint, '
                'acceptable hook types are: (\'pre-create\', \'pre-update\', '
-               '\'pre-delete\')')
+               '\'pre-delete\', \'post-create\', \'post-update\', '
+               '\'post-delete\')')
         ex = self.assertRaises(exception.InvalidBreakPointHook,
                                registry.load, {'resources': resources})
         self.assertEqual(msg, six.text_type(ex))
@@ -861,18 +862,23 @@ class ResourceRegistryTest(common.HeatTestCase):
 
 class HookMatchTest(common.HeatTestCase):
 
+    scenarios = [(hook_type, {'hook': hook_type}) for hook_type in
+                 environment.HOOK_TYPES]
+
     def test_plain_matches(self):
+        other_hook = next(hook for hook in environment.HOOK_TYPES
+                          if hook != self.hook)
         resources = {
             u'a': {
                 u'OS::Fruit': u'apples.yaml',
-                u'hooks': [u'pre-create', u'pre-update'],
+                u'hooks': [self.hook, other_hook]
             },
             u'b': {
                 u'OS::Food': u'fruity.yaml',
             },
             u'nested': {
                 u'res': {
-                    u'hooks': 'pre-create',
+                    u'hooks': self.hook,
                 },
             },
         }
@@ -881,96 +887,59 @@ class HookMatchTest(common.HeatTestCase):
             u'OS::Fruit': u'apples.yaml',
             'resources': resources})
 
-        self.assertTrue(registry.matches_hook(
-            'a', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'b', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'OS::Fruit', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'res', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'unknown', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook('a', self.hook))
+        self.assertFalse(registry.matches_hook('b', self.hook))
+        self.assertFalse(registry.matches_hook('OS::Fruit', self.hook))
+        self.assertFalse(registry.matches_hook('res', self.hook))
+        self.assertFalse(registry.matches_hook('unknown', self.hook))
 
     def test_wildcard_matches(self):
+        other_hook = next(hook for hook in environment.HOOK_TYPES
+                          if hook != self.hook)
         resources = {
             u'prefix_*': {
-                u'hooks': 'pre-create',
+                u'hooks': self.hook
             },
             u'*_suffix': {
-                u'hooks': 'pre-create',
+                u'hooks': self.hook
             },
             u'*': {
-                u'hooks': 'pre-update',
+                u'hooks': other_hook
             },
         }
         registry = environment.ResourceRegistry(None, {})
         registry.load({'resources': resources})
 
-        self.assertTrue(registry.matches_hook(
-            'prefix_', environment.HOOK_PRE_CREATE))
-        self.assertTrue(registry.matches_hook(
-            'prefix_some', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'some_prefix', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook('prefix_', self.hook))
+        self.assertTrue(registry.matches_hook('prefix_some', self.hook))
+        self.assertFalse(registry.matches_hook('some_prefix', self.hook))
 
-        self.assertTrue(registry.matches_hook(
-            '_suffix', environment.HOOK_PRE_CREATE))
-        self.assertTrue(registry.matches_hook(
-            'some_suffix', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            '_suffix_blah', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook('_suffix', self.hook))
+        self.assertTrue(registry.matches_hook('some_suffix', self.hook))
+        self.assertFalse(registry.matches_hook('_suffix_blah', self.hook))
 
-        self.assertTrue(registry.matches_hook(
-            'some_prefix', environment.HOOK_PRE_UPDATE))
-        self.assertTrue(registry.matches_hook(
-            '_suffix_blah', environment.HOOK_PRE_UPDATE))
+        self.assertTrue(registry.matches_hook('some_prefix', other_hook))
+        self.assertTrue(registry.matches_hook('_suffix_blah', other_hook))
 
     def test_hook_types(self):
         resources = {
-            u'pre_create': {
-                u'hooks': 'pre-create',
+            u'hook': {
+                u'hooks': self.hook
             },
-            u'pre_update': {
-                u'hooks': 'pre-update',
-            },
-            u'pre_delete': {
-                u'hooks': 'pre-delete',
+            u'not-hook': {
+                u'hooks': [hook for hook in environment.HOOK_TYPES if hook !=
+                           self.hook]
             },
             u'all': {
-                u'hooks': ['pre-create', 'pre-update', 'pre-delete'],
+                u'hooks': environment.HOOK_TYPES
             },
         }
         registry = environment.ResourceRegistry(None, {})
         registry.load({'resources': resources})
 
-        self.assertTrue(registry.matches_hook(
-            'pre_create', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'pre_create', environment.HOOK_PRE_UPDATE))
-        self.assertFalse(registry.matches_hook(
-            'pre_create', environment.HOOK_PRE_DELETE))
-
-        self.assertTrue(registry.matches_hook(
-            'pre_update', environment.HOOK_PRE_UPDATE))
-        self.assertFalse(registry.matches_hook(
-            'pre_update', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'pre_update', environment.HOOK_PRE_DELETE))
-
-        self.assertTrue(registry.matches_hook(
-            'pre_delete', environment.HOOK_PRE_DELETE))
-        self.assertFalse(registry.matches_hook(
-            'pre_delete', environment.HOOK_PRE_CREATE))
-        self.assertFalse(registry.matches_hook(
-            'pre_delete', environment.HOOK_PRE_UPDATE))
-
-        self.assertTrue(registry.matches_hook(
-            'all', environment.HOOK_PRE_CREATE))
-        self.assertTrue(registry.matches_hook(
-            'all', environment.HOOK_PRE_UPDATE))
-        self.assertTrue(registry.matches_hook(
-            'all', environment.HOOK_PRE_DELETE))
+        self.assertTrue(registry.matches_hook('hook', self.hook))
+        self.assertFalse(registry.matches_hook('not-hook', self.hook))
+        self.assertTrue(registry.matches_hook('all', self.hook))
 
 
 class ActionRestrictedTest(common.HeatTestCase):

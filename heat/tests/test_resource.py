@@ -2891,6 +2891,21 @@ class ResourceHookTest(common.HeatTestCase):
         self.assertFalse(res.has_hook('pre-update'))
         self.assertTrue(res.has_hook('pre-delete'))
 
+        res.data = mock.Mock(return_value={'post-create': 'True'})
+        self.assertFalse(res.has_hook('post-delete'))
+        self.assertFalse(res.has_hook('post-update'))
+        self.assertTrue(res.has_hook('post-create'))
+
+        res.data = mock.Mock(return_value={'post-update': 'True'})
+        self.assertFalse(res.has_hook('post-create'))
+        self.assertFalse(res.has_hook('post-delete'))
+        self.assertTrue(res.has_hook('post-update'))
+
+        res.data = mock.Mock(return_value={'post-delete': 'True'})
+        self.assertFalse(res.has_hook('post-create'))
+        self.assertFalse(res.has_hook('post-update'))
+        self.assertTrue(res.has_hook('post-delete'))
+
     def test_set_hook(self):
         snippet = rsrc_defn.ResourceDefinition('res',
                                                'GenericResourceType')
@@ -2968,6 +2983,38 @@ class ResourceHookTest(common.HeatTestCase):
         task.step()
         self.assertTrue(res.has_hook('pre-delete'))
         res.clear_hook('pre-delete')
+        task.run_to_completion()
+        self.assertEqual((res.DELETE, res.COMPLETE), res.state)
+
+    def test_post_create_hook_call(self):
+        self.stack.env.registry.load(
+            {'resources': {'res': {'hooks': 'post-create'}}})
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+        res.id = '1234'
+        task = scheduler.TaskRunner(res.create)
+        task.start()
+        task.step()
+        self.assertTrue(res.has_hook('post-create'))
+        res.clear_hook('post-create')
+        task.run_to_completion()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+    def test_post_delete_hook_call(self):
+        self.stack.env.registry.load(
+            {'resources': {'res': {'hooks': 'post-delete'}}})
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+        res.id = '1234'
+        res.action = 'CREATE'
+        self.stack.action = 'DELETE'
+        task = scheduler.TaskRunner(res.delete)
+        task.start()
+        task.step()
+        self.assertTrue(res.has_hook('post-delete'))
+        res.clear_hook('post-delete')
         task.run_to_completion()
         self.assertEqual((res.DELETE, res.COMPLETE), res.state)
 
