@@ -1,0 +1,16 @@
+---
+features:
+  - New resource ``OS::Senlin::Cluster`` is added to create a
+    cluster in senlin. A cluster is a group of homogeneous
+    nodes.
+  - New resource ``OS::Senlin::Node`` is added to create a node in senlin.
+    Node represents a physical object exposed by other OpenStack services.
+  - New resource ``OS::Senlin::Receiver`` is added to create a receiver
+    in senlin. Receiver can be used to hook the engine to some external
+    event/alarm sources.
+  - New resource ``OS::Senlin::Profile`` is added to create a profile
+    in senlin. Profile is a module used for creating nodes, it's the
+    definition of a node.
+  - New resource ``OS::Senlin::Policy`` is added to create a policy
+    in senlin. Policy is a set of rules that can be checked and/or
+    enforced when an Action is performed on a Cluster.
