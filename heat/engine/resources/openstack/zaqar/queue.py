@@ -117,6 +117,11 @@ class ZaqarQueue(resource.Resource):
         elif name == self.HREF:
             return self.href()
 
+    def _show_resource(self):
+        queue = self.client().queue(self.resource_id, auto_create=False)
+        metadata = queue.metadata()
+        return {self.METADATA: metadata}
+
 
 def resource_mapping():
     return {
