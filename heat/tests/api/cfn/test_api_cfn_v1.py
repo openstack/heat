@@ -15,7 +15,7 @@ import json
 import os
 
 import mock
-from oslo_config import cfg
+from oslo_config import fixture as config_fixture
 import six
 
 from heat.api.aws import exception
@@ -42,13 +42,8 @@ class CfnStackControllerTest(common.HeatTestCase):
     def setUp(self):
         super(CfnStackControllerTest, self).setUp()
 
-        self.opts = [
-            cfg.StrOpt('config_dir', default=policy_path),
-            cfg.StrOpt('config_file', default='foo'),
-            cfg.StrOpt('project', default='heat'),
-        ]
-        cfg.CONF.register_opts(self.opts)
-        cfg.CONF.set_default('host', 'host')
+        self.fixture = self.useFixture(config_fixture.Config())
+        self.fixture.conf(args=['--config-dir', policy_path])
         self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
         self.template = {u'AWSTemplateFormatVersion': u'2010-09-09',
@@ -69,7 +64,6 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     def tearDown(self):
         super(CfnStackControllerTest, self).tearDown()
-        cfg.CONF.unregister_opts(self.opts)
 
     def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string

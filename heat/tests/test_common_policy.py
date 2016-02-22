@@ -16,7 +16,7 @@
 
 import os.path
 
-from oslo_config import cfg
+from oslo_config import fixture as config_fixture
 from oslo_policy import policy as base_policy
 
 from heat.common import exception
@@ -41,12 +41,8 @@ class TestPolicyEnforcer(common.HeatTestCase):
 
     def setUp(self):
         super(TestPolicyEnforcer, self).setUp(mock_resource_policy=False)
-        opts = [
-            cfg.StrOpt('config_dir', default=policy_path),
-            cfg.StrOpt('config_file', default='foo'),
-            cfg.StrOpt('project', default='heat'),
-        ]
-        cfg.CONF.register_opts(opts)
+        self.fixture = self.useFixture(config_fixture.Config())
+        self.fixture.conf(args=['--config-dir', policy_path])
         self.addCleanup(self.m.VerifyAll)
 
     def get_policy_file(self, filename):
