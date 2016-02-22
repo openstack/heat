@@ -122,6 +122,12 @@ class ZaqarQueue(resource.Resource):
         metadata = queue.metadata()
         return {self.METADATA: metadata}
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        return {
+            self.NAME: self.resource_id,
+            self.METADATA: resource_data[self.METADATA]
+        }
+
 
 def resource_mapping():
     return {

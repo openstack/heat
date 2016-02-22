@@ -241,3 +241,32 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
             queue._show_resource())
 
         self.m.VerifyAll()
+
+    def test_parse_live_resource_data(self):
+        t = template_format.parse(wp_template)
+        self.parse_stack(t)
+
+        queue = self.stack['MyQueue2']
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
+
+        fake_q = FakeQueue(queue.physical_resource_name(), auto_create=False)
+        self.m.StubOutWithMock(self.fc, 'queue')
+        self.fc.queue(queue.physical_resource_name(),
+                      auto_create=False).AndReturn(fake_q)
+        self.m.StubOutWithMock(fake_q, 'metadata')
+        fake_q.metadata(new_meta=queue.properties.get('metadata'))
+        self.fc.queue(queue.physical_resource_name(),
+                      auto_create=False).AndReturn(fake_q)
+        fake_q.metadata().AndReturn(
+            {"key1": {"key2": "value", "key3": [1, 2]}})
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(queue.create)()
+        self.assertEqual(
+            {'metadata': {"key1": {"key2": "value", "key3": [1, 2]}},
+             'name': queue.resource_id},
+            queue.parse_live_resource_data(queue.properties,
+                                           queue._show_resource()))
+
+        self.m.VerifyAll()
