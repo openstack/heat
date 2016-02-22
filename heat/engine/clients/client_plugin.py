@@ -24,6 +24,7 @@ from keystoneclient import session
 from oslo_config import cfg
 import six
 
+from heat.common import config
 from heat.common.i18n import _
 
 
@@ -110,6 +111,8 @@ class ClientPlugin(object):
     @property
     def clients(self):
         return self._clients()
+
+    _get_client_option = staticmethod(config.get_client_option)
 
     @property
     def _keystone_session(self):
@@ -209,22 +212,6 @@ class ClientPlugin(object):
             raise exceptions.EndpointNotFound()
 
         return url
-
-    def _get_client_option(self, client, option):
-        # look for the option in the [clients_${client}] section
-        # unknown options raise cfg.NoSuchOptError
-        try:
-            group_name = 'clients_' + client
-            cfg.CONF.import_opt(option, 'heat.common.config',
-                                group=group_name)
-            v = getattr(getattr(cfg.CONF, group_name), option)
-            if v is not None:
-                return v
-        except cfg.NoSuchGroupError:
-            pass  # do not error if the client is unknown
-        # look for the option in the generic [clients] section
-        cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
-        return getattr(cfg.CONF.clients, option)
 
     def is_client_exception(self, ex):
         """Returns True if the current exception comes from the client."""
