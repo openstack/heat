@@ -181,6 +181,21 @@ class CfnTemplate(CfnTemplateBase):
     OUTPUT_CONDITION = CONDITION
     OUTPUT_KEYS = CfnTemplateBase.OUTPUT_KEYS + (OUTPUT_CONDITION,)
 
+    functions = {
+        'Fn::FindInMap': cfn_funcs.FindInMap,
+        'Fn::GetAZs': cfn_funcs.GetAZs,
+        'Ref': cfn_funcs.Ref,
+        'Fn::GetAtt': cfn_funcs.GetAtt,
+        'Fn::Select': cfn_funcs.Select,
+        'Fn::Join': cfn_funcs.Join,
+        'Fn::Split': cfn_funcs.Split,
+        'Fn::Replace': cfn_funcs.Replace,
+        'Fn::Base64': cfn_funcs.Base64,
+        'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
+        'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
+        'Fn::If': hot_funcs.If,
+    }
+
     condition_functions = {
         'Fn::Equals': hot_funcs.Equals,
         'Ref': cfn_funcs.ParamRef,

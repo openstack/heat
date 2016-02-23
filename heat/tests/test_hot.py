@@ -1135,6 +1135,42 @@ class HOTemplateTest(common.HeatTestCase):
         error_msg = 'The function is not supported in condition: get_attr'
         self.assertIn(error_msg, six.text_type(exc))
 
+    def test_if(self):
+        snippet = {'if': ['create_prod', 'value_if_true', 'value_if_false']}
+        # when condition evaluates to true, if function
+        # resolve to value_if_true
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_if_function', tmpl)
+        tmpl._conditions = {'create_prod': True}
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertEqual('value_if_true', resolved)
+        # when condition evaluates to false, if function
+        # resolve to value_if_false
+        tmpl._conditions = {'create_prod': False}
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertEqual('value_if_false', resolved)
+
+    def test_if_invalid_args(self):
+        snippet = {'if': ['create_prod', 'one_value']}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve, snippet, tmpl)
+        self.assertIn('Arguments to "if" must be of the form: '
+                      '[condition_name, value_if_true, value_if_false]',
+                      six.text_type(exc))
+
+    def test_if_condition_name_non_existing(self):
+        snippet = {'if': ['cd_not_existing', 'value_true', 'value_false']}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_if_function', tmpl)
+        tmpl._conditions = {'create_prod': True}
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve, snippet, tmpl, stack)
+        self.assertIn('Invalid condition name "cd_not_existing"',
+                      six.text_type(exc))
+
     def test_repeat(self):
         """Test repeat function."""
         snippet = {'repeat': {'template': 'this is %var%',

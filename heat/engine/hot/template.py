@@ -446,6 +446,7 @@ class HOTemplate20161014(HOTemplate20160408):
         # functions added in 2016-10-14
         'yaql': hot_funcs.Yaql,
         'map_replace': hot_funcs.MapReplace,
+        'if': hot_funcs.If,
 
         # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,

@@ -933,3 +933,38 @@ class Equals(function.Function):
         resolved_v2 = function.resolve(self.value2)
 
         return resolved_v1 == resolved_v2
+
+
+class If(function.Macro):
+    """A function to return corresponding value based on condition evaluation.
+
+    Takes the form::
+
+        { "if" : [condition_name, value_if_true, value_if_false] }
+
+    The value_if_true to be returned if the specified condition evaluates
+    to true, the value_if_false to be returned if the specified condition
+    evaluates to false.
+    """
+
+    def parse_args(self, parse_func):
+        try:
+            if (not self.args or
+                    not isinstance(self.args, collections.Sequence) or
+                    isinstance(self.args, six.string_types)):
+                raise ValueError()
+            cd_name, value_if_true, value_if_false = self.args
+        except ValueError:
+            msg = _('Arguments to "%s" must be of the form: '
+                    '[condition_name, value_if_true, value_if_false]')
+            raise ValueError(msg % self.fn_name)
+
+        cd = self.get_condition(cd_name)
+        return parse_func(value_if_true if cd else value_if_false)
+
+    def get_condition(self, cd_name):
+        conditions = self.template.conditions(self.stack)
+        if cd_name not in conditions:
+            raise KeyError(_('Invalid condition name "%s"') % cd_name)
+
+        return conditions[cd_name]

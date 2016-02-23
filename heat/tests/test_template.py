@@ -325,7 +325,8 @@ class TestTemplateConditionParser(common.HeatTestCase):
                                {'get_attr': [None, 'att']}]}}}
         # test with get_attr in equals
         tmpl = template.Template(t)
-        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
+        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl,
+                          resolve_data=False)
         ex = self.assertRaises(exception.InvalidConditionFunction,
                                tmpl.resolve_conditions, stk)
         self.assertIn('The function is not supported in condition: get_attr',
@@ -333,7 +334,8 @@ class TestTemplateConditionParser(common.HeatTestCase):
 
         # test with get_resource in top level of a condition
         tmpl.t['conditions']['prod_env'] = {'get_resource': 'R1'}
-        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
+        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl,
+                          resolve_data=False)
         ex = self.assertRaises(exception.InvalidConditionFunction,
                                tmpl.resolve_conditions, stk)
         self.assertIn('The function is not supported in condition: '
@@ -341,7 +343,8 @@ class TestTemplateConditionParser(common.HeatTestCase):
 
         # test with get_attr in top level of a condition
         tmpl.t['conditions']['prod_env'] = {'get_attr': [None, 'att']}
-        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
+        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl,
+                          resolve_data=False)
         ex = self.assertRaises(exception.InvalidConditionFunction,
                                tmpl.resolve_conditions, stk)
         self.assertIn('The function is not supported in condition: get_attr',

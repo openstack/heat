@@ -26,7 +26,7 @@ Resources:
   test_res:
     Type: OS::Heat::TestResource
     Properties:
-      value: test_res
+      value: {"Fn::If": ["Prod", "env_is_prod", "env_is_test"]}
   prod_res:
     Type: OS::Heat::TestResource
     Properties:
@@ -36,6 +36,10 @@ Outputs:
   res_value:
     Value: {"Fn::GetAtt": [prod_res, output]}
     Condition: Prod
+  test_res_value:
+    Value: {"Fn::GetAtt": [test_res, output]}
+  prod_resource:
+    Value: {"Fn::If": [Prod, {Ref: prod_res}, 'no_prod_res']}
 '''
 
 hot_template = '''
@@ -52,7 +56,7 @@ resources:
   test_res:
     type: OS::Heat::TestResource
     properties:
-      value: test_res
+      value: {if: ["prod", "env_is_prod", "env_is_test"]}
   prod_res:
     type: OS::Heat::TestResource
     properties:
@@ -62,6 +66,10 @@ outputs:
   res_value:
     value: {get_attr: [prod_res, output]}
     condition: prod
+  test_res_value:
+    value: {get_attr: [test_res, output]}
+  prod_resource:
+    value: {if: [prod, {get_resource: prod_res}, 'no_prod_res']}
 '''
 
 
@@ -87,10 +95,26 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
                                                 'res_value')['output']
         self.assertEqual('prod_res', output['output_value'])
 
+        test_res_value = self.client.stacks.output_show(
+            stack_id, 'test_res_value')['output']
+        self.assertEqual('env_is_prod', test_res_value['output_value'])
+
+        prod_resource = self.client.stacks.output_show(
+            stack_id, 'prod_resource')['output']
+        self.assertNotEqual('no_prod_res', prod_resource['output_value'])
+
     def output_assert_for_test(self, stack_id):
         output = self.client.stacks.output_show(stack_id,
                                                 'res_value')['output']
         self.assertIsNone(output['output_value'])
+
+        test_res_value = self.client.stacks.output_show(
+            stack_id, 'test_res_value')['output']
+        self.assertEqual('env_is_test', test_res_value['output_value'])
+
+        prod_resource = self.client.stacks.output_show(
+            stack_id, 'prod_resource')['output']
+        self.assertEqual('no_prod_res', prod_resource['output_value'])
 
     def test_stack_create_update_cfn_template_test_to_prod(self):
         stack_identifier = self.stack_create(template=cfn_template)
