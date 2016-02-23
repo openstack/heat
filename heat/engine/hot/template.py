@@ -414,6 +414,9 @@ class HOTemplate20161014(HOTemplate20160408):
         # functions added since 20161014
         'yaql': hot_funcs.Yaql,
 
+        # functions added since 20161014
+        'equals': cfn_funcs.Equals,
+
         # functions added since 20151015
         'map_merge': hot_funcs.MapMerge,
 

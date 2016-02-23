@@ -48,6 +48,36 @@ class FindInMap(function.Function):
         return mapping[key][value]
 
 
+class Equals(function.Function):
+    """A function for comparing whether two values are equal.
+
+    Takes the form::
+
+        { "Fn::Equals" : ["value_1", "value_2"] }
+
+    The value to be any type that you want to compare. Returns true
+    if the two values are equal or false if they aren't.
+    """
+
+    def __init__(self, stack, fn_name, args):
+        super(Equals, self).__init__(stack, fn_name, args)
+        try:
+            if (not self.args or
+                    not isinstance(self.args, list)):
+                raise ValueError()
+            self.value1, self.value2 = self.args
+        except ValueError:
+            msg = _('Arguments to "%s" must be of the form: '
+                    '[value_1, value_2]')
+            raise ValueError(msg % self.fn_name)
+
+    def result(self):
+        resolved_v1 = function.resolve(self.value1)
+        resolved_v2 = function.resolve(self.value2)
+
+        return resolved_v1 == resolved_v2
+
+
 class GetAZs(function.Function):
     """A function for retrieving the availability zones.
 

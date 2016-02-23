@@ -187,7 +187,7 @@ For example, Heat currently supports the following values for the
 ----------
     The key with value ``2016-04-08`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
-    Mitaka release.  This version also adds the map_merge function which
+    Mitaka release.  This version also adds the ``map_merge`` function which
     can be used to merge the contents of maps. The complete list of supported
     functions is::
 
@@ -207,9 +207,10 @@ For example, Heat currently supports the following values for the
 ----------
     The key with value ``2016-10-14`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
-    Newton release.  This version also adds the yaql function which
-    can be used for evaluation of complex expressions. The complete list of
-    supported functions is::
+    Newton release.  This version adds the ``yaql`` function which
+    can be used for evaluation of complex expressions, and also adds ``equals``
+    function which can be used to compare whether two values are equal.
+    The complete list of supported functions is::
 
       digest
       get_attr
@@ -223,6 +224,7 @@ For example, Heat currently supports the following values for the
       str_replace
       str_split
       yaql
+      equals
 
 .. _hot_spec_parameter_groups:
 
@@ -1315,3 +1317,25 @@ For example
             list_param: {get_param: list_param}
 
 max_elem output will be evaluated to 3
+
+equals
+------
+The ``equals`` function compares whether two values are equal.
+
+The syntax of the ``equals`` function is
+
+.. code-block:: yaml
+
+    equals: [value_1, value_2]
+
+The value can be any type that you want to compare. This function
+returns true if the two values are equal or false if they aren't.
+
+For example
+
+.. code-block:: yaml
+
+    equals: [{get_param: env_type}, 'prod']
+
+If param 'env_type' equals to 'prod', this function returns true,
+otherwise returns false.
