@@ -43,7 +43,7 @@ class EngineClient(object):
         1.22 - Add support for stack export
         1.23 - Add environment_files to create/update/preview/validate
         1.24 - Adds ignorable_errors to validate_template
-        1.25 - list_stack_resoure filter update
+        1.25 - list_stack_resource filter update
     """
 
     BASE_RPC_API_VERSION = '1.0'
