@@ -305,6 +305,7 @@ class WorkerService(service.Service):
 
         tmpl = stack.t
         stack.adopt_stack_data = adopt_stack_data
+        stack.thread_group_mgr = self.thread_group_mgr
 
         if is_update:
             if (rsrc.replaced_by is not None and

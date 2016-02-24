@@ -794,6 +794,7 @@ class EngineService(service.Service):
             action = stack.CREATE
             if stack.adopt_stack_data:
                 action = stack.ADOPT
+            stack.thread_group_mgr = self.thread_group_mgr
             stack.converge_stack(template=stack.t, action=action)
         else:
             self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
@@ -932,6 +933,7 @@ class EngineService(service.Service):
             cnxt, current_stack, template, params, files, args)
 
         if current_stack.convergence:
+            current_stack.thread_group_mgr = self.thread_group_mgr
             current_stack.converge_stack(template=tmpl,
                                          new_stack=updated_stack)
         else:
@@ -1284,6 +1286,7 @@ class EngineService(service.Service):
 
         if stack.convergence and cfg.CONF.convergence_engine:
             template = templatem.Template.create_empty_template()
+            stack.thread_group_mgr = self.thread_group_mgr
             stack.converge_stack(template=template, action=stack.DELETE)
             return
 
