@@ -127,7 +127,7 @@ heat_template_version: 2013-05-23
 resources:
   instance1:
     type: OS::Nova::Server
-    metadata: {"template_data": {get_attr: [instance2, first_address]}}
+    metadata: {"template_data": {get_attr: [instance2, networks]}}
     properties:
       image: cirros-0.3.2-x86_64-disk
       flavor: m1.small
@@ -327,7 +327,7 @@ class MetadataRefreshServerTests(common.HeatTestCase):
 
         # Verify outgoing calls
         mock_get.assert_has_calls([
-            mock.call('first_address'),
-            mock.call('first_address')])
+            mock.call('networks'),
+            mock.call('networks')])
         self.assertEqual(2, mock_handle.call_count)
         self.assertEqual(2, mock_check.call_count)
