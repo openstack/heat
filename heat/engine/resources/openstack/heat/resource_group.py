@@ -23,6 +23,7 @@ from heat.common.i18n import _
 from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine import constraints
+from heat.engine import function
 from heat.engine.hot import template
 from heat.engine import properties
 from heat.engine.resources import stack_resource
@@ -437,6 +438,36 @@ class ResourceGroup(stack_resource.StackResource):
                                                                   res_def)
 
     def get_resource_def(self, include_all=False):
+        """Returns the resource definition portion of the group.
+
+        :param include_all: if False, only properties for the resource
+               definition that are not empty will be included
+        :type  include_all: bool
+        :return: resource definition for the group
+        :rtype:  dict
+        """
+
+        # At this stage, we don't mind if all of the parameters have values
+        # assigned. Pass in a custom resolver to the properties to not
+        # error when a parameter does not have a user entered value.
+        def ignore_param_resolve(snippet):
+            while isinstance(snippet, function.Function):
+                try:
+                    snippet = snippet.result()
+                except exception.UserParameterMissing:
+                    return None
+
+            if isinstance(snippet, collections.Mapping):
+                return dict((k, ignore_param_resolve(v))
+                            for k, v in snippet.items())
+            elif (not isinstance(snippet, six.string_types) and
+                  isinstance(snippet, collections.Iterable)):
+                return [ignore_param_resolve(v) for v in snippet]
+
+            return snippet
+
+        self.properties.resolve = ignore_param_resolve
+
         res_def = self.properties[self.RESOURCE_DEF]
         if not include_all:
             return self._clean_props(res_def)

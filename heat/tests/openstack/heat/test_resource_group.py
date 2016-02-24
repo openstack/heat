@@ -27,7 +27,6 @@ from heat.engine import stack as stackm
 from heat.tests import common
 from heat.tests import utils
 
-
 template = {
     "heat_template_version": "2013-05-23",
     "resources": {
@@ -307,6 +306,39 @@ class ResourceGroupTest(common.HeatTestCase):
         res0.status = res0.FAILED
         resg.build_resource_definition = mock.Mock(return_value=resource_def)
         self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
+
+    def test_assemble_nested_missing_param(self):
+        # Setup
+
+        # Change the standard testing template to use a get_param lookup
+        # within the resource definition
+        templ = copy.deepcopy(template)
+        res_def = templ['resources']['group1']['properties']['resource_def']
+        res_def['properties']['Foo'] = {'get_param': 'bar'}
+
+        stack = utils.parse_stack(templ)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+
+        # Test - This should not raise a ValueError about "bar" not being
+        # provided
+        nested_tmpl = resg._assemble_nested(['0', '1'])
+
+        # Verify
+        expected = {
+            "heat_template_version": "2015-04-30",
+            "resources": {
+                "0": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {}
+                },
+                "1": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {}
+                }
+            }
+        }
+        self.assertEqual(expected, nested_tmpl.t)
 
     def test_index_var(self):
         stack = utils.parse_stack(template_repl)
