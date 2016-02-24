@@ -130,8 +130,8 @@ class SwiftTest(common.HeatTestCase):
                    'content-type': 'text/plain; charset=utf-8'}
         mock_head.return_value = headers
 
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         container = self._create_container(stack)
@@ -157,10 +157,10 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_public_read(self, mock_put):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         properties = self.t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         self._create_container(stack)
@@ -172,11 +172,11 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_public_read_write(self, mock_put):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         properties = self.t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
         properties['X-Container-Write'] = '.r:*'
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         self._create_container(stack)
@@ -188,8 +188,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_container_headers(self, mock_put):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         self._create_container(stack,
@@ -205,8 +205,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_account_headers(self, mock_put, mock_post):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         self._create_container(stack,
@@ -220,8 +220,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_default_headers_not_none_empty_string(self, mock_put):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         container = self._create_container(stack)
@@ -235,8 +235,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_delete_exception(self, mock_put, mock_get, mock_delete):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         mock_delete.side_effect = sc.ClientException('test-delete-failure')
         mock_get.return_value = ({'name': container_name}, [])
@@ -258,8 +258,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_delete_not_found(self, mock_put, mock_get, mock_delete):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         mock_delete.side_effect = sc.ClientException('missing',
                                                      http_status=404)
@@ -281,8 +281,8 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_delete_non_empty_not_allowed(self, mock_put, mock_get):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         mock_get.return_value = ({'name': container_name},
                                  [{'name': 'test_object'}])
@@ -309,10 +309,10 @@ class SwiftTest(common.HeatTestCase):
                                       mock_delete_object,
                                       mock_delete_container):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         res_prop = self.t['Resources']['SwiftContainer']['Properties']
         res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         get_return_values = [
             ({'name': container_name},
@@ -343,10 +343,10 @@ class SwiftTest(common.HeatTestCase):
                                                 mock_delete_object,
                                                 mock_delete_container):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         res_prop = self.t['Resources']['SwiftContainer']['Properties']
         res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         mock_get.return_value = ({'name': container_name},
                                  [{'name': 'test_object'}])
@@ -375,10 +375,10 @@ class SwiftTest(common.HeatTestCase):
     def test_delete_non_empty_fails_delete_object(self, mock_put, mock_get,
                                                   mock_delete_object):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         res_prop = self.t['Resources']['SwiftContainer']['Properties']
         res_prop['PurgeOnDelete'] = True
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         mock_get.return_value = ({'name': container_name},
                                  [{'name': 'test_object'}])
@@ -401,9 +401,9 @@ class SwiftTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_delete_retain(self, mock_put):
         # Setup
-        container_name = utils.PhysName('test_stack', 'test_resource')
         self.t['Resources']['SwiftContainer']['DeletionPolicy'] = 'Retain'
         stack = utils.parse_stack(self.t)
+        container_name = utils.PhysName(stack.name, 'test_resource')
 
         # Test
         container = self._create_container(stack)

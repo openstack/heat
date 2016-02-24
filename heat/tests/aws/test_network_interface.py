@@ -114,7 +114,7 @@ class NetworkInterfaceTest(common.HeatTestCase):
 
         self.mock_show_subnet()
         self.stub_SubnetConstraint_validate()
-        self.mock_create_network_interface()
+        self.mock_create_network_interface(my_stack.name)
 
         update_props = {}
         update_sg_ids = ['0389f747-7785-4757-b7bb-2ab07e4b09c3']
