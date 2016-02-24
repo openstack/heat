@@ -3576,6 +3576,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                 }
             }
         }
+        self.dummy_timeout = 10
 
     def create_resource(self):
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
@@ -3583,6 +3584,17 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                                   stack_id=str(uuid.uuid4()))
         res = self.stack['bar']
         scheduler.TaskRunner(res.create)()
+        return res
+
+    def create_convergence_resource(self):
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(self.tmpl, env=self.env),
+                                  stack_id=str(uuid.uuid4()))
+        res_data = {}
+        res = self.stack['bar']
+        self.patchobject(res, 'lock')
+        scheduler.TaskRunner(res.create_convergence, self.stack.t.id,
+                             res_data, 'engine-007', self.dummy_timeout)()
         return res
 
     def test_update_restricted(self):
@@ -3678,4 +3690,60 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                                   scheduler.TaskRunner(res.update, snippet))
         self.assertIn('requires replacement', six.text_type(error))
         self.assertEqual(1, prep_replace.call_count)
+        ev.assert_not_called()
+
+    def test_replace_restricted_type_change_with_convergence(self):
+        self.env_snippet = {u'resource_registry': {
+            u'resources': {
+                'bar': {'restricted_actions': 'replace'}
+            }
+        }
+        }
+        self.env = environment.Environment()
+        self.env.load(self.env_snippet)
+        res = self.create_convergence_resource()
+        ev = self.patchobject(res, '_add_event')
+        bar = self.tmpl['resources']['bar']
+        bar['type'] = 'OS::Heat::None'
+        self.new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                      template.Template(self.tmpl,
+                                                        env=self.env))
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(res.update_convergence,
+                                                       self.stack.t.id,
+                                                       {},
+                                                       'engine-007',
+                                                       self.dummy_timeout,
+                                                       self.new_stack))
+        self.assertEqual('ResourceActionRestricted: resources.bar: '
+                         'replace is restricted for resource.',
+                         six.text_type(error))
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        ev.assert_called_with(res.UPDATE, res.FAILED,
+                              'replace is restricted for resource.')
+
+    def test_update_restricted_type_change_with_convergence(self):
+        self.env_snippet = {u'resource_registry': {
+            u'resources': {
+                'bar': {'restricted_actions': 'update'}
+            }
+        }
+        }
+        self.env = environment.Environment()
+        self.env.load(self.env_snippet)
+        res = self.create_convergence_resource()
+        ev = self.patchobject(res, '_add_event')
+        bar = self.tmpl['resources']['bar']
+        bar['type'] = 'OS::Heat::None'
+        self.new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                      template.Template(self.tmpl,
+                                                        env=self.env))
+        error = self.assertRaises(exception.UpdateReplace,
+                                  scheduler.TaskRunner(res.update_convergence,
+                                                       self.stack.t.id,
+                                                       {},
+                                                       'engine-007',
+                                                       self.dummy_timeout,
+                                                       self.new_stack))
+        self.assertIn('requires replacement', six.text_type(error))
         ev.assert_not_called()
