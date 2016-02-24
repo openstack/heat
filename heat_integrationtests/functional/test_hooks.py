@@ -191,7 +191,7 @@ class HooksTest(functional_base.FunctionalTestsBase):
                          res_after.physical_resource_id)
 
     def test_hook_pre_create_nested(self):
-        files = {'nested.yaml': yaml.dump(self.template)}
+        files = {'nested.yaml': yaml.safe_dump(self.template)}
         env = {'resource_registry':
                {'resources':
                 {'nested':

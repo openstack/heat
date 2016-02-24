@@ -69,7 +69,7 @@ class RBACPolicyTest(common.HeatTestCase):
     def test_validate_invalid_action(self):
         tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
         tpl['resources']['rbac']['properties']['action'] = 'access_as_external'
-        self._create_stack(tmpl=yaml.dump(tpl))
+        self._create_stack(tmpl=yaml.safe_dump(tpl))
         msg = "Invalid action access_as_external for object type network."
         self.assertRaisesRegexp(exception.StackValidationFailed, msg,
                                 self.rbac.validate)
@@ -77,7 +77,7 @@ class RBACPolicyTest(common.HeatTestCase):
     def test_validate_invalid_type(self):
         tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
         tpl['resources']['rbac']['properties']['object_type'] = 'networks'
-        self._create_stack(tmpl=yaml.dump(tpl))
+        self._create_stack(tmpl=yaml.safe_dump(tpl))
         msg = "Invalid object_type: networks. "
         self.assertRaisesRegexp(exception.StackValidationFailed, msg,
                                 self.rbac.validate)
