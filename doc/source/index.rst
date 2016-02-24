@@ -62,7 +62,7 @@ Operating Heat
 
     getting_started/on_fedora
     getting_started/on_ubuntu
-    scale_deployment
+    operating_guides/scale_deployment
     man/index
 
 Developing Heat
@@ -72,11 +72,11 @@ Developing Heat
 
     contributing/index
     getting_started/on_devstack
-    architecture
-    pluginguide
-    schedulerhints
-    gmr
-    supportstatus
+    developing_guides/architecture
+    developing_guides/pluginguide
+    developing_guides/schedulerhints
+    developing_guides/gmr
+    developing_guides/supportstatus
 
 API Documentation
 ========================
