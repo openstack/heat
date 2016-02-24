@@ -59,7 +59,8 @@ resources:
         stack_ids = [m.body['payload']['stack_id'] for m in messages]
         self.assertEqual([stack_id] * 4, stack_ids)
         statuses = [m.body['payload']['resource_status'] for m in messages]
+        statuses.sort()
         self.assertEqual(
-            ['IN_PROGRESS', 'IN_PROGRESS', 'COMPLETE', 'COMPLETE'], statuses)
+            ['COMPLETE', 'COMPLETE', 'IN_PROGRESS', 'IN_PROGRESS'], statuses)
         actions = [m.body['payload']['resource_action'] for m in messages]
         self.assertEqual(['CREATE'] * 4, actions)
