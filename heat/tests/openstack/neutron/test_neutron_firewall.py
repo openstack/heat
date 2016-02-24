@@ -188,7 +188,8 @@ class FirewallTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
-        self.assertIs(True, rsrc.FnGetAtt('shared'))
+        self.assertEqual('This attribute is currently unsupported in neutron '
+                         'firewall resource.', rsrc.FnGetAtt('shared'))
         self.assertEqual('policy-id', rsrc.FnGetAtt('firewall_policy_id'))
         self.m.VerifyAll()
 
