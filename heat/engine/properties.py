@@ -62,10 +62,10 @@ class Schema(constr.Schema):
                  support_status=support.SupportStatus(),
                  allow_conversion=False):
         super(Schema, self).__init__(data_type, description, default,
-                                     schema, required, constraints)
+                                     schema, required, constraints,
+                                     immutable=immutable)
         self.implemented = implemented
         self.update_allowed = update_allowed
-        self.immutable = immutable
         self.support_status = support_status
         self.allow_conversion = allow_conversion
         # validate structural correctness of schema itself

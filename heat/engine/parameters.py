@@ -39,10 +39,11 @@ class Schema(constr.Schema):
     """Parameter schema."""
 
     KEYS = (
-        TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN, LABEL
+        TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN,
+        LABEL, IMMUTABLE
     ) = (
         'Type', 'Description', 'Default', 'Schema', 'Constraints', 'NoEcho',
-        'Label'
+        'Label', 'Immutable'
     )
 
     PARAMETER_KEYS = PARAMETER_KEYS
@@ -56,14 +57,15 @@ class Schema(constr.Schema):
     )
 
     def __init__(self, data_type, description=None, default=None, schema=None,
-                 constraints=None, hidden=False, label=None):
+                 constraints=None, hidden=False, label=None, immutable=False):
         super(Schema, self).__init__(data_type=data_type,
                                      description=description,
                                      default=default,
                                      schema=schema,
                                      required=default is None,
                                      constraints=constraints,
-                                     label=label)
+                                     label=label,
+                                     immutable=immutable)
         self.hidden = hidden
 
     # Schema class validates default value for lists assuming list type. For
@@ -493,6 +495,8 @@ class Parameters(collections.Mapping):
         self.params = dict((p.name,
                             p) for p in itertools.chain(pseudo_parameters,
                                                         user_parameters))
+        self.non_pseudo_param_keys = [p for p in self.params if p not in
+                                      self.PSEUDO_PARAMETERS]
 
         for pd in six.iterkeys(param_defaults):
             if pd in self.params:
@@ -585,3 +589,21 @@ class Parameters(collections.Mapping):
                                                              'ap-southeast-1',
                                                              'ap-northeast-1']
                                                             )]))
+
+    def immutable_params_modified(self, new_parameters, input_params):
+        # A parameter must have been present in the old stack for its
+        # immutability to be enforced
+        common_params = list(set(new_parameters.non_pseudo_param_keys)
+                             & set(self.non_pseudo_param_keys))
+        invalid_params = []
+        for param in common_params:
+            old_value = self.params[param]
+            if param in input_params:
+                new_value = input_params[param]
+            else:
+                new_value = new_parameters[param]
+            immutable = new_parameters.params[param].schema.immutable
+            if immutable and old_value.value() != new_value:
+                invalid_params.append(param)
+        if invalid_params:
+            return invalid_params

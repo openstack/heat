@@ -64,8 +64,10 @@ class Schema(collections.Mapping):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, SCHEMA, REQUIRED, CONSTRAINTS,
+        IMMUTABLE,
     ) = (
         'type', 'description', 'default', 'schema', 'required', 'constraints',
+        'immutable',
     )
 
     # Keywords for data types; each Schema subclass can define its respective
@@ -88,7 +90,8 @@ class Schema(collections.Mapping):
 
     def __init__(self, data_type, description=None,
                  default=None, schema=None,
-                 required=False, constraints=None, label=None):
+                 required=False, constraints=None, label=None,
+                 immutable=False):
         self._len = None
         self.label = label
         self.type = data_type
@@ -102,6 +105,7 @@ class Schema(collections.Mapping):
 
         self.description = description
         self.required = required
+        self.immutable = immutable
 
         if isinstance(schema, type(self)):
             if self.type != self.LIST:

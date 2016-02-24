@@ -133,6 +133,16 @@ class InvalidTemplateParameter(HeatException):
     msg_fmt = _("The Parameter (%(key)s) has no attributes.")
 
 
+class ImmutableParameterModified(HeatException):
+    msg_fmt = _("The following parameters are immutable and may not be "
+                "updated: %(keys)s")
+
+    def __init__(self, *args, **kwargs):
+        if args:
+            kwargs.update({'keys': ", ".join(args)})
+        super(ImmutableParameterModified, self).__init__(**kwargs)
+
+
 class InvalidTemplateAttribute(HeatException):
     msg_fmt = _("The Referenced Attribute (%(resource)s %(key)s)"
                 " is incorrect.")
