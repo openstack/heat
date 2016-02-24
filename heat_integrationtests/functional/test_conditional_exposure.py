@@ -76,20 +76,6 @@ resources:
       ram: 20000
       vcpus: 10
 """
-    fl_tmpl_nested = """
-heat_template_version: 2015-10-15
-
-resources:
-  not4everyonerg:
-    type: OS::Heat::ResourceGroup
-    properties:
-        count: 1
-        resource_def:
-            type: OS::Nova::Flavor
-            properties:
-              ram: 20000
-              vcpus: 10
-"""
 
     def test_non_admin_forbidden_create_flavors(self):
         """Fail to create Flavor resource w/o admin role.
@@ -103,14 +89,6 @@ resources:
                                self.client.stacks.create,
                                stack_name=stack_name,
                                template=self.fl_tmpl)
-        self.assertIn(self.forbidden_resource_type, ex.message)
-
-    def test_non_admin_forbidden_create_flavors_nested(self):
-        stack_name = self._stack_rand_name()
-        ex = self.assertRaises(exc.Forbidden,
-                               self.client.stacks.create,
-                               stack_name=stack_name,
-                               template=self.fl_tmpl_nested)
         self.assertIn(self.forbidden_resource_type, ex.message)
 
     def test_forbidden_resource_not_listed(self):
