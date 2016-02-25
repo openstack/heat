@@ -126,7 +126,7 @@ outputs:
                 stack_identifier,
                 template=immutable_true,
                 parameters=update_parameters)
-        except heat_exceptions.HTTPInternalServerError as exc:
+        except heat_exceptions.HTTPBadRequest as exc:
             exp = ('The following parameters are immutable and may not be '
                    'updated: param1')
             self.assertIn(exp, str(exc))

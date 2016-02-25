@@ -1284,6 +1284,53 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual({'resource_changes': resource_changes}, result)
         self.m.VerifyAll()
 
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_update_immutable_parameter(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'param1': u'bar'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': 30}
+
+        req = self._put('/stacks/%(stack_name)s/%(stack_id)s' %
+                        identity, json.dumps(body))
+
+        error = heat_exc.ImmutableParameterModified(keys='param1')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('update_stack',
+             {'stack_identity': dict(identity),
+              'template': template,
+              'params': {u'parameters': parameters,
+                         u'encrypted_param_names': [],
+                         u'parameter_defaults': {},
+                         u'event_sinks': [],
+                         u'resource_registry': {}},
+              'files': {},
+              'environment_files': None,
+              'args': {'timeout_mins': 30}}),
+            version='1.23'
+        ).AndRaise(tools.to_remote_error(error))
+        self.m.ReplayAll()
+
+        resp = tools.request_with_middleware(fault.FaultWrapper,
+                                             self.controller.update,
+                                             req, tenant_id=identity.tenant,
+                                             stack_name=identity.stack_name,
+                                             stack_id=identity.stack_id,
+                                             body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('ImmutableParameterModified',
+                         resp.json['error']['type'])
+        self.assertIn("The following parameters are immutable",
+                      six.text_type(resp.json['error']['message']))
+        self.m.VerifyAll()
+
     def test_lookup(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'lookup', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
