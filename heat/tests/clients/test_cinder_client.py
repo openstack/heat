@@ -22,11 +22,11 @@ from heat.tests import common
 from heat.tests import utils
 
 
-class CinderClientPluginTests(common.HeatTestCase):
+class CinderClientPluginTest(common.HeatTestCase):
     """Basic tests for :module:'heat.engine.clients.os.cinder'."""
 
     def setUp(self):
-        super(CinderClientPluginTests, self).setUp()
+        super(CinderClientPluginTest, self).setUp()
         self.cinder_client = mock.MagicMock()
         con = utils.dummy_context()
         c = con.clients

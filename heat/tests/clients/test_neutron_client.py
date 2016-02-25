@@ -35,9 +35,9 @@ class NeutronClientPluginTestCase(common.HeatTestCase):
         self.neutron_plugin._client = self.neutron_client
 
 
-class NeutronClientPluginTests(NeutronClientPluginTestCase):
+class NeutronClientPluginTest(NeutronClientPluginTestCase):
     def setUp(self):
-        super(NeutronClientPluginTests, self).setUp()
+        super(NeutronClientPluginTest, self).setUp()
         self.mock_find = self.patchobject(neutron.neutronV20,
                                           'find_resourceid_by_name_or_id')
         self.mock_find.return_value = 42
@@ -258,7 +258,7 @@ class NeutronProviderConstraintsValidate(common.HeatTestCase):
         self.assertFalse(constraint.validate("bar", ctx))
 
 
-class NeutronClientPluginExtensionsTests(NeutronClientPluginTestCase):
+class NeutronClientPluginExtensionsTest(NeutronClientPluginTestCase):
     """Tests for extensions in neutronclient."""
 
     def test_has_no_extension(self):

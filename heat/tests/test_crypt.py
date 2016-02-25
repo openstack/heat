@@ -20,7 +20,7 @@ from heat.common import exception
 from heat.tests import common
 
 
-class CryptTests(common.HeatTestCase):
+class CryptTest(common.HeatTestCase):
 
     def test_fernet_key(self):
         key = 'x' * 16

@@ -41,7 +41,7 @@ class NovaClientPluginTestCase(common.HeatTestCase):
         self.nova_plugin._client = self.nova_client
 
 
-class NovaClientPluginTests(NovaClientPluginTestCase):
+class NovaClientPluginTest(NovaClientPluginTestCase):
     """Basic tests for :module:'heat.engine.clients.os.nova'."""
 
     def test_create(self):
@@ -255,7 +255,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
                           self.nova_plugin.absolute_limits)
 
 
-class NovaClientPluginRefreshServerTests(NovaClientPluginTestCase):
+class NovaClientPluginRefreshServerTest(NovaClientPluginTestCase):
     msg = ("ClientException: The server has either erred or is "
            "incapable of performing the requested operation.")
 
@@ -288,7 +288,7 @@ class NovaClientPluginRefreshServerTests(NovaClientPluginTestCase):
         server.get.assert_called_once_with()
 
 
-class NovaClientPluginFetchServerTests(NovaClientPluginTestCase):
+class NovaClientPluginFetchServerTest(NovaClientPluginTestCase):
 
     server = mock.Mock()
     # set explicitly as id and name has internal meaning in mock.Mock
@@ -328,7 +328,7 @@ class NovaClientPluginFetchServerTests(NovaClientPluginTestCase):
         self.nova_client.servers.get.assert_called_once_with(self.server.id)
 
 
-class NovaClientPluginCheckActiveTests(NovaClientPluginTestCase):
+class NovaClientPluginCheckActiveTest(NovaClientPluginTestCase):
 
     scenarios = [
         ('active', dict(
@@ -346,7 +346,7 @@ class NovaClientPluginCheckActiveTests(NovaClientPluginTestCase):
     ]
 
     def setUp(self):
-        super(NovaClientPluginCheckActiveTests, self).setUp()
+        super(NovaClientPluginCheckActiveTest, self).setUp()
         self.server = mock.Mock()
         self.server.id = '1234'
         self.server.status = self.status
@@ -387,7 +387,7 @@ class NovaClientPluginCheckActiveTests(NovaClientPluginTestCase):
         self.assertEqual(0, self.r_mock.call_count)
 
 
-class NovaClientPluginUserdataTests(NovaClientPluginTestCase):
+class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
 
     def test_build_userdata(self):
         """Tests the build_userdata function."""
@@ -432,7 +432,7 @@ class NovaClientPluginUserdataTests(NovaClientPluginTestCase):
         self.assertIn('ec2-user', data)
 
 
-class NovaClientPluginMetadataTests(NovaClientPluginTestCase):
+class NovaClientPluginMetadataTest(NovaClientPluginTestCase):
 
     def test_serialize_string(self):
         original = {'test_key': 'simple string value'}
@@ -677,7 +677,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
         self.console_method.assert_called_once_with(self.console_type)
 
 
-class NovaClientPluginExtensionsTests(NovaClientPluginTestCase):
+class NovaClientPluginExtensionsTest(NovaClientPluginTestCase):
     """Tests for extensions in novaclient."""
 
     def test_has_no_extensions(self):

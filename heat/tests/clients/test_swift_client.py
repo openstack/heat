@@ -33,7 +33,7 @@ class SwiftClientPluginTestCase(common.HeatTestCase):
         self.swift_plugin._client = self.swift_client
 
 
-class SwiftUtilsTests(SwiftClientPluginTestCase):
+class SwiftUtilsTest(SwiftClientPluginTestCase):
 
     def test_is_valid_temp_url_path(self):
 

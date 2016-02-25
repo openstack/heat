@@ -20,7 +20,7 @@ from heat.tests import common
 from heat.tests import utils
 
 
-class ManilaClientPluginTests(common.HeatTestCase):
+class ManilaClientPluginTest(common.HeatTestCase):
     scenarios = [
         ('share_type',
             dict(manager_name="share_types",
@@ -37,7 +37,7 @@ class ManilaClientPluginTests(common.HeatTestCase):
     ]
 
     def setUp(self):
-        super(ManilaClientPluginTests, self).setUp()
+        super(ManilaClientPluginTest, self).setUp()
         # mock client and plugin
         self.manila_client = mock.MagicMock()
         con = utils.dummy_context()

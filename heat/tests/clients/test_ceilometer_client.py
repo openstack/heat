@@ -17,7 +17,7 @@ from heat.tests import common
 from heat.tests import utils
 
 
-class CeilometerClientPluginTests(common.HeatTestCase):
+class CeilometerClientPluginTest(common.HeatTestCase):
 
     def test_create(self):
         self.patchobject(cc.HTTPClient, 'client_request')
