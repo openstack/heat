@@ -94,6 +94,11 @@ class StackResource(resource.Resource):
         if self.nested() is None and self.status == self.FAILED:
             raise exception.UpdateReplace(self)
 
+        # If stack resource is in CHECK_FAILED state, raise UpdateReplace
+        # to replace the failed stack.
+        if self.state == (self.CHECK, self.FAILED):
+            raise exception.UpdateReplace(self)
+
         if (check_init_complete and
                 self.nested() is None and
                 self.action == self.INIT and self.status == self.COMPLETE):

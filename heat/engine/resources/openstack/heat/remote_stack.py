@@ -214,6 +214,11 @@ class RemoteStack(resource.Resource):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
+        # If resource is in CHECK_FAILED state, raise UpdateReplace
+        # to replace the failed stack.
+        if self.state == (self.CHECK, self.FAILED):
+            raise exception.UpdateReplace(self)
+
         # Always issue an update to the remote stack and let the individual
         # resources in it decide if they need updating.
         return True
