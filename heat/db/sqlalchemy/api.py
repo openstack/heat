@@ -526,13 +526,14 @@ def stack_update(context, stack_id, values, exp_trvsl=None):
         return False
 
     session = _session(context)
-    rows_updated = (session.query(models.Stack)
-                    .filter(models.Stack.id == stack.id)
-                    .filter(models.Stack.current_traversal
-                            == stack.current_traversal)
-                    .update(values, synchronize_session=False))
-    session.expire_all()
 
+    with session.begin():
+        rows_updated = (session.query(models.Stack)
+                        .filter(models.Stack.id == stack.id)
+                        .filter(models.Stack.current_traversal
+                                == stack.current_traversal)
+                        .update(values, synchronize_session=False))
+    session.expire_all()
     return (rows_updated is not None and rows_updated > 0)
 
 
