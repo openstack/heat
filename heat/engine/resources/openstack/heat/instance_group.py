@@ -249,7 +249,8 @@ class InstanceGroup(stack_resource.StackResource):
         Also see heat.scaling.template.member_definitions.
         """
         instance_definition = self._get_resource_definition()
-        old_resources = grouputils.get_member_definitions(self)
+        old_resources = grouputils.get_member_definitions(self,
+                                                          include_failed=True)
         definitions = template.member_definitions(
             old_resources, instance_definition, num_instances, num_replace,
             short_id.generate_id)

@@ -30,17 +30,20 @@ def get_size(group, include_failed=False):
         return 0
 
 
-def get_members(group):
+def get_members(group, include_failed=False):
     """Get a list of member resources managed by the specified group.
 
     Sort the list of instances first by created_time then by name.
+    If include_failed is set, failed members will be put first in the
+    list sorted by created_time then by name.
     """
     resources = []
     if group.nested():
         resources = [r for r in six.itervalues(group.nested())
-                     if r.status != r.FAILED]
+                     if include_failed or r.status != r.FAILED]
 
-    return sorted(resources, key=lambda r: (r.created_time, r.name))
+    return sorted(resources,
+                  key=lambda r: (r.status != r.FAILED, r.created_time, r.name))
 
 
 def get_member_refids(group, exclude=None):
@@ -100,10 +103,12 @@ def get_nested_attrs(stack, key, use_indices, *path):
         return get_rsrc_id(stack, key, use_indices, *path)
 
 
-def get_member_definitions(group):
+def get_member_definitions(group, include_failed=False):
     """Get member definitions in (name, ResourceDefinition) pair for group.
 
         The List is sorted first by created_time then by name.
+        If include_failed is set, failed members will be put first in the
+        List sorted by created_time then by name.
     """
     return [(resource.name, resource.t)
-            for resource in get_members(group)]
+            for resource in get_members(group, include_failed)]

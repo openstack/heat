@@ -347,15 +347,9 @@ class LoadbalancerReloadTest(common.HeatTestCase):
             {'Instances': ['aaaabbbbcccc']})
 
 
-class ReplaceTest(common.HeatTestCase):
-    scenarios = [
-        ('1', dict(min_in_service=0, batch_size=1, updates=2)),
-        ('2', dict(min_in_service=0, batch_size=2, updates=1)),
-        ('3', dict(min_in_service=3, batch_size=1, updates=3)),
-        ('4', dict(min_in_service=3, batch_size=2, updates=2))]
-
+class InstanceGroupWithNestedStack(common.HeatTestCase):
     def setUp(self):
-        super(ReplaceTest, self).setUp()
+        super(InstanceGroupWithNestedStack, self).setUp()
         t = template_format.parse(inline_templates.as_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
         lc = self.create_launch_config(t, self.stack)
@@ -369,7 +363,6 @@ class ReplaceTest(common.HeatTestCase):
         self.group._lb_reload = mock.Mock()
         self.group.update_with_template = mock.Mock()
         self.group.check_update_complete = mock.Mock()
-        self.group._nested = self.get_fake_nested_stack()
 
     def create_launch_config(self, t, stack):
         self.stub_ImageConstraint_validate()
@@ -381,21 +374,33 @@ class ReplaceTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def get_fake_nested_stack(self):
-        nested_t = '''
+    def get_fake_nested_stack(self, size=1):
+        tmpl = '''
         heat_template_version: 2013-05-23
         description: AutoScaling Test
         resources:
-          one:
-            type: ResourceWithPropsAndAttrs
-            properties:
-              Foo: hello
-          two:
-            type: ResourceWithPropsAndAttrs
-            properties:
-              Foo: fee
         '''
+        resource = '''
+          r%(i)d:
+            type: ResourceWithPropsAndAttrs
+            properties:
+              Foo: bar%(i)d
+          '''
+        resources = '\n'.join([resource % {'i': i + 1} for i in range(size)])
+        nested_t = tmpl + resources
         return utils.parse_stack(template_format.parse(nested_t))
+
+
+class ReplaceTest(InstanceGroupWithNestedStack):
+    scenarios = [
+        ('1', dict(min_in_service=0, batch_size=1, updates=2)),
+        ('2', dict(min_in_service=0, batch_size=2, updates=1)),
+        ('3', dict(min_in_service=3, batch_size=1, updates=3)),
+        ('4', dict(min_in_service=3, batch_size=2, updates=2))]
+
+    def setUp(self):
+        super(ReplaceTest, self).setUp()
+        self.group._nested = self.get_fake_nested_stack(2)
 
     def test_rolling_updates(self):
         self.group._replace(self.min_in_service, self.batch_size, 0)
@@ -403,6 +408,35 @@ class ReplaceTest(common.HeatTestCase):
                          len(self.group.update_with_template.call_args_list))
         self.assertEqual(self.updates + 1,
                          len(self.group._lb_reload.call_args_list))
+
+
+class ResizeWithFailedInstancesTest(InstanceGroupWithNestedStack):
+    scenarios = [
+        ('1', dict(size=3, failed=['r1'], content={'r2', 'r3', 'r4'})),
+        ('2', dict(size=3, failed=['r4'], content={'r1', 'r2', 'r3'})),
+        ('3', dict(size=2, failed=['r1', 'r2'], content={'r3', 'r4'})),
+        ('4', dict(size=2, failed=['r3', 'r4'], content={'r1', 'r2'})),
+        ('5', dict(size=2, failed=['r2', 'r3'], content={'r1', 'r4'})),
+        ('6', dict(size=3, failed=['r2', 'r3'], content={'r1', 'r3', 'r4'}))]
+
+    def setUp(self):
+        super(ResizeWithFailedInstancesTest, self).setUp()
+        self.group._nested = self.get_fake_nested_stack(4)
+        self.nested = self.group.nested()
+        self.group.nested = mock.Mock(return_value=self.nested)
+
+    def set_failed_instance(self, instance):
+        for r in six.itervalues(self.group.nested()):
+            if r.name == instance:
+                r.status = "FAILED"
+
+    def test_resize(self):
+        for inst in self.failed:
+            self.set_failed_instance(inst)
+        self.group.resize(self.size)
+        tmpl = self.group.update_with_template.call_args[0][0]
+        resources = tmpl.resource_definitions(self.group.nested())
+        self.assertEqual(set(resources.keys()), self.content)
 
 
 class TestGetBatches(common.HeatTestCase):
