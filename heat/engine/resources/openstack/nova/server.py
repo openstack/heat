@@ -1096,7 +1096,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         server = None
 
         if self.METADATA in prop_diff:
-            server = self.client().servers.get(self.resource_id)
+            server = self.client_plugin().get_server(self.resource_id)
             self.client_plugin().meta_update(server,
                                              prop_diff[self.METADATA])
 
@@ -1107,12 +1107,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             updaters.append(self._update_image(prop_diff))
         elif self.ADMIN_PASS in prop_diff:
             if not server:
-                server = self.client().servers.get(self.resource_id)
+                server = self.client_plugin().get_server(self.resource_id)
             server.change_password(prop_diff[self.ADMIN_PASS])
 
         if self.NAME in prop_diff:
             if not server:
-                server = self.client().servers.get(self.resource_id)
+                server = self.client_plugin().get_server(self.resource_id)
             self.client_plugin().rename(server, prop_diff[self.NAME])
 
         if self.NETWORKS in prop_diff:

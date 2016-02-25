@@ -21,6 +21,7 @@ from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
+import requests
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -3900,6 +3901,55 @@ class ServersTest(common.HeatTestCase):
         # this call is Act stage of this test. We calling server.validate()
         # to verify that no excessive calls to Nova are made during validation.
         self.assertIsNone(server.validate())
+
+        self.m.VerifyAll()
+
+    def test_server_validate_connection_error_retry_successful(self):
+        stack_name = 'srv_val'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "a" * 10}
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self._mock_validate_flavor_image_success()
+
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().AndRaise(requests.ConnectionError())
+        self.fc.limits.get().AndReturn(self.limits)
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+
+        self.m.VerifyAll()
+
+    def test_server_validate_connection_error_retry_failure(self):
+        stack_name = 'srv_val'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "a" * 10}
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self._mock_validate_flavor_image_success()
+
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().AndRaise(requests.ConnectionError())
+        self.fc.limits.get().AndRaise(requests.ConnectionError())
+        self.fc.limits.get().AndRaise(requests.ConnectionError())
+        self.m.ReplayAll()
+
+        self.assertRaises(requests.ConnectionError, server.validate)
 
         self.m.VerifyAll()
 
