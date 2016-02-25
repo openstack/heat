@@ -257,6 +257,14 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                    (resource_name, status, build_timeout))
         raise exceptions.TimeoutException(message)
 
+    def verify_resource_status(self, stack_identifier, resource_name,
+                               status='CREATE_COMPLETE'):
+        try:
+            res = self.client.resources.get(stack_identifier, resource_name)
+        except heat_exceptions.HTTPNotFound:
+            return False
+        return res.resource_status == status
+
     def _verify_status(self, stack, stack_identifier, status, fail_regexp):
         if stack.stack_status == status:
             # Handle UPDATE_COMPLETE/FAILED case: Make sure we don't
