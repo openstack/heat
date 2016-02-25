@@ -163,8 +163,9 @@ class Schema(constr.Schema):
                                               'false')).lower() == 'true',
                    label=schema_dict.get(LABEL))
 
-    def validate_value(self, value, context=None):
-        super(Schema, self).validate_constraints(value, context)
+    def validate_value(self, value, context=None, template=None):
+        super(Schema, self).validate_constraints(value, context=context,
+                                                 template=template)
 
     def __getitem__(self, key):
         if key == self.TYPE:
@@ -214,7 +215,7 @@ class Parameter(object):
         self.user_value = value
         self.user_default = None
 
-    def validate(self, validate_value=True, context=None):
+    def validate(self, validate_value=True, context=None, template=None):
         """Validates the parameter.
 
         This method validates if the parameter's schema is valid,
@@ -230,9 +231,9 @@ class Parameter(object):
                 return
 
             if self.user_value is not None:
-                self._validate(self.user_value, context)
+                self._validate(self.user_value, context, template)
             elif self.has_default():
-                self._validate(self.default(), context)
+                self._validate(self.default(), context, template)
             else:
                 raise exception.UserParameterMissing(key=self.name)
         except exception.StackValidationFailed as ex:
@@ -305,12 +306,12 @@ class NumberParam(Parameter):
         """Return a float representation of the parameter."""
         return float(super(NumberParam, self).value())
 
-    def _validate(self, val, context):
+    def _validate(self, val, context, template=None):
         try:
             Schema.str_to_num(val)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-        self.schema.validate_value(val, context)
+        self.schema.validate_value(val, context=context, template=template)
 
     def value(self):
         return Schema.str_to_num(super(NumberParam, self).value())
@@ -319,12 +320,12 @@ class NumberParam(Parameter):
 class BooleanParam(Parameter):
     """A template parameter of type "Boolean"."""
 
-    def _validate(self, val, context):
+    def _validate(self, val, context, template=None):
         try:
             strutils.bool_from_string(val, strict=True)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-        self.schema.validate_value(val, context)
+        self.schema.validate_value(val, context=context, template=template)
 
     def value(self):
         if self.user_value is not None:
@@ -337,8 +338,8 @@ class BooleanParam(Parameter):
 class StringParam(Parameter):
     """A template parameter of type "String"."""
 
-    def _validate(self, val, context):
-        self.schema.validate_value(val, context)
+    def _validate(self, val, context, template=None):
+        self.schema.validate_value(val, context=context, template=template)
 
     def value(self):
         return self.schema.to_schema_type(super(StringParam, self).value())
@@ -403,12 +404,12 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
             return super(CommaDelimitedListParam, self).__str__()
         return ",".join(self.value())
 
-    def _validate(self, val, context):
+    def _validate(self, val, context, template=None):
         try:
             parsed = self.parse(val)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-        self.schema.validate_value(parsed, context)
+        self.schema.validate_value(parsed, context=context, template=template)
 
 
 class JsonParam(ParsedParameter):
@@ -451,12 +452,12 @@ class JsonParam(ParsedParameter):
             return super(JsonParam, self).__str__()
         return encodeutils.safe_decode(jsonutils.dumps(self.value()))
 
-    def _validate(self, val, context):
+    def _validate(self, val, context, template=None):
         try:
             parsed = self.parse(val)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-        self.schema.validate_value(parsed, context)
+        self.schema.validate_value(parsed, context=context, template=template)
 
 
 class Parameters(collections.Mapping):
@@ -514,7 +515,7 @@ class Parameters(collections.Mapping):
         self._validate_user_parameters()
 
         for param in six.itervalues(self.params):
-            param.validate(validate_value, context)
+            param.validate(validate_value, context, self.tmpl)
 
     def __contains__(self, key):
         """Return whether the specified parameter exists."""

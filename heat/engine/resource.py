@@ -1379,7 +1379,8 @@ class Resource(object):
                              self.context).validate()
         try:
             validate = self.properties.validate(
-                with_value=self.stack.strict_validate)
+                with_value=self.stack.strict_validate,
+                template=self.t)
         except exception.StackValidationFailed as ex:
             path = [self.stack.t.RESOURCES, ex.path[0],
                     self.stack.t.get_section_name(ex.path[1])]

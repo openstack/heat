@@ -205,14 +205,15 @@ class Schema(collections.Mapping):
 
         return value
 
-    def validate_constraints(self, value, context=None, skipped=None):
+    def validate_constraints(self, value, context=None, skipped=None,
+                             template=None):
         if not skipped:
             skipped = []
 
         try:
             for constraint in self.constraints:
                 if type(constraint) not in skipped:
-                    constraint.validate(value, self, context)
+                    constraint.validate(value, self, context, template)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
 
@@ -296,8 +297,8 @@ class Constraint(collections.Mapping):
 
         return '\n'.join(desc())
 
-    def validate(self, value, schema=None, context=None):
-        if not self._is_valid(value, schema, context):
+    def validate(self, value, schema=None, context=None, template=None):
+        if not self._is_valid(value, schema, context, template):
             if self.description:
                 err_msg = self.description
             else:
@@ -374,7 +375,7 @@ class Range(Constraint):
                                                           self.min,
                                                           self.max)
 
-    def _is_valid(self, value, schema, context):
+    def _is_valid(self, value, schema, context, template):
         value = Schema.str_to_num(value)
 
         if self.min is not None:
@@ -437,8 +438,9 @@ class Length(Range):
                                                                    self.min,
                                                                    self.max)
 
-    def _is_valid(self, value, schema, context):
-        return super(Length, self)._is_valid(len(value), schema, context)
+    def _is_valid(self, value, schema, context, template):
+        return super(Length, self)._is_valid(len(value), schema, context,
+                                             template)
 
 
 class AllowedValues(Constraint):
@@ -471,7 +473,7 @@ class AllowedValues(Constraint):
         allowed = '[%s]' % ', '.join(str(a) for a in self.allowed)
         return '"%s" is not an allowed value %s' % (value, allowed)
 
-    def _is_valid(self, value, schema, context):
+    def _is_valid(self, value, schema, context, template):
         # For list values, check if all elements of the list are contained
         # in allowed list.
         if isinstance(value, list):
@@ -514,7 +516,7 @@ class AllowedPattern(Constraint):
     def _err_msg(self, value):
         return '"%s" does not match pattern "%s"' % (value, self.pattern)
 
-    def _is_valid(self, value, schema, context):
+    def _is_valid(self, value, schema, context, template):
         match = self.match(value)
         return match is not None and match.end() == len(value)
 
@@ -565,11 +567,19 @@ class CustomConstraint(Constraint):
         return _('"%(value)s" does not validate %(name)s') % {
             "value": value, "name": self.name}
 
-    def _is_valid(self, value, schema, context):
+    def _is_valid(self, value, schema, context, template):
         constraint = self.custom_constraint
         if not constraint:
             return False
-        return constraint.validate(value, context)
+
+        try:
+            result = constraint.validate(value, context,
+                                         template=template)
+        except TypeError:
+            # for backwards compatibility with older service constraints
+            result = constraint.validate(value, context)
+
+        return result
 
 
 class BaseCustomConstraint(object):
@@ -591,7 +601,7 @@ class BaseCustomConstraint(object):
         return _("Error validating value '%(value)s': %(message)s") % {
             "value": value, "message": self._error_message}
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
 
         @MEMOIZE
         def check_cache_or_validate_value(cache_value_prefix,
