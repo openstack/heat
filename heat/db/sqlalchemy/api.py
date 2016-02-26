@@ -221,7 +221,7 @@ def resource_data_get(resource, key):
 
 
 def stack_tags_set(context, stack_id, tags):
-    session = get_session()
+    session = _session(context)
     with session.begin():
         stack_tags_delete(context, stack_id)
         result = []
@@ -235,8 +235,8 @@ def stack_tags_set(context, stack_id, tags):
 
 
 def stack_tags_delete(context, stack_id):
-    session = get_session()
-    with session.begin():
+    session = _session(context)
+    with session.begin(subtransactions=True):
         result = stack_tags_get(context, stack_id)
         if result:
             for tag in result:
@@ -545,12 +545,10 @@ def stack_delete(context, stack_id):
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
     session = orm_session.Session.object_session(s)
-
-    for r in s.resources:
-        session.delete(r)
-
-    s.soft_delete(session=session)
-    session.flush()
+    with session.begin():
+        for r in s.resources:
+            session.delete(r)
+        s.soft_delete(session=session)
 
 
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
@@ -682,8 +680,8 @@ def user_creds_delete(context, user_creds_id):
             _('Attempt to delete user creds with id '
               '%(id)s that does not exist') % {'id': user_creds_id})
     session = orm_session.Session.object_session(creds)
-    session.delete(creds)
-    session.flush()
+    with session.begin():
+        session.delete(creds)
 
 
 def event_get(context, event_id):
@@ -851,12 +849,10 @@ def watch_rule_delete(context, watch_id):
                                      'id': watch_id,
                                      'msg': 'that does not exist'})
     session = orm_session.Session.object_session(wr)
-
-    for d in wr.watch_data:
-        session.delete(d)
-
-    session.delete(wr)
-    session.flush()
+    with session.begin():
+        for d in wr.watch_data:
+            session.delete(d)
+        session.delete(wr)
 
 
 def watch_data_create(context, values):
@@ -908,8 +904,8 @@ def software_config_get_all(context, limit=None, marker=None,
 def software_config_delete(context, config_id):
     config = software_config_get(context, config_id)
     session = orm_session.Session.object_session(config)
-    session.delete(config)
-    session.flush()
+    with session.begin():
+        session.delete(config)
 
 
 def software_deployment_create(context, values):
@@ -997,8 +993,8 @@ def snapshot_update(context, snapshot_id, values):
 def snapshot_delete(context, snapshot_id):
     snapshot = snapshot_get(context, snapshot_id)
     session = orm_session.Session.object_session(snapshot)
-    session.delete(snapshot)
-    session.flush()
+    with session.begin():
+        session.delete(snapshot)
 
 
 def snapshot_get_all(context, stack_id):
@@ -1024,11 +1020,11 @@ def service_update(context, service_id, values):
 def service_delete(context, service_id, soft_delete=True):
     service = service_get(context, service_id)
     session = orm_session.Session.object_session(service)
-    if soft_delete:
-        service.soft_delete(session=session)
-    else:
-        session.delete(service)
-    session.flush()
+    with session.begin():
+        if soft_delete:
+            service.soft_delete(session=session)
+        else:
+            session.delete(service)
 
 
 def service_get(context, service_id):
