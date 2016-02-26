@@ -1,0 +1,10 @@
+---
+features:
+  - Adds a new "immutable" boolean field to the parameters section in
+    a HOT template.  This gives template authors the ability to mark
+    template parameters as immutable to restrict updating parameters
+    which have destructive effects on the application.  A value of
+    True results in the engine rejecting stack-updates that include
+    changes to that parameter.  When not specified in the template,
+    "immutable" defaults to False to ensure backwards compatibility
+    with old templates.
