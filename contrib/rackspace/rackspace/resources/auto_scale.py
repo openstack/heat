@@ -18,6 +18,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -243,7 +244,7 @@ class Group(resource.Resource):
               'directly passed to Heat when creating a stack.'),
             schema={
                 LAUNCH_CONFIG_ARGS_STACK_TEMPLATE: properties.Schema(
-                    properties.Schema.MAP,
+                    properties.Schema.STRING,
                     _('The template that describes the stack. Either the '
                       'template or template_url property must be specified.'),
                 ),
@@ -533,7 +534,8 @@ class Group(resource.Resource):
             if st_tmpl:
                 st_files = st_args.get(self.LAUNCH_CONFIG_ARGS_STACK_FILES)
                 try:
-                    templatem.Template(st_tmpl, files=st_files, env=st_env)
+                    tmpl = template_format.simple_parse(st_tmpl)
+                    templatem.Template(tmpl, files=st_files, env=st_env)
                 except Exception as exc:
                     msg = (_('Encountered error while loading template: %s') %
                            six.text_type(exc))
