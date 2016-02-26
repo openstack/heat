@@ -391,3 +391,11 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               'call',
                               stack_identity=self.identity,
                               version='1.22')
+
+    def test_resource_mark_unhealthy(self):
+        self._test_engine_api('resource_mark_unhealthy', 'call',
+                              stack_identity=self.identity,
+                              resource_name='LogicalResourceId',
+                              mark_unhealthy=True,
+                              resource_status_reason="Any reason",
+                              version='1.26')

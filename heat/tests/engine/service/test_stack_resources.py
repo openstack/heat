@@ -22,6 +22,7 @@ from heat.engine import dependencies
 from heat.engine import resource as res
 from heat.engine import service
 from heat.engine import stack
+from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.objects import stack as stack_object
 from heat.tests import common
@@ -497,3 +498,183 @@ class StackResourcesServiceTest(common.HeatTestCase):
         stack_dependencies = stk.dependencies
         self.assertIsInstance(stack_dependencies, dependencies.Dependencies)
         self.assertEqual(2, len(stack_dependencies.graph()))
+
+    @tools.stack_context('service_mark_healthy_create_complete_test_stk')
+    def test_mark_healthy_in_create_complete(self):
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', False,
+                                         resource_status_reason='noop')
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+        self.assertIn('resource_action', r)
+        self.assertIn('resource_status', r)
+        self.assertIn('resource_status_reason', r)
+
+        self.assertEqual(r['resource_action'], 'CREATE')
+        self.assertEqual(r['resource_status'], 'COMPLETE')
+        self.assertEqual(r['resource_status_reason'], 'state changed')
+
+    @tools.stack_context('service_mark_unhealthy_create_complete_test_stk')
+    def test_mark_unhealthy_in_create_complete(self):
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason='Some Reason')
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'FAILED')
+        self.assertEqual(r['resource_status_reason'], 'Some Reason')
+
+    @tools.stack_context('service_mark_healthy_check_failed_test_stk')
+    def test_mark_healthy_check_failed(self):
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason='Some Reason')
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'FAILED')
+        self.assertEqual(r['resource_status_reason'], 'Some Reason')
+
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', False,
+                                         resource_status_reason='Good Reason')
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'COMPLETE')
+        self.assertEqual(r['resource_status_reason'], 'Good Reason')
+
+    @tools.stack_context('service_mark_unhealthy_check_failed_test_stack')
+    def test_mark_unhealthy_check_failed(self):
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason='Some Reason')
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'FAILED')
+        self.assertEqual(r['resource_status_reason'], 'Some Reason')
+
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason='New Reason')
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'FAILED')
+        self.assertEqual(r['resource_status_reason'], 'New Reason')
+
+    @tools.stack_context('service_mark_unhealthy_invalid_value_test_stk')
+    def test_mark_unhealthy_invalid_value(self):
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_mark_unhealthy,
+                               self.ctx,
+                               self.stack.identifier(),
+                               'WebServer', "This is wrong",
+                               resource_status_reason="Some Reason")
+        self.assertEqual(exception.Invalid, ex.exc_info[0])
+
+    @tools.stack_context('service_mark_unhealthy_none_reason_test_stk')
+    def test_mark_unhealthy_none_reason(self):
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True)
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'FAILED')
+        self.assertEqual(r['resource_status_reason'],
+                         'state changed by resource_mark_unhealthy api')
+
+    @tools.stack_context('service_mark_unhealthy_empty_reason_test_stk')
+    def test_mark_unhealthy_empty_reason(self):
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason="")
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServer', with_attr=None)
+
+        self.assertEqual(r['resource_action'], 'CHECK')
+        self.assertEqual(r['resource_status'], 'FAILED')
+        self.assertEqual(r['resource_status_reason'],
+                         'state changed by resource_mark_unhealthy api')
+
+    @tools.stack_context('service_mark_unhealthy_lock_no_converge_test_stk')
+    def test_mark_unhealthy_lock_no_convergence(self):
+        mock_acquire = self.patchobject(stack_lock.StackLock,
+                                        'acquire',
+                                        return_value=None)
+
+        mock_release = self.patchobject(stack_lock.StackLock,
+                                        'release',
+                                        return_value=None)
+
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason="")
+
+        mock_acquire.assert_called_once_with()
+        mock_release.assert_called_once_with()
+
+    @tools.stack_context('service_mark_unhealthy_lock_converge_test_stk',
+                         convergence=True)
+    def test_mark_unhealthy_stack_lock_convergence(self):
+        mock_acquire = self.patchobject(res.Resource,
+                                        '_acquire',
+                                        return_value=None)
+
+        self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
+                                         'WebServer', True,
+                                         resource_status_reason="")
+
+        mock_acquire.assert_called_once_with(self.eng.engine_id)
+
+    @tools.stack_context('service_mark_unhealthy_lockexc_converge_test_stk',
+                         convergence=True)
+    def test_mark_unhealthy_stack_lock_exc_convergence(self):
+        def _acquire(*args, **kwargs):
+            raise exception.UpdateInProgress(self.stack.name)
+
+        self.patchobject(
+            res.Resource,
+            '_acquire',
+            return_value=None,
+            side_effect=exception.UpdateInProgress(self.stack.name))
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_mark_unhealthy,
+                               self.ctx,
+                               self.stack.identifier(),
+                               'WebServer', True,
+                               resource_status_reason="")
+        self.assertEqual(exception.ActionInProgress, ex.exc_info[0])
+
+    @tools.stack_context('service_mark_unhealthy_lockexc_no_converge_test_stk')
+    def test_mark_unhealthy_stack_lock_exc_no_convergence(self):
+        self.patchobject(
+            stack_lock.StackLock,
+            'acquire',
+            return_value=None,
+            side_effect=exception.ActionInProgress(
+                stack_name=self.stack.name,
+                action=self.stack.action))
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_mark_unhealthy,
+                               self.ctx,
+                               self.stack.identifier(),
+                               'WebServer', True,
+                               resource_status_reason="")
+        self.assertEqual(exception.ActionInProgress, ex.exc_info[0])

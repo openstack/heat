@@ -44,6 +44,7 @@ class EngineClient(object):
         1.23 - Add environment_files to create/update/preview/validate
         1.24 - Adds ignorable_errors to validate_template
         1.25 - list_stack_resource filter update
+        1.26 - Add mark_unhealthy
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -559,6 +560,25 @@ class EngineClient(object):
                                              sync_call=sync_call),
 
                          version='1.3')
+
+    def resource_mark_unhealthy(self, ctxt, stack_identity, resource_name,
+                                mark_unhealthy, resource_status_reason=None):
+        """Mark the resource as unhealthy or healthy.
+
+        :param ctxt: RPC context.
+        :param stack_identity: Name of the stack.
+        :param resource_name: the Resource.
+        :param mark_unhealthy: indicates whether the resource is unhealthy.
+        :param resource_status_reason: reason for health change.
+        """
+        return self.call(
+            ctxt,
+            self.make_msg('resource_mark_unhealthy',
+                          stack_identity=stack_identity,
+                          resource_name=resource_name,
+                          mark_unhealthy=mark_unhealthy,
+                          resource_status_reason=resource_status_reason),
+            version='1.26')
 
     def create_watch_data(self, ctxt, watch_name, stats_data):
         """Creates data for CloudWatch and WaitConditions.
