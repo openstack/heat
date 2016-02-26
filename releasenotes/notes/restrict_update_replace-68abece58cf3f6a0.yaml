@@ -1,0 +1,7 @@
+---
+features:
+  - Adds a new feature to restrict update or replace of
+    a resource when a stack is being updated. Template
+    authors can set ``restricted_actions`` in the ``resources``
+    section of ``resource_registry`` in an environment file
+    to restrict update or replace.
