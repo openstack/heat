@@ -117,7 +117,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
         NAME: _sd_ps[NAME],
         INPUT_KEY: properties.Schema(
             properties.Schema.STRING,
-            _('Name of key to use for substituting inputs during deployment'),
+            _('Name of key to use for substituting inputs during deployment.'),
             default='get_input',
         ),
         INPUT_VALUES_VALIDATE: properties.Schema(

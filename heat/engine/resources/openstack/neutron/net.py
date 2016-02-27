@@ -88,7 +88,7 @@ class Net(neutron.NeutronResource):
             properties.Schema.BOOLEAN,
             _('Flag to enable/disable port security on the network. It '
               'provides the default value for the attribute of the ports '
-              'created on this network'),
+              'created on this network.'),
             update_allowed=True,
             support_status=support.SupportStatus(version='5.0.0')
         ),

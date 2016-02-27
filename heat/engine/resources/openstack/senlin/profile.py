@@ -59,7 +59,7 @@ class Profile(resource.Resource):
         ),
         PROFILE_PROPERTIES: properties.Schema(
             properties.Schema.MAP,
-            _('Properties for profile'),
+            _('Properties for profile.'),
         )
     }
 

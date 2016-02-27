@@ -25,7 +25,7 @@ from heat.engine import support
 
 class HeatCustomGuidelines(object):
 
-    _RULES = []
+    _RULES = ['resource_descriptions']
 
     def __init__(self, exclude):
         self.error_count = 0
@@ -55,16 +55,13 @@ class HeatCustomGuidelines(object):
             # check resource's description
             #self._check_resource_description(cls)
             # check properties' descriptions
-            #self._check_resource_schemas(cls, cls.properties_schema,
-            #                             'property')
+            self._check_resource_schemas(cls, cls.properties_schema,
+                                         'property')
             # check attributes' descriptions
             #self._check_resource_schemas(cls, cls.attributes_schema,
             #                             'attribute')
             # check methods descriptions
             #self._check_resource_methods(cls)
-            # TODO(prazumovsky): remove when at least one check will be
-            # available
-            pass
 
     def _check_resource_description(self, resource):
         description = resource.__doc__

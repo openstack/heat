@@ -93,7 +93,7 @@ class MonascaAlarmDefinition(resource.Resource):
             update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.STRING,
-                _('Monasca notification'),
+                _('Monasca notification.'),
                 constraints=[constraints.CustomConstraint(
                     'monasca.notification')
                 ]
@@ -105,7 +105,7 @@ class MonascaAlarmDefinition(resource.Resource):
             update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.STRING,
-                _('Monasca notification'),
+                _('Monasca notification.'),
                 constraints=[constraints.CustomConstraint(
                     'monasca.notification')
                 ]
@@ -118,7 +118,7 @@ class MonascaAlarmDefinition(resource.Resource):
             update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.STRING,
-                _('Monasca notification'),
+                _('Monasca notification.'),
                 constraints=[constraints.CustomConstraint(
                     'monasca.notification')
                 ]

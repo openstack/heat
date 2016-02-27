@@ -97,10 +97,12 @@ class InstanceGroup(stack_resource.StackResource):
                 schema={
                     TAG_KEY: properties.Schema(
                         properties.Schema.STRING,
+                        _('Tag key.'),
                         required=True
                     ),
                     TAG_VALUE: properties.Schema(
                         properties.Schema.STRING,
+                        _('Tag value.'),
                         required=True
                     ),
                 },

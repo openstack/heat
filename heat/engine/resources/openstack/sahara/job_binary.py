@@ -52,7 +52,7 @@ class JobBinary(resource.Resource):
         URL: properties.Schema(
             properties.Schema.STRING,
             _('URL for the job binary. Must be in the format '
-              'swift://<container>/<path> or internal-db://<uuid>'),
+              'swift://<container>/<path> or internal-db://<uuid>.'),
             required=True,
             update_allowed=True
         ),

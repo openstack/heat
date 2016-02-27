@@ -288,7 +288,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         IMAGE_UPDATE_POLICY: properties.Schema(
             properties.Schema.STRING,
             _('Policy on how to apply an image-id update; either by '
-              'requesting a server rebuild or by replacing the entire server'),
+              'requesting a server rebuild or by replacing '
+              'the entire server.'),
             default='REBUILD',
             constraints=[
                 constraints.AllowedValues(['REBUILD', 'REPLACE',
@@ -409,7 +410,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         METADATA: properties.Schema(
             properties.Schema.MAP,
             _('Arbitrary key/value metadata to store for this server. Both '
-              'keys and values must be 255 characters or less.  Non-string '
+              'keys and values must be 255 characters or less. Non-string '
               'values will be serialized to JSON (and the serialized '
               'string must be 255 characters or less).'),
             update_allowed=True

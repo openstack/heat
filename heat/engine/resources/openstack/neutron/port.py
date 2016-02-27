@@ -108,8 +108,8 @@ class Port(neutron.NeutronResource):
             properties.Schema.STRING,
             _('Network this port belongs to. If you plan to use current port '
               'to assign Floating IP, you should specify %(fixed_ips)s '
-              'with %(subnet)s.  Note if this changes to a different network '
-              'update, the port will be replaced') %
+              'with %(subnet)s. Note if this changes to a different network '
+              'update, the port will be replaced.') %
             {'fixed_ips': FIXED_IPS, 'subnet': FIXED_IP_SUBNET},
             support_status=support.SupportStatus(version='2014.2'),
             required=True,
@@ -126,7 +126,7 @@ class Port(neutron.NeutronResource):
             properties.Schema.STRING,
             _('Name of the network owning the port. '
               'The value is typically network:floatingip '
-              'or network:router_interface or network:dhcp'),
+              'or network:router_interface or network:dhcp.'),
             update_allowed=True
         ),
         FIXED_IPS: properties.Schema(

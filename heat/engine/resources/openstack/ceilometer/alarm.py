@@ -91,8 +91,8 @@ common_properties_schema = {
         _('Describe time constraints for the alarm. '
           'Only evaluate the alarm if the time at evaluation '
           'is within this time constraint. Start point(s) of '
-          'the constraint are specified with a cron expression,'
-          'whereas its duration is given in seconds. '
+          'the constraint are specified with a cron expression, '
+          'whereas its duration is given in seconds.'
           ),
         schema=properties.Schema(
             properties.Schema.MAP,
@@ -127,7 +127,7 @@ common_properties_schema = {
                 TIMEZONE: properties.Schema(
                     properties.Schema.STRING,
                     _("Timezone for the time constraint "
-                      "(eg. 'Taiwan/Taipei', 'Europe/Amsterdam')"),
+                      "(eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."),
                     constraints=[
                         constraints.CustomConstraint('timezone')
                     ],
@@ -279,12 +279,12 @@ class CeilometerAlarm(resource.Resource):
                     ),
                     QF_OP: properties.Schema(
                         properties.Schema.STRING,
-                        _('Comparison operator'),
+                        _('Comparison operator.'),
                         constraints=[QF_OP_VALS]
                     ),
                     QF_VALUE: properties.Schema(
                         properties.Schema.STRING,
-                        _('String value with which to compare')
+                        _('String value with which to compare.')
                     )
                 }
             )

@@ -614,7 +614,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         ),
         STATUS_CODES: attributes.Schema(
             _("A map of Nova names and returned status code from the "
-              "configuration execution"),
+              "configuration execution."),
             type=attributes.Schema.MAP
         ),
     }

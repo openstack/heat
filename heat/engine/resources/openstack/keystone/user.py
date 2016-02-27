@@ -65,7 +65,7 @@ class KeystoneUser(resource.Resource,
         ),
         ENABLED: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Keystone user is enabled or disabled'),
+            _('Keystone user is enabled or disabled.'),
             default=True,
             update_allowed=True
         ),
@@ -87,11 +87,11 @@ class KeystoneUser(resource.Resource,
         ),
         GROUPS: properties.Schema(
             properties.Schema.LIST,
-            _('keystone user groups.'),
+            _('Keystone user groups.'),
             update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.STRING,
-                _('keystone user group.'),
+                _('Keystone user group.'),
                 constraints=[constraints.CustomConstraint('keystone.group')]
             )
         )

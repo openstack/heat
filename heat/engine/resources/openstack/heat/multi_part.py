@@ -68,7 +68,7 @@ class MultipartMime(software_config.SoftwareConfig):
                         properties.Schema.STRING,
                         _('Content of part to attach, either inline or by '
                           'referencing the ID of another software config '
-                          'resource'),
+                          'resource.'),
                         required=True
                     ),
                     FILENAME: properties.Schema(

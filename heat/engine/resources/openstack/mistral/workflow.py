@@ -103,7 +103,7 @@ class Workflow(signal_responder.SignalResponder,
               'True, the body would be parsed as a simple json where each '
               'key is a workflow input, in other cases body would be parsed '
               'expecting a specific json format with two keys: "input" and '
-              '"params"'),
+              '"params".'),
             update_allowed=True,
             support_status=support.SupportStatus(version='6.0.0')
         ),
@@ -178,7 +178,7 @@ class Workflow(signal_responder.SignalResponder,
                 PAUSE_BEFORE: properties.Schema(
                     properties.Schema.BOOLEAN,
                     _('Defines whether Mistral Engine should put the '
-                      'workflow on hold or not before starting a task')
+                      'workflow on hold or not before starting a task.')
                 ),
                 TIMEOUT: properties.Schema(
                     properties.Schema.INTEGER,
