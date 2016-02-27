@@ -113,6 +113,13 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         subnet_info = self.client().show_subnet(subnet_id)
         return subnet_info['subnet']['network_id']
 
+    def check_lb_status(self, lb_id):
+        lb = self.client().show_loadbalancer(lb_id)['loadbalancer']
+        status = lb['provisioning_status']
+        if status == 'ERROR':
+            raise exception.ResourceInError(resource_status=status)
+        return status == 'ACTIVE'
+
     def get_qos_policy_id(self, policy):
         """Returns the id of QoS policy.
 
