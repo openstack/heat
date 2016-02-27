@@ -678,3 +678,14 @@ class RemoteStackTest(tests_common.HeatTestCase):
         stack = utils.parse_stack(t, cache_data=cache_data)
         rsrc = stack['remote_stack']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
+
+    def test_update_in_check_failed_state(self):
+        rsrc = self.create_remote_stack()
+        rsrc.state_set(rsrc.CHECK, rsrc.FAILED)
+
+        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
+        self.assertRaises(exception.UpdateReplace,
+                          scheduler.TaskRunner(rsrc.update, update_snippet))

@@ -580,6 +580,27 @@ class StackResourceTest(StackResourceBaseTest):
                           self.parent_resource.properties,
                           self.parent_resource)
 
+    def test_need_update_in_check_failed_state_for_nested_resource(self):
+        """Test the resource should need replacement.
+
+        The resource in check_failed state should need update with
+        UpdateReplace.
+        """
+        self.parent_resource.state_set(self.parent_resource.CHECK,
+                                       self.parent_resource.FAILED)
+        self.nested = mock.MagicMock()
+        self.nested.name = 'nested-stack'
+        self.parent_resource.nested = mock.MagicMock(return_value=self.nested)
+        self.parent_resource._nested = self.nested
+
+        self.assertRaises(exception.UpdateReplace,
+                          self.parent_resource._needs_update,
+                          self.parent_resource.t,
+                          self.parent_resource.t,
+                          self.parent_resource.properties,
+                          self.parent_resource.properties,
+                          self.parent_resource)
+
 
 class StackResourceLimitTest(StackResourceBaseTest):
     scenarios = [
