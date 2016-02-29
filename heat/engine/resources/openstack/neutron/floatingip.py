@@ -28,7 +28,7 @@ class FloatingIP(neutron.NeutronResource):
     """A resource for managing Neutron floating ips.
 
     Floating IP addresses can change their association between routers by
-    action of the user.  One of the most common use cases for floating IPs is
+    action of the user. One of the most common use cases for floating IPs is
     to provide public IP addresses to a private cloud, where there are a
     limited number of IP addresses available. Another is for a public cloud
     user to have a "static" IP address that can be reassigned when an instance

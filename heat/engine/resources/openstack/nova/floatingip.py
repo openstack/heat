@@ -30,7 +30,7 @@ class NovaFloatingIp(resource.Resource):
     """A resource for managing Nova floating IPs.
 
     Floating IP addresses can change their association between instances by
-    action of the user.  One of the most common use cases for floating IPs is
+    action of the user. One of the most common use cases for floating IPs is
     to provide public IP addresses to a private cloud, where there are a
     limited number of IP addresses available. Another is for a public cloud
     user to have a "static" IP address that can be reassigned when an instance
@@ -107,7 +107,10 @@ class NovaFloatingIp(resource.Resource):
 
 
 class NovaFloatingIpAssociation(resource.Resource):
-    """A resource associates Nova floating IP with Nova server resource."""
+    """A resource associates Nova floating IP with Nova server resource.
+
+    Resource for associating existing Nova floating IP and Nova server.
+    """
 
     support_status = support.SupportStatus(version='2014.1')
 
