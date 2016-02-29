@@ -334,7 +334,7 @@ class ResourceGroup(stack_resource.StackResource):
                                 size)
 
     def _count_black_listed(self):
-        """Return the number of current resource names that are blacklisted"""
+        """Return the number of current resource names that are blacklisted."""
         existing_members = grouputils.get_member_names(self)
         return len(self._name_blacklist() & set(existing_members))
 
@@ -442,9 +442,9 @@ class ResourceGroup(stack_resource.StackResource):
 
         :param include_all: if False, only properties for the resource
                definition that are not empty will be included
-        :type  include_all: bool
+        :type include_all: bool
         :return: resource definition for the group
-        :rtype:  dict
+        :rtype: dict
         """
 
         # At this stage, we don't mind if all of the parameters have values

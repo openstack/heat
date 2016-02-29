@@ -177,7 +177,7 @@ class ResourceChain(stack_resource.StackResource):
         :type resource_type: str
         :param depends_on: if specified, the new resource will depend on the
                resource name specified
-        :type  depends_on: str
+        :type depends_on: str
         :return: resource definition suitable for adding to a template
         :rtype: heat.engine.rsrc_defn.ResourceDefinition
         """
