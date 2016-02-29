@@ -803,3 +803,90 @@ resources:
             exp = ('ERROR: Attribute here-it-is for facade '
                    'OS::Thingy missing in provider')
             self.assertEqual(exp, six.text_type(exc))
+
+
+class TemplateResourceNewParamTest(functional_base.FunctionalTestsBase):
+
+    main_template = '''
+heat_template_version: 2013-05-23
+resources:
+  my_resource:
+    type: resource.yaml
+    properties:
+      value1: foo
+'''
+    nested_templ = '''
+heat_template_version: 2013-05-23
+parameters:
+  value1:
+    type: string
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value: {get_param: value1}
+'''
+    main_template_update = '''
+heat_template_version: 2013-05-23
+resources:
+  my_resource:
+    type: resource.yaml
+    properties:
+      value1: foo
+      value2: foo
+'''
+    nested_templ_update_fail = '''
+heat_template_version: 2013-05-23
+parameters:
+  value1:
+    type: string
+  value2:
+    type: string
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      fail: True
+      value:
+        str_replace:
+          template: VAL1-VAL2
+          params:
+            VAL1: {get_param: value1}
+            VAL2: {get_param: value2}
+'''
+    nested_templ_update = '''
+heat_template_version: 2013-05-23
+parameters:
+  value1:
+    type: string
+  value2:
+    type: string
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value:
+        str_replace:
+          template: VAL1-VAL2
+          params:
+            VAL1: {get_param: value1}
+            VAL2: {get_param: value2}
+'''
+
+    def test_update(self):
+        stack_identifier = self.stack_create(
+            template=self.main_template,
+            files={'resource.yaml': self.nested_templ})
+
+        # Make the update fails with the new parameter inserted.
+        self.update_stack(
+            stack_identifier,
+            self.main_template_update,
+            files={'resource.yaml': self.nested_templ_update_fail},
+            expected_status='UPDATE_FAILED')
+
+        # Fix the update, it should succeed now.
+        self.update_stack(
+            stack_identifier,
+            self.main_template_update,
+            files={'resource.yaml': self.nested_templ_update})
