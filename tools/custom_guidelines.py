@@ -58,8 +58,8 @@ class HeatCustomGuidelines(object):
             self._check_resource_schemas(cls, cls.properties_schema,
                                          'property')
             # check attributes' descriptions
-            #self._check_resource_schemas(cls, cls.attributes_schema,
-            #                             'attribute')
+            self._check_resource_schemas(cls, cls.attributes_schema,
+                                         'attribute')
             # check methods descriptions
             #self._check_resource_methods(cls)
 
