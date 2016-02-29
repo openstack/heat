@@ -336,10 +336,13 @@ class ResourceRegistry(object):
 
     def log_resource_info(self, show_all=False, prefix=None):
         registry = self._registry
+        prefix = '%s ' % prefix if prefix is not None else ''
         for name in registry:
+            if name == 'resources':
+                continue
             if show_all or isinstance(registry[name], TemplateResourceInfo):
-                msg = (_('%(p)s Registered: %(t)s') %
-                       {'p': prefix or '',
+                msg = (_LI('%(p)sRegistered: %(t)s') %
+                       {'p': prefix,
                         't': six.text_type(registry[name])})
                 LOG.info(msg)
 
