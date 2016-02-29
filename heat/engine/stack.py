@@ -379,7 +379,10 @@ class Stack(collections.Mapping):
         """Return the dependency graph for a list of resources."""
         deps = dependencies.Dependencies()
         for res in resources:
-            res.add_dependencies(deps)
+            try:
+                res.add_dependencies(deps)
+            except ValueError:
+                pass
 
         return deps
 

@@ -2210,6 +2210,22 @@ class ResourceDependenciesTest(common.HeatTestCase):
 
         self.assertIn(res, graph)
 
+    def test_hot_add_dep_error(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'foo': {'type': 'GenericResourceType'},
+                'bar': {'type': 'ResourceWithPropsType'}
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+        res = stack['bar']
+        self.patchobject(res, 'add_dependencies',
+                         side_effect=ValueError)
+        graph = stack.dependencies.graph()
+        self.assertNotIn(res, graph)
+        self.assertIn(stack['foo'], graph)
+
     def test_ref(self):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
