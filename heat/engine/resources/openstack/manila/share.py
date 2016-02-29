@@ -87,8 +87,8 @@ class ManilaShare(resource.Resource):
         ),
         SHARE_SNAPSHOT: properties.Schema(
             properties.Schema.STRING,
-            _('Name or ID of shared file system snapshot that will be restored'
-              ' and created as a new share.'),
+            _('Name or ID of shared file system snapshot that '
+              'will be restored and created as a new share.'),
             constraints=[constraints.CustomConstraint('manila.share_snapshot')]
         ),
         NAME: properties.Schema(

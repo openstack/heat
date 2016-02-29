@@ -114,7 +114,7 @@ class SubnetPool(neutron.NeutronResource):
         ),
         SHARED: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Whether the subnet pool will be shared across all tenants.'
+            _('Whether the subnet pool will be shared across all tenants. '
               'Note that the default policy setting restricts usage of this '
               'attribute to administrative users only.'),
             default=False,

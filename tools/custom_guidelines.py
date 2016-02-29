@@ -25,7 +25,7 @@ from heat.engine import support
 
 class HeatCustomGuidelines(object):
 
-    _RULES = ['resource_descriptions']
+    _RULES = ['resource_descriptions', 'trailing_spaces']
 
     def __init__(self, exclude):
         self.error_count = 0

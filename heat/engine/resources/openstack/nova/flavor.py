@@ -93,7 +93,7 @@ class NovaFlavor(resource.Resource):
         ),
         IS_PUBLIC: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Scope of flavor accessibility. Public or private.'
+            _('Scope of flavor accessibility. Public or private. '
               'Default value is True, means public, shared '
               'across all projects.'),
             default=True,

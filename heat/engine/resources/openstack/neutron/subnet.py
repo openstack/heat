@@ -187,8 +187,8 @@ class Subnet(neutron.NeutronResource):
         ),
         TENANT_ID: properties.Schema(
             properties.Schema.STRING,
-            _('The ID of the tenant who owns the network. Only administrative'
-              ' users can specify a tenant ID other than their own.')
+            _('The ID of the tenant who owns the network. Only administrative '
+              'users can specify a tenant ID other than their own.')
         ),
         HOST_ROUTES: properties.Schema(
             properties.Schema.LIST,
@@ -218,8 +218,7 @@ class Subnet(neutron.NeutronResource):
         ),
         IPV6_RA_MODE: properties.Schema(
             properties.Schema.STRING,
-            _('IPv6 RA (Router Advertisement) mode.'
-              ' dhcpv6-stateful, dhcpv6-stateless, or slaac.'),
+            _('IPv6 RA (Router Advertisement) mode.'),
             constraints=[
                 constraints.AllowedValues([DHCPV6_STATEFUL, DHCPV6_STATELESS,
                                            SLAAC]),
@@ -228,8 +227,7 @@ class Subnet(neutron.NeutronResource):
         ),
         IPV6_ADDRESS_MODE: properties.Schema(
             properties.Schema.STRING,
-            _('IPv6 address mode.'
-              ' dhcpv6-stateful, dhcpv6-stateless, or slaac.'),
+            _('IPv6 address mode.'),
             constraints=[
                 constraints.AllowedValues([DHCPV6_STATEFUL, DHCPV6_STATELESS,
                                            SLAAC]),

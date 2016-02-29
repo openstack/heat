@@ -165,14 +165,14 @@ class Workflow(signal_responder.SignalResponder,
                 ),
                 WAIT_BEFORE: properties.Schema(
                     properties.Schema.INTEGER,
-                    _('Defines a delay in seconds that Mistral Engine'
-                      ' should wait before starting a task.')
+                    _('Defines a delay in seconds that Mistral Engine '
+                      'should wait before starting a task.')
                 ),
                 WAIT_AFTER: properties.Schema(
                     properties.Schema.INTEGER,
-                    _('Defines a delay in seconds that Mistral Engine'
-                      ' should wait after a task has completed before'
-                      ' starting next tasks defined in '
+                    _('Defines a delay in seconds that Mistral Engine '
+                      'should wait after a task has completed before '
+                      'starting next tasks defined in '
                       'on-success, on-error or on-complete.')
                 ),
                 PAUSE_BEFORE: properties.Schema(
@@ -321,8 +321,8 @@ class Workflow(signal_responder.SignalResponder,
                         _('Allows to synchronize multiple parallel workflow '
                           'branches and aggregate their data. '
                           'Valid inputs: all - the task will run only if '
-                          'all upstream tasks are completed.'
-                          ' Any numeric value - then the task will run once '
+                          'all upstream tasks are completed. '
+                          'Any numeric value - then the task will run once '
                           'at least this number of upstream tasks are '
                           'completed and corresponding conditions have '
                           'triggered.'),
