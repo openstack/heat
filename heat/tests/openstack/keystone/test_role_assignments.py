@@ -95,14 +95,6 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
         (self.test_role_assignment.client_plugin.
          return_value) = self.keystone_client_plugin
 
-    def test_resource_mapping(self):
-        mapping = role_assignments.resource_mapping()
-        self.assertEqual(2, len(mapping))
-        self.assertEqual(role_assignments.KeystoneUserRoleAssignment,
-                         mapping['OS::Keystone::UserRoleAssignment'])
-        self.assertEqual(role_assignments.KeystoneGroupRoleAssignment,
-                         mapping['OS::Keystone::GroupRoleAssignment'])
-
     def test_properties_title(self):
         property_title_map = {MixinClass.ROLES: 'roles'}
 

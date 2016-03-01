@@ -15,7 +15,6 @@ import uuid
 
 import mock
 
-from heat.engine.resources.openstack.heat import cloud_config
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -42,13 +41,6 @@ class CloudConfigTest(common.HeatTestCase):
         self.config = self.stack['config_mysql']
         self.rpc_client = mock.MagicMock()
         self.config._rpc_client = self.rpc_client
-
-    def test_resource_mapping(self):
-        mapping = cloud_config.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(cloud_config.CloudConfig,
-                         mapping['OS::Heat::CloudConfig'])
-        self.assertIsInstance(self.config, cloud_config.CloudConfig)
 
     def test_handle_create(self):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'

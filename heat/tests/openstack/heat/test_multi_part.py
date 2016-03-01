@@ -17,7 +17,6 @@ import uuid
 import mock
 
 from heat.common import exception as exc
-from heat.engine.resources.openstack.heat import multi_part as mp
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
@@ -46,13 +45,6 @@ class MultipartMimeTest(common.HeatTestCase):
         self.config = stack['config_mysql']
         self.rpc_client = mock.MagicMock()
         self.config._rpc_client = self.rpc_client
-
-    def test_resource_mapping(self):
-        mapping = mp.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(mp.MultipartMime,
-                         mapping['OS::Heat::MultipartMime'])
-        self.assertIsInstance(self.config, mp.MultipartMime)
 
     def test_handle_create(self):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'

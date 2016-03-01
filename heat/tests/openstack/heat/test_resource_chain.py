@@ -197,10 +197,6 @@ class ResourceChainTest(common.HeatTestCase):
         chain = self._create_chain(TEMPLATE)
         self.assertEqual({}, chain.child_params())
 
-    def test_resource_mapping(self):
-        found = resource_chain.resource_mapping()['OS::Heat::ResourceChain']
-        self.assertEqual(found, resource_chain.ResourceChain)
-
     def _create_chain(self, t):
         self.stack = utils.parse_stack(t)
         snip = self.stack.t.resource_definitions(self.stack)['test-chain']

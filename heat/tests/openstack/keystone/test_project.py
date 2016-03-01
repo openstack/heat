@@ -76,12 +76,6 @@ class KeystoneProjectTest(common.HeatTestCase):
 
         return value
 
-    def test_resource_mapping(self):
-        mapping = project.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(project.KeystoneProject, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_project, project.KeystoneProject)
-
     def test_project_handle_create(self):
         mock_project = self._get_mock_project()
         self.projects.create.return_value = mock_project

@@ -101,12 +101,6 @@ class SenlinClusterTest(common.HeatTestCase):
         self.assertEqual(self.fake_cl.id, cluster.resource_id)
         return cluster
 
-    def test_resource_mapping(self):
-        mapping = sc.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(sc.Cluster,
-                         mapping['OS::Senlin::Cluster'])
-
     def test_cluster_create_success(self):
         self._create_cluster(self.t)
         expect_kwargs = {

@@ -15,7 +15,6 @@ import mock
 import six
 
 from heat.common import exception
-from heat.engine.resources.openstack.cinder import volume_type
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -56,14 +55,6 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         keystoneclient.client.projects = mock.MagicMock()
         self.project_list = mock.MagicMock()
         keystoneclient.client.projects.get = self.project_list
-
-    def test_resource_mapping(self):
-        mapping = volume_type.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(volume_type.CinderVolumeType,
-                         mapping['OS::Cinder::VolumeType'])
-        self.assertIsInstance(self.my_volume_type,
-                              volume_type.CinderVolumeType)
 
     def _test_handle_create(self, is_public=True, projects=None):
         value = mock.MagicMock()

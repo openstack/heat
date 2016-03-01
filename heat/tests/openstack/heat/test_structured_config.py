@@ -133,19 +133,6 @@ class StructuredConfigTestJSON(common.HeatTestCase):
         self.rpc_client = mock.MagicMock()
         self.config._rpc_client = self.rpc_client
 
-    def test_resource_mapping(self):
-        mapping = sc.resource_mapping()
-        self.assertEqual(4, len(mapping))
-        self.assertEqual(sc.StructuredConfig,
-                         mapping['OS::Heat::StructuredConfig'])
-        self.assertEqual(sc.StructuredDeployment,
-                         mapping['OS::Heat::StructuredDeployment'])
-        self.assertEqual(sc.StructuredDeploymentGroup,
-                         mapping['OS::Heat::StructuredDeploymentGroup'])
-        self.assertEqual(sc.StructuredDeployments,
-                         mapping['OS::Heat::StructuredDeployments'])
-        self.assertIsInstance(self.config, sc.StructuredConfig)
-
     def test_handle_create(self):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         value = {'id': config_id}

@@ -14,7 +14,6 @@
 import mock
 
 from heat.engine.clients.os import nova
-from heat.engine.resources.openstack.nova import host_aggregate
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -56,14 +55,6 @@ class NovaHostAggregateTest(common.HeatTestCase):
         self.my_aggregate.client = nova_client
         nova_client.return_value = self.novaclient
         self.aggregates = self.novaclient.aggregates
-
-    def test_resource_mapping(self):
-        mapping = host_aggregate.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(host_aggregate.HostAggregate,
-                         mapping['OS::Nova::HostAggregate'])
-        self.assertIsInstance(self.my_aggregate,
-                              host_aggregate.HostAggregate)
 
     def test_aggregate_handle_create(self):
         value = mock.MagicMock()

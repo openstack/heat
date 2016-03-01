@@ -117,12 +117,6 @@ class TroveClusterTest(common.HeatTestCase):
                          tc.resource_id)
         self.assertEqual('clusters', tc.entity)
 
-    def test_resource_mapping(self):
-        mapping = cluster.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(cluster.TroveCluster,
-                         mapping['OS::Trove::Cluster'])
-
     def test_attributes(self):
         tc = self._create_resource('cluster', self.rsrc_defn, self.stack)
         self.assertEqual(['10.0.0.1'], tc.FnGetAtt('ip'))

@@ -90,11 +90,6 @@ class TestMagnumBayModel(common.HeatTestCase):
         self.assertEqual((bm.CREATE, bm.COMPLETE), bm.state)
         self.client.baymodels.create.assert_called_once_with(**self.expected)
 
-    def test_resource_mapping(self):
-        mapping = baymodel.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(baymodel.BayModel, mapping[RESOURCE_TYPE])
-
 
 class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
     magnum_template = '''

@@ -159,12 +159,6 @@ class DesignateDomainTest(common.HeatTestCase):
             self.test_resource.resource_id
         )
 
-    def test_resource_mapping(self):
-        mapping = domain.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(domain.DesignateDomain, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_resource, domain.DesignateDomain)
-
     def test_resource_show_resource(self):
         args = dict(
             name='test',

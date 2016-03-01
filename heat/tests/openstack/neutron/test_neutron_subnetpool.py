@@ -63,16 +63,6 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, status), rsrc.state)
         return rsrc
 
-    def test_resource_mapping(self):
-        self.t = template_format.parse(inline_templates.SPOOL_TEMPLATE)
-        self.stack = utils.parse_stack(self.t)
-        rsrc = self.stack['sub_pool']
-        mapping = subnetpool.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(subnetpool.SubnetPool,
-                         mapping['OS::Neutron::SubnetPool'])
-        self.assertIsInstance(rsrc, subnetpool.SubnetPool)
-
     def test_validate_prefixlen_min_gt_max(self):
         self.t = template_format.parse(inline_templates.SPOOL_TEMPLATE)
         props = self.t['resources']['sub_pool']['properties']

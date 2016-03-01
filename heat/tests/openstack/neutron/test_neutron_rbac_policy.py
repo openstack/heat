@@ -19,18 +19,12 @@ from neutronclient.common import exceptions
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.openstack.neutron import rbac_policy
 from heat.tests import common
 from heat.tests.openstack.neutron import inline_templates
 from heat.tests import utils
 
 
 class RBACPolicyTest(common.HeatTestCase):
-
-    def test_resource_mapping(self):
-        mapping = rbac_policy.resource_mapping()
-        self.assertEqual(rbac_policy.RBACPolicy,
-                         mapping['OS::Neutron::RBACPolicy'])
 
     @mock.patch('heat.engine.clients.os.neutron.'
                 'NeutronClientPlugin.has_extension', return_value=True)

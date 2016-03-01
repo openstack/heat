@@ -33,6 +33,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import dependencies
 from heat.engine import environment
+from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
@@ -3747,3 +3748,45 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                                                        self.new_stack))
         self.assertIn('requires replacement', six.text_type(error))
         ev.assert_not_called()
+
+
+class TestResourceMapping(common.HeatTestCase):
+
+    def _check_mapping_func(self, func, module):
+        self.assertTrue(callable(func))
+        res = func()
+        self.assertIsInstance(res, collections.Mapping)
+        for r_type, r_class in six.iteritems(res):
+            self.assertIsInstance(r_type, six.string_types)
+            type_elements = r_type.split('::')
+            # type has fixed format
+            # Platform type::Service/Type::Optional Sub-sections::Name
+            self.assertTrue(len(type_elements) >= 3)
+            # type should be OS or AWS
+            self.assertIn(type_elements[0], ('AWS', 'OS'))
+            # check that value is a class object
+            self.assertIsInstance(r_class, six.class_types)
+            # check that class is subclass of Resource base class
+            self.assertTrue(issubclass(r_class, resource.Resource))
+            # check that mentioned class is presented in the same module
+            self.assertTrue(hasattr(module, six.text_type(r_class.__name__)))
+        return len(res)
+
+    def test_resource_mappings(self):
+        # use plugin manager for loading all resources
+        # use the same approach like and in heat.engine.resources.__init__
+        manager = plugin_manager.PluginManager('heat.engine.resources')
+        num_of_types = 0
+        for module in manager.modules:
+            # check for both potential mappings
+            for name in ('resource_mapping', 'available_resource_mapping'):
+                mapping_func = getattr(module, name, None)
+                if mapping_func:
+                    num_of_types += self._check_mapping_func(
+                        mapping_func, module)
+
+        # check number of registred resource types to make sure,
+        # that there is no regressions
+        # It's soft check and should not be a cause of the merge conflict
+        # Feel free to update it in some separate patch
+        self.assertTrue(num_of_types >= 137)

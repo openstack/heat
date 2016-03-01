@@ -16,7 +16,6 @@ import six
 
 from heat.common import exception as exc
 from heat.common import template_format
-from heat.engine.resources.openstack.heat import software_component as sc
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -59,13 +58,6 @@ class SoftwareComponentTest(common.HeatTestCase):
         self.component = self.stack['mysql_component']
         self.rpc_client = mock.MagicMock()
         self.component._rpc_client = self.rpc_client
-
-    def test_resource_mapping(self):
-        mapping = sc.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(sc.SoftwareComponent,
-                         mapping['OS::Heat::SoftwareComponent'])
-        self.assertIsInstance(self.component, sc.SoftwareComponent)
 
     def test_handle_create(self):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'

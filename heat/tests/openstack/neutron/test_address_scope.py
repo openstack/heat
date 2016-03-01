@@ -15,7 +15,6 @@ import mock
 
 from heat.common import template_format
 from heat.engine.clients.os import neutron
-from heat.engine.resources.openstack.neutron import address_scope
 from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
@@ -55,13 +54,6 @@ class NeutronAddressScopeTest(common.HeatTestCase):
         self.my_address_scope = self.stack['my_address_scope']
         self.my_address_scope.client = mock.MagicMock(
             return_value=self.neutronclient)
-
-    def test_resource_mapping(self):
-        mapping = address_scope.resource_mapping()
-        self.assertEqual(address_scope.AddressScope,
-                         mapping['OS::Neutron::AddressScope'])
-        self.assertIsInstance(self.my_address_scope,
-                              address_scope.AddressScope)
 
     def test_address_scope_handle_create(self):
         addrs = {

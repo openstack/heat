@@ -213,13 +213,6 @@ class KeystoneEndpointTest(common.HeatTestCase):
             enabled=prop_diff[endpoint.KeystoneEndpoint.ENABLED]
         )
 
-    def test_resource_mapping(self):
-        rsrc = self._setup_endpoint_resource('test_resource_mapping')
-        mapping = endpoint.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(endpoint.KeystoneEndpoint, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(rsrc, endpoint.KeystoneEndpoint)
-
     def test_properties_title(self):
         property_title_map = {
             endpoint.KeystoneEndpoint.SERVICE: 'service',

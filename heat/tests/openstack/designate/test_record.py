@@ -226,12 +226,6 @@ class DesignateRecordTest(common.HeatTestCase):
         mock_record_delete.side_effect = designate_exception.NotFound
         self.assertIsNone(self.test_resource.handle_delete())
 
-    def test_resource_mapping(self):
-        mapping = record.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(record.DesignateRecord, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_resource, record.DesignateRecord)
-
     def test_resource_show_resource(self):
         args = dict(
             name='test-record.com',

@@ -75,12 +75,6 @@ class KeystoneGroupTest(common.HeatTestCase):
 
         return value
 
-    def test_resource_mapping(self):
-        mapping = group.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(group.KeystoneGroup, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_group, group.KeystoneGroup)
-
     def test_properties_title(self):
         property_title_map = {
             group.KeystoneGroup.NAME: 'name',

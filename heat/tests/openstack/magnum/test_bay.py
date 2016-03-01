@@ -144,11 +144,6 @@ class TestMagnumBay(common.HeatTestCase):
         self.assertEqual((b.DELETE, b.COMPLETE), b.state)
         self.assertEqual(2, self.client.bays.get.call_count)
 
-    def test_resource_mapping(self):
-        mapping = bay.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(mapping[RESOURCE_TYPE], bay.Bay)
-
 
 class BaymodelConstraintTest(common.HeatTestCase):
     def setUp(self):

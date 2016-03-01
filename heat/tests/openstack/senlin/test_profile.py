@@ -113,9 +113,3 @@ class SenlinProfileTest(common.HeatTestCase):
                               prop_diff=prop_diff)
         self.senlin_mock.update_profile.assert_called_once_with(
             profile.resource_id, **prop_diff)
-
-    def test_resource_mapping(self):
-        mapping = sp.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(sp.Profile,
-                         mapping['OS::Senlin::Profile'])

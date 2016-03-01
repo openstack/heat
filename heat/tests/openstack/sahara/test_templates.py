@@ -132,14 +132,6 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.stack = utils.parse_stack(template)
         return self.stack['node-group']
 
-    def test_ngt_resource_mapping(self):
-        ngt = self._init_ngt(self.t)
-        mapping = st.resource_mapping()
-        self.assertEqual(st.SaharaNodeGroupTemplate,
-                         mapping['OS::Sahara::NodeGroupTemplate'])
-        self.assertIsInstance(ngt,
-                              st.SaharaNodeGroupTemplate)
-
     def _create_ngt(self, template):
         ngt = self._init_ngt(template)
         self.ngt_mgr.create.return_value = self.fake_ngt
@@ -311,14 +303,6 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
     def _init_ct(self, template):
         self.stack = utils.parse_stack(template)
         return self.stack['cluster-template']
-
-    def test_ct_resource_mapping(self):
-        ct = self._init_ct(self.t)
-        mapping = st.resource_mapping()
-        self.assertEqual(st.SaharaClusterTemplate,
-                         mapping['OS::Sahara::ClusterTemplate'])
-        self.assertIsInstance(ct,
-                              st.SaharaClusterTemplate)
 
     def _create_ct(self, template):
         ct = self._init_ct(template)

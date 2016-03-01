@@ -16,7 +16,6 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.openstack.glance import image as gi
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
@@ -78,12 +77,6 @@ class GlanceImageTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resource.validate)
         self.assertIn(error_msg, six.text_type(exc))
-
-    def test_resource_mapping(self):
-        mapping = gi.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(gi.GlanceImage, mapping['OS::Glance::Image'])
-        self.assertIsInstance(self.my_image, gi.GlanceImage)
 
     def test_invalid_min_disk(self):
         # invalid 'min_disk'

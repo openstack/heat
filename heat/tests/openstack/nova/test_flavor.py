@@ -14,7 +14,6 @@
 import mock
 
 from heat.engine.clients.os import nova as novac
-from heat.engine.resources.openstack.nova import flavor
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -57,12 +56,6 @@ class NovaFlavorTest(common.HeatTestCase):
         self.my_flavor.client = nova
         nova.return_value = self.novaclient
         self.flavors = self.novaclient.flavors
-
-    def test_resource_mapping(self):
-        mapping = flavor.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(flavor.NovaFlavor, mapping['OS::Nova::Flavor'])
-        self.assertIsInstance(self.my_flavor, flavor.NovaFlavor)
 
     def test_flavor_handle_create(self):
         value = mock.MagicMock()

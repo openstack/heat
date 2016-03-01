@@ -222,14 +222,6 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
         mock_alarm_delete.side_effect = client_plugin.monasca_exc.NotFound
         self.assertIsNone(self.test_resource.handle_delete())
 
-    def test_resource_mapping(self):
-        mapping = alarm_definition.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(alarm_definition.MonascaAlarmDefinition,
-                         mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_resource,
-                              alarm_definition.MonascaAlarmDefinition)
-
     def test_resource_show_resource(self):
         mock_notification_get = self.test_client.alarm_definitions.get
         mock_notification_get.return_value = {}

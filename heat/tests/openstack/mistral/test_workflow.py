@@ -536,12 +536,6 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual(2, self.mistral.executions.delete.call_count)
         data_delete.assert_called_once_with('executions')
 
-    def test_resource_mapping(self):
-        mapping = workflow.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(workflow.Workflow,
-                         mapping['OS::Mistral::Workflow'])
-
     def test_signal_failed(self):
         tmpl = template_format.parse(workflow_template_full)
         stack = utils.parse_stack(tmpl)

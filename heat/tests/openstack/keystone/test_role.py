@@ -59,12 +59,6 @@ class KeystoneRoleTest(common.HeatTestCase):
 
         return value
 
-    def test_resource_mapping(self):
-        mapping = role.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(role.KeystoneRole, mapping[RESOURCE_TYPE])
-        self.assertIsInstance(self.test_role, role.KeystoneRole)
-
     def test_role_handle_create(self):
         mock_role = self._get_mock_role()
         self.roles.create.return_value = mock_role

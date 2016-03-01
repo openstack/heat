@@ -181,9 +181,3 @@ class SenlinPolicyTest(common.HeatTestCase):
         policy = self._create_policy(self.t)
         self.senlin_mock.get_policy.return_value = FakePolicy()
         self.assertEqual(excepted_show, policy._show_resource())
-
-    def test_resource_mapping(self):
-        mapping = policy.resource_mapping()
-        self.assertEqual(1, len(mapping))
-        self.assertEqual(policy.Policy,
-                         mapping['OS::Senlin::Policy'])
