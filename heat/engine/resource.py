@@ -495,7 +495,7 @@ class Resource(object):
         def prop_changed(key):
             try:
                 before = before_props.get(key)
-            except ValueError as exc:
+            except (TypeError, ValueError) as exc:
                 # We shouldn't get here usually, but there is a known issue
                 # with template resources and new parameters in non-convergence
                 # stacks (see bug 1543685). The error should be harmless
