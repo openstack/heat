@@ -109,3 +109,18 @@ resources:
       protocol: HTTP
       admin_state_up: True
 '''
+
+MEMBER_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a pool member
+resources:
+  member:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      pool: 123
+      address: 1.2.3.4
+      protocol_port: 80
+      weight: 1
+      subnet: sub123
+      admin_state_up: True
+'''
