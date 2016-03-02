@@ -33,14 +33,20 @@
 # Visible fixed network name  (string value)
 #fixed_network_name = heat-net
 
-# Username to use for API requests. (string value)
+# Username to use for non admin API requests. (string value)
 #username = <None>
+
+# Username to use for admin API requests. (string value)
+#admin_username = <None>
 
 # Visible floating network name  (string value)
 #floating_network_name = public
 
-# API key to use when authenticating. (string value)
+# Non admin API key to use when authenticating. (string value)
 #password = <None>
+
+# Admin API key to use when authenticating. (string value)
+#admin_password = <None>
 
 # Path to environment file which defines the resource type
 # Heat::InstallConfigAgent. Needs to be appropriate for the image_ref. (string

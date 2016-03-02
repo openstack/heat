@@ -21,10 +21,15 @@ IntegrationTestGroup = [
 
     cfg.StrOpt('username',
                default=os.environ.get('OS_USERNAME'),
-               help="Username to use for API requests."),
+               help="Username to use for non admin API requests."),
     cfg.StrOpt('password',
                default=os.environ.get('OS_PASSWORD'),
-               help="API key to use when authenticating.",
+               help="Non admin API key to use when authenticating.",
+               secret=True),
+    cfg.StrOpt('admin_username',
+               help="Username to use for admin API requests."),
+    cfg.StrOpt('admin_password',
+               help="Admin API key to use when authentication.",
                secret=True),
     cfg.StrOpt('tenant_name',
                default=(os.environ.get('OS_PROJECT_NAME') or
