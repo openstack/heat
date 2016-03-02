@@ -190,16 +190,18 @@ class ServerNetworkMixin(object):
         for idx, net in enumerate(networks):
             self._validate_belonging_subnet_to_net(net)
             nic_info = {'net-id': self._get_network_id(net)}
-            if net.get(self.NETWORK_FIXED_IP):
-                ip = net[self.NETWORK_FIXED_IP]
-                if netutils.is_valid_ipv6(ip):
-                    nic_info['v6-fixed-ip'] = ip
-                else:
-                    nic_info['v4-fixed-ip'] = ip
             if net.get(self.NETWORK_PORT):
                 nic_info['port-id'] = net[self.NETWORK_PORT]
             elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
                 nic_info['port-id'] = self._create_internal_port(net, idx)
+            # if nic_info including 'port-id', do not set ip for nic
+            if not nic_info.get('port-id'):
+                if net.get(self.NETWORK_FIXED_IP):
+                    ip = net[self.NETWORK_FIXED_IP]
+                    if netutils.is_valid_ipv6(ip):
+                        nic_info['v6-fixed-ip'] = ip
+                    else:
+                        nic_info['v4-fixed-ip'] = ip
             nics.append(nic_info)
         return nics
 
