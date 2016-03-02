@@ -14,15 +14,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import random
 import string
 
 
 class APIError(Exception):
-    pass
+    def __init__(self, content, response):
+        super(APIError, self).__init__(content)
+        self.response = response
 
 
-class FakeDockerClient(object):
+errors = mock.MagicMock()
+errors.APIError = APIError
+
+
+class FakeResponse (object):
+    def __init__(self, status_code=200, reason='OK'):
+        self.status_code = status_code
+        self.reason = reason
+        self.content = reason
+
+
+class Client(object):
 
     def __init__(self, endpoint=None):
         self._endpoint = endpoint
@@ -37,8 +51,11 @@ class FakeDockerClient(object):
 
     def _check_exists(self, container_id):
         if container_id not in self._containers:
-            raise APIError('404 Client Error: Not Found ("No such container: '
-                           '{0}")'.format(container_id))
+            raise APIError(
+                '404 Client Error: Not Found ("No such container: '
+                '{0}")'.format(container_id),
+                FakeResponse(status_code=404,
+                             reason='No such container'))
 
     def _set_running(self, container_id, running):
         self._check_exists(container_id)
@@ -76,6 +93,10 @@ class FakeDockerClient(object):
         self._containers[container_id] = None
         self._set_running(container_id, False)
         return self.inspect_container(container_id)
+
+    def remove_container(self, container_id, **kwargs):
+        self._check_exists(container_id)
+        del self._containers[container_id]
 
     def start(self, container_id, **kwargs):
         self.container_start.append(kwargs)
