@@ -1290,17 +1290,14 @@ class ResourceTest(common.HeatTestCase):
             'description': 'Initial template of TestResource',
             'parameters': {
                 'name': {'type': 'string'},
-                'bool': {'type': 'boolean',
-                         'allowed_values': ['True', 'true', 'False', 'false']},
+                'bool': {'type': 'boolean'},
                 'implemented': {
                     'type': 'string',
-                    'allowed_pattern': '.*',
-                    'max': 7,
-                    'min': 2
+                    'constraints': [{'length': {'max': 7, 'min': 2}},
+                                    {'allowed_pattern': '.*'}]
                 },
                 'number': {'type': 'number',
-                           'max': 77,
-                           'min': 41,
+                           'constraints': [{'range': {'max': 77, 'min': 41}}],
                            'default': 42},
                 'list': {'type': 'comma_delimited_list'},
                 'map': {'type': 'json'}
