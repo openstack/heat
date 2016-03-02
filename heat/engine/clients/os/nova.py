@@ -372,11 +372,14 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             attachments.append((jsonutils.dumps(metadata),
                                 'cfn-init-data', 'x-cfninitdata'))
 
-        attachments.append((cfg.CONF.heat_watch_server_url,
-                            'cfn-watch-server', 'x-cfninitdata'))
+        heat_client_plugin = self.context.clients.client_plugin('heat')
+        watch_url = cfg.CONF.heat_watch_server_url
+        if not watch_url:
+            watch_url = heat_client_plugin.get_watch_server_url()
+
+        attachments.append((watch_url, 'cfn-watch-server', 'x-cfninitdata'))
 
         if is_cfntools:
-            heat_client_plugin = self.context.clients.client_plugin('heat')
             cfn_md_url = heat_client_plugin.get_cfn_metadata_server_url()
             attachments.append((cfn_md_url,
                                 'cfn-metadata-server', 'x-cfninitdata'))
@@ -384,7 +387,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             # Create a boto config which the cfntools on the host use to know
             # where the cfn and cw API's are to be accessed
             cfn_url = urlparse.urlparse(cfn_md_url)
-            cw_url = urlparse.urlparse(cfg.CONF.heat_watch_server_url)
+            cw_url = urlparse.urlparse(watch_url)
             is_secure = cfg.CONF.instance_connection_is_secure
             vcerts = cfg.CONF.instance_connection_https_validate_certificates
             boto_cfg = "\n".join(["[Boto]",
