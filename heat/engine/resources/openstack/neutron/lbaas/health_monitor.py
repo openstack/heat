@@ -172,16 +172,17 @@ class HealthMonitor(neutron.NeutronResource):
         return properties
 
     def check_create_complete(self, properties):
-        if not self._check_lb_status():
-            return False
-
         if self.resource_id is None:
-            healthmonitor = self.client().create_lbaas_healthmonitor(
-                {'healthmonitor': properties})['healthmonitor']
-            self.resource_id_set(healthmonitor['id'])
-            return False
+            try:
+                healthmonitor = self.client().create_lbaas_healthmonitor(
+                    {'healthmonitor': properties})['healthmonitor']
+                self.resource_id_set(healthmonitor['id'])
+            except Exception as ex:
+                if self.client_plugin().is_invalid(ex):
+                    return False
+                raise
 
-        return True
+        return self._check_lb_status()
 
     def _show_resource(self):
         return self.client().show_lbaas_healthmonitor(
@@ -195,15 +196,17 @@ class HealthMonitor(neutron.NeutronResource):
         if not prop_diff:
             return True
 
-        if self._update_called:
-            return self._check_lb_status()
+        if not self._update_called:
+            try:
+                self.client().update_lbaas_healthmonitor(
+                    self.resource_id, {'healthmonitor': prop_diff})
+                self._update_called = True
+            except Exception as ex:
+                if self.client_plugin().is_invalid(ex):
+                    return False
+                raise
 
-        if self._check_lb_status():
-            self.client().update_lbaas_healthmonitor(
-                self.resource_id, {'healthmonitor': prop_diff})
-            self._update_called = True
-
-        return False
+        return self._check_lb_status()
 
     def handle_delete(self):
         self._delete_called = False
@@ -212,15 +215,18 @@ class HealthMonitor(neutron.NeutronResource):
         if self.resource_id is None:
             return True
 
-        if self._delete_called:
-            return self._check_lb_status()
-
-        if self._check_lb_status():
-            with self.client_plugin().ignore_not_found:
+        if not self._delete_called:
+            try:
                 self.client().delete_lbaas_healthmonitor(self.resource_id)
-            self._delete_called = True
+                self._delete_called = True
+            except Exception as ex:
+                if self.client_plugin().is_invalid(ex):
+                    return False
+                elif self.client_plugin().is_not_found(ex):
+                    return True
+                raise
 
-        return False
+        return self._check_lb_status()
 
 
 def resource_mapping():

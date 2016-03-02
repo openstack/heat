@@ -84,9 +84,12 @@ class PoolTest(common.HeatTestCase):
         self._create_stack()
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
+        ]
+        self.neutron_client.create_lbaas_pool.side_effect = [
+            exceptions.StateInvalidClient,
+            {'pool': {'id': '1234'}}
         ]
         expected = {
             'pool': {
@@ -105,6 +108,7 @@ class PoolTest(common.HeatTestCase):
         props = self.pool.handle_create()
 
         self.assertFalse(self.pool.check_create_complete(props))
+        self.neutron_client.create_lbaas_pool.assert_called_with(expected)
         self.assertFalse(self.pool.check_create_complete(props))
         self.neutron_client.create_lbaas_pool.assert_called_with(expected)
         self.assertFalse(self.pool.check_create_complete(props))
@@ -135,10 +139,11 @@ class PoolTest(common.HeatTestCase):
         self.pool.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.update_lbaas_pool.side_effect = [
+            exceptions.StateInvalidClient, None]
         prop_diff = {
             'admin_state_up': False,
             'name': 'your_pool',
@@ -149,6 +154,8 @@ class PoolTest(common.HeatTestCase):
 
         self.assertFalse(self.pool.check_update_complete(prop_diff))
         self.assertFalse(self.pool._update_called)
+        self.neutron_client.update_lbaas_pool.assert_called_with(
+            '1234', {'pool': prop_diff})
         self.assertFalse(self.pool.check_update_complete(prop_diff))
         self.assertTrue(self.pool._update_called)
         self.neutron_client.update_lbaas_pool.assert_called_with(
@@ -161,10 +168,11 @@ class PoolTest(common.HeatTestCase):
         self.pool.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.delete_lbaas_pool.side_effect = [
+            exceptions.StateInvalidClient, None]
 
         self.pool.handle_delete()
 
@@ -179,23 +187,15 @@ class PoolTest(common.HeatTestCase):
     def test_delete_already_gone(self):
         self._create_stack()
         self.pool.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_lbaas_pool.side_effect = (
             exceptions.NotFound)
 
         self.pool.handle_delete()
-        self.assertFalse(self.pool.check_delete_complete(None))
         self.assertTrue(self.pool.check_delete_complete(None))
 
     def test_delete_failed(self):
         self._create_stack()
         self.pool.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_lbaas_pool.side_effect = (
             exceptions.Unauthorized)
 

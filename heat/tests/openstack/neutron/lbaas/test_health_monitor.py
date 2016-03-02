@@ -54,9 +54,12 @@ class HealthMonitorTest(common.HeatTestCase):
         self._create_stack()
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
+        ]
+        self.neutron_client.create_lbaas_healthmonitor.side_effect = [
+            exceptions.StateInvalidClient,
+            {'healthmonitor': {'id': '1234'}}
         ]
         expected = {
             'healthmonitor': {
@@ -75,6 +78,8 @@ class HealthMonitorTest(common.HeatTestCase):
         props = self.healthmonitor.handle_create()
 
         self.assertFalse(self.healthmonitor.check_create_complete(props))
+        self.neutron_client.create_lbaas_healthmonitor.assert_called_with(
+            expected)
         self.assertFalse(self.healthmonitor.check_create_complete(props))
         self.neutron_client.create_lbaas_healthmonitor.assert_called_with(
             expected)
@@ -95,10 +100,11 @@ class HealthMonitorTest(common.HeatTestCase):
         self.healthmonitor.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.update_lbaas_healthmonitor.side_effect = [
+            exceptions.StateInvalidClient, None]
         prop_diff = {
             'admin_state_up': False,
         }
@@ -107,6 +113,8 @@ class HealthMonitorTest(common.HeatTestCase):
 
         self.assertFalse(self.healthmonitor.check_update_complete(prop_diff))
         self.assertFalse(self.healthmonitor._update_called)
+        self.neutron_client.update_lbaas_healthmonitor.assert_called_with(
+            '1234', {'healthmonitor': prop_diff})
         self.assertFalse(self.healthmonitor.check_update_complete(prop_diff))
         self.assertTrue(self.healthmonitor._update_called)
         self.neutron_client.update_lbaas_healthmonitor.assert_called_with(
@@ -119,15 +127,18 @@ class HealthMonitorTest(common.HeatTestCase):
         self.healthmonitor.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.delete_lbaas_healthmonitor.side_effect = [
+            exceptions.StateInvalidClient, None]
 
         self.healthmonitor.handle_delete()
 
         self.assertFalse(self.healthmonitor.check_delete_complete(None))
         self.assertFalse(self.healthmonitor._delete_called)
+        self.neutron_client.delete_lbaas_healthmonitor.assert_called_with(
+            '1234')
         self.assertFalse(self.healthmonitor.check_delete_complete(None))
         self.assertTrue(self.healthmonitor._delete_called)
         self.neutron_client.delete_lbaas_healthmonitor.assert_called_with(
@@ -138,16 +149,11 @@ class HealthMonitorTest(common.HeatTestCase):
     def test_delete_already_gone(self):
         self._create_stack()
         self.healthmonitor.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_lbaas_healthmonitor.side_effect = (
             exceptions.NotFound)
 
         self.healthmonitor.handle_delete()
 
-        self.assertFalse(self.healthmonitor.check_delete_complete(None))
         self.assertTrue(self.healthmonitor.check_delete_complete(None))
         self.neutron_client.delete_lbaas_healthmonitor.assert_called_with(
             '1234')
@@ -155,9 +161,6 @@ class HealthMonitorTest(common.HeatTestCase):
     def test_delete_failed(self):
         self._create_stack()
         self.healthmonitor.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_lbaas_healthmonitor.side_effect = (
             exceptions.Unauthorized)
 

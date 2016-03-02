@@ -51,9 +51,12 @@ class PoolMemberTest(common.HeatTestCase):
         self._create_stack()
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
+        ]
+        self.neutron_client.create_lbaas_member.side_effect = [
+            exceptions.StateInvalidClient,
+            {'member': {'id': '1234'}}
         ]
         expected = {
             'member': {
@@ -68,6 +71,8 @@ class PoolMemberTest(common.HeatTestCase):
         props = self.member.handle_create()
 
         self.assertFalse(self.member.check_create_complete(props))
+        self.neutron_client.create_lbaas_member.assert_called_with('123',
+                                                                   expected)
         self.assertFalse(self.member.check_create_complete(props))
         self.neutron_client.create_lbaas_member.assert_called_with('123',
                                                                    expected)
@@ -89,9 +94,12 @@ class PoolMemberTest(common.HeatTestCase):
         self._create_stack(tmpl=tmpl)
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
+        ]
+        self.neutron_client.create_lbaas_member.side_effect = [
+            exceptions.StateInvalidClient,
+            {'member': {'id': '1234'}}
         ]
         expected = {
             'member': {
@@ -105,6 +113,8 @@ class PoolMemberTest(common.HeatTestCase):
         props = self.member.handle_create()
 
         self.assertFalse(self.member.check_create_complete(props))
+        self.neutron_client.create_lbaas_member.assert_called_with('123',
+                                                                   expected)
         self.assertFalse(self.member.check_create_complete(props))
         self.neutron_client.create_lbaas_member.assert_called_with('123',
                                                                    expected)
@@ -127,10 +137,11 @@ class PoolMemberTest(common.HeatTestCase):
         self.member.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.update_lbaas_member.side_effect = [
+            exceptions.StateInvalidClient, None]
         prop_diff = {
             'admin_state_up': False,
             'weight': 2,
@@ -140,6 +151,8 @@ class PoolMemberTest(common.HeatTestCase):
 
         self.assertFalse(self.member.check_update_complete(prop_diff))
         self.assertFalse(self.member._update_called)
+        self.neutron_client.update_lbaas_member.assert_called_with(
+            '1234', '123', {'member': prop_diff})
         self.assertFalse(self.member.check_update_complete(prop_diff))
         self.assertTrue(self.member._update_called)
         self.neutron_client.update_lbaas_member.assert_called_with(
@@ -152,15 +165,18 @@ class PoolMemberTest(common.HeatTestCase):
         self.member.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.delete_lbaas_member.side_effect = [
+            exceptions.StateInvalidClient, None]
 
         self.member.handle_delete()
 
         self.assertFalse(self.member.check_delete_complete(None))
         self.assertFalse(self.member._delete_called)
+        self.neutron_client.delete_lbaas_member.assert_called_with('1234',
+                                                                   '123')
         self.assertFalse(self.member.check_delete_complete(None))
         self.assertTrue(self.member._delete_called)
         self.neutron_client.delete_lbaas_member.assert_called_with('1234',
@@ -171,24 +187,16 @@ class PoolMemberTest(common.HeatTestCase):
     def test_delete_already_gone(self):
         self._create_stack()
         self.member.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_lbaas_member.side_effect = (
             exceptions.NotFound)
 
         self.member.handle_delete()
 
-        self.assertFalse(self.member.check_delete_complete(None))
         self.assertTrue(self.member.check_delete_complete(None))
 
     def test_delete_failed(self):
         self._create_stack()
         self.member.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_lbaas_member.side_effect = (
             exceptions.Unauthorized)
 
