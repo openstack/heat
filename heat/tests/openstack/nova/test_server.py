@@ -769,7 +769,8 @@ class ServersTest(common.HeatTestCase):
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'software_config_s'
-                }
+                },
+                'collectors': ['ec2', 'cfn', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -789,6 +790,7 @@ class ServersTest(common.HeatTestCase):
                     'secret_access_key': '8901',
                     'stack_name': 'software_config_s'
                 },
+                'collectors': ['ec2', 'cfn', 'local'],
                 'polling_interval': 10
             },
             'deployments': []
@@ -850,7 +852,8 @@ class ServersTest(common.HeatTestCase):
                     'resource_name': 'WebServer',
                     'stack_id': 'software_config_s/%s' % stack.id,
                     'user_id': '1234'
-                }
+                },
+                'collectors': ['ec2', 'heat', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -869,6 +872,7 @@ class ServersTest(common.HeatTestCase):
                     'stack_id': 'software_config_s/%s' % stack.id,
                     'user_id': '1234'
                 },
+                'collectors': ['ec2', 'heat', 'local'],
                 'polling_interval': 10
             },
             'deployments': []
@@ -930,6 +934,8 @@ class ServersTest(common.HeatTestCase):
             server.physical_resource_name(), object_name)
         self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
         self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
+        sc.put_object.assert_called_once_with(
+            container_name, object_name, jsonutils.dumps(md))
 
         sc.head_container.return_value = {'x-container-object-count': '0'}
         server._delete_temp_url()
@@ -948,7 +954,8 @@ class ServersTest(common.HeatTestCase):
             'os-collect-config': {
                 'request': {
                     'metadata_url': metadata_url
-                }
+                },
+                'collectors': ['ec2', 'request', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -963,6 +970,7 @@ class ServersTest(common.HeatTestCase):
                 'request': {
                     'metadata_url': metadata_url
                 },
+                'collectors': ['ec2', 'request', 'local'],
                 'polling_interval': 10
             },
             'deployments': []
@@ -1038,7 +1046,8 @@ class ServersTest(common.HeatTestCase):
                     'auth_url': 'http://server.test:5000/v2.0',
                     'project_id': '8888',
                     'queue_id': queue_id
-                }
+                },
+                'collectors': ['ec2', 'zaqar', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -1055,6 +1064,7 @@ class ServersTest(common.HeatTestCase):
                     'project_id': '8888',
                     'queue_id': queue_id
                 },
+                'collectors': ['ec2', 'zaqar', 'local'],
                 'polling_interval': 10
             },
             'deployments': []
@@ -1667,7 +1677,8 @@ class ServersTest(common.HeatTestCase):
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'
-                }
+                },
+                'collectors': ['ec2', 'cfn', 'local']
             },
             'deployments': []}
         self.assertEqual(expected_md, server.metadata_get())
@@ -1703,6 +1714,7 @@ class ServersTest(common.HeatTestCase):
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'
                 },
+                'collectors': ['ec2', 'cfn', 'local'],
                 'polling_interval': 10
             },
             'deployments': []}
@@ -1738,6 +1750,7 @@ class ServersTest(common.HeatTestCase):
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'
                 },
+                'collectors': ['ec2', 'cfn', 'local'],
                 'polling_interval': 10
             },
             'deployments': []}
@@ -1784,6 +1797,7 @@ class ServersTest(common.HeatTestCase):
                 'request': {
                     'metadata_url': 'the_url',
                 },
+                'collectors': ['ec2', 'request', 'local'],
                 'polling_interval': 10
             },
             'deployments': []}
