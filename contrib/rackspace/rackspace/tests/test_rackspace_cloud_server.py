@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
@@ -516,3 +517,134 @@ class CloudServersTest(common.HeatTestCase):
     def test_server_no_user_data_software_config(self):
         self._test_server_config_drive(None, False, True,
                                        ud_format="SOFTWARE_CONFIG")
+
+
+@mock.patch.object(resource.Resource, "client_plugin")
+@mock.patch.object(resource.Resource, "client")
+class CloudServersValidationTests(common.HeatTestCase):
+    def setUp(self):
+        super(CloudServersValidationTests, self).setUp()
+        resource._register_class("OS::Nova::Server", cloud_server.CloudServer)
+        properties_server = {
+            "image": "CentOS 5.2",
+            "flavor": "256 MB Server",
+            "key_name": "test",
+            "user_data": "wordpress",
+        }
+        self.mockstack = mock.Mock()
+        self.mockstack.has_cache_data.return_value = False
+        self.mockstack.db_resource_get.return_value = None
+        self.rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", cloud_server.CloudServer, properties=properties_server)
+
+    def test_validate_no_image(self, mock_client, mock_plugin):
+        properties_server = {
+            "flavor": "256 MB Server",
+            "key_name": "test",
+            "user_data": "wordpress",
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", cloud_server.CloudServer, properties=properties_server)
+
+        server = cloud_server.CloudServer("test", rsrcdef, self.mockstack)
+
+        mock_boot_vol = self.patchobject(
+            server, '_validate_block_device_mapping')
+        mock_boot_vol.return_value = True
+
+        self.assertIsNone(server.validate())
+
+    def test_validate_no_image_bfv(self, mock_client, mock_plugin):
+        properties_server = {
+            "flavor": "256 MB Server",
+            "key_name": "test",
+            "user_data": "wordpress",
+        }
+        rsrcdef = rsrc_defn.ResourceDefinition(
+            "test", cloud_server.CloudServer, properties=properties_server)
+
+        server = cloud_server.CloudServer("test", rsrcdef, self.mockstack)
+
+        mock_boot_vol = self.patchobject(
+            server, '_validate_block_device_mapping')
+        mock_boot_vol.return_value = True
+
+        mock_flavor = mock.Mock(ram=4)
+        mock_flavor.to_dict.return_value = {
+            'OS-FLV-WITH-EXT-SPECS:extra_specs': {
+                'class': 'standard1',
+                },
+        }
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, server.validate)
+        self.assertEqual(
+            'Flavor 256 MB Server cannot be booted from volume.',
+            six.text_type(error))
+
+    def test_validate_bfv_volume_only(self, mock_client, mock_plugin):
+        server = cloud_server.CloudServer("test", self.rsrcdef, self.mockstack)
+
+        mock_flavor = mock.Mock(ram=4, disk=4)
+        mock_flavor.to_dict.return_value = {
+            'OS-FLV-WITH-EXT-SPECS:extra_specs': {
+                'class': 'memory1',
+                },
+        }
+
+        mock_image = mock.Mock(status='ACTIVE', min_ram=2, min_disk=1)
+        mock_image.get.return_value = "memory1"
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+        mock_plugin().get_image.return_value = mock_image
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, server.validate)
+        self.assertEqual(
+            'Flavor 256 MB Server must be booted from volume, '
+            'but image CentOS 5.2 was also specified.',
+            six.text_type(error))
+
+    def test_validate_image_flavor_excluded_class(self, mock_client,
+                                                  mock_plugin):
+        server = cloud_server.CloudServer("test", self.rsrcdef, self.mockstack)
+
+        mock_image = mock.Mock(status='ACTIVE', min_ram=2, min_disk=1)
+        mock_image.get.return_value = "!standard1, *"
+
+        mock_flavor = mock.Mock(ram=4, disk=4)
+        mock_flavor.to_dict.return_value = {
+            'OS-FLV-WITH-EXT-SPECS:extra_specs': {
+                'class': 'standard1',
+                },
+        }
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+        mock_plugin().get_image.return_value = mock_image
+
+        error = self.assertRaises(
+            exception.StackValidationFailed, server.validate)
+        self.assertEqual(
+            'Flavor 256 MB Server cannot be used with image CentOS 5.2.',
+            six.text_type(error))
+
+    def test_validate_image_flavor_ok(self, mock_client, mock_plugin):
+        server = cloud_server.CloudServer("test", self.rsrcdef, self.mockstack)
+
+        mock_image = mock.Mock(size=1, status='ACTIVE', min_ram=2, min_disk=2)
+        mock_image.get.return_value = "standard1"
+
+        mock_flavor = mock.Mock(ram=4, disk=4)
+        mock_flavor.to_dict.return_value = {
+            'OS-FLV-WITH-EXT-SPECS:extra_specs': {
+                'class': 'standard1',
+                'disk_io_index': 1,
+                },
+        }
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+        mock_plugin().get_image.return_value = mock_image
+
+        self.assertIsNone(server.validate())
