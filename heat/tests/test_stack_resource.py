@@ -326,6 +326,23 @@ class StackResourceTest(StackResourceBaseTest):
         self.assertRaises(exception.RequestLimitExceeded,
                           stk_resource.preview)
 
+    def test_parent_stack_existing_of_nested_stack(self):
+        parent_t = self.parent_stack.t
+        resource_defns = parent_t.resource_definitions(self.parent_stack)
+        stk_resource = MyImplementedStackResource(
+            'test',
+            resource_defns[self.ws_resname],
+            self.parent_stack)
+        stk_resource.child_params = mock.Mock(return_value={})
+        stk_resource.child_template = mock.Mock(
+            return_value=templatem.Template(self.simple_template,
+                                            stk_resource.child_params))
+        stk_resource._validate_nested_resources = mock.Mock()
+        nest_stack = stk_resource._parse_nested_stack(
+            "test_nest_stack", stk_resource.child_template(),
+            stk_resource.child_params())
+        self.assertEqual(nest_stack._parent_stack, self.parent_stack)
+
     def test_preview_dict_validates_nested_resources(self):
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
