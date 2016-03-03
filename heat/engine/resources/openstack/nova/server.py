@@ -56,14 +56,14 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
         RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
-        ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT
+        ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT, USER_DATA_UPDATE_POLICY
     ) = (
         'name', 'image', 'block_device_mapping', 'block_device_mapping_v2',
         'flavor', 'flavor_update_policy', 'image_update_policy', 'key_name',
         'admin_user', 'availability_zone', 'security_groups', 'networks',
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
         'reservation_id', 'config_drive', 'diskConfig', 'personality',
-        'admin_pass', 'software_config_transport'
+        'admin_pass', 'software_config_transport', 'user_data_update_policy'
     )
 
     _BLOCK_DEVICE_MAPPING_KEYS = (
@@ -446,10 +446,22 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
             ]
         ),
+        USER_DATA_UPDATE_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Policy on how to apply a user_data update; either by '
+              'ignorning it or by replacing the entire server.'),
+            default='REPLACE',
+            constraints=[
+                constraints.AllowedValues(['REPLACE', 'IGNORE']),
+            ],
+            support_status=support.SupportStatus(version='6.0.0'),
+            update_allowed=True
+        ),
         USER_DATA: properties.Schema(
             properties.Schema.STRING,
             _('User data script to be executed by cloud-init.'),
-            default=''
+            default='',
+            update_allowed=True
         ),
         RESERVATION_ID: properties.Schema(
             properties.Schema.STRING,
@@ -1092,6 +1104,12 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 before_props.get(self.IMAGE_UPDATE_POLICY))
             if image_update_policy == 'REPLACE':
                 return True
+
+        if self.USER_DATA in changed_properties_set:
+            ud_update_policy = (
+                after_props.get(self.USER_DATA_UPDATE_POLICY) or
+                before_props.get(self.USER_DATA_UPDATE_POLICY))
+            return ud_update_policy == 'REPLACE'
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:

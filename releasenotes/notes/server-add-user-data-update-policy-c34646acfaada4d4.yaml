@@ -1,0 +1,7 @@
+---
+features:
+  - The OS::Nova::Server now supports a new property user_data_update_policy,
+    which may be set to either 'REPLACE' (default) or 'IGNORE' if you wish to
+    allow user_data updates to be ignored on stack update. This is useful when
+    managing a group of servers where changed user_data should apply to new
+    servers without replacing existing servers.

@@ -2129,6 +2129,46 @@ class ServersTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
+    def test_server_update_server_userdata_replace(self):
+        stack_name = 'update_udatrep'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_update_userdata_replace',
+                                resource_defns['WebServer'], stack)
+
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['user_data'] = 'changed'
+        server.action = server.CREATE
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(exception.UpdateReplace, updater)
+
+    def test_server_update_server_userdata_ignore(self):
+        stack_name = 'update_udatignore'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
+        self.patchobject(servers.Server, 'prepare_for_replace')
+        self.patchobject(servers.Server, 'check_update_complete',
+                         return_value=True)
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_update_userdata_ignore',
+                                resource_defns['WebServer'], stack)
+
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['user_data'] = 'changed'
+        update_template['Properties']['user_data_update_policy'] = 'IGNORE'
+        server.action = server.CREATE
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
     def test_server_update_image_replace(self):
         stack_name = 'update_imgrep'
         (tmpl, stack) = self._setup_test_stack(stack_name)
