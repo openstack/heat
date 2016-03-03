@@ -105,8 +105,9 @@ class EnvironmentTest(common.HeatTestCase):
             u'OS::Networking::FloatingIP': 'ip.yaml'}}}}
 
         env = environment.Environment()
-        self.assertIsNone(env.get_resource_info('OS::Networking::FloatingIP',
-                                                'my_fip'))
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          env.get_resource_info,
+                          'OS::Networking::FloatingIP', 'my_fip')
 
         env.load(new_env)
         self.assertEqual('ip.yaml',
@@ -203,7 +204,7 @@ class EnvironmentDuplicateTest(common.HeatTestCase):
                       expected_equal=True)),
         ('diff_temp', dict(resource_type='not.yaml',
                            expected_equal=False)),
-        ('diff_map', dict(resource_type='OS::SomethingElse',
+        ('diff_map', dict(resource_type='OS::Nova::Server',
                           expected_equal=False)),
         ('diff_path', dict(resource_type='a/test.yaml',
                            expected_equal=False)),
@@ -377,7 +378,8 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         resources._load_global_environment(g_env)
 
         # 3. assert our resource is in now gone.
-        self.assertIsNone(g_env.get_resource_info('OS::Nova::Server'))
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          g_env.get_resource_info, 'OS::Nova::Server')
 
         # 4. make sure we haven't removed something we shouldn't have
         self.assertEqual(instance.Instance,
@@ -402,7 +404,8 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         resources._load_global_environment(g_env)
 
         # 3. assert our resources are now gone.
-        self.assertIsNone(g_env.get_resource_info('AWS::EC2::Instance'))
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          g_env.get_resource_info, 'AWS::EC2::Instance')
 
         # 4. make sure we haven't removed something we shouldn't have
         self.assertEqual(server.Server,
@@ -513,11 +516,12 @@ class ChildEnvTest(common.HeatTestCase):
         self.assertIsNotNone(victim)
         cenv = environment.get_child_environment(penv, None,
                                                  item_to_remove=victim)
-        res = cenv.get_resource_info('OS::Food', resource_name='abc')
-        self.assertIsNone(res)
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          cenv.get_resource_info,
+                          'OS::Food', resource_name='abc')
         self.assertNotIn('OS::Food',
                          cenv.user_env_as_dict()['resource_registry'])
-        # make sure the parent env is uneffected
+        # make sure the parent env is unaffected
         innocent = penv.get_resource_info('OS::Food', resource_name='abc')
         self.assertIsNotNone(innocent)
 
@@ -578,8 +582,9 @@ class ChildEnvTest(common.HeatTestCase):
         self.assertIn('hooks', resources['nested_res'])
         self.assertIsNotNone(
             cenv.get_resource_info('OS::Food', resource_name='abc'))
-        self.assertIsNone(
-            cenv.get_resource_info('OS::Fruit', resource_name='a'))
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          cenv.get_resource_info,
+                          'OS::Fruit', resource_name='a')
         res = cenv.get_resource_info('OS::Fruit', resource_name='b')
         self.assertIsNotNone(res)
         self.assertEqual(u'carrots.yaml', res.value)

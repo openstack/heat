@@ -378,7 +378,7 @@ class StackResourceTest(StackResourceBaseTest):
 
     def _test_validate_unknown_resource_type(self, stack_name, tmpl,
                                              resource_name):
-        raise_exc_msg = ('Unknown resource Type : idontexist')
+        raise_exc_msg = 'The Resource Type (idontexist) could not be found.'
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         rsrc = stack[resource_name]
         exc = self.assertRaises(exception.StackValidationFailed,
