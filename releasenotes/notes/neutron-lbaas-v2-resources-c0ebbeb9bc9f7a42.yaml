@@ -1,0 +1,17 @@
+---
+features:
+  - New resources for Neutron Load Balancer version 2.  These are unique
+    for version 2 and do not support or mix with existing version 1
+    resources.
+  - New resource ``OS::Neutron::LBaaS::LoadBalancer`` is added to create and
+    manage Load Balancers which allow traffic to be directed between servers.
+  - New resource ``OS::Neutron::LBaaS::Listener`` is added to create and
+    manage Listeners which represent a listening endpoint for the Load
+    Balancer.
+  - New resource ``OS::Neutron::LBaaS::Pool`` is added to create and
+    manage Pools which represent a group of nodes. Pools define the subnet
+    where nodes reside, the balancing algorithm, and the nodes themselves.
+  - New resource ``OS::Neutron::LBaaS::PoolMember`` is added to create and
+    manage Pool members which represent a single backend node.
+  - New resource ``OS::Neutron::LBaaS::HealthMonitor`` is added to create and
+    manage Health Monitors which watch status of the Load Balanced servers.
