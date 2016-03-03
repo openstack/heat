@@ -251,7 +251,8 @@ class ManilaShare(resource.Resource):
                     'Error during applying access rules to share "{0}". '
                     'The root cause of the problem is the following: {1}.'
                 ).format(self.resource_id, err_msg)
-                raise exception.ResourceInError(status_reason=reason)
+                raise exception.ResourceInError(
+                    status_reason=reason, resource_status=share_status)
         elif share_status == self.STATUS_ERROR:
             reason = _('Error during creation of share "{0}"').format(
                 self.resource_id)
