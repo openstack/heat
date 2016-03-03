@@ -42,11 +42,14 @@ test_encryption_vol_type = {
 class EncryptionVolTypeTest(functional_base.FunctionalTestsBase):
     def setUp(self):
         super(EncryptionVolTypeTest, self).setUp()
+        if not self.conf.admin_username or not self.conf.admin_password:
+            self.skipTest('No admin creds found, skipping')
         self.conf = config.init_conf()
         # cinder security policy usage of volume type is limited
         # to being used by administrators only.
-        # Temporarily set username as admin for this test case.
-        self.conf.username = 'admin'
+        # Temporarily switch to admin
+        self.conf.username = self.conf.admin_username
+        self.conf.password = self.conf.admin_password
         self.manager = clients.ClientManager(self.conf)
         self.client = self.manager.orchestration_client
         self.volume_client = self.manager.volume_client
