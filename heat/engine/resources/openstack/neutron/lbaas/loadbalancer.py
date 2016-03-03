@@ -15,7 +15,6 @@
 #    under the License.
 
 from neutronclient.common import exceptions
-from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -24,8 +23,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
-
-LOG = logging.getLogger(__name__)
 
 
 class LoadBalancer(neutron.NeutronResource):
