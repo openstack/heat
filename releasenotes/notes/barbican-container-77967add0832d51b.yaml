@@ -1,0 +1,8 @@
+---
+features:
+  - Add new ``OS::Barbican::GenericContainer`` resource for storing
+    arbitrary barbican secrets.
+  - Add new ``OS::Barbican::RSAContainer`` resource for storing
+    RSA public keys, private keys, and private key pass phrases.
+  - A new ``OS::Barbican::CertificateContainer`` resource for storing
+    the secrets that are relevant to certificates.
