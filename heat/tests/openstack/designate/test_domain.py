@@ -180,3 +180,15 @@ class DesignateDomainTest(common.HeatTestCase):
         self.assertEqual(args,
                          self.test_resource._show_resource(),
                          'Failed to show resource')
+
+    def test_no_ttl(self):
+        mock_domain_create = self.test_client_plugin.domain_create
+        mock_resource = self._get_mock_resource()
+        mock_domain_create.return_value = mock_resource
+
+        self.test_resource.properties.data['ttl'] = None
+
+        self.test_resource.handle_create()
+        mock_domain_create.assert_called_once_with(
+            name='test-domain.com', description='Test domain',
+            email='abc@test-domain.com')
