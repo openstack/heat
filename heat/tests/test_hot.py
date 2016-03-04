@@ -805,6 +805,16 @@ class HOTemplateTest(common.HeatTestCase):
 
     def test_repeat(self):
         """Test repeat function."""
+        snippet = {'repeat': {'template': 'this is %var%',
+                              'for_each': {'%var%': ['a', 'b', 'c']}}}
+        snippet_resolved = ['this is a', 'this is b', 'this is c']
+
+        tmpl = template.Template(hot_kilo_tpl_empty)
+
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_repeat_get_param(self):
+        """Test repeat function with get_param function as an argument."""
         hot_tpl = template_format.parse('''
         heat_template_version: 2015-04-30
         parameters:
@@ -1165,6 +1175,22 @@ class HotStackTest(common.HeatTestCase):
 
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
+
+    def test_repeat_get_attr(self):
+        """Test repeat function with get_attr function as an argument."""
+        tmpl = template.Template(hot_tpl_complex_attrs_all_attrs)
+        self.stack = parser.Stack(self.ctx, 'test_repeat_get_attr', tmpl)
+
+        snippet = {'repeat': {'template': 'this is %var%',
+                   'for_each': {'%var%': {'get_attr': ['resource1', 'list']}}}}
+        repeat = self.stack.t.parse(self.stack, snippet)
+
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(['this is foo', 'this is bar'],
+                         function.resolve(repeat))
 
     def test_get_attr_multiple_rsrc_status(self):
         """Test resolution of get_attr occurrences in HOT template."""

@@ -490,7 +490,7 @@ class Repeat(function.Function):
                             self.fn_name)
 
         try:
-            for_each = function.resolve(self.args['for_each'])
+            for_each = self.args['for_each']
             template = self.args['template']
         except (KeyError, TypeError):
             example = ('''repeat:
@@ -500,13 +500,14 @@ class Repeat(function.Function):
             raise KeyError(_('"repeat" syntax should be %s') %
                            example)
 
-        if not isinstance(for_each, collections.Mapping):
-            raise TypeError(_('The "for_each" argument to "%s" must contain '
-                              'a map') % self.fn_name)
-        for v in six.itervalues(for_each):
-            if not isinstance(v, list):
-                raise TypeError(_('The values of the "for_each" argument to '
-                                  '"%s" must be lists') % self.fn_name)
+        if not isinstance(for_each, function.Function):
+            if not isinstance(for_each, collections.Mapping):
+                raise TypeError(_('The "for_each" argument to "%s" must '
+                                  'contain a map') % self.fn_name)
+            for v in six.itervalues(for_each):
+                if not isinstance(v, (list, function.Function)):
+                    raise TypeError(_('The values of the "for_each" argument '
+                                      'to "%s" must be lists') % self.fn_name)
 
         return for_each, template
 
@@ -524,9 +525,15 @@ class Repeat(function.Function):
                         for (k, v) in template.items())
 
     def result(self):
-        keys = list(six.iterkeys(self._for_each))
-        lists = [self._for_each[key] for key in keys]
+        for_each = function.resolve(self._for_each)
+        keys = list(six.iterkeys(for_each))
+        lists = [for_each[key] for key in keys]
+        if not all(isinstance(l, list) for l in lists):
+            raise TypeError(_('The values of the "for_each" argument to '
+                              '"%s" must be lists') % self.fn_name)
+
         template = function.resolve(self._template)
+
         return [self._do_replacement(keys, items, template)
                 for items in itertools.product(*lists)]
 
