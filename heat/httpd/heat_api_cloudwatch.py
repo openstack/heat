@@ -40,6 +40,7 @@ def init_application():
              version=version.version_info.version_string())
     logging.setup(cfg.CONF, 'heat-api-cloudwatch')
     logging.set_defaults()
+    config.set_config_defaults()
     messaging.setup()
 
     port = cfg.CONF.heat_api_cloudwatch.bind_port
