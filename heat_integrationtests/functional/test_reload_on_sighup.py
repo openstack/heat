@@ -28,8 +28,27 @@ class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
 
     def _set_config_value(self, service, key, value):
         config = configparser.ConfigParser()
-        config.read(self.config_file)
-        config.set(service, key, value)
+
+        # NOTE(prazumovsky): If there are several workers, there can be
+        # situation, when one thread opens self.config_file for writing
+        # (so config_file erases with opening), in that moment other thread
+        # intercepts to this file and try to set config option value, i.e.
+        # write to file, which is already erased by first thread, so,
+        # NoSectionError raised. So, should wait until first thread writes to
+        # config_file.
+        retries_count = self.conf.sighup_config_edit_retries
+        while True:
+            config.read(self.config_file)
+            try:
+                config.set(service, key, value)
+            except configparser.NoSectionError:
+                if retries_count <= 0:
+                    raise
+                retries_count -= 1
+                eventlet.sleep(1)
+            else:
+                break
+
         with open(self.config_file, 'wb') as f:
             config.write(f)
 

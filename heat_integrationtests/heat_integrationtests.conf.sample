@@ -112,5 +112,10 @@
 # receiving of sighup signal (integer value)
 #sighup_timeout = 30
 
+# Count of retries to edit config file during sighup. If another worker already
+# edit config file, file can be busy, so need to wait and try edit file
+# again. (integer value)
+#sighup_config_edit_retries = 10
+
 # Path to the script heat-config-notify (string value)
 #heat_config_notify_script = heat-config-notify
