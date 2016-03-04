@@ -917,11 +917,6 @@ class HOTemplateTest(common.HeatTestCase):
                               'foreach': {'%var%': ['a', 'b', 'c']}}}
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
 
-        # for_each is not a map
-        snippet = {'repeat': {'template': 'this is %var%',
-                              'for_each': '%var%'}}
-        self.assertRaises(TypeError, self.resolve, snippet, tmpl)
-
         # value given to for_each entry is not a list
         snippet = {'repeat': {'template': 'this is %var%',
                               'for_each': {'%var%': 'a'}}}
@@ -931,6 +926,15 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'repeat': {'templte': 'this is %var%',
                               'for_each': {'%var%': ['a', 'b', 'c']}}}
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
+
+    def test_repeat_bad_arg_type(self):
+        tmpl = template.Template(hot_kilo_tpl_empty)
+
+        # for_each is not a map
+        snippet = {'repeat': {'template': 'this is %var%',
+                              'for_each': '%var%'}}
+        repeat = tmpl.parse(None, snippet)
+        self.assertRaises(TypeError, function.validate, repeat)
 
     def test_digest(self):
         snippet = {'digest': ['md5', 'foobar']}
