@@ -13,7 +13,6 @@
 
 import itertools
 
-from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import netutils
 
@@ -22,8 +21,6 @@ from heat.common.i18n import _
 from heat.engine import resource
 
 from heat.engine.resources.openstack.neutron import port as neutron_port
-
-LOG = logging.getLogger(__name__)
 
 
 class ServerNetworkMixin(object):
