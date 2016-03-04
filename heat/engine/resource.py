@@ -228,6 +228,8 @@ class Resource(object):
             resource = stack.db_resource_get(name)
             if resource:
                 self._load_data(resource)
+            else:
+                self.translate_properties(self.properties)
         else:
             self.action = stack.cache_data[name]['action']
             self.status = stack.cache_data[name]['status']
@@ -331,7 +333,6 @@ class Resource(object):
     def reparse(self):
         self.properties = self.t.properties(self.properties_schema,
                                             self.context)
-        self.translate_properties(self.properties)
 
     def __eq__(self, other):
         """Allow == comparison of two resources."""
@@ -781,6 +782,7 @@ class Resource(object):
         # the parser.Stack is stored (which is after the resources
         # are __init__'d, but before they are create()'d)
         self.reparse()
+        self.translate_properties(self.properties)
         self._update_stored_properties()
 
         def pause():
@@ -1098,6 +1100,7 @@ class Resource(object):
 
                 self.t = after
                 self.reparse()
+                self.translate_properties(self.properties)
                 self._update_stored_properties()
 
         except exception.ResourceActionRestricted as ae:
