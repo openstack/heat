@@ -424,6 +424,22 @@ class SqlAlchemyTest(common.HeatTestCase):
         st = db_api.stack_get(self.ctx, UUID1, show_deleted=True)
         self.assertEqual(UUID1, st.id)
 
+    def test_stack_get_status(self):
+        stack = self._setup_test_stack('stack', UUID1)[1]
+
+        st = db_api.stack_get_status(self.ctx, UUID1)
+        self.assertEqual(('CREATE', 'IN_PROGRESS', '', None), st)
+
+        stack.delete()
+        st = db_api.stack_get_status(self.ctx, UUID1)
+        self.assertEqual(
+            ('DELETE', 'COMPLETE',
+             'Stack DELETE completed successfully', None),
+            st)
+
+        self.assertRaises(exception.NotFound,
+                          db_api.stack_get_status, self.ctx, UUID2)
+
     def test_stack_get_show_deleted_context(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
 

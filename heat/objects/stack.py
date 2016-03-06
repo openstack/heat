@@ -205,3 +205,8 @@ class Stack(
     @classmethod
     def encrypt_hidden_parameters(cls, tmpl):
         raw_template.RawTemplate.encrypt_hidden_parameters(tmpl)
+
+    @classmethod
+    def get_status(cls, context, stack_id):
+        """Return action and status for the given stack."""
+        return db_api.stack_get_status(context, stack_id)

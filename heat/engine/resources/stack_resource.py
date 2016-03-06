@@ -30,6 +30,8 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
+from heat.objects import stack as stack_object
+from heat.objects import stack_lock
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
@@ -128,24 +130,15 @@ class StackResource(resource.Resource):
 
         return False
 
-    def nested(self, force_reload=False, show_deleted=False):
+    def nested(self):
         """Return a Stack object representing the nested (child) stack.
 
         If we catch NotFound exception when loading, return None.
-
-        :param force_reload: Forces reloading from the DB instead of returning
-                             the locally cached Stack object
-        :param show_deleted: Returns the stack even if it's been deleted
         """
-        if force_reload:
-            self._nested = None
-
         if self._nested is None and self.resource_id is not None:
             try:
                 self._nested = parser.Stack.load(self.context,
-                                                 self.resource_id,
-                                                 show_deleted=show_deleted,
-                                                 force_reload=force_reload)
+                                                 self.resource_id)
             except exception.NotFound:
                 return None
 
@@ -343,19 +336,23 @@ class StackResource(resource.Resource):
         raise exception.ResourceFailure(message, self, action=self.action)
 
     def check_create_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.CREATE)
+        return self._check_status_complete(self.CREATE)
 
-    def _check_status_complete(self, action, show_deleted=False,
-                               cookie=None):
-        nested = self.nested(force_reload=True, show_deleted=show_deleted)
-        if nested is None:
-            if action == resource.Resource.DELETE:
+    def _check_status_complete(self, expected_action, cookie=None):
+
+        try:
+            data = stack_object.Stack.get_status(self.context,
+                                                 self.resource_id)
+        except exception.NotFound:
+            if expected_action == self.DELETE:
                 return True
             # It's possible the engine handling the create hasn't persisted
             # the stack to the DB when we first start polling for state
             return False
 
-        if nested.action != action:
+        action, status, status_reason, updated_time = data
+
+        if action != expected_action:
             return False
 
         # Has the action really started?
@@ -374,25 +371,29 @@ class StackResource(resource.Resource):
         if cookie is not None:
             prev_state = cookie['previous']['state']
             prev_updated_at = cookie['previous']['updated_at']
-            if (prev_updated_at == nested.updated_time and
-                    prev_state == nested.state):
+            if (prev_updated_at == updated_time and
+                    prev_state == (action, status)):
                 return False
 
-        if nested.status == resource.Resource.IN_PROGRESS:
+        if status == self.IN_PROGRESS:
             return False
-        elif nested.status == resource.Resource.COMPLETE:
-            return True
-        elif nested.status == resource.Resource.FAILED:
-            raise exception.ResourceFailure(nested.status_reason, self,
+        elif status == self.COMPLETE:
+            ret = stack_lock.StackLock.get_engine_id(self.resource_id) is None
+            if ret:
+                # Reset nested, to indicate we changed status
+                self._nested = None
+            return ret
+        elif status == self.FAILED:
+            raise exception.ResourceFailure(status_reason, self,
                                             action=action)
         else:
             raise exception.ResourceUnknownStatus(
-                resource_status=nested.status,
-                status_reason=nested.status_reason,
+                resource_status=status,
+                status_reason=status_reason,
                 result=_('Stack unknown status'))
 
     def check_adopt_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.ADOPT)
+        return self._check_status_complete(self.ADOPT)
 
     def update_with_template(self, child_template, user_params=None,
                              timeout_mins=None):
@@ -436,7 +437,7 @@ class StackResource(resource.Resource):
         return cookie
 
     def check_update_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.UPDATE,
+        return self._check_status_complete(self.UPDATE,
                                            cookie=cookie)
 
     def delete_nested(self):
@@ -456,8 +457,7 @@ class StackResource(resource.Resource):
         return self.delete_nested()
 
     def check_delete_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.DELETE,
-                                           show_deleted=True)
+        return self._check_status_complete(self.DELETE)
 
     def handle_suspend(self):
         stack = self.nested()
@@ -471,7 +471,7 @@ class StackResource(resource.Resource):
         self.rpc_client().stack_suspend(self.context, dict(stack_identity))
 
     def check_suspend_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.SUSPEND)
+        return self._check_status_complete(self.SUSPEND)
 
     def handle_resume(self):
         stack = self.nested()
@@ -485,7 +485,7 @@ class StackResource(resource.Resource):
         self.rpc_client().stack_resume(self.context, dict(stack_identity))
 
     def check_resume_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.RESUME)
+        return self._check_status_complete(self.RESUME)
 
     def handle_check(self):
         stack = self.nested()
@@ -500,7 +500,7 @@ class StackResource(resource.Resource):
         self.rpc_client().stack_check(self.context, dict(stack_identity))
 
     def check_check_complete(self, cookie=None):
-        return self._check_status_complete(resource.Resource.CHECK)
+        return self._check_status_complete(self.CHECK)
 
     def prepare_abandon(self):
         self.abandon_in_progress = True

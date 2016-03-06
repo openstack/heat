@@ -367,6 +367,18 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
     return result
 
 
+def stack_get_status(context, stack_id):
+    query = model_query(context, models.Stack)
+    query = query.options(
+        orm.load_only("action", "status", "status_reason", "updated_at"))
+    result = query.filter_by(id=stack_id).first()
+    if result is None:
+        raise exception.NotFound(_('Stack with id %s not found') % stack_id)
+
+    return (result.action, result.status, result.status_reason,
+            result.updated_at)
+
+
 def stack_get_all_by_owner_id(context, owner_id):
     results = soft_delete_aware_query(
         context, models.Stack).filter_by(owner_id=owner_id).all()
