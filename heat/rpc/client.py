@@ -15,6 +15,8 @@
 
 """Client side of the heat engine RPC API."""
 
+from oslo_utils import reflection
+
 from heat.common import messaging
 from heat.rpc import api as rpc_api
 
@@ -79,7 +81,7 @@ class EngineClient(object):
 
         :param error: Remote raised error to derive the name from.
         """
-        error_name = error.__class__.__name__
+        error_name = reflection.get_class_name(error, fully_qualified=False)
         return error_name.split('_Remote')[0]
 
     def ignore_error_named(self, error, name):

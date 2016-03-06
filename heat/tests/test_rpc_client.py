@@ -22,6 +22,7 @@ import copy
 import mock
 from mox import stubout
 from oslo_messaging._drivers import common as rpc_common
+from oslo_utils import reflection
 
 from heat.common import exception
 from heat.common import identifier
@@ -53,7 +54,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self.assertEqual('NotFound', self.rpcapi.local_error_name(ex))
 
         exr = self._to_remote_error(ex)
-        self.assertEqual('NotFound_Remote', exr.__class__.__name__)
+        self.assertEqual('NotFound_Remote',
+                         reflection.get_class_name(exr, fully_qualified=False))
         self.assertEqual('NotFound', self.rpcapi.local_error_name(exr))
 
     def test_ignore_error_named(self):

@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import reflection
+
 from heat_integrationtests.common import test
 
 
@@ -21,7 +23,7 @@ class FunctionalTestsBase(test.HeatIntegrationTest):
         self.client = self.orchestration_client
 
     def check_skip(self):
-        test_cls_name = self.__class__.__name__
+        test_cls_name = reflection.get_class_name(self, fully_qualified=False)
         test_method_name = '.'.join([test_cls_name, self._testMethodName])
         test_skipped = (self.conf.skip_functional_test_list and (
             test_cls_name in self.conf.skip_functional_test_list or
