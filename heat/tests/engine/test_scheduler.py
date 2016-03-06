@@ -16,6 +16,7 @@ import contextlib
 import eventlet
 import six
 
+from heat.common.i18n import repr_wraper
 from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import scheduler
@@ -822,6 +823,27 @@ class DescriptionTest(common.HeatTestCase):
                 pass
 
         self.assertEqual('o', scheduler.task_description(C()))
+
+    def test_unicode(self):
+        @repr_wraper
+        @six.python_2_unicode_compatible
+        class C(object):
+            def __str__(self):
+                return u'C "\u2665"'
+
+            def __repr__(self):
+                return u'\u2665'
+
+            def __call__(self):
+                pass
+
+            def m(self):
+                pass
+
+        self.assertEqual(u'm from C "\u2665"',
+                         scheduler.task_description(C().m))
+        self.assertEqual(u'\u2665',
+                         scheduler.task_description(C()))
 
 
 class WrapperTaskTest(common.HeatTestCase):

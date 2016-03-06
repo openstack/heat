@@ -18,12 +18,14 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import repr_wraper
 
 
 class CircularDependencyException(exception.HeatException):
     msg_fmt = _("Circular Dependency Found: %(cycle)s")
 
 
+@repr_wraper
 @six.python_2_unicode_compatible
 class Node(object):
     """A node in a dependency graph."""
@@ -88,7 +90,7 @@ class Node(object):
 
     def __str__(self):
         """Return a human-readable string representation of the node."""
-        text = '{%s}' % ', '.join(str(n) for n in self)
+        text = '{%s}' % ', '.join(six.text_type(n) for n in self)
         return six.text_type(text)
 
     def __repr__(self):
@@ -143,7 +145,8 @@ class Graph(collections.defaultdict):
 
     def __str__(self):
         """Convert the graph to a human-readable string."""
-        pairs = ('%s: %s' % (str(k), str(v)) for k, v in six.iteritems(self))
+        pairs = ('%s: %s' % (six.text_type(k), six.text_type(v))
+                 for k, v in six.iteritems(self))
         text = '{%s}' % ', '.join(pairs)
         return six.text_type(text)
 
@@ -165,6 +168,7 @@ class Graph(collections.defaultdict):
                 raise CircularDependencyException(cycle=six.text_type(graph))
 
 
+@repr_wraper
 @six.python_2_unicode_compatible
 class Dependencies(object):
     """Helper class for calculating a dependency graph."""
