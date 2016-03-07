@@ -50,7 +50,6 @@ class QoSPolicy(neutron.NeutronResource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('The name for the QoS policy.'),
-            required=True,
             update_allowed=True
         ),
         DESCRIPTION: properties.Schema(

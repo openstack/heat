@@ -280,13 +280,23 @@ class VPNServiceTest(common.HeatTestCase):
 
     def test_update(self):
         rsrc = self.create_vpnservice()
+        self.patchobject(rsrc, 'physical_resource_name',
+                         return_value='VPNService')
+
+        upd_dict = {'vpnservice': {'name': 'VPNService',
+                                   'admin_state_up': False}}
         neutronclient.Client.update_vpnservice(
-            'vpn123', {'vpnservice': {'admin_state_up': False}})
+            'vpn123', upd_dict).MultipleTimes().AndReturn(None)
+
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['admin_state_up'] = False
-        scheduler.TaskRunner(rsrc.update, update_template)()
+        # with name
+        prop_diff = {'name': 'VPNService', 'admin_state_up': False}
+        self.assertIsNone(rsrc.handle_update({}, {}, prop_diff))
+
+        # without name
+        prop_diff = {'name': None, 'admin_state_up': False}
+        self.assertIsNone(rsrc.handle_update({}, {}, prop_diff))
         self.m.VerifyAll()
 
 

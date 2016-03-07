@@ -28,7 +28,6 @@ resources:
   my_qos_policy:
     type: OS::Neutron::QoSPolicy
     properties:
-      name: test_policy
       description: a policy for test
       shared: true
       tenant_id: d66c74c01d6c41b9846088c1ad9634d0
@@ -68,11 +67,12 @@ class NeutronQoSPolicyTest(common.HeatTestCase):
         self.my_qos_policy = self.stack['my_qos_policy']
         self.my_qos_policy.client = mock.MagicMock(
             return_value=self.neutronclient)
+        self.patchobject(self.my_qos_policy, 'physical_resource_name',
+                         return_value='test_policy')
 
     def test_qos_policy_handle_create(self):
         policy = {
             'policy': {
-                'name': 'test_policy',
                 'description': 'a policy for test',
                 'id': '9c1eb3fe-7bba-479d-bd43-1d497e53c384',
                 'rules': [],
@@ -122,22 +122,29 @@ class NeutronQoSPolicyTest(common.HeatTestCase):
         self.my_qos_policy.resource_id = policy_id
 
         props = {
-            'name': 'new_name',
+            'name': 'test_policy',
             'description': 'test',
             'shared': False
         }
-
+        prop_dict = props.copy()
         update_snippet = rsrc_defn.ResourceDefinition(
             self.my_qos_policy.name,
             self.my_qos_policy.type(),
             props)
 
+        # with name
+        self.my_qos_policy.handle_update(json_snippet=update_snippet,
+                                         tmpl_diff={},
+                                         prop_diff=props)
+        # without name
+        props['name'] = None
         self.my_qos_policy.handle_update(json_snippet=update_snippet,
                                          tmpl_diff={},
                                          prop_diff=props)
 
-        self.neutronclient.update_qos_policy.assert_called_once_with(
-            policy_id, {'policy': props})
+        self.assertEqual(2, self.neutronclient.update_qos_policy.call_count)
+        self.neutronclient.update_qos_policy.assert_called_with(
+            policy_id, {'policy': prop_dict})
 
     def test_qos_policy_get_attr(self):
         self.my_qos_policy.resource_id = 'test policy'

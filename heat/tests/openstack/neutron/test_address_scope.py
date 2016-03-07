@@ -28,7 +28,6 @@ resources:
   my_address_scope:
     type: OS::Neutron::AddressScope
     properties:
-      name: test_address_scope
       shared: False
       tenant_id: d66c74c01d6c41b9846088c1ad9634d0
 '''
@@ -54,11 +53,12 @@ class NeutronAddressScopeTest(common.HeatTestCase):
         self.my_address_scope = self.stack['my_address_scope']
         self.my_address_scope.client = mock.MagicMock(
             return_value=self.neutronclient)
+        self.patchobject(self.my_address_scope, 'physical_resource_name',
+                         return_value='test_address_scope')
 
     def test_address_scope_handle_create(self):
         addrs = {
             'address_scope': {
-                'name': 'test_address_scope',
                 'id': '9c1eb3fe-7bba-479d-bd43-1d497e53c384',
                 'tenant_id': 'd66c74c01d6c41b9846088c1ad9634d0',
                 'shared': False,
@@ -108,22 +108,31 @@ class NeutronAddressScopeTest(common.HeatTestCase):
         self.my_address_scope.resource_id = addrs_id
 
         props = {
-            'name': 'new_name',
+            'name': 'test_address_scope',
             'shared': True
         }
 
+        update_dict = props.copy()
         update_snippet = rsrc_defn.ResourceDefinition(
             self.my_address_scope.name,
             self.my_address_scope.type(),
             props)
 
+        # with name
         self.my_address_scope.handle_update(
             json_snippet=update_snippet,
             tmpl_diff={},
             prop_diff=props)
 
-        self.neutronclient.update_address_scope.assert_called_once_with(
-            addrs_id, {'address_scope': props})
+        # without name
+        props['name'] = None
+        self.my_address_scope.handle_update(
+            json_snippet=update_snippet,
+            tmpl_diff={},
+            prop_diff=props)
+        self.assertEqual(2, self.neutronclient.update_address_scope.call_count)
+        self.neutronclient.update_address_scope.assert_called_with(
+            addrs_id, {'address_scope': update_dict})
 
     def test_address_scope_get_attr(self):
         self.my_address_scope.resource_id = 'addrs_id'
