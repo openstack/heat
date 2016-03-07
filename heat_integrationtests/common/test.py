@@ -90,6 +90,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.metering_client = self.manager.metering_client
         self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
         self.updated_time = {}
+        if self.conf.disable_ssl_certificate_validation:
+            self.verify_cert = False
+        else:
+            self.verify_cert = self.conf.ca_file or True
 
     def get_remote_client(self, server_or_ip, username, private_key=None):
         if isinstance(server_or_ip, six.string_types):

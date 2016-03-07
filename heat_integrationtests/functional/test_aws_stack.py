@@ -107,7 +107,7 @@ Outputs:
         full_url = '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
 
         def download():
-            r = requests.get(full_url)
+            r = requests.get(full_url, verify=self.verify_cert)
             LOG.info('GET: %s -> %s' % (full_url, r.status_code))
             return r.status_code == requests.codes.ok
 

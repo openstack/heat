@@ -61,6 +61,10 @@ IntegrationTestGroup = [
     cfg.BoolOpt('disable_ssl_certificate_validation',
                 default=False,
                 help="Set to True if using self-signed SSL certificates."),
+    cfg.StrOpt('ca_file',
+               default=None,
+               help="CA certificate to pass for servers that have "
+                    "https endpoint."),
     cfg.IntOpt('build_interval',
                default=4,
                help="Time in seconds between build status checks."),
