@@ -303,7 +303,8 @@ class Stack(collections.Mapping):
     def dependencies(self):
         if self._dependencies is None:
             self._dependencies = self._get_dependencies(
-                six.itervalues(self.resources))
+                six.itervalues(self.resources),
+                ignore_errors=self.id is not None)
         return self._dependencies
 
     def reset_dependencies(self):
@@ -375,14 +376,22 @@ class Stack(collections.Mapping):
         return set(itertools.chain.from_iterable(attr_lists))
 
     @staticmethod
-    def _get_dependencies(resources):
+    def _get_dependencies(resources, ignore_errors=True):
         """Return the dependency graph for a list of resources."""
         deps = dependencies.Dependencies()
         for res in resources:
+            res.add_explicit_dependencies(deps)
+
             try:
                 res.add_dependencies(deps)
-            except ValueError:
-                pass
+            except Exception as exc:
+                if not ignore_errors:
+                    raise
+                else:
+                    LOG.warning(_LW('Ignoring error adding implicit '
+                                    'dependencies for %(res)s: %(err)s') %
+                                {'res': six.text_type(res),
+                                 'err': six.text_type(exc)})
 
         return deps
 
