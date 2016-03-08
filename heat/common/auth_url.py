@@ -27,7 +27,13 @@ class AuthUrlFilter(wsgi.Middleware):
     def __init__(self, app, conf):
         super(AuthUrlFilter, self).__init__(app)
         self.conf = conf
-        self.auth_url = self._get_auth_url()
+        self._auth_url = None
+
+    @property
+    def auth_url(self):
+        if not self._auth_url:
+            self._auth_url = self._get_auth_url()
+        return self._auth_url
 
     def _get_auth_url(self):
         if 'auth_uri' in self.conf:
