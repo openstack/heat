@@ -358,6 +358,22 @@ class Port(neutron.NeutronResource):
                 translation.TranslationRule.REPLACE,
                 [self.FIXED_IPS, self.FIXED_IP_SUBNET],
                 value_name=self.FIXED_IP_SUBNET_ID
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.NETWORK],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FIXED_IPS, self.FIXED_IP_SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
             )
         ]
 
@@ -379,7 +395,7 @@ class Port(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        self.client_plugin().resolve_network(props, self.NETWORK, 'network_id')
+        props['network_id'] = props.pop(self.NETWORK)
         self._prepare_port_properties(props)
         qos_policy = props.pop(self.QOS_POLICY, None)
         if qos_policy:
@@ -472,21 +488,6 @@ class Port(neutron.NeutronResource):
     def needs_replace(self, after_props):
         """Mandatory replace based on props."""
         return after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS'
-
-    def needs_replace_with_prop_diff(self, changed_properties_set,
-                                     after_props, before_props):
-        """Needs replace based on prop_diff."""
-        # Switching between name and ID is OK, provided the value resolves
-        # to the same network.  If the network changes, port is replaced.
-        if self.NETWORK in changed_properties_set:
-            before_id = self.client_plugin().find_resourceid_by_name_or_id(
-                'network',
-                before_props[self.NETWORK])
-            after_id = self.client_plugin().find_resourceid_by_name_or_id(
-                'network',
-                after_props[self.NETWORK])
-            changed_properties_set.remove(self.NETWORK)
-            return before_id != after_id
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

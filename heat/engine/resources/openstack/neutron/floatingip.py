@@ -146,6 +146,14 @@ class FloatingIP(neutron.NeutronResource):
                 translation.TranslationRule.REPLACE,
                 [self.FLOATING_NETWORK],
                 value_path=[self.FLOATING_NETWORK_ID]
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FLOATING_NETWORK],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
             )
         ]
 
@@ -224,8 +232,7 @@ class FloatingIP(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        self.client_plugin().resolve_network(props, self.FLOATING_NETWORK,
-                                             'floating_network_id')
+        props['floating_network_id'] = props.pop(self.FLOATING_NETWORK)
         fip = self.client().create_floatingip({
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])
@@ -321,9 +328,7 @@ class FloatingIPAssociation(neutron.NeutronResource):
 
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
-
         floatingip_id = props.pop(self.FLOATINGIP_ID)
-
         self.client().update_floatingip(floatingip_id, {
             'floatingip': props})
         self.resource_id_set(self.id)
