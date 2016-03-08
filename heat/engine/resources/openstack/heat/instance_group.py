@@ -132,6 +132,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def validate(self):
         """Add validation for update_policy."""
+        self.validate_launchconfig()
         super(InstanceGroup, self).validate()
 
         if self.update_policy is not None:
@@ -167,7 +168,6 @@ class InstanceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
-        self.validate_launchconfig()
         num_instances = self.properties[self.SIZE]
         initial_template = self._create_template(num_instances)
         return self.create_with_template(initial_template)
