@@ -670,14 +670,15 @@ class Stack(collections.Mapping):
                   not found.
         """
         for r in six.itervalues(self):
-            if r.state in (
+            if (r.state in (
                     (r.INIT, r.COMPLETE),
                     (r.CREATE, r.IN_PROGRESS),
                     (r.CREATE, r.COMPLETE),
                     (r.RESUME, r.IN_PROGRESS),
                     (r.RESUME, r.COMPLETE),
                     (r.UPDATE, r.IN_PROGRESS),
-                    (r.UPDATE, r.COMPLETE)) and r.FnGetRefId() == refid:
+                    (r.UPDATE, r.COMPLETE)) and
+                    (r.FnGetRefId() == refid or r.name == refid)):
                 return r
 
     def register_access_allowed_handler(self, credential_id, handler):

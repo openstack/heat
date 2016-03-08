@@ -963,7 +963,6 @@ class StackTest(common.HeatTestCase):
         self.assertIn('AResource', self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')
-        self.assertIsNotNone(resource)
 
         for action, status in (
                 (rsrc.INIT, rsrc.COMPLETE),
@@ -982,6 +981,42 @@ class StackTest(common.HeatTestCase):
             self.assertIsNone(self.stack.resource_by_refid('bbbb'))
         finally:
             rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
+
+    def test_resource_name_ref_by_depends_on(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                    'AResource': {'Type': 'GenericResourceType'},
+                    'BResource': {'Type': 'ResourceWithPropsType',
+                                  'Properties': {'Foo': 'AResource'},
+                                  'DependsOn': 'AResource'}}}
+
+        self.stack = stack.Stack(self.ctx, 'resource_by_name_ref_stack',
+                                 template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertIn('AResource', self.stack)
+        self.assertIn('BResource', self.stack)
+        rsrc = self.stack['AResource']
+        rsrc.resource_id_set('aaaa')
+        b_rsrc = self.stack['BResource']
+        b_rsrc.resource_id_set('bbbb')
+
+        b_foo_ref = b_rsrc.properties.get('Foo')
+
+        for action, status in (
+                (rsrc.INIT, rsrc.COMPLETE),
+                (rsrc.CREATE, rsrc.IN_PROGRESS),
+                (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.RESUME, rsrc.IN_PROGRESS),
+                (rsrc.RESUME, rsrc.COMPLETE),
+                (rsrc.UPDATE, rsrc.IN_PROGRESS),
+                (rsrc.UPDATE, rsrc.COMPLETE)):
+            rsrc.state_set(action, status)
+            ref_rsrc = self.stack.resource_by_refid(b_foo_ref)
+            self.assertEqual(rsrc, ref_rsrc)
+            self.assertIn(b_rsrc.name, ref_rsrc.required_by())
 
     def test_create_failure_recovery(self):
         """Check that rollback still works with dynamic metadata.
