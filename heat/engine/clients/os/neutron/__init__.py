@@ -68,6 +68,9 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def is_no_unique(self, ex):
         return isinstance(ex, exceptions.NeutronClientNoUniqueMatch)
 
+    def is_invalid(self, ex):
+        return isinstance(ex, exceptions.StateInvalidClient)
+
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       cmd_resource=None):
         return self._find_resource_id(self.context.tenant_id,

@@ -66,9 +66,12 @@ class ListenerTest(common.HeatTestCase):
         self._create_stack()
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
+        ]
+        self.neutron_client.create_listener.side_effect = [
+            exceptions.StateInvalidClient,
+            {'listener': {'id': '1234'}}
         ]
         expected = {
             'listener': {
@@ -88,6 +91,7 @@ class ListenerTest(common.HeatTestCase):
         props = self.listener.handle_create()
 
         self.assertFalse(self.listener.check_create_complete(props))
+        self.neutron_client.create_listener.assert_called_with(expected)
         self.assertFalse(self.listener.check_create_complete(props))
         self.neutron_client.create_listener.assert_called_with(expected)
         self.assertFalse(self.listener.check_create_complete(props))
@@ -109,10 +113,11 @@ class ListenerTest(common.HeatTestCase):
         self.listener.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.update_listener.side_effect = [
+            exceptions.StateInvalidClient, None]
         prop_diff = {
             'admin_state_up': False,
             'name': 'your_listener',
@@ -122,6 +127,8 @@ class ListenerTest(common.HeatTestCase):
 
         self.assertFalse(self.listener.check_update_complete(prop_diff))
         self.assertFalse(self.listener._update_called)
+        self.neutron_client.update_listener.assert_called_with(
+            '1234', {'listener': prop_diff})
         self.assertFalse(self.listener.check_update_complete(prop_diff))
         self.assertTrue(self.listener._update_called)
         self.neutron_client.update_listener.assert_called_with(
@@ -134,15 +141,17 @@ class ListenerTest(common.HeatTestCase):
         self.listener.resource_id_set('1234')
         self.neutron_client.show_loadbalancer.side_effect = [
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
             {'loadbalancer': {'provisioning_status': 'PENDING_UPDATE'}},
             {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
         ]
+        self.neutron_client.delete_listener.side_effect = [
+            exceptions.StateInvalidClient, None]
 
         self.listener.handle_delete()
 
         self.assertFalse(self.listener.check_delete_complete(None))
         self.assertFalse(self.listener._delete_called)
+        self.neutron_client.delete_listener.assert_called_with('1234')
         self.assertFalse(self.listener.check_delete_complete(None))
         self.assertTrue(self.listener._delete_called)
         self.neutron_client.delete_listener.assert_called_with('1234')
@@ -152,23 +161,15 @@ class ListenerTest(common.HeatTestCase):
     def test_delete_already_gone(self):
         self._create_stack()
         self.listener.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_listener.side_effect = (
             exceptions.NotFound)
 
         self.listener.handle_delete()
-        self.assertFalse(self.listener.check_delete_complete(None))
         self.assertTrue(self.listener.check_delete_complete(None))
 
     def test_delete_failed(self):
         self._create_stack()
         self.listener.resource_id_set('1234')
-        self.neutron_client.show_loadbalancer.side_effect = [
-            {'loadbalancer': {'provisioning_status': 'ACTIVE'}},
-        ]
         self.neutron_client.delete_listener.side_effect = (
             exceptions.Unauthorized)
 
