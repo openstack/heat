@@ -560,10 +560,30 @@ class Resource(object):
     def dep_attrs(self, resource_name):
         return self.t.dep_attrs(resource_name)
 
-    def add_dependencies(self, deps):
+    def add_explicit_dependencies(self, deps):
+        """Add all dependencies explicitly specified in the template.
+
+        The deps parameter is a Dependencies object to which dependency pairs
+        are added.
+        """
         for dep in self.t.dependencies(self.stack):
             deps += (self, dep)
         deps += (self, None)
+
+    def add_dependencies(self, deps):
+        """Add implicit dependencies specific to the resource type.
+
+        Some resource types may have implicit dependencies on other resources
+        in the same stack that are not linked by a property value (that would
+        be set using get_resource or get_attr for example, thus creating an
+        explicit dependency). Such dependencies are opaque to the user and
+        should be avoided wherever possible, however in some circumstances they
+        are required due to magic in the underlying API.
+
+        The deps parameter is a Dependencies object to which dependency pairs
+        may be added.
+        """
+        return
 
     def required_by(self):
         """List of resources that require this one as a dependency.

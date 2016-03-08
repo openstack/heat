@@ -326,6 +326,7 @@ class ServersTest(common.HeatTestCase):
         server_rsrc = stack['server']
         subnet_rsrc = stack['subnet']
         deps = []
+        server_rsrc.add_explicit_dependencies(deps)
         server_rsrc.add_dependencies(deps)
         self.assertEqual(4, len(deps))
         self.assertEqual(subnet_rsrc, deps[3])
@@ -339,6 +340,7 @@ class ServersTest(common.HeatTestCase):
         server_rsrc = stack['server']
         subnet_rsrc = stack['subnet']
         deps = []
+        server_rsrc.add_explicit_dependencies(deps)
         server_rsrc.add_dependencies(deps)
         self.assertEqual(2, len(deps))
         self.assertNotIn(subnet_rsrc, deps)
