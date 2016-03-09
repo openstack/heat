@@ -132,6 +132,26 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual('EntityNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
+    def test_index_invalid_filters(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'rubbish', '1')
+
+        req = self._get(stack_identity._tenant_path() + '/resources',
+                        {'invalid_key': 'junk'})
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.controller.index, req,
+                               tenant_id=self.tenant,
+                               stack_name=stack_identity.stack_name,
+                               stack_id=stack_identity.stack_id)
+
+        self.assertIn("Invalid filter parameters %s" %
+                      [six.text_type('invalid_key')],
+                      six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_index_nested_depth(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         stack_identity = identifier.HeatIdentifier(self.tenant,

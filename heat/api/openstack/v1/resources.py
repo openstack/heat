@@ -105,6 +105,13 @@ class ResourceController(object):
             'physical_resource_id': 'mixed'
         }
 
+        invalid_keys = (set(req.params.keys()) -
+                        set(list(whitelist) + [rpc_api.PARAM_NESTED_DEPTH,
+                                               rpc_api.PARAM_WITH_DETAIL]))
+        if invalid_keys:
+            raise exc.HTTPBadRequest(_('Invalid filter parameters %s') %
+                                     six.text_type(list(invalid_keys)))
+
         nested_depth = self._extract_to_param(req,
                                               rpc_api.PARAM_NESTED_DEPTH,
                                               param_utils.extract_int,
