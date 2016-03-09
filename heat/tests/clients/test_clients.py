@@ -89,6 +89,10 @@ class ClientsTest(common.HeatTestCase):
         obj = self._client_cfn_url()
         self.assertEqual("http://0.0.0.0:8000/v1/", obj.get_heat_cfn_url())
 
+    def test_clients_get_watch_server_url(self):
+        obj = self._client_cfn_url()
+        self.assertEqual("http://0.0.0.0:8003/v1/", obj.get_watch_server_url())
+
     def test_clients_get_heat_cfn_metadata_url(self):
         obj = self._client_cfn_url()
         self.assertEqual("http://0.0.0.0:8000/v1/",

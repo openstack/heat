@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_config import cfg
+import six
 
 from heatclient import client as hc
 from heatclient import exc
@@ -96,3 +97,12 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
         if config_url and config_url[-1] != "/":
             config_url += '/'
         return config_url
+
+    def get_watch_server_url(self):
+        cfn_url = self.get_heat_cfn_url()
+        url_parts = cfn_url.split(':')
+        port_and_version = url_parts[-1].split('/')
+        port_and_version[0] = (
+            six.text_type(cfg.CONF.heat_api_cloudwatch.bind_port))
+        url_parts[-1] = '/'.join(port_and_version)
+        return ':'.join(url_parts)
