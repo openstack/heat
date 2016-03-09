@@ -145,6 +145,8 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
         update_subnetpool = self.patchobject(neutronclient.Client,
                                              'update_subnetpool')
         rsrc = self.create_subnetpool()
+        self.patchobject(rsrc, 'physical_resource_name',
+                         return_value='the_new_sp')
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
         props = {
@@ -159,10 +161,22 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
             'max_prefixlen': '28',
             'is_default': False,
         }
+        update_dict = props.copy()
+        update_dict['name'] = 'the_new_sp'
+        update_dict['address_scope_id'] = update_dict.pop('address_scope')
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
+        # with name
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, props))
-        self.assertEqual(1, update_subnetpool.call_count)
+
+        # without name
+        props['name'] = None
+        self.assertIsNone(rsrc.handle_update(update_snippet, {}, props))
+
+        self.assertEqual(2, update_subnetpool.call_count)
+        update_subnetpool.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'subnetpool': update_dict})
 
     def test_update_subnetpool_no_prop_diff(self):
         update_subnetpool = self.patchobject(neutronclient.Client,

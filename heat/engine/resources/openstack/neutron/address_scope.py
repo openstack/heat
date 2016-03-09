@@ -41,7 +41,6 @@ class AddressScope(neutron.NeutronResource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('The name for the address scope.'),
-            required=True,
             update_allowed=True
         ),
         SHARED: properties.Schema(
@@ -89,6 +88,7 @@ class AddressScope(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
+            self.prepare_update_properties(prop_diff)
             self.client().update_address_scope(
                 self.resource_id,
                 {'address_scope': prop_diff})

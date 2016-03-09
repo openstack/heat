@@ -202,6 +202,7 @@ class SubnetPool(neutron.NeutronResource):
                 prop_diff[
                     'address_scope_id'] = prop_diff.pop(self.ADDRESS_SCOPE)
         if prop_diff:
+            self.prepare_update_properties(prop_diff)
             self.client().update_subnetpool(
                 self.resource_id, {'subnetpool': prop_diff})
 
