@@ -28,9 +28,9 @@ class LaunchConfigurationTest(common.HeatTestCase):
     def setUp(self):
         super(LaunchConfigurationTest, self).setUp()
 
-    def validate_launch_config(self, t, stack, resource_name):
+    def validate_launch_config(self, stack, lc_name='LaunchConfig'):
         # create the launch configuration resource
-        conf = stack['LaunchConfig']
+        conf = stack[lc_name]
         self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
@@ -94,14 +94,11 @@ class LaunchConfigurationTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
-        self.patchobject(nova.ServerConstraint, 'validate', return_value=True)
-        self.m.ReplayAll()
+        self.stub_ServerConstraint_validate()
 
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
 
     def test_lc_validate_without_InstanceId_and_ImageId(self):
         t = template_format.parse(inline_templates.as_template)
@@ -111,13 +108,12 @@ class LaunchConfigurationTest(common.HeatTestCase):
         rsrc = stack['LaunchConfig']
         self.stub_SnapshotConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
+
         e = self.assertRaises(exception.StackValidationFailed,
                               rsrc.validate)
         ex_msg = ('If without InstanceId, '
                   'ImageId and InstanceType are required.')
         self.assertIn(ex_msg, six.text_type(e))
-        self.m.VerifyAll()
 
     def test_lc_validate_without_InstanceId_and_InstanceType(self):
         t = template_format.parse(inline_templates.as_template)
@@ -127,13 +123,12 @@ class LaunchConfigurationTest(common.HeatTestCase):
         rsrc = stack['LaunchConfig']
         self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
-        self.m.ReplayAll()
+
         e = self.assertRaises(exception.StackValidationFailed,
                               rsrc.validate)
         ex_msg = ('If without InstanceId, '
                   'ImageId and InstanceType are required.')
         self.assertIn(ex_msg, six.text_type(e))
-        self.m.VerifyAll()
 
     def test_launch_config_create_with_instanceid_not_found(self):
         t = template_format.parse(inline_templates.as_template)
@@ -152,7 +147,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                "Resources.LaunchConfig.Properties.InstanceId: "
                "Error validating value '5678': The Server (5678) "
                "could not be found.")
-        self.m.ReplayAll()
+
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn(msg, six.text_type(exc))
@@ -166,16 +161,12 @@ class LaunchConfigurationTest(common.HeatTestCase):
 
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
-                              self.validate_launch_config, t,
-                              stack, 'LaunchConfig')
+                              self.validate_launch_config, stack)
 
         self.assertIn("Ebs is missing, this is required",
                       six.text_type(e))
-
-        self.m.VerifyAll()
 
     def test_validate_BlockDeviceMappings_without_SnapshotId_property(self):
         t = template_format.parse(inline_templates.as_template)
@@ -187,15 +178,12 @@ class LaunchConfigurationTest(common.HeatTestCase):
 
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
-                              self.validate_launch_config, t,
-                              stack, 'LaunchConfig')
+                              self.validate_launch_config, stack)
 
         self.assertIn("SnapshotId is missing, this is required",
                       six.text_type(e))
-        self.m.VerifyAll()
 
     def test_validate_BlockDeviceMappings_without_DeviceName_property(self):
         t = template_format.parse(inline_templates.as_template)
@@ -207,16 +195,12 @@ class LaunchConfigurationTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
-        self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
-                              self.validate_launch_config, t,
-                              stack, 'LaunchConfig')
+                              self.validate_launch_config, stack)
 
         excepted_error = (
             'Property error: '
             'Resources.LaunchConfig.Properties.BlockDeviceMappings[0]: '
             'Property DeviceName not assigned')
         self.assertIn(excepted_error, six.text_type(e))
-
-        self.m.VerifyAll()
