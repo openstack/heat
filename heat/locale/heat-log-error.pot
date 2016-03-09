@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0b2.dev223\n"
+"Project-Id-Version: heat 6.0.0.0b4.dev30\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-01-18 06:34+0000\n"
+"POT-Creation-Date: 2016-03-09 06:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,39 +30,39 @@ msgstr ""
 msgid "Request does not contain required MetricData"
 msgstr ""
 
-#: heat/common/context.py:218
+#: heat/common/context.py:222
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
 
-#: heat/common/exception.py:57
+#: heat/common/exception.py:73
 msgid "Exception in string format operation"
 msgstr ""
 
-#: heat/common/exception.py:59
+#: heat/common/exception.py:75
 #, python-format
 msgid "%(name)s: %(value)s"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:130
-#: heat/common/heat_keystoneclient.py:211
+#: heat/common/heat_keystoneclient.py:131
+#: heat/common/heat_keystoneclient.py:200
 msgid "Domain admin client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:156
-#: heat/common/heat_keystoneclient.py:358
+#: heat/common/heat_keystoneclient.py:157
+#: heat/common/heat_keystoneclient.py:347
 msgid "Keystone client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:162
+#: heat/common/heat_keystoneclient.py:163
 msgid "trust token re-scoping failed!"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:166
+#: heat/common/heat_keystoneclient.py:167
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:281
-#: heat/common/heat_keystoneclient.py:343
+#: heat/common/heat_keystoneclient.py:270
+#: heat/common/heat_keystoneclient.py:332
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -90,30 +90,30 @@ msgstr ""
 msgid "Failed to import module %s"
 msgstr ""
 
-#: heat/common/wsgi.py:287
+#: heat/common/wsgi.py:278
 msgid "SIGTERM received"
 msgstr ""
 
-#: heat/common/wsgi.py:295
+#: heat/common/wsgi.py:286
 msgid "SIGHUP received"
 msgstr ""
 
-#: heat/common/wsgi.py:432
+#: heat/common/wsgi.py:434
 #, python-format
 msgid "Not respawning child %d, cannot recover from termination"
 msgstr ""
 
-#: heat/common/wsgi.py:842
+#: heat/common/wsgi.py:844
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr ""
 
-#: heat/common/wsgi.py:864
+#: heat/common/wsgi.py:866
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr ""
 
-#: heat/common/wsgi.py:938
+#: heat/common/wsgi.py:940
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -126,17 +126,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:725
+#: heat/engine/environment.py:794
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:737
+#: heat/engine/environment.py:806
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:741
+#: heat/engine/environment.py:810
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -151,58 +151,63 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:643
+#: heat/engine/resource.py:677
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:1346 heat/engine/resource.py:1393
-#: heat/engine/resource.py:1421
+#: heat/engine/resource.py:1494 heat/engine/resource.py:1541
+#: heat/engine/resource.py:1569
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1426
+#: heat/engine/resource.py:1574
 #, python-format
 msgid ""
 "Error acquiring lock for resource id:%(resource_id)s with "
 "atomic_key:%(atomic_key)s, engine_id:%(rs_engine_id)s/%(engine_id)s"
 msgstr ""
 
-#: heat/engine/resource.py:1698
+#: heat/engine/resource.py:1884
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:129
+#: heat/engine/service.py:130
 msgid "Unhandled error in asynchronous task"
 msgstr ""
 
-#: heat/engine/service.py:389
+#: heat/engine/service.py:351
+#, python-format
+msgid "Watch task creation attempt failed, %s"
+msgstr ""
+
+#: heat/engine/service.py:416
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:806
+#: heat/engine/service.py:870
 msgid ""
 "PATCH update to FAILED stack only possible if convergence enabled or "
 "previous template stored"
 msgstr ""
 
-#: heat/engine/service.py:1289 heat/engine/service.py:1335
+#: heat/engine/service.py:1451 heat/engine/service.py:1505
 #, python-format
 msgid "Error loading resource type %s from global environment."
 msgstr ""
 
-#: heat/engine/service.py:1717
+#: heat/engine/service.py:1933
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service.py:1865
+#: heat/engine/service.py:2083
 #, python-format
 msgid "Service %(service_id)s update failed: %(error)s"
 msgstr ""
 
-#: heat/engine/service.py:1942
+#: heat/engine/service.py:2160
 #, python-format
 msgid "Error while resetting stack: %s"
 msgstr ""
@@ -217,27 +222,27 @@ msgstr ""
 msgid "Unexpected exception in %(func)s: %(msg)s"
 msgstr ""
 
-#: heat/engine/stack.py:710
+#: heat/engine/stack.py:746
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:1268
+#: heat/engine/stack.py:1310
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:1550
+#: heat/engine/stack.py:1602
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1753
+#: heat/engine/stack.py:1805
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1762
+#: heat/engine/stack.py:1814
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -251,7 +256,7 @@ msgstr ""
 msgid "Zaqar connection failed, no auth_token!"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:434
+#: heat/engine/resources/stack_resource.py:437
 msgid "update_stack"
 msgstr ""
 
@@ -280,13 +285,13 @@ msgstr ""
 msgid "exception: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/floatingip.py:84
+#: heat/engine/resources/openstack/nova/floatingip.py:93
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1131
+#: heat/engine/resources/openstack/nova/server.py:1188
 msgid "Error while updating software config transport"
 msgstr ""
 
