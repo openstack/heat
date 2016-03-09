@@ -60,7 +60,7 @@ class HeatBase(models.ModelBase, models.TimestampMixin):
             session = orm_session.Session.object_session(self)
             if not session:
                 session = get_session()
-        session.begin()
+        session.begin(subtransactions=True)
         session.delete(self)
         session.commit()
 
@@ -69,7 +69,7 @@ class HeatBase(models.ModelBase, models.TimestampMixin):
             session = orm_session.Session.object_session(self)
             if not session:
                 session = get_session()
-        session.begin()
+        session.begin(subtransactions=True)
         for k, v in six.iteritems(values):
             setattr(self, k, v)
         session.commit()
