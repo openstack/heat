@@ -36,8 +36,10 @@ class NoneResource(resource.Resource):
                       prev_resource, check_init_complete=True):
         return False
 
-    def reparse(self):
+    def reparse(self, translate=True, client_resolve=True):
         self.properties = properties.Properties(schema={}, data={})
+        if translate:
+            self.translate_properties(self.properties, client_resolve)
 
     def handle_create(self):
         self.resource_id_set(six.text_type(uuid.uuid4()))
