@@ -22,8 +22,10 @@ class CooldownMixin(object):
     This logic includes both cooldown timestamp comparing and scaling in
     progress checking.
     """
-    def _cooldown_inprogress(self):
-        inprogress = False
+    def _is_scaling_allowed(self):
+        metadata = self.metadata_get()
+        if metadata.get('scaling_in_progress'):
+            return False
         try:
             # Negative values don't make sense, so they are clamped to zero
             cooldown = max(0, self.properties[self.COOLDOWN])
@@ -31,34 +33,30 @@ class CooldownMixin(object):
             # If not specified, it will be None, same as cooldown == 0
             cooldown = 0
 
-        metadata = self.metadata_get()
-        if metadata.get('scaling_in_progress'):
-            return True
-
         if 'cooldown' not in metadata:
             # Note: this is for supporting old version cooldown checking
             if metadata and cooldown != 0:
                 last_adjust = next(six.iterkeys(metadata))
                 if not timeutils.is_older_than(last_adjust, cooldown):
-                    inprogress = True
+                    return False
         elif cooldown != 0:
             last_adjust = next(six.iterkeys(metadata['cooldown']))
             if not timeutils.is_older_than(last_adjust, cooldown):
-                inprogress = True
+                return False
+        # Assumes _finished_scaling is called
+        # after the scaling operation completes
+        metadata['scaling_in_progress'] = True
+        self.metadata_set(metadata)
+        return True
 
-        if not inprogress:
-            metadata['scaling_in_progress'] = True
-            self.metadata_set(metadata)
-
-        return inprogress
-
-    def _cooldown_timestamp(self, reason):
-        # Save cooldown timestamp into metadata and clean the
-        # scaling_in_progress state.
+    def _finished_scaling(self, cooldown_reason,
+                          changed_size=True):
         # If we wanted to implement the AutoScaling API like AWS does,
         # we could maintain event history here, but since we only need
         # the latest event for cooldown, just store that for now
         metadata = self.metadata_get()
-        metadata['cooldown'] = {timeutils.utcnow().isoformat(): reason}
+        if changed_size:
+            now = timeutils.utcnow().isoformat()
+            metadata['cooldown'] = {now: cooldown_reason}
         metadata['scaling_in_progress'] = False
         self.metadata_set(metadata)
