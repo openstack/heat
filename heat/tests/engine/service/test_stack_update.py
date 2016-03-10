@@ -407,7 +407,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
         self.assertIn("Cancelling update when stack is "
-                      "('UPDATE', 'COMPLETE')",
+                      "UPDATE_COMPLETE",
                       six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(stack_object.Stack, 'count_total_resources')

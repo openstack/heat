@@ -1092,8 +1092,9 @@ class EngineService(service.Service):
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
         if current_stack.state != (current_stack.UPDATE,
                                    current_stack.IN_PROGRESS):
+            state = '_'.join(current_stack.state)
             msg = _("Cancelling update when stack is %s"
-                    ) % str(current_stack.state)
+                    ) % str(state)
             raise exception.NotSupported(feature=msg)
         LOG.info(_LI('Starting cancel of updating stack %s'), db_stack.name)
         # stop the running update and take the lock
