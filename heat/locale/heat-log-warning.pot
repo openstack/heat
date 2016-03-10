@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0b4.dev30\n"
+"Project-Id-Version: heat 6.0.0.0b4.dev48\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-09 06:32+0000\n"
+"POT-Creation-Date: 2016-03-10 06:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -113,32 +113,32 @@ msgstr ""
 msgid "Ignoring error in old property value %(prop_name)s: %(msg)s"
 msgstr ""
 
-#: heat/engine/resource.py:1053
+#: heat/engine/resource.py:1073
 #, python-format
 msgid "Resource cannot be updated with it's live state in case of next error: %s"
 msgstr ""
 
-#: heat/engine/resource.py:1460
+#: heat/engine/resource.py:1480
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1546
+#: heat/engine/resource.py:1566
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1598
+#: heat/engine/resource.py:1618
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1639
+#: heat/engine/resource.py:1659
 #, python-format
 msgid "Resolving 'show' attribute has failed : %s"
 msgstr ""
 
-#: heat/engine/resource.py:1914
+#: heat/engine/resource.py:1934
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -180,32 +180,37 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:398
+#: heat/engine/stack.py:399
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
-#: heat/engine/stack.py:831
+#: heat/engine/stack.py:428
+#, python-format
+msgid "Ignoring error adding implicit dependencies for %(res)s: %(err)s"
+msgstr ""
+
+#: heat/engine/stack.py:840
 #, python-format
 msgid ""
 "Failed to set state of stack %(name)s with traversal ID %(trvsl_id)s, to "
 "%(action)s_%(status)s"
 msgstr ""
 
-#: heat/engine/stack.py:1146 heat/engine/stack.py:1172
+#: heat/engine/stack.py:1155 heat/engine/stack.py:1181
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
 "stack %(action)s"
 msgstr ""
 
-#: heat/engine/stack.py:1217
+#: heat/engine/stack.py:1226
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, not "
 "trigerring rollback."
 msgstr ""
 
-#: heat/engine/stack.py:1926
+#: heat/engine/stack.py:1935
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
@@ -265,7 +270,7 @@ msgid ""
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:548
+#: heat/engine/clients/os/nova.py:551
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
