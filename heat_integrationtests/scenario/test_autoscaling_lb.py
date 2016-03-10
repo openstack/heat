@@ -39,7 +39,7 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
         for count in range(retries):
             time.sleep(1)
             try:
-                r = requests.get(url)
+                r = requests.get(url, verify=self.verify_cert)
             except requests.exceptions.ConnectionError:
                 # The LB may not be up yet, let's retry
                 continue
