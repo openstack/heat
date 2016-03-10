@@ -1177,7 +1177,8 @@ class EngineService(service.Service):
                              resource_validate=False,
                              service_check_defer=service_check_defer)
         try:
-            stack.validate(ignorable_errors=ignorable_errors)
+            stack.validate(ignorable_errors=ignorable_errors,
+                           validate_by_deps=False)
         except exception.StackValidationFailed as ex:
             return {'Error': six.text_type(ex)}
 

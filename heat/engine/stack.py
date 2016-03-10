@@ -710,7 +710,7 @@ class Stack(collections.Mapping):
         return handler and handler(resource_name)
 
     @profiler.trace('Stack.validate', hide_args=False)
-    def validate(self, ignorable_errors=None):
+    def validate(self, ignorable_errors=None, validate_by_deps=True):
         """Validates the stack."""
         # TODO(sdake) Should return line number of invalid reference
 
@@ -737,7 +737,12 @@ class Stack(collections.Mapping):
             raise exception.StackValidationFailed(
                 message=_("Duplicate names %s") % dup_names)
 
-        for res in self.dependencies:
+        if validate_by_deps:
+            iter_rsc = self.dependencies
+        else:
+            iter_rsc = six.itervalues(self.resources)
+
+        for res in iter_rsc:
             try:
                 if self.resource_validate:
                     result = res.validate()
