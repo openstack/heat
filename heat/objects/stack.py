@@ -21,6 +21,8 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 
+from heat.common import exception
+from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.objects import fields as heat_fields
 from heat.objects import raw_template
@@ -167,6 +169,9 @@ class Stack(
     def refresh(self):
         db_stack = db_api.stack_get(
             self._context, self.id, show_deleted=True)
+        if db_stack is None:
+            message = _('No stack exists with id "%s"') % str(self.id)
+            raise exception.NotFound(message)
         db_stack.refresh()
         return self.__class__._from_db_object(
             self._context,
