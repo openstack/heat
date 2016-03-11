@@ -52,26 +52,38 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         if sorted(tuple(six.iterkeys(metadata))) == sorted(self.METADATA_KEYS):
             return self._status_ok(metadata[self.STATUS])
 
-    def handle_signal(self, metadata=None):
-        signal_reason = None
-        if self._metadata_format_ok(metadata):
-            rsrc_metadata = self.metadata_get(refresh=True)
-            if metadata[self.UNIQUE_ID] in rsrc_metadata:
+    def normalise_signal_data(self, signal_data, latest_metadata):
+        return signal_data
+
+    def handle_signal(self, details=None):
+        write_attempts = []
+
+        def merge_signal_metadata(signal_data, latest_rsrc_metadata):
+            signal_data = self.normalise_signal_data(signal_data,
+                                                     latest_rsrc_metadata)
+
+            if not self._metadata_format_ok(signal_data):
+                LOG.error(_LE("Metadata failed validation for %s"), self.name)
+                raise ValueError(_("Metadata format invalid"))
+
+            new_entry = signal_data.copy()
+            unique_id = new_entry.pop(self.UNIQUE_ID)
+
+            new_rsrc_metadata = latest_rsrc_metadata.copy()
+            if unique_id in new_rsrc_metadata:
                 LOG.warning(_LW("Overwriting Metadata item for id %s!"),
-                            metadata[self.UNIQUE_ID])
-            safe_metadata = {}
-            for k in self.METADATA_KEYS:
-                if k == self.UNIQUE_ID:
-                    continue
-                safe_metadata[k] = metadata[k]
-            rsrc_metadata.update({metadata[self.UNIQUE_ID]: safe_metadata})
-            self.metadata_set(rsrc_metadata)
-            signal_reason = ('status:%s reason:%s' %
-                             (safe_metadata[self.STATUS],
-                              safe_metadata[self.REASON]))
-        else:
-            LOG.error(_LE("Metadata failed validation for %s"), self.name)
-            raise ValueError(_("Metadata format invalid"))
+                            unique_id)
+            new_rsrc_metadata.update({unique_id: new_entry})
+
+            write_attempts.append(signal_data)
+            return new_rsrc_metadata
+
+        self.metadata_set(details, merge_metadata=merge_signal_metadata)
+
+        data_written = write_attempts[-1]
+        signal_reason = ('status:%s reason:%s' %
+                         (data_written[self.STATUS],
+                          data_written[self.REASON]))
         return signal_reason
 
     def get_status(self):
