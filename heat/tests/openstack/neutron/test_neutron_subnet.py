@@ -650,12 +650,6 @@ class NeutronSubnetTest(common.HeatTestCase):
             'new_pool',
             cmd_resource=None,
         ).AndReturn('new_pool')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnetpool',
-            'new_pool',
-            cmd_resource=None,
-        ).AndReturn('new_pool')
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         props = t['resources']['sub_net']['properties']

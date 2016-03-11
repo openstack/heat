@@ -101,7 +101,7 @@ class TranslationRule(object):
             raise ValueError(_('client_plugin and finder should be specified '
                                'for Resolve rule'))
 
-    def execute_rule(self):
+    def execute_rule(self, client_resolve=True):
         try:
             (source_key, source_data) = self._get_data_from_source_path(
                 self.source_path)
@@ -130,7 +130,7 @@ class TranslationRule(object):
         elif self.rule == TranslationRule.REPLACE:
             self._exec_replace(source_key, source_data,
                                value_key, value_data, value)
-        elif self.rule == TranslationRule.RESOLVE:
+        elif self.rule == TranslationRule.RESOLVE and client_resolve:
             self._exec_resolve(source_key, source_data)
         elif self.rule == TranslationRule.DELETE:
             self._exec_delete(source_key, source_data, value)

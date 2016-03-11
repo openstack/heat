@@ -43,6 +43,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
+from heat.engine import translation
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
@@ -163,11 +164,12 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual('Resource name may not contain "/"',
                          six.text_type(ex))
 
+    @mock.patch.object(translation.TranslationRule, '_exec_resolve')
     @mock.patch.object(parser.Stack, 'db_resource_get')
     @mock.patch.object(resource.Resource, '_load_data')
     @mock.patch.object(resource.Resource, 'translate_properties')
     def test_stack_resources(self, mock_translate, mock_load,
-                             mock_db_get):
+                             mock_db_get, mock_resolve):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
                    {'A': {'Type': 'ResourceWithPropsType',
@@ -183,11 +185,14 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(0, mock_load.call_count)
 
         # set stack._resources = None to reload the resources
+        # and set strict_validate = False
         stack._resources = None
+        stack.strict_validate = False
         mock_db_get.return_value = mock.Mock()
         self.assertEqual(1, len(stack.resources))
         self.assertEqual(1, mock_translate.call_count)
         self.assertEqual(1, mock_load.call_count)
+        self.assertEqual(0, mock_resolve.call_count)
 
     def test_resource_new_stack_not_stored(self):
         snippet = rsrc_defn.ResourceDefinition('aresource',

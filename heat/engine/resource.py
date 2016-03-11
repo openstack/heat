@@ -192,7 +192,9 @@ class Resource(object):
         self.context = stack.context
         self.name = name
         self.t = definition
-        self.reparse()
+        # Only translate in cases where strict_validate is True
+        self.reparse(translate=self.stack.strict_validate,
+                     client_resolve=False)
         self.update_policy = self.t.update_policy(self.update_policy_schema,
                                                   self.context)
         self.attributes_schema.update(self.base_attributes_schema)
@@ -229,8 +231,6 @@ class Resource(object):
             resource = stack.db_resource_get(name)
             if resource:
                 self._load_data(resource)
-            else:
-                self.translate_properties(self.properties)
         else:
             self.action = stack.cache_data[name]['action']
             self.status = stack.cache_data[name]['status']
@@ -331,9 +331,17 @@ class Resource(object):
             {'status': self.COMPLETE, 'replaced_by': self.replaced_by})
         return new_rs.id
 
-    def reparse(self):
+    def reparse(self, translate=True, client_resolve=True):
+        """Reparse the resource properties.
+
+        Optional translate flag for property translation and
+        client_resolve flag for resolving properties by doing
+        client lookup.
+        """
         self.properties = self.t.properties(self.properties_schema,
                                             self.context)
+        if translate:
+            self.translate_properties(self.properties, client_resolve)
 
     def __eq__(self, other):
         """Allow == comparison of two resources."""
@@ -802,9 +810,10 @@ class Resource(object):
         # Re-resolve the template, since if the resource Ref's
         # the StackId pseudo parameter, it will change after
         # the parser.Stack is stored (which is after the resources
-        # are __init__'d, but before they are create()'d)
+        # are __init__'d, but before they are create()'d). We also
+        # do client lookups for RESOLVE translation rules here.
+
         self.reparse()
-        self.translate_properties(self.properties)
         self._update_stored_properties()
 
         def pause():
@@ -898,11 +907,17 @@ class Resource(object):
     def translation_rules(self, properties):
         """Return specified rules for resource."""
 
-    def translate_properties(self, properties):
-        """Translates old properties to new ones."""
+    def translate_properties(self, properties,
+                             client_resolve=True):
+        """Translates properties with resource specific rules.
+
+        The properties parameter is a properties object and the
+        optional client_resolve flag is to specify whether to
+        do 'RESOLVE' translation with client lookup.
+        """
         rules = self.translation_rules(properties) or []
         for rule in rules:
-            rule.execute_rule()
+            rule.execute_rule(client_resolve)
 
     def _get_resource_info(self, resource_data):
         if not resource_data:
@@ -1119,10 +1134,8 @@ class Resource(object):
                 yield self.action_handler_task(action,
                                                args=[after, tmpl_diff,
                                                      prop_diff])
-
                 self.t = after
                 self.reparse()
-                self.translate_properties(self.properties)
                 self._update_stored_properties()
 
         except exception.ResourceActionRestricted as ae:

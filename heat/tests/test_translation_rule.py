@@ -614,6 +614,35 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
         self.assertEqual(data, props.data)
 
+    def test_resolve_rule_other_with_get_attr(self):
+        client_plugin, schema = self._test_resolve_rule()
+
+        class DummyStack(dict):
+            pass
+
+        class rsrc(object):
+            pass
+
+        stack = DummyStack(another_res=rsrc())
+        attr_func = cfn_funcs.GetAtt(stack, 'Fn::GetAtt',
+                                     ['another_res', 'name'])
+        data = {'far': attr_func}
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far'],
+            client_plugin=client_plugin,
+            finder='find_name_id')
+        rule.execute_rule(client_resolve=False)
+        self.assertEqual(data, props.data)
+
+        mock_getatt = self.patchobject(attr_func, 'result',
+                                       return_value='rose')
+        rule.execute_rule()
+        self.assertEqual('pink', props.get('far'))
+        self.assertEqual(1, mock_getatt.call_count)
+
     def test_resolve_rule_other_with_entity(self):
         client_plugin, schema = self._test_resolve_rule()
         data = {'far': 'one'}

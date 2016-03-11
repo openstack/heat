@@ -182,12 +182,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'abcd1234',
             cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
@@ -247,18 +241,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_FnGetRefId(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'abcd1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('abcd1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub1234')
         self.m.ReplayAll()
         t = template_format.parse(neutron_floating_template)
         stack = utils.parse_stack(t)
@@ -482,12 +464,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
     def _test_floating_dependancy(self):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
-            'network',
-            'abcd1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('abcd1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
             'router',
             'subnet_uuid',
             cmd_resource=None,
@@ -540,12 +516,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'abcd1234',
             cmd_resource=None,
         ).MultipleTimes().AndReturn('abcd1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub1234')
         self.stub_NetworkConstraint_validate()
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234',
