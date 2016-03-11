@@ -18,6 +18,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class ManilaShareNetwork(resource.Resource):
@@ -126,6 +127,39 @@ class ManilaShareNetwork(resource.Resource):
                 self.properties[self.NEUTRON_SUBNET]):
             raise exception.ResourcePropertyConflict(self.NEUTRON_SUBNET,
                                                      self.NOVA_NETWORK)
+
+    def translation_rules(self, props):
+        if self.is_using_neutron():
+            translation_rules = [
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    [self.NEUTRON_NETWORK],
+                    client_plugin=self.client_plugin('neutron'),
+                    finder='find_resourceid_by_name_or_id',
+                    entity='network'
+                ),
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    [self.NEUTRON_SUBNET],
+                    client_plugin=self.client_plugin('neutron'),
+                    finder='find_resourceid_by_name_or_id',
+                    entity='subnet'
+                )
+            ]
+        else:
+            translation_rules = [
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    [self.NOVA_NETWORK],
+                    client_plugin=self.client_plugin('nova'),
+                    finder='get_nova_network_id'
+                )
+            ]
+
+        return translation_rules
 
     def handle_create(self):
         network = self.client().share_networks.create(
