@@ -103,8 +103,9 @@ class SoftwareConfigService(service.Service):
         rows_updated = db_api.resource_update(
             cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
         if not rows_updated:
+            action = "deployments of server %s" % server_id
             raise db_exc.RetryRequest(
-                exception.DeploymentConcurrentTransaction(server=server_id))
+                exception.ConcurrentTransaction(action=action))
 
         metadata_put_url = None
         metadata_queue_id = None
