@@ -186,3 +186,44 @@ outputs:
 
         self.assertEqual('abc', res['properties']['value'])
         self.assertEqual([], res['required_by'])
+
+    def test_res_group_with_nested_template(self):
+        main_template = '''
+heat_template_version: 2015-04-30
+resources:
+  fixed_network:
+    type: "OS::Neutron::Net"
+  rg:
+    type: "OS::Heat::ResourceGroup"
+    properties:
+      count: 1
+      resource_def:
+        type: nested.yaml
+        properties:
+          fixed_network_id: {get_resource: fixed_network}
+    '''
+        nested_template = '''
+heat_template_version: 2015-04-30
+
+parameters:
+  fixed_network_id:
+    type: string
+resources:
+  port:
+    type: "OS::Neutron::Port"
+    properties:
+      network_id:
+          get_param: fixed_network_id
+
+'''
+        stack_name = self._stack_rand_name()
+        result = self.client.stacks.preview(
+            disable_rollback=True,
+            stack_name=stack_name,
+            template=main_template,
+            files={'nested.yaml': nested_template}).to_dict()
+        # ensure that fixed network and port here
+        self.assertEqual('fixed_network',
+                         result['resources'][0]['resource_name'])
+        self.assertEqual('port',
+                         result['resources'][1][0][0]['resource_name'])

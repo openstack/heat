@@ -16,6 +16,7 @@ import six
 
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine import function
 from heat.engine.hot import functions as hot_funcs
 from heat.engine import parameters
 from heat.engine import properties
@@ -826,3 +827,40 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertEqual([param], props.data.get('far'))
+
+    def test_property_no_translation_if_user_parameter_missing(self):
+        """Test translation in the case of missing parameter"""
+        schema = {
+            'source': properties.Schema(
+                properties.Schema.STRING
+            ),
+            'destination': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        class DummyStack(dict):
+            @property
+            def parameters(self):
+                return mock.Mock()
+
+        param = hot_funcs.GetParam(DummyStack(),
+                                   'get_param',
+                                   'source_param')
+
+        param.parameters = {}
+
+        data = {'source': param, 'destination': ''}
+        props = properties.Properties(schema, data,
+                                      resolver=function.resolve)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['destination'],
+            value_path=['source'])
+
+        rule.execute_rule()
+
+        # ensure that translation rule was not applied
+        self.assertEqual({'source': param, 'destination': ''},
+                         data)
