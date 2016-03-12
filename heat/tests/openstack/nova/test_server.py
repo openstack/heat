@@ -2900,6 +2900,38 @@ class ServersTest(common.HeatTestCase):
             six.text_type(error))
         self.m.VerifyAll()
 
+    def test_validate_image_flavor_not_found(self):
+        stack_name = 'test_stack'
+        tmpl, stack = self._setup_test_stack(stack_name)
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('image_not_found',
+                                resource_defns['WebServer'], stack)
+
+        self._server_validate_mock(server)
+        image = tmpl['Resources']['WebServer']['Properties']['image']
+        flavor = tmpl['Resources']['WebServer']['Properties']['flavor']
+
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'get_flavor')
+
+        self.stub_FlavorConstraint_validate()
+        # Image not found
+        glance.GlanceClientPlugin.get_image(
+            image).AndRaise(glance.exceptions.NotFound())
+
+        # Flavor not found
+        glance.GlanceClientPlugin.get_image(
+            image).AndReturn(self.mock_image)
+        nova.NovaClientPlugin.get_flavor(
+            flavor).AndRaise(fakes_nova.fake_exception())
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
     def test_validate_insufficient_disk_flavor(self):
         stack_name = 'test_stack'
         tmpl, stack = self._setup_test_stack(stack_name)
