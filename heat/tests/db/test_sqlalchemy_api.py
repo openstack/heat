@@ -22,6 +22,9 @@ from oslo_config import cfg
 from oslo_db import exception as db_exception
 from oslo_utils import timeutils
 import six
+from sqlalchemy.orm import exc
+from sqlalchemy.orm import session
+
 
 from heat.common import context
 from heat.common import exception
@@ -1573,12 +1576,32 @@ class DBAPIUserCredsTest(common.HeatTestCase):
         db_api.user_creds_delete(self.ctx, user_creds['id'])
         creds = db_api.user_creds_get(user_creds['id'])
         self.assertIsNone(creds)
+        mock_delete = self.patchobject(session.Session, 'delete')
         err = self.assertRaises(
             exception.NotFound, db_api.user_creds_delete,
             self.ctx, user_creds['id'])
         exp_msg = ('Attempt to delete user creds with id '
                    '%s that does not exist' % user_creds['id'])
         self.assertIn(exp_msg, six.text_type(err))
+        self.assertEqual(0, mock_delete.call_count)
+
+    def test_user_creds_delete_retries(self):
+        mock_delete = self.patchobject(session.Session, 'delete')
+        # returns StaleDataErrors, so we try delete 3 times
+        mock_delete.side_effect = [exc.StaleDataError,
+                                   exc.StaleDataError,
+                                   None]
+        user_creds = create_user_creds(self.ctx)
+        self.assertIsNotNone(user_creds['id'])
+        self.assertIsNone(
+            db_api.user_creds_delete(self.ctx, user_creds['id']))
+        self.assertEqual(3, mock_delete.call_count)
+
+        # returns other errors, so we try delete once
+        mock_delete.side_effect = [exc.UnmappedError]
+        self.assertRaises(exc.UnmappedError, db_api.user_creds_delete,
+                          self.ctx, user_creds['id'])
+        self.assertEqual(4, mock_delete.call_count)
 
 
 class DBAPIStackTagTest(common.HeatTestCase):
