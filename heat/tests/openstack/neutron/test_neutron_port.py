@@ -80,6 +80,10 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
 
     def test_missing_subnet_id(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties']['fixed_ips'][0].pop('subnet')
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -91,7 +95,7 @@ class NeutronPortTest(common.HeatTestCase):
             'fixed_ips': [
                 {'ip_address': u'10.0.3.21'}
             ],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
@@ -107,16 +111,16 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties']['fixed_ips'][0].pop('subnet')
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
 
         self.m.VerifyAll()
 
     def test_missing_ip_address(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties']['fixed_ips'][0].pop('ip_address')
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -135,7 +139,7 @@ class NeutronPortTest(common.HeatTestCase):
             'fixed_ips': [
                 {'subnet_id': u'sub1234'}
             ],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
@@ -151,15 +155,15 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties']['fixed_ips'][0].pop('ip_address')
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
     def test_missing_fixed_ips(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -168,7 +172,7 @@ class NeutronPortTest(common.HeatTestCase):
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
@@ -188,15 +192,14 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
     def test_allowed_address_pair(self):
+        t = template_format.parse(neutron_port_with_address_pair_template)
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -209,7 +212,7 @@ class NeutronPortTest(common.HeatTestCase):
                 'ip_address': u'10.0.3.21',
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -224,14 +227,14 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_with_address_pair_template)
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
     def test_port_security_enabled(self):
+        t = template_format.parse(neutron_port_security_template)
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -242,7 +245,7 @@ class NeutronPortTest(common.HeatTestCase):
         neutronclient.Client.create_port({'port': {
             'network_id': u'abcd1234',
             'port_security_enabled': False,
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -258,14 +261,17 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_security_template)
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
     def test_missing_mac_address(self):
+        t = template_format.parse(neutron_port_with_address_pair_template)
+        t['resources']['port']['properties']['allowed_address_pairs'][0].pop(
+            'mac_address'
+        )
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -277,7 +283,7 @@ class NeutronPortTest(common.HeatTestCase):
             'allowed_address_pairs': [{
                 'ip_address': u'10.0.3.21',
             }],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -292,17 +298,16 @@ class NeutronPortTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_with_address_pair_template)
-        t['resources']['port']['properties']['allowed_address_pairs'][0].pop(
-            'mac_address'
-        )
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
     def test_ip_address_is_cidr(self):
+        t = template_format.parse(neutron_port_with_address_pair_template)
+        t['resources']['port']['properties'][
+            'allowed_address_pairs'][0]['ip_address'] = '10.0.3.0/24'
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -315,7 +320,7 @@ class NeutronPortTest(common.HeatTestCase):
                 'ip_address': u'10.0.3.0/24',
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -329,11 +334,6 @@ class NeutronPortTest(common.HeatTestCase):
         }})
 
         self.m.ReplayAll()
-
-        t = template_format.parse(neutron_port_with_address_pair_template)
-        t['resources']['port']['properties'][
-            'allowed_address_pairs'][0]['ip_address'] = '10.0.3.0/24'
-        stack = utils.parse_stack(t)
 
         port = stack['port']
         scheduler.TaskRunner(port.create)()
@@ -366,6 +366,12 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.ReplayAll()
 
     def test_security_groups(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties']['security_groups'] = [
+            '8a2f582a-e1cd-480f-b85d-b02631c10656',
+            '024613dc-b489-4478-b46f-ada462738740']
+        stack = utils.parse_stack(t)
+
         port_prop = {
             'network_id': u'net1234',
             'security_groups': ['8a2f582a-e1cd-480f-b85d-b02631c10656',
@@ -373,17 +379,11 @@ class NeutronPortTest(common.HeatTestCase):
             'fixed_ips': [
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
             ],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'}
 
         self._mock_create_with_security_groups(port_prop)
-
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties']['security_groups'] = [
-            '8a2f582a-e1cd-480f-b85d-b02631c10656',
-            '024613dc-b489-4478-b46f-ada462738740']
-        stack = utils.parse_stack(t)
 
         port = stack['port']
         scheduler.TaskRunner(port.create)()
@@ -391,22 +391,22 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_security_groups_empty_list(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties']['security_groups'] = []
+        stack = utils.parse_stack(t)
+
         port_prop = {
             'network_id': u'net1234',
             'security_groups': [],
             'fixed_ips': [
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
             ],
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'
         }
 
         self._mock_create_with_security_groups(port_prop)
-
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties']['security_groups'] = []
-        stack = utils.parse_stack(t)
 
         port = stack['port']
         scheduler.TaskRunner(port.create)()
@@ -414,8 +414,12 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_port_needs_update(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
         props = {'network_id': u'net1234',
-                 'name': utils.PhysName('test_stack', 'port'),
+                 'name': utils.PhysName(stack.name, 'port'),
                  'admin_state_up': True,
                  'device_owner': u'network:dhcp'}
 
@@ -445,10 +449,6 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         # create port
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
 
@@ -583,6 +583,10 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_get_port_attributes(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
         subnet_dict = {'name': 'test-subnet', 'enable_dhcp': True,
                        'network_id': 'net1234', 'dns_nameservers': [],
                        'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
@@ -600,7 +604,7 @@ class NeutronPortTest(common.HeatTestCase):
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
@@ -614,7 +618,7 @@ class NeutronPortTest(common.HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'port': {
             'status': 'DOWN',
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'allowed_address_pairs': [],
             'admin_state_up': True,
             'network_id': 'net1234',
@@ -627,10 +631,6 @@ class NeutronPortTest(common.HeatTestCase):
         }})
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.assertEqual('DOWN', port.FnGetAtt('status'))
@@ -638,7 +638,7 @@ class NeutronPortTest(common.HeatTestCase):
         self.assertTrue(port.FnGetAtt('admin_state_up'))
         self.assertEqual('net1234', port.FnGetAtt('network_id'))
         self.assertEqual('fa:16:3e:75:67:60', port.FnGetAtt('mac_address'))
-        self.assertEqual(utils.PhysName('test_stack', 'port'),
+        self.assertEqual(utils.PhysName(stack.name, 'port'),
                          port.FnGetAtt('name'))
         self.assertEqual('dc68eg2c-b60g-4b3f-bd82-67ec87650532',
                          port.FnGetAtt('device_id'))
@@ -655,6 +655,10 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_subnet_attribute_exception(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -663,7 +667,7 @@ class NeutronPortTest(common.HeatTestCase):
         ).MultipleTimes().AndReturn('net1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
@@ -674,7 +678,7 @@ class NeutronPortTest(common.HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'port': {
             'status': 'DOWN',
-            'name': utils.PhysName('test_stack', 'port'),
+            'name': utils.PhysName(stack.name, 'port'),
             'allowed_address_pairs': [],
             'admin_state_up': True,
             'network_id': 'net1234',
@@ -692,9 +696,6 @@ class NeutronPortTest(common.HeatTestCase):
                                              'attempts reached'))
         self.m.ReplayAll()
 
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
-        stack = utils.parse_stack(t)
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.assertIsNone(port.FnGetAtt('subnets'))
@@ -881,6 +882,10 @@ class UpdatePortTest(common.HeatTestCase):
         ]
 
     def test_update_port(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
         self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
                          return_value='net1234')
         create_port = self.patchobject(neutronclient.Client, 'create_port')
@@ -900,7 +905,7 @@ class UpdatePortTest(common.HeatTestCase):
                          return_value=fake_groups_list)
 
         props = {'network_id': u'net1234',
-                 'name': utils.PhysName('test_stack', 'port'),
+                 'name': utils.PhysName(stack.name, 'port'),
                  'admin_state_up': True,
                  'device_owner': u'network:dhcp'}
 
@@ -918,7 +923,7 @@ class UpdatePortTest(common.HeatTestCase):
             update_dict['security_groups'] = ['default']
 
         if update_props['name'] is None:
-            update_dict['name'] = utils.PhysName('test_stack', 'test_subnet')
+            update_dict['name'] = utils.PhysName(stack.name, 'test_subnet')
 
         value_specs = update_dict.pop('value_specs')
         if value_specs:
@@ -926,10 +931,6 @@ class UpdatePortTest(common.HeatTestCase):
                 update_dict[value_spec[0]] = value_spec[1]
 
         # create port
-        t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
-        stack = utils.parse_stack(t)
-
         port = stack['port']
         self.assertIsNone(scheduler.TaskRunner(port.handle_create)())
         create_port.assset_called_once_with(props)

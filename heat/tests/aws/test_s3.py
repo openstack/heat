@@ -81,7 +81,10 @@ class s3Test(common.HeatTestCase):
         return rsrc
 
     def test_attributes(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
@@ -92,8 +95,6 @@ class s3Test(common.HeatTestCase):
         sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
 
         ref_id = rsrc.FnGetRefId()
@@ -111,27 +112,32 @@ class s3Test(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        properties = t['Resources']['S3Bucket']['Properties']
+        properties['AccessControl'] = 'PublicRead'
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
-            utils.PhysName('test_stack', 'test_resource'),
+            utils.PhysName(stack.name, 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': '.r:*'}).AndReturn(None)
         sc.Connection.delete_container(
             container_name).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        properties = t['Resources']['S3Bucket']['Properties']
-        properties['AccessControl'] = 'PublicRead'
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_tags(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
-            utils.PhysName('test_stack', 'test_resource'),
+            utils.PhysName(stack.name, 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username',
              'X-Container-Meta-S3-Tag-greeting': 'hello',
@@ -140,14 +146,18 @@ class s3Test(common.HeatTestCase):
             container_name).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket_with_tags')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_public_read_write(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        properties = t['Resources']['S3Bucket']['Properties']
+        properties['AccessControl'] = 'PublicReadWrite'
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': '.r:*',
@@ -156,16 +166,18 @@ class s3Test(common.HeatTestCase):
             container_name).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        properties = t['Resources']['S3Bucket']['Properties']
-        properties['AccessControl'] = 'PublicReadWrite'
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_authenticated_read(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        properties = t['Resources']['S3Bucket']['Properties']
+        properties['AccessControl'] = 'AuthenticatedRead'
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
@@ -173,16 +185,16 @@ class s3Test(common.HeatTestCase):
         sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        properties = t['Resources']['S3Bucket']['Properties']
-        properties['AccessControl'] = 'AuthenticatedRead'
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_website(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Meta-Web-Error': 'error.html',
@@ -192,14 +204,16 @@ class s3Test(common.HeatTestCase):
         sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3BucketWebsite')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_delete_exception(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
@@ -208,8 +222,7 @@ class s3Test(common.HeatTestCase):
             sc.ClientException('Test delete failure'))
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(rsrc.delete))
@@ -217,7 +230,10 @@ class s3Test(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_not_found(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
@@ -226,15 +242,17 @@ class s3Test(common.HeatTestCase):
             sc.ClientException('Its gone', http_status=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
     def test_delete_conflict_not_empty(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
@@ -244,8 +262,7 @@ class s3Test(common.HeatTestCase):
         sc.Connection.get_container(container_name).AndReturn(
             ({'name': container_name}, [{'name': 'test_object'}]))
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         deleter = scheduler.TaskRunner(rsrc.delete)
         ex = self.assertRaises(exception.ResourceFailure, deleter)
@@ -256,7 +273,10 @@ class s3Test(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_conflict_empty(self):
-        container_name = utils.PhysName('test_stack', 'test_resource')
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+
+        container_name = utils.PhysName(stack.name, 'test_resource')
         sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
@@ -267,8 +287,7 @@ class s3Test(common.HeatTestCase):
             ({'name': container_name}, []))
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
-        stack = utils.parse_stack(t)
+
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         deleter = scheduler.TaskRunner(rsrc.delete)
         ex = self.assertRaises(exception.ResourceFailure, deleter)
@@ -277,18 +296,19 @@ class s3Test(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_retain(self):
+        t = template_format.parse(swift_template)
+        bucket = t['Resources']['S3Bucket']
+        bucket['DeletionPolicy'] = 'Retain'
+        stack = utils.parse_stack(t)
+
         # first run, with retain policy
         sc.Connection.put_container(
-            utils.PhysName('test_stack', 'test_resource'),
+            utils.PhysName(stack.name, 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
 
         self.m.ReplayAll()
-        t = template_format.parse(swift_template)
 
-        bucket = t['Resources']['S3Bucket']
-        bucket['DeletionPolicy'] = 'Retain'
-        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)

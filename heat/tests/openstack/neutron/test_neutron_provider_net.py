@@ -162,7 +162,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
         neutronclient.Client.update_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'network': {
-                'name': utils.PhysName('test_stack', 'provider_net')
+                'name': utils.PhysName(rsrc.stack.name, 'provider_net')
             }}).AndReturn(None)
 
         self.m.ReplayAll()

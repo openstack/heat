@@ -127,10 +127,9 @@ class NeutronSubnetTest(common.HeatTestCase):
                 {'start': '10.0.3.20', 'end': '10.0.3.100'},
                 {'start': '10.0.3.110', 'end': '10.0.3.200'}]}}
 
-        t = self._test_subnet(u_props=update_props)
+        t, stack = self._test_subnet(u_props=update_props)
         neutronclient.Client.update_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1', update_props)
-        stack = utils.parse_stack(t)
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
@@ -177,8 +176,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         update_props_merged['subnet']['enable_dhcp'] = True
         del update_props_merged['subnet']['value_specs']
 
-        t = self._test_subnet(u_props=update_props_merged)
-        stack = utils.parse_stack(t)
+        t, stack = self._test_subnet(u_props=update_props_merged)
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
@@ -203,14 +201,14 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_subnet_with_no_name(self):
+        stack_name = utils.random_name()
         update_props = {'subnet': {
             'name': None,
         }}
         update_props_name = {'subnet': {
-            'name': utils.PhysName('test_stack', 'test_subnet'),
+            'name': utils.PhysName(stack_name, 'test_subnet'),
         }}
-        t = self._test_subnet(u_props=update_props_name)
-        stack = utils.parse_stack(t)
+        t, stack = self._test_subnet(stack_name, u_props=update_props_name)
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
@@ -308,8 +306,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_subnet_deprecated(self):
-        t = self._test_subnet(resolve_neutron=False)
-        stack = utils.parse_stack(t)
+        t, stack = self._test_subnet(resolve_neutron=False)
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
@@ -333,7 +330,8 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
 
-    def _test_subnet(self, resolve_neutron=True, u_props=None):
+    def _test_subnet(self, stack_name=None,
+                     resolve_neutron=True, u_props=None):
         default_update_props = {'subnet': {
             'dns_nameservers': ['8.8.8.8', '192.168.1.254'],
             'name': 'mysubnet',
@@ -342,9 +340,19 @@ class NeutronSubnetTest(common.HeatTestCase):
                              'nexthop': '194.168.1.2'}]}}
         update_props = u_props if u_props else default_update_props
 
+        if resolve_neutron:
+            t = template_format.parse(neutron_template)
+            # Update script
+            neutronclient.Client.update_subnet(
+                '91e47a57-7508-46fe-afc9-fc454e8580e1', update_props)
+
+        else:
+            t = template_format.parse(neutron_template_deprecated)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
         neutronclient.Client.create_subnet({
             'subnet': {
-                'name': utils.PhysName('test_stack', 'test_subnet'),
+                'name': utils.PhysName(stack.name, 'test_subnet'),
                 'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
@@ -413,21 +421,16 @@ class NeutronSubnetTest(common.HeatTestCase):
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        if resolve_neutron:
-            t = template_format.parse(neutron_template)
-            # Update script
-            neutronclient.Client.update_subnet(
-                '91e47a57-7508-46fe-afc9-fc454e8580e1', update_props)
-
-        else:
-            t = template_format.parse(neutron_template_deprecated)
-
-        return t
+        return t, stack
 
     def test_subnet_disable_dhcp(self):
+        t = template_format.parse(neutron_template)
+        t['resources']['sub_net']['properties']['enable_dhcp'] = 'False'
+        stack = utils.parse_stack(t)
+
         neutronclient.Client.create_subnet({
             'subnet': {
-                'name': utils.PhysName('test_stack', 'test_subnet'),
+                'name': utils.PhysName(stack.name, 'test_subnet'),
                 'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
@@ -486,9 +489,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(neutron_template)
-        t['resources']['sub_net']['properties']['enable_dhcp'] = 'False'
-        stack = utils.parse_stack(t)
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')
@@ -546,9 +546,20 @@ class NeutronSubnetTest(common.HeatTestCase):
         }, p)
 
     def test_ipv6_subnet(self):
+        t = template_format.parse(neutron_template)
+        props = t['resources']['sub_net']['properties']
+        props.pop('allocation_pools')
+        props.pop('host_routes')
+        props['ip_version'] = 6
+        props['ipv6_address_mode'] = 'slaac'
+        props['ipv6_ra_mode'] = 'slaac'
+        props['cidr'] = 'fdfa:6a50:d22b::/64'
+        props['dns_nameservers'] = ['2001:4860:4860::8844']
+        stack = utils.parse_stack(t)
+
         neutronclient.Client.create_subnet({
             'subnet': {
-                'name': utils.PhysName('test_stack', 'test_subnet'),
+                'name': utils.PhysName(stack.name, 'test_subnet'),
                 'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 'dns_nameservers': [u'2001:4860:4860::8844'],
                 'ip_version': 6,
@@ -577,16 +588,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         })
 
         self.m.ReplayAll()
-        t = template_format.parse(neutron_template)
-        props = t['resources']['sub_net']['properties']
-        props.pop('allocation_pools')
-        props.pop('host_routes')
-        props['ip_version'] = 6
-        props['ipv6_address_mode'] = 'slaac'
-        props['ipv6_ra_mode'] = 'slaac'
-        props['cidr'] = 'fdfa:6a50:d22b::/64'
-        props['dns_nameservers'] = ['2001:4860:4860::8844']
-        stack = utils.parse_stack(t)
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = self.create_subnet(t, stack, 'sub_net')

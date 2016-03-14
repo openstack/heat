@@ -430,8 +430,8 @@ Resources:
         scheduler.TaskRunner(stack['the_vpc'].delete)()
         self.m.VerifyAll()
 
-    def _mock_create_subnet_failed(self):
-        self.subnet_name = utils.PhysName('test_stack', 'the_subnet')
+    def _mock_create_subnet_failed(self, stack_name):
+        self.subnet_name = utils.PhysName(stack_name, 'the_subnet')
         neutronclient.Client.create_subnet(
             {'subnet': {
                 'network_id': u'aaaa',
@@ -449,13 +449,14 @@ Resources:
             neutron_exc.NeutronClientException(status_code=404))
 
     def test_create_failed_delete_success(self):
-        self._mock_create_subnet_failed()
+        stack_name = 'test_subnet_'
+        self._mock_create_subnet_failed(stack_name)
         neutronclient.Client.delete_subnet('cccc').AndReturn(None)
         self.m.ReplayAll()
 
         t = template_format.parse(self.test_template)
         tmpl = template.Template(t)
-        stack = parser.Stack(utils.dummy_context(), 'test_subnet_', tmpl,
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
                              stack_id=str(uuid.uuid4()))
         tmpl.t['Resources']['the_subnet']['Properties']['VpcId'] = 'aaaa'
         resource_defns = tmpl.resource_definitions(stack)

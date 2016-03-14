@@ -278,6 +278,9 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.assertEqual('abc', rsrc.FnGetRefId())
 
     def test_floatip_association_port(self):
+        t = template_format.parse(neutron_floating_template)
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -302,7 +305,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'fixed_ips': [
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
-            'name': utils.PhysName('test_stack', 'port_floating'),
+            'name': utils.PhysName(stack.name, 'port_floating'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -396,9 +399,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.stub_PortConstraint_validate()
 
         self.m.ReplayAll()
-
-        t = template_format.parse(neutron_floating_template)
-        stack = utils.parse_stack(t)
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
@@ -546,6 +546,13 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_floatip_port(self):
+        t = template_format.parse(neutron_floating_no_assoc_template)
+        t['resources']['port_floating']['properties']['network'] = "xyz1234"
+        t['resources']['port_floating']['properties'][
+            'fixed_ips'][0]['subnet'] = "sub1234"
+        t['resources']['router_interface']['properties']['subnet'] = "sub1234"
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -564,7 +571,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'fixed_ips': [
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
-            'name': utils.PhysName('test_stack', 'port_floating'),
+            'name': utils.PhysName(stack.name, 'port_floating'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -630,13 +637,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.stub_PortConstraint_validate()
 
         self.m.ReplayAll()
-
-        t = template_format.parse(neutron_floating_no_assoc_template)
-        t['resources']['port_floating']['properties']['network'] = "xyz1234"
-        t['resources']['port_floating']['properties'][
-            'fixed_ips'][0]['subnet'] = "sub1234"
-        t['resources']['router_interface']['properties']['subnet'] = "sub1234"
-        stack = utils.parse_stack(t)
 
         # check dependencies for fip resource
         required_by = set(stack.dependencies.required_by(

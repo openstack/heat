@@ -103,6 +103,9 @@ class NeutronNetTest(common.HeatTestCase):
         return rsrc
 
     def test_net(self):
+        t = template_format.parse(neutron_template)
+        stack = utils.parse_stack(t)
+
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'router',
@@ -257,7 +260,7 @@ class NeutronNetTest(common.HeatTestCase):
         neutronclient.Client.update_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'network': {
-                'name': utils.PhysName('test_stack', 'test_net'),
+                'name': utils.PhysName(stack.name, 'test_net'),
             }}).AndReturn(None)
 
         # Delete script
@@ -277,8 +280,6 @@ class NeutronNetTest(common.HeatTestCase):
                          return_value='0389f747-7785-4757-b7bb-2ab07e4b09c3')
 
         self.m.ReplayAll()
-        t = template_format.parse(neutron_template)
-        stack = utils.parse_stack(t)
         self.patchobject(stack['router'], 'FnGetRefId',
                          return_value='792ff887-6c85-4a56-b518-23f24fa65581')
 

@@ -245,16 +245,19 @@ class NeutronRouterTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_router(self):
+        t = template_format.parse(neutron_template)
+        stack = utils.parse_stack(t)
+
         neutronclient.Client.create_router({
             'router': {
-                'name': utils.PhysName('test_stack', 'router'),
+                'name': utils.PhysName(stack.name, 'router'),
                 'admin_state_up': True,
             }
         }).AndReturn({
             "router": {
                 "status": "BUILD",
                 "external_gateway_info": None,
-                "name": utils.PhysName('test_stack', 'router'),
+                "name": utils.PhysName(stack.name, 'router'),
                 "admin_state_up": True,
                 "tenant_id": "3e21026f2dc94372b105808c0e721661",
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
@@ -272,7 +275,7 @@ class NeutronRouterTest(common.HeatTestCase):
                 "router": {
                     "status": "BUILD",
                     "external_gateway_info": None,
-                    "name": utils.PhysName('test_stack', 'router'),
+                    "name": utils.PhysName(stack.name, 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -284,7 +287,7 @@ class NeutronRouterTest(common.HeatTestCase):
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": None,
-                    "name": utils.PhysName('test_stack', 'router'),
+                    "name": utils.PhysName(stack.name, 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -299,7 +302,7 @@ class NeutronRouterTest(common.HeatTestCase):
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": None,
-                    "name": utils.PhysName('test_stack', 'router'),
+                    "name": utils.PhysName(stack.name, 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -311,7 +314,7 @@ class NeutronRouterTest(common.HeatTestCase):
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": None,
-                    "name": utils.PhysName('test_stack', 'router'),
+                    "name": utils.PhysName(stack.name, 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -416,8 +419,6 @@ class NeutronRouterTest(common.HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(neutron_template)
-        stack = utils.parse_stack(t)
         rsrc = self.create_router(t, stack, 'router')
 
         rsrc.validate()

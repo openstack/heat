@@ -133,11 +133,17 @@ class PhysName(object):
         if len(short_id) != len(self.mock_short_id):
             return False
 
-        # ignore the stack portion of the name, as it may have been truncated
-        return res == self.res
+        # stack name may have been truncated
+        if (not isinstance(self.stack, PhysName) and
+                3 < len(stk) < len(self.stack)):
+            our_stk = self.stack[:2] + '-' + self.stack[3 - len(stk):]
+        else:
+            our_stk = self.stack
+
+        return (stk == our_stk) and (res == self.res)
 
     def __hash__(self):
-        return id(self)
+        return hash(self.stack) ^ hash(self.res)
 
     def __ne__(self, physical_name):
         return not self.__eq__(physical_name)
