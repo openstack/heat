@@ -561,7 +561,7 @@ class Stack(collections.Mapping):
         If self.id is set, we update the existing stack.
         """
         s = self.get_kwargs_for_cloning(keep_status=True, only_db=True)
-        s['name'] = self._backup_name() if backup else self.name
+        s['name'] = self.name
         s['backup'] = backup
         s['updated_at'] = self.updated_time
         if self.t.id is None:
@@ -1073,7 +1073,8 @@ class Stack(collections.Mapping):
             kwargs = self.get_kwargs_for_cloning()
             kwargs['owner_id'] = self.id
             del(kwargs['prev_raw_template_id'])
-            prev = type(self)(self.context, self.name, copy.deepcopy(self.t),
+            prev = type(self)(self.context, self._backup_name(),
+                              copy.deepcopy(self.t),
                               **kwargs)
             prev.store(backup=True)
             LOG.debug('Created new backup stack')
