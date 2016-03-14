@@ -621,7 +621,7 @@ class MiscMethodsTest(common.HeatTestCase):
                                'uuid': mock.ANY,
                                'action': mock.ANY,
                                'status': mock.ANY}
-        self.resource.FnGetAtt = mock.Mock(
+        self.resource.get_attribute = mock.Mock(
             side_effect=exception.InvalidTemplateAttribute(resource='A',
                                                            key='value'))
         actual_input_data = worker.construct_input_data(self.resource,
