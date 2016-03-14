@@ -13,13 +13,12 @@
 
 import uuid
 
-from oslo_db import api as oslo_db_api
-from oslo_db import exception as db_exc
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_service import service
 from oslo_utils import timeutils
 import requests
+from retrying import retry
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -34,6 +33,10 @@ from heat.objects import software_deployment as software_deployment_object
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
+
+
+def retry_if_concur_trans_error(ex):
+    return isinstance(ex, exception.ConcurrentTransaction)
 
 
 class SoftwareConfigService(service.Service):
@@ -91,7 +94,8 @@ class SoftwareConfigService(service.Service):
         result = [api.format_software_config(sd.config) for sd in flt_sd_s]
         return result
 
-    @oslo_db_api.wrap_db_retry(max_retries=10, retry_on_request=True)
+    @retry(stop_max_attempt_number=11,
+           retry_on_exception=retry_if_concur_trans_error)
     def _push_metadata_software_deployments(
             self, cnxt, server_id, stack_user_project_id):
         rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
@@ -104,8 +108,7 @@ class SoftwareConfigService(service.Service):
             cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
         if not rows_updated:
             action = "deployments of server %s" % server_id
-            raise db_exc.RetryRequest(
-                exception.ConcurrentTransaction(action=action))
+            raise exception.ConcurrentTransaction(action=action)
 
         metadata_put_url = None
         metadata_queue_id = None
