@@ -343,11 +343,28 @@ class Resource(object):
         self._rsrc_metadata = rs.rsrc_metadata
         return rs.rsrc_metadata
 
-    def metadata_set(self, metadata):
+    @resource_objects.retry_on_conflict
+    def metadata_set(self, metadata, merge_metadata=None):
+        """Write new metadata to the database.
+
+        The caller may optionally provide a merge_metadata() function, which
+        takes two arguments - the metadata passed to metadata_set() and the
+        current metadata of the resource - and returns the merged metadata to
+        write. If merge_metadata is not provided, the metadata passed to
+        metadata_set() is written verbatim, overwriting any existing metadata.
+
+        If a race condition is detected, the write will be retried with the new
+        result of merge_metadata() (if it is supplied) or the verbatim data (if
+        it is not).
+        """
         if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
-        rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
-        rs.update_and_save({'rsrc_metadata': metadata})
+        LOG.debug('Setting metadata for %s', six.text_type(self))
+        db_res = resource_objects.Resource.get_obj(self.stack.context, self.id)
+        if merge_metadata is not None:
+            db_res = db_res.refresh(attrs=['rsrc_metadata'])
+            metadata = merge_metadata(metadata, db_res.rsrc_metadata)
+        db_res.update_metadata(metadata)
         self._rsrc_metadata = metadata
 
     @classmethod
