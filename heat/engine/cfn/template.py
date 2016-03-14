@@ -130,7 +130,7 @@ class CfnTemplate(template.Template):
                     'list or string', allowed_keys, name, data)
                 self.validate_resource_key_type(
                     RES_DELETION_POLICY,
-                    six.string_types,
+                    (six.string_types, function.Function),
                     'string', allowed_keys, name, data)
                 self.validate_resource_key_type(
                     RES_UPDATE_POLICY,
@@ -153,9 +153,10 @@ class CfnTemplate(template.Template):
             if isinstance(depends, six.string_types):
                 depends = [depends]
 
-            deletion_policy = data.get(RES_DELETION_POLICY)
+            deletion_policy = function.resolve(data.get(RES_DELETION_POLICY))
             if deletion_policy is not None:
-                if deletion_policy not in self.deletion_policies:
+                if deletion_policy not in six.iterkeys(
+                        self.deletion_policies):
                     msg = _('Invalid deletion policy "%s"') % deletion_policy
                     raise exception.StackValidationFailed(message=msg)
                 else:
