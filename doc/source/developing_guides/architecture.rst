@@ -19,10 +19,8 @@ Heat architecture
 =================
 
 Heat is a service to orchestrate multiple composite cloud applications using
-the .. _AWS CloudFormation:
-http://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078
-template format, through both an OpenStack-native REST API and a
-CloudFormation-compatible Query API.
+the `AWS CloudFormation`_ template format, through both an OpenStack-native
+REST API and a CloudFormation-compatible Query API.
 
 
 Detailed description
@@ -91,7 +89,8 @@ heat-engine
 The heat-engine's main responsibility is to orchestrate the launching of
 templates and provide events back to the API consumer.
 
-The templates integrate well with .. _Puppet:
-https://s3.amazonaws.com/cloudformation-examples/IntegratingAWSCloudFormationWithPuppet.pdf
-and .. _Chef:
-http://www.full360.com/2011/02/27/integrating-aws-cloudformation-and-chef.html
+The templates integrate well with Puppet_ and Chef_.
+
+.. _Puppet: https://s3.amazonaws.com/cloudformation-examples/IntegratingAWSCloudFormationWithPuppet.pdf
+.. _Chef: http://www.full360.com/2011/02/27/integrating-aws-cloudformation-and-chef.html
+.. _`AWS CloudFormation`: http://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078
