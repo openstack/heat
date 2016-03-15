@@ -643,7 +643,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         md_sd.return_value = deployments
 
         self.assertRaises(
-            exception.DeploymentConcurrentTransaction,
+            exception.ConcurrentTransaction,
             self.engine.software_config._push_metadata_software_deployments,
             self.ctx,
             '1234',
