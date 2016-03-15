@@ -450,7 +450,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         else:
             return False
 
-    def check_resize(self, server_id, flavor_id, flavor):
+    def check_resize(self, server_id, flavor):
         """Verify that a resizing server is properly resized.
 
         If that's the case, confirm the resize, if not raise an error.

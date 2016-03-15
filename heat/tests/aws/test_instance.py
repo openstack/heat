@@ -722,9 +722,16 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_type')
 
-        self._stub_glance_for_update()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['InstanceType'] = 'm1.small'
+
+        def side_effect(*args):
+            return 2 if args[0] == 'm1.small' else 1
+
+        self.patchobject(nova.NovaClientPlugin, 'find_flavor_by_name_or_id',
+                         side_effect=side_effect)
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         return_value=1)
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
 
@@ -770,7 +777,14 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_type_f')
 
-        self._stub_glance_for_update()
+        def side_effect(*args):
+            return 2 if args[0] == 'm1.small' else 1
+
+        self.patchobject(nova.NovaClientPlugin, 'find_flavor_by_name_or_id',
+                         side_effect=side_effect)
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         return_value=1)
+
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['InstanceType'] = 'm1.small'
 
@@ -797,7 +811,7 @@ class InstancesTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: resources.ud_type_f: "
-            "Resizing to 'm1.small' failed, status 'ERROR'",
+            "Resizing to '2' failed, status 'ERROR'",
             six.text_type(error))
         self.assertEqual((instance.UPDATE, instance.FAILED), instance.state)
         self.m.VerifyAll()

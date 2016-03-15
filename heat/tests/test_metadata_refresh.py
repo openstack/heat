@@ -15,6 +15,8 @@ from oslo_serialization import jsonutils
 
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine.resources.aws.cfn.wait_condition_handle import (
     WaitConditionHandle)
@@ -144,11 +146,13 @@ resources:
 
 class MetadataRefreshTest(common.HeatTestCase):
 
+    @mock.patch.object(nova.NovaClientPlugin, 'find_flavor_by_name_or_id')
+    @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id')
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
     @mock.patch.object(instance.Instance, 'FnGetAtt')
-    def test_FnGetAtt_metadata_updated(self, mock_get,
-                                       mock_check, mock_handle):
+    def test_FnGetAtt_metadata_updated(self, mock_get, mock_check,
+                                       mock_handle, *args):
         """Tests that metadata gets updated when FnGetAtt return changes."""
         # Setup
         temp = template_format.parse(TEST_TEMPLATE_METADATA)
@@ -158,9 +162,7 @@ class MetadataRefreshTest(common.HeatTestCase):
         stack = stk.Stack(ctx, 'test_stack', template, disable_rollback=True)
         stack.store()
 
-        self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
 
         # Configure FnGetAtt to return different values on subsequent calls
         mock_get.side_effect = [
@@ -208,13 +210,15 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
+    @mock.patch.object(nova.NovaClientPlugin, 'find_flavor_by_name_or_id')
+    @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id')
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
     @mock.patch.object(instance.Instance, 'is_service_available')
     @mock.patch.object(TaskRunner, '_sleep')
     @mock.patch.object(WaitConditionHandle, 'identifier')
     def test_wait_metadata(self, mock_identifier, mock_sleep, mock_available,
-                           mock_check, mock_handle):
+                           mock_check, mock_handle, *args):
         """Tests a wait condition metadata update after a signal call."""
 
         # Setup Stack
@@ -224,9 +228,7 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
         stack = stk.Stack(ctx, 'test-stack', template, disable_rollback=True)
         stack.store()
 
-        self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
 
         res_id = identifier.ResourceIdentifier('test_tenant_id', stack.name,
                                                stack.id, '', 'WH')
@@ -288,10 +290,15 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
 
 class MetadataRefreshServerTest(common.HeatTestCase):
 
+    @mock.patch.object(nova.NovaClientPlugin, 'find_flavor_by_name_or_id',
+                       return_value=1)
+    @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                       return_value=1)
     @mock.patch.object(Server, 'handle_create')
     @mock.patch.object(Server, 'check_create_complete')
     @mock.patch.object(Server, 'FnGetAtt')
-    def test_FnGetAtt_metadata_update(self, mock_get, mock_check, mock_handle):
+    def test_FnGetAtt_metadata_update(self, mock_get, mock_check,
+                                      mock_handle, *args):
         temp = template_format.parse(TEST_TEMPLATE_SERVER)
         template = tmpl.Template(temp,
                                  env=environment.Environment({}))
@@ -299,9 +306,7 @@ class MetadataRefreshServerTest(common.HeatTestCase):
         stack = stk.Stack(ctx, 'test-stack', template, disable_rollback=True)
         stack.store()
 
-        self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
 
         # Note dummy addresses are from TEST-NET-1 ref rfc5737
         mock_get.side_effect = ['192.0.2.1', '192.0.2.2', '192.0.2.2']

@@ -21,6 +21,8 @@ import six
 from heat.common import exception
 from heat.common import messaging
 from heat.common import template_format
+from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine import service
@@ -853,6 +855,14 @@ resources:
                                    environment_files=None):
         stack_name = 'service_update_test_stack_preview'
         params = {'foo': 'bar'}
+
+        def side_effect(*args):
+            return 2 if args[0] == 'm1.small' else 1
+
+        self.patchobject(nova.NovaClientPlugin, 'find_flavor_by_name_or_id',
+                         side_effect=side_effect)
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         return_value=1)
         old_stack = tools.get_stack(stack_name, self.ctx,
                                     template=orig_template)
         sid = old_stack.store()
@@ -947,7 +957,6 @@ resources:
     def test_stack_update_preview_updated(self):
         # new template changes to flavor of server
         new_tmpl = self.old_tmpl.replace('m1.large', 'm1.small')
-
         result = self._test_stack_update_preview(self.old_tmpl, new_tmpl)
 
         updated = [x for x in result['updated']][0]

@@ -66,8 +66,7 @@ class ServerNetworkMixin(object):
             subnet = network.get(self.NETWORK_SUBNET)
             if (subnet is not None and net is not None):
                 subnet_net = self.client_plugin(
-                    'neutron').network_id_from_subnet_id(
-                    self._get_subnet_id(subnet))
+                    'neutron').network_id_from_subnet_id(subnet)
                 if subnet_net != net:
                     msg = _('Specified subnet %(subnet)s does not belongs to '
                             'network %(network)s.') % {
@@ -98,7 +97,7 @@ class ServerNetworkMixin(object):
         if fixed_ip:
             body['ip_address'] = fixed_ip
         if subnet:
-            body['subnet_id'] = self._get_subnet_id(subnet)
+            body['subnet_id'] = subnet
         # we should add fixed_ips only if subnet or ip were provided
         if body:
             kwargs.update({'fixed_ips': [body]})
@@ -276,22 +275,10 @@ class ServerNetworkMixin(object):
     def _get_network_id(self, net):
         net_id = net.get(self.NETWORK_ID) or None
         subnet = net.get(self.NETWORK_SUBNET) or None
-        if net_id:
-            if self.is_using_neutron():
-                net_id = self.client_plugin(
-                    'neutron').find_resourceid_by_name_or_id('network',
-                                                             net_id)
-            else:
-                net_id = self.client_plugin(
-                    'nova').get_nova_network_id(net_id)
-        elif subnet:
-            net_id = self.client_plugin('neutron').network_id_from_subnet_id(
-                self._get_subnet_id(subnet))
+        if not net_id and subnet:
+            net_id = self.client_plugin(
+                'neutron').network_id_from_subnet_id(subnet)
         return net_id
-
-    def _get_subnet_id(self, subnet):
-        return self.client_plugin('neutron').find_resourceid_by_name_or_id(
-            'subnet', subnet)
 
     def update_networks_matching_iface_port(self, nets, interfaces):
 
