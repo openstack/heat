@@ -51,6 +51,7 @@ def main():
                  version=version.version_info.version_string())
         logging.setup(cfg.CONF, 'heat-api-cfn')
         logging.set_defaults()
+        config.set_config_defaults()
         messaging.setup()
 
         app = config.load_paste_app()

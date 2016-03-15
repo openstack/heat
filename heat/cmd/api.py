@@ -47,6 +47,7 @@ def main():
         cfg.CONF(project='heat', prog='heat-api',
                  version=version.version_info.version_string())
         logging.setup(cfg.CONF, 'heat-api')
+        config.set_config_defaults()
         messaging.setup()
 
         app = config.load_paste_app()

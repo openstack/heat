@@ -38,6 +38,7 @@ def init_application():
     version = hversion.version_info.version_string()
     cfg.CONF(project='heat', prog='heat-api', version=version)
     logging.setup(cfg.CONF, 'heat-api')
+    config.set_config_defaults()
     messaging.setup()
 
     port = cfg.CONF.heat_api.bind_port
