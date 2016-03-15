@@ -13,6 +13,7 @@
 
 import mock
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import resources
 from heat.engine.resources.openstack.mistral import cron_trigger
@@ -68,6 +69,12 @@ class MistralCronTriggerTest(common.HeatTestCase):
         self.client.cron_triggers.get.return_value = FakeCronTrigger(
             'my_cron_trigger')
         scheduler.TaskRunner(ct.create)()
+        return ct
+
+    def test_create(self):
+        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
+        expected_state = (ct.CREATE, ct.COMPLETE)
+        self.assertEqual(expected_state, ct.state)
         args = self.client.cron_triggers.create.call_args[1]
         self.assertEqual('* * 0 * *', args['pattern'])
         self.assertEqual('get_first_glance_image', args['workflow_name'])
@@ -75,12 +82,6 @@ class MistralCronTriggerTest(common.HeatTestCase):
         self.assertEqual('2015-04-08 06:20', args['first_time'])
         self.assertEqual(3, args['count'])
         self.assertEqual('my_cron_trigger', ct.resource_id)
-        return ct
-
-    def test_create(self):
-        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
-        expected_state = (ct.CREATE, ct.COMPLETE)
-        self.assertEqual(expected_state, ct.state)
 
     def test_attributes(self):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
@@ -88,3 +89,34 @@ class MistralCronTriggerTest(common.HeatTestCase):
                          ct.FnGetAtt('next_execution_time'))
         self.assertEqual(3, ct.FnGetAtt('remaining_executions'))
         self.assertEqual({'trigger': 'info'}, ct.FnGetAtt('show'))
+
+    def test_validate_fail(self):
+        t = template_format.parse(stack_template)
+        del t['resources']['cron_trigger']['properties']['first_time']
+        del t['resources']['cron_trigger']['properties']['pattern']
+        stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
+        self.rsrc_defn = resource_defns['cron_trigger']
+        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
+        msg = ("At least one of the following properties must be specified: "
+               "pattern, first_time")
+        self.assertRaisesRegexp(exception.PropertyUnspecifiedError, msg,
+                                ct.validate)
+
+    def test_validate_ok_without_first_time(self):
+        t = template_format.parse(stack_template)
+        del t['resources']['cron_trigger']['properties']['first_time']
+        stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
+        self.rsrc_defn = resource_defns['cron_trigger']
+        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
+        ct.validate()
+
+    def test_validate_ok_without_pattern(self):
+        t = template_format.parse(stack_template)
+        del t['resources']['cron_trigger']['properties']['pattern']
+        stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
+        self.rsrc_defn = resource_defns['cron_trigger']
+        ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
+        ct.validate()
