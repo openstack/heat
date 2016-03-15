@@ -221,7 +221,10 @@ class Workflow(signal_responder.SignalResponder,
                           'or by name of the referenced workflow, i.e. '
                           '{ workflow: wf_name } or '
                           '{ workflow: { get_resource: wf_name }}. Either '
-                          'action or workflow may be defined in the task.')
+                          'action or workflow may be defined in the task.'),
+                        constraints=[
+                            constraints.CustomConstraint('mistral.workflow')
+                        ]
                     ),
                     PUBLISH: properties.Schema(
                         properties.Schema.MAP,

@@ -74,6 +74,9 @@ class CronTrigger(resource.Resource):
                     properties.Schema.STRING,
                     _('Name of the workflow.'),
                     required=True,
+                    constraints=[
+                        constraints.CustomConstraint('mistral.workflow')
+                    ]
                 ),
                 WORKFLOW_INPUT: properties.Schema(
                     properties.Schema.MAP,

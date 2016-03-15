@@ -63,6 +63,8 @@ class MistralCronTriggerTest(common.HeatTestCase):
 
     def _create_resource(self, name, snippet, stack):
         ct = cron_trigger.CronTrigger(name, snippet, stack)
+        mock_get_workflow = mock.Mock(return_value='get_first_glance_image')
+        ct.client_plugin().get_workflow_by_identifier = mock_get_workflow
         self.client.cron_triggers.create.return_value = FakeCronTrigger(
             'my_cron_trigger')
         self.client.cron_triggers.get.return_value = FakeCronTrigger(

@@ -14,7 +14,9 @@
 from mistralclient.api import base as mistral_base
 from mistralclient.api import client as mistral_client
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 CLIENT_NAME = 'mistral'
 
@@ -47,3 +49,20 @@ class MistralClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return (isinstance(ex, mistral_base.APIException) and
                 ex.error_code == 409)
+
+    def get_workflow_by_identifier(self, workflow_identifier):
+        try:
+            return self.client().workflows.get(
+                workflow_identifier)
+        except Exception as ex:
+            if self.is_not_found(ex):
+                raise exception.EntityNotFound(
+                    entity="Workflow",
+                    name=workflow_identifier)
+            raise ex
+
+
+class WorkflowConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_workflow_by_identifier'
+    expected_exceptions = (exception.EntityNotFound,)
