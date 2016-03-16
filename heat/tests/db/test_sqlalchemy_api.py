@@ -2928,7 +2928,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
     def _create_template(self):
         """Initialize sample template."""
-        t = template_format.parse('''
+        self.t = template_format.parse('''
         heat_template_version: 2013-05-23
         parameters:
             param1:
@@ -2973,7 +2973,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                 type: GenericResourceType
         ''')
         template = {
-            'template': t,
+            'template': self.t,
             'files': {'foo': 'bar'},
             'environment': {
                 'parameters': {
@@ -2996,7 +2996,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             'param_comma_list': '[\"Hola\", \"Senor\"]'}
 
         raw_templates = session.query(models.RawTemplate).all()
-        self.assertTrue(raw_templates)
+        self.assertNotEqual([], raw_templates)
         for r_tmpl in raw_templates:
             for param_name, param_value in hidden_params_dict.items():
                 self.assertEqual(param_value,
@@ -3004,18 +3004,18 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                 self.assertEqual('foo',
                                  r_tmpl.environment['parameters']['param1'])
         resources = session.query(models.Resource).all()
-        self.assertTrue(resources)
+        self.assertNotEqual([], resources)
         for resource in resources:
             self.assertEqual('bar1', resource.properties_data['foo1'])
 
         def encrypt(enc_key=None):
             if enc_key is None:
                 enc_key = cfg.CONF.auth_encryption_key
-            db_api.db_encrypt_parameters_and_properties(
-                self.ctx, enc_key, batch_size=batch_size)
+            self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
+                self.ctx, enc_key, batch_size=batch_size))
             session = db_api.get_session()
             enc_raw_templates = session.query(models.RawTemplate).all()
-            self.assertTrue(enc_raw_templates)
+            self.assertNotEqual([], enc_raw_templates)
             for enc_tmpl in enc_raw_templates:
                 for param_name in hidden_params_dict.keys():
                     self.assertEqual(
@@ -3029,7 +3029,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
             encrypt_value = enc_tmpl.environment['parameters']['param2'][1]
             enc_resources = session.query(models.Resource).all()
-            self.assertTrue(enc_resources)
+            self.assertNotEqual([], enc_resources)
             for enc_prop in enc_resources:
                 self.assertEqual('cryptography_decrypt_v1',
                                  enc_prop.properties_data['foo1'][0])
@@ -3045,11 +3045,11 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         def decrypt(enc_key=None):
             if enc_key is None:
                 enc_key = cfg.CONF.auth_encryption_key
-            db_api.db_decrypt_parameters_and_properties(
-                self.ctx, enc_key, batch_size=batch_size)
+            self.assertEqual([], db_api.db_decrypt_parameters_and_properties(
+                self.ctx, enc_key, batch_size=batch_size))
             session = db_api.get_session()
             dec_templates = session.query(models.RawTemplate).all()
-            self.assertTrue(dec_templates)
+            self.assertNotEqual([], dec_templates)
             for dec_tmpl in dec_templates:
                 self.assertNotEqual(
                     encrypt_value,
@@ -3073,7 +3073,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
             decrypt_value = dec_tmpl.environment['parameters']['param2'][1]
             dec_resources = session.query(models.Resource).all()
-            self.assertTrue(dec_resources)
+            self.assertNotEqual([], dec_resources)
             for dec_prop in dec_resources:
                 self.assertEqual('bar1', dec_prop.properties_data['foo1'])
             return decrypt_value
@@ -3152,8 +3152,10 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         self.assertEqual('', r_tmpls[1].environment)
 
         # Test encryption
-        db_api.db_encrypt_parameters_and_properties(
+        enc_result = db_api.db_encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
+        self.assertEqual(1, len(enc_result))
+        self.assertIs(AttributeError, type(enc_result[0]))
         session = db_api.get_session()
         enc_tmpls = session.query(models.RawTemplate).all()
         self.assertEqual('', enc_tmpls[1].environment)
@@ -3161,10 +3163,85 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                          enc_tmpls[2].environment['parameters']['param2'][0])
 
         # Test decryption
-        db_api.db_decrypt_parameters_and_properties(
+        dec_result = db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
+        self.assertEqual(len(dec_result), 1)
+        self.assertIs(TypeError, type(dec_result[0]))
         session = db_api.get_session()
         dec_tmpls = session.query(models.RawTemplate).all()
         self.assertEqual('', dec_tmpls[1].environment)
         self.assertEqual('bar',
                          dec_tmpls[2].environment['parameters']['param2'])
+
+    def test_db_encrypt_no_env(self):
+        template = {
+            'template': self.t,
+            'files': {'foo': 'bar'},
+            'environment': None}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+
+    def test_db_encrypt_no_env_parameters(self):
+        template = {
+            'template': self.t,
+            'files': {'foo': 'bar'},
+            'environment': {'encrypted_param_names': ['a']}}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+
+    def test_db_encrypt_no_properties_data(self):
+        ctx = utils.dummy_context()
+        template = self._create_template()
+        user_creds = create_user_creds(ctx)
+        stack = create_stack(ctx, template, user_creds)
+        resources = [create_resource(ctx, stack, name='res1')]
+        resources[0].properties_data = None
+        self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key))
+
+    def test_db_encrypt_non_string_param_type(self):
+        t = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+            param3:
+                type: string
+                description: value3
+                hidden: true
+                default: 1234
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        template = {
+            'template': t,
+            'files': {},
+            'environment': {'parameters': {
+                'param1': 'foo',
+                'param2': 'bar',
+                'param3': 12345}}}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+        session = db_api.get_session()
+        enc_raw_templates = session.query(models.RawTemplate).all()
+        self.assertNotEqual([], enc_raw_templates)
+        enc_params = enc_raw_templates[1].environment['parameters']
+
+        self.assertEqual([], db_api.db_decrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key, batch_size=50))
+        session = db_api.get_session()
+        dec_tmpls = session.query(models.RawTemplate).all()
+        dec_params = dec_tmpls[1].environment['parameters']
+
+        self.assertNotEqual(enc_params['param3'], dec_params['param3'])
+        self.assertEqual('bar', dec_params['param2'])
+        self.assertEqual('12345', dec_params['param3'])
