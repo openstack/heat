@@ -73,8 +73,8 @@ class TestTranslationRule(common.HeatTestCase):
                                 translation.TranslationRule.ADD,
                                 'networks.network',
                                 'value')
-        self.assertEqual('source_path should be a list with path instead of '
-                         '%s.' % str, six.text_type(exc))
+        self.assertEqual('translation_path should be a list with path instead '
+                         'of %s.' % str, six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -82,7 +82,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 translation.TranslationRule.ADD,
                                 [],
                                 mock.ANY)
-        self.assertEqual('source_path must be non-empty list with path.',
+        self.assertEqual('translation_path must be non-empty list with path.',
                          six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
