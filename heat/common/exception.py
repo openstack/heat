@@ -355,7 +355,7 @@ class ResourcePropertyValueDependency(HeatException):
 
 class PropertyUnspecifiedError(HeatException):
     msg_fmt = _('At least one of the following properties '
-                'must be specified: %(props)s')
+                'must be specified: %(props)s.')
 
     def __init__(self, *args, **kwargs):
         if args:
