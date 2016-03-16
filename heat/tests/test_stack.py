@@ -1977,29 +1977,85 @@ class StackTest(common.HeatTestCase):
     def test_incorrect_deletion_policy(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'
+        Parameters:
+          Deletion_Policy:
+            Type: String
+            Default: [1, 2]
         Resources:
           AResource:
             Type: ResourceWithPropsType
-            DeletionPolicy: wibble
+            DeletionPolicy: {Ref: Deletion_Policy}
             Properties:
               Foo: abc
         """)
+
         self.stack = stack.Stack(self.ctx, 'stack_bad_delpol',
                                  template.Template(tmpl))
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('Invalid deletion policy "wibble"',
+        self.assertIn('Invalid deletion policy "[1, 2]"',
                       six.text_type(ex))
+
+    def test_deletion_policy_apply_ref(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Parameters:
+          Deletion_Policy:
+            Type: String
+            Default: Delete
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            DeletionPolicy: wibble
+            Properties:
+              Foo: abc
+            DeletionPolicy: {Ref: Deletion_Policy}
+        """)
+
+        self.stack = stack.Stack(self.ctx, 'stack_delpol_get_param',
+                                 template.Template(tmpl))
+        self.stack.validate()
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+
+    def test_deletion_policy_apply_get_param(self):
+        tmpl = template_format.parse("""
+        heat_template_version: 2016-04-08
+        parameters:
+          deletion_policy:
+            type: string
+            default: Delete
+        resources:
+          AResource:
+            type: ResourceWithPropsType
+            deletion_policy: {get_param: deletion_policy}
+            properties:
+              Foo: abc
+        """)
+
+        self.stack = stack.Stack(self.ctx, 'stack_delpol_get_param',
+                                 template.Template(tmpl))
+        self.stack.validate()
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
 
     def test_incorrect_deletion_policy_hot(self):
         tmpl = template_format.parse("""
         heat_template_version: 2013-05-23
+        parameters:
+          deletion_policy:
+            type: string
+            default: [1, 2]
         resources:
           AResource:
             type: ResourceWithPropsType
-            deletion_policy: wibble
+            deletion_policy: {get_param: deletion_policy}
             properties:
               Foo: abc
         """)
@@ -2009,7 +2065,7 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('Invalid deletion policy "wibble"',
+        self.assertIn('Invalid deletion policy "[1, 2]',
                       six.text_type(ex))
 
     def test_incorrect_outputs_hot_get_attr(self):
