@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0b4.dev30\n"
+"Project-Id-Version: heat 6.0.0.0b4.dev90\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-09 06:32+0000\n"
+"POT-Creation-Date: 2016-03-16 06:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,21 +46,21 @@ msgstr ""
 msgid "AWS authentication successful."
 msgstr ""
 
-#: heat/api/cfn/v1/stacks.py:433 heat/engine/service.py:1149
+#: heat/api/cfn/v1/stacks.py:433 heat/engine/service.py:1150
 msgid "validate_template"
 msgstr ""
 
-#: heat/cmd/api.py:56 heat/httpd/heat_api.py:46
+#: heat/cmd/api.py:57 heat/httpd/heat_api.py:47
 #, python-format
 msgid "Starting Heat REST API on %(host)s:%(port)s"
 msgstr ""
 
-#: heat/cmd/api_cfn.py:60 heat/httpd/heat_api_cfn.py:47
+#: heat/cmd/api_cfn.py:61 heat/httpd/heat_api_cfn.py:48
 #, python-format
 msgid "Starting Heat API on %(host)s:%(port)s"
 msgstr ""
 
-#: heat/cmd/api_cloudwatch.py:60 heat/httpd/heat_api_cloudwatch.py:47
+#: heat/cmd/api_cloudwatch.py:61 heat/httpd/heat_api_cloudwatch.py:48
 #, python-format
 msgid "Starting Heat CloudWatch API on %(host)s:%(port)s"
 msgstr ""
@@ -122,64 +122,64 @@ msgstr ""
 msgid "Loading %s"
 msgstr ""
 
-#: heat/engine/resource.py:400
+#: heat/engine/resource.py:408
 #, python-format
 msgid "Reached hook on %s"
 msgstr ""
 
-#: heat/engine/resource.py:665
+#: heat/engine/resource.py:693
 #, python-format
 msgid "%(action)s: %(info)s"
 msgstr ""
 
-#: heat/engine/resource.py:780
+#: heat/engine/resource.py:808
 #, python-format
 msgid "creating %s"
 msgstr ""
 
-#: heat/engine/resource.py:1084
+#: heat/engine/resource.py:1119
 #, python-format
 msgid "updating %s"
 msgstr ""
 
-#: heat/engine/resource.py:1162
+#: heat/engine/resource.py:1195
 #, python-format
 msgid "Checking %s"
 msgstr ""
 
-#: heat/engine/resource.py:1203
+#: heat/engine/resource.py:1236
 #, python-format
 msgid "suspending %s"
 msgstr ""
 
-#: heat/engine/resource.py:1222
+#: heat/engine/resource.py:1255
 #, python-format
 msgid "resuming %s"
 msgstr ""
 
-#: heat/engine/resource.py:1227
+#: heat/engine/resource.py:1260
 #, python-format
 msgid "snapshotting %s"
 msgstr ""
 
-#: heat/engine/resource.py:1277
+#: heat/engine/resource.py:1310
 #, python-format
 msgid "Validating %s"
 msgstr ""
 
-#: heat/engine/resource.py:1333
+#: heat/engine/resource.py:1366
 #, python-format
 msgid ""
 "Could not find replacement of resource %(name)s with id %(id)s while "
 "updating needed_by."
 msgstr ""
 
-#: heat/engine/resource.py:1411
+#: heat/engine/resource.py:1444
 #, python-format
 msgid "deleting %s"
 msgstr ""
 
-#: heat/engine/resource.py:1847
+#: heat/engine/resource.py:1880
 #, python-format
 msgid "Clearing %(hook)s hook on %(resource)s"
 msgstr ""
@@ -241,112 +241,112 @@ msgstr ""
 msgid "Previewing update of stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1098
+#: heat/engine/service.py:1099
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1303
+#: heat/engine/service.py:1305
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1382
+#: heat/engine/service.py:1384
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1388
+#: heat/engine/service.py:1390
 #, python-format
 msgid "exporting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1793
+#: heat/engine/service.py:1795
 #, python-format
 msgid "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1841
+#: heat/engine/service.py:1843
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/service.py:2074
+#: heat/engine/service.py:2076
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/service.py:2081
+#: heat/engine/service.py:2083
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:2102
+#: heat/engine/service.py:2104
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:2145
+#: heat/engine/service.py:2147
 #, python-format
 msgid ""
 "Engine %(engine)s went down when stack %(stack_id)s was in action "
 "%(action)s"
 msgstr ""
 
-#: heat/engine/service_software_config.py:138
-#: heat/engine/service_software_config.py:160
+#: heat/engine/service_software_config.py:142
+#: heat/engine/service_software_config.py:164
 #, python-format
 msgid "Signal object not found: %(c)s %(o)s"
 msgstr ""
 
-#: heat/engine/stack.py:868
+#: heat/engine/stack.py:883
 #, python-format
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:1178
+#: heat/engine/stack.py:1194
 #, python-format
 msgid "convergence_dependencies: %s"
 msgstr ""
 
-#: heat/engine/stack.py:1196
+#: heat/engine/stack.py:1212
 #, python-format
 msgid "Triggering resource %s for update"
 msgstr ""
 
-#: heat/engine/stack.py:1198
+#: heat/engine/stack.py:1214
 #, python-format
 msgid "Triggering resource %s for cleanup"
 msgstr ""
 
-#: heat/engine/stack.py:1563
+#: heat/engine/stack.py:1579
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s "
 "user_creds_id=%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:1571
+#: heat/engine/stack.py:1587
 #, python-format
 msgid "Tried to store a stack that does not exist %s"
 msgstr ""
 
-#: heat/engine/stack.py:1660 heat/engine/stack.py:1672
+#: heat/engine/stack.py:1676 heat/engine/stack.py:1688
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1691
+#: heat/engine/stack.py:1707
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:1717
+#: heat/engine/stack.py:1733
 #, python-format
 msgid "%s is already resumed"
 msgstr ""
 
-#: heat/engine/stack.py:1900
+#: heat/engine/stack.py:1916
 #, python-format
 msgid "[%(name)s(%(id)s)] update traversal %(tid)s complete"
 msgstr ""
@@ -417,7 +417,7 @@ msgstr ""
 msgid "Attaching volume %(id)s complete"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:663
+#: heat/engine/clients/os/nova.py:666
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
@@ -524,6 +524,27 @@ msgstr ""
 
 #: heat/engine/resources/openstack/manila/share.py:235
 msgid "Applying access rules to created Share."
+msgstr ""
+
+#: heat/engine/resources/openstack/nova/server_network_mixin.py:418
+#, python-format
+msgid ""
+"Detach interface %(port)s successful from server %(server)s when prepare "
+"for replace."
+msgstr ""
+
+#: heat/engine/resources/openstack/nova/server_network_mixin.py:458
+#, python-format
+msgid ""
+"Detach interface %(port)s successful from server %(server)s when restore "
+"after rollback."
+msgstr ""
+
+#: heat/engine/resources/openstack/nova/server_network_mixin.py:480
+#, python-format
+msgid ""
+"Attach interface %(port)s successful to server %(server)s when restore "
+"after rollback."
 msgstr ""
 
 #: heat/engine/resources/openstack/sahara/cluster.py:237
