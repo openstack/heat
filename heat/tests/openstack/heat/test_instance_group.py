@@ -87,16 +87,13 @@ class TestInstanceGroup(common.HeatTestCase):
         self.assertIn('(JobServerConfig) reference can not be found',
                       six.text_type(error))
         # test resource name of instance group not WebServerGroup, so no ref
-        props = self.instance_group.properties.data
         props['LaunchConfigurationName'] = 'LaunchConfig'
         error = self.assertRaises(ValueError, self.instance_group.validate)
         self.assertIn('LaunchConfigurationName (LaunchConfig) requires a '
                       'reference to the configuration not just the '
                       'name of the resource.',
                       six.text_type(error))
-        # test validate ok
-        props = self.instance_group.properties.data
-        props['LaunchConfigurationName'] = 'LaunchConfig'
+        # test validate ok if change instance_group name to 'WebServerGroup'
         self.instance_group.name = 'WebServerGroup'
         self.instance_group.validate()
 
