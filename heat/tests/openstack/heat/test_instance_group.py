@@ -79,32 +79,33 @@ class TestInstanceGroup(common.HeatTestCase):
         expected = [{'Key': 'metering.fee', 'Value': 'foo'}]
         self.assertEqual(expected, self.instance_group._tags())
 
-    def test_validate_launch_conf(self):
-        props = self.instance_group.properties.data
-        props['LaunchConfigurationName'] = 'urg_i_cant_spell'
-        creator = scheduler.TaskRunner(self.instance_group.create)
-        error = self.assertRaises(exception.ResourceFailure, creator)
-
-        self.assertIn('(urg_i_cant_spell) reference can not be found.',
-                      six.text_type(error))
-
-    def test_validate_launch_conf_no_ref(self):
+    def test_validate_launch_conf_ref(self):
+        # test the launch conf ref can't be found
         props = self.instance_group.properties.data
         props['LaunchConfigurationName'] = 'JobServerConfig'
-        creator = scheduler.TaskRunner(self.instance_group.create)
-        error = self.assertRaises(exception.ResourceFailure, creator)
-        self.assertIn('(JobServerConfig) reference can not be',
+        error = self.assertRaises(ValueError, self.instance_group.validate)
+        self.assertIn('(JobServerConfig) reference can not be found',
                       six.text_type(error))
+        # test resource name of instance group not WebServerGroup, so no ref
+        props = self.instance_group.properties.data
+        props['LaunchConfigurationName'] = 'LaunchConfig'
+        error = self.assertRaises(ValueError, self.instance_group.validate)
+        self.assertIn('LaunchConfigurationName (LaunchConfig) requires a '
+                      'reference to the configuration not just the '
+                      'name of the resource.',
+                      six.text_type(error))
+        # test validate ok
+        props = self.instance_group.properties.data
+        props['LaunchConfigurationName'] = 'LaunchConfig'
+        self.instance_group.name = 'WebServerGroup'
+        self.instance_group.validate()
 
     def test_handle_create(self):
         self.instance_group.create_with_template = mock.Mock(return_value=None)
-        self.instance_group.validate_launchconfig = mock.Mock(
-            return_value=None)
         self.instance_group._create_template = mock.Mock(return_value='{}')
 
         self.instance_group.handle_create()
 
-        self.instance_group.validate_launchconfig.assert_called_once_with()
         self.instance_group._create_template.assert_called_once_with(2)
         self.instance_group.create_with_template.assert_called_once_with('{}')
 
