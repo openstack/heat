@@ -677,7 +677,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         ex = self.assertRaises(exception.PropertyUnspecifiedError,
                                rsrc.validate)
         msg = ("At least one of the following properties must be specified: "
-               "subnetpool, cidr")
+               "subnetpool, cidr.")
         self.assertEqual(msg, six.text_type(ex))
 
     def test_validate_both_prefixlen_cidr(self):

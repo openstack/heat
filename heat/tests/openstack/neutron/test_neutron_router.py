@@ -689,7 +689,7 @@ class NeutronRouterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.PropertyUnspecifiedError,
                                res.validate)
         self.assertEqual("At least one of the following properties "
-                         "must be specified: subnet, port",
+                         "must be specified: subnet, port.",
                          six.text_type(ex))
         self.m.VerifyAll()
 
