@@ -835,7 +835,7 @@ class EngineService(service.Service):
         # stack definition.  If PARAM_EXISTING is specified, we merge
         # any environment provided into the existing one and attempt
         # to use the existing stack template, if one is not provided.
-        if args.get(rpc_api.PARAM_EXISTING, None):
+        if args.get(rpc_api.PARAM_EXISTING):
             existing_env = current_stack.env.user_env_as_dict()
             existing_params = existing_env[env_fmt.PARAMETERS]
             clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
@@ -872,12 +872,14 @@ class EngineService(service.Service):
                                   'previous template stored'))
                     msg = _('PATCH update to non-COMPLETE stack')
                     raise exception.NotSupported(feature=msg)
+            tmpl = templatem.Template(new_template, files=new_files,
+                                      env=new_env)
+            for key in list(new_env.params.keys()):
+                if key not in tmpl.param_schemata():
+                    new_env.params.pop(key)
         else:
-            new_env = environment.Environment(params)
-            new_files = files
-            new_template = template
-
-        tmpl = templatem.Template(new_template, files=new_files, env=new_env)
+            tmpl = templatem.Template(template, files=files,
+                                      env=environment.Environment(params))
 
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
