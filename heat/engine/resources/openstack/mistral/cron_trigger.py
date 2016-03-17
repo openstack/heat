@@ -72,7 +72,8 @@ class CronTrigger(resource.Resource):
             schema={
                 WORKFLOW_NAME: properties.Schema(
                     properties.Schema.STRING,
-                    _('Name of the workflow.')
+                    _('Name of the workflow.'),
+                    required=True,
                 ),
                 WORKFLOW_INPUT: properties.Schema(
                     properties.Schema.MAP,
