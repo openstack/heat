@@ -331,7 +331,8 @@ class Workflow(signal_responder.SignalResponder,
                 },
             ),
             required=True,
-            update_allowed=True
+            update_allowed=True,
+            constraints=[constraints.Length(min=1)]
         )
     }
 
