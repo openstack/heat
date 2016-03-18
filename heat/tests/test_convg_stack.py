@@ -379,6 +379,37 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.purge_db()
         self.assertTrue(mock_tmpl_delete.called)
 
+    @mock.patch.object(parser.Stack, '_delete_credentials')
+    @mock.patch.object(stack_object.Stack, 'delete')
+    def test_purge_db_deletes_creds(self, mock_delete_stack,
+                                    mock_creds_delete, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        reason = 'stack delete complete'
+        mock_creds_delete.return_value = (stack.COMPLETE, reason)
+        stack.state_set(stack.DELETE, stack.COMPLETE, reason)
+        stack.purge_db()
+        self.assertTrue(mock_creds_delete.called)
+        self.assertTrue(mock_delete_stack.called)
+
+    @mock.patch.object(parser.Stack, '_delete_credentials')
+    @mock.patch.object(stack_object.Stack, 'delete')
+    def test_purge_db_deletes_creds_failed(self, mock_delete_stack,
+                                           mock_creds_delete, mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+
+        reason = 'stack delete complete'
+        failed_reason = 'Error deleting trust'
+        mock_creds_delete.return_value = (stack.FAILED, failed_reason)
+        stack.state_set(stack.DELETE, stack.COMPLETE, reason)
+        stack.purge_db()
+        self.assertTrue(mock_creds_delete.called)
+        self.assertFalse(mock_delete_stack.called)
+        self.assertEqual((stack.DELETE, stack.FAILED), stack.state)
+
     @mock.patch.object(raw_template_object.RawTemplate, 'delete')
     def test_purge_db_does_not_delete_previous_template_when_stack_fails(
             self, mock_tmpl_delete, mock_cr):
