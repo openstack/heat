@@ -915,6 +915,13 @@ def software_config_get_all(context, limit=None, marker=None,
 
 def software_config_delete(context, config_id):
     config = software_config_get(context, config_id)
+    # Query if the software config has been referenced by deployment.
+    result = model_query(context, models.SoftwareDeployment).filter_by(
+        config_id=config_id).first()
+    if result:
+        msg = (_("Software config with id %s can not be deleted as "
+                 "it is referenced.") % config_id)
+        raise exception.InvalidRestrictedAction(message=msg)
     session = orm_session.Session.object_session(config)
     with session.begin():
         session.delete(config)
