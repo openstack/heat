@@ -301,18 +301,12 @@ class TestGroupAdjust(common.HeatTestCase):
 
     def test_scaling_policy_cooldown_toosoon(self):
         """If _is_scaling_allowed() returns False don't progress."""
-
         dont_call = self.patchobject(grouputils, 'get_size')
-        with mock.patch.object(self.group, '_is_scaling_allowed',
-                               return_value=False):
-            self.group.adjust(1)
+        self.patchobject(self.group, '_is_scaling_allowed',
+                         return_value=False)
+        self.assertRaises(exception.NoActionRequired,
+                          self.group.adjust, 1)
         self.assertEqual([], dont_call.call_args_list)
-
-    def test_scaling_policy_cooldown_toosoon_with_signal(self):
-        with mock.patch.object(self.group, '_is_scaling_allowed',
-                               return_value=False):
-            self.assertRaises(exception.NoActionRequired, self.group.adjust, 1,
-                              signal=True)
 
     def test_scaling_same_capacity(self):
         """Alway resize even if the capacity is the same."""
@@ -520,36 +514,35 @@ class TestGroupCrud(common.HeatTestCase):
 
     def test_handle_update_desired_cap(self):
         self.group._try_rolling_update = mock.Mock(return_value=None)
-        self.group.adjust = mock.Mock(return_value=None)
-
-        props = {'DesiredCapacity': 4}
+        self.group.resize = mock.Mock(return_value=None)
+        props = {'DesiredCapacity': 4,
+                 'MinSize': 0,
+                 'MaxSize': 6}
+        self.group._get_new_capacity = mock.Mock(return_value=4)
         defn = rsrc_defn.ResourceDefinition(
             'nopayload',
             'AWS::AutoScaling::AutoScalingGroup',
             props)
 
         self.group.handle_update(defn, None, props)
-
-        self.group.adjust.assert_called_once_with(
-            4, adjustment_type='ExactCapacity')
+        self.group.resize.assert_called_once_with(4)
         self.group._try_rolling_update.assert_called_once_with(props)
 
     def test_handle_update_desired_nocap(self):
         self.group._try_rolling_update = mock.Mock(return_value=None)
-        self.group.adjust = mock.Mock(return_value=None)
+        self.group.resize = mock.Mock(return_value=None)
         get_size = self.patchobject(grouputils, 'get_size')
-        get_size.return_value = 6
+        get_size.return_value = 4
 
-        props = {'Tags': []}
+        props = {'MinSize': 0,
+                 'MaxSize': 6}
         defn = rsrc_defn.ResourceDefinition(
             'nopayload',
             'AWS::AutoScaling::AutoScalingGroup',
             props)
 
         self.group.handle_update(defn, None, props)
-
-        self.group.adjust.assert_called_once_with(
-            6, adjustment_type='ExactCapacity')
+        self.group.resize.assert_called_once_with(4)
         self.group._try_rolling_update.assert_called_once_with(props)
 
     def test_conf_properties_vpc_zone(self):
@@ -576,7 +569,7 @@ class TestGroupCrud(common.HeatTestCase):
     def test_update_in_failed(self):
         self.group.state_set('CREATE', 'FAILED')
         # to update the failed asg
-        self.group.adjust = mock.Mock(return_value=None)
+        self.group.resize = mock.Mock(return_value=None)
 
         new_defn = rsrc_defn.ResourceDefinition(
             'asg', 'AWS::AutoScaling::AutoScalingGroup',
@@ -587,8 +580,7 @@ class TestGroupCrud(common.HeatTestCase):
              'DesiredCapacity': 2})
 
         self.group.handle_update(new_defn, None, None)
-        self.group.adjust.assert_called_once_with(
-            2, adjustment_type='ExactCapacity')
+        self.group.resize.assert_called_once_with(2)
 
 
 def asg_tmpl_with_bad_updt_policy():
@@ -727,7 +719,7 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
             properties=updated_grp.t['Properties'],
             update_policy=updated_policy)
         current_grp._try_rolling_update = mock.MagicMock()
-        current_grp.adjust = mock.MagicMock()
+        current_grp.resize = mock.MagicMock()
         current_grp.handle_update(update_snippet, tmpl_diff, None)
         if updated_policy is None:
             self.assertEqual({}, current_grp.update_policy.data)
