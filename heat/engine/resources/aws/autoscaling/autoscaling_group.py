@@ -281,19 +281,22 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
                min_adjustment_step=None):
         """Adjust the size of the scaling group if the cooldown permits."""
-        if not self._is_scaling_allowed():
-            LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
-                         "cooldown %(cooldown)s"),
-                     {'name': self.name,
-                      'cooldown': self.properties[self.COOLDOWN]})
-            raise exception.NoActionRequired()
-
         capacity = grouputils.get_size(self)
         new_capacity = self._get_new_capacity(capacity, adjustment,
                                               adjustment_type,
                                               min_adjustment_step)
+        if new_capacity == capacity:
+            LOG.info(_LI("%s NOT performing scaling adjustment, "
+                         "as there is no change in capacity.") % self.name)
+            raise exception.NoActionRequired()
 
-        changed_size = new_capacity != capacity
+        if not self._is_scaling_allowed():
+            LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
+                         "cooldown %(cooldown)s") % {
+                'name': self.name,
+                'cooldown': self.properties[self.COOLDOWN]})
+            raise exception.NoActionRequired()
+
         # send a notification before, on-error and on-success.
         notif = {
             'stack': self.stack,
@@ -305,31 +308,37 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                 'group': self.FnGetRefId()},
             'suffix': 'start',
         }
-        notification.send(**notif)
+        size_changed = False
         try:
-            self.resize(new_capacity)
-        except Exception as resize_ex:
-            with excutils.save_and_reraise_exception():
-                try:
-                    notif.update({'suffix': 'error',
-                                  'message': six.text_type(resize_ex),
-                                  'capacity': grouputils.get_size(self),
-                                  })
-                    notification.send(**notif)
-                except Exception:
-                    LOG.exception(_LE('Failed sending error notification'))
-        else:
-            notif.update({
-                'suffix': 'end',
-                'capacity': new_capacity,
-                'message': _("End resizing the group %(group)s") % {
-                    'group': notif['groupname']},
-            })
             notification.send(**notif)
+            try:
+                self.resize(new_capacity)
+            except Exception as resize_ex:
+                with excutils.save_and_reraise_exception():
+                    try:
+                        notif.update({'suffix': 'error',
+                                      'message': six.text_type(resize_ex),
+                                      'capacity': grouputils.get_size(self),
+                                      })
+                        notification.send(**notif)
+                    except Exception:
+                        LOG.exception(_LE('Failed sending error notification'))
+            else:
+                size_changed = True
+                notif.update({
+                    'suffix': 'end',
+                    'capacity': new_capacity,
+                    'message': _("End resizing the group %(group)s") % {
+                        'group': notif['groupname']},
+                })
+                notification.send(**notif)
+        except Exception:
+            LOG.error(_LE("Error in performing scaling adjustment for"
+                          "group %s.") % self.name)
+            raise
         finally:
             self._finished_scaling("%s : %s" % (adjustment_type, adjustment),
-                                   changed_size=changed_size)
-        return changed_size
+                                   size_changed=size_changed)
 
     def _tags(self):
         """Add Identifying Tags to all servers in the group.

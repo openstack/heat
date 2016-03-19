@@ -49,13 +49,12 @@ class CooldownMixin(object):
         self.metadata_set(metadata)
         return True
 
-    def _finished_scaling(self, cooldown_reason,
-                          changed_size=True):
+    def _finished_scaling(self, cooldown_reason, size_changed=True):
         # If we wanted to implement the AutoScaling API like AWS does,
         # we could maintain event history here, but since we only need
         # the latest event for cooldown, just store that for now
         metadata = self.metadata_get()
-        if changed_size:
+        if size_changed:
             now = timeutils.utcnow().isoformat()
             metadata['cooldown'] = {now: cooldown_reason}
         metadata['scaling_in_progress'] = False
