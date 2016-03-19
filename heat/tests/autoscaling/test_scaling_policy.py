@@ -121,8 +121,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                return_value=True) as mock_isa:
             pol.handle_signal(details=test)
             mock_isa.assert_called_once_with()
-        group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None,
-                                             signal=True)
+        group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None)
 
     @mock.patch.object(aws_sp.AWSScalingPolicy, '_get_ec2_signed_url')
     def test_scaling_policy_refid_signed_url(self, mock_get_ec2_url):
