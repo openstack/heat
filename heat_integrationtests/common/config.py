@@ -38,9 +38,13 @@ IntegrationTestGroup = [
     cfg.StrOpt('auth_url',
                default=os.environ.get('OS_AUTH_URL'),
                help="Full URI of the OpenStack Identity API (Keystone)"),
-    cfg.StrOpt('domain_name',
-               default='default',
-               help="User/project domain name, if keystone v3 auth_url"
+    cfg.StrOpt('user_domain_name',
+               default=os.environ.get('OS_USER_DOMAIN_NAME'),
+               help="User domain name, if keystone v3 auth_url"
+                    "is used"),
+    cfg.StrOpt('project_domain_name',
+               default=os.environ.get('OS_PROJECT_DOMAIN_NAME'),
+               help="Project domain name, if keystone v3 auth_url"
                     "is used"),
     cfg.StrOpt('region',
                default=os.environ.get('OS_REGION_NAME'),
