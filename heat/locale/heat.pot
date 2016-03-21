@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0b4.dev90\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev4\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-16 06:34+0000\n"
+"POT-Creation-Date: 2016-03-21 06:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1504,22 +1504,22 @@ msgid ""
 "restricted_action types are: %(types)s"
 msgstr ""
 
-#: heat/engine/environment.py:526 heat/tests/test_resource.py:220
+#: heat/engine/environment.py:533 heat/tests/test_resource.py:220
 #, python-format
 msgid "Resource \"%s\" has no type"
 msgstr ""
 
-#: heat/engine/environment.py:529
+#: heat/engine/environment.py:536
 #, python-format
 msgid "Non-empty resource type is required for resource \"%s\""
 msgstr ""
 
-#: heat/engine/environment.py:533
+#: heat/engine/environment.py:540
 #, python-format
 msgid "Resource \"%s\" type is not a string"
 msgstr ""
 
-#: heat/engine/environment.py:570
+#: heat/engine/environment.py:577
 #, python-format
 msgid "Invalid support status and should be one of %s"
 msgstr ""
@@ -1718,8 +1718,8 @@ msgstr ""
 msgid "limit cannot be less than 4"
 msgstr ""
 
-#: heat/engine/resource.py:1347 heat/engine/cfn/template.py:159
-#: heat/engine/hot/template.py:262
+#: heat/engine/resource.py:1347 heat/engine/cfn/template.py:160
+#: heat/engine/hot/template.py:263
 #, python-format
 msgid "Invalid deletion policy \"%s\""
 msgstr ""
@@ -1729,12 +1729,12 @@ msgstr ""
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:1756 heat/engine/stack.py:830
+#: heat/engine/resource.py:1756 heat/engine/stack.py:836
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:1759 heat/engine/stack.py:833
+#: heat/engine/resource.py:1759 heat/engine/stack.py:839
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
@@ -1839,26 +1839,26 @@ msgstr ""
 msgid "Invalid stack name %s, must be a string"
 msgstr ""
 
-#: heat/engine/stack.py:276
+#: heat/engine/stack.py:280
 msgid "Attempt to use stored_context with no user_creds"
 msgstr ""
 
-#: heat/engine/stack.py:447 heat/objects/stack.py:197
+#: heat/engine/stack.py:451 heat/objects/stack.py:197
 #, python-format
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/stack.py:739
+#: heat/engine/stack.py:745
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:769
+#: heat/engine/stack.py:775
 #, python-format
 msgid "Outputs must contain Output. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/stack.py:777
+#: heat/engine/stack.py:783
 msgid "Each Output must contain a Value key."
 msgstr ""
 
@@ -2614,33 +2614,33 @@ msgstr ""
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:292
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:291
 #, python-format
 msgid "Start resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:313
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:312
 #, python-format
 msgid "End resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:338
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:337
 msgid "MinSize can not be greater than MaxSize"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:342
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:341
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:348
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:347
 msgid "DesiredCapacity must be between MinSize and MaxSize"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:357
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:356
 msgid "Anything other than one VPCZoneIdentifier"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:367
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:366
 msgid "Either 'InstanceId' or 'LaunchConfigurationName' must be provided."
 msgstr ""
 
@@ -4143,17 +4143,17 @@ msgstr ""
 msgid "Tag value."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/instance_group.py:143
+#: heat/engine/resources/openstack/heat/instance_group.py:144
 #, python-format
 msgid "Maximum %s is 1 hour."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/instance_group.py:156
+#: heat/engine/resources/openstack/heat/instance_group.py:157
 #, python-format
 msgid "%(lc)s (%(ref)s) reference can not be found."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/instance_group.py:161
+#: heat/engine/resources/openstack/heat/instance_group.py:162
 #, python-format
 msgid ""
 "%(lc)s (%(ref)s) requires a reference to the configuration not just the "
@@ -4680,9 +4680,8 @@ msgstr ""
 
 #: heat/engine/resources/openstack/heat/software_deployment.py:660
 msgid ""
-"The resource OS::Heat::SoftwareDeployments is deprecated and usage is "
-"discouraged. Please use resource OS::Heat::SoftwareDeploymentGroup "
-"instead."
+"Use of this resource is discouraged. Please use "
+"OS::Heat::SoftwareDeploymentGroup instead."
 msgstr ""
 
 #: heat/engine/resources/openstack/heat/structured_config.py:64
@@ -4704,9 +4703,8 @@ msgstr ""
 
 #: heat/engine/resources/openstack/heat/structured_config.py:238
 msgid ""
-"The resource OS::Heat::StructuredDeployments is deprecated and usage is "
-"discouraged. Please use resource OS::Heat::StructuredDeploymentGroup "
-"instead."
+"Use of this resource is discouraged. Please use "
+"OS::Heat::StructuredDeploymentGroup instead."
 msgstr ""
 
 #: heat/engine/resources/openstack/heat/swiftsignal.py:76
@@ -5713,24 +5711,22 @@ msgid "Address family of the address scope, which is 4 or 6."
 msgstr ""
 
 #: heat/engine/resources/openstack/neutron/extraroute.py:35
-msgid ""
-"The resource OS::Neutron::ExtraRoute is not supported, use at your own "
-"risk."
+msgid "Use this resource at your own risk."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/extraroute.py:47
+#: heat/engine/resources/openstack/neutron/extraroute.py:46
 msgid "The router id."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/extraroute.py:55
+#: heat/engine/resources/openstack/neutron/extraroute.py:54
 msgid "Network in CIDR notation."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/extraroute.py:59
+#: heat/engine/resources/openstack/neutron/extraroute.py:58
 msgid "Nexthop IP address."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/extraroute.py:91
+#: heat/engine/resources/openstack/neutron/extraroute.py:90
 msgid "Route duplicates an existing route."
 msgstr ""
 

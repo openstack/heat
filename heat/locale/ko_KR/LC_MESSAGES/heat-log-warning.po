@@ -1,0 +1,351 @@
+# SeYeon Lee <sy_lee@kr.ibm.com>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: heat 6.0.0.0rc2.dev2\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2016-03-18 15:11+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2016-03-21 03:00+0000\n"
+"Last-Translator: SeYeon Lee <sy_lee@kr.ibm.com>\n"
+"Language-Team: Korean (South Korea)\n"
+"Language: ko-KR\n"
+"X-Generator: Zanata 3.7.3\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+
+#, python-format
+msgid ""
+"\"%(subnet)s\" will be ignored if specified \"%(net_interfaces)s\". So if "
+"you specified the \"%(net_interfaces)s\" property, do not specify "
+"\"%(subnet)s\" property."
+msgstr ""
+"\"%(net_interfaces)s\"이(가) 지정된 경우 \"%(subnet)s\"이(가) 무시됩니다. "
+"\"%(net_interfaces)s\" 특성을 지정한 경우 \"%(subnet)s\"특성을 지정하지 마십"
+"시오."
+
+#, python-format
+msgid "%s"
+msgstr "%s"
+
+#, python-format
+msgid "Access denied to resource %s"
+msgstr "%s 자원에 대한 액세스가 거부됨"
+
+#, python-format
+msgid "Attribute %(name)s is not of type %(att_type)s"
+msgstr "%(name)s 속성의 유형이 %(att_type)s이(가) 아님"
+
+msgid "Cannot generate signed url, unable to create keypair"
+msgstr "서명된 url을 생성할 수 없으므로 키 페어를 생성할 수 없음"
+
+#, python-format
+msgid "Changing %(path)s from %(was)s to %(now)s"
+msgstr "%(path)s을(를) %(was)s에서 %(now)s(으)로 변경"
+
+#, python-format
+msgid "Could not process watch state %s for stack"
+msgstr "스택의 감시 상태  %s을(를) 처리할 수 없음"
+
+#, python-format
+msgid "Creating generic resource (Type \"%s\")"
+msgstr "일반 자원(유형 \"%s\") 생성"
+
+#, python-format
+msgid "Deleting generic resource (Type \"%s\")"
+msgstr "일반 자원(유형 \"%s\") 삭제"
+
+#, python-format
+msgid "Failed to fetch resource attributes: %s"
+msgstr "자원 속성을 가져오는 데 실패: %s"
+
+#, python-format
+msgid ""
+"Failed to set state of stack %(name)s with traversal ID %(trvsl_id)s, to "
+"%(action)s_%(status)s"
+msgstr ""
+"조회 ID가 %(trvsl_id)s인 %(name)s 스택의 상태를 %(action)s_%(status)s(으)로 "
+"설정하는 데 실패"
+
+#, python-format
+msgid ""
+"Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
+"stack %(action)s"
+msgstr ""
+"조회 ID가 %(trvsl_id)s인 스택 %(name)s을(를) 저장하는 데 실패하여 %(action)s "
+"스택을 중단"
+
+#, python-format
+msgid ""
+"Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
+"stack purge"
+msgstr ""
+"조회 ID가 %(trvsl_id)s인 %(name)s 스택을 저장하는 데 실패하여 스택 제거를 중"
+"단"
+
+#, python-format
+msgid ""
+"Failed to store stack %(name)s with traversal ID %(trvsl_id)s, not "
+"trigerring rollback."
+msgstr ""
+"조회 ID가 %(trvsl_id)s인 %(name)s 스택을 저장하는 데 실패하여, 롤백을 트리거"
+"하지 않음"
+
+#, python-format
+msgid "Failed to unlock resource %s"
+msgstr "%s 자원을 잠금 해제하는 데 실패"
+
+#, python-format
+msgid "Head container failed: %s"
+msgstr "헤드 컨테이너 실패: %s"
+
+#, python-format
+msgid "Ignoring error adding implicit dependencies for %(res)s: %(err)s"
+msgstr "%(res)s의 내재적 종속성을 추가하는 중에 발생하는 오류 무시: %(err)s"
+
+#, python-format
+msgid "Ignoring error in old property value %(prop_name)s: %(msg)s"
+msgstr "이전 특성 값 %(prop_name)s의 오류 무시: %(msg)s"
+
+#, python-format
+msgid "Instance (%(server)s) not found: %(ex)s"
+msgstr "(%(server)s) 인스턴스가 없음: %(ex)s"
+
+#, python-format
+msgid "Invalid filter key %s, ignoring"
+msgstr "올바르지 않은 필터 키 %s, 무시"
+
+#, python-format
+msgid "Lock was already released on stack %s!"
+msgstr "%s 스택에서 잠금이 이미 해제되었습니다!"
+
+msgid "Not deleting non heat-domain project"
+msgstr "히트 도메인이 아닌 프로젝트를 삭제하지 않음"
+
+msgid ""
+"OSProfiler is enabled.\n"
+"It means that person who knows any of hmac_keys that are specified in /etc/"
+"heat/heat.conf can trace his requests. \n"
+"In real life only operator can read this file so there is no security issue. "
+"Note that even if person can trigger profiler, only admin user can retrieve "
+"trace information.\n"
+"To disable OSprofiler set in heat.conf:\n"
+"[profiler]\n"
+"enabled=false"
+msgstr ""
+"OSProfiler를 사용하지 않습니다.\n"
+"즉, /etc/heat/heat.conf에 지정된 hmac_keys만 아는 사용자가 요청을 추적할 수 "
+"있습니다. \n"
+"실제로 운영자만 이 파일을 읽을 수 있으므로 보안 문제가 발생하지 않습니다. 사"
+"용자가 프로파일러를 트리거할 수 있어도 관리자만 추적 정보를 검색할 수 있습니"
+"다.\n"
+"heat.conf에 설정된 OSprofiler를 사용하지 않으려면 다음을 수행하십시오.\n"
+"[profiler]\n"
+"enabled=false"
+
+#, python-format
+msgid "Old Engine Version: %s"
+msgstr "이전 엔진 버전: %s"
+
+#, python-format
+msgid "Option 'required=True' should not be used with any 'default' value (%s)"
+msgstr "'required=True' 옵션을 'default' 값(%s)과 사용하지 않아야 함"
+
+#, python-format
+msgid "Overwriting Metadata item for id %s!"
+msgstr "ID %s의 메타데이터 항목 겹쳐쓰기!"
+
+msgid "Please update auth_encryption_key to be 32 characters."
+msgstr "32자가 되도록 auth_encryption_key를 업데이트하십시오."
+
+#, python-format
+msgid "Preview of '%s' not yet implemented"
+msgstr "'%s' 미리보기가 아직 구현되지 않음"
+
+msgid ""
+"Reading the ResourceDefinition as if it were a snippet of a CloudFormation "
+"template is deprecated, and the ability to treat it as such will be removed "
+"in the future. Resource plugins should use the ResourceDefinition API to "
+"work with the definition of the resource instance."
+msgstr ""
+"ResourceDefinition을 CloudFormation 템플릿의 스니펫처럼 읽는 기능은 더 이상 "
+"사용되지 않으며, 이러한 기능은 향후 제거될 예정입니다. 자원 플러그인에서는 "
+"ResourceDefinition API를 사용하여 자원 인스턴스 정의에 대한 작업을 수행해야 "
+"합니다."
+
+#, python-format
+msgid ""
+"Received an OverLimit response when fetching server (%(id)s) : %(exception)s"
+msgstr " (%(id)s) 서버를 가져올 때 OverLimit 응답을 수신함 : %(exception)s"
+
+#, python-format
+msgid ""
+"Received the following exception when fetching server (%(id)s) : "
+"%(exception)s"
+msgstr "(%(id)s) 서버를 가져올 때 다음 예외 발생 : %(exception)s"
+
+#, python-format
+msgid "Removing %(item)s from %(path)s"
+msgstr "%(path)s에서 %(item)s 제거 "
+
+#, python-format
+msgid "Requested client \"%s\" not found"
+msgstr "요청된 클라이언트 \"%s\"이(가) 없음"
+
+#, python-format
+msgid "Resolving 'show' attribute has failed : %s"
+msgstr "'show' 속성을 분석하는 데 실패 : %s"
+
+#, python-format
+msgid "Resource \"%s\" not pre-stored in DB"
+msgstr "DB에 \"%s\" 자원이 미리 저장되지 않음"
+
+#, python-format
+msgid "Resource %s does not implement metadata update"
+msgstr "%s 자원이 메타데이터 업데이트를 구현하지 않음"
+
+#, python-format
+msgid ""
+"Resource cannot be updated with it's live state in case of next error: %s"
+msgstr "다음에 오류가 발생하면 활성 상태로 자원을 업데이트할 수 없음: %s"
+
+#, python-format
+msgid "Resuming generic resource (Type \"%s\")"
+msgstr "일반 자원(유형 \"%s\") 재개"
+
+msgid "Reverting to legacy user delete path"
+msgstr "레거시 사용자 삭제 경로로 되돌리기"
+
+#, python-format
+msgid ""
+"Server \"%(name)s\" (%(id)s) received the following exception during server."
+"get(): %(exception)s"
+msgstr ""
+"server.get() 중에 \"%(name)s\" (%(id)s) 서버에서 다음 예외 발생: "
+"%(exception)s"
+
+#, python-format
+msgid ""
+"Server %(name)s (%(id)s) received an OverLimit response during server.get(): "
+"%(exception)s"
+msgstr ""
+"server.get() 중에 %(name)s (%(id)s) 서버에서 OverLimit 응답을 수신함: "
+"%(exception)s"
+
+#, python-format
+msgid "Signaled resource (Type \"%(type)s\") %(details)s"
+msgstr "신호를 보낸 자원(유형 \"%(type)s\") %(details)s"
+
+msgid "Skipping association, resource not specified"
+msgstr "자원이 지정되지 않았으므로 연결을 건너뜀"
+
+#, python-format
+msgid ""
+"Stack %(name)s (%(id)s) received an OverLimit response during clusters."
+"get(): %(exception)s"
+msgstr ""
+"clusters.get() 중에 %(name)s (%(id)s) 스택에서 OverLimit 응답을 수신함: "
+"%(exception)s"
+
+#, python-format
+msgid ""
+"Stack %(name)s (%(id)s) received an OverLimit response during instance."
+"get(): %(exception)s"
+msgstr ""
+"instance.get() 중에 %(name)s (%(id)s) 스택에서 OverLimit 응답을 수신함: "
+"%(exception)s"
+
+#, python-format
+msgid "Suspending generic resource (Type \"%s\")"
+msgstr "일반 자원(유형 \"%s\") 일시중단"
+
+msgid ""
+"The default value of \"trusts_delegated_roles\" option in heat.conf is "
+"changed to [] in Kilo and heat will delegate all roles of trustor. Please "
+"keep the same if you do not want to delegate subset roles when upgrading."
+msgstr ""
+"heat.conf에 있는 \"trusts_delegated_roles\" 옵션의 기본값이 Kilo의 []로 변경"
+"되었으며 히트에서 트러스터(trustor)의 모든 역할을 위임합니다. 업그레이드 시 "
+"서브세트 역할을 위임하지 않으려는 경우 동일하게 유지하십시오."
+
+#, python-format
+msgid ""
+"There is no change of \"%(net_interfaces)s\" for instance %(server)s, do "
+"nothing when updating."
+msgstr ""
+"%(server)s 인스턴스의 \"%(net_interfaces)s\"이(가) 변경되지 않아, 업데이트 "
+"시 아무 작업도 수행하지 않습니다."
+
+#, python-format
+msgid "Truncating the username %s to the last 64 characters."
+msgstr "사용자  이름 %s을(를) 마지막 64자로 자르기."
+
+#, python-format
+msgid "Unable to get details for project %s, not deleting"
+msgstr "%s 프로젝트의 세부 사항을 가져올 수 없으므로, 삭제하지 않음"
+
+#, python-format
+msgid "Unable to override state %(state)s for watch %(name)s"
+msgstr "감시 %(name)s의 %(state)s 상태를 겹쳐쓸 수 없음"
+
+msgid "Unable to serialize exception response"
+msgstr "예외 응답을 직렬화할 수 없음"
+
+msgid "Unable to set parameters StackId identifier"
+msgstr "매개변수 StackId 식별자를 설정할 수 없음"
+
+msgid "Unexpected instance state change during update. Retrying."
+msgstr ""
+"업데이트 중에 예상치 못한 인스턴스 상태 변경이 발생했습니다. 다시 시도합니다."
+
+#, python-format
+msgid "Unrecognised child %s"
+msgstr "인식되지 않은 하위 %s"
+
+#, python-format
+msgid "Updating generic resource (Type \"%s\")"
+msgstr "일반 자원(유형 \"%s\") 업데이트"
+
+#, python-format
+msgid ""
+"Using the keystone_authtoken user as the heat trustee user directly is "
+"deprecated. Please add the trustee credentials you need to the %s section of "
+"your heat.conf file."
+msgstr ""
+"keystone_authtoken 사용자를 히트 트러스티(trustee) 사용자로 사용하는 기능은 "
+"더 이상 사용되지 않습니다. 필요한 트러스티 자격 증명을 heat.conf 파일의 %s 섹"
+"션에 추가하십시오."
+
+#, python-format
+msgid "WatchRule.load (%(watch_name)s) db error %(ex)s"
+msgstr "WatchRule.load (%(watch_name)s) db 오류 %(ex)s"
+
+#, python-format
+msgid "db error %s"
+msgstr "db 오류 %s"
+
+msgid ""
+"get_live_state isn't implemented for this type of resource due to specific "
+"behaviour of cron trigger in mistral."
+msgstr ""
+"mistral의 특정 cron 트리거 동작으로 인해 이 유형의 자원에 대해 get_live_state"
+"가 구현되지 않았습니다."
+
+#, python-format
+msgid "periodic_task db error watch rule removed? %(ex)s"
+msgstr "periodic_task db 오류 감시 규칙이 제거되었습니까? %(ex)s"
+
+#, python-format
+msgid "show_metric (all) db error %s"
+msgstr "show_metric (all) db 오류 %s"
+
+#, python-format
+msgid "show_watch (all) db error %s"
+msgstr "show_watch (all) db 오류 %s"
+
+msgid ""
+"stack_user_domain_id or stack_user_domain_name not set in heat.conf falling "
+"back to using default"
+msgstr ""
+"heat.conf에 stack_user_domain_id 또는 stack_user_domain_name이 설정되지 않"
+"아, 다시 기본값을 사용함"
