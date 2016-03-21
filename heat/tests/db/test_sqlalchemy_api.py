@@ -2901,10 +2901,6 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPICryptParamsPropsTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.template = self._create_template()
-        self.user_creds = create_user_creds(self.ctx)
-        self.stack = create_stack(self.ctx, self.template, self.user_creds)
-        self.resources = [create_resource(self.ctx, self.stack, name='res1')]
 
     def _create_template(self):
         """Initialize sample template."""
@@ -2963,6 +2959,34 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                     'param_boolean': '1',
                     'param_map': '{\"test\":\"json\"}',
                     'param_comma_list': '[\"Hola\", \"Senor\"]'}}}
+
+        return db_api.raw_template_create(self.ctx, template)
+
+    def _create_malformed_template(self):
+        """Initialize a malformed template which should fail the encryption."""
+        t = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+            param3:
+                type: string
+                description: value3
+                hidden: true
+                default: "don't encrypt me! I'm not sensitive enough"
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        template = {
+            'template': t,
+            'files': {'foo': 'bar'},
+            'environment': ''}  # <- environment should be a dict
 
         return db_api.raw_template_create(self.ctx, template)
 
@@ -3072,9 +3096,38 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             # raw_template.environment
             self.assertIsNone(r_tmpl.environment['parameters'].get('param3'))
 
+    def _test_db_encrypt_decrypt_malformed(self, batch_size=50):
+        session = db_api.get_session()
+
+        r_tmpls = session.query(models.RawTemplate).all()
+        self.assertEqual('', r_tmpls[0].environment)
+
+        # Test encryption
+        db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key, batch_size=batch_size)
+        session = db_api.get_session()
+        enc_tmpls = session.query(models.RawTemplate).all()
+        self.assertEqual('', enc_tmpls[0].environment)
+        self.assertEqual('cryptography_decrypt_v1',
+                         enc_tmpls[1].environment['parameters']['param2'][0])
+
+        # Test decryption
+        db_api.db_decrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key, batch_size=batch_size)
+        session = db_api.get_session()
+        dec_tmpls = session.query(models.RawTemplate).all()
+        self.assertEqual('', dec_tmpls[0].environment)
+        self.assertEqual('bar',
+                         dec_tmpls[1].environment['parameters']['param2'])
+
+    def _delete_templates(self, template_refs):
+        for tmpl_ref in template_refs:
+            db_api.raw_template_delete(self.ctx, tmpl_ref.id)
+
     def test_db_encrypt_decrypt(self):
         """Test encryption and decryption for single template"""
-        self._create_template()
+        tmpl = self._create_template()
+        self.addCleanup(self._delete_templates, [tmpl])
         self._test_db_encrypt_decrypt()
 
     def test_db_encrypt_decrypt_in_batches(self):
@@ -3083,6 +3136,14 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         Test encryption and decryption when heat requests templates in batch:
         predefined amount records.
         """
-        self._create_template()
-        self._create_template()
+        tmpl1 = self._create_template()
+        tmpl2 = self._create_template()
+        self.addCleanup(self._delete_templates, [tmpl1, tmpl2])
         self._test_db_encrypt_decrypt(batch_size=1)
+
+    def test_db_encrypt_decrypt_exception_continue(self):
+        """Test that encryption and decryption proceed after an exception"""
+        tmpl1 = self._create_malformed_template()
+        tmpl2 = self._create_template()
+        self.addCleanup(self._delete_templates, [tmpl1, tmpl2])
+        self._test_db_encrypt_decrypt_malformed()
