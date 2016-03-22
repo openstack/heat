@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 import uuid
 
 from oslo_config import cfg
@@ -223,7 +224,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.context, **derived_params)
         return derived_config[rpc_api.SOFTWARE_CONFIG_ID]
 
-    def _handle_action(self, action):
+    def _load_config(self):
         if self.properties.get(self.CONFIG):
             config = self.rpc_client().show_software_config(
                 self.context, self.properties.get(self.CONFIG))
@@ -238,6 +239,12 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             swc_io.OutputConfig(**o)
             for o in config.get(rpc_api.SOFTWARE_CONFIG_OUTPUTS, [])
         ]
+
+        return config
+
+    def _handle_action(self, action, config=None):
+        if config is None:
+            config = self._load_config()
 
         if config.get(rpc_api.SOFTWARE_CONFIG_GROUP) == 'component':
             valid_actions = set()
@@ -423,11 +430,28 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            self.properties = json_snippet.properties(self.properties_schema,
-                                                      self.context)
+        old_config_id = self.properties.get(self.CONFIG)
+        config = self._load_config()
+        old_inputs = {i.name(): i
+                      for i in self._build_derived_inputs(self.UPDATE, config)}
 
-        return self._handle_action(self.UPDATE)
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
+
+        new_config_id = self.properties.get(self.CONFIG)
+        if old_config_id != new_config_id:
+            config = self._load_config()
+        new_inputs = {i.name(): i
+                      for i in self._build_derived_inputs(self.UPDATE, config)}
+
+        for name, inp in six.iteritems(new_inputs):
+            if inp.replace_on_change() and name in old_inputs:
+                if inp.input_data() != old_inputs[name].input_data():
+                    LOG.debug('Replacing SW Deployment due to change in '
+                              'input "%s"', name)
+                    raise exception.UpdateReplace
+
+        return self._handle_action(self.UPDATE, config=config)
 
     def check_update_complete(self, sd):
         if not sd:
