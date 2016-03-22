@@ -10,9 +10,9 @@
 # Linda <duleish@cn.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev8\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev7\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-17 15:36+0000\n"
+"POT-Creation-Date: 2016-03-21 10:32+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -5990,24 +5990,6 @@ msgstr "请求的动作还未实现"
 #, python-format
 msgid "The resource %s is already being updated."
 msgstr "已在更新资源 %s。"
-
-msgid ""
-"The resource OS::Heat::SoftwareDeployments is deprecated and usage is "
-"discouraged. Please use resource OS::Heat::SoftwareDeploymentGroup instead."
-msgstr ""
-"已不推荐使用资源 OS::Heat::SoftwareDeployments。请改用资源 OS::Heat::"
-"SoftwareDeploymentGroup。"
-
-msgid ""
-"The resource OS::Heat::StructuredDeployments is deprecated and usage is "
-"discouraged. Please use resource OS::Heat::StructuredDeploymentGroup instead."
-msgstr ""
-"已不推荐使用资源 OS::Heat::StructuredDeployments。请改用资源 OS::Heat::"
-"StructuredDeploymentGroup。"
-
-msgid ""
-"The resource OS::Neutron::ExtraRoute is not supported, use at your own risk."
-msgstr "资源 OS::Neutron::ExtraRoute 不受支持，使用时风险自负。"
 
 msgid "The resource href of the queue."
 msgstr "队列的资源 href。"

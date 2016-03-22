@@ -8,13 +8,13 @@
 # Grigory Mokhin <mokhin@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev2\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev7\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-18 15:11+0000\n"
+"POT-Creation-Date: 2016-03-21 10:32+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-18 10:10+0000\n"
+"PO-Revision-Date: 2016-03-21 07:09+0000\n"
 "Last-Translator: Grigory Mokhin <mokhin@gmail.com>\n"
 "Language: ru\n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
@@ -953,6 +953,10 @@ msgstr "Аргументы \"%s\" должны иметь формат [имя-�
 #, python-format
 msgid "Arguments to %s not fully resolved"
 msgstr "Аргументы %s обрабатываются неполностью"
+
+#, python-format
+msgid "At least one of the following properties must be specified: %(props)s"
+msgstr "Необходимо указать хотя бы одно из следующих свойств: %(props)s"
 
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
@@ -6502,26 +6506,6 @@ msgstr "Запрашиваемое действие пока не реализо
 #, python-format
 msgid "The resource %s is already being updated."
 msgstr "Ресурс %s уже обновляется."
-
-msgid ""
-"The resource OS::Heat::SoftwareDeployments is deprecated and usage is "
-"discouraged. Please use resource OS::Heat::SoftwareDeploymentGroup instead."
-msgstr ""
-"Ресурс OS::Heat::SoftwareDeployments устарел и не рекомендуется к "
-"использованию. Вместо него используйте OS::Heat::SoftwareDeploymentGroup."
-
-msgid ""
-"The resource OS::Heat::StructuredDeployments is deprecated and usage is "
-"discouraged. Please use resource OS::Heat::StructuredDeploymentGroup instead."
-msgstr ""
-"Ресурс OS::Heat::StructuredDeployments устарел и не рекомендуется к "
-"использованию. Вместо него используйте OS::Heat::StructuredDeploymentGroup."
-
-msgid ""
-"The resource OS::Neutron::ExtraRoute is not supported, use at your own risk."
-msgstr ""
-"Ресурс OS::Neutron::ExtraRoute не поддерживается. Результаты его "
-"использования могут быть непредсказуемыми."
 
 msgid "The resource href of the queue."
 msgstr "Ресурс href очереди."
