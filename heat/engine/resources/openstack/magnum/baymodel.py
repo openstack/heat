@@ -110,6 +110,12 @@ class BayModel(resource.Resource):
         SSH_AUTHORIZED_KEY: properties.Schema(
             properties.Schema.STRING,
             _('The SSH Authorized Key.'),
+            support_status=support.SupportStatus(
+                status=support.HIDDEN,
+                version='6.0.0',
+                message=_('This attribute has been removed in Magnum'),
+                previous_status=support.SupportStatus(version='5.0.0')
+            )
         ),
         COE: properties.Schema(
             properties.Schema.STRING,
@@ -183,7 +189,6 @@ class BayModel(resource.Resource):
             'fixed_network': self.properties[self.FIXED_NETWORK],
             'dns_nameserver': self.properties[self.DNS_NAMESERVER],
             'docker_volume_size': self.properties[self.DOCKER_VOLUME_SIZE],
-            'ssh_authorized_key': self.properties[self.SSH_AUTHORIZED_KEY],
             'coe': self.properties[self.COE],
         }
         if self.properties[self.NETWORK_DRIVER]:
