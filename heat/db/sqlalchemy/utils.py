@@ -13,7 +13,9 @@
 
 # SQLAlchemy helper functions
 
+import retrying
 import sqlalchemy
+from sqlalchemy.orm import exc
 
 
 def clone_table(name, parent, meta, newcols=None, ignorecols=None,
@@ -86,3 +88,11 @@ def migrate_data(migrate_engine,
     table.drop()
 
     new_table.rename(table_name)
+
+
+def retry_on_stale_data_error(func):
+    def is_staledata_error(ex):
+        return isinstance(ex, exc.StaleDataError)
+    wrapper = retrying.retry(stop_max_attempt_number=3,
+                             retry_on_exception=is_staledata_error)
+    return wrapper(func)

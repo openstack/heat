@@ -215,7 +215,8 @@ class UserCreds(BASE, HeatBase):
     tenant_id = sqlalchemy.Column(sqlalchemy.String(256))
     trust_id = sqlalchemy.Column(sqlalchemy.String(255))
     trustor_user_id = sqlalchemy.Column(sqlalchemy.String(64))
-    stack = relationship(Stack, backref=backref('user_creds'))
+    stack = relationship(Stack, backref=backref('user_creds'),
+                         cascade_backrefs=False)
 
 
 class Event(BASE, HeatBase):
