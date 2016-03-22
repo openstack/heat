@@ -1339,6 +1339,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         self._delete_internal_ports()
         self.data_delete('external_ports')
 
+        if self.resource_id is None:
+            return
+
         try:
             self.client().servers.delete(self.resource_id)
         except Exception as e:
@@ -1347,10 +1350,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return progress.ServerDeleteProgress(self.resource_id)
 
     def handle_snapshot_delete(self, state):
-        if self.resource_id is None:
-            return
 
-        if state[1] != self.FAILED:
+        if state[1] != self.FAILED and self.resource_id:
             image_id = self.client().servers.create_image(
                 self.resource_id, self.physical_resource_name())
             return progress.ServerDeleteProgress(
@@ -1358,8 +1359,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return self._delete()
 
     def handle_delete(self):
-        if self.resource_id is None:
-            return
 
         return self._delete()
 

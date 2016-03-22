@@ -3944,15 +3944,60 @@ class ServersTest(common.HeatTestCase):
         create_image = self.patchobject(self.fc.servers, 'create_image')
 
         # test resource_id is None
+        self.patchobject(servers.Server, 'user_data_software_config',
+                         return_value=True)
+        delete_internal_ports = self.patchobject(servers.Server,
+                                                 '_delete_internal_ports')
+        delete_queue = self.patchobject(servers.Server, '_delete_queue')
+        delete_user = self.patchobject(servers.Server, '_delete_user')
+        delete_swift_object = self.patchobject(servers.Server,
+                                               '_delete_temp_url')
         rsrc.handle_snapshot_delete((rsrc.CREATE, rsrc.FAILED))
+
         delete_server.assert_not_called()
         create_image.assert_not_called()
+        # attempt to delete queue/user/swift_object/internal_ports
+        # if no resource_id
+        delete_internal_ports.assert_called_once_with()
+        delete_queue.assert_called_once_with()
+        delete_user.assert_called_once_with()
+        delete_swift_object.assert_called_once_with()
 
         # test has resource_id but state is CREATE_FAILED
         rsrc.resource_id = '4567'
         rsrc.handle_snapshot_delete((rsrc.CREATE, rsrc.FAILED))
         delete_server.assert_called_once_with('4567')
         create_image.assert_not_called()
+        # attempt to delete internal_ports if has resource_id
+        self.assertEqual(2, delete_internal_ports.call_count)
+
+    def test_handle_delete_without_resource_id(self):
+        t = template_format.parse(wp_template)
+        tmpl = template.Template(t)
+        stack = parser.Stack(
+            utils.dummy_context(), 'without_resource_id', tmpl)
+        rsrc = stack['WebServer']
+
+        delete_server = self.patchobject(self.fc.servers, 'delete')
+
+        # test resource_id is None
+        self.patchobject(servers.Server, 'user_data_software_config',
+                         return_value=True)
+        delete_internal_ports = self.patchobject(servers.Server,
+                                                 '_delete_internal_ports')
+        delete_queue = self.patchobject(servers.Server, '_delete_queue')
+        delete_user = self.patchobject(servers.Server, '_delete_user')
+        delete_swift_object = self.patchobject(servers.Server,
+                                               '_delete_temp_url')
+        rsrc.handle_delete()
+
+        delete_server.assert_not_called()
+        # attempt to delete queue/user/swift_object/internal_ports
+        # if no resource_id
+        delete_internal_ports.assert_called_once_with()
+        delete_queue.assert_called_once_with()
+        delete_user.assert_called_once_with()
+        delete_swift_object.assert_called_once_with()
 
 
 class ServerInternalPortTest(common.HeatTestCase):
