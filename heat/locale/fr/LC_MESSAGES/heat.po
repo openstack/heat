@@ -9,17 +9,18 @@
 # OpenStack Infra <zanata@openstack.org>, 2015. #zanata
 # SOURDET Henri <hsourdet@gmail.com>, 2015. #zanata
 # Tom Cocozzello <tjcocozz@us.ibm.com>, 2015. #zanata
+# Angelique Pillal <pillal@fr.ibm.com>, 2016. #zanata
 # Sylvie Chesneau <sissicdf@fr.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev7\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-21 10:32+0000\n"
+"POT-Creation-Date: 2016-03-22 09:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-21 11:37+0000\n"
-"Last-Translator: Sylvie Chesneau <sissicdf@fr.ibm.com>\n"
+"PO-Revision-Date: 2016-03-22 04:29+0000\n"
+"Last-Translator: Angelique Pillal <pillal@fr.ibm.com>\n"
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: Babel 2.0\n"
@@ -1131,6 +1132,12 @@ msgstr "Dépendance en boucle trouvée : %(cycle)s"
 msgid "Client entity to poll."
 msgstr "Entité client à interroger."
 
+#, fuzzy
+msgid "Client name and resource getter name must be specified."
+msgstr ""
+"Le nom du client et le nom de la méthode d'accès get de la ressource doivent "
+"être spécifiés."
+
 msgid "Client to poll."
 msgstr "Client à interroger."
 
@@ -1343,6 +1350,9 @@ msgid ""
 msgstr ""
 "Configuration du protocole de détection d'homologue inactif pour la "
 "connexion de site IPSec."
+
+msgid "Dead engines are removed."
+msgstr "Dead engines are removed."
 
 #, python-format
 msgid "Default must be a comma-delimited list string: %s"
@@ -2594,6 +2604,10 @@ msgstr "Clé invalide %s"
 msgid "Invalid key '%(key)s' for %(entity)s"
 msgstr "Clé invalide '%(key)s' pour %(entity)s"
 
+#, fuzzy, python-format
+msgid "Invalid keys in resource mark unhealthy %s"
+msgstr "Clés non valides dans ressource marquée défectueuse %s"
+
 msgid ""
 "Invalid mix of disk and container formats. When setting a disk or container "
 "format to one of 'aki', 'ari', or 'ami', the container and disk formats must "
@@ -3160,6 +3174,20 @@ msgstr "Nombre minimal d'instances dans le groupe."
 
 msgid "Minimum number of resources in the group."
 msgstr "Nombre minimal de ressources dans le groupe."
+
+#, fuzzy
+msgid ""
+"Minimum number of resources that are added or removed when the AutoScaling "
+"group scales up or down. This can be used only when specifying "
+"PercentChangeInCapacity for the AdjustmentType property."
+msgstr ""
+"Nombre minimum de ressources ajoutées ou retirées lorsque le groupe "
+"AutoScaling s'agrandit ou se réduit. Peut être utilisé uniquement lorsque "
+"PercentChangeInCapacity est indiqué pour la propriété AdjustmentType."
+
+#, fuzzy, python-format
+msgid "Missing mandatory (%s) key from mark unhealthy request"
+msgstr "Clé obligatoire (%s) manquante dans demande marquée défectueuse"
 
 #, python-format
 msgid "Missing parameter type for parameter: %s"
@@ -3843,6 +3871,10 @@ msgstr "Sorties reçues"
 
 msgid "Owner of the source security group."
 msgstr "Propriétaire du groupe de sécurité source."
+
+#, fuzzy
+msgid "PATCH update to non-COMPLETE stack"
+msgstr "Mise à jour PATCH dans la pile non-COMPLETE"
 
 #, python-format
 msgid "Parameter '%(name)s' is invalid: %(exp)s"
@@ -4530,6 +4562,10 @@ msgstr "Redimensionnement du volume"
 msgid "Signal data error"
 msgstr "Erreur de données de signal"
 
+#, fuzzy, python-format
+msgid "Signal resource during %s"
+msgstr "Ressource signal pendant %s"
+
 #, python-format
 msgid "Single schema valid only for %(ltype)s, not %(utype)s"
 msgstr "Schéma unique valide uniquement pour %(ltype)s, pas pour %(utype)s"
@@ -4812,6 +4848,52 @@ msgstr "Description de la tâche."
 
 msgid "Task name."
 msgstr "Nom de la tâche."
+
+#, fuzzy
+msgid ""
+"Template default for how the server should receive the metadata required for "
+"software configuration. POLL_SERVER_CFN will allow calls to the cfn API "
+"action DescribeStackResource authenticated with the provided keypair "
+"(requires enabled heat-api-cfn). POLL_SERVER_HEAT will allow calls to the "
+"Heat API resource-show using the provided keystone credentials (requires "
+"keystone v3 API, and configured stack_user_* config options). POLL_TEMP_URL "
+"will create and populate a Swift TempURL with metadata for polling (requires "
+"object-store endpoint which supports TempURL).ZAQAR_MESSAGE will create a "
+"dedicated zaqar queue and post the metadata for polling."
+msgstr ""
+"Modèle par défaut pour indiquer comment le serveur doit recevoir les "
+"métadonnées requises pour la configuration logicielle. POLL_SERVER_CFN va "
+"autoriser les appels vers l'action cfn API DescribeStackResource "
+"authentifiée avec la paire de clés fournie (nécessite que heat-api-cfn soit "
+"activé). POLL_SERVER_HEAT va autoriser les appels vers Heat API resource-"
+"show à l'aide des informations d'identification Keystone fournies (nécessite "
+"v3 API Keystone et les options stack_user_* config de pile configurées). "
+"POLL_TEMP_URL va créer et remplir une TempURL Swift à l'aide de métadonnées "
+"pour l'interrogation (nécessite le noeud final object-store prenant en "
+"charge TempURL). ZAQAR_MESSAGE va créer une file d'attente zaqar dédiée et "
+"publier les métadonnées pour l'interrogation"
+
+#, fuzzy
+msgid ""
+"Template default for how the server should signal to heat with the "
+"deployment output values. CFN_SIGNAL will allow an HTTP POST to a CFN "
+"keypair signed URL (requires enabled heat-api-cfn). TEMP_URL_SIGNAL will "
+"create a Swift TempURL to be signaled via HTTP PUT (requires object-store "
+"endpoint which supports TempURL). HEAT_SIGNAL will allow calls to the Heat "
+"API resource-signal using the provided keystone credentials. ZAQAR_SIGNAL "
+"will create a dedicated zaqar queue to be signaled using the provided "
+"keystone credentials."
+msgstr ""
+"Modèle par défaut pour indiquer comment le serveur doit envoyer un signal à "
+"Heat avec les valeurs de sortie de déploiement. CFN_SIGNAL va autoriser un "
+"HTTP POST vers une URL signée de paire de clés CFN (nécessite que heat-api-"
+"cfn soit activé ). TEMP_URL_SIGNAL va créer une Swift TempURL pour l'envoi "
+"d'un signal via HTTP PUT (nécessite point de terminaison object-store "
+"prenant en charge TempURL). HEAT_SIGNAL va autoriser les appels vers le "
+"signal ressource d'API Heat à l'aide des informations d'identification "
+"Keystone fournies. ZAQAR_SIGNAL va créer une file d'attente zaqar dédiée "
+"pour l'envoi d'un signal à l'aide des informations d'identification Keystone "
+"fournies."
 
 msgid "Template format version not found."
 msgstr "Le format de la version du template n'est pas trouvé"
@@ -6259,6 +6341,44 @@ msgstr ""
 "Fuseau horaire de la contrainte de temps (par ex., 'Taïwan/Taipei', 'Europe/"
 "Amsterdam')."
 
+#, fuzzy
+msgid ""
+"Toggle to enable/disable caching when Orchestration Engine looks for other "
+"OpenStack service resources using name or id. Please note that the global "
+"toggle for oslo.cache(enabled=True in [cache] group) must be enabled to use "
+"this feature."
+msgstr ""
+"Activez/Désactivez la mise en cache lorsque le moteur Orchestration  "
+"recherche d'autres ressources de service OpenStack à l'aide d'un nom ou d'un "
+"ID. Notez que l'activation globale pour oslo.cache(enabled=True dans le "
+"groupe [cache]) doit être activée pour l'utilisation de cette fonction."
+
+msgid ""
+"Toggle to enable/disable caching when Orchestration Engine retrieves "
+"extensions from other OpenStack services. Please note that the global toggle "
+"for oslo.cache(enabled=True in [cache] group) must be enabled to use this "
+"feature."
+msgstr ""
+"Activez/Désactivez la mise en cache lorsque le moteur Orchestration extrait "
+"des extensions d'autres services OpenStack. Notez que l'activation globale "
+"pour oslo.cache(enabled=True dans le groupe [cache]) doit être activée pour "
+"l'utilisation de cette fonction."
+
+#, fuzzy
+msgid ""
+"Toggle to enable/disable caching when Orchestration Engine validates "
+"property constraints of stack.During property validation with constraints "
+"Orchestration Engine caches requests to other OpenStack services. Please "
+"note that the global toggle for oslo.cache(enabled=True in [cache] group) "
+"must be enabled to use this feature."
+msgstr ""
+"Activez/Désactivez la mise en cache lorsque le moteur Orchestration valide "
+"les contraintes de propriété de la pile. Pendant la validation de propriété "
+"avec des contraintes, le moteur Orchestration met en cache les demandes vers "
+"d'autres services OpenStack. Notez que la validation globale pour oslo."
+"cache(enabled=True dans le grouoe [cache]) doit être activée pour "
+"l'utilisation de cette fonction"
+
 msgid ""
 "Token for stack-user which can be used for signalling handle when "
 "signal_transport is set to TOKEN_SIGNAL. None for all other signal "
@@ -6813,6 +6933,33 @@ msgid ""
 msgstr ""
 "Lors de l'exécution du serveur en mode SSL, vous devez spécifier une valeur "
 "d'option cert_file et key_file dans votre fichier de configuration"
+
+#, fuzzy
+msgid ""
+"When this feature is enabled, scheduler hints identifying the heat stack "
+"context of a server or volume resource are passed to the configured "
+"schedulers in nova and cinder, for creates done using heat resource types "
+"OS::Cinder::Volume, OS::Nova::Server, and AWS::EC2::Instance. "
+"heat_root_stack_id will be set to the id of the root stack of the resource, "
+"heat_stack_id will be set to the id of the resource's parent stack, "
+"heat_stack_name will be set to the name of the resource's parent stack, "
+"heat_path_in_stack will be set to a list of tuples, (stackresourcename, "
+"stackname) with list[0] being (None, rootstackname), heat_resource_name will "
+"be set to the resource's name, and heat_resource_uuid will be set to the "
+"resource's orchestration id."
+msgstr ""
+"Lorsque cette fonction est activée, les suggestions de planificateur "
+"identifiant le contexte de pile Heat d'un serveur ou d'une ressource de "
+"volume sont transmises aux planificateurs configurés dans nova et cinder, "
+"pour que les créations soient effectuées avec les types de ressource Heat "
+"OS::Cinder::Volume, OS::Nova::Server et AWS::EC2::Instance. "
+"heat_root_stack_id va être défini sur l'ID de la pile racine de la "
+"ressource, heat_stack_id va être défini sur l'ID de la pile parente de la "
+"ressource, heat_stack_name va être défini sur le nom de la pile parente de "
+"la ressource, heat_path_in_stack va être défini sur une liste d'uplets, "
+"(stackresourcename, stackname) avec list[0] (None, rootstackname), "
+"heat_resource_name va être défini sur le nom de la ressource et "
+"heat_resource_uuid va être défini sur l'ID d'orchestration de la ressource."
 
 msgid ""
 "Whether allow the volume to be attached more than once. This property is "
