@@ -19,9 +19,12 @@ from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
+import retrying
 import six
 
 from heat.common import crypt
+from heat.common import exception
+from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
@@ -29,6 +32,15 @@ from heat.objects import resource_data
 from heat.objects import stack
 
 cfg.CONF.import_opt('encrypt_parameters_and_properties', 'heat.common.config')
+
+
+def retry_on_conflict(func):
+    def is_conflict(ex):
+        return isinstance(ex, exception.ConcurrentTransaction)
+    wrapper = retrying.retry(stop_max_attempt_number=11,
+                             wait_random_min=0.0, wait_random_max=2.0,
+                             retry_on_exception=is_conflict)
+    return wrapper(func)
 
 
 class Resource(
@@ -186,3 +198,11 @@ class Resource(
                 result[prop_name] = encrypted_value
             return (True, result)
         return (False, data)
+
+    def update_metadata(self, metadata):
+        if self.rsrc_metadata != metadata:
+            rows_updated = self.select_and_update(
+                {'rsrc_metadata': metadata}, self.engine_id, self.atomic_key)
+            if not rows_updated:
+                action = _('metadata setting for resource %s') % self.name
+                raise exception.ConcurrentTransaction(action=action)
