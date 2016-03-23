@@ -1372,11 +1372,11 @@ class Stack(collections.Mapping):
                                                   self.t.env.params})
         previous_template_id = None
         should_rollback = False
+        update_task = update.StackUpdate(
+            self, newstack, backup_stack,
+            rollback=action == self.ROLLBACK,
+            error_wait_time=cfg.CONF.error_wait_time)
         try:
-            update_task = update.StackUpdate(
-                self, newstack, backup_stack,
-                rollback=action == self.ROLLBACK,
-                error_wait_time=cfg.CONF.error_wait_time)
             updater = scheduler.TaskRunner(update_task)
 
             self.parameters = newstack.parameters
