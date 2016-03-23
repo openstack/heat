@@ -36,6 +36,7 @@ from heat.common.i18n import _
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
+from heat.db.sqlalchemy import utils as db_utils
 from heat.rpc import api as rpc_api
 
 CONF = cfg.CONF
@@ -685,6 +686,7 @@ def user_creds_get(user_creds_id):
     return result
 
 
+@db_utils.retry_on_stale_data_error
 def user_creds_delete(context, user_creds_id):
     creds = model_query(context, models.UserCreds).get(user_creds_id)
     if not creds:
