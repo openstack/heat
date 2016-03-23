@@ -45,6 +45,9 @@ outputs:
 
     def setUp(self):
         super(RemoteStackTest, self).setUp()
+        # replacing the template region with the one from the config
+        self.template = self.template.replace('RegionOne',
+                                              self.conf.region)
 
     def test_remote_stack_alone(self):
         stack_id = self.stack_create(template=self.remote_template)
@@ -78,7 +81,7 @@ outputs:
         self.assertEqual(remote_resources, self.list_resources(remote_id))
 
     def test_stack_create_bad_region(self):
-        tmpl_bad_region = self.template.replace('RegionOne', 'DARKHOLE')
+        tmpl_bad_region = self.template.replace(self.conf.region, 'DARKHOLE')
         files = {'remote_stack.yaml': self.remote_template}
         kwargs = {
             'template': tmpl_bad_region,
@@ -98,8 +101,9 @@ outputs:
         ex = self.assertRaises(exc.HTTPBadRequest, self.stack_create, **kwargs)
 
         error_msg = ('ERROR: Failed validating stack template using Heat '
-                     'endpoint at region "RegionOne" due to '
-                     '"ERROR: The template section is invalid: resource"')
+                     'endpoint at region "%s" due to '
+                     '"ERROR: The template section is '
+                     'invalid: resource"') % self.conf.region
         self.assertEqual(error_msg, six.text_type(ex))
 
     def test_stack_update(self):
