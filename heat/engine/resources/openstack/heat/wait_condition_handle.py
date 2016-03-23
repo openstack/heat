@@ -202,16 +202,18 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
         Optionally "id" may also be specified, but if missing the index
         of the signal received will be used.
         """
-        rsrc_metadata = self.metadata_get(refresh=True)
-        signal_num = len(rsrc_metadata) + 1
+        return super(HeatWaitConditionHandle, self).handle_signal(details)
+
+    def normalise_signal_data(self, signal_data, latest_metadata):
+        signal_num = len(latest_metadata) + 1
         reason = 'Signal %s received' % signal_num
         # Tolerate missing values, default to success
-        metadata = details or {}
+        metadata = signal_data.copy() if signal_data else {}
         metadata.setdefault(self.REASON, reason)
         metadata.setdefault(self.DATA, None)
         metadata.setdefault(self.UNIQUE_ID, signal_num)
         metadata.setdefault(self.STATUS, self.STATUS_SUCCESS)
-        return super(HeatWaitConditionHandle, self).handle_signal(metadata)
+        return metadata
 
 
 class UpdateWaitConditionHandle(aws_wch.WaitConditionHandle):
