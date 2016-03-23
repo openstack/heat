@@ -106,6 +106,16 @@ class TestOrder(common.HeatTestCase):
                                 msg,
                                 res.validate)
 
+    def test_validate_certificate_with_profile_without_ca_id(self):
+        snippet = copy.deepcopy(self.res_template)
+        snippet['Properties']['profile'] = 'cert'
+        snippet['Properties']['type'] = 'certificate'
+        res = self._create_resource('test', snippet, self.stack)
+        msg = ("profile cannot be specified without ca_id.")
+        self.assertRaisesRegexp(exception.ResourcePropertyDependency,
+                                msg,
+                                res.validate)
+
     def test_key_order_validation_fail(self):
         snippet = copy.deepcopy(self.res_template)
         snippet['Properties']['pass_phrase'] = "something"

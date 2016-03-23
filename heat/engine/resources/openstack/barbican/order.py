@@ -222,6 +222,12 @@ class Order(resource.Resource):
                             'bit_length': self.BIT_LENGTH,
                             'type': self.properties[self.TYPE]}
                 raise exception.StackValidationFailed(message=msg)
+        else:
+            if (self.properties[self.PROFILE] and
+                    not self.properties[self.CA_ID]):
+                raise exception.ResourcePropertyDependency(
+                    prop1=self.PROFILE, prop2=self.CA_ID
+                )
         declared_props = sorted([k for k, v in six.iteritems(
             self.properties) if k != self.TYPE and v is not None])
         allowed_props = sorted(self.ALLOWED_PROPERTIES_FOR_TYPE[
