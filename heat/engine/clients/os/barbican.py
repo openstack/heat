@@ -63,8 +63,25 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
                     name=secret_ref)
             raise ex
 
+    def get_container_by_ref(self, container_ref):
+        try:
+            return self.client().containers.get(
+                container_ref)._get_formatted_entity()
+        except Exception as ex:
+            if self.is_not_found(ex):
+                raise exception.EntityNotFound(
+                    entity="Container",
+                    name=container_ref)
+            raise ex
+
 
 class SecretConstraint(constraints.BaseCustomConstraint):
     resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_secret_by_ref'
+    expected_exceptions = (exception.EntityNotFound,)
+
+
+class ContainerConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_container_by_ref'
     expected_exceptions = (exception.EntityNotFound,)

@@ -134,6 +134,9 @@ class Order(resource.Resource):
             properties.Schema.STRING,
             _('The source of certificate request.'),
             support_status=support.SupportStatus(version='5.0.0'),
+            constraints=[
+                constraints.CustomConstraint('barbican.container')
+            ],
         ),
         CA_ID: properties.Schema(
             properties.Schema.STRING,
