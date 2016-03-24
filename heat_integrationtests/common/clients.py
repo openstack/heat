@@ -110,7 +110,8 @@ class ClientManager(object):
                 password=self.conf.password)
 
     def _get_identity_client(self):
-        domain = self.conf.domain_name
+        user_domain_name = self.conf.user_domain_name
+        project_domain_name = self.conf.project_domain_name
         kwargs = {
             'username': self.conf.username,
             'password': self.conf.password,
@@ -120,8 +121,8 @@ class ClientManager(object):
         # keystone v2 can't ignore domain details
         if self.auth_version == '3':
             kwargs.update({
-                'project_domain_name': domain,
-                'user_domain_name': domain})
+                'user_domain_name': user_domain_name,
+                'project_domain_name': project_domain_name})
         auth = password.Password(**kwargs)
         if self.insecure:
             verify_cert = False
@@ -196,7 +197,8 @@ class ClientManager(object):
         return swift_client.Connection(**args)
 
     def _get_metering_client(self):
-        domain = self.conf.domain_name
+        user_domain_name = self.conf.user_domain_name
+        project_domain_name = self.conf.project_domain_name
         try:
             endpoint = self.identity_client.get_endpoint_url('metering',
                                                              self.conf.region)
@@ -218,8 +220,8 @@ class ClientManager(object):
             # v2 auth_url
             if self.auth_version == '3':
                 args.update(
-                    {'user_domain_name': domain,
-                     'project_domain_name': domain})
+                    {'user_domain_name': user_domain_name,
+                     'project_domain_name': project_domain_name})
 
             return ceilometer_client.Client(self.CEILOMETER_VERSION,
                                             endpoint, **args)

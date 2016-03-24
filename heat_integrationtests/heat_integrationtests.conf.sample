@@ -22,8 +22,11 @@
 # Full URI of the OpenStack Identity API (Keystone) (string value)
 #auth_url = <None>
 
-# User/project domain name, if keystone v3 auth_urlis used (string value)
-#domain_name = default
+# User domain name, if keystone v3 auth_urlis used (string value)
+#user_domain_name = <None>
+
+# Project domain name, if keystone v3 auth_urlis used (string value)
+#project_domain_name = <None>
 
 # The region name to use (string value)
 #region = <None>
@@ -47,6 +50,9 @@
 
 # Set to True if using self-signed SSL certificates. (boolean value)
 #disable_ssl_certificate_validation = false
+
+# CA certificate to pass for servers that have https endpoint. (string value)
+#ca_file = <None>
 
 # Time in seconds between build status checks. (integer value)
 #build_interval = 4
@@ -113,8 +119,8 @@
 #sighup_timeout = 30
 
 # Count of retries to edit config file during sighup. If another worker already
-# edit config file, file can be busy, so need to wait and try edit file
-# again. (integer value)
+# edit config file, file can be busy, so need to wait and try edit file again.
+# (integer value)
 #sighup_config_edit_retries = 10
 
 # Path to the script heat-config-notify (string value)
