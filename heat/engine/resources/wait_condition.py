@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from oslo_log import log as logging
 import six
 
@@ -48,8 +50,11 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         return status in self.WAIT_STATUSES
 
     def _metadata_format_ok(self, metadata):
-        if sorted(tuple(six.iterkeys(metadata))) == sorted(self.METADATA_KEYS):
-            return self._status_ok(metadata[self.STATUS])
+        if not isinstance(metadata, collections.Mapping):
+            return False
+        if set(metadata) != set(self.METADATA_KEYS):
+            return False
+        return self._status_ok(metadata[self.STATUS])
 
     def normalise_signal_data(self, signal_data, latest_metadata):
         return signal_data
