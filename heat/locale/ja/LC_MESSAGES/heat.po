@@ -15,13 +15,13 @@
 # 笹原 昌美 <ebb0de1@jp.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev8\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev11\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-22 09:39+0000\n"
+"POT-Creation-Date: 2016-03-23 10:47+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-23 06:32+0000\n"
+"PO-Revision-Date: 2016-03-24 06:43+0000\n"
 "Last-Translator: Tsutomu Kimura <ebb0de2@jp.ibm.com>\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -182,6 +182,11 @@ msgid "%(action)s is restricted for resource."
 msgstr "%(action)s はリソースが制限されています。"
 
 #, python-format
+msgid "%(desired_capacity)s must be between %(min_size)s and %(max_size)s"
+msgstr ""
+"%(desired_capacity)s は %(min_size)s と %(max_size)s の間である必要があります"
+
+#, python-format
 msgid "%(error)s%(path)s%(message)s"
 msgstr "%(error)s%(path)s%(message)s"
 
@@ -221,6 +226,10 @@ msgid "%(message)s"
 msgstr "%(message)s"
 
 #, python-format
+msgid "%(min_size)s can not be greater than %(max_size)s"
+msgstr "%(min_size)s を %(max_size)s よりも大きくすることはできません"
+
+#, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "%(name)s 制約は %(utype)s には無効です"
 
@@ -254,6 +263,10 @@ msgid "%(schema)s supplied for %(type)s %(data)s"
 msgstr "%(schema)s が %(type)s %(data)s に指定されました"
 
 #, python-format
+msgid "%(server)s-port-%(number)s"
+msgstr "%(server)s-ポート-%(number)s"
+
+#, python-format
 msgid "%(type)s not in valid format: %(error)s"
 msgstr "%(type)s が有効な形式ではありません: %(error)s"
 
@@ -268,6 +281,10 @@ msgstr "%s がタイムアウトになりました"
 #, python-format
 msgid "%s Value Name must be a string"
 msgstr "%s 値名は文字列でなければなりません"
+
+#, fuzzy, python-format
+msgid "%s is not a valid job location."
+msgstr "%s は有効なジョブロケーションではありません。"
 
 #, python-format
 msgid "%s is not active"
@@ -348,6 +365,30 @@ msgstr ""
 "システムの /dev/device_name でボリュームが接続される場合のデバイス名。例えば "
 "vdb"
 
+#, fuzzy
+msgid ""
+"A dict of all network addresses with corresponding port_id. Each network "
+"will have two keys in dict, they are network name and network id. The port "
+"ID may be obtained through the following expression: \"{get_attr: [<server>, "
+"addresses, <network name_or_id>, 0, port]}\"."
+msgstr ""
+"対応する port_id を持つすべてのネットワークアドレスのディクショナリー。各ネッ"
+"トワークはディクショナリー内に 2 つのキー (ネットワーク名とネットワーク ID) "
+"を持ちます。ポート ID は以下の式で取得できます: \"{get_attr: [<server>, "
+"addresses, <network name_or_id>, 0, port]}\""
+
+#, fuzzy
+msgid ""
+"A dict of assigned network addresses of the form: {\"public\": [ip1, "
+"ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
+"\"private_uuid\": [ip3, ip4]}. Each network will have two keys in dict, they "
+"are network name and network id."
+msgstr ""
+"以下の形式を持つネットワークアドレスのディクショナリー: {\"public\": [ip1, "
+"ip2...]、\"private\": [ip3, ip4]、\"public_uuid\": [ip1, "
+"ip2...]、\"private_uuid\": [ip3, ip4]}。各ネットワークはディクショナリー内に "
+"2 つのキー (ネットワーク名とネットワーク ID) を持ちます。"
+
 msgid "A dict of key-value pairs output from the stack."
 msgstr "スタックから出力されるキー/値ペアのディクショナリー。"
 
@@ -398,6 +439,12 @@ msgid ""
 "A list of character sequences and their constraints to generate the random "
 "string from."
 msgstr "ランダム文字列の生成元である文字シーケンスとその制約のリスト。"
+
+msgid "A list of cluster instance IPs."
+msgstr "クラスターインスタンスの IP のリスト。"
+
+msgid "A list of clusters to which this policy is attached."
+msgstr "このポリシーが追加されるクラスターのリスト。"
 
 msgid ""
 "A list of dimensions (arbitrary name/value pairs) associated with the metric."
@@ -522,6 +569,13 @@ msgid "A name used to distinguish the volume."
 msgstr "ボリュームを区別するために使用される名前。"
 
 msgid ""
+"A per-tenant quota on the prefix space that can be allocated from the subnet "
+"pool for tenant subnets."
+msgstr ""
+"サブネットプールからテナントのサブネットに割り当てることができるプレフィック"
+"ススペース上のテナントごとのクォータ。"
+
+msgid ""
 "A predefined access control list (ACL) that grants permissions on the bucket."
 msgstr "バケットに対する許可を付与する事前定義アクセス制御リスト (ACL)。"
 
@@ -552,7 +606,7 @@ msgid "A signed url to handle the alarm. (Heat extension)."
 msgstr "アラームを処理する署名済み URL (heat 拡張)。"
 
 msgid "A specified set of DNS name servers to be used."
-msgstr "使用する DNS サーバーの指定されたセット。"
+msgstr "使用する DNS ネームサーバーの指定されたセット。"
 
 msgid ""
 "A string specifying a symbolic name for the network, which is not required "
@@ -630,10 +684,13 @@ msgid "Add rule must be used only for lists."
 msgstr "Add ルールはリストのためにのみ使用する必要があります。"
 
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
-msgstr "ポートを通過することが許可されている追加 MAC と IP アドレスのペア。"
+msgstr ""
+"ポートを通過することが許可されている追加の MAC アドレスと IP アドレスのペア。"
 
+#, fuzzy
 msgid "Additional MAC/IP address pairs allowed to pass through the port."
-msgstr "ポートを通過することが許可されている追加 MAC と IP アドレスのペア。"
+msgstr ""
+"ポートを通過することが許可されている追加の MAC アドレスと IP アドレスのペア。"
 
 msgid "Additional routes for this subnet."
 msgstr "このサブネットの追加経路。"
@@ -690,7 +747,7 @@ msgid "Allocate a floating IP from a given floating IP pool."
 msgstr "指定した Floating IP プールから Floating IP を確保します。"
 
 msgid "Allocated floating IP address."
-msgstr "割り振り済み Floating IP アドレス。"
+msgstr "割り当て済み Floating IP アドレス。"
 
 msgid "Allocation ID for VPC EIP address."
 msgstr "VPC EIP アドレスの割り振り ID。"
@@ -774,6 +831,9 @@ msgstr ""
 "イメージのブートに必要な RAM の容量 (MB)。指定しない場合のデフォルト値は 0 "
 "で、これは RAM サイズの制限がないことを意味します。"
 
+msgid "An address scope ID to assign to the subnet pool."
+msgstr "サブネットプールに割り当てる必要があるアドレススコープ。"
+
 msgid "An application health check for the instances."
 msgstr "インスタンスのアプリケーションヘルスチェック。"
 
@@ -818,6 +878,26 @@ msgid ""
 msgstr ""
 "Cinder スケジューラーによるボリュームの作成を支援するためにクライアントで指定"
 "される任意のキーと値のペア。"
+
+msgid ""
+"Arbitrary key/value metadata to store contextual information about this "
+"queue."
+msgstr ""
+"このキューに関するコンテキスト情報を保存する任意のキーと値のメタデータ。"
+
+#, fuzzy
+msgid ""
+"Arbitrary key/value metadata to store for this server. Both keys and values "
+"must be 255 characters or less. Non-string values will be serialized to JSON "
+"(and the serialized string must be 255 characters or less)."
+msgstr ""
+"このサーバーのために保存する必要のある任意のキーと値のペア。キーと値の両方と"
+"も 255 文字以下である必要があります。文字列でない値は JSON にシリアライズされ"
+"ます (シリアライズされた文字列は 255 文字以下である必要があります)。"
+
+#, fuzzy
+msgid "Arbitrary key/value metadata to store information for aggregate."
+msgstr "アグリゲートのための情報を保存する任意のキーと値のメタデータ。"
 
 msgid ""
 "Arbitrary labels in the form of key=value pairs to associate with a baymodel."
@@ -887,6 +967,10 @@ msgstr "watch_rule: %(id)s の削除を試行: %(msg)s"
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr "ID %(id)s のスタックの更新を試行: %(msg)s"
+
+#, python-format
+msgid "Attempt to update a stack with id: %(id)s %(traversal)s %(msg)s"
+msgstr "%(id)s %(traversal)s %(msg)s の ID でスタックの更新を試みます。"
 
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
@@ -1085,6 +1169,10 @@ msgstr "%s を中断できません。スタックは作成されません"
 msgid "Cannot use %(key)s and %(name)s at the same time."
 msgstr "同時に %(key)s と %(name)s を使用することはできません。"
 
+#, fuzzy
+msgid "Cannot use network and uuid at the same time."
+msgstr "ネットワークと UUID を同時に使用することはできません。"
+
 msgid "Captured stderr from the configuration execution."
 msgstr "設定実行から取り込まれた stderr。"
 
@@ -1111,6 +1199,12 @@ msgstr "クラスター設定ディクショナリー。"
 msgid "Cluster information."
 msgstr "クラスターの情報。"
 
+msgid "Cluster metadata."
+msgstr "クラスターのメタデータ。"
+
+msgid "Cluster name."
+msgstr "クラスター名。"
+
 msgid "Cluster status."
 msgstr "クラスターの状態。"
 
@@ -1129,6 +1223,9 @@ msgid ""
 "Configuration script or manifest which specifies what actual configuration "
 "is performed."
 msgstr "どの実設定を実行するかを指定する設定スクリプトまたは設定マニフェスト。"
+
+msgid "Configure most important configs automatically."
+msgstr "自動的に最も重要なコンフィグを設定します。"
 
 #, python-format
 msgid "Confirm resize for server %s failed"
@@ -1238,6 +1335,16 @@ msgstr "%(name)s をロードできませんでした: %(error)s"
 msgid "Could not retrieve template: %s"
 msgstr "テンプレートを取得できませんでした： %s"
 
+msgid "Create volumes on the same physical port as an instance."
+msgstr "インスタンスと同じ物理ポート上でボリュームを作成します。"
+
+msgid ""
+"Credentials used for swift. Not required if sahara is configured to use "
+"proxy users and delegated trusts for access."
+msgstr ""
+"Swift のために使用する認証情報。sahara がアクセスのためにプロキシーユーザーと"
+"委任された信頼を使用する場合は、この情報は必要ありません。"
+
 msgid "Cron expression."
 msgstr "Cron 式。"
 
@@ -1317,6 +1424,10 @@ msgstr "ipsec サイト接続の Dead Peer Detection プロトコル設定。"
 
 msgid "Dead engines are removed."
 msgstr "停止したheatエンジンは取り除かれました"
+
+#, fuzzy
+msgid "Default TLS container reference to retrieve TLS information."
+msgstr "TLS 情報を抽出するデフォルトの TLS コンテナー参照。"
 
 #, python-format
 msgid "Default must be a comma-delimited list string: %s"
@@ -1510,6 +1621,9 @@ msgstr "Sahara グループテンプレートの説明。"
 msgid "Description of the alarm."
 msgstr "アラームの説明。"
 
+msgid "Description of the data source."
+msgstr "データソースの説明。"
+
 msgid "Description of the firewall policy."
 msgstr "ファイアウォールポリシーの説明。"
 
@@ -1519,8 +1633,14 @@ msgstr "ファイアウォールルールの説明。"
 msgid "Description of the firewall."
 msgstr "ファイアウォールの説明。"
 
+msgid "Description of the image."
+msgstr "イメージの説明。"
+
 msgid "Description of the input."
 msgstr "入力の説明。"
+
+msgid "Description of the job binary."
+msgstr "ジョブバイナリーの説明。"
 
 msgid "Description of the metering label."
 msgstr "計測ラベルの説明。"
@@ -1543,11 +1663,29 @@ msgstr "ボリュームタイプの説明。"
 msgid "Description of the volume."
 msgstr "ボリュームの説明"
 
+#, fuzzy
+msgid "Description of this Load Balancer."
+msgstr "このロードバランサーの説明。"
+
+#, fuzzy
+msgid "Description of this listener."
+msgstr "このリスナーの説明。"
+
+msgid "Description of this pool."
+msgstr "このプールの説明。"
+
+#, fuzzy
 msgid "Desired IPs for this port."
-msgstr "このポートの必要 IP。"
+msgstr "このポートで必要な IP。"
+
+msgid "Desired capacity of the cluster."
+msgstr "クラスターに存在することが望ましいキャパシティー。"
 
 msgid "Desired initial number of instances."
 msgstr "インスタンスの初期必要数。"
+
+msgid "Desired initial number of resources in cluster."
+msgstr "クラスター内に当初存在することが好ましいリソース数。"
 
 msgid "Desired initial number of resources."
 msgstr "最初に存在することが好ましいリソース数。"
@@ -1583,6 +1721,13 @@ msgid ""
 "Device type: at the moment we can make distinction only between disk and "
 "cdrom."
 msgstr "デバイス種別: 現在、ディスクと CD-ROM のみを区別することができます。"
+
+msgid ""
+"Dict, which has expand properties for port. Used only if port property is "
+"not specified for creating port."
+msgstr ""
+"ポートに関する拡張プロパティーを持つ Dict。ポートの作成のためにポートプロパ"
+"ティーが指定されていない場合にのみ使用します。"
 
 msgid "Dictionary containing workflow tasks."
 msgstr "ワークフローのタスクを含むディクショナリー。"
@@ -1707,8 +1852,8 @@ msgid ""
 "Enables Source NAT on the router gateway. NOTE: The default policy setting "
 "in Neutron restricts usage of this property to administrative users only."
 msgstr ""
-"ゲートウェイルーター上のソース NAT を有効にします。注: Neutron のデフォルトポ"
-"リシー設定では、このプロパティーの使用は管理ユーザーのみに制限されます。"
+"ゲートウェイルーター上のソース NAT を有効化します。注意: Neutron のデフォルト"
+"ポリシー設定では、このプロパティーの使用は管理ユーザーのみに制限されます。"
 
 msgid ""
 "Enables engine with convergence architecture. All stacks with this option "
@@ -1827,7 +1972,7 @@ msgid "External fixed IP addresses for the gateway."
 msgstr "ゲートウェイの外部 Fixed IP のアドレス。"
 
 msgid "External network gateway configuration for a router."
-msgstr "ルーターの外部ネットワークゲートウェイ設定。"
+msgstr "ルーターの外部ネットワークゲートウェイの設定。"
 
 msgid ""
 "Extra parameters to include in the \"floatingip\" object in the creation "
@@ -1846,8 +1991,8 @@ msgid ""
 "Extra parameters to include in the request. Parameters are often specific to "
 "installed hardware or extensions."
 msgstr ""
-"リクエストに含める必要のある追加のパラメーター。パラメーターがインストール済"
-"みのハードウェアや強化機能に依存することがよくあります。"
+"リクエストに含める必要のある追加のパラメーター。インストール済みのハードウェ"
+"アや強化機能ごとにパラメーターが存在することがよくあります。"
 
 msgid "Extra specs key-value pairs defined for share type."
 msgstr "シェアのタイプに定義したキーと値のペアの追加の仕様。"
@@ -1870,6 +2015,10 @@ msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr ""
 "サーバー (%(server)s) からインターフェース (%(port)s) を接続解除できませんで"
 "した。"
+
+#, fuzzy, python-format
+msgid "Failed to execute %(action)s for %(cluster)s: %(reason)s"
+msgstr "%(cluster)s に対する %(action)s の実行に失敗しました: %(reason)s"
 
 #, python-format
 msgid "Failed to extend volume %(vol)s - %(err)s"
@@ -2016,6 +2165,10 @@ msgid ""
 "Gap, in seconds, to determine whether the given token is about to expire."
 msgstr "特定のトークンの有効期限が近いかどうかを判断するための間隔 (秒)。"
 
+#, python-format
+msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
+msgstr "ゲートウェイの IP アドレス「%(gateway)s」の形式が無効です。"
+
 msgid "Gateway network for the router."
 msgstr "ルーターのゲートウェイネットワーク。"
 
@@ -2024,6 +2177,9 @@ msgstr "一般 HeatAPIException。具体的なサブクラスを使用してく�
 
 msgid "Glance image ID or name."
 msgstr "glance イメージの ID または名前。"
+
+msgid "Governs permissions set in manila for the cluster ips."
+msgstr "クラスターの ips のために manila で設定する権限を管理します。"
 
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "存続期間引数に使用する単位、デフォルトは日数。"
@@ -2082,6 +2238,24 @@ msgstr ""
 "HTTP POST を実行できます。NO_SIGNAL を設定すると、リソースは信号を待機せずに"
 "送信済み状態に達します。"
 
+#, fuzzy
+msgid ""
+"How the server should receive the metadata required for software "
+"configuration. POLL_SERVER_CFN will allow calls to the cfn API action "
+"DescribeStackResource authenticated with the provided keypair. "
+"POLL_SERVER_HEAT will allow calls to the Heat API resource-show using the "
+"provided keystone credentials. POLL_TEMP_URL will create and populate a "
+"Swift TempURL with metadata for polling. ZAQAR_MESSAGE will create a "
+"dedicated zaqar queue and post the metadata for polling."
+msgstr ""
+"サーバーがソフトウェアの構成に必要なメタデータを受信する方法。"
+"POLL_SERVER_CFN を設定すると、提供されるキーペアで認証された cfn API アクショ"
+"ンである DescribeStackResource を呼び出すことができます。POLL_SERVER_HEATを設"
+"定すると、提供される keystone の認証情報を使用して Heat API の resource-show "
+"を呼び出すことができます。POLL_TEMP_URL を設定すると、Swift TempURL を作成"
+"し、ポーリングのためのメタデータをロードすることができます。ZAQAR_MESSAGE は"
+"専用の zaqar キューを作成し、ポーリング用のメタデータを提供します。"
+
 msgid "How the server should signal to heat with the deployment output values."
 msgstr "サーバーが heat にデプロイメント出力値をシグナル通知する方法。"
 
@@ -2131,7 +2305,7 @@ msgid ""
 "property to administrative users only."
 msgstr ""
 "L3 エージェントの ID リスト。ユーザーは高可用性ルーターに対してマルチエージェ"
-"ントを指定できます。注: Neutron のデフォルトのポリシー設定では、このプロパ"
+"ントを指定できます。注意: Neutron のデフォルトのポリシー設定では、このプロパ"
 "ティーの使用は管理ユーザーのみに制限されます。"
 
 msgid "ID of an existing port to associate with this server."
@@ -2185,8 +2359,8 @@ msgid ""
 "ID of the L3 agent. NOTE: The default policy setting in Neutron restricts "
 "usage of this property to administrative users only."
 msgstr ""
-"L3 エージェントの ID。注: Neutron でのデフォルトポリシー設定により、管理ユー"
-"ザーのみに対するこのプロパティーの使用が制限されます。"
+"L3 エージェントの ID。注意: Neutron でのデフォルトポリシー設定により、管理"
+"ユーザーのみに対するこのプロパティーの使用が制限されます。"
 
 msgid "ID of the Node Group Template."
 msgstr "ノードグループテンプレートの ID。"
@@ -2197,20 +2371,34 @@ msgstr "VPC に接続する VPN ゲートウェイ ID。"
 msgid "ID of the default image to use for the template."
 msgstr "テンプレートに使用するデフォルトイメージの ID。"
 
+#, fuzzy
+msgid "ID of the default pool this listener is associated to."
+msgstr "このリスナーが関連付けられているデフォルトプールの ID。"
+
 msgid "ID of the floating IP to assign to the server."
 msgstr "サーバーに割り当てる Floating IP の ID。"
 
 msgid "ID of the floating IP to associate."
-msgstr "関連付ける Floating IP の ID。"
+msgstr "関連付ける必要のある Floating IP の ID。"
+
+msgid "ID of the health monitor associated with this pool."
+msgstr "このプールと関連付けられているヘルスモニターの ID。"
 
 msgid "ID of the image to use for the template."
 msgstr "テンプレートに使用するイメージの ID。"
+
+#, fuzzy
+msgid "ID of the load balancer this listener is associated to."
+msgstr "このリスナーが関連付けられているロードバランサーの ID。"
 
 msgid "ID of the network in which this IP is allocated."
 msgstr "この IP が割り振られているネットワークの ID。"
 
 msgid "ID of the port associated with this IP."
 msgstr "この IP に関連付けられているポートの ID。"
+
+msgid "ID of the queue."
+msgstr "キューの ID。"
 
 msgid "ID of the router used as gateway, set when associated with a port."
 msgstr ""
@@ -2229,6 +2417,9 @@ msgstr "このデプロイメントが属するスタックの ID"
 msgid "ID of the tenant to which the RBAC policy will be enforced."
 msgstr "RBAC ポリシーが適用されるテナントの ID。"
 
+msgid "ID of the tenant who owns the health monitor."
+msgstr "ヘルスモニターを所有するテナントの ID。"
+
 #, fuzzy
 msgid "ID or name of the QoS policy."
 msgstr "QoS ポリシーの ID または名前。"
@@ -2238,6 +2429,15 @@ msgstr "RBAC オブジェクトの名前または ID。"
 
 msgid "ID or name of the external network for the gateway."
 msgstr "ゲートウェイの外部ネットワークの ID または名前。"
+
+msgid "ID or name of the image to register."
+msgstr "登録対象のイメージの ID または名前。"
+
+msgid "ID or name of the load balancer with which listener is associated."
+msgstr "リスナーが関連付けられているロードバランサーの ID または名前。"
+
+msgid "ID or name of the load balancing pool."
+msgstr "ロードバランシングプールの ID または名前。"
 
 msgid ""
 "ID that AWS assigns to represent the allocation of the address for use with "
@@ -2251,6 +2451,9 @@ msgstr "プールの IP アドレスとポート。"
 
 msgid "IP address desired in the subnet for this port."
 msgstr "このポートのサブネットで必要な IP アドレス。"
+
+msgid "IP address for the VIP."
+msgstr "VIP の IP アドレス。"
 
 msgid "IP address of the associated port, if specified."
 msgstr "関連付けられているポートの IP アドレス (指定されている場合)。"
@@ -2282,14 +2485,26 @@ msgid ""
 "IP or other address information about guest that allowed to access to Share."
 msgstr "シェアにアクセス可能なゲストのIP またはその他のアドレス情報。"
 
+msgid "IPv6 RA (Router Advertisement) mode."
+msgstr "IPv6 の RA (ルーター広告) モード。"
+
+msgid "IPv6 address mode."
+msgstr "IPv6 アドレスモード。"
+
 msgid "Id of a resource."
 msgstr "リソースの ID。"
+
+msgid "Id of the manila share."
+msgstr "manila シェアの ID。"
 
 msgid "Id of the tenant owning the firewall policy."
 msgstr "ファイアウォールポリシーを所有するテナントの ID。"
 
 msgid "Id of the tenant owning the firewall."
 msgstr "ファイアウォールを所有するテナントの ID。"
+
+msgid "Identifier of the source instance to replicate."
+msgstr "複製すべきソースインスタンスの識別子。"
 
 #, python-format
 msgid ""
@@ -2379,6 +2594,32 @@ msgstr ""
 msgid "If without InstanceId, ImageId and InstanceType are required."
 msgstr "InstanceId がない場合は ImageId および InstanceType が必要です。"
 
+#, python-format
+msgid "Illegal prefix bounds: %(key1)s=%(value1)s, %(key2)s=%(value2)s."
+msgstr "不正なプレフィックス境界: %(key1)s=%(value1)s、%(key2)s=%(value2)s"
+
+#, python-format
+msgid ""
+"Image %(image)s requires %(imram)s minimum ram. Flavor %(flavor)s has only "
+"%(flram)s."
+msgstr ""
+"イメージ %(image)s には %(imram)s 以上の RAM が必要です。フレーバー "
+"%(flavor)s には %(flram)s しかありません。"
+
+#, python-format
+msgid ""
+"Image %(image)s requires %(imsz)s GB minimum disk space. Flavor %(flavor)s "
+"has only %(flsz)s GB."
+msgstr ""
+"イメージ %(image)s には %(imsz)s GB 以上のディスクスペースが必要です。フレー"
+"バー %(flavor)s には %(flsz)s GB しかありません。"
+
+#, fuzzy, python-format
+msgid "Image status is required to be %(cstatus)s not %(wstatus)s."
+msgstr ""
+"イメージのステータスは、%(wstatus)s ではなく %(cstatus)s である必要がありま"
+"す。"
+
 msgid "Incompatible parameters were used together"
 msgstr "同時に指定できないパラメーターが使用されました"
 
@@ -2435,7 +2676,7 @@ msgid ""
 "users only. This property can not be used in conjunction with the L3 agent "
 "ID."
 msgstr ""
-"分散ルーターを作成するかどうかを指示します。注: Neutron のデフォルトのポリ"
+"分散ルーターを作成するかどうかを指示します。注意: Neutron のデフォルトのポリ"
 "シー設定では、このプロパティーの使用は管理者ユーザーのみに制限されます。この"
 "プロパティーは、L3 エージェント ID と共に使用することはできません。"
 
@@ -2445,8 +2686,8 @@ msgid ""
 "administrative users only. And now neutron do not support distributed and ha "
 "at the same time."
 msgstr ""
-"高可用性ルーターを作成するかどうかを指示します。注: Neutron のデフォルトのポ"
-"リシー設定では、このプロパティーの使用は管理ユーザーのみに制限されます。現"
+"高可用性ルーターを作成するかどうかを指示します。注意: Neutron のデフォルトの"
+"ポリシー設定では、このプロパティーの使用は管理ユーザーのみに制限されます。現"
 "在、Neutron は DVR と HA を同時にサポートしません。"
 
 msgid "Indicates whether this firewall rule is enabled or not."
@@ -2691,7 +2932,7 @@ msgid "Invalid watch state %s"
 msgstr "監視状態 %s は無効です"
 
 msgid "Ip allocation pools and their ranges."
-msgstr "IP 割り振りプールとその範囲。"
+msgstr "IP の割り当てプールとその範囲。"
 
 msgid "Ip of the subnet's gateway."
 msgstr "サブネットのゲートウェイの IP。"
@@ -2752,6 +2993,10 @@ msgid ""
 msgstr ""
 "データベースで認証情報を暗号化するために使用されるキー。このキーの長さは 32 "
 "文字である必要があります。"
+
+#, fuzzy
+msgid "Key/Value pairs to extend the capabilities of the flavor."
+msgstr "フレーバーの機能を拡張するキーと値のペア。"
 
 msgid "Key/value pairs associated with the volume in raw dict form."
 msgstr "ボリュームに関連付けられたローディクショナリー形式のキー/値ペア。"
@@ -2867,6 +3112,10 @@ msgstr "LoadBalancer リソースのリスト。"
 msgid "List of Security Groups assigned on current LB."
 msgstr "現在の LB に割り当てられたセキュリティーグループのリスト。"
 
+#, fuzzy
+msgid "List of TLS container references for SNI."
+msgstr "SNI に対する TLS コンテナー参照のリスト。"
+
 msgid "List of alarm identifiers to combine."
 msgstr "結合するアラーム ID のリスト。"
 
@@ -2880,13 +3129,19 @@ msgid "List of directories to search for plug-ins."
 msgstr "プラグインを検索するディレクトリーのリスト。"
 
 msgid "List of dns nameservers."
-msgstr "DNS サーバーの一覧。"
+msgstr "DNS ネームサーバーの一覧。"
 
 msgid "List of firewall rules in this firewall policy."
 msgstr "このファイアウォールポリシー内のファイアウォールルールのリスト。"
 
 msgid "List of health monitors associated with the pool."
 msgstr "プールに関連付けられているヘルスモニターのリスト。"
+
+msgid "List of hosts to join aggregate."
+msgstr "結合とアグリゲートを行うホストのリスト。"
+
+msgid "List of manila shares to be mounted."
+msgstr "搭載すべき manila シェアのリスト。"
 
 msgid "List of network interfaces to create on instance."
 msgstr "インスタンス上に作成するネットワークインターフェースの一覧。"
@@ -2944,6 +3199,9 @@ msgstr ""
 msgid "List of security group rules."
 msgstr "セキュリティーグループルールの一覧。"
 
+msgid "List of subnet prefixes to assign."
+msgstr "割り当てる必要があるサブネットのプレフィックスのリスト。"
+
 msgid "List of tags associated with this interface."
 msgstr "このインターフェースに関連付けられているタグのリスト。"
 
@@ -2990,6 +3248,19 @@ msgstr ""
 "です。各ディクショナリーはキー (id、workflow_name、created_at、updated_at、"
 "state for current execution state、input, output) に関する値を返します。"
 
+msgid "Listener associated with this pool."
+msgstr "このプールと関連付けられているリスナー。"
+
+msgid "Listner name or ID to be associated with this pool."
+msgstr "このプールと関連付ける必要のあるリスナーの名前または ID。"
+
+msgid ""
+"Local path on each cluster node on which to mount the share. Defaults to '/"
+"mnt/{share_id}'."
+msgstr ""
+"シェアを搭載する必要のある各クラスターノード上のローカルパス。デフォルトでは "
+"'/mnt/{share_id}' に設定されます。"
+
 msgid "Location of the SSL certificate file to use for SSL mode."
 msgstr "SSL モードに使用する SSL 証明書ファイルのロケーション。"
 
@@ -3032,6 +3303,9 @@ msgstr "最大帯域幅 (kbps)。"
 msgid "Max burst bandwidth in kbps."
 msgstr "最大バースト帯域幅 (kbps)。"
 
+msgid "Max size of the cluster."
+msgstr "クラスターの最大サイズ。"
+
 #, python-format
 msgid "Maximum %s is 1 hour."
 msgstr "最大 %s は 1 時間です。"
@@ -3068,6 +3342,9 @@ msgstr ""
 msgid "Maximum number of instances in the group."
 msgstr "グループ内のインスタンスの最大数。"
 
+msgid "Maximum number of resources in the cluster. -1 means unlimited."
+msgstr "クラスター内のリソースの最小数。-1 は無制限を指します。"
+
 msgid "Maximum number of resources in the group."
 msgstr "グループ内のリソースの最大数。"
 
@@ -3079,6 +3356,10 @@ msgstr ""
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr "任意の 1 つのテナントが同時にアクティブにできるスタックの最大数。"
+
+msgid "Maximum prefix size that can be allocated from the subnet pool."
+msgstr ""
+"サブネットプールから割り当てることができるプレフィックスサイズの最大値。"
 
 msgid ""
 "Maximum raw byte size of JSON request body. Should be larger than "
@@ -3108,12 +3389,28 @@ msgstr "メンバー一覧の項目は文字列でなければなりません"
 msgid "Member list must be a list"
 msgstr "メンバー一覧はリストでなければなりません"
 
+#, fuzzy
+msgid "Members associated with this pool."
+msgstr "このプールと関連付けられているメンバー。"
+
+msgid "Memory in MB for the flavor."
+msgstr "フレーバーのメモリー容量 (MB)。"
+
 #, python-format
 msgid "Message: %(message)s, Code: %(code)s"
 msgstr "メッセージ: %(message)s、コード: %(code)s"
 
 msgid "Metadata format invalid"
 msgstr "メタデータの形式が無効です"
+
+msgid "Metadata key-values defined for cluster."
+msgstr "クラスター用に定義したメタデータのキーと値。"
+
+msgid "Metadata key-values defined for node."
+msgstr "ノードのために定義したメタデータのキーと値。"
+
+msgid "Metadata key-values defined for profile."
+msgstr "プロファイルのために定義したメタデータのキーと値。"
 
 msgid "Metadata key-values defined for share."
 msgstr "シェアのために定義したメタデータのキーと値。"
@@ -3140,11 +3437,17 @@ msgstr "アラームによって監視されるメトリック名。"
 msgid "Metric statistic to evaluate."
 msgstr "評価するメトリック統計。"
 
+msgid "Min size of the cluster."
+msgstr "クラスターの最小サイズ。"
+
 msgid "MinSize can not be greater than MaxSize"
 msgstr "最小サイズを最大サイズより大きくすることはできません"
 
 msgid "Minimum number of instances in the group."
 msgstr "グループ内のインスタンスの最小数。"
+
+msgid "Minimum number of resources in the cluster."
+msgstr "クラスター内のリソースの最小数。"
 
 msgid "Minimum number of resources in the group."
 msgstr "グループ内のリソースの最小数。"
@@ -3216,6 +3519,12 @@ msgstr "Sahara クラスターテンプレートの名前。"
 
 msgid "Name for the Sahara Node Group Template."
 msgstr "Sahara ノードグループテンプレートの名前。"
+
+msgid "Name for the aggregate."
+msgstr "アグリゲートの名前。"
+
+msgid "Name for the availability zone."
+msgstr "アベイラビリティーゾーンの名前。"
 
 msgid ""
 "Name for the container. If not specified, a unique name will be generated."
@@ -3310,6 +3619,9 @@ msgstr ""
 "タスクと関連付けられたアクションの名前。タスクではアクションかワークフローの"
 "いずれかを定義できます。"
 
+msgid "Name of the administrative user to use on the server."
+msgstr "サーバー上で使用する管理者の名前。"
+
 #, fuzzy
 msgid "Name of the alarm. By default, physical resource name is used."
 msgstr "アラームの名前。デフォルトでは物理リソース名を使用します。"
@@ -3323,6 +3635,9 @@ msgstr "サーバー配置のアベイラビリティーゾーンの名前。"
 msgid "Name of the cluster to create."
 msgstr "作成するクラスターの名前。"
 
+msgid "Name of the cluster. By default, physical resource name is used."
+msgstr "クラスターの名前。デフォルトでは物理リソース名を使用します。"
+
 msgid "Name of the cookie, required if type is APP_COOKIE."
 msgstr "Cookie の名前。タイプが APP_COOKIE である場合に必要です。"
 
@@ -3331,6 +3646,9 @@ msgstr "Cron トリガーの名前。"
 
 msgid "Name of the current action being deployed"
 msgstr "デプロイされている現行アクションの名前"
+
+msgid "Name of the data source."
+msgstr "データソースの名前。"
 
 msgid ""
 "Name of the derived config associated with this deployment. This is used to "
@@ -3349,6 +3667,9 @@ msgstr ""
 
 msgid "Name of the input."
 msgstr "入力の名前。"
+
+msgid "Name of the job binary."
+msgstr "ジョブバイナリーの名前。"
 
 msgid "Name of the metering label."
 msgstr "計測ラベルの名前。"
@@ -3373,6 +3694,9 @@ msgstr "出力の名前。"
 msgid "Name of the pool."
 msgstr "プールの名前。"
 
+msgid "Name of the queue instance to create."
+msgstr "作成すべきキューインスタンスの名前。"
+
 msgid ""
 "Name of the registered datastore version. It must exist for provided "
 "datastore type. Defaults to using single active version. If several active "
@@ -3387,6 +3711,20 @@ msgstr ""
 msgid "Name of the secret."
 msgstr "秘密の名前。"
 
+msgid "Name of the senlin node. By default, physical resource name is used."
+msgstr "Senlin ノードの名前。デフォルトでは物理リソース名を使用します。"
+
+msgid "Name of the senlin policy. By default, physical resource name is used."
+msgstr "Senlin ポリシーの名前。デフォルトでは物理リソース名を使用します。"
+
+msgid "Name of the senlin profile. By default, physical resource name is used."
+msgstr "Senlin プロファイルの名前。デフォルトでは物理リソース名を使用します。"
+
+#, fuzzy
+msgid ""
+"Name of the senlin receiver. By default, physical resource name is used."
+msgstr "Senlin レシーバーの名前。デフォルトでは物理リソース名を使用します。"
+
 msgid "Name of the server."
 msgstr "サーバーの名前。"
 
@@ -3398,6 +3736,10 @@ msgstr "シェアのタイプの名前。"
 
 msgid "Name of the stack."
 msgstr "スタックの名前。"
+
+#, fuzzy
+msgid "Name of the subnet pool."
+msgstr "サブネットプールの名前。"
 
 msgid "Name of the vip."
 msgstr "VIP の名前。"
@@ -3422,14 +3764,28 @@ msgstr ""
 msgid "Name of the workflow."
 msgstr "ワークフローの名前。"
 
+#, fuzzy
+msgid "Name of this Load Balancer."
+msgstr "このロードバランサーの名前。"
+
 msgid "Name of this deployment resource in the stack"
 msgstr "スタック内のこのデプロイメントリソースの名前"
+
+msgid "Name of this listener."
+msgstr "このリスナーの名前。"
+
+#, fuzzy
+msgid "Name of this pool."
+msgstr "このプールの名前。"
 
 msgid "Name or ID Nova flavor for the nodes."
 msgstr "ノードの Nova フレーバーの名前または ID。"
 
 msgid "Name or ID of network to create a port on."
 msgstr "ポートを作成するネットワークの名前または ID。"
+
+msgid "Name or ID of senlin profile to create this node."
+msgstr "このノードを作成するための Senlin プロファイルの名前または ID。"
 
 msgid ""
 "Name or ID of shared file system snapshot that will be restored and created "
@@ -3447,6 +3803,14 @@ msgstr ""
 
 msgid "Name or ID of shared network defined for shared filesystem."
 msgstr "共有ファイルシステムのために定義した共有ネットワークの名前または ID。"
+
+#, fuzzy
+msgid "Name or ID of target cluster."
+msgstr "ターゲットクラスターの名前または ID。"
+
+#, fuzzy
+msgid "Name or ID of the load balancing pool."
+msgstr "ロードバランシングプールの名前または ID。"
 
 msgid "Name or Id of keystone region."
 msgstr "keystone の領域の名前または ID。"
@@ -3512,7 +3876,7 @@ msgstr ""
 "は、どの設定ツールが設定を実行しようとしているかを暗黙に示す場合があります。"
 
 msgid "Need more arguments"
-msgstr "さらなる引数が必要です"
+msgstr "追加の引数が必要です"
 
 msgid "Negotiation mode for the ike policy."
 msgstr "IKE ポリシーのネゴシエーションモード。"
@@ -3530,13 +3894,13 @@ msgstr "EIP に関連付けるネットワークインターフェース ID。"
 msgid "Network interfaces to associate with instance."
 msgstr "インスタンスに関連付けるネットワークインターフェース。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Network this port belongs to. If you plan to use current port to assign "
 "Floating IP, you should specify %(fixed_ips)s with %(subnet)s. Note if this "
 "changes to a different network update, the port will be replaced."
 msgstr ""
-"このポートが含まれるネットワーク。現在のポートを使用して Floating IP を割り当"
+"このポートが所属するネットワーク。現在のポートを使用して Floating IP を割り当"
 "てる場合、%(subnet)s に %(fixed_ips)s を指定する必要があります。このポートを"
 "別のネットワークで使用する場合、このポートは置き換えられます。"
 
@@ -3609,6 +3973,9 @@ msgstr "使用可能なボリュームサービスがありません。"
 msgid "Node groups."
 msgstr "ノードグループ。"
 
+msgid "Nodes list in the cluster."
+msgstr "クラスター内のノードのリスト。"
+
 msgid "Non HA routers can only have one L3 agent."
 msgstr "非 HA ルーターが持つことができるのは 1 つの L3 エージェントのみです。"
 
@@ -3642,6 +4009,10 @@ msgstr "Nova インスタンスタイプ (フレーバー)。"
 #, fuzzy
 msgid "Nova network id."
 msgstr "Nova のネットワーク ID。"
+
+#, fuzzy
+msgid "Number of VCPUs for the flavor."
+msgstr "フレーバーの VCPU 数。"
 
 msgid "Number of backlog requests to configure the socket with."
 msgstr "ソケットを設定するためのバックログ要求の数。"
@@ -3729,6 +4100,23 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "事前定義ヘルスモニタータイプの 1 つ。"
 
+#, python-format
+msgid ""
+"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
+"be set for the specified network of server \"%(server)s\"."
+msgstr ""
+"サーバー「%(server)s」の指定されたネットワークに対して、「%(id)s」、"
+"「%(port_id)s」、「%(subnet)s」のプロパティーのうちのいずれか 1 つを設定する"
+"必要があります。"
+
+#, fuzzy, python-format
+msgid ""
+"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
+"the specified network of server \"%s\"."
+msgstr ""
+"サーバー「%s」の指定されたネットワークに対しては、「network」、「port」、"
+"「subnet」のプロパティーのうち いずれか 1 つを設定する必要があります。"
+
 msgid "One or more listeners for this load balancer."
 msgstr "このロードバランサーの 1 つ以上のリスナー。"
 
@@ -3806,6 +4194,21 @@ msgstr "パラメーター '%(name)s' が無効です: %(exp)s"
 msgid "Parameter Groups error"
 msgstr "パラメーターグループのエラー"
 
+msgid ""
+"Parameter Groups error: parameter_groups.: The key_name parameter must be "
+"assigned to one parameter group only."
+msgstr ""
+"Parameter Groups error: parameter_groups.: The key_name parameter must be "
+"assigned to one parameter group only."
+
+msgid ""
+"Parameter Groups error: parameter_groups.Database Group: The InstanceType "
+"parameter must be assigned to one parameter group only."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups.Database Group: The "
+"InstanceType パラメーターは 1 つのパラメーターグループにしか割り当てることが"
+"できません。"
+
 #, python-format
 msgid "Parameter name in \"%s\" must be string"
 msgstr "\"%s\" 内のパラメーター名は文字列でなければなりません"
@@ -3822,6 +4225,13 @@ msgstr "このメッセージに属するパーツ。"
 
 msgid "Password for API authentication"
 msgstr "API 認証用パスワード"
+
+msgid "Password for accessing the data source URL."
+msgstr "データソースの URL にアクセスするためのパスワード。"
+
+#, fuzzy
+msgid "Password for accessing the job binary URL."
+msgstr "ジョブバイナリーの URL にアクセスするためのパスワード。"
 
 msgid "Password for those users on instance creation."
 msgstr "インスタンス作成時のこれらのユーザーのパスワード。"
@@ -3861,6 +4271,14 @@ msgstr "評価する期間 (秒)。"
 msgid "Physical ID of the VPC. Not implemented."
 msgstr "VPC の物理 ID。実装されていません。"
 
+#, fuzzy, python-format
+msgid ""
+"Plugin %(plugin)s doesn't support the following node processes: "
+"%(unsupported)s. Allowed processes are: %(allowed)s"
+msgstr ""
+"プラグイン %(plugin)s は %(unsupported)s のノードプロセスをサポートしませ"
+"ん。 許容されるプロセスは %(allowed)s です。"
+
 msgid "Plugin name."
 msgstr "プラグイン名。"
 
@@ -3876,6 +4294,14 @@ msgid ""
 msgstr ""
 "フレーバー更新の適用方法に関するポリシー。サーバーのサイズ変更を要求するか、"
 "サーバー全体を置換するかのいずれかです。"
+
+#, fuzzy
+msgid ""
+"Policy on how to apply a user_data update; either by ignorning it or by "
+"replacing the entire server."
+msgstr ""
+"user_data の更新を適用する方法に関するポリシー。更新を無視するか、サーバー全"
+"体の置き換えを行うかのいずれかを実施します。"
 
 msgid ""
 "Policy on how to respond to a stack-update for this resource. REPLACE_ALWAYS "
@@ -3898,10 +4324,14 @@ msgid "Pool creation failed due to vip"
 msgstr "vip が原因で、プール作成に失敗しました"
 
 msgid "Pool from which floating IP is allocated."
-msgstr "Floating IP アドレスの割り振り元であるプール。"
+msgstr "Floating IP アドレスの割り当て元であるプール。"
 
 msgid "Port number on which the servers are running on the members."
 msgstr "サーバーがメンバー上で稼働するときのポート番号。"
+
+#, fuzzy
+msgid "Port on which the pool member listens for requests or connections."
+msgstr "プールメンバーがリクエストまたは接続をリッスンするポート。"
 
 msgid "Port security enabled of the network."
 msgstr "ネットワークで有効化されたポートセキュリティー。"
@@ -3945,14 +4375,46 @@ msgstr ""
 "%(type)s タイプの注文に対しては、プロパティー %(algorithm)s と "
 "%(bit_length)s が必要です。"
 
+#, fuzzy
+msgid "Properties for profile."
+msgstr "プロファイルのプロパティー。"
+
 #, python-format
 msgid "Properties must be Properties type. Found %s."
 msgstr ""
 "プロパティーはプロパティータイプである必要があります。%s が見つかりました。"
 
+msgid "Properties of this policy."
+msgstr "このポリシーのプロパティー。"
+
 #, fuzzy
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "チェーン内で作成中の各ソースに渡すプロパティー。"
+
+#, python-format
+msgid "Property \"%s\" is supported only for Neutron."
+msgstr "プロパティー「%s」は Neutron でのみサポートされます。"
+
+#, fuzzy, python-format
+msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
+msgstr ""
+"%(sp)s タイプが %(app)s に設定されている場合、プロパティー %(cookie)s が必要"
+"です。"
+
+#, fuzzy, python-format
+msgid ""
+"Property %(cookie)s must NOT be specified when %(sp)s type is set to %(ip)s."
+msgstr ""
+"%(sp)s タイプが %(ip)s に設定されている場合、プロパティー %(cookie)s を設定す"
+"ることはできません。"
+
+#, fuzzy, python-format
+msgid ""
+"Property %(key)s updated value %(new)s should be superset of existing value "
+"%(old)s."
+msgstr ""
+"プロパティー %(key)s が更新した値 %(new)s は、既存の値 %(old)s のスーパーセッ"
+"トである必要があります。"
 
 #, python-format
 msgid ""
@@ -3973,6 +4435,10 @@ msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
 msgstr ""
 "プロパティー %(prop)s: %(ua)s と %(im)s の両方を True にすることはできません"
 
+#, fuzzy, python-format
+msgid "Property %(ref)s required when protocol is %(term)s."
+msgstr "プロトコルが %(term)s の場合、プロパティー %(ref)s が必要です。"
+
 #, python-format
 msgid "Property %s not assigned"
 msgstr "プロパティー %s が割り当てられていません"
@@ -3988,6 +4454,14 @@ msgstr ""
 "session_persistence タイプが APP_COOKIE に設定された場合、プロパティー"
 "cookie_name は必須です。"
 
+#, fuzzy
+msgid ""
+"Property cookie_name must NOT be specified when session_persistence type is "
+"set to SOURCE_IP."
+msgstr ""
+"session_persistence タイプが SOURCE_IPP に設定されている場合、プロパティーの "
+"cookie_name を指定することはできません。"
+
 msgid "Property uses removed function."
 msgstr "プロパティーが削除された関数を使用しています。"
 
@@ -4000,6 +4474,13 @@ msgstr "バランシング用のプロトコル。"
 msgid "Protocol for the firewall rule."
 msgstr "ファイアウォールルールのプロトコル。"
 
+msgid "Protocol of the pool."
+msgstr "プールのプロトコル。"
+
+#, fuzzy
+msgid "Protocol on which to listen for the client traffic."
+msgstr "クライアントトラフィックをリッスンするプロトコル。"
+
 msgid "Protocol to balance."
 msgstr "バランスを取るためのプロトコル。"
 
@@ -4007,10 +4488,19 @@ msgid "Protocol value for this firewall rule."
 msgstr "このファイアウォールルールのプロトコル値。"
 
 msgid ""
+"Provide access to nodes using other nodes of the cluster as proxy gateways."
+msgstr ""
+"プロキシゲートウェイとしてクラスターの他のノードを使用することで、ノードへの"
+"アクセスを提供します。"
+
+msgid ""
 "Provide old encryption key. New encryption key would be used from config "
 "file."
 msgstr ""
 "古い 暗号化キーを提供します。新規の暗号化キーは設定ファイルから使用します。"
+
+msgid "Provider for this Load Balancer."
+msgstr "このロードバランサーのプロバイダー。"
 
 msgid "Provider implementing this load balancer instance."
 msgstr "このロードバランサーのインスタンスを実装するプロバイダー。"
@@ -4030,6 +4520,9 @@ msgstr "指定されたインスタンスのパブリック IP アドレス。"
 msgid ""
 "RPC timeout for the engine liveness check that is used for stack locking."
 msgstr "スタックロックに使用するエンジン活性チェックの RPC タイムアウト。"
+
+msgid "RX/TX factor."
+msgstr "RX/TX 係数。"
 
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
@@ -4080,6 +4573,7 @@ msgstr "今後実行すべき処理。"
 msgid "Remote branch router identity."
 msgstr "リモートブランチルーター ID。"
 
+#, fuzzy
 msgid "Remote branch router public IPv4 address or IPv6 address or FQDN."
 msgstr ""
 "リモートブランチルーターのパブリック IPv4 アドレスまたは IPv6 アドレスあるい"
@@ -4190,6 +4684,9 @@ msgstr "リソースタイプ。"
 msgid "Resource update already requested"
 msgstr "リソース更新は既に要求済みです"
 
+msgid "Resource update failed"
+msgstr "リソースの更新が失敗しました"
+
 msgid "Resource with the name requested already exists"
 msgstr "要求された名前のリソースは既に存在します"
 
@@ -4243,6 +4740,15 @@ msgstr "このソフトウェア設定が生成する出力を表すスキーマ
 msgid "Schema valid only for %(ltype)s or %(mtype)s, not %(utype)s"
 msgstr ""
 "スキーマは %(utype)s ではなく %(ltype)s または %(mtype)s にのみ有効です"
+
+#, fuzzy
+msgid ""
+"Scope of flavor accessibility. Public or private. Default value is True, "
+"means public, shared across all projects."
+msgstr ""
+"フレーバーのアクセス可能性の範囲。パブリックまたはプライベートに設定します。"
+"デフォルト値の True はプライベートを意味し、すべてのプロジェクトで共有されま"
+"す。"
 
 msgid ""
 "Scope of image accessibility. Public or private. Default value is False "
@@ -4422,11 +4928,21 @@ msgstr "%s 中の信号リソース"
 msgid "Single schema valid only for %(ltype)s, not %(utype)s"
 msgstr "単一スキーマは %(utype)s ではなく %(ltype)s にのみ有効です"
 
+msgid "Size of a secondary ephemeral data disk in GB."
+msgstr "セカンダリー一時データディスクのサイズ (GB)。"
+
 msgid "Size of adjustment."
 msgstr "調整のサイズ。"
 
 msgid "Size of encryption key, in bits. For example, 128 or 256."
 msgstr "暗号化キーのサイズ (ビット数)。例えば、128 や 256 など。"
+
+msgid ""
+"Size of local disk in GB. The \"0\" size is a special case that uses the "
+"native base image size as the size of the ephemeral root volume."
+msgstr ""
+"ローカルディスクのサイズ (GB)。「0」のサイズは、一時的なルートボリュームとし"
+"てネイティブのベースイメージのサイズを使用する特別なケースです。"
 
 msgid ""
 "Size of the block device in GB. If it is omitted, hypervisor driver "
@@ -4440,6 +4956,10 @@ msgstr "インスタンスのボリュームの容量 (GB)。"
 
 msgid "Size of the volumes, in GB."
 msgstr "ボリューム容量 (GB)。"
+
+msgid "Smallest prefix size that can be allocated from the subnet pool."
+msgstr ""
+"サブネットプールから割り当てることができるプレフィックスサイズの最小値。"
 
 #, python-format
 msgid "Snapshot with id %s not found"
@@ -4474,6 +4994,11 @@ msgstr "指定された出力キー %s が見つかりません。"
 #, python-format
 msgid "Specified status is invalid, defaulting to %s"
 msgstr "指定された状況は無効です。%s にデフォルト設定されます"
+
+#, python-format
+msgid "Specified subnet %(subnet)s does not belongs to network %(network)s."
+msgstr ""
+"指定したサブネット %(subnet)s がネットワーク %(network)s に含まれません。"
 
 #, fuzzy
 msgid "Specifies a custom discovery url for node discovery."
@@ -4576,8 +5101,21 @@ msgstr "サブネット ID。"
 msgid "Subnet in which the vpn service will be created."
 msgstr "VPN サービスが作成されるサブネット。"
 
+#, fuzzy
+msgid ""
+"Subnet in which to allocate the IP address for port. Used for creating port, "
+"based on derived properties. If subnet is specified, network property "
+"becomes optional."
+msgstr ""
+"ポートに IP アドレスを割り当てる必要のあるサブネット。抽出したプロパティーに"
+"基づいてポートの作成のために使用します。サブネットを指定すると、ネットワーク"
+"プロパティーは必須ではなくなります。"
+
 msgid "Subnet in which to allocate the IP address for this port."
 msgstr "このポートの IP アドレスを割り振るサブネット。"
+
+msgid "Subnet name or ID of this member."
+msgstr "このメンバーのサブネットの名前または ID。"
 
 msgid "Subnet of external fixed IP address."
 msgstr "外部 Fixed IP のアドレスのサブネット。"
@@ -4606,12 +5144,23 @@ msgstr "サポートされるバージョン: keystone v3"
 msgid "Suspend of instance %s failed"
 msgstr "インスタンスの中断 %s が失敗しました"
 
+#, fuzzy, python-format
+msgid "Suspend of server %s failed"
+msgstr "サーバー %s の中断が失敗しました"
+
+msgid "Swap space in MB."
+msgstr "スワップスペース (MB)。"
+
 #, python-format
 msgid "Sync Point %s not found"
 msgstr "同期ポイント %s が見つかりません"
 
 msgid "System SIGHUP signal received."
 msgstr "システムの SIGHUP 信号を受信しました。"
+
+#, fuzzy
+msgid "TCP or UDP port on which to listen for client traffic."
+msgstr "クライアントトラフィックをリッスンする TCP ポートまたは UDP ポート。"
 
 msgid "TCP port on which the instance server is listening."
 msgstr "インスタンスサーバーが listen している TCP ポート。"
@@ -4652,6 +5201,9 @@ msgstr "タグキー。"
 
 msgid "Tag value."
 msgstr "タグ値。"
+
+msgid "Tags to add to the image."
+msgstr "イメージに追加する必要のあるタグ。"
 
 msgid "Tags to attach to instance."
 msgstr "インスタンスに接続するタグ。"
@@ -4844,6 +5396,24 @@ msgstr ""
 "メンバーヘルスをテストするためにモニターで使用される、HTTP 要求で使用される "
 "HTTP パス。"
 
+#, fuzzy
+msgid ""
+"The HTTP path used in the HTTP request used by the monitor to test a member "
+"health. A valid value is a string the begins with a forward slash (/)."
+msgstr ""
+"メンバーの健全性をテストするためにモニターが使用する、HTTP 要求で使用される "
+"HTTP パス。有効な値は、スラッシュ (/) で始まる文字列です。"
+
+#, fuzzy
+msgid ""
+"The HTTP status codes expected in response from the member to declare it "
+"healthy. Specify one of the following values: a single value, such as 200. a "
+"list, such as 200, 202. a range, such as 200-204."
+msgstr ""
+"正常であることを宣言するためにメンバーからの応答で予測される HTTP ステータス"
+"コード。以下の値のうちのいずれかを設定します: 単一の値 (200 など)、リスト "
+"(200, 202 など)、範囲 (200-204 など)"
+
 msgid ""
 "The ID of an existing instance to use to create the Auto Scaling group. If "
 "specify this property, will create the group use an existing instance "
@@ -4883,6 +5453,9 @@ msgstr "ボリュームの接続先インスタンスの ID。"
 msgid "The ID of the load balancing pool."
 msgstr "ロードバランシングプールの ID。"
 
+msgid "The ID of the pool to which the pool member belongs."
+msgstr "プールメンバーが所属するプールの ID。"
+
 msgid "The ID of the server to which the volume attaches."
 msgstr "ボリュームの接続先サーバーの ID。"
 
@@ -4897,12 +5470,32 @@ msgstr ""
 "ネットワークを所有することになるテナントの ID。テナント ID を設定できるのは管"
 "理ユーザーのみです。権限ポリシーを使用してこれを変更することはできません。"
 
+#, fuzzy
+msgid ""
+"The ID of the tenant who owns the Load Balancer. Only administrative users "
+"can specify a tenant ID other than their own."
+msgstr ""
+"ロードバランサーを所有するテナントの ID。自分の ID 以外のテナント ID を指定で"
+"きるのは管理者に限られます。"
+
+#, fuzzy
+msgid "The ID of the tenant who owns the listener."
+msgstr "このリスナーを所有するテナントの ID。"
+
 msgid ""
 "The ID of the tenant who owns the network. Only administrative users can "
 "specify a tenant ID other than their own."
 msgstr ""
 "ネットワークを所有するテナントの ID。自分以外のテナント ID を指定できるのは管"
 "理ユーザーのみです。"
+
+#, fuzzy
+msgid ""
+"The ID of the tenant who owns the subnet pool. Only administrative users can "
+"specify a tenant ID other than their own."
+msgstr ""
+"サブネットプールを所有するテナントのID。自分の ID 以外にテナント ID を設定で"
+"きるのは管理者に限られます。"
 
 msgid "The ID of the volume to be attached."
 msgstr "接続するボリュームの ID。"
@@ -4928,6 +5521,10 @@ msgstr ""
 "ネットワークをスケジュールする DHCP エージェントの ID。Neutron のデフォルトポ"
 "リシー設定では、このプロパティーの使用は管理ユーザーのみに制限されることに注"
 "意してください。"
+
+#, fuzzy
+msgid "The IP address of the pool member."
+msgstr "プールメンバーの IP アドレス。"
 
 msgid "The IP version, which is 4 or 6."
 msgstr "IP バージョン (4 または 6)。"
@@ -5011,12 +5608,26 @@ msgstr "リソースとして作成するスタックを指定するテンプレ
 msgid "The URL of the container."
 msgstr "コンテナーの URL。"
 
+#, fuzzy
+msgid "The VIP address of the LoadBalancer."
+msgstr "ロードバランサーの VIP アドレス。"
+
+#, fuzzy
+msgid "The VIP port of the LoadBalancer."
+msgstr "ロードバランサー の VIP ポート。"
+
+msgid "The VIP subnet of the LoadBalancer."
+msgstr "ロードバランサーの VIP サブネット。"
+
 #, python-format
 msgid "The Watch Rule (%(watch_name)s) could not be found."
 msgstr "監視ルール %(watch_name)s) が見つかりませんでした。"
 
 msgid "The action or operation requested is invalid"
 msgstr "要求されたアクションまたは操作は無効です"
+
+msgid "The action to be executed when the receiver is signaled."
+msgstr "レシーバーが信号を受信した際に実行されるアクション。"
 
 msgid "The administrative state of the firewall."
 msgstr "ファイアウォールの管理状態。"
@@ -5036,8 +5647,14 @@ msgstr "ルーターの管理状態。"
 msgid "The administrative state of the vpn service."
 msgstr "VPN サービスの管理状態。"
 
+msgid "The administrative state of this Load Balancer."
+msgstr "このロードバランサーの管理状態。"
+
 msgid "The administrative state of this health monitor."
 msgstr "このヘルスモニターの管理状態。"
+
+msgid "The administrative state of this listener."
+msgstr "このリスナーの管理状態。"
 
 msgid "The administrative state of this pool member."
 msgstr "このプールのメンバーの管理状態。"
@@ -5127,6 +5744,9 @@ msgstr "定義済みのデバイスをマップ解除するために使用でき
 msgid "The certificate or AWS Key ID provided does not exist"
 msgstr "指定された証明書または AWS キー ID が存在しません"
 
+msgid "The channel for receiving signals."
+msgstr "信号の受信のためのチャンネル。"
+
 #, fuzzy
 msgid ""
 "The class that provides encryption support. For example, nova.volume."
@@ -5138,6 +5758,9 @@ msgstr ""
 #, python-format
 msgid "The client (%(client_name)s) is not available."
 msgstr "クライアント (%(client_name)s) は使用できません。"
+
+msgid "The cluster ID this node belongs to."
+msgstr "このノードが属するクラスター ID。"
 
 msgid "The config value of the software config."
 msgstr "ソフトウェア設定の設定値。"
@@ -5188,6 +5811,15 @@ msgstr "ipsec サイト接続のデッドピア検出プロトコル設定。"
 msgid "The decrypted secret payload."
 msgstr "復号化された秘密のペイロード。"
 
+msgid ""
+"The default cloud-init user set up for each image (e.g. \"ubuntu\" for "
+"Ubuntu 12.04+, \"fedora\" for Fedora 19+ and \"cloud-user\" for CentOS/RHEL "
+"6.5)."
+msgstr ""
+"各イメージに関するデフォルトの cloud-init のユーザーセットアップ (Ubuntu "
+"12.04+ の場合の「ubuntu」、Fedora 19+ の場合の「fedora」、CentOS/RHEL 6.5 の"
+"場合の「cloud-user」など)。"
+
 #, fuzzy
 msgid "The description for the QoS policy."
 msgstr "QoS ポリシーの説明。"
@@ -5203,6 +5835,12 @@ msgstr "ipsec サイト接続の説明。"
 
 msgid "The description of the vpn service."
 msgstr "VPN サービスの説明。"
+
+msgid "The destination for static route."
+msgstr "静的なルートの宛先。"
+
+msgid "The details of physical object."
+msgstr "物理オブジェクトの詳細。"
 
 msgid "The device id for the network gateway."
 msgstr "ネットワークゲートウェイのデバイス ID。"
@@ -5291,6 +5929,7 @@ msgstr "以下のパラメーターは変更できず、更新できません: %
 msgid "The function %s is not supported in this version of HOT."
 msgstr "関数 %s は、このバージョンの HOT でサポートされていません。"
 
+#, fuzzy
 msgid ""
 "The gateway IP address. Set to any of [ null | ~ | \"\" ] to create/update a "
 "subnet without a gateway. If omitted when creation, neutron will assign the "
@@ -5300,7 +5939,7 @@ msgid ""
 msgstr ""
 "ゲートウェイの IP アドレス。ゲートウェイを使用せずにサブネットの作成または更"
 "新を行うには 、[ null | ~ | \"\" ] のうちの任意の値を設定します。作成時にこの"
-"値を指定しないと、neutron はtサブネット内の空いている最初の IP アドレスを自動"
+"値を指定しないと、neutron はサブネット内の空いている最初の IP アドレスを自動"
 "的にゲートウェイに割り当てます。更新時にテンプレートからこの値を削除すると、"
 "古いゲートウェイの IP アドレスは接続が解除されます。"
 
@@ -5372,11 +6011,15 @@ msgid ""
 "The list of HTTP status codes expected in response from the member to "
 "declare it healthy."
 msgstr ""
-"正常であることを宣言するためにメンバーからの応答で必要なHTTP ステータスコード"
-"のリスト。"
+"正常であることを宣言するためにメンバーからの応答で必要な HTTP ステータスコー"
+"ドのリスト。"
 
 msgid "The list of Nova server IDs load balanced."
 msgstr "負荷分散される Nova サーバー ID の一覧。"
+
+#, fuzzy
+msgid "The list of Pools related to this monitor."
+msgstr "このモニターに関連するプールのリスト。"
 
 msgid "The list of attachments of the volume."
 msgstr "ボリュームの接続機構のリスト。"
@@ -5423,7 +6066,15 @@ msgid "The manually assigned alternative public IPv6 address of the server."
 msgstr "サーバーに手動で割り当てられた代替パブリック IPv6 アドレス。"
 
 msgid "The maximum number of connections per second allowed for the vip."
-msgstr "VIP に許可される秒あたりの最大接続数。"
+msgstr "VIP に許容される 1 秒あたりの最大接続数。"
+
+#, fuzzy
+msgid ""
+"The maximum number of connections permitted for this load balancer. Defaults "
+"to -1, which is infinite."
+msgstr ""
+"このロードバランサーで許容される接続の最大数。デフォルト値は -1 であり、無制"
+"限を指します。"
 
 msgid "The maximum number of resources to create at once."
 msgstr "一度に作成可能なリソースの最大数。"
@@ -5568,18 +6219,31 @@ msgstr "このポートに追加する QoS ポリシーの名前または ID。"
 msgid "The name or ID of parent of this keystone project in hierarchy."
 msgstr "階層内のこの keystone プロジェクトの親の名前または ID。"
 
+msgid "The name or ID of target cluster."
+msgstr "ターゲットクラスターの名前または ID。"
+
 #, fuzzy
 msgid "The name or ID of the bay model."
 msgstr "ベイモデルの名前または ID。"
 
+#, fuzzy
+msgid "The name or ID of the subnet on which to allocate the VIP address."
+msgstr "VIP アドレスを割り当てる必要のあるサブネットの名前または ID。"
+
 msgid "The name or ID of the subnet pool."
 msgstr "サブネットプールの名前または ID。"
+
+msgid "The name or id of the Senlin profile."
+msgstr "Senlin プロファイルの名前または ID。"
 
 msgid "The name or id of the nova ssh keypair."
 msgstr "nova の ssh キーペアの名前またはID。"
 
 msgid "The negotiation mode of the ike policy."
 msgstr "IKE ポリシーのネゴシエーションモード。"
+
+msgid "The next hop for the destination."
+msgstr "宛先のネクストホップ。"
 
 #, fuzzy
 msgid "The node count for this bay."
@@ -5624,6 +6288,10 @@ msgid "The number of objects stored in the container."
 msgstr "コンテナーに保管されたオブジェクトの数。"
 
 #, fuzzy
+msgid "The number of replicas to be created."
+msgstr "作成されるレプリカの数。"
+
+#, fuzzy
 msgid "The number of resources to create."
 msgstr "作成対象のリソースの数。"
 
@@ -5633,6 +6301,9 @@ msgstr "次の更新のバッチまで待機する秒数。"
 #, fuzzy
 msgid "The number of seconds to wait between batches."
 msgstr "バッチとバッチの間の待機時間 (秒)。"
+
+msgid "The number of seconds to wait for the cluster actions."
+msgstr "クラスターのアクションを待機する秒数。"
 
 msgid ""
 "The number of seconds to wait for the correct number of signals to arrive."
@@ -5668,6 +6339,9 @@ msgid ""
 msgstr ""
 "所有者のテナント ID。呼び出し元が管理者のロールを持ち、他のテナントのために "
 "RBAC を設定したい場合にのみ必要となります。"
+
+msgid "The parameters passed to action when the receiver is signaled."
+msgstr "レシーバーが信号を受信した際にアクションに渡されるパラメーター。"
 
 msgid "The parent URL of the container."
 msgstr "コンテナーの親 URL。"
@@ -5796,6 +6470,9 @@ msgstr "要求されたアクションはまだ実装されていません"
 msgid "The resource %s is already being updated."
 msgstr "リソース %s は既に更新中です。"
 
+msgid "The resource href of the queue."
+msgstr "キューのリソース href。"
+
 msgid "The route mode of the ipsec site connection."
 msgstr "ipsec サイト接続の経路モード。"
 
@@ -5838,6 +6515,13 @@ msgstr "ドッカー容量のサイズ (GB)。"
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr "オートスケールグループのサイズをゼロより小さくすることはできません"
 
+msgid ""
+"The size of the prefix to allocate when the cidr or prefixlen attributes are "
+"not specified while creating a subnet."
+msgstr ""
+"サブネットの作成時に CIDR や prefixlen の属性が指定されない場合に割り当てるプ"
+"レフィックスのサイズ。"
+
 msgid "The size of the swap, in MB."
 msgstr "スワップの容量 (MB)。"
 
@@ -5875,7 +6559,7 @@ msgid "The specified reference \"%(resource)s\" (in %(key)s) is incorrect."
 msgstr "指定された参照 \"%(resource)s\" (%(key)s 内) は正しくありません。"
 
 msgid "The start and end addresses for the allocation pools."
-msgstr "割り振りプールの開始アドレスと終了アドレス。"
+msgstr "割り当てプールの開始アドレスと終了アドレス。"
 
 msgid "The status of the container."
 msgstr "コンテナーの状況。"
@@ -5953,6 +6637,12 @@ msgstr "ボリューム作成を示すタイムスタンプ。"
 
 msgid "The transform protocol of the ipsec policy."
 msgstr "ipsec ポリシーの変換プロトコル。"
+
+msgid "The type of profile."
+msgstr "プロファイルのタイプ。"
+
+msgid "The type of senlin policy."
+msgstr "Senlin ポリシーの名前。"
 
 msgid "The type of the certificate request."
 msgstr "証明書のリクエストのタイプ。"
@@ -6085,13 +6775,12 @@ msgstr ""
 "5.0.0 ではこのようなオプションは存在しないため、この属性をサポート対象外に設"
 "定する必要があります。設定しない場合、エラーが発生します。"
 
-#, fuzzy
 msgid ""
 "There is no such option during 5.0.0, so need to make this property "
 "unsupported while it not used."
 msgstr ""
 "5.0.0 ではこのようなオプションは存在しないため、このプロパティーを使用しない"
-"うちは、プロパティーをサポート対象外に設定する必要があります。"
+"場合は、プロパティーをサポート対象外に設定する必要があります。"
 
 #, python-format
 msgid ""
@@ -6230,6 +6919,12 @@ msgstr ""
 msgid "Type of keystone Service."
 msgstr "keystone サービスのタイプ。"
 
+msgid "Type of receiver."
+msgstr "レシーバーのタイプ。"
+
+msgid "Type of the data source."
+msgstr "データソースのタイプ。"
+
 #, fuzzy
 msgid "Type of the notification."
 msgstr "通知のタイプ。"
@@ -6248,6 +6943,16 @@ msgstr "Cinder バックエンドで作成するボリュームのタイプ。"
 
 msgid "URL for API authentication"
 msgstr "API 認証用 URL"
+
+msgid "URL for the data source."
+msgstr "データソースの URL。"
+
+msgid ""
+"URL for the job binary. Must be in the format swift://<container>/<path> or "
+"internal-db://<uuid>."
+msgstr ""
+"ジョブバイナリーの URL。swift://<container>/<path> または iternal-db://"
+"<uuid> の形式である必要があります。"
 
 msgid ""
 "URL of TempURL where resource will signal completion and optionally upload "
@@ -6467,6 +7172,13 @@ msgstr "スタックを削除中に更新しています"
 msgid "Updating a stack when it is suspended"
 msgstr "中断中にスタックを更新しています"
 
+msgid ""
+"Use get_resource|Ref command instead. For example: { get_resource : "
+"<resource_name> }"
+msgstr ""
+"代わりに get_resource|Ref コマンドを使用してください。コマンドの例は、"
+"{ get_resource : <resource_name> } です。"
+
 #, fuzzy
 msgid ""
 "Use of this resource is discouraged. Please use OS::Heat::"
@@ -6548,6 +7260,15 @@ msgstr "AccessKey に関連付けられたユーザー名。"
 
 msgid "Username for API authentication"
 msgstr "API 認証用ユーザー名"
+
+msgid "Username for accessing the data source URL."
+msgstr "データソースの URL にアクセスするためのユーザー名。"
+
+msgid "Username for accessing the job binary URL."
+msgstr "ジョブバイナリーの URL にアクセスするためのユーザー名。"
+
+msgid "Username of privileged user in the image."
+msgstr "イメージ内の特権ユーザーのユーザー名。"
 
 msgid "Using Cinder API V1, volume type access"
 msgstr "Cinder API V1 を使用したボリュームタイプのアクセス"
@@ -6743,6 +7464,9 @@ msgstr ""
 "2 度以上ボリュームを追加できるかどうかを指定します。このプロパティーは "
 "Cinder API v2 のみがサポートします。"
 
+msgid "Whether enable this policy on that cluster."
+msgstr "このクラスター上でこのポリシーを有効化すべきかどうか。"
+
 #, fuzzy
 msgid ""
 "Whether the address scope should be shared to other tenants. Note that the "
@@ -6753,6 +7477,10 @@ msgstr ""
 "アドレススコープを他のテナントに共有すべきかどうか。デフォルトのポリシー設定"
 "ではこの属性を使用できるのは管理者に限られ、共有アドレススコープを非共有に変"
 "更できるのは更新時に限られます。"
+
+#, fuzzy
+msgid "Whether the flavor is shared across all projects."
+msgstr "すべてのプロジェクトでフレーバーを共有するかどうか。"
 
 msgid ""
 "Whether the image can be deleted. If the value is True, the image is "
@@ -6770,6 +7498,14 @@ msgstr "ネットワークに外部ルーターが含まれるかどうか。"
 msgid "Whether the part content is text or multipart."
 msgstr "パーツ内容がテキストかマルチパートか。"
 
+msgid ""
+"Whether the subnet pool will be shared across all tenants. Note that the "
+"default policy setting restricts usage of this attribute to administrative "
+"users only."
+msgstr ""
+"このサブネットプールをすべてのテナントで共有するかどうか。デフォルトのポリ"
+"シー設定では、この属性を使用できるのは管理者に限られます。"
+
 msgid "Whether the volume type is accessible to the public."
 msgstr "ボリュームタイプが一般ユーザーからアクセスできるかどうか。"
 
@@ -6784,6 +7520,16 @@ msgstr ""
 "このファイアウォールをすべてのテナントで共有するかどうか。注: Neutron のデ"
 "フォルトポリシー設定では、このプロパティーの使用は管理ユーザーのみに制限され"
 "ます。"
+
+#, fuzzy
+msgid ""
+"Whether this is default IPv4/IPv6 subnet pool. There can only be one default "
+"subnet pool for each IP family. Note that the default policy setting "
+"restricts administrative users to set this to True."
+msgstr ""
+"これがデフォルトの IPv4/IPv6 のサブネットプールであるかどうか。各 IP ファミ"
+"リーに存在するデフォルトのサブネットプールは 1 つだけです。 デフォルトのポリ"
+"シー設定では、管理者のみがこの値を True に設定することができます。"
 
 msgid "Whether this network should be shared across all tenants."
 msgstr "このネットワークがすべてのテナントで共有されるかどうか。"
@@ -6889,6 +7635,14 @@ msgstr "ユーザー %s が見つかりませんでした"
 
 msgid "deployment_id must be specified"
 msgstr "deployment_id の指定は必須です"
+
+#, fuzzy
+msgid ""
+"deployments key not allowed in resource metadata with user_data_format of "
+"SOFTWARE_CONFIG"
+msgstr ""
+"SOFTWARE_CONFIG の user_data_format を持つリソースのメタデータでは、実装キー"
+"は許容されません。 "
 
 #, python-format
 msgid "environment has wrong section \"%s\""
