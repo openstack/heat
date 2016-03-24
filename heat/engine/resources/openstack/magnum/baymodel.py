@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -33,14 +34,18 @@ class BayModel(resource.Resource):
         EXTERNAL_NETWORK, FIXED_NETWORK, DNS_NAMESERVER,
         DOCKER_VOLUME_SIZE, SSH_AUTHORIZED_KEY, COE, NETWORK_DRIVER,
         HTTP_PROXY, HTTPS_PROXY, NO_PROXY, LABELS, TLS_DISABLED, PUBLIC,
-        REGISTRY_ENABLED
+        REGISTRY_ENABLED, VOLUME_DRIVER
     ) = (
         'name', 'image', 'flavor', 'master_flavor', 'keypair',
         'external_network', 'fixed_network', 'dns_nameserver',
         'docker_volume_size', 'ssh_authorized_key', 'coe', 'network_driver',
         'http_proxy', 'https_proxy', 'no_proxy', 'labels', 'tls_disabled',
-        'public', 'registry_enabled'
+        'public', 'registry_enabled', 'volume_driver'
     )
+
+    # Change it when magnum supports more function in the future.
+    SUPPORTED_VOLUME_DRIVER = {'kubernetes': ['cinder'], 'swarm': ['rexray'],
+                               'mesos': ['rexray']}
 
     properties_schema = {
         NAME: properties.Schema(
@@ -172,7 +177,15 @@ class BayModel(resource.Resource):
             _('Enable the docker registry in the bay.'),
             default=False,
             support_status=support.SupportStatus(version='6.0.0')
-        )
+        ),
+        VOLUME_DRIVER: properties.Schema(
+            properties.Schema.STRING,
+            _('The volume driver name for instantiating container volume.'),
+            support_status=support.SupportStatus(version='7.0.0'),
+            constraints=[
+                constraints.AllowedValues(['cinder', 'rexray'])
+            ]
+        ),
     }
 
     default_client_name = 'magnum'
@@ -188,6 +201,24 @@ class BayModel(resource.Resource):
                     [self.SSH_AUTHORIZED_KEY]
                 )
             ]
+
+    def validate(self):
+        """Validate the provided params."""
+        super(BayModel, self).validate()
+
+        coe = self.properties[self.COE]
+        volume_driver = self.properties[self.VOLUME_DRIVER]
+
+        # Confirm that volume driver is supported by Magnum COE per
+        # SUPPORTED_VOLUME_DRIVER.
+        value = self.SUPPORTED_VOLUME_DRIVER[coe]
+        if volume_driver is not None and volume_driver not in value:
+            msg = (_('Volume driver type %(driver)s is not supported by '
+                     'COE:%(coe)s, expecting a %(supported_volume_driver)s '
+                     'volume driver.') % {
+                'driver': volume_driver, 'coe': coe,
+                'supported_volume_driver': value})
+            raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         args = {
@@ -218,6 +249,8 @@ class BayModel(resource.Resource):
             args['public'] = self.properties[self.PUBLIC]
         if self.properties[self.REGISTRY_ENABLED]:
             args['registry_enabled'] = self.properties[self.REGISTRY_ENABLED]
+        if self.properties[self.VOLUME_DRIVER]:
+            args['volume_driver'] = self.properties[self.VOLUME_DRIVER]
 
         bm = self.client().baymodels.create(**args)
         self.resource_id_set(bm.uuid)
