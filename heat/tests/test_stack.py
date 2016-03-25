@@ -37,6 +37,7 @@ from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import template
+from heat.engine import update
 from heat.objects import raw_template as raw_template_object
 from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
@@ -2528,6 +2529,35 @@ class StackTest(common.HeatTestCase):
                                                stc.resolve_static_data,
                                                None)
         self.assertEqual(expected_message, six.text_type(expected_exception))
+
+    @mock.patch.object(update, 'StackUpdate')
+    def test_update_task_exception(self, mock_stack_update):
+        class RandomException(Exception):
+            pass
+
+        tmpl1 = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'}
+            }
+        })
+        self.stack = stack.Stack(utils.dummy_context(), 'test_stack', tmpl1)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+                'bar': {'Type': 'GenericResourceType'}
+            }
+        })
+        updated_stack = stack.Stack(utils.dummy_context(), 'test_stack', tmpl2)
+
+        mock_stack_update.side_effect = RandomException()
+        self.assertRaises(RandomException, self.stack.update, updated_stack)
 
     def update_exception_handler(self, exc, action=stack.Stack.UPDATE,
                                  disable_rollback=False):
