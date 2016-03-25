@@ -267,6 +267,7 @@ default value defined as nested elements.
       hidden: <true | false>
       constraints:
         <parameter constraints>
+      immutable: <true | false>
 
 param name
     The name of the parameter.
@@ -302,6 +303,11 @@ constraints
     Orchestration engine when a user deploys a stack. The stack creation fails
     if the parameter value doesn't comply to the constraints.
     This attribute is optional.
+
+immutable
+    Defines whether the parameter is updatable. Stack update fails, if this is
+    set to ``true`` and the parameter value is changed.
+    This attribute is optional and defaults to ``false``.
 
 The table below describes all currently supported types with examples:
 
