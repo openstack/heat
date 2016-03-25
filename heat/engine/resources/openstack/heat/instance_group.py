@@ -146,7 +146,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def validate_launchconfig(self):
         # It seems to be a common error to not have a dependency on the
-        # launchconfiguration. This can happen if the the actual resource
+        # launchconfiguration. This can happen if the actual resource
         # name is used instead of {get_resource: launch_conf} and no
         # depends_on is used.
 
