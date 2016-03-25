@@ -18,9 +18,9 @@ from Crypto.Cipher import AES
 from cryptography import fernet
 from oslo_config import cfg
 from oslo_utils import encodeutils
+from oslo_utils import importutils
 
 from heat.common.i18n import _
-from heat.openstack.common.crypto import utils
 
 auth_opts = [
     cfg.StrOpt('auth_encryption_key',
@@ -31,6 +31,46 @@ auth_opts = [
 ]
 
 cfg.CONF.register_opts(auth_opts)
+
+
+class SymmetricCrypto(object):
+    """Symmetric Key Crypto object.
+
+    This class creates a Symmetric Key Crypto object that can be used
+    to decrypt arbitrary data.
+
+    Note: This is moved here from oslo-incubator for backward
+    compatibility. Once we've db migration script available to
+    re-rencrypt using new encryption method as part of upgrade,
+    this can be removed.
+
+    :param enctype: Encryption Cipher name (default: AES)
+    """
+
+    def __init__(self, enctype='AES'):
+        self.cipher = importutils.import_module('Crypto.Cipher.' + enctype)
+
+    def decrypt(self, key, msg, b64decode=True):
+        """Decrypts the provided ciphertext.
+
+        The ciphertext can be optionally base64 encoded.
+
+        Uses AES-128-CBC with an IV by default.
+
+        :param key: The Encryption key.
+        :param msg: the ciphetext, the first block is the IV
+
+        :returns plain: the plaintext message, after padding is removed.
+        """
+        if b64decode:
+            msg = base64.b64decode(msg)
+        iv = msg[:self.cipher.block_size]
+        cipher = self.cipher.new(key, self.cipher.MODE_CBC, iv)
+
+        padded = cipher.decrypt(msg[self.cipher.block_size:])
+        l = ord(padded[-1:]) + 1
+        plain = padded[:-l]
+        return plain
 
 
 def encrypt(value, encryption_key=None):
@@ -54,9 +94,8 @@ def decrypt(method, data, encryption_key=None):
 
 def oslo_decrypt_v1(value, encryption_key=None):
     encryption_key = get_valid_encryption_key(encryption_key)
-    sym = utils.SymmetricCrypto()
-    return sym.decrypt(encryption_key,
-                       value, b64decode=True)
+    sym = SymmetricCrypto()
+    return sym.decrypt(encryption_key, value, b64decode=True)
 
 
 def cryptography_decrypt_v1(value, encryption_key=None):
