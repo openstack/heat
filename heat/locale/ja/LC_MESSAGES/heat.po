@@ -15,13 +15,13 @@
 # 笹原 昌美 <ebb0de1@jp.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev11\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev14\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-23 10:47+0000\n"
+"POT-Creation-Date: 2016-03-24 10:21+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-24 06:43+0000\n"
+"PO-Revision-Date: 2016-03-24 12:43+0000\n"
 "Last-Translator: Tsutomu Kimura <ebb0de2@jp.ibm.com>\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -953,6 +953,10 @@ msgid "Arguments to %s not fully resolved"
 msgstr "%s に対する引数が完全に解決されていません"
 
 #, python-format
+msgid "At least one of the following properties must be specified: %(props)s"
+msgstr "1 つ以上の以下のプロパティーを設定する必要があります: %(props)s"
+
+#, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr "ID %(id)s のスタックの削除を試行: %(msg)s"
 
@@ -1202,6 +1206,7 @@ msgstr "クラスターの情報。"
 msgid "Cluster metadata."
 msgstr "クラスターのメタデータ。"
 
+#, fuzzy
 msgid "Cluster name."
 msgstr "クラスター名。"
 
@@ -1726,8 +1731,8 @@ msgid ""
 "Dict, which has expand properties for port. Used only if port property is "
 "not specified for creating port."
 msgstr ""
-"ポートに関する拡張プロパティーを持つ Dict。ポートの作成のためにポートプロパ"
-"ティーが指定されていない場合にのみ使用します。"
+"ポートに関する拡張プロパティーを持つディクショナリー。ポートの作成のために"
+"ポートプロパティーが指定されていない場合にのみ使用します。"
 
 msgid "Dictionary containing workflow tasks."
 msgstr "ワークフローのタスクを含むディクショナリー。"
@@ -2096,6 +2101,30 @@ msgid ""
 msgstr ""
 "「%(exc)s」が原因でリージョン「%(region)s」での heat エンドポイントを使用した"
 "スタックテンプレートの検証に失敗しました"
+
+msgid "Fake attribute !a."
+msgstr "フェイク属性 !a。"
+
+msgid "Fake attribute a."
+msgstr "フェイク属性 a。"
+
+#, fuzzy
+msgid "Fake property !a."
+msgstr "フェイクプロパティー !a。"
+
+msgid "Fake property !c."
+msgstr "フェイクプロパティー !c。"
+
+msgid "Fake property a."
+msgstr "フェイクプロパティー a。"
+
+#, fuzzy
+msgid "Fake property c."
+msgstr "フェイクプロパティー c。"
+
+#, fuzzy
+msgid "Fake property ca."
+msgstr "フェイクプロパティー ca。"
 
 msgid ""
 "False to trigger actions when the threshold is reached AND the alarm's state "
@@ -2958,6 +2987,10 @@ msgid "Items to join must be string, map or list. %s failed json serialization"
 msgstr ""
 "結合する項目は文字列、マップ、またはリストである必要があります。%s が JSON の"
 "シリアライズに失敗しました。"
+
+#, fuzzy, python-format
+msgid "Items to join must be strings not %s"
+msgstr "結合する項目は %s ではなく文字列である必要があります。"
 
 #, python-format
 msgid ""
@@ -4105,17 +4138,17 @@ msgid ""
 "One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
 "be set for the specified network of server \"%(server)s\"."
 msgstr ""
-"サーバー「%(server)s」の指定されたネットワークに対して、「%(id)s」、"
-"「%(port_id)s」、「%(subnet)s」のプロパティーのうちのいずれか 1 つを設定する"
-"必要があります。"
+"サーバー \"%(server)s\" の指定されたネットワークに対して、\"%(id)s"
+"\"、\"%(port_id)s\"、\"%(subnet)s\" のプロパティーのうちのいずれか 1 つを設定"
+"する必要があります。"
 
 #, fuzzy, python-format
 msgid ""
 "One of the properties \"network\", \"port\" or \"subnet\" should be set for "
 "the specified network of server \"%s\"."
 msgstr ""
-"サーバー「%s」の指定されたネットワークに対しては、「network」、「port」、"
-"「subnet」のプロパティーのうち いずれか 1 つを設定する必要があります。"
+"サーバー \"%s\" の指定されたネットワークに対しては、\"network\"、\"port"
+"\"、\"subnet\" のプロパティーのうち いずれか 1 つを設定する必要があります。"
 
 msgid "One or more listeners for this load balancer."
 msgstr "このロードバランサーの 1 つ以上のリスナー。"
@@ -4195,19 +4228,63 @@ msgid "Parameter Groups error"
 msgstr "パラメーターグループのエラー"
 
 msgid ""
+"Parameter Groups error: parameter_groups.: The grouped parameter key_name "
+"does not reference a valid parameter."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups。グループ化されたパラメー"
+"ター  key_name が有効なパラメーターを参照していません。"
+
+msgid ""
 "Parameter Groups error: parameter_groups.: The key_name parameter must be "
 "assigned to one parameter group only."
 msgstr ""
-"Parameter Groups error: parameter_groups.: The key_name parameter must be "
-"assigned to one parameter group only."
+"パラメーターグループのエラー: parameter_groups 。key_name パラメーターは 1 つ"
+"のパラメーターグループにしか割り当てることができません。"
+
+msgid ""
+"Parameter Groups error: parameter_groups.: The parameters of parameter group "
+"should be a list."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups。パラメーターグループのパラ"
+"メーターはリストである必要があります。"
 
 msgid ""
 "Parameter Groups error: parameter_groups.Database Group: The InstanceType "
 "parameter must be assigned to one parameter group only."
 msgstr ""
-"パラメーターグループのエラー: parameter_groups.Database Group: The "
+"パラメーターグループのエラー: parameter_groups。データベースグループ: "
 "InstanceType パラメーターは 1 つのパラメーターグループにしか割り当てることが"
 "できません。"
+
+msgid ""
+"Parameter Groups error: parameter_groups.Database Group: The grouped "
+"parameter SomethingNotHere does not reference a valid parameter."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups。データベースグループ:  グルー"
+"プ化されたパラメーターの SomethingNotHere が有効なパラメーターを参照していま"
+"せん。"
+
+#, fuzzy
+msgid ""
+"Parameter Groups error: parameter_groups.Server Group: The parameters must "
+"be provided for each parameter group."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups。サーバーグループ: パラメー"
+"ターを各パラメーターグループに提供する必要があります。"
+
+msgid ""
+"Parameter Groups error: parameter_groups.Server Group: The parameters of "
+"parameter group should be a list."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups。サーバーグループ: "
+"InstanceType パラメーターグループはリストである必要があります。"
+
+msgid ""
+"Parameter Groups error: parameter_groups: The parameter_groups should be a "
+"list."
+msgstr ""
+"パラメーターグループのエラー: parameter_groups 。parameter_groups はリストで"
+"ある必要があります。"
 
 #, python-format
 msgid "Parameter name in \"%s\" must be string"
@@ -4249,6 +4326,9 @@ msgstr "\"%s\" 内のパスコンポーネントは文字列でなければな�
 
 msgid "Path components in attributes must be strings"
 msgstr "属性の Path コンポーネントは文字列である必要があります。"
+
+msgid "Payload exceeds maximum allowed size"
+msgstr "ペイロードが最大許容サイズを超えています。"
 
 msgid "Perfect forward secrecy for the ipsec policy."
 msgstr "ipsec ポリシーの Perfect Forward Secrecy。"
@@ -4302,6 +4382,14 @@ msgid ""
 msgstr ""
 "user_data の更新を適用する方法に関するポリシー。更新を無視するか、サーバー全"
 "体の置き換えを行うかのいずれかを実施します。"
+
+#, fuzzy
+msgid ""
+"Policy on how to apply an image-id update; either by requesting a server "
+"rebuild or by replacing the entire server."
+msgstr ""
+"イメージ ID 更新の適用方法に関するポリシー。サーバーの再ビルドを要求するか、"
+"サーバー全体を置換するかのいずれかを行います。"
 
 msgid ""
 "Policy on how to respond to a stack-update for this resource. REPLACE_ALWAYS "
@@ -4393,7 +4481,7 @@ msgstr "チェーン内で作成中の各ソースに渡すプロパティー。
 
 #, python-format
 msgid "Property \"%s\" is supported only for Neutron."
-msgstr "プロパティー「%s」は Neutron でのみサポートされます。"
+msgstr "プロパティー \"%s\" は Neutron でのみサポートされます。"
 
 #, fuzzy, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -4446,6 +4534,14 @@ msgstr "プロパティー %s が割り当てられていません"
 #, python-format
 msgid "Property %s not implemented yet"
 msgstr "プロパティー %s はまだ実装されていません"
+
+#, fuzzy
+msgid ""
+"Property cookie_name is required when session_persistence type is set to "
+"APP_COOKIE."
+msgstr ""
+"session_persistence タイプが APP_COOKIE に設定されている場合、プロパティー"
+"cookie_name が必要です。"
 
 msgid ""
 "Property cookie_name is required, when session_persistence type is set to "
@@ -4689,6 +4785,14 @@ msgstr "リソースの更新が失敗しました"
 
 msgid "Resource with the name requested already exists"
 msgstr "要求された名前のリソースは既に存在します"
+
+#, fuzzy
+msgid ""
+"ResourceInError: resources.remote_stack: Went to status UPDATE_FAILED due to "
+"\"Remote stack update failed\""
+msgstr ""
+"ResourceInError: resources。remote_stack: \"Remote stack update\" のため"
+"UPDATE_FAILED の状態が発生しました。"
 
 #, python-format
 msgid "Resources must contain Resource. Found a [%s] instead"
@@ -4995,10 +5099,10 @@ msgstr "指定された出力キー %s が見つかりません。"
 msgid "Specified status is invalid, defaulting to %s"
 msgstr "指定された状況は無効です。%s にデフォルト設定されます"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Specified subnet %(subnet)s does not belongs to network %(network)s."
 msgstr ""
-"指定したサブネット %(subnet)s がネットワーク %(network)s に含まれません。"
+"指定したサブネット %(subnet)s がネットワーク %(network)s 属していません。"
 
 #, fuzzy
 msgid "Specifies a custom discovery url for node discovery."
@@ -5795,14 +5899,15 @@ msgstr "AutoscalingResourceGroup の現行サイズ。"
 msgid "The current status of the volume."
 msgstr "ボリュームの現行状況。"
 
+#, fuzzy
 msgid ""
 "The database instance was created, but heat failed to set up the datastore. "
 "If a database instance is in the FAILED state, it should be deleted and a "
 "new one should be created."
 msgstr ""
-"データベースインスタンスが作成されましたが、 heat はデータストアをセットアッ"
-"プできませんでした。データベースインスタンスが FAILED 状態の場合は、そのイン"
-"スタンスを削除し、新しいインスタンスを作成する必要があります。"
+"データベースインスタンスが作成されましたが、heat はデータストアをセットアップ"
+"できませんでした。データベースインスタンスが FAILED 状態の場合は、そのインス"
+"タンスを削除し、新しいインスタンスを作成する必要があります。"
 
 msgid ""
 "The dead peer detection protocol configuration of the ipsec site connection."
@@ -5817,8 +5922,8 @@ msgid ""
 "6.5)."
 msgstr ""
 "各イメージに関するデフォルトの cloud-init のユーザーセットアップ (Ubuntu "
-"12.04+ の場合の「ubuntu」、Fedora 19+ の場合の「fedora」、CentOS/RHEL 6.5 の"
-"場合の「cloud-user」など)。"
+"12.04+ の場合の \"ubuntu\"、Fedora 19+ の場合の \"fedora\"、CentOS/RHEL 6.5 "
+"の場合の \"cloud-user\" など)。"
 
 #, fuzzy
 msgid "The description for the QoS policy."
@@ -7688,7 +7793,7 @@ msgid "min/max must be numeric"
 msgstr "min/max は数値でなければなりません"
 
 msgid "need more memory."
-msgstr "メモリーがさらに必要です。"
+msgstr "追加のメモリーが必要です。"
 
 msgid "no resource data found"
 msgstr "リソースデータが見つかりません"
