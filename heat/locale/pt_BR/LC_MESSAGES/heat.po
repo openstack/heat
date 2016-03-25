@@ -10,13 +10,13 @@
 # Carlos Marques <marquesc@br.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev11\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev14\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-23 10:47+0000\n"
+"POT-Creation-Date: 2016-03-24 10:21+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-23 08:21+0000\n"
+"PO-Revision-Date: 2016-03-24 01:03+0000\n"
 "Last-Translator: Carlos Marques <marquesc@br.ibm.com>\n"
 "Language: pt-BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
@@ -174,6 +174,10 @@ msgid "%(action)s is restricted for resource."
 msgstr "%(action)sé restrita para o recurso."
 
 #, python-format
+msgid "%(desired_capacity)s must be between %(min_size)s and %(max_size)s"
+msgstr "%(desired_capacity)s deve estar entre %(min_size)s e %(max_size)s"
+
+#, python-format
 msgid "%(error)s%(path)s%(message)s"
 msgstr "%(error)s%(path)s%(message)s"
 
@@ -214,6 +218,10 @@ msgid "%(message)s"
 msgstr "%(message)s"
 
 #, python-format
+msgid "%(min_size)s can not be greater than %(max_size)s"
+msgstr "%(min_size)s não pode ser maior que %(max_size)s"
+
+#, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "%(name)s restrição inválida para %(utype)s"
 
@@ -249,6 +257,10 @@ msgid "%(schema)s supplied for %(type)s %(data)s"
 msgstr "%(schema)s fornecido para  %(type)s %(data)s"
 
 #, python-format
+msgid "%(server)s-port-%(number)s"
+msgstr "%(server)s-port-%(number)s"
+
+#, python-format
 msgid "%(type)s not in valid format: %(error)s"
 msgstr "%(type)s não no formato válido: %(error)s"
 
@@ -263,6 +275,10 @@ msgstr "%s Tempo Excedido"
 #, python-format
 msgid "%s Value Name must be a string"
 msgstr "Nome do Valor %s deve ser uma sequência"
+
+#, python-format
+msgid "%s is not a valid job location."
+msgstr "%s não é um local de tarefa válido."
 
 #, python-format
 msgid "%s is not active"
@@ -347,6 +363,28 @@ msgstr ""
 "Um nome de dispositivo ao qual o volume será anexado no sistema em /dev/"
 "device_name.e.g. vdb"
 
+msgid ""
+"A dict of all network addresses with corresponding port_id. Each network "
+"will have two keys in dict, they are network name and network id. The port "
+"ID may be obtained through the following expression: \"{get_attr: [<server>, "
+"addresses, <network name_or_id>, 0, port]}\"."
+msgstr ""
+"Um dicionário de todos os endereços de rede com o port_id correspondente. "
+"Cada rede terá duas chaves no dicionário, que são o nome da rede e o ID da "
+"rede. O ID da porta poderá ser obtido por meio da seguinte expressão: "
+"\"{get_attr: [<server>, addresses, <network name_or_id>, 0, port]}\"."
+
+msgid ""
+"A dict of assigned network addresses of the form: {\"public\": [ip1, "
+"ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
+"\"private_uuid\": [ip3, ip4]}. Each network will have two keys in dict, they "
+"are network name and network id."
+msgstr ""
+"Um dicionário de endereços de rede designados no formato: {\"public\": [ip1, "
+"ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
+"\"private_uuid\": [ip3, ip4]}. Cada rede terá duas chaves no dicionário, que "
+"são o nome da rede e o ID da rede."
+
 msgid "A dict of key-value pairs output from the stack."
 msgstr "Um dicionário de saída de pares chave-valor da pilha."
 
@@ -415,6 +453,12 @@ msgid ""
 msgstr ""
 "Uma lista de sequências de caracteres e suas restrições da qual gerar a "
 "sequência aleatória."
+
+msgid "A list of cluster instance IPs."
+msgstr "Uma lista de IPs de instância de cluster."
+
+msgid "A list of clusters to which this policy is attached."
+msgstr "Uma lista de clusters à qual essa política é anexada. "
 
 msgid ""
 "A list of dimensions (arbitrary name/value pairs) associated with the metric."
@@ -858,6 +902,27 @@ msgstr ""
 "o planejador do Cinder a criar um volume."
 
 msgid ""
+"Arbitrary key/value metadata to store contextual information about this "
+"queue."
+msgstr ""
+"Metadados de chave/valor arbitrários para armazenar informações contextuais "
+"sobre essa fila. "
+
+msgid ""
+"Arbitrary key/value metadata to store for this server. Both keys and values "
+"must be 255 characters or less. Non-string values will be serialized to JSON "
+"(and the serialized string must be 255 characters or less)."
+msgstr ""
+"Metadados de chave/valor arbitrários a serem armazenados para este servidor. "
+"As chaves e os valores devem ter 255 caracteres ou menos. Valores não "
+"sequência serão serializados para JSON (e a sequência serializada deve ter "
+"255 caracteres ou menos)."
+
+msgid "Arbitrary key/value metadata to store information for aggregate."
+msgstr ""
+"Metadados de chave/valor arbitrários para armazenar informações do agregado. "
+
+msgid ""
 "Arbitrary labels in the form of key=value pairs to associate with a baymodel."
 msgstr ""
 "Rótulos arbitrários no formato de pares key=value para associar ao modelo de "
@@ -932,6 +997,10 @@ msgstr "Tentativa de excluir watch_rule: %(id)s%(msg)s"
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr "Tentativa de atualizar uma pilha com ID: %(id)s%(msg)s"
+
+#, python-format
+msgid "Attempt to update a stack with id: %(id)s %(traversal)s %(msg)s"
+msgstr "Tentativa de atualizar uma pilha com ID: %(id)s %(traversal)s %(msg)s"
 
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
@@ -1132,6 +1201,9 @@ msgstr "Não é possível suspender %s; pilha não criada"
 msgid "Cannot use %(key)s and %(name)s at the same time."
 msgstr "Não é possível usar %(key)s e %(name)s ao mesmo tempo."
 
+msgid "Cannot use network and uuid at the same time."
+msgstr "Não é possível usar a rede e o UUID ao mesmo tempo."
+
 msgid "Captured stderr from the configuration execution."
 msgstr "stderr capturado da execução de configuração."
 
@@ -1157,6 +1229,12 @@ msgstr "Dicionário de configurações do cluster."
 msgid "Cluster information."
 msgstr "Informações do cluster."
 
+msgid "Cluster metadata."
+msgstr "Metadados do cluster."
+
+msgid "Cluster name."
+msgstr "Nome do cluster."
+
 msgid "Cluster status."
 msgstr "Status do cluster."
 
@@ -1176,6 +1254,9 @@ msgid ""
 msgstr ""
 "Script de configuração ou manifesto que especifica qual configuração "
 "realmente é executada."
+
+msgid "Configure most important configs automatically."
+msgstr "Definir as configurações mais importantes automaticamente. "
 
 #, python-format
 msgid "Confirm resize for server %s failed"
@@ -1285,6 +1366,16 @@ msgstr "Não foi possível carregar %(name)s: %(error)s"
 msgid "Could not retrieve template: %s"
 msgstr "Não foi possível recuperar o template: %s"
 
+msgid "Create volumes on the same physical port as an instance."
+msgstr "Cria volumes na mesma porta física de uma instância. "
+
+msgid ""
+"Credentials used for swift. Not required if sahara is configured to use "
+"proxy users and delegated trusts for access."
+msgstr ""
+"Credenciais usadas no Swift. Não necessárias se o Sahara estiver configurado "
+"para usar usuários proxy e confianças delegadas para acesso."
+
 msgid "Cron expression."
 msgstr "Expressão cron."
 
@@ -1365,6 +1456,10 @@ msgstr ""
 
 msgid "Dead engines are removed."
 msgstr "Mecanismo inativos são removidos."
+
+msgid "Default TLS container reference to retrieve TLS information."
+msgstr ""
+"A referência do contêiner TLS padrão para recuperar informações do TLS."
 
 #, python-format
 msgid "Default must be a comma-delimited list string: %s"
@@ -1558,6 +1653,9 @@ msgstr "Descrição do Modelo de Grupo do Sahara."
 msgid "Description of the alarm."
 msgstr "Descrição do alarme."
 
+msgid "Description of the data source."
+msgstr "Descrição da origem de dados."
+
 msgid "Description of the firewall policy."
 msgstr "Descrição da política de firewall."
 
@@ -1567,8 +1665,14 @@ msgstr "Descrição da regra de firewall."
 msgid "Description of the firewall."
 msgstr "Descrição do firewall."
 
+msgid "Description of the image."
+msgstr "Descrição da imagem."
+
 msgid "Description of the input."
 msgstr "Descrição da entrada."
+
+msgid "Description of the job binary."
+msgstr "Descrição do binário da tarefa."
 
 msgid "Description of the metering label."
 msgstr "Descrição do rótulo de medição."
@@ -1591,11 +1695,26 @@ msgstr "Descrição do tipo de volume."
 msgid "Description of the volume."
 msgstr "Descrição do volume."
 
+msgid "Description of this Load Balancer."
+msgstr "Descrição desse Balanceador de Carga."
+
+msgid "Description of this listener."
+msgstr "Descrição desse listener."
+
+msgid "Description of this pool."
+msgstr "Descrição desse conjunto."
+
 msgid "Desired IPs for this port."
 msgstr "IPs desejado para esta porta."
 
+msgid "Desired capacity of the cluster."
+msgstr "Capacidade desejada do cluster."
+
 msgid "Desired initial number of instances."
 msgstr "O número inicial de instâncias."
+
+msgid "Desired initial number of resources in cluster."
+msgstr "O número inicial desejado de recursos no cluster."
 
 msgid "Desired initial number of resources."
 msgstr "O número inicial desejado de recursos."
@@ -1633,6 +1752,13 @@ msgid ""
 msgstr ""
 "Tipo de dispositivo: no momento, é possível fazer distinção somente entre "
 "disco e cdrom."
+
+msgid ""
+"Dict, which has expand properties for port. Used only if port property is "
+"not specified for creating port."
+msgstr ""
+"Dicionário, que possui propriedades de expansão para a porta. Usado somente "
+"se a propriedade de porta não estiver especificada para criação da porta."
 
 msgid "Dictionary containing workflow tasks."
 msgstr "Dicionário contendo tarefas de fluxo de trabalho."
@@ -1914,6 +2040,10 @@ msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr "Falha ao desconectar a interface (%(port)s) do servidor (%(server)s)"
 
 #, python-format
+msgid "Failed to execute %(action)s for %(cluster)s: %(reason)s"
+msgstr "Failed ao executar  %(action)s para %(cluster)s: %(reason)s"
+
+#, python-format
 msgid "Failed to extend volume %(vol)s - %(err)s"
 msgstr "Falha ao estender volume %(vol)s - %(err)s"
 
@@ -1988,6 +2118,27 @@ msgid ""
 msgstr ""
 "Falha ao validar o modelo de pilha usando o terminal Heat na região "
 "\"%(region)s\" devido a \"%(exc)s\""
+
+msgid "Fake attribute !a."
+msgstr "Atributo falso !a."
+
+msgid "Fake attribute a."
+msgstr "Atributo falso a."
+
+msgid "Fake property !a."
+msgstr "Propriedade falsa !a."
+
+msgid "Fake property !c."
+msgstr "Propriedade falsa !c."
+
+msgid "Fake property a."
+msgstr "Propriedade falsa a."
+
+msgid "Fake property c."
+msgstr "Propriedade falsa c."
+
+msgid "Fake property ca."
+msgstr "Propriedade falsa ca."
 
 msgid ""
 "False to trigger actions when the threshold is reached AND the alarm's state "
@@ -2071,6 +2222,9 @@ msgstr "HeatAPIException genérica, use as subclasses específicas!"
 msgid "Glance image ID or name."
 msgstr "ID ou nome de imagem Glance."
 
+msgid "Governs permissions set in manila for the cluster ips."
+msgstr "Controla permissões configuradas no Manila para IPs de cluster."
+
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "Granularidade a ser usada para o argumento da idade, o padrão é dias."
 
@@ -2127,6 +2281,23 @@ msgstr ""
 "POST para um terminal da API do Heat com o token de keystone fornecido. "
 "NO_SIGNAL resulta no recurso entrando no estado COMPLETE sem aguardar nenhum "
 "sinal."
+
+msgid ""
+"How the server should receive the metadata required for software "
+"configuration. POLL_SERVER_CFN will allow calls to the cfn API action "
+"DescribeStackResource authenticated with the provided keypair. "
+"POLL_SERVER_HEAT will allow calls to the Heat API resource-show using the "
+"provided keystone credentials. POLL_TEMP_URL will create and populate a "
+"Swift TempURL with metadata for polling. ZAQAR_MESSAGE will create a "
+"dedicated zaqar queue and post the metadata for polling."
+msgstr ""
+"Como o servidor deve receber os metadados necessários para a configuração do "
+"software. POLL_SERVER_CFN permite chamadas da ação da API cfn "
+"DescribeStackResource autenticada com o par de chaves fornecido. "
+"POLL_SERVER_HEAT  permite chamadas do resource-show da API do Heat usando as "
+"credenciais do keystone fornecidas. POLL_TEMP_URL cria e preenche uma "
+"TempURL Swift com metadados para pesquisa . ZAQAR_MESSAGE cria uma fila "
+"zaqar dedicada e posta os metadados para pesquisa."
 
 msgid "How the server should signal to heat with the deployment output values."
 msgstr ""
@@ -2247,20 +2418,32 @@ msgstr "ID do VPNGateway para se conectar ao VPC."
 msgid "ID of the default image to use for the template."
 msgstr "ID da imagem padrão a ser usada para o modelo."
 
+msgid "ID of the default pool this listener is associated to."
+msgstr "ID do conjunto padrão ao qual esse listener está associado."
+
 msgid "ID of the floating IP to assign to the server."
 msgstr "ID do IP flutuante a ser designado ao servidor."
 
 msgid "ID of the floating IP to associate."
 msgstr "ID do IP flutuante para associar."
 
+msgid "ID of the health monitor associated with this pool."
+msgstr "ID do monitor de funcionamento associado a esse conjunto."
+
 msgid "ID of the image to use for the template."
 msgstr "ID da imagem a ser usada para o modelo."
+
+msgid "ID of the load balancer this listener is associated to."
+msgstr "ID do balanceador de carga ao qual esse listener está associado. "
 
 msgid "ID of the network in which this IP is allocated."
 msgstr "ID da rede na qual esse IP é alocado."
 
 msgid "ID of the port associated with this IP."
 msgstr "ID da porta associado a esse IP."
+
+msgid "ID of the queue."
+msgstr "ID da fila."
 
 msgid "ID of the router used as gateway, set when associated with a port."
 msgstr ""
@@ -2279,6 +2462,9 @@ msgstr "ID da implementação desta pilha pertence a"
 msgid "ID of the tenant to which the RBAC policy will be enforced."
 msgstr "ID do locatário para o qual a política do RBAC será aplicada."
 
+msgid "ID of the tenant who owns the health monitor."
+msgstr "ID do locatário que possui o monitor de funcionamento."
+
 msgid "ID or name of the QoS policy."
 msgstr "ID ou nome da política do QoS."
 
@@ -2287,6 +2473,16 @@ msgstr "ID ou nome do objeto RBAC."
 
 msgid "ID or name of the external network for the gateway."
 msgstr "ID ou nome da rede externa para o gateway."
+
+msgid "ID or name of the image to register."
+msgstr "O ID ou nome da imagem para registrar."
+
+msgid "ID or name of the load balancer with which listener is associated."
+msgstr ""
+"ID ou nome do balanceador de carga com o qual o listener está associado. "
+
+msgid "ID or name of the load balancing pool."
+msgstr "ID ou nome do conjunto de balanceamento de carga. "
 
 msgid ""
 "ID that AWS assigns to represent the allocation of the address for use with "
@@ -2300,6 +2496,9 @@ msgstr "O endereço IP e a porta do conjunto."
 
 msgid "IP address desired in the subnet for this port."
 msgstr "Endereço IP desejado na sub-rede para esta porta."
+
+msgid "IP address for the VIP."
+msgstr "Endereço IP do VIP."
 
 msgid "IP address of the associated port, if specified."
 msgstr "Endereço IP da porta associada, se especificado."
@@ -2342,11 +2541,17 @@ msgstr "Modo de endereço IPv6."
 msgid "Id of a resource."
 msgstr "ID de um recurso."
 
+msgid "Id of the manila share."
+msgstr "ID do compartilhamento Manila."
+
 msgid "Id of the tenant owning the firewall policy."
 msgstr "ID do locatário possui a política de firewall."
 
 msgid "Id of the tenant owning the firewall."
 msgstr "ID do locatário que possui o firewall."
+
+msgid "Identifier of the source instance to replicate."
+msgstr "Identificador da instância de origem para replicar."
 
 #, python-format
 msgid ""
@@ -2433,6 +2638,30 @@ msgstr ""
 
 msgid "If without InstanceId, ImageId and InstanceType are required."
 msgstr "Se sem InstanceId, ImageId e InstanceType forem necessários."
+
+#, python-format
+msgid "Illegal prefix bounds: %(key1)s=%(value1)s, %(key2)s=%(value2)s."
+msgstr "Limites de prefixo ilegais: %(key1)s=%(value1)s, %(key2)s=%(value2)s."
+
+#, python-format
+msgid ""
+"Image %(image)s requires %(imram)s minimum ram. Flavor %(flavor)s has only "
+"%(flram)s."
+msgstr ""
+"A imagem %(image)s requer um mínimo de %(imram)s de RAM. O tipo %(flavor)s "
+"possui somente %(flram)s."
+
+#, python-format
+msgid ""
+"Image %(image)s requires %(imsz)s GB minimum disk space. Flavor %(flavor)s "
+"has only %(flsz)s GB."
+msgstr ""
+"A imagem %(image)s requer um espaço mínimo em disco de %(imsz)s GB. O tipo "
+"%(flavor)s possui somente %(flsz)s GB."
+
+#, python-format
+msgid "Image status is required to be %(cstatus)s not %(wstatus)s."
+msgstr "O status da imagem precisa ser %(cstatus)s, não %(wstatus)s."
 
 msgid "Incompatible parameters were used together"
 msgstr "Parâmetros incompatíveis foram usados em conjunto"
@@ -2810,6 +3039,9 @@ msgstr ""
 "A chave usada para criptografar informações de autenticação no banco de "
 "dados. O comprimento dessa chave deve ser de 32 caracteres."
 
+msgid "Key/Value pairs to extend the capabilities of the flavor."
+msgstr "Par de valores de chave para estender os recursss do tipo."
+
 msgid "Key/value pairs associated with the volume in raw dict form."
 msgstr ""
 "Pares de chave/valor associados ao volume na forma bruta de dicionário."
@@ -2927,6 +3159,9 @@ msgstr "Lista de recursos LoadBalancer."
 msgid "List of Security Groups assigned on current LB."
 msgstr "Lista de Grupos de Segurança designados no LB atual."
 
+msgid "List of TLS container references for SNI."
+msgstr "Lista de referências do contêiner TLS para SNI."
+
 msgid "List of alarm identifiers to combine."
 msgstr "Lista de identificadores de alarme para combinar."
 
@@ -2948,6 +3183,12 @@ msgstr "Lista de regras de firewall nesta política de firewall."
 
 msgid "List of health monitors associated with the pool."
 msgstr "Lista de monitores de saúde associados ao conjunto."
+
+msgid "List of hosts to join aggregate."
+msgstr "Lista de hosts para unir o agregado. "
+
+msgid "List of manila shares to be mounted."
+msgstr "Lista de compartilhamentos Manila a serem montados. "
 
 msgid "List of network interfaces to create on instance."
 msgstr "Lista de interfaces de rede para criar na instância."
@@ -3059,6 +3300,19 @@ msgstr ""
 "para as próximas chaves: workflow_name, created_at, updated_at, estado para "
 "o estado da execução atual, entrada e saída. ."
 
+msgid "Listener associated with this pool."
+msgstr "Listener associado a esse conjunto."
+
+msgid "Listner name or ID to be associated with this pool."
+msgstr "Nome ou ID do listener a ser associado a esse conjunto."
+
+msgid ""
+"Local path on each cluster node on which to mount the share. Defaults to '/"
+"mnt/{share_id}'."
+msgstr ""
+"Caminho local em cada nó do cluster no qual montar o compartilhamento. "
+"Padronizado para '/mnt/{share_id}'."
+
 msgid "Location of the SSL certificate file to use for SSL mode."
 msgstr "Local do arquivo de certificado SSL a ser usado para o modo SSL."
 
@@ -3107,6 +3361,9 @@ msgstr "Largura da banda máxima em kbps."
 msgid "Max burst bandwidth in kbps."
 msgstr "Largura da banda máxima de burst em kbps."
 
+msgid "Max size of the cluster."
+msgstr "Tamanho máx. do cluster."
+
 #, python-format
 msgid "Maximum %s is 1 hour."
 msgstr "O máximo é de %s 1 hora."
@@ -3145,6 +3402,9 @@ msgstr ""
 msgid "Maximum number of instances in the group."
 msgstr "Número máximo de instâncias no grupo."
 
+msgid "Maximum number of resources in the cluster. -1 means unlimited."
+msgstr "Número máximo de recursos no cluster. O valor -1 significa ilimitado. "
+
 msgid "Maximum number of resources in the group."
 msgstr "Número máximo de recursos no grupo."
 
@@ -3176,8 +3436,8 @@ msgstr "Tamanho do byte bruto máximo de qualquer modelo."
 
 msgid "Maximum resources allowed per top-level stack. -1 stands for unlimited."
 msgstr ""
-"Máximo de recursos permitido por pilha de nível superior. -1 representa "
-"ilimitado."
+"Máximo de recursos permitido por pilha de nível superior. O valor -1 "
+"representa ilimitado."
 
 msgid "Maximum resources per stack exceeded."
 msgstr "Máximo de recursos por pilha excedido."
@@ -3194,12 +3454,27 @@ msgstr "Itens da lista de membros devem ser sequências"
 msgid "Member list must be a list"
 msgstr "Lista de Membros deve ser uma lista"
 
+msgid "Members associated with this pool."
+msgstr "Membros associados a esse conjunto."
+
+msgid "Memory in MB for the flavor."
+msgstr "Memória em MB para o tipo."
+
 #, python-format
 msgid "Message: %(message)s, Code: %(code)s"
 msgstr "Mensagem:%(message)s, Código:%(code)s"
 
 msgid "Metadata format invalid"
 msgstr "Formato inválido de metadados"
+
+msgid "Metadata key-values defined for cluster."
+msgstr "Valores de chave de metadados definidos para o cluster. "
+
+msgid "Metadata key-values defined for node."
+msgstr "Valores de chave de metadados definidos para o nó. "
+
+msgid "Metadata key-values defined for profile."
+msgstr "Valores de chave de metadados definidos para o perfil. "
 
 msgid "Metadata key-values defined for share."
 msgstr "Valores de chave de metadados definidos para compartilhamento. "
@@ -3226,11 +3501,17 @@ msgstr "Nome da métrica inspecionada pelo alarme."
 msgid "Metric statistic to evaluate."
 msgstr "Estatística de métrica para avaliar."
 
+msgid "Min size of the cluster."
+msgstr "Tamanho mín. do cluster."
+
 msgid "MinSize can not be greater than MaxSize"
 msgstr "MinSize não pode ser maior que MaxSize"
 
 msgid "Minimum number of instances in the group."
 msgstr "Número mínimo de instâncias neste grupo."
+
+msgid "Minimum number of resources in the cluster."
+msgstr "Número mínimo de recursos no cluster."
 
 msgid "Minimum number of resources in the group."
 msgstr "Número mínimo de recursos no grupo."
@@ -3299,6 +3580,12 @@ msgstr "Nome do Modelo de Cluster do Sahara."
 
 msgid "Name for the Sahara Node Group Template."
 msgstr "Nome do Modelo de Grupo de Nós do Sahara."
+
+msgid "Name for the aggregate."
+msgstr "Nome do agregado. "
+
+msgid "Name for the availability zone."
+msgstr "Nome da zona de disponibilidade."
 
 msgid ""
 "Name for the container. If not specified, a unique name will be generated."
@@ -3393,6 +3680,9 @@ msgstr ""
 "Nome da ação associada à tarefa. A ação ou o fluxo de trabalho pode ser "
 "definido na tarefa."
 
+msgid "Name of the administrative user to use on the server."
+msgstr "Nome do usuário administrativo a ser usado no servidor."
+
 msgid "Name of the alarm. By default, physical resource name is used."
 msgstr "Nome do alarme. Por padrão, o nome do recurso físico é usado."
 
@@ -3405,6 +3695,9 @@ msgstr "Nome da zona de disponibilidade para colocação do servidor."
 msgid "Name of the cluster to create."
 msgstr "Nome do cluster a ser criado."
 
+msgid "Name of the cluster. By default, physical resource name is used."
+msgstr "Nome do cluster. Por padrão, o nome do recurso físico é usado."
+
 msgid "Name of the cookie, required if type is APP_COOKIE."
 msgstr "Nome do cookie, necessário se o tipo for APP_COOKIE."
 
@@ -3413,6 +3706,9 @@ msgstr "Nome do acionador cron."
 
 msgid "Name of the current action being deployed"
 msgstr "Nome da ação atual que está sendo implementada"
+
+msgid "Name of the data source."
+msgstr "Nome da origem de dados."
 
 msgid ""
 "Name of the derived config associated with this deployment. This is used to "
@@ -3432,6 +3728,9 @@ msgstr ""
 
 msgid "Name of the input."
 msgstr "Nome da entrada."
+
+msgid "Name of the job binary."
+msgstr "Nome do binário da tarefa."
 
 msgid "Name of the metering label."
 msgstr "Nome do rótulo de medição."
@@ -3455,6 +3754,9 @@ msgstr "O nome da saída."
 msgid "Name of the pool."
 msgstr "Nome do pool."
 
+msgid "Name of the queue instance to create."
+msgstr "Nome da instância de fila para criar."
+
 msgid ""
 "Name of the registered datastore version. It must exist for provided "
 "datastore type. Defaults to using single active version. If several active "
@@ -3469,6 +3771,19 @@ msgstr ""
 
 msgid "Name of the secret."
 msgstr "Nome do segredo."
+
+msgid "Name of the senlin node. By default, physical resource name is used."
+msgstr "Nome do nó Senlin. Por padrão, o nome do recurso físico é usado."
+
+msgid "Name of the senlin policy. By default, physical resource name is used."
+msgstr "Nome da política Senlin. Por padrão, o nome do recurso físico é usado."
+
+msgid "Name of the senlin profile. By default, physical resource name is used."
+msgstr "Nome do perfil Senlin. Por padrão, o nome do recurso físico é usado."
+
+msgid ""
+"Name of the senlin receiver. By default, physical resource name is used."
+msgstr "Nome do receptor Senlin. Por padrão, o nome do recurso físico é usado."
 
 msgid "Name of the server."
 msgstr "Nome do servidor."
@@ -3508,14 +3823,26 @@ msgstr ""
 msgid "Name of the workflow."
 msgstr "Nome do fluxo de trabalho."
 
+msgid "Name of this Load Balancer."
+msgstr "Nome desse Balanceador de Carga."
+
 msgid "Name of this deployment resource in the stack"
 msgstr "Nome deste recurso de implementação na pilha"
+
+msgid "Name of this listener."
+msgstr "Nome do listener."
+
+msgid "Name of this pool."
+msgstr "Nome desse conjunto."
 
 msgid "Name or ID Nova flavor for the nodes."
 msgstr "Nome ou tipo do ID Nova para os nós."
 
 msgid "Name or ID of network to create a port on."
 msgstr "Nome ou ID da rede no qual criar uma porta."
+
+msgid "Name or ID of senlin profile to create this node."
+msgstr "O nome ou ID do perfil Senlin para criar esse nó."
 
 msgid ""
 "Name or ID of shared file system snapshot that will be restored and created "
@@ -3536,6 +3863,12 @@ msgid "Name or ID of shared network defined for shared filesystem."
 msgstr ""
 "Nome ou ID da rede compartilhada definida para o sistema de arquivos "
 "compartilhado. "
+
+msgid "Name or ID of target cluster."
+msgstr "Nome ou ID do cluster de destino."
+
+msgid "Name or ID of the load balancing pool."
+msgstr "Nome ou ID do conjunto de balanceamento de carga."
 
 msgid "Name or Id of keystone region."
 msgstr "Nome ou ID da região do keystone."
@@ -3701,6 +4034,9 @@ msgstr "Nenhum serviço do volume disponível."
 msgid "Node groups."
 msgstr "Grupos de nós."
 
+msgid "Nodes list in the cluster."
+msgstr "Lista de nós no cluster."
+
 msgid "Non HA routers can only have one L3 agent."
 msgstr ""
 "Roteadores que não têm alta disponibilidade podem ter apenas um agente L3."
@@ -3734,6 +4070,9 @@ msgstr "Tipo de instância de Nova (tipo)."
 
 msgid "Nova network id."
 msgstr "ID da rede do Nova"
+
+msgid "Number of VCPUs for the flavor."
+msgstr "Número de vCPUs para o tipo."
 
 msgid "Number of backlog requests to configure the socket with."
 msgstr ""
@@ -3823,6 +4162,22 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "Um dos tipos de monitor de funcionamento predefinidos."
 
+#, python-format
+msgid ""
+"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
+"be set for the specified network of server \"%(server)s\"."
+msgstr ""
+"Uma das propriedades \"%(id)s\", \"%(port_id)s\" ou \"%(subnet)s\" deve ser "
+"configurada para a rede do servidor \"%(server)s\" especificada ."
+
+#, python-format
+msgid ""
+"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
+"the specified network of server \"%s\"."
+msgstr ""
+"Uma das propriedades \"network\", \"port\" ou \"subnet\" deve ser "
+"configurada para a rede do servidor \"%s\" especificada."
+
 msgid "One or more listeners for this load balancer."
 msgstr "Um ou mais listeners para esse balanceador de carga."
 
@@ -3901,6 +4256,62 @@ msgstr "Parâmetro '%(name)s' é inválido: %(exp)s"
 msgid "Parameter Groups error"
 msgstr "Erro de Grupos de Parâmetro"
 
+msgid ""
+"Parameter Groups error: parameter_groups.: The grouped parameter key_name "
+"does not reference a valid parameter."
+msgstr ""
+"Erro de Grupos de Parâmetros: parameter_groups.: O parâmetro agrupado   "
+"key_name não referencia um parâmetro válido. "
+
+msgid ""
+"Parameter Groups error: parameter_groups.: The key_name parameter must be "
+"assigned to one parameter group only."
+msgstr ""
+"Erro de Grupos de Parâmetros: parameter_groups.:O parâmetro key_name deve "
+"ser designado somente para um grupo de parâmetros. "
+
+msgid ""
+"Parameter Groups error: parameter_groups.: The parameters of parameter group "
+"should be a list."
+msgstr ""
+"Erro de Grupos de Parâmetros: parameter_groups.: Os parâmetros do grupo de "
+"parâmetros devem ser uma lista."
+
+msgid ""
+"Parameter Groups error: parameter_groups.Database Group: The InstanceType "
+"parameter must be assigned to one parameter group only."
+msgstr ""
+"Erro de Grupos de Parâmetros: parameter_groups.Database Group: O parâmetro  "
+"InstanceType deve ser designado somente para um grupo de parâmetros."
+
+msgid ""
+"Parameter Groups error: parameter_groups.Database Group: The grouped "
+"parameter SomethingNotHere does not reference a valid parameter."
+msgstr ""
+"Erro de Grupos de Parâmetros: : parameter_groups.Database Group: O parâmetro "
+"agrupado SomethingNotHere não referencia um parâmetro válido. "
+
+msgid ""
+"Parameter Groups error: parameter_groups.Server Group: The parameters must "
+"be provided for each parameter group."
+msgstr ""
+"Erro de Grupos de Parâmetros: parameter_groups.Server Group: Os parâmetros "
+"devem ser fornecidos para cada grupo de parâmetros."
+
+msgid ""
+"Parameter Groups error: parameter_groups.Server Group: The parameters of "
+"parameter group should be a list."
+msgstr ""
+"Erro de Grupos de Parâmetros:  parameter_groups.Server Group: Os parâmetros "
+"do grupo de parâmetros devem ser uma lista."
+
+msgid ""
+"Parameter Groups error: parameter_groups: The parameter_groups should be a "
+"list."
+msgstr ""
+"Erro de Grupos de Parâmetros: parameter_groups: O parameter_groups deve ser "
+"uma lista."
+
 #, python-format
 msgid "Parameter name in \"%s\" must be string"
 msgstr "Nome do parâmetro em \"%s\" deve ser uma sequência"
@@ -3917,6 +4328,12 @@ msgstr "Partes pertencentes a esta mensagem."
 
 msgid "Password for API authentication"
 msgstr "Senha para autenticação da API"
+
+msgid "Password for accessing the data source URL."
+msgstr "Senha para acessar a URL da origem de dados."
+
+msgid "Password for accessing the job binary URL."
+msgstr "Senha para acessar a URL do binário da tarefa."
 
 msgid "Password for those users on instance creation."
 msgstr "Senha para esses usuários na criação da instância."
@@ -3959,6 +4376,14 @@ msgstr "Período (segundos) para avaliar."
 msgid "Physical ID of the VPC. Not implemented."
 msgstr "ID físico do VPC. Não implementado."
 
+#, python-format
+msgid ""
+"Plugin %(plugin)s doesn't support the following node processes: "
+"%(unsupported)s. Allowed processes are: %(allowed)s"
+msgstr ""
+"O plug-in %(plugin)s não suporta os seguintes processos do nó: "
+"%(unsupported)s. Os processos permitidos são: %(allowed)s"
+
 msgid "Plugin name."
 msgstr "Nome do plugin."
 
@@ -3974,6 +4399,20 @@ msgid ""
 msgstr ""
 "A política sobre como aplicar uma atualização de tipo; solicitando um "
 "redimensionamento do servidor ou substituindo o servidor inteiro."
+
+msgid ""
+"Policy on how to apply a user_data update; either by ignorning it or by "
+"replacing the entire server."
+msgstr ""
+"Política sobre como aplicar uma atualização user_data, seja ignorando-a ou "
+"substituindo o servidor inteiro. "
+
+msgid ""
+"Policy on how to apply an image-id update; either by requesting a server "
+"rebuild or by replacing the entire server."
+msgstr ""
+"Política sobre como aplicar uma atualização de ID de imagem; solicitando uma "
+"reconstrução do servidor ou substituindo o servidor inteiro."
 
 msgid ""
 "Policy on how to respond to a stack-update for this resource. REPLACE_ALWAYS "
@@ -4003,6 +4442,9 @@ msgstr "Conjunto de onde o IP flutuante está alocado."
 
 msgid "Port number on which the servers are running on the members."
 msgstr "O número da porta no qual os servidores estão em execução nos membros."
+
+msgid "Port on which the pool member listens for requests or connections."
+msgstr "A porta na qual o membro do conjunto atende solicitações ou conexões."
 
 msgid "Port security enabled of the network."
 msgstr "Segurança de porta ativada da rede."
@@ -4048,14 +4490,45 @@ msgstr ""
 "As propriedades %(algorithm)s e %(bit_length)s são necessárias para o tipo "
 "de pedido %(type)s."
 
+msgid "Properties for profile."
+msgstr "Propriedades para o perfil. "
+
 #, python-format
 msgid "Properties must be Properties type. Found %s."
 msgstr "Propriedades devem ser do tipo Propriedades. Localizada %s."
+
+msgid "Properties of this policy."
+msgstr "Propriedades dessa política."
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr ""
 "Propriedades a serem transmitidas para cada recurso que estiver sendo criado "
 "na cadeia. "
+
+#, python-format
+msgid "Property \"%s\" is supported only for Neutron."
+msgstr "A propriedade \"%s\" é suportada somente para o Neutron."
+
+#, python-format
+msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
+msgstr ""
+"A propriedade %(cookie)s é necessária quando o tipo %(sp)s é configurado "
+"para %(app)s."
+
+#, python-format
+msgid ""
+"Property %(cookie)s must NOT be specified when %(sp)s type is set to %(ip)s."
+msgstr ""
+"A propriedade %(cookie)s NÃO deve ser especificada quando o tipo %(sp)s é "
+"configurado para %(ip)s."
+
+#, python-format
+msgid ""
+"Property %(key)s updated value %(new)s should be superset of existing value "
+"%(old)s."
+msgstr ""
+"O valor atualizado  %(new)s da propriedade  %(key)s deve ser um "
+"superconjunto do valor existente %(old)s."
 
 #, python-format
 msgid ""
@@ -4075,6 +4548,10 @@ msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
 msgstr "Propriedades %(prop)s: %(ua)s e %(im)s não podem ser True"
 
 #, python-format
+msgid "Property %(ref)s required when protocol is %(term)s."
+msgstr "A propriedade %(ref)s necessária quando o protocolo é %(term)s."
+
+#, python-format
 msgid "Property %s not assigned"
 msgstr "Propriedade %s não designada"
 
@@ -4083,11 +4560,25 @@ msgid "Property %s not implemented yet"
 msgstr "Propriedade %s ainda não implementada"
 
 msgid ""
+"Property cookie_name is required when session_persistence type is set to "
+"APP_COOKIE."
+msgstr ""
+"A propriedade cookie_name é necessária quando o tipo de session_persistence "
+"está configurado como APP_COOKIE."
+
+msgid ""
 "Property cookie_name is required, when session_persistence type is set to "
 "APP_COOKIE."
 msgstr ""
 "Propriedade cookie_name é necessária, quando o tipo de session_persistence "
 "está configurado como APP_COOKIE."
+
+msgid ""
+"Property cookie_name must NOT be specified when session_persistence type is "
+"set to SOURCE_IP."
+msgstr ""
+"A propriedade cookie_name NÃO deve ser especificada quando o tipo "
+"session_persistence é configurado para SOURCE_IP."
 
 msgid "Property uses removed function."
 msgstr "A propriedade usa função removida."
@@ -4101,6 +4592,12 @@ msgstr "Protocolo para o balanceamento."
 msgid "Protocol for the firewall rule."
 msgstr "Protocolo para a regra de firewall."
 
+msgid "Protocol of the pool."
+msgstr "Protocolo do conjunto."
+
+msgid "Protocol on which to listen for the client traffic."
+msgstr "Protocolo no qual atender o tráfego do cliente."
+
 msgid "Protocol to balance."
 msgstr "Protocolo para balancear."
 
@@ -4108,11 +4605,19 @@ msgid "Protocol value for this firewall rule."
 msgstr "Valor de protocolo para esta regra de firewall."
 
 msgid ""
+"Provide access to nodes using other nodes of the cluster as proxy gateways."
+msgstr ""
+"Fornece acesso aos nós usando outros nós do cluster como gateways proxy."
+
+msgid ""
 "Provide old encryption key. New encryption key would be used from config "
 "file."
 msgstr ""
 "Forneça chave de criptografia antiga. A nova chave de criptografia seria "
 "usada a partir do arquivo de configuração."
+
+msgid "Provider for this Load Balancer."
+msgstr "Provedor desse Balanceador de Carga."
 
 msgid "Provider implementing this load balancer instance."
 msgstr "Provedor implementando essa instância do balanceador de carga. "
@@ -4132,6 +4637,9 @@ msgid ""
 msgstr ""
 "Tempo limite de RPC para a verificação de atividade do mecanismo que é "
 "utilizado para o bloqueio de pilha."
+
+msgid "RX/TX factor."
+msgstr "Fator RX/TX."
 
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
@@ -4294,8 +4802,18 @@ msgstr "Tipo de recurso."
 msgid "Resource update already requested"
 msgstr "Atualização do recurso já solicitada"
 
+msgid "Resource update failed"
+msgstr "A atualização de recurso falhou. "
+
 msgid "Resource with the name requested already exists"
 msgstr "Recurso com o nome requisitado já existe"
+
+msgid ""
+"ResourceInError: resources.remote_stack: Went to status UPDATE_FAILED due to "
+"\"Remote stack update failed\""
+msgstr ""
+"ResourceInError: resources.remote_stack: Atingiu status UPDATE_FAILED devido "
+"a  \"A atualização da pilha remota falhou\""
 
 #, python-format
 msgid "Resources must contain Resource. Found a [%s] instead"
@@ -4349,6 +4867,13 @@ msgstr ""
 #, python-format
 msgid "Schema valid only for %(ltype)s or %(mtype)s, not %(utype)s"
 msgstr "Esquema válido apenas para %(ltype)s ou %(mtype)s, não %(utype)s"
+
+msgid ""
+"Scope of flavor accessibility. Public or private. Default value is True, "
+"means public, shared across all projects."
+msgstr ""
+"Escopo de acessibilidade de tipo. Público ou privado. O valor padrão é True, "
+"que significa público, compartilhado com todos os projetos. "
 
 msgid ""
 "Scope of image accessibility. Public or private. Default value is False "
@@ -4525,11 +5050,21 @@ msgstr "Sinalizar recurso durante %s"
 msgid "Single schema valid only for %(ltype)s, not %(utype)s"
 msgstr "Esquema válido apenas para %(ltype)s, não %(utype)s"
 
+msgid "Size of a secondary ephemeral data disk in GB."
+msgstr "Tamanho de um disco de dados efêmero secundário em GB."
+
 msgid "Size of adjustment."
 msgstr "Tamanho de ajuste."
 
 msgid "Size of encryption key, in bits. For example, 128 or 256."
 msgstr "Tamanho da chave de criptografia, em bits. Por exemplo, 128 ou 256."
+
+msgid ""
+"Size of local disk in GB. The \"0\" size is a special case that uses the "
+"native base image size as the size of the ephemeral root volume."
+msgstr ""
+"Tamanho do disco local em GB. O tamanho \"0\" é um caso especial que usa o "
+"tamanho da imagem de base nativo como o tamanho do volume raiz efêmero."
 
 msgid ""
 "Size of the block device in GB. If it is omitted, hypervisor driver "
@@ -4581,6 +5116,10 @@ msgstr "Chave de saída especificada %s não localizada."
 #, python-format
 msgid "Specified status is invalid, defaulting to %s"
 msgstr "Status especificado é inválido, padronizando para %s"
+
+#, python-format
+msgid "Specified subnet %(subnet)s does not belongs to network %(network)s."
+msgstr "A sub-rede %(subnet)s especificada não pertence à rede %(network)s."
 
 msgid "Specifies a custom discovery url for node discovery."
 msgstr "Especifica uma URL de descoberta customizada para a descoberta do nó. "
@@ -4685,8 +5224,20 @@ msgstr "ID de sub-rede."
 msgid "Subnet in which the vpn service will be created."
 msgstr "Sub-rede na qual o serviço da vpn será criado."
 
+msgid ""
+"Subnet in which to allocate the IP address for port. Used for creating port, "
+"based on derived properties. If subnet is specified, network property "
+"becomes optional."
+msgstr ""
+"Sub-rede no qual alocar o endereço IP para a porta. Usada para criar a porta "
+"com base em propriedades derivadas. Se a sub-rede for especificada, a "
+"propriedade de rede se torna opcional. "
+
 msgid "Subnet in which to allocate the IP address for this port."
 msgstr "Sub-rede no qual alocar o endereço IP para esta porta."
+
+msgid "Subnet name or ID of this member."
+msgstr "Nome ou ID da sub-rede desse membro."
 
 msgid "Subnet of external fixed IP address."
 msgstr "Sub-rede do endereço IP fixo externo."
@@ -4716,17 +5267,28 @@ msgid "Suspend of instance %s failed"
 msgstr "Suspensão da instância %s falhou"
 
 #, python-format
+msgid "Suspend of server %s failed"
+msgstr "A suspensão do servidor %s falhou"
+
+msgid "Swap space in MB."
+msgstr "O espaço de troca, em MB."
+
+#, python-format
 msgid "Sync Point %s not found"
 msgstr "Ponto de Sincronização %s não localizado"
 
 msgid "System SIGHUP signal received."
 msgstr "Sinal SIGHUP do sistema recebido."
 
+msgid "TCP or UDP port on which to listen for client traffic."
+msgstr "A porta TCP ou UDP na qual o tráfego do cliente é atendido."
+
 msgid "TCP port on which the instance server is listening."
 msgstr "A porta TCP na qual o servidor de instância está atendendo."
 
 msgid "TCP port on which the pool member listens for requests or connections."
-msgstr "A porta TCP na qual o membro do conjunto atende pedidos ou conexões."
+msgstr ""
+"A porta TCP na qual o membro do conjunto atende solicitações ou conexões."
 
 msgid ""
 "TCP port on which to listen for client traffic that is associated with the "
@@ -4762,6 +5324,9 @@ msgstr "Chave da tag."
 
 msgid "Tag value."
 msgstr "Valor da tag."
+
+msgid "Tags to add to the image."
+msgstr "Tags para incluir na imagem. "
 
 msgid "Tags to attach to instance."
 msgstr "Tags para anexar à instância."
@@ -4949,6 +5514,23 @@ msgstr ""
 "funcionamento do membro."
 
 msgid ""
+"The HTTP path used in the HTTP request used by the monitor to test a member "
+"health. A valid value is a string the begins with a forward slash (/)."
+msgstr ""
+"O caminho HTTP usado na solicitação de HTTP utilizada pelo monitor para "
+"testar o funcionamento de um membro. Um valor válido é uma sequência que "
+"inicia com uma barra (/)."
+
+msgid ""
+"The HTTP status codes expected in response from the member to declare it "
+"healthy. Specify one of the following values: a single value, such as 200. a "
+"list, such as 200, 202. a range, such as 200-204."
+msgstr ""
+"Os códigos de status HTTP esperados em resposta do membro para declará-lo "
+"como funcionamento. corretamente Especifique um dos seguintes valores: valor "
+"único, como 200, uma lista, como 200, 202 e um intervalo, como 200-204."
+
+msgid ""
 "The ID of an existing instance to use to create the Auto Scaling group. If "
 "specify this property, will create the group use an existing instance "
 "instead of a launch configuration."
@@ -4988,6 +5570,9 @@ msgstr "O ID da instância para a qual o volume está conectado."
 msgid "The ID of the load balancing pool."
 msgstr "O ID do poll de balanceamento."
 
+msgid "The ID of the pool to which the pool member belongs."
+msgstr "O ID do conjunto ao qual o membro do conjunto pertence."
+
 msgid "The ID of the server to which the volume attaches."
 msgstr "O ID do servidor para o qual o volume está conectado."
 
@@ -5004,11 +5589,30 @@ msgstr ""
 "utilizando políticas de autorização."
 
 msgid ""
+"The ID of the tenant who owns the Load Balancer. Only administrative users "
+"can specify a tenant ID other than their own."
+msgstr ""
+"O ID do locatário que possui o Balanceador de Carga. Somente usuários "
+"administrativos podem especificar um ID de locatário diferente do seu "
+"próprio."
+
+msgid "The ID of the tenant who owns the listener."
+msgstr "O ID do locatário que possui o listener."
+
+msgid ""
 "The ID of the tenant who owns the network. Only administrative users can "
 "specify a tenant ID other than their own."
 msgstr ""
 "O ID do locatário que possui a rede. Somente usuários administrativos podem "
 "especificar um ID de locatário diferente do seu próprio."
+
+msgid ""
+"The ID of the tenant who owns the subnet pool. Only administrative users can "
+"specify a tenant ID other than their own."
+msgstr ""
+"O ID do locatário que possui o conjunto de sub-redes. Somente usuários "
+"administrativos podem especificar um ID de locatário diferente do seu "
+"próprio."
 
 msgid "The ID of the volume to be attached."
 msgstr "O ID do volume a ser conectado."
@@ -5034,6 +5638,9 @@ msgstr ""
 "Os IDs do agente DHCP para planejar a rede. Observe que a configuração de "
 "política padrão em Neutron restringe uso desta propriedade para apenas "
 "usuários administrativos."
+
+msgid "The IP address of the pool member."
+msgstr "O endereço IP do membro do conjunto."
 
 msgid "The IP version, which is 4 or 6."
 msgstr "A versão de IP, que é 4 ou 6."
@@ -5117,12 +5724,24 @@ msgstr ""
 msgid "The URL of the container."
 msgstr "A URL do contêiner."
 
+msgid "The VIP address of the LoadBalancer."
+msgstr "O endereço de VIP do LoadBalancer."
+
+msgid "The VIP port of the LoadBalancer."
+msgstr "A porta VIP do LoadBalancer."
+
+msgid "The VIP subnet of the LoadBalancer."
+msgstr "A sub-rede VIP do LoadBalancer."
+
 #, python-format
 msgid "The Watch Rule (%(watch_name)s) could not be found."
 msgstr "A Regra de Observação (%(watch_name)s) não pôde ser localizada."
 
 msgid "The action or operation requested is invalid"
 msgstr "A ação ou operação solicitada é inválida"
+
+msgid "The action to be executed when the receiver is signaled."
+msgstr "A ação a ser executada quando o receptor é sinalizado. "
 
 msgid "The administrative state of the firewall."
 msgstr "O estado administrativo do firewall."
@@ -5142,8 +5761,14 @@ msgstr "O estado administrativo do roteador."
 msgid "The administrative state of the vpn service."
 msgstr "O estado administrativo do serviço de vpn."
 
+msgid "The administrative state of this Load Balancer."
+msgstr "O estado administrativo deste Balanceador de Carga."
+
 msgid "The administrative state of this health monitor."
 msgstr "O estado administrativo deste monitor de funcionamento."
+
+msgid "The administrative state of this listener."
+msgstr "O estado administrativo deste listener."
 
 msgid "The administrative state of this pool member."
 msgstr "O estado administrativo deste membro do conjunto."
@@ -5233,6 +5858,9 @@ msgstr "Pode ser usado para remover mapeamento de um dispositivo definido."
 msgid "The certificate or AWS Key ID provided does not exist"
 msgstr "O certificado ou ID de chave AWS fornecido não existe"
 
+msgid "The channel for receiving signals."
+msgstr "O canal para receber sinais. "
+
 msgid ""
 "The class that provides encryption support. For example, nova.volume."
 "encryptors.luks.LuksEncryptor."
@@ -5243,6 +5871,9 @@ msgstr ""
 #, python-format
 msgid "The client (%(client_name)s) is not available."
 msgstr "O cliente  (%(client_name)s) não está disponível."
+
+msgid "The cluster ID this node belongs to."
+msgstr "O ID do cluster ao qual esse nó pertence."
 
 msgid "The config value of the software config."
 msgstr "O valor de configuração da configuração de software."
@@ -5296,6 +5927,15 @@ msgstr ""
 msgid "The decrypted secret payload."
 msgstr "A carga útil do segredo decriptografada. "
 
+msgid ""
+"The default cloud-init user set up for each image (e.g. \"ubuntu\" for "
+"Ubuntu 12.04+, \"fedora\" for Fedora 19+ and \"cloud-user\" for CentOS/RHEL "
+"6.5)."
+msgstr ""
+"A configuração do usuário cloud-init padrão para cada imagem (por exemplo,  "
+"\"ubuntu\" para Ubuntu 12.04+, \"fedora\" para Fedora 19+ e \"cloud-user\" "
+"para CentOS/RHEL 6.5)."
+
 msgid "The description for the QoS policy."
 msgstr "A descrição da política do QoS."
 
@@ -5313,6 +5953,9 @@ msgstr "A descrição do serviço de vpn."
 
 msgid "The destination for static route."
 msgstr "O destino para a rota estática."
+
+msgid "The details of physical object."
+msgstr "Os detalhes do objeto físico."
 
 msgid "The device id for the network gateway."
 msgstr "O ID do dispositivo para o gateway de rede."
@@ -5492,6 +6135,9 @@ msgstr ""
 msgid "The list of Nova server IDs load balanced."
 msgstr "A lista de IDs do servidor Nova com balanceamento de carga."
 
+msgid "The list of Pools related to this monitor."
+msgstr "A lista de Conjuntos relacionados a esse monitor. "
+
 msgid "The list of attachments of the volume."
 msgstr "A lista de anexos do volume."
 
@@ -5537,6 +6183,13 @@ msgstr "O endereço IPv6 público alternativo designado manualmente do servidor.
 
 msgid "The maximum number of connections per second allowed for the vip."
 msgstr "O número máximo de conexões por segundo permitido para o vip."
+
+msgid ""
+"The maximum number of connections permitted for this load balancer. Defaults "
+"to -1, which is infinite."
+msgstr ""
+"O número máximo de conexões permitidas para esse balanceador de carga, "
+"Padronizado para -1, que é infinito."
 
 msgid "The maximum number of resources to create at once."
 msgstr "O número máximo de recursos para criar de uma vez."
@@ -5683,11 +6336,20 @@ msgstr "O nome ou o ID da política do QoS para anexar a essa porta."
 msgid "The name or ID of parent of this keystone project in hierarchy."
 msgstr "O nome ou ID do pai desse projeto do keystone na hierarquia."
 
+msgid "The name or ID of target cluster."
+msgstr "O nome ou ID do cluster de destino."
+
 msgid "The name or ID of the bay model."
 msgstr "O nome ou ID do modelo do compartimento."
 
+msgid "The name or ID of the subnet on which to allocate the VIP address."
+msgstr "O nome ou ID da sub-rede no qual alocar o endereço VIP."
+
 msgid "The name or ID of the subnet pool."
 msgstr "O nome ou ID do conjunto de sub-redes."
+
+msgid "The name or id of the Senlin profile."
+msgstr "O nome ou ID do perfil Senlin."
 
 msgid "The name or id of the nova ssh keypair."
 msgstr "O nome ou ID do par de chaves ssh Nova."
@@ -5741,6 +6403,9 @@ msgstr "O número de nós principais para esse compartimento."
 msgid "The number of objects stored in the container."
 msgstr "O número de objetos armazenados no contêiner."
 
+msgid "The number of replicas to be created."
+msgstr "O número de réplicas a serem criadas."
+
 msgid "The number of resources to create."
 msgstr "O número de recursos a serem criados."
 
@@ -5749,6 +6414,9 @@ msgstr "O número de segundos para aguardar entre lotes de atualizações."
 
 msgid "The number of seconds to wait between batches."
 msgstr "O número de segundos para aguardar entre lotes."
+
+msgid "The number of seconds to wait for the cluster actions."
+msgstr "O número de segundos para aguardar as ações do cluster."
 
 msgid ""
 "The number of seconds to wait for the correct number of signals to arrive."
@@ -5791,6 +6459,10 @@ msgstr ""
 "O ID do locatário proprietário. Necessário somente se o responsável pela "
 "chamada possuir função administrativa e desejar criar um RBAC para outro "
 "locatário. "
+
+msgid "The parameters passed to action when the receiver is signaled."
+msgstr ""
+"Os parâmetros transmitidos para a ação quando o receptor é sinalizado. "
 
 msgid "The parent URL of the container."
 msgstr "A URL pai do contêiner."
@@ -5922,6 +6594,9 @@ msgstr "A ação requisitada não está implementada ainda"
 #, python-format
 msgid "The resource %s is already being updated."
 msgstr "O recurso %s já está sendo atualizado."
+
+msgid "The resource href of the queue."
+msgstr "O recurso href para a fila. "
 
 msgid "The route mode of the ipsec site connection."
 msgstr "O modo de roteamento da conexão do site ipsec."
@@ -6093,6 +6768,12 @@ msgstr "O registro de data e hora indicando a criação de volume."
 
 msgid "The transform protocol of the ipsec policy."
 msgstr "O protocolo de conversão da política ipsec."
+
+msgid "The type of profile."
+msgstr "O tipo do perfil."
+
+msgid "The type of senlin policy."
+msgstr "O tipo da política Senlin."
 
 msgid "The type of the certificate request."
 msgstr "O tipo da solicitação de certificado. "
@@ -6377,6 +7058,12 @@ msgstr ""
 msgid "Type of keystone Service."
 msgstr "Tipo de Serviço do keystone."
 
+msgid "Type of receiver."
+msgstr "Tipo de receptor."
+
+msgid "Type of the data source."
+msgstr "Tipo da origem de dados."
+
 msgid "Type of the notification."
 msgstr "O tipo da notificação."
 
@@ -6394,6 +7081,16 @@ msgstr "Tipo do volume para criar no backend do Cinder."
 
 msgid "URL for API authentication"
 msgstr "URL para autenticação da API"
+
+msgid "URL for the data source."
+msgstr "URL para a origem de dados."
+
+msgid ""
+"URL for the job binary. Must be in the format swift://<container>/<path> or "
+"internal-db://<uuid>."
+msgstr ""
+"URL para o binário da tarefa. Deve estar no formato swift://<container>/"
+"<path> ou internal-db://<uuid>."
 
 msgid ""
 "URL of TempURL where resource will signal completion and optionally upload "
@@ -6622,6 +7319,13 @@ msgid "Updating a stack when it is suspended"
 msgstr "Atualizando uma pilha quando ela estiver suspensa"
 
 msgid ""
+"Use get_resource|Ref command instead. For example: { get_resource : "
+"<resource_name> }"
+msgstr ""
+"Use o comando get_resource|Ref. Por exemplo: { get_resource : "
+"<resource_name> }"
+
+msgid ""
 "Use of this resource is discouraged. Please use OS::Heat::"
 "SoftwareDeploymentGroup instead."
 msgstr ""
@@ -6700,6 +7404,15 @@ msgstr "O nome de usuário associado ao AccessKey."
 
 msgid "Username for API authentication"
 msgstr "O nome de usuário para autenticação da API"
+
+msgid "Username for accessing the data source URL."
+msgstr "Nome do usuário para acessar a URL da origem de dados."
+
+msgid "Username for accessing the job binary URL."
+msgstr "Nome do usuário para acessar a URL do binário da tarefa."
+
+msgid "Username of privileged user in the image."
+msgstr "Nome de usuário do usuário privilegiado na imagem. "
 
 msgid "Using Cinder API V1, volume type access"
 msgstr "Usando o acesso de tipo de volume do Cinder API V1"
@@ -6896,6 +7609,9 @@ msgstr ""
 "Especifica se o volume pode ser conectado mais de uma vez. Essa propriedade "
 "é suportada somente a partir do Cinder API v2."
 
+msgid "Whether enable this policy on that cluster."
+msgstr "Especifica se essa política é ativada nesse cluster. "
+
 msgid ""
 "Whether the address scope should be shared to other tenants. Note that the "
 "default policy setting restricts usage of this attribute to administrative "
@@ -6906,6 +7622,9 @@ msgstr ""
 "locatários. Observe que a configuração da política padrão restringe o uso "
 "desse atributo somente para usuários administrativos, e restringe a mudança "
 "do escopo de endereço compartilhado para não compartilhado com atualização. "
+
+msgid "Whether the flavor is shared across all projects."
+msgstr "Especifica se o tipo é compartilhado com todos os projetos."
 
 msgid ""
 "Whether the image can be deleted. If the value is True, the image is "
@@ -6924,6 +7643,15 @@ msgstr "Especifica se a rede contém um roteador externo."
 msgid "Whether the part content is text or multipart."
 msgstr "Se o conteúdo da parte é texto ou parte de multipartes."
 
+msgid ""
+"Whether the subnet pool will be shared across all tenants. Note that the "
+"default policy setting restricts usage of this attribute to administrative "
+"users only."
+msgstr ""
+"Especifica se este conjunto de sub-redes precisa ser compartilhado por todos "
+"os locatários. Observe que a configuração de política padrão restringe o uso "
+"deste atributo apenas para usuários administrativos."
+
 msgid "Whether the volume type is accessible to the public."
 msgstr "Especifica se o tipo de volume é acessível para o público. "
 
@@ -6937,9 +7665,9 @@ msgid ""
 "policy setting in Neutron restricts usage of this property to administrative "
 "users only."
 msgstr ""
-"Se este firewall precisar ser compartilhado por todos os locatários. NOTA: A "
-"configuração de política padrão em Neutron restringe o uso desta propriedade "
-"para apenas usuários administrativos."
+"Especifica se este firewall precisa ser compartilhado por todos os "
+"locatários. NOTA: A configuração de política padrão no Neutron restringe o "
+"uso desta propriedade apenas para usuários administrativos."
 
 msgid ""
 "Whether this is default IPv4/IPv6 subnet pool. There can only be one default "
@@ -7052,6 +7780,13 @@ msgstr "não foi possível localizar usuário %s"
 
 msgid "deployment_id must be specified"
 msgstr "deployment_id deve ser especificado"
+
+msgid ""
+"deployments key not allowed in resource metadata with user_data_format of "
+"SOFTWARE_CONFIG"
+msgstr ""
+"Chave de implementações não permitida nos metadados de recurso com  "
+"user_data_format de SOFTWARE_CONFIG"
 
 #, python-format
 msgid "environment has wrong section \"%s\""
