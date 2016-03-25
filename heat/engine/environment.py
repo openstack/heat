@@ -393,7 +393,7 @@ class ResourceRegistry(object):
     def matches_hook(self, resource_name, hook):
         """Return whether a resource have a hook set in the environment.
 
-        For a given resource and a hook type, we check to see if the the passed
+        For a given resource and a hook type, we check to see if the passed
         group of resources has the right hook associated with the name.
 
         Hooks are set in this format via `resources`:
