@@ -40,7 +40,6 @@ class TestMagnumBayModel(common.HeatTestCase):
           fixed_network: 0f59a3dd-fac1-4d03-b41a-d4115fbffa89
           dns_nameserver: 8.8.8.8
           docker_volume_size: 5
-          ssh_authorized_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB
           coe: 'swarm'
 '''
 
@@ -54,7 +53,6 @@ class TestMagnumBayModel(common.HeatTestCase):
         'fixed_network': '0f59a3dd-fac1-4d03-b41a-d4115fbffa89',
         'dns_nameserver': '8.8.8.8',
         'docker_volume_size': 5,
-        'ssh_authorized_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB',
         'coe': 'swarm',
     }
 
@@ -107,7 +105,6 @@ class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
           fixed_network: 0f59a3dd-fac1-4d03-b41a-d4115fbffa89
           dns_nameserver: 8.8.8.8
           docker_volume_size: 5
-          ssh_authorized_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB
           coe: 'mesos'
           network_driver: 'flannel'
           http_proxy: 'http://proxy.com:123'
@@ -128,7 +125,6 @@ class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
         'fixed_network': '0f59a3dd-fac1-4d03-b41a-d4115fbffa89',
         'dns_nameserver': '8.8.8.8',
         'docker_volume_size': 5,
-        'ssh_authorized_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB',
         'coe': 'mesos',
         'network_driver': 'flannel',
         'http_proxy': 'http://proxy.com:123',
