@@ -20,7 +20,7 @@ OpenStack projects. Heat on DevStack works on both Ubuntu and Fedora.
 These instructions assume you already have a working DevStack installation
 which can launch basic instances.
 
-Configure DevStack to enable Heat
+Configure DevStack to enable heat
 ---------------------------------
 Heat is configured by default on devstack for Icehouse and Juno releases.
 Newer versions of OpenStack require enabling heat services in devstack
@@ -34,8 +34,8 @@ Add the following to `[[local|localrc]]` section of `local.conf`::
   enable_service h-eng h-api h-api-cfn h-api-cw
 
 It would also be useful to automatically download and register
-a VM image that Heat can launch. To do that add the following to your
-devstack `localrc`::
+a VM image that heat can launch. To do that add the following to
+`[[local|localrc]]` section of `local.conf`::
 
     IMAGE_URL_SITE="http://download.fedoraproject.org"
     IMAGE_URL_PATH="/pub/fedora/linux/releases/21/Cloud/Images/x86_64/"
@@ -46,21 +46,23 @@ URLs for any cloud image may be specified, but fedora images from F20 contain
 the heat-cfntools package which is required for some heat functionality.
 
 That is all the configuration that is required. When you run `./stack.sh` the
-Heat processes will be launched in `screen` with the labels prefixed with `h-`.
+heat processes will be launched in `screen` with the labels prefixed with `h-`.
 
-Configure DevStack to enable Ceilometer (if using Alarms)
----------------------------------------------------------
-To use Ceilometer Alarms you need to enable Ceilometer in devstack.
-Adding the following lines to your `localrc` file will enable the ceilometer
-services::
+Configure DevStack to enable ceilometer and aodh (if using alarms)
+------------------------------------------------------------------
+To use ceilometer alarms you need to enable ceilometer and aodh in devstack.
+Adding the following lines to `[[local|localrc]]` section of `local.conf`
+will enable the services::
 
     CEILOMETER_BACKEND=mongodb
     enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer
+    enable_plugin aodh https://git.openstack.org/openstack/aodh
 
 Configure DevStack to enable OSprofiler
 ---------------------------------------
 
-Add the profiler notifier to your Ceilometer to your config::
+Adding the following line to `[[local|localrc]]` section of `local.conf`
+will add the profiler notifier to your ceilometer::
 
   CEILOMETER_NOTIFICATION_TOPICS=notifications,profiler
 
@@ -88,5 +90,5 @@ Note that osprofiler should be run with the admin user name & tenant.
 Create a stack
 --------------
 
-Now that you have a working Heat environment you can go to
+Now that you have a working heat environment you can go to
 :ref:`create-a-stack`.
