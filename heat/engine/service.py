@@ -407,6 +407,8 @@ class EngineService(service.Service):
 
     def _stop_rpc_server(self):
         # Stop rpc connection at first for preventing new requests
+        if self._rpc_server is None:
+            return
         LOG.debug("Attempting to stop engine service...")
         try:
             self._rpc_server.stop()
@@ -423,20 +425,21 @@ class EngineService(service.Service):
             self.worker_service.stop()
 
         # Wait for all active threads to be finished
-        for stack_id in list(self.thread_group_mgr.groups.keys()):
-            # Ignore dummy service task
-            if stack_id == cfg.CONF.periodic_interval:
-                continue
-            LOG.info(_LI("Waiting stack %s processing to be finished"),
-                     stack_id)
-            # Stop threads gracefully
-            self.thread_group_mgr.stop(stack_id, True)
-            LOG.info(_LI("Stack %s processing was finished"), stack_id)
-
-        self.manage_thread_grp.stop()
-        ctxt = context.get_admin_context()
-        service_objects.Service.delete(ctxt, self.service_id)
-        LOG.info(_LI('Service %s is deleted'), self.service_id)
+        if self.thread_group_mgr:
+            for stack_id in list(self.thread_group_mgr.groups.keys()):
+                # Ignore dummy service task
+                if stack_id == cfg.CONF.periodic_interval:
+                    continue
+                LOG.info(_LI("Waiting stack %s processing to be finished"),
+                         stack_id)
+                # Stop threads gracefully
+                self.thread_group_mgr.stop(stack_id, True)
+                LOG.info(_LI("Stack %s processing was finished"), stack_id)
+        if self.manage_thread_grp:
+            self.manage_thread_grp.stop()
+            ctxt = context.get_admin_context()
+            service_objects.Service.delete(ctxt, self.service_id)
+            LOG.info(_LI('Service %s is deleted'), self.service_id)
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
