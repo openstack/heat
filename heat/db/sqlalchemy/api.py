@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_db import api as oslo_db_api
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import timeutils
@@ -33,6 +34,7 @@ from sqlalchemy.orm import session as orm_session
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
@@ -45,6 +47,8 @@ CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_group('profiler', 'heat.common.config')
 
 _facade = None
+
+LOG = logging.getLogger(__name__)
 
 
 def get_facade():
@@ -1230,27 +1234,33 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
         for raw_template in _get_batch(
                 session=session, ctxt=ctxt, query=query,
                 model=models.RawTemplate, batch_size=batch_size):
-            tmpl = template.Template.load(ctxt, raw_template.id, raw_template)
-            param_schemata = tmpl.param_schemata()
-            env = raw_template.environment
+            try:
+                tmpl = template.Template.load(
+                    ctxt, raw_template.id, raw_template)
+                param_schemata = tmpl.param_schemata()
+                env = raw_template.environment
 
-            if 'encrypted_param_names' in env:
-                encrypted_params = env['encrypted_param_names']
-            else:
-                encrypted_params = []
-            for param_name, param_val in env['parameters'].items():
-                if ((param_name in encrypted_params) or
-                   (not param_schemata[param_name].hidden)):
-                        continue
-                encrypted_val = crypt.encrypt(param_val, encryption_key)
-                env['parameters'][param_name] = encrypted_val
-                encrypted_params.append(param_name)
+                if 'encrypted_param_names' in env:
+                    encrypted_params = env['encrypted_param_names']
+                else:
+                    encrypted_params = []
+                for param_name, param_val in env['parameters'].items():
+                    if ((param_name in encrypted_params) or
+                       (not param_schemata[param_name].hidden)):
+                            continue
+                    encrypted_val = crypt.encrypt(param_val, encryption_key)
+                    env['parameters'][param_name] = encrypted_val
+                    encrypted_params.append(param_name)
 
-            if encrypted_params:
-                environment = env.copy()
-                environment['encrypted_param_names'] = encrypted_params
-                raw_template_update(ctxt, raw_template.id,
-                                    {'environment': environment})
+                if encrypted_params:
+                    environment = env.copy()
+                    environment['encrypted_param_names'] = encrypted_params
+                    raw_template_update(ctxt, raw_template.id,
+                                        {'environment': environment})
+            except Exception:
+                LOG.exception(_LE('Failed to encrypt parameters of raw '
+                                  'template %(id)d'), {'id': raw_template.id})
+                continue
 
         query = session.query(models.Resource).filter(
             ~models.Resource.properties_data.is_(None),
@@ -1258,18 +1268,23 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
         for resource in _get_batch(
                 session=session, ctxt=ctxt, query=query, model=models.Resource,
                 batch_size=batch_size):
-            result = {}
-            for prop_name, prop_value in resource.properties_data.items():
-                prop_string = jsonutils.dumps(prop_value)
-                encrypted_value = crypt.encrypt(prop_string,
-                                                encryption_key)
-                result[prop_name] = encrypted_value
-            resource.properties_data = result
-            resource.properties_data_encrypted = True
-            resource_update(ctxt, resource.id,
-                            {'properties_data': result,
-                             'properties_data_encrypted': True},
-                            resource.atomic_key)
+            try:
+                result = {}
+                for prop_name, prop_value in resource.properties_data.items():
+                    prop_string = jsonutils.dumps(prop_value)
+                    encrypted_value = crypt.encrypt(prop_string,
+                                                    encryption_key)
+                    result[prop_name] = encrypted_value
+                resource.properties_data = result
+                resource.properties_data_encrypted = True
+                resource_update(ctxt, resource.id,
+                                {'properties_data': result,
+                                 'properties_data_encrypted': True},
+                                resource.atomic_key)
+            except Exception:
+                LOG.exception(_LE('Failed to encrypt properties_data of '
+                                  'resource %(id)d'), {'id': resource.id})
+                continue
 
 
 def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
@@ -1288,18 +1303,24 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
         for raw_template in _get_batch(
                 session=session, ctxt=ctxt, query=query,
                 model=models.RawTemplate, batch_size=batch_size):
-            parameters = raw_template.environment['parameters']
-            encrypted_params = raw_template.environment[
-                'encrypted_param_names']
-            for param_name in encrypted_params:
-                method, value = parameters[param_name]
-                decrypted_val = crypt.decrypt(method, value, encryption_key)
-                parameters[param_name] = decrypted_val
+            try:
+                parameters = raw_template.environment['parameters']
+                encrypted_params = raw_template.environment[
+                    'encrypted_param_names']
+                for param_name in encrypted_params:
+                    method, value = parameters[param_name]
+                    decrypted_val = crypt.decrypt(method, value,
+                                                  encryption_key)
+                    parameters[param_name] = decrypted_val
 
-            environment = raw_template.environment.copy()
-            environment['encrypted_param_names'] = []
-            raw_template_update(ctxt, raw_template.id,
-                                {'environment': environment})
+                environment = raw_template.environment.copy()
+                environment['encrypted_param_names'] = []
+                raw_template_update(ctxt, raw_template.id,
+                                    {'environment': environment})
+            except Exception:
+                LOG.exception(_LE('Failed to decrypt parameters of raw '
+                                  'template %(id)d'), {'id': raw_template.id})
+                continue
 
         query = session.query(models.Resource).filter(
             ~models.Resource.properties_data.is_(None),
@@ -1307,19 +1328,24 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
         for resource in _get_batch(
                 session=session, ctxt=ctxt, query=query, model=models.Resource,
                 batch_size=batch_size):
-            result = {}
-            for prop_name, prop_value in resource.properties_data.items():
-                method, value = prop_value
-                decrypted_value = crypt.decrypt(method, value,
-                                                encryption_key)
-                prop_string = jsonutils.loads(decrypted_value)
-                result[prop_name] = prop_string
-            resource.properties_data = result
-            resource.properties_data_encrypted = False
-            resource_update(ctxt, resource.id,
-                            {'properties_data': result,
-                             'properties_data_encrypted': False},
-                            resource.atomic_key)
+            try:
+                result = {}
+                for prop_name, prop_value in resource.properties_data.items():
+                    method, value = prop_value
+                    decrypted_value = crypt.decrypt(method, value,
+                                                    encryption_key)
+                    prop_string = jsonutils.loads(decrypted_value)
+                    result[prop_name] = prop_string
+                resource.properties_data = result
+                resource.properties_data_encrypted = False
+                resource_update(ctxt, resource.id,
+                                {'properties_data': result,
+                                 'properties_data_encrypted': False},
+                                resource.atomic_key)
+            except Exception:
+                LOG.exception(_LE('Failed to decrypt properties_data of '
+                                  'resource %(id)d'), {'id': resource.id})
+                continue
 
 
 def _get_batch(session, ctxt, query, model, batch_size=50):
