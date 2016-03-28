@@ -1,0 +1,31 @@
+# The order of packages is significant, because pip processes them in the order
+# of appearance. Changing the order has an impact on the overall integration
+# process, which may cause wedges in the gate later.
+
+# These are stubs for requirements. This file must be processed with
+# heat_integrationtests/install-requirements to generate and install the real
+# requirements.txt where versions for packages present in
+# main project requirements will be synced from main requirements files.
+
+pbr
+kombu
+os-collect-config
+oslo.log
+oslo.messaging
+oslo.concurrency
+oslo.config
+oslo.utils
+paramiko
+python-ceilometerclient
+python-cinderclient
+python-keystoneclient
+python-heatclient
+python-neutronclient
+python-novaclient
+python-swiftclient
+PyYAML
+requests
+six
+testrepository
+testscenarios
+testtools
