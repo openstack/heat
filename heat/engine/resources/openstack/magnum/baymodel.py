@@ -16,6 +16,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class BayModel(resource.Resource):
@@ -177,6 +178,16 @@ class BayModel(resource.Resource):
     default_client_name = 'magnum'
 
     entity = 'baymodels'
+
+    def translation_rules(self, props):
+        if props.get(self.SSH_AUTHORIZED_KEY):
+            return [
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.DELETE,
+                    [self.SSH_AUTHORIZED_KEY]
+                )
+            ]
 
     def handle_create(self):
         args = {
