@@ -1630,7 +1630,13 @@ class Resource(object):
             raise ex
 
     def _release(self, engine_id):
-        rs = resource_objects.Resource.get_obj(self.context, self.id)
+        rs = None
+        try:
+            rs = resource_objects.Resource.get_obj(self.context, self.id)
+        except (exception.NotFound, exception.EntityNotFound):
+            # ignore: Resource is deleted holding a lock-on
+            return
+
         atomic_key = rs.atomic_key
         if atomic_key is None:
             atomic_key = 0
