@@ -108,6 +108,13 @@ class NovaHostAggregateTest(common.HeatTestCase):
         self.assertEqual(0, ag.remove_host.call_count)
         ag.set_metadata.assert_called_once_with(set_metadata_expected)
 
+    def test_aggregate_handle_delete_not_found(self):
+        ag = mock.MagicMock()
+        ag.id = '927202df-1afb-497f-8368-9c2d2f26e5db'
+        ag.hosts = ['host_1']
+        self.aggregates.get.side_effect = [nova.exceptions.NotFound(404)]
+        self.my_aggregate.handle_delete()
+
     def test_aggregate_handle_delete(self):
         ag = mock.MagicMock()
         ag.id = '927202df-1afb-497f-8368-9c2d2f26e5db'
