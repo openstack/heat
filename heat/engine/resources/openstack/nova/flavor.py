@@ -40,11 +40,11 @@ class NovaFlavor(resource.Resource):
     entity = 'flavors'
 
     PROPERTIES = (
-        RAM, VCPUS, DISK, SWAP, EPHEMERAL,
-        RXTX_FACTOR, EXTRA_SPECS, IS_PUBLIC
+        ID, NAME, RAM, VCPUS, DISK, SWAP,
+        EPHEMERAL, RXTX_FACTOR, EXTRA_SPECS, IS_PUBLIC
     ) = (
-        'ram', 'vcpus', 'disk', 'swap', 'ephemeral',
-        'rxtx_factor', 'extra_specs', 'is_public',
+        'flavorid', 'name', 'ram', 'vcpus', 'disk', 'swap',
+        'ephemeral', 'rxtx_factor', 'extra_specs', 'is_public',
     )
 
     ATTRIBUTES = (
@@ -54,6 +54,17 @@ class NovaFlavor(resource.Resource):
     )
 
     properties_schema = {
+        ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Unique ID of the flavor. If not specified, '
+              'an UUID will be auto generated and used.'),
+            support_status=support.SupportStatus(version='7.0.0')
+        ),
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the flavor.'),
+            support_status=support.SupportStatus(version='7.0.0'),
+        ),
         RAM: properties.Schema(
             properties.Schema.INTEGER,
             _('Memory in MB for the flavor.'),
@@ -112,10 +123,11 @@ class NovaFlavor(resource.Resource):
 
     def handle_create(self):
         args = dict(self.properties)
-        args['flavorid'] = 'auto'
-        args['name'] = self.physical_resource_name()
+        if not args['flavorid']:
+            args['flavorid'] = 'auto'
+        if not args['name']:
+            args['name'] = self.physical_resource_name()
         flavor_keys = args.pop(self.EXTRA_SPECS)
-
         flavor = self.client().flavors.create(**args)
         self.resource_id_set(flavor.id)
         if flavor_keys:
