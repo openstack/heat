@@ -186,8 +186,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
             changed_size = group.adjust(
                 self.properties[self.SCALING_ADJUSTMENT],
                 self.properties[self.ADJUSTMENT_TYPE],
-                self.properties[self.MIN_ADJUSTMENT_STEP],
-                signal=True)
+                self.properties[self.MIN_ADJUSTMENT_STEP])
         finally:
             self._finished_scaling("%s : %s" % (
                 self.properties[self.ADJUSTMENT_TYPE],
