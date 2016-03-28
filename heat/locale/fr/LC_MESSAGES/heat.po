@@ -13,13 +13,13 @@
 # Sylvie Chesneau <sissicdf@fr.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev11\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev20\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-23 10:47+0000\n"
+"POT-Creation-Date: 2016-03-25 10:02+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-23 07:14+0000\n"
+"PO-Revision-Date: 2016-03-25 04:28+0000\n"
 "Last-Translator: Angelique Pillal <pillal@fr.ibm.com>\n"
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
@@ -286,7 +286,7 @@ msgstr "%s a dépassé le délai d'attente"
 msgid "%s Value Name must be a string"
 msgstr "Le nom de valeur %s doit être une chaîne"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s is not a valid job location."
 msgstr "%s n'est pas un emplacement de travail valide."
 
@@ -306,12 +306,11 @@ msgstr "%s doit être fourni"
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
 msgstr "'%(attr)s' : '%(expected)s' attendu, '%(current)s' obtenu"
 
-#, fuzzy
 msgid ""
 "'task_name' is not assigned in 'params' in case of reverse type workflow."
 msgstr ""
 "'task_name' n'est pas affecté dans 'params' dans le cas d'un flux de travail "
-"de type inversé"
+"de type inversé."
 
 msgid "'true' if DHCP is enabled for this subnet; 'false' otherwise."
 msgstr "'true' si DHCP est activé pour ce sous-réseau ; sinon 'false'."
@@ -373,20 +372,17 @@ msgstr ""
 "Un nom de périphérique auquel le volume sera rattaché dans le système, à "
 "l'emplacement /dev/device_name.par ex. vdb"
 
-#, fuzzy
 msgid ""
 "A dict of all network addresses with corresponding port_id. Each network "
 "will have two keys in dict, they are network name and network id. The port "
 "ID may be obtained through the following expression: \"{get_attr: [<server>, "
 "addresses, <network name_or_id>, 0, port]}\"."
 msgstr ""
-"Dictionnaire de toutes les adresses réseau avec le port_id correspondant. "
-"Deux clés figurent pour chaque réseau dans le dictionnaire : nom du réseau "
-"et ID du réseau. L'ID de port peut être obtenu à l'aide de l'expression "
-"suivante : \"{get_attr: [<server>, addresses, <network name_or_id>, 0, "
-"port]}\"."
+"Dictionnaire de toutes les adresses réseau avec port_id correspondant. Deux "
+"clés figurent pour chaque réseau dans le dictionnaire : nom du réseau et ID "
+"du réseau. L'ID de port peut être obtenu à l'aide de l'expression suivante : "
+"\"{get_attr: [<server>, addresses, <network name_or_id>, 0, port]}\"."
 
-#, fuzzy
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
@@ -456,7 +452,6 @@ msgstr ""
 "Liste de séquences de caractères et de leurs contraintes à partir de "
 "laquelle générer la chaîne aléatoire."
 
-#, fuzzy
 msgid "A list of cluster instance IPs."
 msgstr "Liste des IP d'instance de cluster."
 
@@ -469,7 +464,6 @@ msgstr ""
 "Une liste de dimensions (paires nom/valeur arbitraires) associées à la "
 "mesure."
 
-#, fuzzy
 msgid "A list of host route dictionaries for the subnet."
 msgstr "Liste des dictionnaires de route hôte pour le sous-réseau."
 
@@ -593,13 +587,12 @@ msgstr ""
 msgid "A name used to distinguish the volume."
 msgstr "Nom utilisé pour distinguer le volume."
 
-#, fuzzy
 msgid ""
 "A per-tenant quota on the prefix space that can be allocated from the subnet "
 "pool for tenant subnets."
 msgstr ""
 "Quota par locataire dans l'espace préfixe qui peut être alloué depuis le "
-"pool de sous-résau pour les sous-réseaux du locataire."
+"pool de sous-réseau pour les sous-réseaux du locataire."
 
 msgid ""
 "A predefined access control list (ACL) that grants permissions on the bucket."
@@ -861,7 +854,6 @@ msgstr ""
 "Quantité de RAM (en Mo) requise pour l'image d'initialisation. La valeur par "
 "défaut est 0 si non spécifié et signifie taille de RAM illimitée."
 
-#, fuzzy
 msgid "An address scope ID to assign to the subnet pool."
 msgstr "ID de portée d'adresse à affecter au pool de sous-réseau."
 
@@ -885,13 +877,12 @@ msgstr "Une erreur inconnue s'est produite avec les outils crypto."
 msgid "An unknown exception occurred."
 msgstr "Une exception inconnue s'est produite."
 
-#, fuzzy
 msgid ""
 "Any data structure arbitrarily containing YAQL expressions that defines "
 "workflow output. May be nested."
 msgstr ""
 "Toute structure de données contenant de manière arbitraire des expressions "
-"YAQL et qui définit la sortie de flux de travail. Elle peut être imbriquée"
+"YAQL et qui définit la sortie de flux de travail. Elle peut être imbriquée."
 
 msgid "Anything other than one VPCZoneIdentifier"
 msgstr "Elément autre qu'un ID VPCZoneIdentifier"
@@ -912,7 +903,6 @@ msgstr ""
 "Paires clé-valeur arbitraires indiquées par le client pour aider le "
 "planificateur Cinder à créer un volume."
 
-#, fuzzy
 msgid ""
 "Arbitrary key/value metadata to store contextual information about this "
 "queue."
@@ -929,7 +919,6 @@ msgstr ""
 "must be 255 characters or less. Non-string values will be serialized to JSON "
 "(and the serialized string must be 255 characters or less)."
 
-#, fuzzy
 msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr ""
 "Métadonnées de clé/valeur arbitraires pour le stockage des informations de "
@@ -1012,7 +1001,7 @@ msgstr "Tentative de suppression de watch_rule : %(id)s %(msg)s"
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr "Tentative de mise à jour d'une pile avec l'ID : %(id)s %(msg)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Attempt to update a stack with id: %(id)s %(traversal)s %(msg)s"
 msgstr ""
 "Tentative de mise à jour d'une pile avec l'ID : %(id)s %(traversal)s %(msg)s"
@@ -1033,7 +1022,7 @@ msgid "Audit status of this firewall policy."
 msgstr "Statut d'audit de ces règles d'administration de pare-feu."
 
 msgid "Authentication Endpoint URI."
-msgstr "URI du noeud final d'authentification."
+msgstr "URI du nœud final d'authentification."
 
 msgid "Authentication hash algorithm for the ike policy."
 msgstr "Algorithme de hachage d'authentification pour la stratégie IKE."
@@ -1084,13 +1073,12 @@ msgstr "Mappages d'unités par bloc v2 pour ce serveur."
 msgid "Block size of %(given)d is too big, max = %(maximum)d"
 msgstr "La taille du block %(given)d est trop grande. max = %(maximum)d"
 
-#, fuzzy
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
 "to create share snapshots."
 msgstr ""
 "Spécification booléenne supplémentaire utilisée pour le filtrage des back-"
-"ends en fonction de leur capacité à créer des instantanés de partage."
+"end en fonction de leur capacité à créer des instantanés de partage."
 
 msgid "Boolean indicating if the volume can be booted or not."
 msgstr "Booléen indiquant si le volume peut être amorcé ou pas."
@@ -1219,9 +1207,8 @@ msgstr "Impossible d'interrompre %s, pile non créée"
 msgid "Cannot use %(key)s and %(name)s at the same time."
 msgstr "Impossible d'utiliser en même temps %(key)s et %(name)s."
 
-#, fuzzy
 msgid "Cannot use network and uuid at the same time."
-msgstr "Imposible d'utiliser le réseau et uuid en même temps."
+msgstr "Impossible d'utiliser le réseau et l'uuid en même temps."
 
 msgid "Captured stderr from the configuration execution."
 msgstr "Stderr capturé à partir de l'exécution de configuration."
@@ -1236,7 +1223,6 @@ msgstr "Dépendance en boucle trouvée : %(cycle)s"
 msgid "Client entity to poll."
 msgstr "Entité client à interroger."
 
-#, fuzzy
 msgid "Client name and resource getter name must be specified."
 msgstr ""
 "Le nom du client et le nom de la méthode d'accès get de la ressource doivent "
@@ -1251,11 +1237,9 @@ msgstr "Dictionnaire de configurations de cluster."
 msgid "Cluster information."
 msgstr "Information du cluster."
 
-#, fuzzy
 msgid "Cluster metadata."
 msgstr "Métadonnées du cluster."
 
-#, fuzzy
 msgid "Cluster name."
 msgstr "Nom du cluster."
 
@@ -1279,7 +1263,6 @@ msgstr ""
 "Script ou manifeste de configuration qui indique quelle configuration réelle "
 "est effectuée."
 
-#, fuzzy
 msgid "Configure most important configs automatically."
 msgstr "Configurez les config les plus importantes automatiquement."
 
@@ -1392,11 +1375,9 @@ msgstr "Impossible de charger %(name)s : %(error)s"
 msgid "Could not retrieve template: %s"
 msgstr "Impossible de recevoir le template: %s"
 
-#, fuzzy
 msgid "Create volumes on the same physical port as an instance."
 msgstr "Créez des volumes sur le même port physique qu'une instance."
 
-#, fuzzy
 msgid ""
 "Credentials used for swift. Not required if sahara is configured to use "
 "proxy users and delegated trusts for access."
@@ -1426,7 +1407,6 @@ msgstr "Adresse IP DNS utilisée dans le réseau du locataire."
 msgid "DNS Record type."
 msgstr "Type d'enregistrement DNS."
 
-#, fuzzy
 msgid "DNS domain serial."
 msgstr "Numéro de série du domaine DNS."
 
@@ -1487,7 +1467,6 @@ msgstr ""
 msgid "Dead engines are removed."
 msgstr "Dead engines are removed."
 
-#, fuzzy
 msgid "Default TLS container reference to retrieve TLS information."
 msgstr ""
 "Référence du conteneur TLS par défaut pour l'extraction des informations TLS."
@@ -1517,7 +1496,6 @@ msgstr ""
 msgid "Default value for the input if none is specified."
 msgstr "Valeur par défaut pour l'entrée si rien n'est indiqué."
 
-#, fuzzy
 msgid ""
 "Defines a delay in seconds that Mistral Engine should wait after a task has "
 "completed before starting next tasks defined in on-success, on-error or on-"
@@ -1527,7 +1505,6 @@ msgstr ""
 "l'exécution d'une tâche et avant le démarrage des tâches suivantes définies "
 "à l'état on-success, on-error ou on-complete."
 
-#, fuzzy
 msgid ""
 "Defines a delay in seconds that Mistral Engine should wait before starting a "
 "task."
@@ -1554,7 +1531,6 @@ msgstr "Définit si le type de partage est accessible au public."
 msgid "Defines if shared filesystem is public or private."
 msgstr "Défini si le système de fichiers partagé est public ou privé."
 
-#, fuzzy
 msgid ""
 "Defines the method in which the request body for signaling a workflow would "
 "be parsed. In case this property is set to True, the body would be parsed as "
@@ -1569,12 +1545,11 @@ msgstr ""
 "travail. Dans les autres cas, le corps serait analysé avec comme résultat un "
 "format json spécifique comportant deux clés : \"input\" et \"params\"."
 
-#, fuzzy
 msgid ""
 "Defines whether Mistral Engine should put the workflow on hold or not before "
 "starting a task."
 msgstr ""
-"Déterminie si le moteur Mistral doit ou non mettre le flux de travail en "
+"Détermine si le moteur Mistral doit ou non mettre le flux de travail en "
 "attente avant de démarrer une tâche."
 
 msgid "Defines whether auto-assign security group to this Node Group template."
@@ -1716,7 +1691,6 @@ msgstr "Description de l'image."
 msgid "Description of the input."
 msgstr "Description de l'entrée"
 
-#, fuzzy
 msgid "Description of the job binary."
 msgstr "Description du binaire de travail."
 
@@ -1753,14 +1727,12 @@ msgstr "Description de ce pool."
 msgid "Desired IPs for this port."
 msgstr "Les IP souhaitées pour ce port."
 
-#, fuzzy
 msgid "Desired capacity of the cluster."
 msgstr "Capacité de cluster souhaitée."
 
 msgid "Desired initial number of instances."
 msgstr "Nombre d'instances initial souhaité."
 
-#, fuzzy
 msgid "Desired initial number of resources in cluster."
 msgstr "Nombre initial souhaité de ressources dans le cluster."
 
@@ -1801,12 +1773,11 @@ msgstr ""
 "Type d'unité : à cet instant, nous pouvons faire la distinction uniquement "
 "entre le disque et CD-ROM."
 
-#, fuzzy
 msgid ""
 "Dict, which has expand properties for port. Used only if port property is "
 "not specified for creating port."
 msgstr ""
-"Dictionnaire, comportant les propriétés d'expansion pour le port. Utilisé "
+"Dictionnaire comportant les propriétés d'expansion pour le port. Utilisé "
 "uniquement si la propriété de port n'est pas spécifiée pour la création du "
 "port."
 
@@ -1823,7 +1794,6 @@ msgstr ""
 msgid "Dictionary which contains input for workflow."
 msgstr "Dictionnaire contenant l'entrée du flux de travail."
 
-#, fuzzy
 msgid ""
 "Dictionary-like section defining task policies that influence how Mistral "
 "Engine runs tasks. Must satisfy Mistral DSL v2."
@@ -1908,9 +1878,8 @@ msgstr "volume_id, snapshot_id, image_id ou swap_size doit être indiqué."
 msgid "Email address of keystone user."
 msgstr "Adresse e-mail de l'utilisateur Keystone."
 
-#, fuzzy
 msgid "Enable the docker registry in the bay."
-msgstr "Activez le registre de docker dans la baie"
+msgstr "Activez le registre de docker dans la baie."
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "Activer la ressource OS::Heat::CWLiteAlarm existante."
@@ -2182,11 +2151,9 @@ msgstr "Propriété factice !a."
 msgid "Fake property !c."
 msgstr "Propriété factice !c."
 
-#, fuzzy
 msgid "Fake property a."
 msgstr "Propriété factice a."
 
-#, fuzzy
 msgid "Fake property c."
 msgstr "Propriété factice c."
 
@@ -2221,7 +2188,6 @@ msgstr ""
 "Indicateur signalant si le trafic en provenance ou à destination de "
 "l'instance est validé."
 
-#, fuzzy
 msgid ""
 "Flag to enable/disable port security on the network. It provides the default "
 "value for the attribute of the ports created on this network."
@@ -2230,7 +2196,6 @@ msgstr ""
 "réseau. Fournit la valeur par défaut pour l'attribut des ports créés sur ce "
 "réseau."
 
-#, fuzzy
 msgid ""
 "Flag to enable/disable port security on the port. When disable this "
 "feature(set it to False), there will be no packages filtering, like security-"
@@ -2238,7 +2203,7 @@ msgid ""
 msgstr ""
 "Indicateur permettant d'activer/de désactiver la sécurité de port sur le "
 "port. Lorsque cette fonction est désactivée (définie sur False), il n'y a "
-"aucun filtrage de packages, comme groupe de sécurité et paires d'adresses."
+"aucun filtrage des packages, comme groupe de sécurité et paires d'adresses."
 
 msgid "Flavor of the instance."
 msgstr "Version de l'instance."
@@ -2281,7 +2246,6 @@ msgstr ""
 msgid "Glance image ID or name."
 msgstr "ID image Glance ou nom."
 
-#, fuzzy
 msgid "Governs permissions set in manila for the cluster ips."
 msgstr "Régit les droits définis dans manila pour les IP de cluster."
 
@@ -2324,7 +2288,6 @@ msgstr "Nom d'hôte de l'instance."
 msgid "How long to preserve deleted data."
 msgstr "Délai de conservation des données supprimées."
 
-#, fuzzy
 msgid ""
 "How the client will signal the wait condition. CFN_SIGNAL will allow an HTTP "
 "POST to a CFN keypair signed URL. TEMP_URL_SIGNAL will create a Swift "
@@ -2336,17 +2299,16 @@ msgid ""
 "the resource going to a signalled state without waiting for any signal."
 msgstr ""
 "Indique comment le client va signaler la condition d'attente. CFN_SIGNAL va "
-"autoriser un HTTP POST vers une URL signée de paire de clés CFN. "
-"TEMP_URL_SIGNAL va créer une Swift TempURL pour l'envoi d'un signal via HTTP "
-"PUT. HEAT_SIGNAL va autoriser les appels vers le signal ressource d'API Heat "
-"à l'aide des informations d'identification Keystone fournies. ZAQAR_SIGNAL "
-"va créer une file d'attente zaqar dédiée pour l'envoi d'un signal à l'aide "
-"des informations d'identification Keystone fournies. TOKEN_SIGNAL va "
-"autoriser un HTTP POST vers un noeud final d'API Heat à l'aide du jeton "
-"Keystone fourni. NO_SIGNAL va se produire dans la ressource qui passe à "
-"l'état COMPLETE sans attendre aucun signal."
+"autoriser un HTTP POST vers une URL signée par une paire de clés CFN. "
+"TEMP_URL_SIGNAL va créer une TempURL Swift pour l'envoi d'un signal via HTTP "
+"PUT. HEAT_SIGNAL va autoriser les appels vers le signal de ressource d'API "
+"Heat à l'aide des informations d'identification Keystone fournies. "
+"ZAQAR_SIGNAL va créer une file d'attente zaqar dédiée pour l'envoi d'un "
+"signal à l'aide des informations d'identification Keystone fournies. "
+"TOKEN_SIGNAL va autoriser un HTTP POST vers un nœud final d'API Heat à "
+"l'aide du jeton Keystone fourni. NO_SIGNAL va se produire dans la ressource "
+"qui passe à l'état COMPLETE sans attendre aucun signal."
 
-#, fuzzy
 msgid ""
 "How the server should receive the metadata required for software "
 "configuration. POLL_SERVER_CFN will allow calls to the cfn API action "
@@ -2361,7 +2323,7 @@ msgstr ""
 "cfn API DescribeStackResource authentifiée avec la paire de clés fournie. "
 "POLL_SERVER_HEAT va autoriser les appels à l'API Heat resource-show à l'aide "
 "des données d'identification Keystone fournies. POLL_TEMP_URL va créer et "
-"remplir une Swift TempURL avec les métadonnées de l'interrogation. "
+"remplir une TempURL Swift avec les métadonnées de l'interrogation. "
 "ZAQAR_MESSAGE va créer une file d'attente zaqar dédiée et publier les "
 "métadonnées pour l'interrogation."
 
@@ -2370,7 +2332,6 @@ msgstr ""
 "Indique comment le serveur doit envoyer un signal à Heat avec les valeurs de "
 "sortie de déploiement."
 
-#, fuzzy
 msgid ""
 "How the server should signal to heat with the deployment output values. "
 "CFN_SIGNAL will allow an HTTP POST to a CFN keypair signed URL. "
@@ -2383,13 +2344,13 @@ msgid ""
 msgstr ""
 "Indique comment le serveur doit envoyer un signal à Heat avec les valeurs de "
 "sortie de déploiement. CFN_SIGNAL va autoriser un HTTP POST vers une URL "
-"signée de paire de clés CFN. TEMP_URL_SIGNAL va créer une Swift TempURL pour "
-"l'envoi d'un signal via HTTP PUT. HEAT_SIGNAL va autoriser les appels vers "
-"le signal ressource d'API Heat à l'aide des informations d'identification "
-"Keystone fournies. ZAQAR_SIGNAL va créer une file d'attente zaqar dédiée "
-"pour l'envoi d'un signal à l'aide des informations d'identification Keystone "
-"fournies. NO_SIGNAL va se produire dans la ressource qui passe à l'état "
-"COMPLETE sans attendre aucun signal."
+"signée par une paire de clés CFN. TEMP_URL_SIGNAL va créer une TempURL Swift "
+"pour l'envoi d'un signal via HTTP PUT. HEAT_SIGNAL va autoriser les appels "
+"vers le signal de ressource d'API Heat à l'aide des informations "
+"d'identification Keystone fournies. ZAQAR_SIGNAL va créer une file d'attente "
+"zaqar dédiée pour l'envoi d'un signal à l'aide des informations "
+"d'identification Keystone fournies. NO_SIGNAL va se produire dans la "
+"ressource qui passe à l'état COMPLETE sans attendre aucun signal."
 
 msgid ""
 "How the user_data should be formatted for the server. For HEAT_CFNTOOLS, the "
@@ -2496,7 +2457,6 @@ msgstr "ID de l'IP flottante à affecter au serveur."
 msgid "ID of the floating IP to associate."
 msgstr "ID de l'IP flottante à associer."
 
-#, fuzzy
 msgid "ID of the health monitor associated with this pool."
 msgstr "ID du moniteur d'état associé à ce pool."
 
@@ -2513,7 +2473,6 @@ msgstr "Identificateur du réseau dans lequel cette adresse IP est allouée."
 msgid "ID of the port associated with this IP."
 msgstr "ID du port associé à cette IP."
 
-#, fuzzy
 msgid "ID of the queue."
 msgstr "ID de la file d'attente."
 
@@ -2531,11 +2490,9 @@ msgstr "ID du serveur vers lequel le déploiement s'effectue"
 msgid "ID of the stack this deployment belongs to"
 msgstr "ID de la pile à laquelle ce déploiement appartient"
 
-#, fuzzy
 msgid "ID of the tenant to which the RBAC policy will be enforced."
 msgstr "ID du locataire pour lequel la stratégie RBAC va être appliquée."
 
-#, fuzzy
 msgid "ID of the tenant who owns the health monitor."
 msgstr "ID du locataire qui détient le moniteur d'état."
 
@@ -2570,7 +2527,6 @@ msgstr "Adresse IP et port du pool."
 msgid "IP address desired in the subnet for this port."
 msgstr "L'adresse IP désirée dans le sous-réseau pour ce port."
 
-#, fuzzy
 msgid "IP address for the VIP."
 msgstr "Adresse IP du VIP."
 
@@ -2600,14 +2556,12 @@ msgstr "Adresse IP à autoriser via ce port."
 msgid "IP address to use if the port has multiple addresses."
 msgstr "Adresse IP à utiliser si le port a plusieurs adresses."
 
-#, fuzzy
 msgid ""
 "IP or other address information about guest that allowed to access to Share."
 msgstr ""
 "IP ou autre information d'adresse concernant l'invité qui est autorisé à "
-"accéder au partage"
+"accéder au partage."
 
-#, fuzzy
 msgid "IPv6 RA (Router Advertisement) mode."
 msgstr "Mode IPv6 RA (Router Advertisement)."
 
@@ -2628,7 +2582,6 @@ msgstr ""
 msgid "Id of the tenant owning the firewall."
 msgstr "Identificateur du locataire possédant le pare-feu."
 
-#, fuzzy
 msgid "Identifier of the source instance to replicate."
 msgstr "Identificateur de l'instance de source à répliquer."
 
@@ -2721,7 +2674,7 @@ msgid "Illegal prefix bounds: %(key1)s=%(value1)s, %(key2)s=%(value2)s."
 msgstr ""
 "Limite de préfixe non conforme : %(key1)s=%(value1)s, %(key2)s=%(value2)s."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Image %(image)s requires %(imram)s minimum ram. Flavor %(flavor)s has only "
 "%(flram)s."
@@ -2729,7 +2682,7 @@ msgstr ""
 "L'image %(image)s requiert au minimum %(imram)s de RAM. La version "
 "%(flavor)s n'a que %(flram)s."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Image %(image)s requires %(imsz)s GB minimum disk space. Flavor %(flavor)s "
 "has only %(flsz)s GB."
@@ -2737,7 +2690,7 @@ msgstr ""
 "L'image %(image)s requiert au minimum un espace disque de %(imsz)s Go. La "
 "version %(flavor)s n'a que  %(flsz)s Go."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Image status is required to be %(cstatus)s not %(wstatus)s."
 msgstr "Le statut de l'image doit être %(cstatus)s et non %(wstatus)s."
 
@@ -2826,10 +2779,9 @@ msgstr ""
 msgid "Initiator state in lowercase for the ipsec site connection."
 msgstr "Etat d'initiateur en minuscules pour la connexion de site IPSec."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Input in signal data must be a map, find a %s"
-msgstr ""
-"L'entrée dans les données de signal doit être une mappe, recherche de %s"
+msgstr "L'entrée dans les données de signal doit être une mappe, recherchez %s"
 
 msgid "Input values for the workflow."
 msgstr "Valeurs en entrée pour le flux de travail."
@@ -2970,9 +2922,11 @@ msgstr "Clé invalide %s"
 msgid "Invalid key '%(key)s' for %(entity)s"
 msgstr "Clé invalide '%(key)s' pour %(entity)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid keys in resource mark unhealthy %s"
-msgstr "Clés non valides dans ressource marquée défectueuse %s"
+msgstr ""
+"Clés non valides dans la ressource pour la demande 'resource-mark-unhealthy' "
+"%s"
 
 msgid ""
 "Invalid mix of disk and container formats. When setting a disk or container "
@@ -3075,7 +3029,6 @@ msgstr "Version IP pour le sous-réseau."
 msgid "Ip_version for this firewall rule."
 msgstr "Ip_version pour la règle du pare-feu."
 
-#, fuzzy
 msgid "It defines an executor to which task action should be sent to."
 msgstr "Définit un exécuteur auquel l'action de tâche doit être envoyée."
 
@@ -3108,15 +3061,14 @@ msgstr ""
 "Données JSON qui ont été téléchargées par l'intermédiaire du "
 "SwiftSignalHandle."
 
-#, fuzzy
 msgid ""
 "JSON serialized map that includes the endpoint, token and/or other "
 "attributes the client must use for signalling this handle. The contents of "
 "this map depend on the type of signal selected in the signal_transport "
 "property."
 msgstr ""
-"Mappe sérialisée JSON qui inclut le noeud final, le jeton et/ou les autres "
-"attributs que le client doit utiliser pour signaler le descripteur. Le "
+"Mappe sérialisée JSON qui inclut le nœud final, le jeton et/ou les autres "
+"attributs que le client doit utiliser pour signaler ce descripteur. Le "
 "contenu de cette mappe dépend du type de signal sélectionné dans la "
 "propriété signal_transport."
 
@@ -3134,7 +3086,6 @@ msgstr ""
 "Clé utilisée pour le chiffrement des informations d'authentification dans la "
 "base de données. La longueur de cette clé doit être de 32 caractères."
 
-#, fuzzy
 msgid "Key/Value pairs to extend the capabilities of the flavor."
 msgstr "Paires clé/valeur permettant d'étendre les capacités de la version."
 
@@ -3212,7 +3163,6 @@ msgstr ""
 msgid "L2 segmentation strategy on the external side of the network gateway."
 msgstr "Stratégie de segmentation L2 du côté externe de la passerelle réseau."
 
-#, fuzzy
 msgid "LBaaS provider to implement this load balancer instance."
 msgstr ""
 "Fournisseur LBaaS pour l'implémentation de cette instance de l'équilibreur "
@@ -3253,11 +3203,10 @@ msgstr ""
 msgid "List of LoadBalancer resources."
 msgstr "Liste des ressources LoadBalancer."
 
-#, fuzzy
 msgid "List of Security Groups assigned on current LB."
-msgstr "Liste de groupes de sécurité affectée sur LB en cours."
+msgstr ""
+"Liste de groupes de sécurité affectée sur l'équilibreur de charge en cours."
 
-#, fuzzy
 msgid "List of TLS container references for SNI."
 msgstr "Liste des références de conteneur TLS pour SNI."
 
@@ -3285,7 +3234,6 @@ msgstr ""
 msgid "List of health monitors associated with the pool."
 msgstr "Liste de moniteurs d'état associés au pool."
 
-#, fuzzy
 msgid "List of hosts to join aggregate."
 msgstr "Liste des hôtes qui doivent rejoindre l'agrégat."
 
@@ -3391,7 +3339,6 @@ msgstr ""
 "Liste d'utilisateurs à créer lors de la création de l'instance de base de "
 "données."
 
-#, fuzzy
 msgid ""
 "List of workflows' executions, each of them is a dictionary with information "
 "about execution. Each dictionary returns values for next keys: id, "
@@ -3410,12 +3357,11 @@ msgstr "Programme d'écoute associé à ce pool."
 msgid "Listner name or ID to be associated with this pool."
 msgstr "Nom ou ID du programme d'écoute à associer à ce pool."
 
-#, fuzzy
 msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
 msgstr ""
-"Chemin local sur chaque noeud de cluster dans lequel monter le partage. Par "
+"Chemin local sur chaque nœud de cluster sur lequel monter le partage. Par "
 "défaut : '/mnt/{share_id}'."
 
 msgid "Location of the SSL certificate file to use for SSL mode."
@@ -3437,7 +3383,6 @@ msgstr "Adresse MAC à donner à ce port."
 msgid "Make the baymodel public."
 msgstr "Rendre le modèle de baie public."
 
-#, fuzzy
 msgid "Map between role with either project or domain."
 msgstr "Mappe entre le rôle et le projet ou domaine."
 
@@ -3465,7 +3410,6 @@ msgstr ""
 msgid "Max bandwidth in kbps."
 msgstr "Bande passante maximale en kb/s"
 
-#, fuzzy
 msgid "Max burst bandwidth in kbps."
 msgstr "Bande passante en rafale max en kb/s."
 
@@ -3510,7 +3454,6 @@ msgstr ""
 msgid "Maximum number of instances in the group."
 msgstr "Nombre maximal d'instances dans le groupe."
 
-#, fuzzy
 msgid "Maximum number of resources in the cluster. -1 means unlimited."
 msgstr "Nombre maximum de ressources dans le cluster. -1 signifie illimité."
 
@@ -3529,10 +3472,9 @@ msgstr ""
 "Nombre maximum de piles pouvant être actives en même temps pour n'importe "
 "quel locataire."
 
-#, fuzzy
 msgid "Maximum prefix size that can be allocated from the subnet pool."
 msgstr ""
-"Taille de préfixe maximum qui peut être allouée depuis le pool  de sous-"
+"Taille de préfixe maximum qui peut être allouée depuis le pool de sous-"
 "réseau."
 
 msgid ""
@@ -3568,7 +3510,6 @@ msgstr "La liste de membres doit être une liste"
 msgid "Members associated with this pool."
 msgstr "Membres associés à ce pool."
 
-#, fuzzy
 msgid "Memory in MB for the flavor."
 msgstr "Mémoire en Mo pour la version."
 
@@ -3579,7 +3520,6 @@ msgstr "Message : %(message)s, code : %(code)s"
 msgid "Metadata format invalid"
 msgstr "Format des métadonnées non valide"
 
-#, fuzzy
 msgid "Metadata key-values defined for cluster."
 msgstr "Métadonnées key-values définies pour le cluster."
 
@@ -3623,14 +3563,12 @@ msgstr "MinSize ne peut pas être supérieur à MaxSize"
 msgid "Minimum number of instances in the group."
 msgstr "Nombre minimal d'instances dans le groupe."
 
-#, fuzzy
 msgid "Minimum number of resources in the cluster."
 msgstr "Nombre minimum de ressources dans le cluster."
 
 msgid "Minimum number of resources in the group."
 msgstr "Nombre minimal de ressources dans le groupe."
 
-#, fuzzy
 msgid ""
 "Minimum number of resources that are added or removed when the AutoScaling "
 "group scales up or down. This can be used only when specifying "
@@ -3640,7 +3578,6 @@ msgstr ""
 "AutoScaling s'agrandit ou se réduit. Peut être utilisé uniquement lorsque "
 "PercentChangeInCapacity est indiqué pour la propriété AdjustmentType."
 
-#, fuzzy
 msgid ""
 "Minimum number of resources that are added or removed when the AutoScaling "
 "group scales up or down. This can be used only when specifying "
@@ -3650,9 +3587,10 @@ msgstr ""
 "AutoScaling s'agrandit ou se réduit. Peut être utilisé uniquement lorsque "
 "percent_change_in_capacity est indiqué pour la propriété adjustment_type."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Missing mandatory (%s) key from mark unhealthy request"
-msgstr "Clé obligatoire (%s) manquante dans demande marquée défectueuse"
+msgstr ""
+"Clé obligatoire (%s) manquante dans la demande 'resource-mark-unhealthy'"
 
 #, python-format
 msgid "Missing parameter type for parameter: %s"
@@ -3809,7 +3747,6 @@ msgstr "Nom de la zone de disponibilité pour le placement de serveur."
 msgid "Name of the cluster to create."
 msgstr "Nom du cluster à créer."
 
-#, fuzzy
 msgid "Name of the cluster. By default, physical resource name is used."
 msgstr ""
 "Nom du cluster. Par défaut, le nom de la ressource physique est utilisé."
@@ -3845,7 +3782,6 @@ msgstr ""
 msgid "Name of the input."
 msgstr "Nom de l'entrée"
 
-#, fuzzy
 msgid "Name of the job binary."
 msgstr "Nom du binaire de travail."
 
@@ -3872,7 +3808,6 @@ msgstr "Nom de sortie"
 msgid "Name of the pool."
 msgstr "Nom du pool."
 
-#, fuzzy
 msgid "Name of the queue instance to create."
 msgstr "Nom de l'instance de file d'attente à créer."
 
@@ -3904,7 +3839,6 @@ msgid "Name of the senlin profile. By default, physical resource name is used."
 msgstr ""
 "Nom du profil senlin. Par défaut, le nom de ressource physique est utilisé."
 
-#, fuzzy
 msgid ""
 "Name of the senlin receiver. By default, physical resource name is used."
 msgstr ""
@@ -3935,7 +3869,6 @@ msgstr "Nom du type de volume."
 msgid "Name of the volume."
 msgstr "Nom du volume."
 
-#, fuzzy
 msgid ""
 "Name of the workflow associated with the task. Can be defined by intrinsic "
 "function get_resource or by name of the referenced workflow, i.e. "
@@ -4161,9 +4094,8 @@ msgstr "Aucun service de volume n'est disponible."
 msgid "Node groups."
 msgstr "Groupes de noeuds."
 
-#, fuzzy
 msgid "Nodes list in the cluster."
-msgstr "Liste de noeuds dans le cluster."
+msgstr "Liste de nœuds dans le cluster."
 
 msgid "Non HA routers can only have one L3 agent."
 msgstr ""
@@ -4200,7 +4132,6 @@ msgstr "Type d'instance Nova (version)."
 msgid "Nova network id."
 msgstr "ID réseau Nova."
 
-#, fuzzy
 msgid "Number of VCPUs for the flavor."
 msgstr "Nombre de  VCPU pour la version."
 
@@ -4370,7 +4301,7 @@ msgstr "Sous-type facultatif à indiquer avec le type."
 msgid "Options for simulating waiting."
 msgstr "Options de simulation d'attente."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "La commande '%(name)s' a échoué :  %(code)s - %(reason)s"
 
@@ -4384,7 +4315,6 @@ msgstr "Sorties reçues"
 msgid "Owner of the source security group."
 msgstr "Propriétaire du groupe de sécurité source."
 
-#, fuzzy
 msgid "PATCH update to non-COMPLETE stack"
 msgstr "Mise à jour PATCH dans la pile non-COMPLETE"
 
@@ -4395,7 +4325,6 @@ msgstr "Le paramètre '%(name)s' n'est pas valide : %(exp)s"
 msgid "Parameter Groups error"
 msgstr "Erreur du groupe de paramèetre"
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups.: The grouped parameter key_name "
 "does not reference a valid parameter."
@@ -4403,7 +4332,6 @@ msgstr ""
 "Erreur de groupes de paramètre : parameter_groups.: Le paramètre groupé "
 "key_name ne fait pas référence à un paramètre valide."
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups.: The key_name parameter must be "
 "assigned to one parameter group only."
@@ -4411,7 +4339,6 @@ msgstr ""
 "Erreur de groupes de paramètre : parameter_groups.: Le paramètre key_name "
 "doit être affecté à un groupe de paramètres uniquement."
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups.: The parameters of parameter group "
 "should be a list."
@@ -4419,7 +4346,6 @@ msgstr ""
 "Erreur de groupes de paramètre : parameter_groups.: Les paramètres du groupe "
 "de paramètres doivent être une liste."
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups.Database Group: The InstanceType "
 "parameter must be assigned to one parameter group only."
@@ -4436,7 +4362,6 @@ msgstr ""
 "paramètre groupé SomethingNotHere ne fait pas référence à un paramètre "
 "valide."
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups.Server Group: The parameters must "
 "be provided for each parameter group."
@@ -4444,7 +4369,6 @@ msgstr ""
 "Erreur de groupes de paramètre : parameter_groups.Server Group: Les "
 "paramètres doivent être fournis pour chaque groupe de paramètres."
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups.Server Group: The parameters of "
 "parameter group should be a list."
@@ -4452,7 +4376,6 @@ msgstr ""
 "Erreur de groupes de paramètre : parameter_groups.Server Group: Les "
 "paramètres du groupe de paramètres doivent être une liste."
 
-#, fuzzy
 msgid ""
 "Parameter Groups error: parameter_groups: The parameter_groups should be a "
 "list."
@@ -4464,9 +4387,9 @@ msgstr ""
 msgid "Parameter name in \"%s\" must be string"
 msgstr "Le nom de paramètre dans \"%s\" doit être une chaîne"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Params must be a map, find a %s"
-msgstr "Les paramètres doivent être une mappe, recherche de %s"
+msgstr "Les paramètres doivent être une mappe, recherchez %s"
 
 msgid "Parent network of the subnet."
 msgstr "Réseau parent du sous-réseau."
@@ -4480,9 +4403,8 @@ msgstr "Mot de passe pour API authentification"
 msgid "Password for accessing the data source URL."
 msgstr "Mot de passe pour l'accès à l'URL de la source de données."
 
-#, fuzzy
 msgid "Password for accessing the job binary URL."
-msgstr "Mot passe  pour accéder à l'URL du binaire de travail."
+msgstr "Mot de passe  pour accéder à l'URL du binaire de travail."
 
 msgid "Password for those users on instance creation."
 msgstr "Mot de passe pour ces utilisateurs lors de la création d'instance."
@@ -4525,13 +4447,13 @@ msgstr "Périodes (en secondes) sur lesquelles effectuer l'évaluation."
 msgid "Physical ID of the VPC. Not implemented."
 msgstr "ID physique de VPC. Non implémenté."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Plugin %(plugin)s doesn't support the following node processes: "
 "%(unsupported)s. Allowed processes are: %(allowed)s"
 msgstr ""
-"Le plugin %(plugin)s ne prend pas en charge les processus de noeud "
-"suivants : %(unsupported)s.  Les processus autorisés sont : %(allowed)s"
+"Le plugin %(plugin)s ne prend pas en charge les processus de nœud suivants : "
+"%(unsupported)s.  Les processus autorisés sont : %(allowed)s"
 
 msgid "Plugin name."
 msgstr "Nom du plugin"
@@ -4551,7 +4473,6 @@ msgstr ""
 "demandant le redimensionnement du serveur, soit en remplaçant le serveur "
 "entier."
 
-#, fuzzy
 msgid ""
 "Policy on how to apply a user_data update; either by ignorning it or by "
 "replacing the entire server."
@@ -4676,12 +4597,12 @@ msgstr ""
 "La propriété %(cookie)s ne doit PAS être spécifiée quaand le type %(sp)s est "
 "défini sur %(ip)s."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Property %(key)s updated value %(new)s should be superset of existing value "
 "%(old)s."
 msgstr ""
-"La valeur  %(new)s mise à jour de la propriété %(key)s doit être un sur-"
+"La valeur %(new)s mise à jour de la propriété %(key)s doit être un sur-"
 "ensemble de la valeur existante %(old)s."
 
 #, python-format
@@ -4761,11 +4682,10 @@ msgstr "Protocole pour l'équilibrage."
 msgid "Protocol value for this firewall rule."
 msgstr "Valeur du protocole pour la règle du pare-feu."
 
-#, fuzzy
 msgid ""
 "Provide access to nodes using other nodes of the cluster as proxy gateways."
 msgstr ""
-"Fournissez un accès aux noeuds en utilisant d'autres noeuds du cluster comme "
+"Fournissez un accès aux nœuds en utilisant d'autres nœuds du cluster comme "
 "passerelles de proxy."
 
 msgid ""
@@ -4860,13 +4780,12 @@ msgstr ""
 msgid "Remote subnet(s) in CIDR format."
 msgstr "Sous-réseau(x) distant(s) au format CIDR."
 
-#, fuzzy
 msgid ""
 "Replacement policy used to work around flawed nova/neutron port interaction "
 "which has been fixed since Liberty."
 msgstr ""
 "Stratégie de remplacement utilisée pour contourner l'interaction de port "
-"nova/neutron défaillante qui a été corrigée depuis Liberty."
+"Nova/Neutron défaillante qui a été corrigée depuis Liberty."
 
 msgid "Request expired or more than 15mins in the future"
 msgstr "La demande a expiré ou intervient à plus de 15 minutes après"
@@ -4965,14 +4884,12 @@ msgstr "Type de ressource."
 msgid "Resource update already requested"
 msgstr "Mise à jour de ressource déjà demandée"
 
-#, fuzzy
 msgid "Resource update failed"
 msgstr "La mise à jour de la ressource a échoué"
 
 msgid "Resource with the name requested already exists"
 msgstr "Le nom de la ressource demandée existe déjà"
 
-#, fuzzy
 msgid ""
 "ResourceInError: resources.remote_stack: Went to status UPDATE_FAILED due to "
 "\"Remote stack update failed\""
@@ -4993,7 +4910,6 @@ msgstr ""
 msgid "Returned status code from the configuration execution."
 msgstr "Code de statut renvoyé à partir de l'exécution de la configuration."
 
-#, fuzzy
 msgid "Route duplicates an existing route."
 msgstr "La route duplique une route existante."
 
@@ -5037,7 +4953,6 @@ msgid "Schema valid only for %(ltype)s or %(mtype)s, not %(utype)s"
 msgstr ""
 "Schéma valide uniquement pour %(ltype)s ou %(mtype)s, pas pour %(utype)s"
 
-#, fuzzy
 msgid ""
 "Scope of flavor accessibility. Public or private. Default value is True, "
 "means public, shared across all projects."
@@ -5113,9 +5028,8 @@ msgstr "Nom du service de sécurité."
 msgid "Security service type."
 msgstr "Type du service de sécurité."
 
-#, fuzzy
 msgid "Security service user or group used by tenant."
-msgstr "Utilisateur ou groupe du service de sécurité utilisé par le locataire"
+msgstr "Utilisateur ou groupe du service de sécurité utilisé par le locataire."
 
 msgid "Select deferred auth method, stored password or trusts."
 msgstr ""
@@ -5215,9 +5129,9 @@ msgstr "Redimensionnement du volume"
 msgid "Signal data error"
 msgstr "Erreur de données de signal"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Signal resource during %s"
-msgstr "Ressource signal pendant %s"
+msgstr "Ressource de signal pendant %s"
 
 #, python-format
 msgid "Single schema valid only for %(ltype)s, not %(utype)s"
@@ -5253,11 +5167,10 @@ msgstr "Taille du volume disque de l'instance en Go."
 msgid "Size of the volumes, in GB."
 msgstr "Taille des volumes, en Go."
 
-#, fuzzy
 msgid "Smallest prefix size that can be allocated from the subnet pool."
 msgstr ""
-"Taille de préfixe minimum qui peut être allouée depuis le pool  de sous-"
-"réseau."
+"Taille de préfixe la plus petite qui peut être allouée depuis le pool  de "
+"sous-réseau."
 
 #, python-format
 msgid "Snapshot with id %s not found"
@@ -5402,7 +5315,6 @@ msgstr "ID de sous-réseau."
 msgid "Subnet in which the vpn service will be created."
 msgstr "Sous-réseau dans lequel le service VPN sera créé."
 
-#, fuzzy
 msgid ""
 "Subnet in which to allocate the IP address for port. Used for creating port, "
 "based on derived properties. If subnet is specified, network property "
@@ -5445,7 +5357,7 @@ msgstr "Versions prises en charge : Keystone version 3"
 msgid "Suspend of instance %s failed"
 msgstr "Echec d'interruption de l'instance %s "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Suspend of server %s failed"
 msgstr "La suspension du serveur %s a échoué"
 
@@ -5522,7 +5434,6 @@ msgstr "Description de la tâche."
 msgid "Task name."
 msgstr "Nom de la tâche."
 
-#, fuzzy
 msgid ""
 "Template default for how the server should receive the metadata required for "
 "software configuration. POLL_SERVER_CFN will allow calls to the cfn API "
@@ -5542,11 +5453,10 @@ msgstr ""
 "show à l'aide des informations d'identification Keystone fournies (nécessite "
 "v3 API Keystone et les options stack_user_* config de pile configurées). "
 "POLL_TEMP_URL va créer et remplir une TempURL Swift à l'aide de métadonnées "
-"pour l'interrogation (nécessite le noeud final object-store prenant en "
-"charge TempURL). ZAQAR_MESSAGE va créer une file d'attente zaqar dédiée et "
-"publier les métadonnées pour l'interrogation"
+"pour l'interrogation (nécessite le nœud final object-store prenant en charge "
+"TempURL). ZAQAR_MESSAGE va créer une file d'attente zaqar dédiée et publier "
+"les métadonnées pour l'interrogation."
 
-#, fuzzy
 msgid ""
 "Template default for how the server should signal to heat with the "
 "deployment output values. CFN_SIGNAL will allow an HTTP POST to a CFN "
@@ -5559,9 +5469,9 @@ msgid ""
 msgstr ""
 "Modèle par défaut pour indiquer comment le serveur doit envoyer un signal à "
 "Heat avec les valeurs de sortie de déploiement. CFN_SIGNAL va autoriser un "
-"HTTP POST vers une URL signée de paire de clés CFN (nécessite que heat-api-"
-"cfn soit activé ). TEMP_URL_SIGNAL va créer une Swift TempURL pour l'envoi "
-"d'un signal via HTTP PUT (nécessite point de terminaison object-store "
+"HTTP POST vers une URL signée par une paire de clés CFN (nécessite que heat-"
+"api-cfn soit activé ). TEMP_URL_SIGNAL va créer une TempURL Swift pour "
+"l'envoi d'un signal via HTTP PUT (nécessite un noeud final object-store qui "
 "prenant en charge TempURL). HEAT_SIGNAL va autoriser les appels vers le "
 "signal ressource d'API Heat à l'aide des informations d'identification "
 "Keystone fournies. ZAQAR_SIGNAL va créer une file d'attente zaqar dédiée "
@@ -5665,9 +5575,8 @@ msgstr ""
 msgid "The CIDR."
 msgstr "CIDR."
 
-#, fuzzy
 msgid "The Container Orchestration Engine for this bay model."
-msgstr "Modèle Orchestration de conteneur pour ce modèle de baie"
+msgstr "Modèle Orchestration de conteneur pour ce modèle de baie."
 
 msgid "The DNS name for the LoadBalancer."
 msgstr "Nom DNS du LoadBalancer."
@@ -5702,7 +5611,6 @@ msgstr ""
 "Le chemin d'accès HTTP utilisé dans la demande HTTP utilisée par le moniteur "
 "pour tester la santé d'un membre."
 
-#, fuzzy
 msgid ""
 "The HTTP path used in the HTTP request used by the monitor to test a member "
 "health. A valid value is a string the begins with a forward slash (/)."
@@ -5711,7 +5619,6 @@ msgstr ""
 "pour tester la santé d'un membre. Une valeur valide est une chaîne qui "
 "commence par une barre oblique (/)."
 
-#, fuzzy
 msgid ""
 "The HTTP status codes expected in response from the member to declare it "
 "healthy. Specify one of the following values: a single value, such as 200. a "
@@ -5798,14 +5705,12 @@ msgstr ""
 "Identificateur du locataire qui possède le réseau. Seuls les utilisateurs "
 "administrateurs peuvent indiquer un ID locataire autre que le leur."
 
-#, fuzzy
 msgid ""
 "The ID of the tenant who owns the subnet pool. Only administrative users can "
 "specify a tenant ID other than their own."
 msgstr ""
 "ID du locataire qui est détenteur du pool de sous-réseau. Seuls les "
-"utilisateurs administrateurs peuvent spécifier un ID locataire différent du "
-"leur."
+"administrateurs peuvent spécifier un ID locataire différent du leur."
 
 msgid "The ID of the volume to be attached."
 msgstr "L'ID du volume à lier."
@@ -5897,9 +5802,8 @@ msgstr "URI du conteneur créé."
 msgid "The URI to the created secret."
 msgstr "URI du secret créé."
 
-#, fuzzy
 msgid "The URI to the order."
-msgstr "URI de la commande"
+msgstr "URI de la commande."
 
 msgid "The URIs to container consumers."
 msgstr "URI des consommateurs de conteneur."
@@ -5930,7 +5834,6 @@ msgstr "La règle de surveillance (%(watch_name)s) est introuvable."
 msgid "The action or operation requested is invalid"
 msgstr "L'action ou l’opération demandée est non valide"
 
-#, fuzzy
 msgid "The action to be executed when the receiver is signaled."
 msgstr "Action à exécuter lorsque le récepteur est signalé."
 
@@ -6049,7 +5952,6 @@ msgstr "Permet de supprimer le mappage d'un appareil défini."
 msgid "The certificate or AWS Key ID provided does not exist"
 msgstr "Le certificat ou l'ID de clé AWS fourni n'existe pas"
 
-#, fuzzy
 msgid "The channel for receiving signals."
 msgstr "Canal pour la réception des signaux."
 
@@ -6121,7 +6023,6 @@ msgstr ""
 msgid "The decrypted secret payload."
 msgstr "Contenu déchiffré du secret."
 
-#, fuzzy
 msgid ""
 "The default cloud-init user set up for each image (e.g. \"ubuntu\" for "
 "Ubuntu 12.04+, \"fedora\" for Fedora 19+ and \"cloud-user\" for CentOS/RHEL "
@@ -6216,7 +6117,6 @@ msgstr "Le numéro de port externe de l'équilibreur de charge."
 msgid "The external network to attach the Bay."
 msgstr "Réseau externe auquel connecter la baie."
 
-#, fuzzy
 msgid "The extra specs key and value pairs of the volume type."
 msgstr ""
 "Clé de spécifications et paires de valeur supplémentaires  du type de volume."
@@ -6243,7 +6143,6 @@ msgstr ""
 msgid "The function %s is not supported in this version of HOT."
 msgstr "La fonction %s n'est pas prise en charge dans cette version de HOT."
 
-#, fuzzy
 msgid ""
 "The gateway IP address. Set to any of [ null | ~ | \"\" ] to create/update a "
 "subnet without a gateway. If omitted when creation, neutron will assign the "
@@ -6426,7 +6325,6 @@ msgstr "Taille MTU maximale (en octets) pour le réseau."
 msgid "The metering label ID to associate with this metering rule."
 msgstr "ID d'étiquette de mesure à associer à cette règle de mesure."
 
-#, fuzzy
 msgid ""
 "The metric dimensions to match to the alarm dimensions. One or more "
 "dimension key names separated by a comma."
@@ -6551,7 +6449,6 @@ msgstr "Nom ou ID du sous-réseau sur lequel allouer l'adresse VIP."
 msgid "The name or ID of the subnet pool."
 msgstr "Nom ou ID du pool de sous-réseaux."
 
-#, fuzzy
 msgid "The name or id of the Senlin profile."
 msgstr "Nom ou ID du profil Senlin."
 
@@ -6605,7 +6502,6 @@ msgstr "Nombre de noeuds maître pour cette baie."
 msgid "The number of objects stored in the container."
 msgstr "Nombre d'objets stockés dans le conteneur."
 
-#, fuzzy
 msgid "The number of replicas to be created."
 msgstr "Nombre de répliques à créer."
 
@@ -6618,7 +6514,6 @@ msgstr "Nombre de secondes d'attente entre deux lots de mises à jour."
 msgid "The number of seconds to wait between batches."
 msgstr "Nombre de secondes d'attente entre deux lots."
 
-#, fuzzy
 msgid "The number of seconds to wait for the cluster actions."
 msgstr "Délai (en nombre de secondes) à observer pour les actions de cluster."
 
@@ -6655,7 +6550,6 @@ msgstr "ID locataire propriétaire de cette stratégie de qualité de service."
 msgid "The owner tenant ID of this rule."
 msgstr "ID locataire propriétaire de cette règle."
 
-#, fuzzy
 msgid ""
 "The owner tenant ID. Only required if the caller has an administrative role "
 "and wants to create a RBAC for another tenant."
@@ -6664,14 +6558,12 @@ msgstr ""
 "administratif et qu'il souhaite créer une stratégie RBAC pour un autre "
 "locataire."
 
-#, fuzzy
 msgid "The parameters passed to action when the receiver is signaled."
 msgstr "Paramètres transmis à l'action lorsque le récepteur est signalé."
 
 msgid "The parent URL of the container."
 msgstr "URL parente du conteneur."
 
-#, fuzzy
 msgid ""
 "The passphrase the created key. Can be set only for asymmetric type of order."
 msgstr ""
@@ -6841,14 +6733,12 @@ msgstr ""
 msgid "The set of parameters passed to this nested stack."
 msgstr "Jeu de paramètres transmis à cette pile imbriquée."
 
-#, fuzzy
 msgid "The size in GB of the docker volume."
-msgstr "Taille en Go du docker."
+msgstr "Taille en Go du volume de docker."
 
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr "La taille d'AutoScalingGroup ne peut pas être inférieure à zéro"
 
-#, fuzzy
 msgid ""
 "The size of the prefix to allocate when the cidr or prefixlen attributes are "
 "not specified while creating a subnet."
@@ -6909,9 +6799,8 @@ msgstr "Statut de la connexion de site IPSec."
 msgid "The status of the network."
 msgstr "Statut du réseau."
 
-#, fuzzy
 msgid "The status of the order."
-msgstr "Statut de la commande"
+msgstr "Statut de la commande."
 
 msgid "The status of the port."
 msgstr "Statut du port."
@@ -6984,7 +6873,6 @@ msgstr "Type de la stratégie senlin."
 msgid "The type of the certificate request."
 msgstr "Type de la demande de certificat."
 
-#, fuzzy
 msgid "The type of the order."
 msgstr "Type de commande."
 
@@ -7050,12 +6938,11 @@ msgstr ""
 "Identificateur unique du service de réseau privé virtuel associé à la "
 "connexion la connexion de site IPSec."
 
-#, fuzzy
 msgid ""
 "The user-defined region ID and should unique to the OpenStack deployment. "
 "While creating the region, heat will url encode this ID."
 msgstr ""
-"ID région défini par l'utilisteur et qui doit être unique pour le "
+"ID région défini par l'utilisateur et qui doit être unique pour le "
 "déploiement OpenStack. Lors de la création de la région, Heat codera cet ID "
 "sous forme d'URL."
 
@@ -7118,21 +7005,19 @@ msgid "There is no rule %(rule)s. List of allowed rules is: %(rules)s."
 msgstr ""
 "Il n'existe aucune règle %(rule)s. Liste des règles autorisées : %(rules)s."
 
-#, fuzzy
 msgid ""
 "There is no such option during 5.0.0, so need to make this attribute "
 "unsupported, otherwise error will raised."
 msgstr ""
-"Il n'y a pas d'option de ce type en 5.0.0 ; cet attribut ne doit donc pas "
-"être pris en charge, sinon cela va générer une erreur."
+"Il n'y a pas d'option de ce type en version 5.0.0 ; cet attribut ne doit "
+"donc pas être pris en charge, sinon cela va générer une erreur."
 
-#, fuzzy
 msgid ""
 "There is no such option during 5.0.0, so need to make this property "
 "unsupported while it not used."
 msgstr ""
-"Il n'y a pas d'option de ce type en 5.0.0 ; cette propriété ne doit donc pas "
-"être prise en charge si elle n'est pas utilisée."
+"Il n'y a pas d'option de ce type en version 5.0.0 ; cette propriété ne doit "
+"donc pas être prise en charge si elle n'est pas utilisée."
 
 #, python-format
 msgid ""
@@ -7157,7 +7042,6 @@ msgstr "Ce service est activé ou désactivé."
 msgid "Threshold to evaluate against."
 msgstr "Seuil par rapport auquel effectuer l'évaluation."
 
-#, fuzzy
 msgid "Time To Live (Seconds)."
 msgstr "Durée de vie (secondes)."
 
@@ -7192,17 +7076,17 @@ msgstr ""
 "Fuseau horaire de la contrainte de temps (par ex., 'Taïwan/Taipei', 'Europe/"
 "Amsterdam')."
 
-#, fuzzy
 msgid ""
 "Toggle to enable/disable caching when Orchestration Engine looks for other "
 "OpenStack service resources using name or id. Please note that the global "
 "toggle for oslo.cache(enabled=True in [cache] group) must be enabled to use "
 "this feature."
 msgstr ""
-"Activez/Désactivez la mise en cache lorsque le moteur Orchestration  "
+"Activez/Désactivez la mise en cache lorsque le moteur Orchestration "
 "recherche d'autres ressources de service OpenStack à l'aide d'un nom ou d'un "
-"ID. Notez que l'activation globale pour oslo.cache(enabled=True dans le "
-"groupe [cache]) doit être activée pour l'utilisation de cette fonction."
+"ID. Notez que l'activation/la désactivation globale pour oslo."
+"cache(enabled=True dans le groupe [cache]) doit être activée pour "
+"l'utilisation de cette fonction."
 
 msgid ""
 "Toggle to enable/disable caching when Orchestration Engine retrieves "
@@ -7215,7 +7099,6 @@ msgstr ""
 "pour oslo.cache(enabled=True dans le groupe [cache]) doit être activée pour "
 "l'utilisation de cette fonction."
 
-#, fuzzy
 msgid ""
 "Toggle to enable/disable caching when Orchestration Engine validates "
 "property constraints of stack.During property validation with constraints "
@@ -7276,7 +7159,6 @@ msgstr ""
 msgid "Type of keystone Service."
 msgstr "Type du service Keystone."
 
-#, fuzzy
 msgid "Type of receiver."
 msgstr "Type de récepteur."
 
@@ -7304,13 +7186,12 @@ msgstr "URL pour l'authentification d'API"
 msgid "URL for the data source."
 msgstr "URL de la source de données."
 
-#, fuzzy
 msgid ""
 "URL for the job binary. Must be in the format swift://<container>/<path> or "
 "internal-db://<uuid>."
 msgstr ""
-"URL du binaire de travail. Doit être au format swift://<container>/<path> or "
-"internal-db://<uuid>."
+"URL du binaire de travail. Doit être au format swift ://<container>/<path> "
+"or internal-db://<uuid>."
 
 msgid ""
 "URL of TempURL where resource will signal completion and optionally upload "
@@ -7545,7 +7426,6 @@ msgstr "Mise à jour d'une pile lors d'une suppression"
 msgid "Updating a stack when it is suspended"
 msgstr "Mise à jour d'une pile lorsqu'elle est interrompue"
 
-#, fuzzy
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
 "<resource_name> }"
@@ -7638,11 +7518,9 @@ msgstr "Nom d'utilisateur pour API authentification"
 msgid "Username for accessing the data source URL."
 msgstr "Nom d'utilisateur pour l'accès à l'URL de la source de données."
 
-#, fuzzy
 msgid "Username for accessing the job binary URL."
 msgstr "Nom d'utilisateur pour accéder à l'URL du binaire de travail."
 
-#, fuzzy
 msgid "Username of privileged user in the image."
 msgstr "Nom d'utilisateur de l'utilisateur avec privilèges dans l'image."
 
@@ -7813,7 +7691,6 @@ msgstr ""
 "Lors de l'exécution du serveur en mode SSL, vous devez spécifier une valeur "
 "d'option cert_file et key_file dans votre fichier de configuration"
 
-#, fuzzy
 msgid ""
 "When this feature is enabled, scheduler hints identifying the heat stack "
 "context of a server or volume resource are passed to the configured "
@@ -7830,12 +7707,12 @@ msgstr ""
 "Lorsque cette fonction est activée, les suggestions de planificateur "
 "identifiant le contexte de pile Heat d'un serveur ou d'une ressource de "
 "volume sont transmises aux planificateurs configurés dans nova et cinder, "
-"pour que les créations soient effectuées avec les types de ressource Heat "
-"OS::Cinder::Volume, OS::Nova::Server et AWS::EC2::Instance. "
-"heat_root_stack_id va être défini sur l'ID de la pile racine de la "
-"ressource, heat_stack_id va être défini sur l'ID de la pile parente de la "
-"ressource, heat_stack_name va être défini sur le nom de la pile parente de "
-"la ressource, heat_path_in_stack va être défini sur une liste d'uplets, "
+"pour que les créations effectuées avec les types de ressource Heat OS::"
+"Cinder::Volume, OS::Nova::Server et AWS::EC2::Instance. heat_root_stack_id "
+"va être défini sur l'ID de la pile racine de la ressource, heat_stack_id va "
+"être défini sur l'ID de la pile parente de la ressource, heat_stack_name va "
+"être défini sur le nom de la pile parente de la ressource, "
+"heat_path_in_stack va être défini sur une liste d'uplets, "
 "(stackresourcename, stackname) avec list[0] (None, rootstackname), "
 "heat_resource_name va être défini sur le nom de la ressource et "
 "heat_resource_uuid va être défini sur l'ID d'orchestration de la ressource."
@@ -7861,7 +7738,6 @@ msgstr ""
 "cet attribut aux seuls administrateurs, et restreint le changement du "
 "périmètre d'adresse partagé à non partagé avec mise à jour."
 
-#, fuzzy
 msgid "Whether the flavor is shared across all projects."
 msgstr "Indique si la version est partagée par l'ensemble des projets."
 
@@ -7882,7 +7758,6 @@ msgstr "Indique si le réseau comporte un routeur externe."
 msgid "Whether the part content is text or multipart."
 msgstr "Si le contenu de la partie est du texte ou à plusieurs parties."
 
-#, fuzzy
 msgid ""
 "Whether the subnet pool will be shared across all tenants. Note that the "
 "default policy setting restricts usage of this attribute to administrative "
@@ -7890,7 +7765,7 @@ msgid ""
 msgstr ""
 "Indique si le pool de sous-réseau va être partagé entre tous les locataires. "
 "Notez que le paramètre de stratégie par défaut limite l'utilisation de cet "
-"attribut aux utilisateurs administrateurs seulement."
+"attribut aux administrateurs seulement."
 
 msgid "Whether the volume type is accessible to the public."
 msgstr "Indique si le type de volume est accessible au public."
@@ -7909,7 +7784,6 @@ msgstr ""
 "REMARQUE : Dans Neutron, le paramètre de règle par défaut limite "
 "l'utilisation de cette propriété uniquement aux administrateurs."
 
-#, fuzzy
 msgid ""
 "Whether this is default IPv4/IPv6 subnet pool. There can only be one default "
 "subnet pool for each IP family. Note that the default policy setting "
@@ -7966,7 +7840,6 @@ msgstr ""
 "Indique les actions de cycle de vie de la ressource de déploiement qui "
 "seront lancées par le déclenchement de ce déploiement."
 
-#, fuzzy
 msgid ""
 "Workflow additional parameters. If Workflow is reverse typed, params "
 "requires 'task_name', which defines initial task."
@@ -8026,13 +7899,16 @@ msgstr "Ne peut pas trouver l'utilisateur %s"
 msgid "deployment_id must be specified"
 msgstr "deployment_id doit être indiqué"
 
-#, fuzzy
 msgid ""
 "deployments key not allowed in resource metadata with user_data_format of "
 "SOFTWARE_CONFIG"
 msgstr ""
 "clés de déploiement non autorisées dans les métadonnées de ressource avec le "
 "format_données_utilisateur de SOFTWARE_CONFIG"
+
+#, python-format
+msgid "deployments of server %s"
+msgstr "déploiements du serveur %s"
 
 #, python-format
 msgid "environment has wrong section \"%s\""
@@ -8070,6 +7946,10 @@ msgstr ""
 
 msgid "limit cannot be less than 4"
 msgstr "la limite ne peut pas être inférieure à 4"
+
+#, python-format
+msgid "metadata setting for resource %s"
+msgstr "paramètre de métadonnées pour la ressource %s"
 
 msgid "min/max length must be integral"
 msgstr "La longueur minimale/maximale doit être intégrale"
@@ -8132,7 +8012,7 @@ msgstr "source_path doit être une liste avec chemin d'accès plutôt que %s."
 msgid "stack not found"
 msgstr "Pile non trouvée"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "task %(task)s contains property 'requires' in case of direct workflow. Only "
 "reverse workflows can contain property 'requires'."

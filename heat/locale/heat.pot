@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev4\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev20\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-21 06:41+0000\n"
+"POT-Creation-Date: 2016-03-28 06:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1227,95 +1227,95 @@ msgid ""
 " or otherwise incorrect."
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:104
+#: heat/db/sqlalchemy/api.py:105
 #, python-format
 msgid "raw template with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:137
+#: heat/db/sqlalchemy/api.py:138
 #, python-format
 msgid "resource with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:169
+#: heat/db/sqlalchemy/api.py:170
 msgid "no resources were found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:198
+#: heat/db/sqlalchemy/api.py:199
 msgid "no resource data found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:263
+#: heat/db/sqlalchemy/api.py:264
 msgid "No resource data found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:322
+#: heat/db/sqlalchemy/api.py:323
 #, python-format
 msgid "no resources for stack_id %s were found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:376
+#: heat/db/sqlalchemy/api.py:377
 #, python-format
 msgid "Stack with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:530
+#: heat/db/sqlalchemy/api.py:531
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:555
+#: heat/db/sqlalchemy/api.py:556
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:658
+#: heat/db/sqlalchemy/api.py:659
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:692
+#: heat/db/sqlalchemy/api.py:694
 #, python-format
 msgid "Attempt to delete user creds with id %(id)s that does not exist"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:848
+#: heat/db/sqlalchemy/api.py:850
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:859
+#: heat/db/sqlalchemy/api.py:861
 #, python-format
 msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:902
+#: heat/db/sqlalchemy/api.py:904
 #, python-format
 msgid "Software config with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:941
+#: heat/db/sqlalchemy/api.py:943
 #, python-format
 msgid "Deployment with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:984
+#: heat/db/sqlalchemy/api.py:986
 #, python-format
 msgid "Snapshot with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:1065
+#: heat/db/sqlalchemy/api.py:1067
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:1067
+#: heat/db/sqlalchemy/api.py:1069
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:1071
+#: heat/db/sqlalchemy/api.py:1073
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:1204
+#: heat/db/sqlalchemy/api.py:1206
 msgid "Cannot migrate to lower schema version."
 msgstr ""
 
@@ -1676,80 +1676,80 @@ msgstr ""
 msgid "Detailed information about resource."
 msgstr ""
 
-#: heat/engine/resource.py:405
+#: heat/engine/resource.py:421
 #, python-format
 msgid "%(a)s paused until Hook %(h)s is cleared"
 msgstr ""
 
-#: heat/engine/resource.py:538
+#: heat/engine/resource.py:554
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr ""
 
-#: heat/engine/resource.py:797
+#: heat/engine/resource.py:813
 #, python-format
 msgid "State %s invalid for create"
 msgstr ""
 
-#: heat/engine/resource.py:892
+#: heat/engine/resource.py:908
 msgid "Resource ID was not provided."
 msgstr ""
 
-#: heat/engine/resource.py:1116
+#: heat/engine/resource.py:1132
 msgid "Resource update already requested"
 msgstr ""
 
-#: heat/engine/resource.py:1210
+#: heat/engine/resource.py:1226
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
 msgstr ""
 
-#: heat/engine/resource.py:1232
+#: heat/engine/resource.py:1248
 #, python-format
 msgid "State %s invalid for suspend"
 msgstr ""
 
-#: heat/engine/resource.py:1252
+#: heat/engine/resource.py:1268
 #, python-format
 msgid "State %s invalid for resume"
 msgstr ""
 
-#: heat/engine/resource.py:1299
+#: heat/engine/resource.py:1315
 msgid "limit cannot be less than 4"
 msgstr ""
 
-#: heat/engine/resource.py:1347 heat/engine/cfn/template.py:160
+#: heat/engine/resource.py:1363 heat/engine/cfn/template.py:160
 #: heat/engine/hot/template.py:263
 #, python-format
 msgid "Invalid deletion policy \"%s\""
 msgstr ""
 
-#: heat/engine/resource.py:1352
+#: heat/engine/resource.py:1368
 #, python-format
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:1756 heat/engine/stack.py:836
+#: heat/engine/resource.py:1772 heat/engine/stack.py:836
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:1759 heat/engine/stack.py:839
+#: heat/engine/resource.py:1775 heat/engine/stack.py:839
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
 
-#: heat/engine/resource.py:1858
+#: heat/engine/resource.py:1874
 #, python-format
 msgid "Signal resource during %s"
 msgstr ""
 
-#: heat/engine/resource.py:1865
+#: heat/engine/resource.py:1881
 #, python-format
 msgid "Invalid hook type \"%(hook)s\" for %(resource)s"
 msgstr ""
 
-#: heat/engine/resource.py:1870
+#: heat/engine/resource.py:1886
 #, python-format
 msgid "The \"%(hook)s\" hook is not defined on %(resource)s"
 msgstr ""
@@ -1770,56 +1770,61 @@ msgstr ""
 msgid "PATCH update to non-COMPLETE stack"
 msgstr ""
 
-#: heat/engine/service.py:945
+#: heat/engine/service.py:947
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:949
+#: heat/engine/service.py:951
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:1096
+#: heat/engine/service.py:1098
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:1152
+#: heat/engine/service.py:1154
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1160 heat/tests/test_validate.py:1703
+#: heat/engine/service.py:1162 heat/tests/test_validate.py:1703
 #, python-format
 msgid "Invalid codes in ignore_errors : %s"
 msgstr ""
 
-#: heat/engine/service.py:1275
+#: heat/engine/service.py:1277
 #, python-format
 msgid "Specified output key %s not found."
 msgstr ""
 
-#: heat/engine/service.py:1427
+#: heat/engine/service.py:1429
 #, python-format
 msgid "Template with version %s not found"
 msgstr ""
 
-#: heat/engine/service.py:1832
+#: heat/engine/service.py:1834
 msgid "Deleting in-progress snapshot"
 msgstr ""
 
-#: heat/engine/service_software_config.py:84
+#: heat/engine/service_software_config.py:80
 msgid "server_id must be specified"
 msgstr ""
 
-#: heat/engine/service_software_config.py:244
+#: heat/engine/service_software_config.py:105
+#, python-format
+msgid "deployments of server %s"
+msgstr ""
+
+#: heat/engine/service_software_config.py:239
 msgid "deployment_id must be specified"
 msgstr ""
 
-#: heat/engine/service_software_config.py:263
+#: heat/engine/service_software_config.py:258
 #, python-format
 msgid "Deployment exited with non-zero status code: %s"
 msgstr ""
 
-#: heat/engine/service_software_config.py:290
+#: heat/engine/service_software_config.py:285
 msgid "Outputs received"
 msgstr ""
 
@@ -2515,17 +2520,17 @@ msgstr ""
 msgid "Volume in use"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:74
+#: heat/engine/resources/wait_condition.py:67
 msgid "Metadata format invalid"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:102
+#: heat/engine/resources/wait_condition.py:114
 #: heat/engine/resources/openstack/heat/swiftsignal.py:46
 #, python-format
 msgid "%(len)d of %(count)d received - %(reasons)s"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:104
+#: heat/engine/resources/wait_condition.py:116
 #: heat/engine/resources/openstack/heat/swiftsignal.py:48
 #, python-format
 msgid "%(len)d of %(count)d received"
@@ -8728,6 +8733,11 @@ msgstr ""
 
 #: heat/engine/resources/openstack/zaqar/queue.py:76
 msgid "The resource href of the queue."
+msgstr ""
+
+#: heat/objects/resource.py:207
+#, python-format
+msgid "metadata setting for resource %s"
 msgstr ""
 
 #: heat/objects/stack.py:183
