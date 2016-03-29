@@ -61,9 +61,9 @@ resources:
 
             wc_notify --data-binary ''{"status": "SUCCESS", "id": "5"}''
 
-            # loop for 25 signals without reasons and data
+            # loop for 20 signals without reasons and data
 
-            for i in `seq 1 25`; do wc_notify --data-binary ''{"status":
+            for i in `seq 1 20`; do wc_notify --data-binary ''{"status":
             "SUCCESS"}'' & done
 
             wait
@@ -76,7 +76,7 @@ resources:
     type: OS::Heat::WaitCondition
     depends_on: instance1
     properties:
-      count: 30
+      count: 25
       handle: {get_resource: wait_handle}
       timeout: {get_param: timeout}
 
@@ -102,5 +102,6 @@ outputs:
     def test_create_stack_with_multi_signal_waitcondition(self):
         params = {'flavor': self.conf.minimal_instance_type,
                   'image': self.conf.minimal_image_ref,
-                  'network': self.conf.fixed_network_name}
+                  'network': self.conf.fixed_network_name,
+                  'timeout': 120}
         self.stack_create(template=self.template, parameters=params)
