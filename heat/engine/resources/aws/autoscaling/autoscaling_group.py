@@ -223,13 +223,33 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         return conf, props
 
     def check_create_complete(self, task):
-        """Invoke the cooldown after creation succeeds."""
+        """Update cooldown timestamp after create succeeds."""
         done = super(AutoScalingGroup, self).check_create_complete(task)
         if done:
             self._finished_scaling(
                 "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
                              grouputils.get_size(self)))
         return done
+
+    def check_update_complete(self, cookie):
+        """Update the cooldown timestamp after update succeeds."""
+        done = super(AutoScalingGroup, self).check_update_complete(cookie)
+        if done:
+            self._finished_scaling(
+                "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
+                             grouputils.get_size(self)))
+        return done
+
+    def _get_new_capacity(self, capacity,
+                          adjustment,
+                          adjustment_type=sc_util.CFN_EXACT_CAPACITY,
+                          min_adjustment_step=None):
+        lower = self.properties[self.MIN_SIZE]
+        upper = self.properties[self.MAX_SIZE]
+        return sc_util.calculate_new_capacity(capacity, adjustment,
+                                              adjustment_type,
+                                              min_adjustment_step,
+                                              lower, upper)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Updates self.properties, if Properties has changed.
@@ -250,36 +270,28 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
             # Replace instances first if launch configuration has changed
             self._try_rolling_update(prop_diff)
 
-        if self.properties[self.DESIRED_CAPACITY] is not None:
-            self.adjust(self.properties[self.DESIRED_CAPACITY],
-                        adjustment_type=sc_util.CFN_EXACT_CAPACITY)
-        else:
-            current_capacity = grouputils.get_size(self)
-            self.adjust(current_capacity,
-                        adjustment_type=sc_util.CFN_EXACT_CAPACITY)
+        # Update will happen irrespective of whether auto-scaling
+        # is in progress or not.
+        capacity = grouputils.get_size(self)
+        desired_capacity = self.properties[self.DESIRED_CAPACITY] or capacity
+        new_capacity = self._get_new_capacity(capacity, desired_capacity)
+        self.resize(new_capacity)
 
     def adjust(self, adjustment,
                adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
-               min_adjustment_step=None, signal=False):
+               min_adjustment_step=None):
         """Adjust the size of the scaling group if the cooldown permits."""
         if not self._is_scaling_allowed():
             LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
                          "cooldown %(cooldown)s"),
                      {'name': self.name,
                       'cooldown': self.properties[self.COOLDOWN]})
-            if signal:
-                raise exception.NoActionRequired()
-            else:
-                return
+            raise exception.NoActionRequired()
 
         capacity = grouputils.get_size(self)
-        lower = self.properties[self.MIN_SIZE]
-        upper = self.properties[self.MAX_SIZE]
-
-        new_capacity = sc_util.calculate_new_capacity(capacity, adjustment,
-                                                      adjustment_type,
-                                                      min_adjustment_step,
-                                                      lower, upper)
+        new_capacity = self._get_new_capacity(capacity, adjustment,
+                                              adjustment_type,
+                                              min_adjustment_step)
 
         changed_size = new_capacity != capacity
         # send a notification before, on-error and on-success.
