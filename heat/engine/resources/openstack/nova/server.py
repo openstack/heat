@@ -82,6 +82,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         BLOCK_DEVICE_MAPPING_DEVICE_NAME,
         BLOCK_DEVICE_MAPPING_VOLUME_ID,
         BLOCK_DEVICE_MAPPING_IMAGE_ID,
+        BLOCK_DEVICE_MAPPING_IMAGE,
         BLOCK_DEVICE_MAPPING_SNAPSHOT_ID,
         BLOCK_DEVICE_MAPPING_SWAP_SIZE,
         BLOCK_DEVICE_MAPPING_DEVICE_TYPE,
@@ -93,6 +94,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         'device_name',
         'volume_id',
         'image_id',
+        'image',
         'snapshot_id',
         'swap_size',
         'device_type',
@@ -214,6 +216,23 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     BLOCK_DEVICE_MAPPING_IMAGE_ID: properties.Schema(
                         properties.Schema.STRING,
                         _('The ID of the image to create a volume from.'),
+                        support_status=support.SupportStatus(
+                            status=support.DEPRECATED,
+                            version='7.0.0',
+                            message=_('Use property %s.') %
+                                    BLOCK_DEVICE_MAPPING_IMAGE,
+                            previous_status=support.SupportStatus(
+                                version='5.0.0')
+                        ),
+                        constraints=[
+                            constraints.CustomConstraint('glance.image')
+                        ],
+                    ),
+                    BLOCK_DEVICE_MAPPING_IMAGE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID or name of the image '
+                          'to create a volume from.'),
+                        support_status=support.SupportStatus(version='7.0.0'),
                         constraints=[
                             constraints.CustomConstraint('glance.image')
                         ],
@@ -585,6 +604,19 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 source_path=[self.IMAGE],
                 client_plugin=self.client_plugin('glance'),
                 finder='find_image_by_name_or_id'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.REPLACE,
+                source_path=[self.BLOCK_DEVICE_MAPPING_V2,
+                             self.BLOCK_DEVICE_MAPPING_IMAGE],
+                value_name=self.BLOCK_DEVICE_MAPPING_IMAGE_ID),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                source_path=[self.BLOCK_DEVICE_MAPPING_V2,
+                             self.BLOCK_DEVICE_MAPPING_IMAGE],
+                client_plugin=self.client_plugin('glance'),
+                finder='find_image_by_name_or_id'),
         ]
         if self.is_using_neutron():
             rules.extend([
@@ -945,9 +977,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     'boot_index': 0,
                     'delete_on_termination': False,
                 }
-            elif mapping.get(cls.BLOCK_DEVICE_MAPPING_IMAGE_ID):
+            elif mapping.get(cls.BLOCK_DEVICE_MAPPING_IMAGE):
                 bmd_dict = {
-                    'uuid': mapping.get(cls.BLOCK_DEVICE_MAPPING_IMAGE_ID),
+                    'uuid': mapping.get(cls.BLOCK_DEVICE_MAPPING_IMAGE),
                     'source_type': 'image',
                     'destination_type': 'volume',
                     'boot_index': 0,
@@ -1292,7 +1324,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         for mapping in bdm_v2:
             volume_id = mapping.get(self.BLOCK_DEVICE_MAPPING_VOLUME_ID)
             snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
-            image_id = mapping.get(self.BLOCK_DEVICE_MAPPING_IMAGE_ID)
+            image_id = mapping.get(self.BLOCK_DEVICE_MAPPING_IMAGE)
             swap_size = mapping.get(self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
 
             property_tuple = (volume_id, snapshot_id, image_id, swap_size)
@@ -1301,7 +1333,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 raise exception.ResourcePropertyConflict(
                     self.BLOCK_DEVICE_MAPPING_VOLUME_ID,
                     self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID,
-                    self.BLOCK_DEVICE_MAPPING_IMAGE_ID,
+                    self.BLOCK_DEVICE_MAPPING_IMAGE,
                     self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
 
             if property_tuple.count(None) == 4:
