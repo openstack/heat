@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev20\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev23\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-28 06:51+0000\n"
+"POT-Creation-Date: 2016-03-29 06:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -5124,45 +5124,49 @@ msgid "The SSH Authorized Key."
 msgstr ""
 
 #: heat/engine/resources/openstack/magnum/baymodel.py:116
+msgid "This attribute has been removed in Magnum"
+msgstr ""
+
+#: heat/engine/resources/openstack/magnum/baymodel.py:122
 msgid "The Container Orchestration Engine for this bay model."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:124
+#: heat/engine/resources/openstack/magnum/baymodel.py:130
 msgid ""
 "The name of the driver used for instantiating container networks. By "
 "default, Magnum will choose the pre-configured network driver based on "
 "COE type."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:131
+#: heat/engine/resources/openstack/magnum/baymodel.py:137
 msgid "The http_proxy address to use for nodes in bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:136
+#: heat/engine/resources/openstack/magnum/baymodel.py:142
 msgid "The https_proxy address to use for nodes in bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:141
+#: heat/engine/resources/openstack/magnum/baymodel.py:147
 msgid ""
 "A comma separated list of addresses for which proxies should not be used "
 "in the bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:147
+#: heat/engine/resources/openstack/magnum/baymodel.py:153
 msgid ""
 "Arbitrary labels in the form of key=value pairs to associate with a "
 "baymodel."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:153
+#: heat/engine/resources/openstack/magnum/baymodel.py:159
 msgid "Disable TLS in the bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:159
+#: heat/engine/resources/openstack/magnum/baymodel.py:165
 msgid "Make the baymodel public."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:165
+#: heat/engine/resources/openstack/magnum/baymodel.py:171
 msgid "Enable the docker registry in the bay."
 msgstr ""
 
