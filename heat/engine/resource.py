@@ -696,14 +696,15 @@ class Resource(object):
         raised, or FAILED otherwise. Non-exit exceptions will be translated
         to ResourceFailure exceptions.
 
-        Expected exceptions are re-raised, with the Resource left in the
-        IN_PROGRESS state.
+        Expected exceptions are re-raised, with the Resource moved to the
+        COMPLETE state.
         """
         try:
             self.state_set(action, self.IN_PROGRESS)
             yield
         except expected_exceptions as ex:
             with excutils.save_and_reraise_exception():
+                self.state_set(action, self.COMPLETE, six.text_type(ex))
                 LOG.debug('%s', six.text_type(ex))
         except Exception as ex:
             LOG.info(_LI('%(action)s: %(info)s'),

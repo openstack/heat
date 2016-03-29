@@ -1024,7 +1024,7 @@ class StackUpdateTest(common.HeatTestCase):
                              self.stack.state)
             self.eng = service.EngineService('a-host', 'a-topic')
             events = self.eng.list_events(self.ctx, self.stack.identifier())
-            self.assertEqual(10, len(events))
+            self.assertEqual(11, len(events))
 
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
             self.assertEqual(5, mock_db_update.call_count)
