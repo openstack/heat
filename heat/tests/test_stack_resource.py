@@ -891,12 +891,14 @@ class RaiseLocalException(StackResourceBaseTest):
     def test_heat_exception(self):
         local = exception.StackValidationFailed(message='test')
         self.assertRaises(exception.StackValidationFailed,
-                          self.parent_resource.raise_local_exception, local)
+                          self.parent_resource.translate_remote_exceptions,
+                          local)
 
     def test_messaging_timeout(self):
         local = msg_exceptions.MessagingTimeout('took too long')
         self.assertRaises(msg_exceptions.MessagingTimeout,
-                          self.parent_resource.raise_local_exception, local)
+                          self.parent_resource.translate_remote_exceptions,
+                          local)
 
     def test_remote_heat_ex(self):
         class StackValidationFailed_Remote(exception.StackValidationFailed):
@@ -904,4 +906,5 @@ class RaiseLocalException(StackResourceBaseTest):
 
         local = StackValidationFailed_Remote(message='test')
         self.assertRaises(exception.ResourceFailure,
-                          self.parent_resource.raise_local_exception, local)
+                          self.parent_resource.translate_remote_exceptions,
+                          local)
