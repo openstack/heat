@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import warnings
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -21,7 +22,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import template_format
@@ -34,6 +34,8 @@ from heat.engine import template
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock
 from heat.rpc import api as rpc_api
+
+from heat.engine.clients.client_plugin import ExceptionFilter
 
 LOG = logging.getLogger(__name__)
 
@@ -290,10 +292,8 @@ class StackResource(resource.Resource):
             'nested_depth': self._child_nested_depth(),
             'parent_resource_name': self.name
         })
-        try:
+        with self.translate_remote_exceptions:
             result = self.rpc_client()._create_stack(self.context, **kwargs)
-        except Exception as ex:
-            self.raise_local_exception(ex)
 
         self.resource_id_set(result['stack_id'])
 
@@ -318,16 +318,23 @@ class StackResource(resource.Resource):
         }
 
     def raise_local_exception(self, ex):
+        warnings.warn('raise_local_exception() is deprecated. Use the '
+                      'translate_remote_exceptions context manager instead.',
+                      DeprecationWarning)
+        return self.translate_remote_exceptions(ex)
+
+    @ExceptionFilter
+    def translate_remote_exceptions(self, ex):
         if (isinstance(ex, exception.ActionInProgress) and
                 self.stack.action == self.stack.ROLLBACK):
             # The update was interrupted and the rollback is already in
             # progress, so just ignore the error and wait for the rollback to
             # finish
-            return
+            return True
 
         class_name = reflection.get_class_name(ex, fully_qualified=False)
         if not class_name.endswith('_Remote'):
-            raise ex
+            return False
 
         full_message = six.text_type(ex)
         if full_message.find('\n') > -1:
@@ -431,11 +438,8 @@ class StackResource(resource.Resource):
             'stack_identity': dict(nested_stack.identifier()),
             'args': {rpc_api.PARAM_TIMEOUT: timeout_mins}
         })
-        try:
+        with self.translate_remote_exceptions:
             self.rpc_client().update_stack(self.context, **kwargs)
-        except Exception as ex:
-            LOG.exception(_LE('update_stack'))
-            self.raise_local_exception(ex)
         return cookie
 
     def check_update_complete(self, cookie=None):
