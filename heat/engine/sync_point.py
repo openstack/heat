@@ -16,7 +16,7 @@ import ast
 from oslo_log import log as logging
 import six
 
-from heat.common.i18n import _
+from heat.common import exception
 from heat.objects import sync_point as sync_point_object
 
 LOG = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def get(context, entity_id, traversal_id, is_update):
                                                         is_update)
     if sync_point is None:
         key = (entity_id, traversal_id, is_update)
-        raise SyncPointNotFound(key)
+        raise exception.EntityNotFound(entity='Sync Point', name=key)
 
     return sync_point
 
@@ -136,10 +136,3 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
         LOG.debug('[%s] Ready %s: Got %s',
                   key, entity_id, _dump_list(input_data))
         propagate(entity_id, serialize_input_data(input_data))
-
-
-class SyncPointNotFound(Exception):
-    """Raised when resource update requires replacement."""
-    def __init__(self, sync_point):
-        msg = _("Sync Point %s not found") % (sync_point, )
-        super(Exception, self).__init__(six.text_type(msg))
