@@ -12,13 +12,13 @@
 # Monika Wolf <vcomas3@de.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev11\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev30\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-23 10:47+0000\n"
+"POT-Creation-Date: 2016-03-29 14:12+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-23 02:36+0000\n"
+"PO-Revision-Date: 2016-03-29 07:53+0000\n"
 "Last-Translator: Monika Wolf <vcomas3@de.ibm.com>\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -3617,7 +3617,6 @@ msgstr "Mindestanzahl an Ressourcen im Cluster."
 msgid "Minimum number of resources in the group."
 msgstr "Minimale Anzahl an Ressourcen in der Gruppe."
 
-#, fuzzy
 msgid ""
 "Minimum number of resources that are added or removed when the AutoScaling "
 "group scales up or down. This can be used only when specifying "
@@ -3628,7 +3627,6 @@ msgstr ""
 "werden, wenn für die AdjustmentType-Eigenschaft 'PercentChangeInCapacity' "
 "angegeben wird."
 
-#, fuzzy
 msgid ""
 "Minimum number of resources that are added or removed when the AutoScaling "
 "group scales up or down. This can be used only when specifying "
@@ -4813,7 +4811,6 @@ msgstr "Verweis auf eine Version zum Erstellen der Datenbankinstanz."
 msgid "Reference to certificate."
 msgstr "Referenz auf Zertifikat."
 
-#, fuzzy
 msgid "Reference to intermediates."
 msgstr "Referenz auf Intermediates."
 
@@ -6694,7 +6691,6 @@ msgstr ""
 msgid "The payload of the created certificate, if available."
 msgstr "Die Nutzdaten des erstellten Zertifikats, sofern verfügbar."
 
-#, fuzzy
 msgid "The payload of the created intermediates, if available."
 msgstr "Die Nutzdaten der erstellten Intermediates, sofern verfügbar. "
 
@@ -7163,6 +7159,9 @@ msgid ""
 "%(type_name)s."
 msgstr ""
 "Fehler beim Laden der Definition des globalen Ressourcentyps %(type_name)s."
+
+msgid "This attribute has been removed in Magnum"
+msgstr "Dieses Attribut wurde in Magnum entfernt."
 
 msgid "This endpoint is enabled or disabled."
 msgstr "Dieser Endpunkt ist aktiviert oder inaktiviert."
@@ -8042,6 +8041,10 @@ msgstr ""
 "für SOFTWARE_CONFIG nicht zulässig."
 
 #, python-format
+msgid "deployments of server %s"
+msgstr "Implementierungen des Servers %s"
+
+#, python-format
 msgid "environment has wrong section \"%s\""
 msgstr "Umgebung weist falschen Abschnitt \"%s\" auf"
 
@@ -8077,6 +8080,10 @@ msgstr "ipv6_ra_mode und ipv6_address_mode werden für ipv4 nicht unterstützt."
 
 msgid "limit cannot be less than 4"
 msgstr "Grenzwert darf nicht kleiner als 4 sein"
+
+#, python-format
+msgid "metadata setting for resource %s"
+msgstr "Metadateneinstellung für Ressource %s"
 
 msgid "min/max length must be integral"
 msgstr "Minimale/maximale Länge muss eine Ganzzahl sein"
