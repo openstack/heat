@@ -24,6 +24,7 @@ import six
 
 from heat.common import exception
 
+
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
@@ -110,12 +111,5 @@ class ResourceEnforcer(Enforcer):
                 return result
 
     def enforce_stack(self, stack, scope=None, target=None):
-        stack.preview_resources()
         for res in stack.resources.values():
-            if res.has_nested():
-                self.enforce_stack(res.nested())
-                # After the preview_resources() call nested stack name will
-                # be equal to stack.name + res.name, without uuid part. Get
-                # rid of the side effect of preview.
-                res._nested = None
             self.enforce(stack.context, res.type(), scope=scope, target=target)
