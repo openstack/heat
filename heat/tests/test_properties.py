@@ -344,7 +344,7 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertEqual("m1.large", schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -352,6 +352,9 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(tuple(allowed_values), allowed_constraint.allowed)
         self.assertEqual(constraint_desc, allowed_constraint.description)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_string_allowed_pattern(self):
         description = "WebServer EC2 instance type"
@@ -369,7 +372,7 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertEqual("m1.large", schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -377,6 +380,9 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(allowed_pattern, allowed_constraint.pattern)
         self.assertEqual(constraint_desc, allowed_constraint.description)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_string_multi_constraints(self):
         description = "WebServer EC2 instance type"
@@ -395,7 +401,7 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertEqual("m1.large", schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(2, len(schema.constraints))
 
@@ -407,6 +413,9 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual(allowed_pattern, allowed_constraint.pattern)
         self.assertEqual(constraint_desc, allowed_constraint.description)
 
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
+
     def test_from_param_string_min_len(self):
         param = parameters.Schema.from_dict('name', {
             "Description": "WebServer EC2 instance type",
@@ -417,12 +426,16 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertFalse(schema.required)
+        self.assertIsNone(schema.default)
         self.assertEqual(1, len(schema.constraints))
 
         len_constraint = schema.constraints[0]
 
         self.assertEqual(7, len_constraint.min)
         self.assertIsNone(len_constraint.max)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_param_string_max_len(self):
         param = parameters.Schema.from_dict('name', {
@@ -434,12 +447,16 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertFalse(schema.required)
+        self.assertIsNone(schema.default)
         self.assertEqual(1, len(schema.constraints))
 
         len_constraint = schema.constraints[0]
 
         self.assertIsNone(len_constraint.min)
         self.assertEqual(11, len_constraint.max)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_param_string_min_max_len(self):
         param = parameters.Schema.from_dict('name', {
@@ -452,12 +469,16 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertFalse(schema.required)
+        self.assertIsNone(schema.default)
         self.assertEqual(1, len(schema.constraints))
 
         len_constraint = schema.constraints[0]
 
         self.assertEqual(7, len_constraint.min)
         self.assertEqual(11, len_constraint.max)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_param_no_default(self):
         param = parameters.Schema.from_dict('name', {
@@ -471,18 +492,20 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual(0, len(schema.constraints))
         self.assertFalse(schema.allow_conversion)
 
+        props = properties.Properties({'name': schema}, {'name': 'm1.large'})
+        props.validate()
+
     def test_from_number_param_min(self):
-        default = "42"
         param = parameters.Schema.from_dict('name', {
             "Type": "Number",
-            "Default": default,
+            "Default": "42",
             "MinValue": "10",
         })
 
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(default, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -491,18 +514,20 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual(10, value_constraint.min)
         self.assertIsNone(value_constraint.max)
 
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
+
     def test_from_number_param_max(self):
-        default = "42"
         param = parameters.Schema.from_dict('name', {
             "Type": "Number",
-            "Default": default,
+            "Default": "42",
             "MaxValue": "100",
         })
 
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(default, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -511,11 +536,13 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertIsNone(value_constraint.min)
         self.assertEqual(100, value_constraint.max)
 
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
+
     def test_from_number_param_min_max(self):
-        default = "42"
         param = parameters.Schema.from_dict('name', {
             "Type": "Number",
-            "Default": default,
+            "Default": "42",
             "MinValue": "10",
             "MaxValue": "100",
         })
@@ -523,7 +550,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(default, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -532,12 +559,14 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual(10, value_constraint.min)
         self.assertEqual(100, value_constraint.max)
 
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
+
     def test_from_number_param_allowed_vals(self):
-        default = "42"
         constraint_desc = "The quick brown fox jumps over the lazy dog."
         param = parameters.Schema.from_dict('name', {
             "Type": "Number",
-            "Default": default,
+            "Default": "42",
             "AllowedValues": ["10", "42", "100"],
             "ConstraintDescription": constraint_desc,
         })
@@ -545,7 +574,7 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(default, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
         self.assertFalse(schema.allow_conversion)
@@ -554,6 +583,9 @@ class PropertySchemaTest(common.HeatTestCase):
 
         self.assertEqual(('10', '42', '100'), allowed_constraint.allowed)
         self.assertEqual(constraint_desc, allowed_constraint.description)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_list_param(self):
         param = parameters.Schema.from_dict('name', {
@@ -564,9 +596,12 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.LIST, schema.type)
-        self.assertEqual("foo,bar,baz", schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertFalse(schema.allow_conversion)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_from_json_param(self):
         param = parameters.Schema.from_dict('name', {
@@ -577,10 +612,12 @@ class PropertySchemaTest(common.HeatTestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.MAP, schema.type)
-        self.assertEqual({"foo": "bar", "blarg": "wibble"},
-                         schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertTrue(schema.allow_conversion)
+
+        props = properties.Properties({'test': schema}, {})
+        props.validate()
 
     def test_no_mismatch_in_update_policy(self):
         manager = plugin_manager.PluginManager('heat.engine.resources')
@@ -1288,7 +1325,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBUsername": {
                 "type": "string",
                 "description": "The WordPress database admin account username",
-                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1304,7 +1340,6 @@ class PropertiesTest(common.HeatTestCase):
             "LinuxDistribution": {
                 "type": "string",
                 "description": "Distribution of choice",
-                "default": "F17",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1316,7 +1351,6 @@ class PropertiesTest(common.HeatTestCase):
             "InstanceType": {
                 "type": "string",
                 "description": "WebServer EC2 instance type",
-                "default": "m1.large",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1337,7 +1371,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBRootPassword": {
                 "type": "string",
                 "description": "Root password for MySQL",
-                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1361,7 +1394,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBPassword": {
                 "type": "string",
                 "description": "The WordPress database admin account password",
-                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1377,7 +1409,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBName": {
                 "type": "string",
                 "description": "The WordPress database name",
-                "default": "wordpress",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1491,7 +1522,6 @@ class PropertiesTest(common.HeatTestCase):
             "InstanceType": {
                 "type": "string",
                 "description": "WebServer EC2 instance type",
-                "default": "m1.large",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1504,7 +1534,6 @@ class PropertiesTest(common.HeatTestCase):
                 ]
             },
             "LinuxDistribution": {
-                "default": "F17",
                 "type": "string",
                 "description": "Distribution of choice",
                 "required": False,
@@ -1519,7 +1548,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBName": {
                 "type": "string",
                 "description": "The WordPress database name",
-                "default": "wordpress",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1534,7 +1562,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBUsername": {
                 "type": "string",
                 "description": "The WordPress database admin account username",
-                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1549,7 +1576,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBPassword": {
                 "type": "string",
                 "description": "The WordPress database admin account password",
-                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
@@ -1564,7 +1590,6 @@ class PropertiesTest(common.HeatTestCase):
             "DBRootPassword": {
                 "type": "string",
                 "description": "Root password for MySQL",
-                "default": "admin",
                 "required": False,
                 'update_allowed': True,
                 'immutable': False,
