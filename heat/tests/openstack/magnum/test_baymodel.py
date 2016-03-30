@@ -12,7 +12,9 @@
 #    under the License.
 
 import mock
+import six
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine.resources.openstack.magnum import baymodel
@@ -114,6 +116,7 @@ class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
           tls_disabled: True
           public: True
           registry_enabled: True
+          volume_driver: rexray
     '''
     expected = {
         'name': 'test_bay_model',
@@ -133,5 +136,26 @@ class TestMagnumBayModelWithAddedProperties(TestMagnumBayModel):
         'labels': {'flannel_cidr': ['10.101.0.0/16', '10.102.0.0/16']},
         'tls_disabled': True,
         'public': True,
-        'registry_enabled': True
+        'registry_enabled': True,
+        'volume_driver': 'rexray'
     }
+
+    def setUp(self):
+        super(TestMagnumBayModelWithAddedProperties, self).setUp()
+        self.t = template_format.parse(self.magnum_template)
+
+    def test_bay_model_create_with_added_properties(self):
+        bm = self._create_resource('bm', self.rsrc_defn, self.stack)
+        self.assertEqual(self.resource_id, bm.resource_id)
+        self.assertEqual((bm.CREATE, bm.COMPLETE), bm.state)
+        self.client.baymodels.create.assert_called_once_with(**self.expected)
+
+    def test_validate_invalid_volume_driver(self):
+        props = self.t['resources']['test_baymodel']['properties']
+        props['volume_driver'] = 'cinder'
+        stack = utils.parse_stack(self.t)
+        msg = ("Volume driver type cinder is not supported by COE:mesos, "
+               "expecting a ['rexray'] volume driver.")
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               stack['test_baymodel'].validate)
+        self.assertEqual(msg, six.text_type(ex))
