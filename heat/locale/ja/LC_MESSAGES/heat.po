@@ -15,13 +15,13 @@
 # 笹原 昌美 <ebb0de1@jp.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev23\n"
+"Project-Id-Version: heat 6.0.0.0rc2.dev30\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-28 14:08+0000\n"
+"POT-Creation-Date: 2016-03-29 14:12+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-28 11:43+0000\n"
+"PO-Revision-Date: 2016-03-30 05:33+0000\n"
 "Last-Translator: 笹原 昌美 <ebb0de1@jp.ibm.com>\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -31,7 +31,7 @@ msgstr ""
 
 #, python-format
 msgid "\"%%s\" is not a valid keyword inside a %s definition"
-msgstr "「%%s」は %s 定義内部で有効なキーワードではありません"
+msgstr "\"%%s\" は %s 定義内部で有効なキーワードではありません"
 
 #, python-format
 msgid "\"%(fn_name)s\": %(err)s"
@@ -42,7 +42,7 @@ msgid ""
 "\"%(name)s\" params must be strings, numbers, list or map. Failed to json "
 "serialize %(value)s"
 msgstr ""
-"「%(name)s」パラメーターは文字列、数値、リスト、またはマップでなければなりま"
+"\"%(name)s\" パラメーターは文字列、数値、リスト、またはマップでなければなりま"
 "せん。JSON のシリアライズ %(value)s に失敗しました。"
 
 #, python-format
@@ -50,8 +50,8 @@ msgid ""
 "\"%(section)s\" must contain a map of %(obj_name)s maps. Found a [%(_type)s] "
 "instead"
 msgstr ""
-"「%(section)s」には %(obj_name)s マップのマップが含まれている必要があります。"
-"代わりに [%(_type)s] が見つかりました。"
+"\"%(section)s\" には %(obj_name)s マップのマップが含まれている必要がありま"
+"す。代わりに [%(_type)s] が見つかりました。"
 
 #, python-format
 msgid "\"%(url)s\" is not a valid SwiftSignalHandle.  The %(part)s is invalid"
@@ -131,7 +131,7 @@ msgstr "\"%s\" はリソース定義内で有効なキーワードではあり�
 
 #, python-format
 msgid "\"%s\" is not a valid template section"
-msgstr "「%s」が有効なテンプレートセクションではありません"
+msgstr "\"%s\" が有効なテンプレートセクションではありません"
 
 #, python-format
 msgid "\"%s\" must operate on a list"
@@ -139,7 +139,7 @@ msgstr "\"%s\" はリストに対して作動しなければなりません"
 
 #, python-format
 msgid "\"%s\" param placeholders must be strings"
-msgstr "「%s」パラメーターのプレースホルダーは文字列である必要があります。"
+msgstr "\"%s\" パラメーターのプレースホルダーは文字列である必要があります。"
 
 #, python-format
 msgid "\"%s\" parameters must be a mapping"
@@ -155,7 +155,7 @@ msgstr "\"%s\" パラメーターは文字列または数値でなければな�
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
-msgstr "「%s」パラメーターは文字列、数値、またはマップでなければなりません。"
+msgstr "\"%s\" パラメーターは文字列、数値、またはマップでなければなりません。"
 
 #, python-format
 msgid "\"%s\" template must be a string"
@@ -163,7 +163,7 @@ msgstr "\"%s\" テンプレートは文字列でなければなりません"
 
 #, python-format
 msgid "\"repeat\" syntax should be %s"
-msgstr "「repeat」構文は %s でなければなりません"
+msgstr "\"repeat\" 構文は %s でなければなりません"
 
 #, python-format
 msgid "\"str_replace\" syntax should be %s"
@@ -256,7 +256,7 @@ msgstr "%(resource)s: 属性 %(key)s は無効です"
 #, python-format
 msgid ""
 "%(result)s - Unknown status %(resource_status)s due to \"%(status_reason)s\""
-msgstr "%(result)s - 「%(status_reason)s」が原因の不明状況 %(resource_status)s"
+msgstr "%(result)s: \"%(status_reason)s\" が原因の不明状況 %(resource_status)s"
 
 #, python-format
 msgid "%(schema)s supplied for %(type)s %(data)s"
@@ -301,8 +301,8 @@ msgstr "%s を指定する必要があります"
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
 msgstr ""
-"「%(attr)s」: 「%(expected)s」が予期されていましたが、「%(current)s」を受け取"
-"りました"
+"'%(attr)s': '%(expected)s' が予期されていましたが、'%(current)s' を受け取りま"
+"した"
 
 msgid ""
 "'task_name' is not assigned in 'params' in case of reverse type workflow."
@@ -317,7 +317,7 @@ msgid "A UUID for the set of servers being requested."
 msgstr "サーバーのセットの UUID が要求されています。"
 
 msgid "A bad or out-of-range value was supplied"
-msgstr "正しくない、または範囲外の値が指定されました"
+msgstr "正しくないか範囲外の値が指定されました"
 
 msgid "A boolean value of default flag."
 msgstr "デフォルトフラグのブール値。"
@@ -735,7 +735,7 @@ msgid "Allocated floating IP address."
 msgstr "割り当て済み Floating IP アドレス。"
 
 msgid "Allocation ID for VPC EIP address."
-msgstr "VPC EIP アドレスの割り振り ID。"
+msgstr "VPC EIP アドレスに割り当てられた ID。"
 
 msgid "Allow client's debug log output."
 msgstr "クライアントのデバッグログ出力を許可します。"
@@ -897,14 +897,14 @@ msgstr "\"%s\" に対する引数は文字列またはリストでなければ�
 
 #, python-format
 msgid "Argument to function \"%s\" must be a list of strings"
-msgstr "関数「%s」に対する引数は文字列のリストでなければなりません"
+msgstr "関数 \"%s\" に対する引数は文字列のリストでなければなりません"
 
 #, python-format
 msgid ""
 "Arguments to \"%s\" can be of the next forms: [resource_name] or "
 "[resource_name, attribute, (path), ...]"
 msgstr ""
-"「%s」に対する引数は以下の形式を取ることができます: [resource_name] または "
+"\"%s\" に対する引数は以下の形式を取ることができます: [resource_name] または "
 "[resource_name, attribute, (path), ...]"
 
 #, python-format
@@ -1067,8 +1067,8 @@ msgstr "以下の理由のためパラメーターを解決できません: %s"
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
 msgstr ""
-"ボリュームタイプが公開されていない場合、プロパティー「%s」を指定することはで"
-"きません。"
+"ボリュームタイプが公開されていない場合、プロパティー \"%s\" を指定することは"
+"できません。"
 
 #, python-format
 msgid "Can not use %s property on Nova-network."
@@ -1108,8 +1108,8 @@ msgid ""
 "Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
 "\"%(exc)s\""
 msgstr ""
-"「%(exc)s」が原因でリージョン「%(region)s」での heat エンドポイントへの接続を"
-"確立できません"
+"\"%(exc)s\" が原因でリージョン \"%(region)s\" での heat エンドポイントへの接"
+"続を確立できません"
 
 msgid ""
 "Cannot get stack domain user token, no stack domain id configured, please "
@@ -1300,7 +1300,7 @@ msgstr "サーバー %(srv)s から接続 %(att)s を切断できませんでし
 #, python-format
 msgid "Could not fetch remote template \"%(name)s\": %(exc)s"
 msgstr ""
-"リモートのテンプレート「%(name)s」を取り出すことができませんでした: %(exc)s"
+"リモートのテンプレート \"%(name)s\" を取り出すことができませんでした: %(exc)s"
 
 #, python-format
 msgid "Could not fetch remote template '%(url)s': %(exc)s"
@@ -1466,8 +1466,8 @@ msgid ""
 msgstr ""
 "ワークフローの送信のためのリクエスト本文が解析される方法を定義します。この値"
 "を True に設定した場合、本文はシンプルな JSON (各キーはワークフローの入力とな"
-"ります) として解析され、その他の値を設定した場合は本文は 2 つのキー"
-"（「input」および「params」）を持つ特定の JSON 形式として解析されます。"
+"ります) として解析され、その他の値を設定した場合は本文は 2 つのキー（\"input"
+"\" および \"params\"）を持つ特定の JSON 形式として解析されます。"
 
 msgid ""
 "Defines whether Mistral Engine should put the workflow on hold or not before "
@@ -1779,7 +1779,7 @@ msgstr "'EIP' または 'AllocationId' のいずれかを指定する必要が�
 
 msgid "Either 'InstanceId' or 'LaunchConfigurationName' must be provided."
 msgstr ""
-"「InstanceId」または「LaunchConfigurationName」のいずれかを指定する必要があり"
+"'InstanceId' または 'LaunchConfigurationName' のいずれかを指定する必要があり"
 "ます。"
 
 #, python-format
@@ -1883,14 +1883,14 @@ msgid ""
 "Error during applying access rules to share \"{0}\". The root cause of the "
 "problem is the following: {1}."
 msgstr ""
-"シェア「{0}」にアクセスルールを適用する際にエラーが発生しました。この問題の根"
-"本原因は以下のとおりです: {1}"
+"シェア \"{0}\" にアクセスルールを適用する際にエラーが発生しました。この問題の"
+"根本原因は以下のとおりです: {1}"
 
 msgid "Error during creation of share \"{0}\""
-msgstr "シェア「{0}」の作成中にエラーが発生しました 。"
+msgstr "シェア \"{0}\" の作成中にエラーが発生しました 。"
 
 msgid "Error during deleting share \"{0}\"."
-msgstr "シェア「{0}」の削除中にエラーが発生しました。"
+msgstr "シェア \"{0}\" の削除中にエラーが発生しました。"
 
 #, python-format
 msgid "Error parsing template: %s"
@@ -1970,7 +1970,7 @@ msgstr "サーバー %(srv)s へのボリューム %(vol)s の追加に失敗し
 
 #, python-format
 msgid "Failed to create Bay '%(name)s' - %(reason)s"
-msgstr "ベイ「%(name)s」の作成に失敗しました: %(reason)s"
+msgstr "ベイ '%(name)s' の作成に失敗しました: %(reason)s"
 
 #, python-format
 msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
@@ -2035,7 +2035,7 @@ msgstr ""
 
 #, python-format
 msgid "Failed to update Bay '%(name)s' - %(reason)s"
-msgstr "ベイ「%(name)s」の更新に失敗しました: %(reason)s"
+msgstr "ベイ '%(name)s' の更新に失敗しました: %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr "更新できませんでした。ポート情報が見つかりません。"
@@ -2056,8 +2056,8 @@ msgid ""
 "Failed validating stack template using Heat endpoint at region \"%(region)s"
 "\" due to \"%(exc)s\""
 msgstr ""
-"「%(exc)s」が原因でリージョン「%(region)s」での heat エンドポイントを使用した"
-"スタックテンプレートの検証に失敗しました"
+"\"%(exc)s\" が原因でリージョン \"%(region)s\" での heat エンドポイントを使用"
+"したスタックテンプレートの検証に失敗しました"
 
 msgid "Fake attribute !a."
 msgstr "フェイク属性 !a。"
@@ -2141,7 +2141,7 @@ msgstr "関数 \"%s\" には引数が必要です"
 
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
-msgstr "関数「%s」の使用状況: [\"<algorithm>\", \"<value>\"]"
+msgstr "関数 \"%s\" の使用状況: [\"<algorithm>\", \"<value>\"]"
 
 msgid ""
 "Gap, in seconds, to determine whether the given token is about to expire."
@@ -2149,7 +2149,7 @@ msgstr "特定のトークンの有効期限が近いかどうかを判断する
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
-msgstr "ゲートウェイの IP アドレス「%(gateway)s」の形式が無効です。"
+msgstr "ゲートウェイの IP アドレス \"%(gateway)s\" の形式が無効です。"
 
 msgid "Gateway network for the router."
 msgstr "ルーターのゲートウェイネットワーク。"
@@ -2417,7 +2417,7 @@ msgid ""
 "ID that AWS assigns to represent the allocation of the address for use with "
 "Amazon VPC. Returned only for VPC elastic IP addresses."
 msgstr ""
-"Amazon VPC で使用するためのアドレスの割り振りを表す AWS の ID。VPC elastic "
+"Amazon VPC で使用するためのアドレスの割り当てを表す AWS の ID。VPC elastic "
 "IP アドレスに対してのみ返されます。"
 
 msgid "IP address and port of the pool."
@@ -2485,9 +2485,9 @@ msgid ""
 "\"%(source_vol)s\", \"%(snapshot_id)s\" can be specified, but currently "
 "specified options: %(exclusive_options)s."
 msgstr ""
-"「%(size)s」が提供される場合、「%(image)s」、「%(image_ref)s」、"
-"「%(source_vol)s」、「%(snapshot_id)s」のうち 1 つのみを指定することができる"
-"ものの、現在指定されているオプションは %(exclusive_options)s です。"
+"\"%(size)s\" が提供される場合、\"%(image)s\"、\"%(image_ref)s"
+"\"、\"%(source_vol)s\"、\"%(snapshot_id)s\" のうち 1 つのみを指定することがで"
+"きるものの、現在指定されているオプションは %(exclusive_options)s です。"
 
 msgid "If False, closes the client socket connection explicitly."
 msgstr "False の場合、明示的にクライアントのソケット接続を終了します。"
@@ -2515,9 +2515,9 @@ msgid ""
 "of \"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s\" "
 "must be specified, but currently specified options: %(exclusive_options)s."
 msgstr ""
-"「%(backup_id)s」と「%(size)s」のいずれも提供されない場合、 「%(image)s」、"
-"「%(image_ref)s」、「%(source_vol)s」、「\"%(snapshot_id)s」のうち 1 つだけを"
-"指定する必要があるものの、現在指定されているオプションは "
+"\"%(backup_id)s\" と \"%(size)s\" のいずれも提供されない場合、 \"%(image)s"
+"\"、\"%(image_ref)s\"、\"%(source_vol)s\"、\"%(snapshot_id)s\" のうち 1 つだ"
+"けを指定する必要があるものの、現在指定されているオプションは "
 "%(exclusive_options)s です。"
 
 msgid "If set, then the server's certificate will not be verified."
@@ -2611,14 +2611,14 @@ msgstr "不正確な引数: マージする項目はマップでなければな�
 msgid ""
 "Incorrect index to \"%(fn_name)s\" should be between 0 and %(max_index)s"
 msgstr ""
-"「%(fn_name)s」に対するインデックスが正しくありません。0 と %(max_index)s の"
+"\"%(fn_name)s\" に対するインデックスが正しくありません。0 と %(max_index)s の"
 "間の値である必要があります。"
 
 #, python-format
 msgid "Incorrect index to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
-"「%(fn_name)s」に対するインデックスが正しくありません。%(example)s である必要"
-"があります。"
+"\"%(fn_name)s\" に対するインデックスが正しくありません。%(example)s である必"
+"要があります。"
 
 #, python-format
 msgid "Index to \"%s\" must be a string"
@@ -2725,7 +2725,7 @@ msgstr "無効な CRON 式: %s"
 
 #, python-format
 msgid "Invalid Parameter type \"%s\""
-msgstr "パラメーター形式「%s」は無効です"
+msgstr "パラメーター形式 \"%s\" は無効です"
 
 #, python-format
 msgid "Invalid Property %s"
@@ -2819,8 +2819,8 @@ msgid ""
 "match."
 msgstr ""
 "ディスクとコンテナーの形式が無効な形で混在しています。ディスクまたはコンテ"
-"ナーの形式を「aki」、「ari」、または「ami」 のいずれかに設定するときは、コン"
-"テナーとディスクの形式が一致していなければなりません。"
+"ナーの形式を 'aki'、'ari'、または 'ami'  のいずれかに設定するときは、コンテ"
+"ナーとディスクの形式が一致していなければなりません。"
 
 #, python-format
 msgid "Invalid object_type: %(obj_type)s. Valid object_type :%(value)s"
@@ -2843,8 +2843,8 @@ msgid ""
 "Invalid stack name %s must contain only alphanumeric or \"_-.\" characters, "
 "must start with alpha and must be 255 characters or less."
 msgstr ""
-"無効なスタック名 %s は英数か「_-.」の文字のみを含む必要があり、英語で始まり、"
-"255 文字以下である必要があります。"
+"無効なスタック名 %s は英数か \"_-.\" の文字のみを含む必要があり、英語で始ま"
+"り、255 文字以下である必要があります。"
 
 #, python-format
 msgid "Invalid stack name %s, must be a string"
@@ -2997,9 +2997,9 @@ msgid ""
 "Keystone domain name which contains heat template-defined users. If "
 "`stack_user_domain_id` option is set, this option is ignored."
 msgstr ""
-"heat テンプレート定義ユーザーが含まれている keystone ドメイン名。"
-"「stack_user_domain_id」オプションが設定されている場合、このオプションは無視"
-"されます。"
+"heat テンプレート定義ユーザーが含まれている keystone ドメイン"
+"名。'stack_user_domain_id' オプションが設定されている場合、このオプションは無"
+"視されます。"
 
 msgid "Keystone domain."
 msgstr "Keystone のドメイン。"
@@ -3132,7 +3132,7 @@ msgstr ""
 "特定リソースを削除する必要のある更新の実行時に削除されるリソースのリスト。リ"
 "ソースは以下のいくつかの方法で指定できます。(1) ネストされたスタック内に存在"
 "するリソース名。(2) テンプレート内の get_resource から返されるリソース参照。"
-"これは「refs」属性経由で取得できます。これを指定した場合、更新時に破壊的な影"
+"これは 'refs' 属性経由で取得できます。これを指定した場合、更新時に破壊的な影"
 "響が発生することに注意してください。リソース数が減らない場合でも、リソース名"
 "が削除されると、その後の更新時にはそのリソース名は再使用できません。"
 
@@ -3529,7 +3529,7 @@ msgstr ""
 "比較する属性の名前。形式 metadata.user_metadata.X または metadata.metering.X "
 "の名前は、matching_metadata を使用してアドレス指定できる名前と同等です。前者"
 "は Nova メーター用、後者は他のすべてのメーター用です。「サンプル」の属性を確"
-"認するには、「ceilometer --debug sample-list」を使用してください。"
+"認するには、'ceilometer --debug sample-list' を使用してください。"
 
 msgid "Name of key to use for substituting inputs during deployment."
 msgstr "実装中に入力を置き換えるために使用するキーの名前。"
@@ -3852,7 +3852,7 @@ msgstr ""
 "別のネットワークで使用する場合、このポートは置き換えられます。"
 
 msgid "Network to allocate floating IP from."
-msgstr "Floating IP の割り振り元のネットワーク。"
+msgstr "Floating IP の割り当て元のネットワーク。"
 
 msgid "Neutron network id."
 msgstr "Neutron のネットワーク ID。"
@@ -3884,7 +3884,7 @@ msgstr ""
 
 #, python-format
 msgid "No event %s found"
-msgstr "イベント「%s」は見つかりませんでした。"
+msgstr "イベント \"%s\" は見つかりませんでした。"
 
 #, python-format
 msgid "No event exists with id \"%s\""
@@ -3892,7 +3892,7 @@ msgstr "ID \"%s\" のイベントは存在しません"
 
 #, python-format
 msgid "No events found for resource %s"
-msgstr "リソース「%s」に関連するイベントは見つかりませんでした。"
+msgstr "リソース \"%s\" に関連するイベントは見つかりませんでした。"
 
 msgid "No resource data found"
 msgstr "リソースデータが見つかりません"
@@ -4518,7 +4518,7 @@ msgstr "RX/TX 係数。"
 
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
-msgstr "サーバーの再ビルドに失敗しました。状況「%s」"
+msgstr "サーバーの再ビルドに失敗しました。状況 '%s'"
 
 msgid "Record name."
 msgstr "レコード名。"
@@ -4614,7 +4614,7 @@ msgstr ""
 
 #, python-format
 msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
-msgstr "「%(flavor)s」のサイズ変更に失敗しました。状況: 「%(status)s」"
+msgstr "'%(flavor)s' のサイズ変更に失敗しました。状況: '%(status)s'"
 
 #, python-format
 msgid "Resource \"%s\" has no type"
@@ -4861,8 +4861,7 @@ msgid "Set of symbols and encodings."
 msgstr "一連のシンボルとエンコード。"
 
 msgid "Set to \"vpc\" to have IP address allocation associated to your VPC."
-msgstr ""
-"IP アドレス割り振りをご使用の VPC に関連付けるには、\"vpc\" に設定します。"
+msgstr "IP アドレスの割り当てを VPC に関連付けるには、\"vpc\" に設定します。"
 
 msgid "Set to true if DHCP is enabled and false if DHCP is disabled."
 msgstr "DHCP が有効である場合は TRUE、無効である場合は FALSE に設定します。"
@@ -4930,7 +4929,7 @@ msgid ""
 "Size of local disk in GB. The \"0\" size is a special case that uses the "
 "native base image size as the size of the ephemeral root volume."
 msgstr ""
-"ローカルディスクのサイズ (GB)。「0」のサイズは、一時的なルートボリュームとし"
+"ローカルディスクのサイズ (GB)。\"0\" のサイズは、一時的なルートボリュームとし"
 "てネイティブのベースイメージのサイズを使用する特別なケースです。"
 
 msgid ""
@@ -5302,7 +5301,8 @@ msgstr "%(resource)s で \"%(hook)s\" のフックが定義されていません
 
 #, python-format
 msgid "The \"for_each\" argument to \"%s\" must contain a map"
-msgstr "「%s」に対する「for_each」引数にはマップが含まれていなければなりません"
+msgstr ""
+"\"%s\" に対する \"for_each\" 引数にはマップが含まれていなければなりません"
 
 #, python-format
 msgid "The %(entity)s (%(name)s) could not be found."
@@ -5663,7 +5663,7 @@ msgid "The algorithm used to distribute load between the members of the pool."
 msgstr "プールのメンバー間で負荷を分散するために使用されるアルゴリズム。"
 
 msgid "The allocated address of this IP."
-msgstr "この IP の割り振り済みアドレス。"
+msgstr "この IP に割り当て済みのアドレス。"
 
 msgid ""
 "The approximate interval, in seconds, between health checks of an individual "
@@ -6388,7 +6388,7 @@ msgid ""
 msgstr ""
 "このセキュリティーグループルールに関連付けるリモートグループ ID。値を指定しな"
 "いと、このルールはこのセキュリティーグループを remote_group_id に使用します。"
-"リモートモードのパラメーターは「remote_group_id」に設定する必要があります。"
+"リモートモードのパラメーターは \"remote_group_id\" に設定する必要があります。"
 
 msgid "The remote subnet(s) in CIDR format of the ipsec site connection."
 msgstr "ipsec サイト接続の CIDR 形式のリモートサブネット。"
@@ -6672,7 +6672,7 @@ msgstr "値は %(max)s を超えてはなりません。"
 
 #, python-format
 msgid "The values of the \"for_each\" argument to \"%s\" must be lists"
-msgstr "「%s」に対する「for_each」引数はリストでなければなりません"
+msgstr "\"%s\" に対する \"for_each\" 引数はリストでなければなりません"
 
 msgid "The version of the ike policy."
 msgstr "IKE ポリシーのバージョン。"
@@ -6752,10 +6752,10 @@ msgid "Time To Live (Seconds)."
 msgstr "ライブになるまでの時間 (秒)。"
 
 msgid "Time of the first execution in format \"YYYY-MM-DD HH:MM\"."
-msgstr "「YYYY-MM-DD HH:MM」形式で表示される最初の実行時間。"
+msgstr "\"YYYY-MM-DD HH:MM\" 形式で表示される最初の実行時間。"
 
 msgid "Time of the next execution in format \"YYYY-MM-DD HH:MM:SS\"."
-msgstr "「YYYY-MM-DD HH:MM:SS」形式で表示される次の実行時間。"
+msgstr "\"YYYY-MM-DD HH:MM:SS\" 形式で表示される次の実行時間。"
 
 msgid ""
 "Timeout for client connections' socket operations. If an incoming connection "
@@ -6776,7 +6776,7 @@ msgstr "スタックアクション (作成または更新) のタイムアウ�
 
 msgid ""
 "Timezone for the time constraint (eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."
-msgstr "時間制約のタイムゾーン (「Taiwan/Taipei」や「Europe/Amsterdam」など)。"
+msgstr "時間制約のタイムゾーン ('Taiwan/Taipei' や 'Europe/Amsterdam' など)。"
 
 msgid ""
 "Toggle to enable/disable caching when Orchestration Engine looks for other "
@@ -6819,8 +6819,8 @@ msgid ""
 "transports."
 msgstr ""
 "signal_transport が TOKEN_SIGNAL に設定されている場合にハンドルを送信するため"
-"に使用できるスタック・ユーザーのトークン。その他の信号の送信の場合は存在しま"
-"せん。"
+"に使用できるスタックユーザーのトークン。その他の信号の送信の場合は存在しませ"
+"ん。"
 
 msgid ""
 "Tokens are not needed for Swift TempURLs. This attribute is being kept for "
@@ -7056,18 +7056,18 @@ msgid "Unknown key(s) %s"
 msgstr "キー %s は不明です"
 
 msgid "Unknown share_status during creation of share \"{0}\""
-msgstr "シェア「{0}」の作成中の share_status が不明です。"
+msgstr "シェア \"{0}\" の作成中の share_status が不明です。"
 
 #, python-format
 msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
-msgstr "ベイ「%(name)s」の作成状況が不明です:  %(reason)s"
+msgstr "ベイ '%(name)s' の作成状況が不明です:  %(reason)s"
 
 msgid "Unknown status during deleting share \"{0}\""
-msgstr "シェア「{0}」の削除中の状態が不明です。"
+msgstr "シェア \"{0}\" の削除中の状態が不明です。"
 
 #, python-format
 msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
-msgstr "ベイ「%(name)s」の更新状況が不明です:  %(reason)s"
+msgstr "ベイ '%(name)s' の更新状況が不明です:  %(reason)s"
 
 #, python-format
 msgid "Unknown status: %s"
@@ -7151,7 +7151,7 @@ msgid ""
 "Use the `external_gateway_info` property in the router resource to set up "
 "the gateway."
 msgstr ""
-"ゲートウェイを設定するには、ルーターリソース内の「external_gateway_info」プロ"
+"ゲートウェイを設定するには、ルーターリソース内の 'external_gateway_info' プロ"
 "パティーを使用します。"
 
 msgid ""
@@ -7377,9 +7377,9 @@ msgid ""
 "be set to the resource's name, and heat_resource_uuid will be set to the "
 "resource's orchestration id."
 msgstr ""
-"この機能を有効化すると、サーバー・リソースまたはボリューム・リソースの heat "
-"スタックのコンテキストを特定するスケジューラーヒントが nova および cinder 内"
-"で設定されたスケジューラーに渡され、heat のリソースタイプである OS::Cinder::"
+"この機能を有効化すると、サーバーリソースまたはボリュームリソースの heat ス"
+"タックのコンテキストを特定するスケジューラーヒントが nova および cinder 内で"
+"設定されたスケジューラーに渡され、heat のリソースタイプである OS::Cinder::"
 "Volume、OS::Nova::Server、および AWS::EC2::Instance を使用してスケジューラー"
 "を作成します。heat_root_stack_id はリソースのルートスタックの ID に設定され、"
 "heat_stack_id はリソースの親スタックの ID に設定され、heat_stack_name はリ"
@@ -7499,15 +7499,14 @@ msgid ""
 "Which lifecycle actions of the deployment resource will result in this "
 "deployment being triggered."
 msgstr ""
-"実装リソースのどのライフサイクル・アクションがこの実装環境をトリガーするの"
-"か。"
+"実装リソースのどのライフサイクルアクションがこの実装環境をトリガーするのか。"
 
 msgid ""
 "Workflow additional parameters. If Workflow is reverse typed, params "
 "requires 'task_name', which defines initial task."
 msgstr ""
 "ワークフローの追加のパラメーター。ワークフローがリバースタイプの場合、params "
-"には最初のタスクを定義する「task_name」が必要になります"
+"には最初のタスクを定義する 'task_name' が必要になります"
 
 msgid "Workflow description."
 msgstr "ワークフローの説明。"
@@ -7597,9 +7596,9 @@ msgid ""
 "\"stack_user_domain_name\" without \"stack_domain_admin\" and "
 "\"stack_domain_admin_password\""
 msgstr ""
-"heat.conf の設定に誤りがあります。「stack_user_domain_id」または"
-"「stack_user_domain_name」を、「stack_domain_admin」および"
-"「stack_domain_admin_password」なしで指定することはできません。"
+"heat.conf の設定に誤りがあります。\"stack_user_domain_id\" または "
+"\"stack_user_domain_name\" を、\"stack_domain_admin\" および "
+"\"stack_domain_admin_password\" なしで指定することはできません。"
 
 msgid "ipv6_ra_mode and ipv6_address_mode are not supported for ipv4."
 msgstr ""
