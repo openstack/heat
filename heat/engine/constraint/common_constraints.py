@@ -153,3 +153,21 @@ class TimezoneConstraint(constraints.BaseCustomConstraint):
             self._error_message = _(
                 'Invalid timezone: %s') % six.text_type(ex)
         return False
+
+
+class ExpirationConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        if not value:
+            return True
+        try:
+            expiration_tz = timeutils.parse_isotime(value.strip())
+            expiration = timeutils.normalize_time(expiration_tz)
+            if expiration > timeutils.utcnow():
+                return True
+            raise ValueError(_('Expiration time is out of date.'))
+        except Exception as ex:
+            self._error_message = (_(
+                'Expiration {0} is invalid: {1}').format(value,
+                                                         six.text_type(ex)))
+        return False

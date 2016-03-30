@@ -98,7 +98,7 @@ class Secret(resource.Resource):
             properties.Schema.STRING,
             _('The expiration date for the secret in ISO-8601 format.'),
             constraints=[
-                constraints.CustomConstraint('iso_8601'),
+                constraints.CustomConstraint('expiration'),
             ],
         ),
         ALGORITHM: properties.Schema(
