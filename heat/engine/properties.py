@@ -161,8 +161,7 @@ class Schema(constr.Schema):
                    constraints=param.constraints,
                    update_allowed=True,
                    immutable=False,
-                   allow_conversion=allow_conversion,
-                   default=param.default)
+                   allow_conversion=allow_conversion)
 
     def allowed_param_prop_type(self):
         """Return allowed type of Property Schema converted from parameter.
