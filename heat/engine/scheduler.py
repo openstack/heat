@@ -401,11 +401,14 @@ class DependencyTaskGroup(object):
                     self.cancel_all()
 
         if raised_exceptions:
-            if self.aggregate_exceptions:
-                raise ExceptionGroup(v for t, v, tb in raised_exceptions)
-            else:
-                exc_type, exc_val, traceback = raised_exceptions[0]
-                raise_(exc_type, exc_val, traceback)
+            try:
+                if self.aggregate_exceptions:
+                    raise ExceptionGroup(v for t, v, tb in raised_exceptions)
+                else:
+                    exc_type, exc_val, traceback = raised_exceptions[0]
+                    raise_(exc_type, exc_val, traceback)
+            finally:
+                del raised_exceptions
 
     def cancel_all(self, grace_period=None):
         for r in six.itervalues(self._runners):
