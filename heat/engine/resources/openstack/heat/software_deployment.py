@@ -213,7 +213,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.ZAQAR_SIGNAL
 
-    def _build_properties(self, properties, config_id, action):
+    def _build_properties(self, config_id, action):
         props = {
             'config_id': config_id,
             'action': action,
@@ -259,7 +259,6 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             return
 
         props = self._build_properties(
-            self.properties,
             self._get_derived_config(action, config),
             action)
 
