@@ -1682,6 +1682,17 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(engine_id, rs.engine_id)
         self.assertEqual(atomic_key, rs.atomic_key)
 
+    @mock.patch.object(resource_objects.Resource, 'get_obj')
+    @mock.patch.object(resource_objects.Resource, 'select_and_update')
+    def test_release_ignores_not_found_error(self, mock_sau, mock_get_obj):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res._store()
+        res._acquire('engine-id')
+        mock_get_obj.side_effect = exception.NotFound()
+        res._release('engine-id')
+        self.assertFalse(mock_sau.called)
+
     @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
                        return_value=None)
     @mock.patch.object(resource.scheduler.TaskRunner, '__call__')
