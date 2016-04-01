@@ -1108,6 +1108,26 @@ class SqlAlchemyTest(common.HeatTestCase):
             self.ctx, config_id)
         self.assertIn(config_id, six.text_type(err))
 
+    def test_software_config_delete_not_allowed(self):
+        tenant_id = self.ctx.tenant_id
+        config = db_api.software_config_create(
+            self.ctx, {'name': 'config_mysql',
+                       'tenant': tenant_id})
+        config_id = config.id
+        values = {
+            'tenant': tenant_id,
+            'stack_user_project_id': str(uuid.uuid4()),
+            'config_id': config_id,
+            'server_id': str(uuid.uuid4()),
+        }
+        db_api.software_deployment_create(self.ctx, values)
+        err = self.assertRaises(
+            exception.InvalidRestrictedAction, db_api.software_config_delete,
+            self.ctx, config_id)
+        msg = ("Software config with id %s can not be deleted as it is "
+               "referenced" % config_id)
+        self.assertIn(msg, six.text_type(err))
+
     def _deployment_values(self):
         tenant_id = self.ctx.tenant_id
         stack_user_project_id = str(uuid.uuid4())
