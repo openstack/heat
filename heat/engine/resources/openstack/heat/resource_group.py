@@ -44,7 +44,9 @@ class ResourceGroup(stack_resource.StackResource):
     for a single resource in the group, synthetic attributes of the form
     `resource.{resource index}.{attribute name}` can be used. The resource ID
     of a particular resource in the group can be obtained via the synthetic
-    attribute `resource.{resource index}`.
+    attribute `resource.{resource index}`. Note, that if you get attribute
+    without `{resource index}`, e.g. `[resource, {attribute_name}]`, you'll get
+    a list of this attribute's value for all resources in group.
 
     While each resource in the group will be identically configured, this
     resource does allow for some index-based customization of the properties
