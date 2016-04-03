@@ -2032,6 +2032,27 @@ class ResourceTest(common.HeatTestCase):
                           new_temp.id, res_data, 'engine-007',
                           -1, new_stack)
 
+    def test_update_convergence_with_substitute_class(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res',
+                                            'GenericResourceType')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res._store()
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_temp.store(self.stack.context)
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
+
+        res_data = {}
+        self.assertRaises(exception.UpdateReplace, res.update_convergence,
+                          new_temp.id, res_data, 'engine-007',
+                          -1, new_stack)
+
     def test_update_convergence_checks_resource_class(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res',
                                             'GenericResourceType')

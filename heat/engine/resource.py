@@ -1113,8 +1113,8 @@ class Resource(object):
                 new_res_def.resource_type, resource_name=self.name)
             restricted_actions = registry.get_rsrc_restricted_actions(
                 self.name)
-
-            if type(self) is not new_res_type:
+            is_substituted = self.check_is_substituted(new_res_type)
+            if type(self) is not new_res_type and not is_substituted:
                 self._check_for_convergence_replace(restricted_actions)
 
             action_rollback = self.stack.action == self.stack.ROLLBACK
@@ -1128,7 +1128,15 @@ class Resource(object):
                                    six.text_type(failure))
                     raise failure
 
-            runner = scheduler.TaskRunner(self.update, new_res_def)
+            # Use new resource as update method if existing resource
+            # need to be substituted.
+            if is_substituted:
+                substitute = new_res_type(self.name, self.t, self.stack)
+                self.stack.resources[self.name] = substitute
+                updater = substitute.update
+            else:
+                updater = self.update
+            runner = scheduler.TaskRunner(updater, new_res_def)
             try:
                 runner(timeout=timeout)
                 update_tmpl_id_and_requires()
@@ -1219,6 +1227,14 @@ class Resource(object):
             failure = exception.ResourceFailure(e, self, action)
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
+
+    @classmethod
+    def check_is_substituted(cls, new_res_type):
+            support_status = getattr(cls, 'support_status', None)
+            if support_status:
+                is_substituted = support_status.is_substituted(new_res_type)
+                return is_substituted
+            return False
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):

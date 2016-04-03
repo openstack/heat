@@ -24,6 +24,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack
+from heat.engine import support
 from heat.engine import template
 from heat.objects import stack as stack_object
 from heat.rpc import api as rpc_api
@@ -2035,3 +2036,67 @@ class StackUpdateTest(common.HeatTestCase):
                          test_stack['Bres'].state)
         self.assertIn('create_b', test_stack.t.t['conditions'])
         self.assertIn('create_b_res', test_stack.t.t['parameters'])
+
+    def test_stack_update_with_deprecated_resource(self):
+        """Test with update deprecated resource to substitute.
+
+        Test checks the following scenario:
+        1. Create stack with deprecated resource.
+        2. Update stack with substitute resource.
+        The test checks that deprecated resource can be update to it's
+        substitute resource during update Stack.
+        """
+
+        class ResourceTypeB(generic_rsrc.GenericResource):
+            count_b = 0
+
+            def update(self, after, before=None, prev_resource=None):
+                ResourceTypeB.count_b += 1
+
+        resource._register_class('ResourceTypeB', ResourceTypeB)
+
+        class ResourceTypeA(ResourceTypeB):
+            support_status = support.SupportStatus(
+                status=support.DEPRECATED,
+                message='deprecation_msg',
+                version='2014.2',
+                substitute_class=ResourceTypeB)
+
+            count_a = 0
+
+            def update(self, after, before=None, prev_resource=None):
+                ResourceTypeA.count_a += 1
+
+        resource._register_class('ResourceTypeA', ResourceTypeA)
+
+        TMPL_WITH_DEPRECATED_RES = """
+        heat_template_version: 2015-10-15
+        resources:
+          AResource:
+            type: ResourceTypeA
+        """
+        TMPL_WITH_PEPLACE_RES = """
+        heat_template_version: 2015-10-15
+        resources:
+          AResource:
+            type: ResourceTypeB
+        """
+        t = template_format.parse(TMPL_WITH_DEPRECATED_RES)
+        templ = template.Template(t)
+        self.stack = stack.Stack(self.ctx, 'update_test_stack',
+                                 templ)
+
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        t = template_format.parse(TMPL_WITH_PEPLACE_RES)
+        tmpl2 = template.Template(t)
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    tmpl2)
+        self.stack.update(updated_stack)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertIn('AResource', self.stack)
+        self.assertEqual(1, ResourceTypeB.count_b)
+        self.assertEqual(0, ResourceTypeA.count_a)

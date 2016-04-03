@@ -154,11 +154,13 @@ class StackUpdate(object):
         res_name = new_res.name
 
         if res_name in self.existing_stack:
-            if type(self.existing_stack[res_name]) is type(new_res):
-                existing_res = self.existing_stack[res_name]
+            existing_res = self.existing_stack[res_name]
+            is_substituted = existing_res.check_is_substituted(type(new_res))
+            if type(existing_res) is type(new_res) or is_substituted:
                 try:
                     yield self._update_in_place(existing_res,
-                                                new_res)
+                                                new_res,
+                                                is_substituted)
                 except resource.UpdateReplace:
                     pass
                 else:
@@ -181,7 +183,7 @@ class StackUpdate(object):
 
         yield self._create_resource(new_res)
 
-    def _update_in_place(self, existing_res, new_res):
+    def _update_in_place(self, existing_res, new_res, is_substituted=False):
         existing_snippet = self.existing_snippets[existing_res.name]
         prev_res = self.previous_stack.get(new_res.name)
 
@@ -191,7 +193,12 @@ class StackUpdate(object):
         # is switching template implementations)
         new_snippet = new_res.t.reparse(self.existing_stack,
                                         self.new_stack.t)
-
+        if is_substituted:
+            substitute = type(new_res)(existing_res.name,
+                                       existing_res.t,
+                                       existing_res.stack)
+            existing_res.stack.resources[existing_res.name] = substitute
+            existing_res = substitute
         return existing_res.update(new_snippet, existing_snippet,
                                    prev_resource=prev_res)
 
