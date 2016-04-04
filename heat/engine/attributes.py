@@ -18,7 +18,7 @@ import six
 
 from heat.common.i18n import _
 from heat.common.i18n import _LW
-from heat.common.i18n import repr_wraper
+from heat.common.i18n import repr_wrapper
 from heat.engine import constraints as constr
 from heat.engine import support
 
@@ -124,7 +124,7 @@ class Attribute(object):
             }
 
 
-@repr_wraper
+@repr_wrapper
 class Attributes(collections.Mapping):
     """Models a collection of Resource Attributes."""
 

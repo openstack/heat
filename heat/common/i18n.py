@@ -38,7 +38,7 @@ _LE = _translators.log_error
 _LC = _translators.log_critical
 
 
-def repr_wraper(klass):
+def repr_wrapper(klass):
     """A decorator that defines __repr__ method under Python 2.
 
     Under Python 2 it will encode repr return value to str type.
@@ -46,7 +46,7 @@ def repr_wraper(klass):
     """
     if six.PY2:
         if '__repr__' not in klass.__dict__:
-            raise ValueError("@repr_wraper cannot be applied "
+            raise ValueError("@repr_wrapper cannot be applied "
                              "to %s because it doesn't define __repr__()." %
                              klass.__name__)
         klass._repr = klass.__repr__
