@@ -1085,11 +1085,13 @@ class ServersTest(common.HeatTestCase):
               'network': network_name}])
 
         resource_defns = tmpl.resource_definitions(stack)
-        ex = self.assertRaises(ValueError, servers.Server,
+        ex = self.assertRaises(exception.ResourcePropertyConflict,
+                               servers.Server,
                                'server_validate_with_networks',
                                resource_defns['WebServer'], stack)
 
-        self.assertIn(_('Cannot use network and uuid at the same time.'),
+        self.assertIn("Cannot define the following properties at the "
+                      "same time: ['network', 'uuid'].",
                       six.text_type(ex))
 
     def test_server_validate_with_network_empty_ref(self):
@@ -2457,8 +2459,10 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack('mapping',
                                                test_templ=test_templ)
         resource_defns = tmpl.resource_definitions(stack)
-        msg = 'Cannot use image and image_id at the same time.'
-        exc = self.assertRaises(ValueError, servers.Server, 'server',
+        msg = ("Cannot define the following properties at the same time: "
+               "['image', 'image_id'].")
+        exc = self.assertRaises(exception.ResourcePropertyConflict,
+                                servers.Server, 'server',
                                 resource_defns['server'], stack)
         self.assertEqual(msg, six.text_type(exc))
 

@@ -359,8 +359,10 @@ class TestTranslationRule(common.HeatTestCase):
             translation.TranslationRule.REPLACE,
             ['bar'],
             value_path=['far'])
-        ex = self.assertRaises(ValueError, rule.execute_rule)
-        self.assertEqual('Cannot use bar and far at the same time.',
+        ex = self.assertRaises(exception.ResourcePropertyConflict,
+                               rule.execute_rule)
+        self.assertEqual("Cannot define the following properties at the "
+                         "same time: ['bar', 'far'].",
                          six.text_type(ex))
 
     def test_replace_rule_str_value_path(self):
