@@ -351,3 +351,29 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.projects.get.return_value = project
         res = self.test_project._show_resource()
         self.assertEqual({'attr': 'val'}, res)
+
+    def test_get_live_state(self):
+        project = mock.Mock()
+        project.to_dict.return_value = {
+            "is_domain": False,
+            "description": "",
+            "links": {"self": "link"},
+            "enabled": True,
+            "id": "8cbb746917ee42f08a787e721552e738",
+            "parent_id": "default",
+            "domain_id": "default",
+            "name": "fake"
+        }
+        self.projects.get.return_value = project
+
+        reality = self.test_project.get_live_state(
+            self.test_project.properties)
+        expected = {
+            "description": "",
+            "enabled": True,
+            "domain": "default",
+            "name": "fake"
+        }
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])
