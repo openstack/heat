@@ -17,6 +17,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.keystone import role_assignments
 from heat.engine import support
+from heat.engine import translation
 
 
 class KeystoneGroup(resource.Resource,
@@ -63,6 +64,17 @@ class KeystoneGroup(resource.Resource,
         )
     }
 
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.DOMAIN],
+                client_plugin=self.client_plugin(),
+                finder='get_domain_id'
+            )
+        ]
+
     properties_schema.update(
         role_assignments.KeystoneRoleAssignmentMixin.mixin_properties_schema)
 
@@ -77,8 +89,7 @@ class KeystoneGroup(resource.Resource,
         group_name = (self.properties[self.NAME] or
                       self.physical_resource_name())
         description = self.properties[self.DESCRIPTION]
-        domain = self.client_plugin().get_domain_id(
-            self.properties[self.DOMAIN])
+        domain = self.properties[self.DOMAIN]
 
         group = self.client().groups.create(
             name=group_name,
@@ -99,13 +110,12 @@ class KeystoneGroup(resource.Resource,
             description = prop_diff.get(self.DESCRIPTION)
             domain = (prop_diff.get(self.DOMAIN) or
                       self.properties[self.DOMAIN])
-            domain_id = self.client_plugin().get_domain_id(domain)
 
             self.client().groups.update(
                 group=self.resource_id,
                 name=name,
                 description=description,
-                domain_id=domain_id)
+                domain_id=domain)
 
             self.update_assignment(prop_diff=prop_diff,
                                    group_id=self.resource_id)
@@ -114,6 +124,14 @@ class KeystoneGroup(resource.Resource,
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().groups.delete(self.resource_id)
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        return {
+            self.NAME: resource_data.get(self.NAME),
+            self.DESCRIPTION: resource_data.get(self.DESCRIPTION),
+            self.DOMAIN: resource_data.get('domain_id'),
+            self.ROLES: self.parse_list_assignments(group_id=self.resource_id)
+        }
 
 
 def resource_mapping():
