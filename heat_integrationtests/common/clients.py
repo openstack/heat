@@ -35,6 +35,8 @@ class ClientManager(object):
 
     def __init__(self, conf):
         self.conf = conf
+        self.insecure = self.conf.disable_ssl_certificate_validation
+        self.ca_file = self.conf.ca_file
         self.identity_client = self._get_identity_client()
         self.orchestration_client = self._get_orchestration_client()
         self.compute_client = self._get_compute_client()
@@ -74,11 +76,11 @@ class ClientManager(object):
             password=self.conf.password,
             tenant_name=self.conf.tenant_name,
             auth_url=self.conf.auth_url,
-            insecure=self.conf.disable_ssl_certificate_validation)
+            insecure=self.insecure,
+            cacert=self.ca_file)
 
     def _get_compute_client(self):
 
-        dscv = self.conf.disable_ssl_certificate_validation
         region = self.conf.region
 
         client_args = (
@@ -96,12 +98,12 @@ class ClientManager(object):
             endpoint_type='publicURL',
             region_name=region,
             no_cache=True,
-            insecure=dscv,
+            insecure=self.insecure,
+            cacert=self.ca_file,
             http_log_debug=True)
 
     def _get_network_client(self):
         auth_url = self.conf.auth_url
-        dscv = self.conf.disable_ssl_certificate_validation
 
         return neutronclient.v2_0.client.Client(
             username=self.conf.username,
@@ -109,13 +111,13 @@ class ClientManager(object):
             tenant_name=self.conf.tenant_name,
             endpoint_type='publicURL',
             auth_url=auth_url,
-            insecure=dscv)
+            insecure=self.insecure,
+            ca_cert=self.ca_file)
 
     def _get_volume_client(self):
         auth_url = self.conf.auth_url
         region = self.conf.region
         endpoint_type = 'publicURL'
-        dscv = self.conf.disable_ssl_certificate_validation
         return cinderclient.client.Client(
             self.CINDERCLIENT_VERSION,
             self.conf.username,
@@ -124,11 +126,11 @@ class ClientManager(object):
             auth_url,
             region_name=region,
             endpoint_type=endpoint_type,
-            insecure=dscv,
+            insecure=self.insecure,
+            cacert=self.ca_file,
             http_log_debug=True)
 
     def _get_object_client(self):
-        dscv = self.conf.disable_ssl_certificate_validation
         args = {
             'auth_version': '2.0',
             'tenant_name': self.conf.tenant_name,
@@ -136,12 +138,12 @@ class ClientManager(object):
             'key': self.conf.password,
             'authurl': self.conf.auth_url,
             'os_options': {'endpoint_type': 'publicURL'},
-            'insecure': dscv,
+            'insecure': self.insecure,
+            'cacert': self.ca_file,
         }
         return swiftclient.client.Connection(**args)
 
     def _get_metering_client(self):
-        dscv = self.conf.disable_ssl_certificate_validation
 
         keystone = self._get_identity_client()
         try:
@@ -159,7 +161,8 @@ class ClientManager(object):
                 'password': self.conf.password,
                 'tenant_name': self.conf.tenant_name,
                 'auth_url': self.conf.auth_url,
-                'insecure': dscv,
+                'insecure': self.insecure,
+                'cacert': self.ca_file,
                 'region_name': self.conf.region,
                 'endpoint_type': 'publicURL',
                 'service_type': 'metering',

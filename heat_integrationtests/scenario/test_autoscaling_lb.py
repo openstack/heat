@@ -37,7 +37,7 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
         resp = set()
         for count in range(retries):
             time.sleep(1)
-            r = requests.get(url)
+            r = requests.get(url, verify=self.verify_cert)
             # skip unsuccessfull requests
             if r.status_code == 200:
                 resp.add(r.text)

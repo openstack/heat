@@ -144,4 +144,5 @@ properties:
             iv = dict((i['name'], i['value']) for i in dep['inputs'])
             sigurl = iv.get('deploy_signal_id')
             requests.post(sigurl, data='{}',
-                          headers={'content-type': None})
+                          headers={'content-type': None},
+                          verify=self.verify_cert)
