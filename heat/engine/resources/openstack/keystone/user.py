@@ -131,6 +131,12 @@ class KeystoneUser(resource.Resource,
         if enabled is not None:
             values['enabled'] = enabled
 
+        # If there're no args above, keystone raises BadRequest error with
+        # message about not enough parameters for updating, so return from
+        # this method to prevent raising error.
+        if not values:
+            return
+
         values['user'] = user_id
         domain = (self.client_plugin().get_domain_id(domain))
 
