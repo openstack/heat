@@ -298,6 +298,16 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             LOG.info(message)
             raise exception.Error(message)
 
+    def _server_exists(self, sd):
+        """Returns whether or not the deployment's server exists."""
+        nova_client = self.client_plugin('nova')
+
+        try:
+            nova_client.get_server(sd['server_id'])
+            return True
+        except exception.EntityNotFound:
+            return False
+
     def empty_config(self):
         return ''
 
@@ -467,7 +477,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def check_delete_complete(self, sd=None):
-        if not sd or self._check_complete():
+        if not sd or not self._server_exists(sd) or self._check_complete():
             self._delete_resource()
             return True
 
