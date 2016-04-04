@@ -77,7 +77,7 @@ Outputs:
     def setUp(self):
         super(AwsStackTest, self).setUp()
         self.object_container_name = AwsStackTest.__name__
-        self.project_id = self.identity_client.auth_ref.project_id
+        self.project_id = self.identity_client.project_id
         self.object_client.put_container(self.object_container_name)
         self.nested_name = '%s.yaml' % test.rand_name()
 

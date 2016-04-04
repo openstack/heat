@@ -37,10 +37,18 @@ IntegrationTestGroup = [
                help="Tenant name to use for API requests."),
     cfg.StrOpt('auth_url',
                default=os.environ.get('OS_AUTH_URL'),
-               help="Full URI of the OpenStack Identity API (Keystone), v2"),
+               help="Full URI of the OpenStack Identity API (Keystone)"),
+    cfg.StrOpt('user_domain_name',
+               default=os.environ.get('OS_USER_DOMAIN_NAME'),
+               help="User domain name, if keystone v3 auth_url"
+                    "is used"),
+    cfg.StrOpt('project_domain_name',
+               default=os.environ.get('OS_PROJECT_DOMAIN_NAME'),
+               help="Project domain name, if keystone v3 auth_url"
+                    "is used"),
     cfg.StrOpt('region',
                default=os.environ.get('OS_REGION_NAME'),
-               help="The region name to us"),
+               help="The region name to use"),
     cfg.StrOpt('instance_type',
                help="Instance type for tests. Needs to be big enough for a "
                     "full OS plus the test workload"),
@@ -54,10 +62,6 @@ IntegrationTestGroup = [
     cfg.StrOpt('minimal_image_ref',
                help="Name of minimal (e.g cirros) image to use when "
                     "launching test instances."),
-    cfg.StrOpt('auth_version',
-               default='v2',
-               help="Identity API version to be used for authentication "
-                    "for API tests."),
     cfg.BoolOpt('disable_ssl_certificate_validation',
                 default=False,
                 help="Set to True if using self-signed SSL certificates."),
