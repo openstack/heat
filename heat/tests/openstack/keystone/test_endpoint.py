@@ -375,3 +375,30 @@ class KeystoneEndpointTest(common.HeatTestCase):
         self.endpoints.get.return_value = mock_endpoint
         attrs = rsrc._show_resource()
         self.assertEqual({'attr': 'val'}, attrs)
+
+    def test_get_live_state(self):
+        rsrc = self._setup_endpoint_resource('test_get_live_state')
+        mock_endpoint = mock.Mock()
+        mock_endpoint.to_dict.return_value = {
+            'region_id': 'RegionOne',
+            'links': {'self': 'some_link'},
+            'url': 'http://127.0.0.1:8004/v1/1234',
+            'region': 'RegionOne',
+            'enabled': True,
+            'interface': 'admin',
+            'service_id': '934f10ea63c24d82a8d9370cc0a1cb3b',
+            'id': '7f1944ae8c524e2799119b5f2dcf9781',
+            'name': 'fake'}
+        self.endpoints.get.return_value = mock_endpoint
+
+        reality = rsrc.get_live_state(rsrc.properties)
+        expected = {
+            'region': 'RegionOne',
+            'enabled': True,
+            'interface': 'admin',
+            'service': '934f10ea63c24d82a8d9370cc0a1cb3b',
+            'name': 'fake',
+            'url': 'http://127.0.0.1:8004/v1/1234'
+        }
+
+        self.assertEqual(expected, reality)
