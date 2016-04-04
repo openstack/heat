@@ -1045,7 +1045,7 @@ class Resource(object):
             return True
 
     def _check_restricted_actions(self, actions, after, before,
-                                  after_porps, before_props,
+                                  after_props, before_props,
                                   prev_resource):
         """Checks for restricted actions.
 
@@ -1056,7 +1056,7 @@ class Resource(object):
         True, if in-place update is required.
         """
         try:
-            if self.preview_update(after, before, after_porps, before_props,
+            if self.preview_update(after, before, after_props, before_props,
                                    prev_resource, check_init_complete=True):
                 if 'update' in actions:
                     raise exception.ResourceActionRestricted(action='update')
