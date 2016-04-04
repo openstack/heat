@@ -1233,11 +1233,13 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
     :param batch_size: number of templates requested from db in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
+    :return: list of exceptions encountered during encryption
     """
     from heat.engine import template
     session = get_session()
     with session.begin():
         query = session.query(models.RawTemplate)
+        excs = []
         for raw_template in _get_batch(
                 session=session, ctxt=ctxt, query=query,
                 model=models.RawTemplate, batch_size=batch_size):
@@ -1247,15 +1249,21 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 param_schemata = tmpl.param_schemata()
                 env = raw_template.environment
 
+                if (not env or
+                        'parameters' not in env or
+                        not tmpl.param_schemata()):
+                    continue
                 if 'encrypted_param_names' in env:
                     encrypted_params = env['encrypted_param_names']
                 else:
                     encrypted_params = []
+
                 for param_name, param_val in env['parameters'].items():
                     if ((param_name in encrypted_params) or
                        (not param_schemata[param_name].hidden)):
                             continue
-                    encrypted_val = crypt.encrypt(param_val, encryption_key)
+                    encrypted_val = crypt.encrypt(six.text_type(param_val),
+                                                  encryption_key)
                     env['parameters'][param_name] = encrypted_val
                     encrypted_params.append(param_name)
 
@@ -1264,9 +1272,10 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                     environment['encrypted_param_names'] = encrypted_params
                     raw_template_update(ctxt, raw_template.id,
                                         {'environment': environment})
-            except Exception:
+            except Exception as exc:
                 LOG.exception(_LE('Failed to encrypt parameters of raw '
                                   'template %(id)d'), {'id': raw_template.id})
+                excs.append(exc)
                 continue
 
         query = session.query(models.Resource).filter(
@@ -1277,6 +1286,8 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 batch_size=batch_size):
             try:
                 result = {}
+                if not resource.properties_data:
+                    continue
                 for prop_name, prop_value in resource.properties_data.items():
                     prop_string = jsonutils.dumps(prop_value)
                     encrypted_value = crypt.encrypt(prop_string,
@@ -1288,10 +1299,12 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                                 {'properties_data': result,
                                  'properties_data_encrypted': True},
                                 resource.atomic_key)
-            except Exception:
+            except Exception as exc:
                 LOG.exception(_LE('Failed to encrypt properties_data of '
                                   'resource %(id)d'), {'id': resource.id})
+                excs.append(exc)
                 continue
+        return excs
 
 
 def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
@@ -1303,8 +1316,10 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
     :param batch_size: number of templates requested from db in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
+    :return: list of exceptions encountered during decryption
     """
     session = get_session()
+    excs = []
     with session.begin():
         query = session.query(models.RawTemplate)
         for raw_template in _get_batch(
@@ -1324,9 +1339,10 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 environment['encrypted_param_names'] = []
                 raw_template_update(ctxt, raw_template.id,
                                     {'environment': environment})
-            except Exception:
+            except Exception as exc:
                 LOG.exception(_LE('Failed to decrypt parameters of raw '
                                   'template %(id)d'), {'id': raw_template.id})
+                excs.append(exc)
                 continue
 
         query = session.query(models.Resource).filter(
@@ -1349,10 +1365,12 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                                 {'properties_data': result,
                                  'properties_data_encrypted': False},
                                 resource.atomic_key)
-            except Exception:
+            except Exception as exc:
                 LOG.exception(_LE('Failed to decrypt properties_data of '
                                   'resource %(id)d'), {'id': resource.id})
+                excs.append(exc)
                 continue
+        return excs
 
 
 def _get_batch(session, ctxt, query, model, batch_size=50):
