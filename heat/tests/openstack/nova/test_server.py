@@ -81,6 +81,19 @@ resources:
       networks: [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
 '''
 
+bdm_v2_template = '''
+heat_template_version: 2015-04-30
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      flavor: m1.tiny
+      block_device_mapping_v2:
+        - device_name: vda
+          delete_on_termination: true
+          image_id: F17-x86_64-gold
+'''
+
 subnet_template = '''
 heat_template_version: 2013-05-23
 resources:
@@ -2413,7 +2426,7 @@ class ServersTest(common.HeatTestCase):
             'destination_type': 'volume', 'boot_index': 0,
             'delete_on_termination': False}
         ], servers.Server._build_block_device_mapping_v2([
-            {'image_id': '1'}
+            {'image': '1'}
         ]))
 
         self.assertEqual([{
@@ -2427,6 +2440,26 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual([], servers.Server._build_block_device_mapping_v2([
             {'device_name': ''}
         ]))
+
+    def test_block_device_mapping_v2_image_resolve(self):
+        (tmpl, stack) = self._setup_test_stack('mapping',
+                                               test_templ=bdm_v2_template)
+        resource_defns = tmpl.resource_definitions(stack)
+        self.server = servers.Server('server',
+                                     resource_defns['server'], stack)
+        self.server.translate_properties(self.server.properties, True)
+        self.assertEqual(2, self.server.t._properties[
+            'block_device_mapping_v2'][0]['image'])
+
+    def test_block_device_mapping_v2_image_prop_conflict(self):
+        test_templ = bdm_v2_template + "\n          image: F17-x86_64-gold"
+        (tmpl, stack) = self._setup_test_stack('mapping',
+                                               test_templ=test_templ)
+        resource_defns = tmpl.resource_definitions(stack)
+        msg = 'Cannot use image and image_id at the same time.'
+        exc = self.assertRaises(ValueError, servers.Server, 'server',
+                                resource_defns['server'], stack)
+        self.assertEqual(msg, six.text_type(exc))
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_validate_with_both_blk_dev_map_and_blk_dev_map_v2(self,
