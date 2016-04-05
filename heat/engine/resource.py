@@ -1685,7 +1685,7 @@ class Resource(object):
         self._handle_signal(details)
         return self.signal_needs_metadata_updates
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             raise exception.UpdateReplace(self.name)
 
