@@ -100,12 +100,6 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
                                                                props.pop(key))
         return props[id_key]
 
-    def resolve_loadbalancer(self, props, lb_key, lb_id_key):
-        return self._resolve(props, lb_key, lb_id_key, 'loadbalancer')
-
-    def resolve_listener(self, props, listener_key, listener_id_key):
-        return self._resolve(props, listener_key, listener_id_key, 'listener')
-
     def resolve_pool(self, props, pool_key, pool_id_key):
         if props.get(pool_key):
             props[pool_id_key] = self.find_resourceid_by_name_or_id(
@@ -113,14 +107,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             props.pop(pool_key)
         return props[pool_id_key]
 
-    def resolve_subnet(self, props, subnet_key, subnet_id_key):
-        return self._resolve(props, subnet_key, subnet_id_key, 'subnet')
-
     def resolve_router(self, props, router_key, router_id_key):
         return self._resolve(props, router_key, router_id_key, 'router')
-
-    def resolve_port(self, props, port_key, port_id_key):
-        return self._resolve(props, port_key, port_id_key, 'port')
 
     def network_id_from_subnet_id(self, subnet_id):
         subnet_info = self.client().show_subnet(subnet_id)
