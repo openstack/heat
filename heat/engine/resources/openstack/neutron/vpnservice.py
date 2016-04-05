@@ -157,10 +157,27 @@ class VPNService(neutron.NeutronResource):
             ),
             translation.TranslationRule(
                 props,
+                translation.TranslationRule.RESOLVE,
+                [self.SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
+            ),
+            translation.TranslationRule(
+                props,
                 translation.TranslationRule.REPLACE,
                 [self.ROUTER],
                 value_path=[self.ROUTER_ID]
-            )
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.ROUTER],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='router'
+            ),
+
         ]
 
     def _show_resource(self):
@@ -170,8 +187,8 @@ class VPNService(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        self.client_plugin().resolve_subnet(props, self.SUBNET, 'subnet_id')
-        self.client_plugin().resolve_router(props, self.ROUTER, 'router_id')
+        props['subnet_id'] = props.pop(self.SUBNET)
+        props['router_id'] = props.pop(self.ROUTER)
         vpnservice = self.client().create_vpnservice({'vpnservice': props})[
             'vpnservice']
         self.resource_id_set(vpnservice['id'])
