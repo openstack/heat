@@ -523,6 +523,24 @@ Delete
            is deleted; ``False`` otherwise.
   :raise: any ``Exception`` if the delete operation failed.
 
+Resource Dependencies
++++++++++++++++++++++
+
+Ideally, your resource should not have any 'hidden' dependencies, i.e. Heat
+should be able to infer any inbound or outbound dependencies of your resource
+instances from resource properties and the other resources/resource attributes
+they reference. This is handled by
+``heat.engine.resource.Resource.add_dependencies()``.
+
+If this is not possible, please do not simply override `add_dependencies()` in
+your resource plugin! This has previously caused `problems
+<https://bugs.launchpad.net/heat/+bug/1554625>`_ for multiple operations,
+usually due to uncaught exceptions, If you feel you need to override
+`add_dependencies()`, please reach out to Heat developers on the `#heat` IRC
+channel on FreeNode or on the `openstack-dev
+<mailto:openstack-dev@lists.openstack.org>`_ mailing list to discuss the
+possibility of a better solution.
+
 Registering Resource Plug-ins
 +++++++++++++++++++++++++++++
 To make your plug-in available for use in stack templates, the plug-in must
