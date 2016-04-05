@@ -42,24 +42,6 @@ class NeutronClientPluginTest(NeutronClientPluginTestCase):
                                           'find_resourceid_by_name_or_id')
         self.mock_find.return_value = 42
 
-    def test_resolve_network(self):
-        props = {'net': 'test_network'}
-
-        res = self.neutron_plugin.resolve_network(props, 'net', 'net_id')
-        self.assertEqual(42, res)
-        self.mock_find.assert_called_once_with(self.neutron_client, 'network',
-                                               'test_network',
-                                               cmd_resource=None)
-
-        # check resolve if was send id instead of name
-        props = {'net_id': 77}
-        res = self.neutron_plugin.resolve_network(props, 'net', 'net_id')
-        self.assertEqual(77, res)
-        # in this case find_resourceid_by_name_or_id is not called
-        self.mock_find.assert_called_once_with(self.neutron_client, 'network',
-                                               'test_network',
-                                               cmd_resource=None)
-
     def test_resolve_subnet(self):
         props = {'snet': 'test_subnet'}
 

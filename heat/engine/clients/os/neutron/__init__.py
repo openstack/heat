@@ -113,9 +113,6 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             props.pop(pool_key)
         return props[pool_id_key]
 
-    def resolve_network(self, props, net_key, net_id_key):
-        return self._resolve(props, net_key, net_id_key, 'network')
-
     def resolve_subnet(self, props, subnet_key, subnet_id_key):
         return self._resolve(props, subnet_key, subnet_id_key, 'subnet')
 

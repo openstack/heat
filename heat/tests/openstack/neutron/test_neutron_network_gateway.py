@@ -14,7 +14,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
@@ -91,7 +90,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disconnect_network_gateway')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
-        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
+                         return_value='6af055d3-26f6-48dd-a597-7611d7e58d35')
 
     def mock_create_fail_network_not_found_delete_success(self):
         neutronclient.Client.create_network_gateway({
@@ -113,13 +113,13 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             }
         }
         )
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).MultipleTimes().AndRaise(qe.NeutronClientException(status_code=404))
+        neutronclient.Client.disconnect_network_gateway(
+            'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
+                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'segmentation_id': 10,
+                'segmentation_type': u'vlan'
+            }
+        ).AndReturn(None)
         # mock successful to delete the network_gateway
         neutronclient.Client.delete_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
@@ -172,12 +172,6 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         })
         self.stub_NetworkConstraint_validate()
         if resolve_neutron:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'network',
-                '6af055d3-26f6-48dd-a597-7611d7e58d35',
-                cmd_resource=None,
-            ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
             t = template_format.parse(gw_template)
         else:
             t = template_format.parse(gw_template_deprecated)
@@ -191,14 +185,6 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
     def _test_network_gateway_create(self, resolve_neutron=True):
         rsrc = self.prepare_create_network_gateway(resolve_neutron)
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn(
-            '6af055d3-26f6-48dd-a597-7611d7e58d35')
-
         neutronclient.Client.disconnect_network_gateway(
             'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
@@ -278,43 +264,6 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
     def test_network_gateway_update(self):
         rsrc = self.prepare_create_network_gateway()
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            cmd_resource=None,
-        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-
         neutronclient.Client.update_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_gateway': {

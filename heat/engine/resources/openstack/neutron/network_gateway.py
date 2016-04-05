@@ -14,8 +14,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -158,6 +156,14 @@ class NetworkGateway(neutron.NeutronResource):
                 translation.TranslationRule.REPLACE,
                 [self.CONNECTIONS, self.NETWORK],
                 value_name=self.NETWORK_ID
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.CONNECTIONS, self.NETWORK],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
             )
         ]
 
@@ -196,10 +202,8 @@ class NetworkGateway(neutron.NeutronResource):
         self.resource_id_set(ret['id'])
 
         for connection in connections:
-            self.client_plugin().resolve_network(
-                connection, self.NETWORK, 'network_id')
-            if self.NETWORK in six.iterkeys(connection):
-                connection.pop(self.NETWORK)
+            if self.NETWORK in connection:
+                connection['network_id'] = connection.pop(self.NETWORK)
             self.client().connect_network_gateway(
                 ret['id'], connection
             )
@@ -211,14 +215,11 @@ class NetworkGateway(neutron.NeutronResource):
         connections = self.properties[self.CONNECTIONS]
         for connection in connections:
             with self.client_plugin().ignore_not_found:
-                self.client_plugin().resolve_network(
-                    connection, self.NETWORK, 'network_id')
-                if self.NETWORK in six.iterkeys(connection):
-                    connection.pop(self.NETWORK)
+                if self.NETWORK in connection:
+                    connection['network_id'] = connection.pop(self.NETWORK)
                 self.client().disconnect_network_gateway(
                     self.resource_id, connection
                 )
-
         try:
             self.client().delete_network_gateway(self.resource_id)
         except Exception as ex:
@@ -245,18 +246,15 @@ class NetworkGateway(neutron.NeutronResource):
         if connections:
             for connection in self.properties[self.CONNECTIONS]:
                 with self.client_plugin().ignore_not_found:
-                    self.client_plugin().resolve_network(
-                        connection, self.NETWORK, 'network_id')
-                    if self.NETWORK in six.iterkeys(connection):
-                        connection.pop(self.NETWORK)
+                    if self.NETWORK in connection:
+                        connection[
+                            'network_id'] = connection.pop(self.NETWORK)
                     self.client().disconnect_network_gateway(
                         self.resource_id, connection
                     )
             for connection in connections:
-                self.client_plugin().resolve_network(
-                    connection, self.NETWORK, 'network_id')
-                if self.NETWORK in six.iterkeys(connection):
-                    connection.pop(self.NETWORK)
+                if self.NETWORK in connection:
+                    connection['network_id'] = connection.pop(self.NETWORK)
                 self.client().connect_network_gateway(
                     self.resource_id, connection
                 )
