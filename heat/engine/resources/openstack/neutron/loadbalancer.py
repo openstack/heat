@@ -418,6 +418,22 @@ class Pool(neutron.NeutronResource):
                 translation.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.VIP, self.VIP_SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
             )
         ]
 
@@ -443,8 +459,8 @@ class Pool(neutron.NeutronResource):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        self.client_plugin().resolve_subnet(
-            properties, self.SUBNET, 'subnet_id')
+        subnet_id = properties.pop(self.SUBNET)
+        properties['subnet_id'] = subnet_id
         vip_properties = properties.pop(self.VIP)
         monitors = properties.pop(self.MONITORS)
 
@@ -467,10 +483,9 @@ class Pool(neutron.NeutronResource):
         vip_arguments['protocol'] = self.properties[self.PROTOCOL]
 
         if vip_arguments.get(self.VIP_SUBNET) is None:
-            vip_arguments['subnet_id'] = properties[self.SUBNET_ID]
+            vip_arguments['subnet_id'] = subnet_id
         else:
-            vip_arguments['subnet_id'] = self.client_plugin().resolve_subnet(
-                vip_arguments, self.VIP_SUBNET, 'subnet_id')
+            vip_arguments['subnet_id'] = vip_arguments.pop(self.VIP_SUBNET)
 
         vip_arguments['pool_id'] = pool['id']
         vip = self.client().create_vip({'vip': vip_arguments})['vip']

@@ -352,7 +352,7 @@ class PoolTest(common.HeatTestCase):
             'subnet',
             'sub123',
             cmd_resource=None,
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
         if resolve_neutron and with_vip_subnet:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
@@ -480,7 +480,6 @@ class PoolTest(common.HeatTestCase):
             'sub123',
             cmd_resource=None,
         ).MultipleTimes().AndReturn('sub123')
-
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
@@ -1086,7 +1085,7 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
             'subnet',
             'sub123',
             cmd_resource=None,
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
