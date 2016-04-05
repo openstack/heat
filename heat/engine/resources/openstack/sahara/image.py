@@ -17,6 +17,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class SaharaImageRegistry(resource.Resource):
@@ -66,15 +67,22 @@ class SaharaImageRegistry(resource.Resource):
         )
     }
 
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.IMAGE],
+                client_plugin=self.client_plugin('glance'),
+                finder='find_image_by_name_or_id')
+        ]
+
     default_client_name = 'sahara'
 
     entity = 'images'
 
     def handle_create(self):
-        self.resource_id_set(self.client_plugin(
-            'glance').find_image_by_name_or_id(
-            self.properties[self.IMAGE]))
-
+        self.resource_id_set(self.properties[self.IMAGE])
         self.client().images.update_image(
             self.resource_id,
             self.properties[self.USERNAME],

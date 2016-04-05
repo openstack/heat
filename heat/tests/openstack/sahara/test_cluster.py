@@ -199,5 +199,6 @@ resources:
       neutron_management_network: some_network
       '''
         ct = self._create_cluster(template_format.parse(tmpl))
-        self.assertEqual('some_image', ct.properties.get('default_image_id'))
-        self.assertIsNone(ct.properties.get('image'))
+        self.assertEqual('some_image_id',
+                         ct.properties.get('default_image_id'))
+        self.assertIsNone(ct.properties.get('image_id'))
