@@ -52,6 +52,30 @@ tmpl_multiple = {
     }
 }
 
+tmpl_multiple_too_large = {
+    'HeatTemplateFormatVersion': '2012-12-12',
+    'Resources': {
+        'EventTestResource': {
+            'Type': 'ResourceWithMultipleRequiredProps',
+            'Properties': {'Foo1': 'zoo',
+                           'Foo2': 'A' * (1 << 16),
+                           'Foo3': '99999'}
+        }
+    }
+}
+
+tmpl_multiple_srsly_too_large = {
+    'HeatTemplateFormatVersion': '2012-12-12',
+    'Resources': {
+        'EventTestResource': {
+            'Type': 'ResourceWithMultipleRequiredProps',
+            'Properties': {'Foo1': 'Z' * (1 << 16),
+                           'Foo2': 'A' * (1 << 16),
+                           'Foo3': '99999'}
+        }
+    }
+}
+
 
 class EventCommon(common.HeatTestCase):
 
@@ -203,13 +227,13 @@ class EventTest(EventCommon):
         self.assertIn('Error', e.resource_properties)
 
 
-class EventTestProps(EventCommon):
+class EventTestSingleLargeProp(EventCommon):
 
     def setUp(self):
-        super(EventTestProps, self).setUp()
-        self._setup_stack(tmpl_multiple)
+        super(EventTestSingleLargeProp, self).setUp()
+        self._setup_stack(tmpl_multiple_too_large)
 
-    def test_store_fail_all_props(self):
+    def test_too_large_single_prop(self):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
@@ -219,22 +243,42 @@ class EventTestProps(EventCommon):
         self.assertIsNotNone(e.id)
         ev = event_object.Event.get_by_id(self.ctx, e.id)
 
-        errors = [oslo_db.exception.DBError, oslo_db.exception.DBError]
+        self.assertEqual(
+            {'Foo1': 'zoo',
+             'Foo2': '<Deleted, too large>',
+             'Foo3': '99999',
+             'Error': 'Resource properties are too large to store fully'},
+            ev['resource_properties'])
 
-        def side_effect(*args):
-            try:
-                raise errors.pop()
-            except IndexError:
-                self.assertEqual(
-                    {'Error': 'Resource properties are too large to store'},
-                    args[1]['resource_properties'])
-                return ev
 
-        with mock.patch("heat.objects.event.Event") as mock_event:
-            mock_event.create.side_effect = side_effect
-            e.store()
+class EventTestMultipleLargeProp(EventCommon):
 
-    def test_store_fail_one_prop(self):
+    def setUp(self):
+        super(EventTestMultipleLargeProp, self).setUp()
+        self._setup_stack(tmpl_multiple_srsly_too_large)
+
+    def test_too_large_multiple_prop(self):
+        self.resource.resource_id_set('resource_physical_id')
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'alabama', self.resource.properties,
+                        self.resource.name, self.resource.type())
+        e.store()
+        self.assertIsNotNone(e.id)
+        ev = event_object.Event.get_by_id(self.ctx, e.id)
+
+        self.assertEqual(
+            {'Error': 'Resource properties are too large to attempt to store'},
+            ev['resource_properties'])
+
+
+class EventTestStoreProps(EventCommon):
+
+    def setUp(self):
+        super(EventTestStoreProps, self).setUp()
+        self._setup_stack(tmpl_multiple)
+
+    def test_store_fail_all_props(self):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
@@ -251,10 +295,7 @@ class EventTestProps(EventCommon):
                 raise errors.pop()
             except IndexError:
                 self.assertEqual(
-                    {'Foo1': 'zoo',
-                     'Foo2': '<Deleted, too large>',
-                     'Foo3': '99999',
-                     'Error': 'Resource properties are too large to store'},
+                    {'Error': 'Resource properties are too large to store'},
                     args[1]['resource_properties'])
                 return ev
 

@@ -11,14 +11,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import pickle
 import six
 
 import oslo_db.exception
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import identifier
 from heat.objects import event as event_object
+
+LOG = logging.getLogger(__name__)
+
+MAX_EVENT_RESOURCE_PROPERTIES_SIZE = (1 << 16) - 1
 
 
 class Event(object):
@@ -87,22 +93,38 @@ class Event(object):
         if self.timestamp is not None:
             ev['created_at'] = self.timestamp
 
+        # Workaround: we don't want to attempt to store the
+        # event.resource_properties column if the data is too large
+        # (greater than permitted by BLOB). Otherwise, we end up with
+        # an unsightly log message.
+        rp_size = len(pickle.dumps(ev['resource_properties']))
+        if rp_size > MAX_EVENT_RESOURCE_PROPERTIES_SIZE:
+            LOG.debug('event\'s resource_properties too large to store at '
+                      '%d bytes', rp_size)
+            # Try truncating the largest value and see if that gets us under
+            # the db column's size constraint.
+            max_key, max_val = max(ev['resource_properties'].items(),
+                                   key=lambda i: len(repr(i[1])))
+            err = 'Resource properties are too large to store fully'
+            ev['resource_properties'].update({'Error': err})
+            ev['resource_properties'][max_key] = '<Deleted, too large>'
+            rp_size = len(pickle.dumps(ev['resource_properties']))
+            if rp_size > MAX_EVENT_RESOURCE_PROPERTIES_SIZE:
+                LOG.debug('event\'s resource_properties STILL too large '
+                          'after truncating largest key at %d bytes', rp_size)
+                err = 'Resource properties are too large to attempt to store'
+                ev['resource_properties'] = {'Error': err}
+
+        # We should have worked around the issue, but let's be extra
+        # careful.
         try:
             new_ev = event_object.Event.create(self.context, ev)
         except oslo_db.exception.DBError:
-            # Attempt do drop the largest key and re-store as we expect
-            # This to mostly happen with one large config blob property
-            max_key, max_val = max(ev['resource_properties'].items(),
-                                   key=lambda i: len(repr(i[1])))
+            # Give up and drop all properties..
             err = 'Resource properties are too large to store'
-            ev['resource_properties'].update({'Error': err})
-            ev['resource_properties'][max_key] = '<Deleted, too large>'
-            try:
-                new_ev = event_object.Event.create(self.context, ev)
-            except oslo_db.exception.DBError:
-                # Give up and drop all properties..
-                ev['resource_properties'] = {'Error': err}
-                new_ev = event_object.Event.create(self.context, ev)
+            ev['resource_properties'] = {'Error': err}
+            new_ev = event_object.Event.create(self.context, ev)
+
         self.id = new_ev.id
         return self.id
 
