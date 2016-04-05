@@ -159,7 +159,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
         if alarm_state != 'alarm':
             raise exception.NoActionRequired()
-        if self._cooldown_inprogress():
+        if not self._is_scaling_allowed():
             LOG.info(_LI("%(name)s NOT performing scaling action, "
                          "cooldown %(cooldown)s"),
                      {'name': self.name,
@@ -168,6 +168,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)
+        changed_size = False
         try:
             if group is None:
                 raise exception.NotFound(_('Alarm %(alarm)s could not find '
@@ -180,15 +181,16 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                      {'name': self.name, 'group': group.name,
                       'asgn_id': asgn_id,
                       'filter': self.properties[self.SCALING_ADJUSTMENT]})
-            group.adjust(self.properties[self.SCALING_ADJUSTMENT],
-                         self.properties[self.ADJUSTMENT_TYPE],
-                         self.properties[self.MIN_ADJUSTMENT_STEP],
-                         signal=True)
-
-        finally:
-            self._cooldown_timestamp("%s : %s" % (
+            changed_size = group.adjust(
+                self.properties[self.SCALING_ADJUSTMENT],
                 self.properties[self.ADJUSTMENT_TYPE],
-                self.properties[self.SCALING_ADJUSTMENT]))
+                self.properties[self.MIN_ADJUSTMENT_STEP],
+                signal=True)
+        finally:
+            self._finished_scaling("%s : %s" % (
+                self.properties[self.ADJUSTMENT_TYPE],
+                self.properties[self.SCALING_ADJUSTMENT]),
+                changed_size=changed_size)
 
     def _resolve_attribute(self, name):
         if name == self.ALARM_URL:

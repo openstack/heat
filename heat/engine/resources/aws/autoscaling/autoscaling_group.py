@@ -227,7 +227,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         """Invoke the cooldown after creation succeeds."""
         done = super(AutoScalingGroup, self).check_create_complete(task)
         if done:
-            self._cooldown_timestamp(
+            self._finished_scaling(
                 "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
                              grouputils.get_size(self)))
         return done
@@ -264,7 +264,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         """
         Adjust the size of the scaling group if the cooldown permits.
         """
-        if self._cooldown_inprogress():
+        if not self._is_scaling_allowed():
             LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
                          "cooldown %(cooldown)s"),
                      {'name': self.name,
@@ -283,6 +283,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                                       min_adjustment_step,
                                                       lower, upper)
 
+        changed_size = new_capacity != capacity
         # send a notification before, on-error and on-success.
         notif = {
             'stack': self.stack,
@@ -316,8 +317,9 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
             })
             notification.send(**notif)
         finally:
-            self._cooldown_timestamp("%s : %s" % (adjustment_type,
-                                                  adjustment))
+            self._finished_scaling("%s : %s" % (adjustment_type, adjustment),
+                                   changed_size=changed_size)
+        return changed_size
 
     def _tags(self):
         """Add Identifing Tags to all servers in the group.
