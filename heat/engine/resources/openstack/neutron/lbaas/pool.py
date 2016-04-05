@@ -21,6 +21,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class Pool(neutron.NeutronResource):
@@ -139,6 +140,18 @@ class Pool(neutron.NeutronResource):
         ),
     }
 
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.LISTENER],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='listener'
+            ),
+        ]
+
     def __init__(self, name, definition, stack):
         super(Pool, self).__init__(name, definition, stack)
         self._lb_id = None
@@ -146,10 +159,8 @@ class Pool(neutron.NeutronResource):
     @property
     def lb_id(self):
         if self._lb_id is None:
-            listener_id = self.client_plugin().find_resourceid_by_name_or_id(
-                'listener', self.properties[self.LISTENER])
+            listener_id = self.properties[self.LISTENER]
             listener = self.client().show_listener(listener_id)['listener']
-
             self._lb_id = listener['loadbalancers'][0]['id']
         return self._lb_id
 
@@ -186,9 +197,7 @@ class Pool(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        self.client_plugin().resolve_listener(
-            properties, self.LISTENER, 'listener_id')
-
+        properties['listener_id'] = properties.pop(self.LISTENER)
         session_p = properties.get(self.SESSION_PERSISTENCE)
         if session_p is not None:
             session_props = self.prepare_properties(session_p, None)

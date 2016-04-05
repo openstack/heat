@@ -20,6 +20,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class PoolMember(neutron.NeutronResource):
@@ -107,6 +108,18 @@ class PoolMember(neutron.NeutronResource):
         )
     }
 
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
+            ),
+        ]
+
     def __init__(self, name, definition, stack):
         super(PoolMember, self).__init__(name, definition, stack)
         self._pool_id = None
@@ -145,9 +158,7 @@ class PoolMember(neutron.NeutronResource):
         properties.pop('pool_id')
 
         if self.SUBNET in properties:
-            self.client_plugin().resolve_subnet(
-                properties, self.SUBNET, 'subnet_id')
-
+            properties['subnet_id'] = properties.pop(self.SUBNET)
         return properties
 
     def check_create_complete(self, properties):

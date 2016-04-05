@@ -46,6 +46,7 @@ class PoolMemberTest(common.HeatTestCase):
             mock.MagicMock(return_value='123'))
         self.member.client_plugin().client = mock.MagicMock(
             return_value=self.neutron_client)
+        self.member.translate_properties(self.member.properties)
 
     def test_create(self):
         self._create_stack()
