@@ -23,7 +23,7 @@ from six import reraise as raise_
 
 from heat.common.i18n import _
 from heat.common.i18n import _LI
-from heat.common.i18n import repr_wraper
+from heat.common.i18n import repr_wrapper
 from heat.common import timeutils
 
 LOG = logging.getLogger(__name__)
@@ -333,7 +333,7 @@ def wrappertask(task):
     return wrapper
 
 
-@repr_wraper
+@repr_wrapper
 class DependencyTaskGroup(object):
     """Task which manages group of subtasks that have ordering dependencies."""
 

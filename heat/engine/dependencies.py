@@ -18,14 +18,14 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import repr_wraper
+from heat.common.i18n import repr_wrapper
 
 
 class CircularDependencyException(exception.HeatException):
     msg_fmt = _("Circular Dependency Found: %(cycle)s")
 
 
-@repr_wraper
+@repr_wrapper
 @six.python_2_unicode_compatible
 class Node(object):
     """A node in a dependency graph."""
@@ -168,7 +168,7 @@ class Graph(collections.defaultdict):
                 raise CircularDependencyException(cycle=six.text_type(graph))
 
 
-@repr_wraper
+@repr_wrapper
 @six.python_2_unicode_compatible
 class Dependencies(object):
     """Helper class for calculating a dependency graph."""

@@ -19,7 +19,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _LW
-from heat.common.i18n import repr_wraper
+from heat.common.i18n import repr_wrapper
 from heat.engine import function
 from heat.engine import properties
 
@@ -28,7 +28,7 @@ LOG = log.getLogger(__name__)
 __all__ = ['ResourceDefinition']
 
 
-@repr_wraper
+@repr_wrapper
 class ResourceDefinitionCore(object):
     """A definition of a resource, independent of any template format."""
 
