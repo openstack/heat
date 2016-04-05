@@ -45,12 +45,12 @@ class TestResource(resource.Resource):
         VALUE, UPDATE_REPLACE, FAIL,
         CLIENT_NAME, ENTITY_NAME,
         WAIT_SECS, ACTION_WAIT_SECS, ATTR_WAIT_SECS,
-        CONSTRAINT_PROP_SECS,
+        CONSTRAINT_PROP_SECS, UPDATE_REPLACE_VALUE,
     ) = (
         'value', 'update_replace', 'fail',
         'client_name', 'entity_name',
         'wait_secs', 'action_wait_secs', 'attr_wait_secs',
-        'constraint_prop_secs',
+        'constraint_prop_secs', 'update_replace_value',
     )
 
     ATTRIBUTES = (
@@ -82,6 +82,11 @@ class TestResource(resource.Resource):
             _('The input string to be stored.'),
             default='test_string',
             update_allowed=True
+        ),
+        UPDATE_REPLACE_VALUE: properties.Schema(
+            properties.Schema.STRING,
+            _('Some value that can be stored but can not be updated.'),
+            support_status=support.SupportStatus(version='7.0.0')
         ),
         FAIL: properties.Schema(
             properties.Schema.BOOLEAN,
