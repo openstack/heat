@@ -120,8 +120,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                return_value=True) as mock_isa:
             pol.handle_signal(details=test)
             mock_isa.assert_called_once_with()
-        group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None,
-                                             signal=True)
+        group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None)
 
 
 class TestCooldownMixin(common.HeatTestCase):
