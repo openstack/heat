@@ -1661,6 +1661,10 @@ class StackParametersTest(common.HeatTestCase):
          dict(params={'list': 'foo,bar'},
               snippet={'properties': {'prop1': {'get_param': ['list', 1]}}},
               expected={'properties': {'prop1': 'bar'}})),
+        ('get_list_attr_string_index',
+         dict(params={'list': 'foo,bar'},
+              snippet={'properties': {'prop1': {'get_param': ['list', '1']}}},
+              expected={'properties': {'prop1': 'bar'}})),
         ('get_flat_dict_attr',
          dict(params={'flat_dict':
                       {'key1': 'val1', 'key2': 'val2', 'key3': 'val3'}},
