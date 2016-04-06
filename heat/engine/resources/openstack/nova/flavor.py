@@ -48,9 +48,9 @@ class NovaFlavor(resource.Resource):
     )
 
     ATTRIBUTES = (
-        IS_PUBLIC_ATTR,
+        IS_PUBLIC_ATTR, EXTRA_SPECS_ATTR
     ) = (
-        'is_public',
+        'is_public', 'extra_specs'
     )
 
     properties_schema = {
@@ -119,6 +119,11 @@ class NovaFlavor(resource.Resource):
             support_status=support.SupportStatus(version='6.0.0'),
             type=attributes.Schema.BOOLEAN
         ),
+        EXTRA_SPECS_ATTR: attributes.Schema(
+            _('Extra specs of the flavor in key-value pairs.'),
+            support_status=support.SupportStatus(version='7.0.0'),
+            type=attributes.Schema.MAP
+        )
     }
 
     def handle_create(self):
@@ -152,6 +157,8 @@ class NovaFlavor(resource.Resource):
         flavor = self.client().flavors.get(self.resource_id)
         if name == self.IS_PUBLIC_ATTR:
             return getattr(flavor, name)
+        if name == self.EXTRA_SPECS_ATTR:
+            return flavor.get_keys()
 
 
 def resource_mapping():
