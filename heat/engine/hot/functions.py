@@ -80,6 +80,15 @@ class GetParam(function.Function):
                 raise TypeError(_('Path components in "%s" '
                                   'must be strings') % self.fn_name)
 
+            if isinstance(collection, collections.Sequence
+                          ) and isinstance(key, six.string_types):
+                try:
+                    key = int(key)
+                except ValueError:
+                    raise TypeError(_("Path components in '%s' "
+                                      "must be a string that can be "
+                                      "parsed into an "
+                                      "integer.") % self.fn_name)
             return collection[key]
 
         try:
