@@ -58,9 +58,9 @@
    Metadata service
      A Compute service that enables virtual machine instances to
      retrieve instance-specific data. See `Metadata
-     service (OpenStack Cloud Admin Guide)`_.
+     service (OpenStack Administrator Guide)`_.
 
-     .. _Metadata service (OpenStack Cloud Admin Guide): http://docs.openstack.org/admin-guide-cloud/compute-networking-nova.html#metadata-service
+     .. _Metadata service (OpenStack Administrator Guide): http://docs.openstack.org/admin-guide/compute-networking-nova.html#metadata-service
 
    Multi-region
      A feature of Heat that supports deployment to multiple regions.

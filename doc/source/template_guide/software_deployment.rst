@@ -790,7 +790,7 @@ contents of the file ``example-puppet-manifest.pp``, containing:
 .. _`AWS::CloudFormation::Init`: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
 .. _diskimage-builder: https://git.openstack.org/cgit/openstack/diskimage-builder
 .. _imagefactory: http://imgfac.org/
-.. _`Metadata service`: http://docs.openstack.org/admin-guide-cloud/compute-networking-nova.html#metadata-service
+.. _`Metadata service`: http://docs.openstack.org/admin-guide/compute-networking-nova.html#metadata-service
 .. _Cloud-init: http://cloudinit.readthedocs.org/en/latest/
 .. _curl: http://curl.haxx.se/
 .. _`Orchestration API`: http://developer.openstack.org/api-ref-orchestration-v1.html
