@@ -86,8 +86,9 @@ class GetParam(function.Function):
                     key = int(key)
                 except ValueError:
                     raise TypeError(_("Path components in '%s' "
-                                      "must be a integer "
-                                      "parsable strings.") % self.fn_name)
+                                      "must be a string that can be "
+                                      "parsed into an "
+                                      "integer.") % self.fn_name)
             return collection[key]
 
         try:
