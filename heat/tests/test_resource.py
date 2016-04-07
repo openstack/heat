@@ -448,6 +448,7 @@ class ResourceTest(common.HeatTestCase):
             exception.ResourceFailure, scheduler.TaskRunner(res.update, utmpl))
 
     def test_update_replace_rollback(self):
+        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
         res, utmpl = self._setup_resource_for_update(
             res_name='test_update_replace_rollback')
         res.restore_prev_rsrc = mock.Mock()
@@ -458,6 +459,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(res.restore_prev_rsrc.called)
 
     def test_update_replace_rollback_restore_prev_rsrc_error(self):
+        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
         res, utmpl = self._setup_resource_for_update(
             res_name='restore_prev_rsrc_error')
         res.restore_prev_rsrc = mock.Mock(side_effect=Exception)
