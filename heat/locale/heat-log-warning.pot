@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0b4.dev48\n"
+"Project-Id-Version: heat 6.0.1.dev35\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-10 06:26+0000\n"
+"POT-Creation-Date: 2016-04-08 06:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,13 +27,13 @@ msgstr ""
 msgid "Old Engine Version: %s"
 msgstr ""
 
-#: heat/common/config.py:334
+#: heat/common/config.py:340
 msgid ""
 "stack_user_domain_id or stack_user_domain_name not set in heat.conf "
 "falling back to using default"
 msgstr ""
 
-#: heat/common/config.py:348
+#: heat/common/config.py:354
 msgid "Please update auth_encryption_key to be 32 characters."
 msgstr ""
 
@@ -103,42 +103,42 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/environment.py:331
+#: heat/engine/environment.py:338
 #, python-format
-msgid "%s"
+msgid "%(name)s is %(status)s. %(message)s"
 msgstr ""
 
-#: heat/engine/resource.py:515
+#: heat/engine/resource.py:539
 #, python-format
 msgid "Ignoring error in old property value %(prop_name)s: %(msg)s"
 msgstr ""
 
-#: heat/engine/resource.py:1073
+#: heat/engine/resource.py:1105
 #, python-format
 msgid "Resource cannot be updated with it's live state in case of next error: %s"
 msgstr ""
 
-#: heat/engine/resource.py:1480
+#: heat/engine/resource.py:1510
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1566
+#: heat/engine/resource.py:1596
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1618
+#: heat/engine/resource.py:1654
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1659
+#: heat/engine/resource.py:1695
 #, python-format
 msgid "Resolving 'show' attribute has failed : %s"
 msgstr ""
 
-#: heat/engine/resource.py:1934
+#: heat/engine/resource.py:1970
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -160,17 +160,17 @@ msgid ""
 "upgrading."
 msgstr ""
 
-#: heat/engine/service.py:1603
+#: heat/engine/service.py:1610
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1911
+#: heat/engine/service.py:1918
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1939
+#: heat/engine/service.py:1946
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -180,37 +180,37 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:399
+#: heat/engine/stack.py:403
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
-#: heat/engine/stack.py:428
+#: heat/engine/stack.py:432
 #, python-format
 msgid "Ignoring error adding implicit dependencies for %(res)s: %(err)s"
 msgstr ""
 
-#: heat/engine/stack.py:840
+#: heat/engine/stack.py:851
 #, python-format
 msgid ""
 "Failed to set state of stack %(name)s with traversal ID %(trvsl_id)s, to "
 "%(action)s_%(status)s"
 msgstr ""
 
-#: heat/engine/stack.py:1155 heat/engine/stack.py:1181
+#: heat/engine/stack.py:1167 heat/engine/stack.py:1193
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
 "stack %(action)s"
 msgstr ""
 
-#: heat/engine/stack.py:1226
+#: heat/engine/stack.py:1238
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, not "
 "trigerring rollback."
 msgstr ""
 
-#: heat/engine/stack.py:1935
+#: heat/engine/stack.py:1947
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
@@ -279,18 +279,13 @@ msgstr ""
 msgid "Cannot generate signed url, unable to create keypair"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:179
+#: heat/engine/resources/stack_resource.py:181
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
 
 #: heat/engine/resources/stack_user.py:99
 msgid "Reverting to legacy user delete path"
-msgstr ""
-
-#: heat/engine/resources/wait_condition.py:60
-#, python-format
-msgid "Overwriting Metadata item for id %s!"
 msgstr ""
 
 #: heat/engine/resources/aws/ec2/eip.py:380
@@ -312,7 +307,7 @@ msgid ""
 "\"%(subnet)s\" property."
 msgstr ""
 
-#: heat/engine/resources/openstack/mistral/cron_trigger.py:148
+#: heat/engine/resources/openstack/mistral/cron_trigger.py:160
 msgid ""
 "get_live_state isn't implemented for this type of resource due to "
 "specific behaviour of cron trigger in mistral."
