@@ -26,6 +26,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
 
@@ -250,48 +251,40 @@ class SaharaNodeGroupTemplate(resource.Resource):
 
     entity = 'node_group_templates'
 
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FLAVOR],
+                client_plugin=self.client_plugin('nova'),
+                finder='find_flavor_by_name_or_id'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FLOATING_IP_POOL],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network')
+            ]
+
     def _ngt_name(self):
         name = self.properties[self.NAME]
         if name:
             return name
         return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
-    def _prepare_properties(self):
-        props = {
-            'name': self._ngt_name(),
-            'plugin_name': self.properties[self.PLUGIN_NAME],
-            'hadoop_version': self.properties[self.HADOOP_VERSION],
-            'flavor_id': self.client_plugin("nova").find_flavor_by_name_or_id(
-                self.properties[self.FLAVOR]),
-            'description': self.properties[self.DESCRIPTION],
-            'volumes_per_node': self.properties[self.VOLUMES_PER_NODE],
-            'volumes_size': self.properties[self.VOLUMES_SIZE],
-            'node_processes': self.properties[self.NODE_PROCESSES],
-            'node_configs': self.properties[self.NODE_CONFIGS],
-            'floating_ip_pool': self.properties[self.FLOATING_IP_POOL],
-            'security_groups': self.properties[self.SECURITY_GROUPS],
-            'auto_security_group': self.properties[self.AUTO_SECURITY_GROUP],
-            'availability_zone': self.properties[self.AVAILABILITY_ZONE],
-            'volumes_availability_zone': self.properties[
-                self.VOLUMES_AVAILABILITY_ZONE],
-            'volume_type': self.properties[self.VOLUME_TYPE],
-            'image_id': self.properties[self.IMAGE_ID],
-            'is_proxy_gateway': self.properties[self.IS_PROXY_GATEWAY],
-            'volume_local_to_instance': self.properties[
-                self.VOLUME_LOCAL_TO_INSTANCE],
-            'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
-            'shares': self.properties[self.SHARES]
-        }
-        floating_ip_pool = props['floating_ip_pool']
-        if floating_ip_pool and self.is_using_neutron():
-            props['floating_ip_pool'] = self.client_plugin(
-                'neutron').find_resourceid_by_name_or_id(
-                'network',
-                floating_ip_pool)
+    def _prepare_properties(self, properties):
+        """Prepares the property values."""
+        props = dict((k, v) for k, v in six.iteritems(properties))
+        if self.NAME in props:
+            props['name'] = self._ngt_name()
+        if self.FLAVOR in props:
+            props['flavor_id'] = props.pop(self.FLAVOR)
         return props
 
     def handle_create(self):
-        args = self._prepare_properties()
+        args = self._prepare_properties(self.properties)
         node_group_template = self.client().node_group_templates.create(**args)
         LOG.info(_LI("Node Group Template '%s' has been created"),
                  node_group_template.name)
@@ -303,7 +296,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             self.properties = json_snippet.properties(
                 self.properties_schema,
                 self.context)
-            args = self._prepare_properties()
+            args = self._prepare_properties(prop_diff)
             self.client().node_group_templates.update(self.resource_id, **args)
 
     def validate(self):
@@ -535,39 +528,43 @@ class SaharaClusterTemplate(resource.Resource):
 
     entity = 'cluster_templates'
 
+    def translation_rules(self, props):
+        if not self.is_using_neutron():
+            return [
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    [self.MANAGEMENT_NETWORK],
+                    client_plugin=self.client_plugin('nova'),
+                    finder='get_nova_network_id')
+                ]
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.MANAGEMENT_NETWORK],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network')
+            ]
+
     def _cluster_template_name(self):
         name = self.properties[self.NAME]
         if name:
             return name
         return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
-    def _prepare_properties(self):
-        props = {
-            'name': self._cluster_template_name(),
-            'plugin_name': self.properties[self.PLUGIN_NAME],
-            'hadoop_version': self.properties[self.HADOOP_VERSION],
-            'description': self.properties[self.DESCRIPTION],
-            'cluster_configs': self.properties[self.CLUSTER_CONFIGS],
-            'node_groups': self.properties[self.NODE_GROUPS],
-            'anti_affinity': self.properties[self.ANTI_AFFINITY],
-            'net_id': self.properties[self.MANAGEMENT_NETWORK],
-            'default_image_id': self.properties[self.IMAGE_ID],
-            'use_autoconfig': self.properties[self.USE_AUTOCONFIG],
-            'shares': self.properties[self.SHARES]
-        }
-        net_id = props['net_id']
-        if net_id:
-            if self.is_using_neutron():
-                props['net_id'] = self.client_plugin(
-                    'neutron').find_resourceid_by_name_or_id('network',
-                                                             net_id)
-            else:
-                props['net_id'] = self.client_plugin(
-                    'nova').get_nova_network_id(net_id)
+    def _prepare_properties(self, properties):
+        """Prepares the property values."""
+        props = dict((k, v) for k, v in six.iteritems(properties))
+        if self.NAME in props:
+            props['name'] = self._cluster_template_name()
+        if self.MANAGEMENT_NETWORK in props:
+            props['net_id'] = props.pop(self.MANAGEMENT_NETWORK)
         return props
 
     def handle_create(self):
-        args = self._prepare_properties()
+        args = self._prepare_properties(self.properties)
         cluster_template = self.client().cluster_templates.create(**args)
         LOG.info(_LI("Cluster Template '%s' has been created"),
                  cluster_template.name)
@@ -579,7 +576,7 @@ class SaharaClusterTemplate(resource.Resource):
             self.properties = json_snippet.properties(
                 self.properties_schema,
                 self.context)
-            args = self._prepare_properties()
+            args = self._prepare_properties(prop_diff)
             self.client().cluster_templates.update(self.resource_id, **args)
 
     def validate(self):
