@@ -106,3 +106,6 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             six.text_type(cfg.CONF.heat_api_cloudwatch.bind_port))
         url_parts[-1] = '/'.join(port_and_version)
         return ':'.join(url_parts)
+
+    def get_insecure_option(self):
+        return self._get_client_option(CLIENT_NAME, 'insecure')
