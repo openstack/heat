@@ -856,7 +856,7 @@ class EngineService(service.Service):
             new_env = environment.Environment(existing_env)
             new_env.load(params)
 
-            new_files = current_stack.t.files.copy()
+            new_files = current_stack.t.files
             new_files.update(files or {})
 
             assert template_id is None, \

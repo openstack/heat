@@ -318,7 +318,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             self.assertEqual(expected_env,
                              tmpl.env.user_env_as_dict())
             self.assertEqual(expected_files,
-                             tmpl.files)
+                             tmpl.files.files)
             self.assertEqual(stk.identifier(), result)
 
     def test_stack_update_existing_parameter_defaults(self):

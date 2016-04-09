@@ -133,7 +133,33 @@ def raw_template_update(context, template_id, values):
 
 def raw_template_delete(context, template_id):
     raw_template = raw_template_get(context, template_id)
+    raw_tmpl_files_id = raw_template.files_id
     raw_template.delete()
+    if raw_tmpl_files_id is None:
+        return
+    # If no other raw_template is referencing the same raw_template_files,
+    # delete that too
+    if _session(context).query(models.RawTemplate).filter_by(
+            files_id=raw_tmpl_files_id).first() is None:
+        raw_template_files_get(context, raw_tmpl_files_id).delete()
+
+
+def raw_template_files_create(context, values):
+    session = _session(context)
+    raw_templ_files_ref = models.RawTemplateFiles()
+    raw_templ_files_ref.update(values)
+    with session.begin():
+        raw_templ_files_ref.save(session)
+    return raw_templ_files_ref
+
+
+def raw_template_files_get(context, files_id):
+    result = model_query(context, models.RawTemplateFiles).get(files_id)
+    if not result:
+        raise exception.NotFound(
+            _("raw_template_files with files_id %d not found") %
+            files_id)
+    return result
 
 
 def resource_get(context, resource_id):
@@ -1106,6 +1132,8 @@ def purge_deleted(age, granularity='days'):
     resource_data = sqlalchemy.Table('resource_data', meta, autoload=True)
     event = sqlalchemy.Table('event', meta, autoload=True)
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
+    raw_template_files = sqlalchemy.Table('raw_template_files', meta,
+                                          autoload=True)
     user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
     service = sqlalchemy.Table('service', meta, autoload=True)
     syncpoint = sqlalchemy.Table('sync_point', meta, autoload=True)
@@ -1159,9 +1187,26 @@ def purge_deleted(age, granularity='days'):
                 stack.c.prev_raw_template_id.in_(raw_template_ids))
             raw_tmpl = [i[0] for i in engine.execute(raw_tmpl_sel)]
             raw_template_ids = raw_template_ids - set(raw_tmpl)
+            raw_tmpl_file_sel = sqlalchemy.select(
+                [raw_template.c.files_id]).where(
+                    raw_template.c.id.in_(raw_template_ids))
+            raw_tmpl_file_ids = [i[0] for i in engine.execute(
+                raw_tmpl_file_sel)]
             raw_templ_del = raw_template.delete().where(
                 raw_template.c.id.in_(raw_template_ids))
             engine.execute(raw_templ_del)
+            # purge any raw_template_files that are no longer referenced
+            if raw_tmpl_file_ids:
+                raw_tmpl_file_sel = sqlalchemy.select(
+                    [raw_template.c.files_id]).where(
+                        raw_template.c.files_id.in_(raw_tmpl_file_ids))
+                raw_tmpl_files = [i[0] for i in engine.execute(
+                    raw_tmpl_file_sel)]
+                raw_tmpl_file_ids = set(raw_tmpl_file_ids) \
+                    - set(raw_tmpl_files)
+                raw_tmpl_file_del = raw_template_files.delete().where(
+                    raw_template_files.c.id.in_(raw_tmpl_file_ids))
+                engine.execute(raw_tmpl_file_del)
         # purge any user creds that are no longer referenced
         user_creds_ids = [i[3] for i in stacks if i[3] is not None]
         if user_creds_ids:

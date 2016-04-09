@@ -39,6 +39,7 @@ from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
+from heat.engine import template_files
 from heat.tests import common
 from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -1376,8 +1377,12 @@ def create_raw_template(context, **kwargs):
     t = template_format.parse(wp_template)
     template = {
         'template': t,
-        'files': {'foo': 'bar'}
     }
+    if 'files' not in kwargs and 'files_id' not in kwargs:
+        # modern raw_templates have associated raw_template_files db obj
+        tf = template_files.TemplateFiles({'foo': 'bar'})
+        tf.store()
+        kwargs['files_id'] = tf.files_id
     template.update(kwargs)
     return db_api.raw_template_create(context, template)
 
@@ -1505,7 +1510,6 @@ class DBAPIRawTemplateTest(common.HeatTestCase):
         tp = create_raw_template(self.ctx, template=t)
         self.assertIsNotNone(tp.id)
         self.assertEqual(t, tp.template)
-        self.assertEqual({'foo': 'bar'}, tp.files)
 
     def test_raw_template_get(self):
         t = template_format.parse(wp_template)
@@ -1962,26 +1966,31 @@ class DBAPIStackTest(common.HeatTestCase):
         now = timeutils.utcnow()
         delta = datetime.timedelta(seconds=3600 * 7)
         deleted = [now - delta * i for i in range(1, 6)]
-        templates = [create_raw_template(self.ctx) for i in range(5)]
+        tmpl_files = [template_files.TemplateFiles(
+            {'foo': 'file contents %d' % i}) for i in range(5)]
+        [tmpl_file.store(self.ctx) for tmpl_file in tmpl_files]
+        templates = [create_raw_template(self.ctx,
+                                         files_id=tmpl_files[i].files_id
+                                         ) for i in range(5)]
         creds = [create_user_creds(self.ctx) for i in range(5)]
         stacks = [create_stack(self.ctx, templates[i], creds[i],
                                deleted_at=deleted[i]) for i in range(5)]
 
         db_api.purge_deleted(age=1, granularity='days')
         self._deleted_stack_existance(utils.dummy_context(), stacks,
-                                      (0, 1, 2), (3, 4))
+                                      tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=22, granularity='hours')
         self._deleted_stack_existance(utils.dummy_context(), stacks,
-                                      (0, 1, 2), (3, 4))
+                                      tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=1100, granularity='minutes')
         self._deleted_stack_existance(utils.dummy_context(), stacks,
-                                      (0, 1), (2, 3, 4))
+                                      tmpl_files, (0, 1), (2, 3, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds')
         self._deleted_stack_existance(utils.dummy_context(), stacks,
-                                      (), (0, 1, 2, 3, 4))
+                                      tmpl_files, (), (0, 1, 2, 3, 4))
 
     def test_purge_deleted_prev_raw_template(self):
         now = timeutils.utcnow()
@@ -1997,10 +2006,44 @@ class DBAPIStackTest(common.HeatTestCase):
                                               show_deleted=True))
         self.assertIsNotNone(db_api.raw_template_get(ctx, templates[1].id))
 
-    def _deleted_stack_existance(self, ctx, stacks, existing, deleted):
+    def test_dont_purge_shared_raw_template_files(self):
+        now = timeutils.utcnow()
+        delta = datetime.timedelta(seconds=3600 * 7)
+        deleted = [now - delta * i for i in range(1, 6)]
+        # the last two template_files are identical to first two
+        # (so should not be purged)
+        tmpl_files = [template_files.TemplateFiles(
+            {'foo': 'more file contents'}) for i in range(3)]
+        [tmpl_file.store(self.ctx) for tmpl_file in tmpl_files]
+        templates = [create_raw_template(self.ctx,
+                                         files_id=tmpl_files[i % 3].files_id
+                                         ) for i in range(5)]
+        creds = [create_user_creds(self.ctx) for i in range(5)]
+        [create_stack(self.ctx, templates[i], creds[i],
+                      deleted_at=deleted[i]) for i in range(5)]
+        db_api.purge_deleted(age=15, granularity='hours')
+
+        # The third raw_template_files object should be purged (along
+        # with the last three stacks/templates). However, the other
+        # two are shared with existing templates, so should not be
+        # purged.
+        self.assertIsNotNone(db_api.raw_template_files_get(
+            self.ctx, tmpl_files[0].files_id))
+        self.assertIsNotNone(db_api.raw_template_files_get(
+            self.ctx, tmpl_files[1].files_id))
+        self.assertRaises(exception.NotFound,
+                          db_api.raw_template_files_get,
+                          self.ctx, tmpl_files[2].files_id)
+
+    def _deleted_stack_existance(self, ctx, stacks,
+                                 tmpl_files, existing, deleted):
+        tmpl_idx = 0
         for s in existing:
             self.assertIsNotNone(db_api.stack_get(ctx, stacks[s].id,
                                                   show_deleted=True))
+            self.assertIsNotNone(db_api.raw_template_files_get(
+                ctx, tmpl_files[tmpl_idx].files_id))
+            tmpl_idx = tmpl_idx + 1
         for s in deleted:
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
                                                show_deleted=True))
@@ -2010,6 +2053,9 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertRaises(exception.NotFound,
                               db_api.resource_get_all_by_stack,
                               ctx, stacks[s].id)
+            self.assertRaises(exception.NotFound,
+                              db_api.raw_template_files_get,
+                              ctx, tmpl_files[tmpl_idx].files_id)
             for r in stacks[s].resources:
                 self.assertRaises(exception.NotFound,
                                   db_api.resource_data_get_all(r.context,
@@ -2018,6 +2064,7 @@ class DBAPIStackTest(common.HeatTestCase):
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
             self.assertIsNone(db_api.user_creds_get(stacks[s].user_creds_id))
+            tmpl_idx = tmpl_idx + 1
 
     def test_stack_get_root_id(self):
         root = create_stack(self.ctx, self.template, self.user_creds,
