@@ -175,12 +175,15 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
                 token = self.data().get('token')
                 if endpoint is None or token is None:
                     return None
-                return ("curl -i -X POST "
+                heat_client_plugin = self.stack.clients.client_plugin('heat')
+                insecure_option = heat_client_plugin.get_insecure_option()
+                return ("curl %(insecure)s-i -X POST "
                         "-H 'X-Auth-Token: %(token)s' "
                         "-H 'Content-Type: application/json' "
                         "-H 'Accept: application/json' "
                         "%(endpoint)s" %
-                        dict(token=token, endpoint=endpoint))
+                        dict(insecure="--insecure " if insecure_option else "",
+                             token=token, endpoint=endpoint))
 
     def get_status(self):
         # before we check status, we have to update the signal transports
