@@ -328,6 +328,11 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api('show_software_deployment', 'call',
                               deployment_id=deployment_id)
 
+    def test_check_software_deployment(self):
+        deployment_id = '86729f02-4648-44d8-af44-d0ec65b6abc9'
+        self._test_engine_api('check_software_deployment', 'call',
+                              deployment_id=deployment_id, timeout=100)
+
     def test_create_software_deployment(self):
         self._test_engine_api(
             'create_software_deployment', 'call',

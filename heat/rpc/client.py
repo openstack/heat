@@ -47,6 +47,7 @@ class EngineClient(object):
         1.24 - Adds ignorable_errors to validate_template
         1.25 - list_stack_resource filter update
         1.26 - Add mark_unhealthy
+        1.27 - Add check_software_deployment
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -60,12 +61,17 @@ class EngineClient(object):
     def make_msg(method, **kwargs):
         return method, kwargs
 
-    def call(self, ctxt, msg, version=None):
+    def call(self, ctxt, msg, version=None, timeout=None):
         method, kwargs = msg
+
         if version is not None:
             client = self._client.prepare(version=version)
         else:
             client = self._client
+
+        if timeout is not None:
+            client = client.prepare(timeout=timeout)
+
         return client.call(ctxt, method, **kwargs)
 
     def cast(self, ctxt, msg, version=None):
@@ -680,6 +686,12 @@ class EngineClient(object):
     def show_software_deployment(self, cnxt, deployment_id):
         return self.call(cnxt, self.make_msg('show_software_deployment',
                                              deployment_id=deployment_id))
+
+    def check_software_deployment(self, cnxt, deployment_id, timeout):
+        return self.call(cnxt, self.make_msg('check_software_deployment',
+                                             deployment_id=deployment_id,
+                                             timeout=timeout),
+                         timeout=timeout, version='1.27')
 
     def create_software_deployment(self, cnxt, server_id, config_id=None,
                                    input_values=None, action='INIT',

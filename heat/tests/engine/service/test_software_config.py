@@ -311,6 +311,20 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             deployment,
             self.engine.show_software_deployment(self.ctx, deployment_id))
 
+    def test_check_software_deployment(self):
+        deployment_id = str(uuid.uuid4())
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.check_software_deployment,
+                               self.ctx, deployment_id, 10)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+        deployment = self._create_software_deployment()
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        self.assertEqual(
+            deployment,
+            self.engine.check_software_deployment(self.ctx, deployment_id, 10))
+
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        '_push_metadata_software_deployments')
     def test_signal_software_deployment(self, pmsd):

@@ -40,7 +40,7 @@ class ServiceEngineTest(common.HeatTestCase):
 
     def test_make_sure_rpc_version(self):
         self.assertEqual(
-            '1.26',
+            '1.27',
             service.EngineService.RPC_API_VERSION,
             ('RPC version is changed, please update this test to new version '
              'and make sure additional test cases are added for RPC APIs '

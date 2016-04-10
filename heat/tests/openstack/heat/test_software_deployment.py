@@ -18,6 +18,8 @@ import uuid
 import mock
 import six
 
+from oslo_utils import timeutils
+
 from heat.common import exception as exc
 from heat.common.i18n import _
 from heat.engine.clients.os import nova
@@ -168,6 +170,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             stack_user_project_id='65728b74-cfe7-4f17-9c15-11d4f686e591',
             cache_data=cache_data
         )
+        self.stack.created_time = timeutils.utcnow()
 
         self.patchobject(nova.NovaClientPlugin, 'get_server',
                          return_value=mock.MagicMock())
@@ -546,7 +549,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_check_create_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
 
         sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_create_complete(sd))
@@ -560,7 +563,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_check_update_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
 
         sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_update_complete(sd))
@@ -575,7 +578,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_check_suspend_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
 
         sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_suspend_complete(sd))
@@ -590,7 +593,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_check_resume_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
 
         sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_resume_complete(sd))
@@ -608,7 +611,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'status': self.deployment.FAILED,
             'status_reason': 'something wrong'
         }
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
         err = self.assertRaises(
             exc.Error, self.deployment.check_create_complete, sd)
         self.assertEqual(
@@ -641,7 +644,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
 
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
         self.rpc_client.update_software_deployment.return_value = sd
         self.assertEqual(sd, self.deployment.handle_delete())
         self.assertEqual({
@@ -748,7 +751,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
 
-        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.check_software_deployment.return_value = sd
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
 
         # first, handle the suspend

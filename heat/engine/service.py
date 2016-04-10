@@ -294,7 +294,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.26'
+    RPC_API_VERSION = '1.27'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -2013,6 +2013,11 @@ class EngineService(service.Service):
     def show_software_deployment(self, cnxt, deployment_id):
         return self.software_config.show_software_deployment(
             cnxt, deployment_id)
+
+    @context.request_context
+    def check_software_deployment(self, cnxt, deployment_id, timeout):
+        return self.software_config.check_software_deployment(
+            cnxt, deployment_id, timeout)
 
     @context.request_context
     def create_software_deployment(self, cnxt, server_id, config_id,
