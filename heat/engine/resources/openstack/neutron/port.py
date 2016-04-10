@@ -413,9 +413,9 @@ class Port(neutron.NeutronResource):
                     for key, value in list(fixed_ip.items()):
                         if value is None:
                             fixed_ip.pop(key)
-                    if fixed_ip.get(self.FIXED_IP_SUBNET):
-                        self.client_plugin().resolve_subnet(
-                            fixed_ip, self.FIXED_IP_SUBNET, 'subnet_id')
+                    if self.FIXED_IP_SUBNET in fixed_ip:
+                        fixed_ip[
+                            'subnet_id'] = fixed_ip.pop(self.FIXED_IP_SUBNET)
             else:
                 # Passing empty list would have created a port without
                 # fixed_ips during CREATE and released the existing
