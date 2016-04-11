@@ -134,6 +134,7 @@ def translate_filters(params):
         rpc_api.STACK_OWNER: 'username',
         rpc_api.STACK_PARENT: 'owner_id',
         rpc_api.STACK_USER_PROJECT_ID: 'stack_user_project_id',
+        rpc_api.RES_PHYSICAL_ID: 'nova_instance'
     }
 
     for key, field in key_map.items():
