@@ -36,13 +36,13 @@ class KeystoneClientTest(common.HeatTestCase):
 
         dummy_url = 'http://server.test:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
         cfg.CONF.set_override('admin_user', 'heat',
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
         cfg.CONF.set_override('admin_password', 'verybadpass',
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
         cfg.CONF.set_override('admin_tenant_name', 'service',
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
         self.addCleanup(self.m.VerifyAll)
 
     def _stubs_v2(self, method='token', auth_ok=True, trust_scoped=True,

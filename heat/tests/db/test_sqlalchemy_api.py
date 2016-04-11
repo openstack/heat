@@ -599,7 +599,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(['id'], sort_keys)
 
     def test_stack_get_all_hidden_tags(self):
-        cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
+        cfg.CONF.set_override('hidden_stack_tags', ['hidden'],
+                              enforce_type=True)
 
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
         stacks[0].tags = ['hidden']
@@ -709,7 +710,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(stacks[0].id, st_db[0].id)
 
     def test_stack_get_all_by_tag_with_show_hidden(self):
-        cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
+        cfg.CONF.set_override('hidden_stack_tags', ['hidden'],
+                              enforce_type=True)
 
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
         stacks[0].tags = ['tag1']
@@ -746,7 +748,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(3, st_db)
 
     def test_count_all_hidden_tags(self):
-        cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
+        cfg.CONF.set_override('hidden_stack_tags', ['hidden'],
+                              enforce_type=True)
 
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
         stacks[0].tags = ['hidden']
@@ -776,7 +779,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(2, st_db)
 
     def test_count_all_by_tag_with_show_hidden(self):
-        cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
+        cfg.CONF.set_override('hidden_stack_tags', ['hidden'],
+                              enforce_type=True)
 
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
         stacks[0].tags = ['tag1']

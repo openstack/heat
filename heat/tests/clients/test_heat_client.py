@@ -55,10 +55,13 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.StubOutWithMock(ks_auth, 'load_from_conf_options')
 
         cfg.CONF.set_override('auth_uri', 'http://server.test:5000/v2.0',
-                              group='keystone_authtoken')
-        cfg.CONF.set_override('stack_user_domain_id', 'adomain123')
-        cfg.CONF.set_override('stack_domain_admin', 'adminuser123')
-        cfg.CONF.set_override('stack_domain_admin_password', 'adminsecret')
+                              group='keystone_authtoken', enforce_type=True)
+        cfg.CONF.set_override('stack_user_domain_id', 'adomain123',
+                              enforce_type=True)
+        cfg.CONF.set_override('stack_domain_admin', 'adminuser123',
+                              enforce_type=True)
+        cfg.CONF.set_override('stack_domain_admin_password', 'adminsecret',
+                              enforce_type=True)
 
         self.addCleanup(self.m.VerifyAll)
 
@@ -483,7 +486,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test create_trust_context with existing trust_id."""
 
         self._stubs_v3(method='trust')
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -513,9 +517,11 @@ class KeystoneClientTest(common.HeatTestCase):
                                                      project_id='42',
                                                      stub_trust_context=True)
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         if delegate_roles:
-            cfg.CONF.set_override('trusts_delegated_roles', delegate_roles)
+            cfg.CONF.set_override('trusts_delegated_roles', delegate_roles,
+                                  enforce_type=True)
 
         trustor_roles = ['heat_stack_owner', 'admin', '__member__']
         trustee_roles = delegate_roles or trustor_roles
@@ -552,8 +558,10 @@ class KeystoneClientTest(common.HeatTestCase):
                                                   project_id='42',
                                                   stub_trust_context=True)
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-        cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
+        cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'],
+                              enforce_type=True)
 
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.create(
@@ -606,7 +614,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test consuming a trust when initializing."""
 
         self._stubs_v3(method='trust')
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -624,7 +633,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test consuming a trust when initializing, error scoping."""
 
         self._stubs_v3(method='trust', trust_scoped=False)
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -641,7 +651,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test consuming a trust when initializing, impersonation error."""
 
         self._stubs_v3(method='trust', user_id='wrong_user_id')
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -687,7 +698,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test delete_trust when deleting trust."""
 
         self._stubs_v3()
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
 
@@ -701,7 +713,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test delete_trust when trust already deleted."""
 
         self._stubs_v3()
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndRaise(
             kc_exception.NotFound)
@@ -1390,7 +1403,8 @@ class KeystoneClientTest(common.HeatTestCase):
         Test that None value is passed as region name if region name is not
         specified in the config file or as one of the arguments.
         """
-        cfg.CONF.set_override('region_name_for_services', None)
+        cfg.CONF.set_override('region_name_for_services', None,
+                              enforce_type=True)
         service_url = 'http://example.com:1234/v1'
         kwargs = {
             'region_name': None
@@ -1403,7 +1417,8 @@ class KeystoneClientTest(common.HeatTestCase):
         Test that region name passed as argument is not override by region name
         specified in the config file.
         """
-        cfg.CONF.set_override('region_name_for_services', 'RegionOne')
+        cfg.CONF.set_override('region_name_for_services', 'RegionOne',
+                              enforce_type=True)
         service_url = 'http://regiontwo.example.com:1234/v1'
         kwargs = {
             'region_name': 'RegionTwo'
@@ -1418,7 +1433,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """
         region_name_for_services = 'RegionOne'
         cfg.CONF.set_override('region_name_for_services',
-                              region_name_for_services)
+                              region_name_for_services, enforce_type=True)
         kwargs = {
             'region_name': region_name_for_services
         }
@@ -1431,7 +1446,8 @@ class KeystoneClientTest(common.HeatTestCase):
         Test that default region name for services from context is passed
         if region name is not specified in arguments.
         """
-        cfg.CONF.set_override('region_name_for_services', 'RegionOne')
+        cfg.CONF.set_override('region_name_for_services', 'RegionOne',
+                              enforce_type=True)
         service_url = 'http://regiontwo.example.com:1234/v1'
         region_name_for_services = 'RegionTwo'
         expected_kwargs = {
@@ -1449,7 +1465,8 @@ class KeystoneClientTest(common.HeatTestCase):
 
 class KeystoneClientTestDomainName(KeystoneClientTest):
     def setUp(self):
-        cfg.CONF.set_override('stack_user_domain_name', 'fake_domain_name')
+        cfg.CONF.set_override('stack_user_domain_name', 'fake_domain_name',
+                              enforce_type=True)
         super(KeystoneClientTestDomainName, self).setUp()
         cfg.CONF.clear_override('stack_user_domain_id')
 

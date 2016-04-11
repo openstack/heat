@@ -102,7 +102,7 @@ class SenlinNodeTest(common.HeatTestCase):
         self.senlin_mock.get_node.assert_called_once_with(self.fake_node.id)
 
     def test_node_create_error(self):
-        cfg.CONF.set_override('action_retry_limit', 0)
+        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         self.senlin_mock.create_node.return_value = self.fake_node
         self.senlin_mock.get_node.return_value = FakeNode(
             status='ERROR')

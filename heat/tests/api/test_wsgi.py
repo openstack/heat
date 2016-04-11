@@ -391,7 +391,7 @@ class JSONRequestDeserializerTest(common.HeatTestCase):
         self.assertEqual(expected, actual)
 
     def test_from_json_exceeds_max_json_mb(self):
-        cfg.CONF.set_override('max_json_body_size', 10)
+        cfg.CONF.set_override('max_json_body_size', 10, enforce_type=True)
         body = json.dumps(['a'] * cfg.CONF.max_json_body_size)
         self.assertTrue(len(body) > cfg.CONF.max_json_body_size)
         error = self.assertRaises(exception.RequestLimitExceeded,

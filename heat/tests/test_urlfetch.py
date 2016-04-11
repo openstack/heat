@@ -113,7 +113,7 @@ class UrlFetchTest(common.HeatTestCase):
         url = 'http://example.com/template'
         data = b'{ "foo": "bar" }'
         response = Response(data)
-        cfg.CONF.set_override('max_template_size', 500)
+        cfg.CONF.set_override('max_template_size', 500, enforce_type=True)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
         urlfetch.get(url)
@@ -123,7 +123,7 @@ class UrlFetchTest(common.HeatTestCase):
         url = 'http://example.com/template'
         data = b'{ "foo": "bar" }'
         response = Response(data)
-        cfg.CONF.set_override('max_template_size', 5)
+        cfg.CONF.set_override('max_template_size', 5, enforce_type=True)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
         exception = self.assertRaises(urlfetch.URLFetchError,

@@ -104,7 +104,7 @@ class HeatTestCase(testscenarios.WithScenarios,
                                'environment.d')
 
         cfg.CONF.set_default('environment_dir', env_dir)
-        cfg.CONF.set_override('error_wait_time', None)
+        cfg.CONF.set_override('error_wait_time', None, enforce_type=True)
         self.addCleanup(cfg.CONF.reset)
 
         messaging.setup("fake://", optional=True)

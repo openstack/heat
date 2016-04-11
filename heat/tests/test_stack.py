@@ -94,7 +94,8 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('', self.stack.status_reason)
 
     def test_timeout_secs_default(self):
-        cfg.CONF.set_override('stack_action_timeout', 1000)
+        cfg.CONF.set_override('stack_action_timeout', 1000,
+                              enforce_type=True)
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         self.assertIsNone(self.stack.timeout_mins)
         self.assertEqual(1000, self.stack.timeout_secs())
@@ -1332,7 +1333,8 @@ class StackTest(common.HeatTestCase):
 
     def test_store_saves_creds_trust(self):
         """A user_creds entry is created on first stack store."""
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('deferred_auth_method', 'trusts',
+                              enforce_type=True)
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
         keystone.KeystoneClientPlugin._create().AndReturn(
@@ -2294,7 +2296,8 @@ class StackTest(common.HeatTestCase):
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
+                              enforce_type=True)
 
         # Verify that hidden parameters stored in plain text
         self.stack.store()
@@ -2322,7 +2325,8 @@ class StackTest(common.HeatTestCase):
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
+                              enforce_type=True)
 
         # Verify that hidden parameters are stored encrypted
         self.stack.store()
@@ -2378,7 +2382,8 @@ class StackTest(common.HeatTestCase):
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
+                              enforce_type=True)
 
         # Verify that hidden parameters are stored decrypted
         self.stack.store()

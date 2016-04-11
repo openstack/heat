@@ -117,7 +117,7 @@ class SenlinClusterTest(common.HeatTestCase):
         self.senlin_mock.get_cluster.assert_called_once_with(self.fake_cl.id)
 
     def test_cluster_create_error(self):
-        cfg.CONF.set_override('action_retry_limit', 0)
+        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         cluster = self._init_cluster(self.t)
         self.senlin_mock.create_cluster.return_value = self.fake_cl
         self.senlin_mock.get_cluster.return_value = FakeCluster(

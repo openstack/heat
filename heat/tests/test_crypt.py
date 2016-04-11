@@ -30,7 +30,8 @@ class CryptTest(common.HeatTestCase):
 
     def test_init_auth_encryption_key_length(self):
         """Test for length of the auth_encryption_length in config file"""
-        cfg.CONF.set_override('auth_encryption_key', 'abcdefghijklma')
+        cfg.CONF.set_override('auth_encryption_key', 'abcdefghijklma',
+                              enforce_type=True)
         err = self.assertRaises(exception.Error,
                                 config.startup_sanity_check)
         exp_msg = ('heat.conf misconfigured, auth_encryption_key '

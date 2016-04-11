@@ -899,7 +899,8 @@ class ServersTest(common.HeatTestCase):
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        sh.cfg.CONF.set_override('stack_scheduler_hints', True)
+        sh.cfg.CONF.set_override('stack_scheduler_hints', True,
+                                 enforce_type=True)
         # Unroll _create_test_server, to enable check
         # for addition of heat ids (stack id, resource name)
         stack_name = 'test_server_w_stack_sched_hints_s'

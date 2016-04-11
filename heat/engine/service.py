@@ -403,7 +403,7 @@ class EngineService(service.Service):
         if ((cfg.CONF.database.max_overflow is None) or
                 (cfg.CONF.database.max_overflow < worker_pool_size)):
             cfg.CONF.set_override('max_overflow', worker_pool_size,
-                                  group='database')
+                                  group='database', enforce_type=True)
 
     def _stop_rpc_server(self):
         # Stop rpc connection at first for preventing new requests

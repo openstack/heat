@@ -544,7 +544,7 @@ class Ec2TokenTest(common.HeatTestCase):
         importutils.import_module('keystonemiddleware.auth_token')
         dummy_url = 'http://123:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
         ec2 = ec2token.EC2Token(app='woot', conf={})
         params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
         req_env = {'SERVER_NAME': 'heat',

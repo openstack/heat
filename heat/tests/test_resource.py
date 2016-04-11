@@ -440,7 +440,7 @@ class ResourceTest(common.HeatTestCase):
         res, utmpl = self._setup_resource_for_update(
             res_name='test_update_rsrc_in_progress_raises_exception')
 
-        cfg.CONF.set_override('convergence_engine', False)
+        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
 
         res.action = res.UPDATE
         res.status = res.IN_PROGRESS
@@ -795,7 +795,7 @@ class ResourceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_fail_retry_disabled(self):
-        cfg.CONF.set_override('action_retry_limit', 0)
+        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
                                             {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
@@ -1597,7 +1597,8 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual({'foo': 'res', 'Foo': 'res'}, res.FnGetAtts())
 
     def test_properties_data_stored_encrypted_decrypted_on_load(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
+                              enforce_type=True)
 
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         stored_properties_data = {'prop1': 'string',
@@ -1641,7 +1642,8 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual('string', res_obj.properties_data['prop1'])
 
     def test_properties_data_no_encryption(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
+                              enforce_type=True)
 
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         stored_properties_data = {'prop1': 'string',
@@ -3571,7 +3573,7 @@ class TestLiveStateUpdate(common.HeatTestCase):
         res = self._prepare_resource_live_state()
         res.resource_id = self.resource_id
 
-        cfg.CONF.set_override('observe_on_update', True)
+        cfg.CONF.set_override('observe_on_update', True, enforce_type=True)
 
         utmpl = rsrc_defn.ResourceDefinition('test_resource',
                                              'ResourceWithPropsType',

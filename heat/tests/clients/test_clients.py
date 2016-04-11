@@ -44,12 +44,14 @@ class ClientsTest(common.HeatTestCase):
 
     def test_bad_cloud_backend(self):
         con = mock.Mock()
-        cfg.CONF.set_override('cloud_backend', 'some.weird.object')
+        cfg.CONF.set_override('cloud_backend', 'some.weird.object',
+                              enforce_type=True)
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
         self.assertIn('Invalid cloud_backend setting in heat.conf detected',
                       six.text_type(exc))
 
-        cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients')
+        cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients',
+                              enforce_type=True)
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
         self.assertIn('Invalid cloud_backend setting in heat.conf detected',
                       six.text_type(exc))
@@ -100,7 +102,7 @@ class ClientsTest(common.HeatTestCase):
 
     def test_clients_get_heat_cfn_metadata_url_conf(self):
         cfg.CONF.set_override('heat_metadata_server_url',
-                              'http://server.test:123')
+                              'http://server.test:123', enforce_type=True)
         obj = self._client_cfn_url()
         self.assertEqual("http://server.test:123/v1/",
                          obj.get_cfn_metadata_server_url())
@@ -182,11 +184,11 @@ class ClientPluginTest(common.HeatTestCase):
         plugin = FooClientsPlugin(con)
 
         cfg.CONF.set_override('ca_file', '/tmp/bar',
-                              group='clients_heat')
+                              group='clients_heat', enforce_type=True)
         cfg.CONF.set_override('ca_file', '/tmp/foo',
-                              group='clients')
+                              group='clients', enforce_type=True)
         cfg.CONF.set_override('endpoint_type', 'internalURL',
-                              group='clients')
+                              group='clients', enforce_type=True)
 
         # check heat group
         self.assertEqual('/tmp/bar',
@@ -357,7 +359,8 @@ class ClientPluginTest(common.HeatTestCase):
         self.assertRaises(TypeError, client_plugin.ClientPlugin, c)
 
     def test_create_client_on_token_expiration(self):
-        cfg.CONF.set_override('reauthentication_auth_method', 'trusts')
+        cfg.CONF.set_override('reauthentication_auth_method', 'trusts',
+                              enforce_type=True)
         con = mock.Mock()
         con.auth_plugin.auth_ref.will_expire_soon.return_value = False
         plugin = FooClientsPlugin(con)

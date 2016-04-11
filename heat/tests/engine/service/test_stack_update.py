@@ -444,7 +444,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
 
         # do update
-        cfg.CONF.set_override('max_resources_per_stack', 3)
+        cfg.CONF.set_override('max_resources_per_stack', 3, enforce_type=True)
 
         api_args = {'timeout_mins': 60}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
@@ -532,7 +532,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         sid = old_stack.store()
         self.assertIsNotNone(sid)
 
-        cfg.CONF.set_override('max_resources_per_stack', 2)
+        cfg.CONF.set_override('max_resources_per_stack', 2, enforce_type=True)
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.update_stack, self.ctx,

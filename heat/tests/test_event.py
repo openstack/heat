@@ -172,8 +172,8 @@ class EventTest(EventCommon):
         self.assertEqual({'Foo': 'goo'}, loaded_e.resource_properties)
 
     def test_store_caps_events(self):
-        cfg.CONF.set_override('event_purge_batch_size', 1)
-        cfg.CONF.set_override('max_events_per_stack', 1)
+        cfg.CONF.set_override('event_purge_batch_size', 1, enforce_type=True)
+        cfg.CONF.set_override('max_events_per_stack', 1, enforce_type=True)
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',

@@ -209,7 +209,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackConvergenceServiceCreateUpdateTest, self).setUp()
-        cfg.CONF.set_override('convergence_engine', True)
+        cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
 
@@ -829,7 +829,7 @@ class StackServiceTest(common.HeatTestCase):
 
     @tools.stack_context('service_export_stack')
     def test_export_stack(self):
-        cfg.CONF.set_override('enable_stack_abandon', True)
+        cfg.CONF.set_override('enable_stack_abandon', True, enforce_type=True)
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
                           stack=mox.IgnoreArg()).AndReturn(self.stack)
@@ -862,7 +862,7 @@ class StackServiceTest(common.HeatTestCase):
 
     @tools.stack_context('service_abandon_stack')
     def test_abandon_stack(self):
-        cfg.CONF.set_override('enable_stack_abandon', True)
+        cfg.CONF.set_override('enable_stack_abandon', True, enforce_type=True)
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
                           stack=mox.IgnoreArg()).AndReturn(self.stack)
@@ -1203,7 +1203,7 @@ class StackServiceTest(common.HeatTestCase):
 
     @mock.patch.object(stack_object.Stack, 'count_all')
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
-        cfg.CONF.set_override('max_stacks_per_tenant', 99)
+        cfg.CONF.set_override('max_stacks_per_tenant', 99, enforce_type=True)
         mock_db_count.return_value = 99
         template = templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12'})
@@ -1238,7 +1238,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(msg, six.text_type(ex))
 
     def test_validate_new_stack_checks_resource_limit(self):
-        cfg.CONF.set_override('max_resources_per_stack', 5)
+        cfg.CONF.set_override('max_resources_per_stack', 5, enforce_type=True)
         template = {'HeatTemplateFormatVersion': '2012-12-12',
                     'Resources': {
                         'Res1': {'Type': 'GenericResource1'},
@@ -1385,7 +1385,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual('FAILED', test_stack.resources.get('r3').status)
 
     def test_parse_adopt_stack_data_without_parameters(self):
-        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
         template = {"heat_template_version": "2015-04-30",
                     "resources": {
                         "myres": {
@@ -1410,7 +1410,7 @@ class StackServiceTest(common.HeatTestCase):
             self.ctx, 'stack_name', template, {}, {}, None, args)
 
     def test_parse_adopt_stack_data_with_parameters(self):
-        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
         template = {"heat_template_version": "2015-04-30",
                     "parameters": {
                         "volsize": {"type": "number"}
