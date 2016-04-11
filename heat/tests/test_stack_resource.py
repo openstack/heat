@@ -455,7 +455,8 @@ class StackResourceTest(StackResourceBaseTest):
         self.assertEqual(4, rsrc.FnGetAtt(rsrc.CURRENT_SIZE))
 
     def test__validate_nested_resources_checks_num_of_resources(self):
-        stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
+        stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2,
+                                             enforce_type=True)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': [1]}
         template = stack_resource.template.Template(tmpl)

@@ -108,7 +108,7 @@ class SenlinPolicyTest(common.HeatTestCase):
             **expect_kwargs)
 
     def test_policy_create_fail(self):
-        cfg.CONF.set_override('action_retry_limit', 0)
+        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         policy = self._init_policy(self.t)
         self.senlin_mock.create_policy.return_value = self.fake_p
         self.senlin_mock.cluster_attach_policy.return_value = {

@@ -97,7 +97,8 @@ class YamlMinimalTest(common.HeatTestCase):
 
     def test_long_yaml(self):
         template = {'HeatTemplateFormatVersion': '2012-12-12'}
-        config.cfg.CONF.set_override('max_template_size', 10)
+        config.cfg.CONF.set_override('max_template_size', 10,
+                                     enforce_type=True)
         template['Resources'] = ['a'] * int(
             config.cfg.CONF.max_template_size / 3)
         limit = config.cfg.CONF.max_template_size

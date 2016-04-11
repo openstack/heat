@@ -55,7 +55,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
         return template, adopt_data
 
     def test_stack_adopt_with_params(self):
-        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         result = self.man.create_stack(self.ctx, "test_adopt_with_params",
@@ -68,7 +68,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
                          stack.raw_template.environment['parameters'])
 
     def test_stack_adopt_saves_input_params(self):
-        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
         env = {'parameters': {"app_dbx": "foo"}}
         input_params = {
             "parameters": {"app_dbx": "bar"}
@@ -84,7 +84,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
                          stack.raw_template.environment['parameters'])
 
     def test_stack_adopt_stack_state(self):
-        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         result = self.man.create_stack(self.ctx, "test_adopt_stack_state",
@@ -97,7 +97,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
 
     def test_stack_adopt_disabled(self):
         # to test disable stack adopt
-        cfg.CONF.set_override('enable_stack_adopt', False)
+        cfg.CONF.set_override('enable_stack_adopt', False, enforce_type=True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         ex = self.assertRaises(

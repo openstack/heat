@@ -64,7 +64,8 @@ cfg.CONF.import_opt('region_name_for_services', 'heat.common.config')
 class CloudServersTest(common.HeatTestCase):
     def setUp(self):
         super(CloudServersTest, self).setUp()
-        cfg.CONF.set_override('region_name_for_services', 'RegionOne')
+        cfg.CONF.set_override('region_name_for_services', 'RegionOne',
+                              enforce_type=True)
         self.ctx = utils.dummy_context()
 
         self.fc = fakes.FakeClient()
