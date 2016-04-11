@@ -221,7 +221,7 @@ translation mechanism for that. Mechanism used for such cases:
    replace non-LIST property.
 
 Mechanism has rules and executes them. To define rule, ``TranslationRule``
-class called and specifies *source_path* - list with path in properties_schema
+class called and specifies *translation_path* - list with path in properties_schema
 for property which will be affected; *value* - value, which will be added to
 property, specified by previous parameter; *value_name* - name of old property,
 used for case 4; *value_path* - list with path in properties_schema for
@@ -249,5 +249,5 @@ must overload `translation_rules` method, which should return a list of
         return [properties.TranslationRule(
             self.properties,
             properties.TranslationRule.REPLACE,
-            source_path=[self.NETWORKS, self.NETWORK_ID],
+            translation_path=[self.NETWORKS, self.NETWORK_ID],
             value_name=self.NETWORK_UUID)]

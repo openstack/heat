@@ -49,15 +49,15 @@ class TranslationRule(object):
                  DELETE, RESOLVE) = ('Add', 'Replace',
                                      'Delete', 'Resolve')
 
-    def __init__(self, properties, rule, source_path, value=None,
+    def __init__(self, properties, rule, translation_path, value=None,
                  value_name=None, value_path=None, client_plugin=None,
                  finder=None, entity=None):
         """Add new rule for translating mechanism.
 
         :param properties: properties of resource
         :param rule: rule from RULE_KEYS
-        :param source_path: list with path to property, which value will be
-               affected in rule.
+        :param translation_path: list with path to property, which value will
+               be affected in rule.
         :param value: value which will be involved in rule
         :param value_name: value_name which used for replacing properties
                inside list-type properties.
@@ -69,7 +69,7 @@ class TranslationRule(object):
         """
         self.properties = properties
         self.rule = rule
-        self.source_path = source_path
+        self.translation_path = translation_path
         self.value = value or None
         self.value_name = value_name
         self.value_path = value_path
@@ -88,26 +88,28 @@ class TranslationRule(object):
         elif not isinstance(self.properties, properties.Properties):
             raise ValueError(_('Properties must be Properties type. '
                                'Found %s.') % type(self.properties))
-        elif not isinstance(self.source_path, list):
-            raise ValueError(_('source_path should be a list with path '
-                               'instead of %s.') % type(self.source_path))
-        elif len(self.source_path) == 0:
-            raise ValueError(_('source_path must be non-empty list with '
+        elif not isinstance(self.translation_path, list):
+            raise ValueError(_('translation_path should be a list with path '
+                               'instead of %s.') % type(self.translation_path))
+        elif len(self.translation_path) == 0:
+            raise ValueError(_('translation_path must be non-empty list with '
                                'path.'))
         elif self.value_name and self.rule != self.REPLACE:
             raise ValueError(_('Use value_name only for replacing list '
                                'elements.'))
         elif self.rule == self.ADD and not isinstance(self.value, list):
             raise ValueError(_('value must be list type when rule is Add.'))
-        elif (self.rule == self.RESOLVE and not (self.client_plugin
-                                                 or self.finder)):
+
+        elif (self.rule == self.RESOLVE and not (self.client_plugin or
+                                                 self.finder)):
             raise ValueError(_('client_plugin and finder should be specified '
                                'for Resolve rule'))
 
     def execute_rule(self, client_resolve=True):
         try:
-            (source_key, source_data) = self._get_data_from_source_path(
-                self.source_path)
+            (translation_key,
+             translation_data) = self._get_data_from_source_path(
+                self.translation_path)
             if self.value_path:
                 (value_key, value_data) = self._get_data_from_source_path(
                     self.value_path)
@@ -120,23 +122,21 @@ class TranslationRule(object):
         except AttributeError:
             return
 
-        if (source_data is None or (self.rule not in (self.DELETE,
-                                                      self.RESOLVE) and
-                                    (value is None and
-                                     self.value_name is None and
-                                     (value_data is None or
-                                      value_data.get(value_key) is None)))):
+        if (translation_data is None or
+                (self.rule not in (self.DELETE, self.RESOLVE) and
+                 (value is None and self.value_name is None and
+                  (value_data is None or value_data.get(value_key) is None)))):
             return
 
         if self.rule == TranslationRule.ADD:
-            self._exec_add(source_key, source_data, value)
+            self._exec_add(translation_key, translation_data, value)
         elif self.rule == TranslationRule.REPLACE:
-            self._exec_replace(source_key, source_data,
+            self._exec_replace(translation_key, translation_data,
                                value_key, value_data, value)
         elif self.rule == TranslationRule.RESOLVE and client_resolve:
-            self._exec_resolve(source_key, source_data)
+            self._exec_resolve(translation_key, translation_data)
         elif self.rule == TranslationRule.DELETE:
-            self._exec_delete(source_key, source_data, value)
+            self._exec_delete(translation_key, translation_data)
 
     def _get_data_from_source_path(self, path):
         def get_props(props, key):
@@ -204,67 +204,67 @@ class TranslationRule(object):
                 props = get_props(props, key)
         return source_key, data
 
-    def _exec_add(self, source_key, source_data, value):
-        if isinstance(source_data, list):
-            source_data.extend(value)
+    def _exec_add(self, translation_key, translation_data, value):
+        if isinstance(translation_data, list):
+            translation_data.extend(value)
         else:
             raise ValueError(_('Add rule must be used only for '
                                'lists.'))
 
-    def _exec_replace(self, source_key, source_data,
+    def _exec_replace(self, translation_key, translation_data,
                       value_key, value_data, value):
-        if isinstance(source_data, list):
-            for item in source_data:
-                if item.get(self.value_name) and item.get(source_key):
+        if isinstance(translation_data, list):
+            for item in translation_data:
+                if item.get(self.value_name) and item.get(translation_key):
                     raise ValueError(_('Cannot use %(key)s and '
                                        '%(name)s at the same time.')
-                                     % dict(key=source_key,
+                                     % dict(key=translation_key,
                                             name=self.value_name))
                 elif item.get(self.value_name) is not None:
-                    item[source_key] = item[self.value_name]
+                    item[translation_key] = item[self.value_name]
                     del item[self.value_name]
                 elif value is not None:
-                    item[source_key] = value
+                    item[translation_key] = value
         else:
-            if (source_data and source_data.get(source_key) and
+            if (translation_data and translation_data.get(translation_key) and
                     value_data and value_data.get(value_key)):
                 raise ValueError(_('Cannot use %(key)s and '
                                    '%(name)s at the same time.')
-                                 % dict(key=source_key,
+                                 % dict(key=translation_key,
                                         name=value_key))
-            source_data[source_key] = value
+            translation_data[translation_key] = value
             # If value defined with value_path, need to delete value_path
             # property data after it's replacing.
             if value_data and value_data.get(value_key):
                 del value_data[value_key]
 
-    def _exec_resolve(self, source_key, source_data):
+    def _exec_resolve(self, translation_key, translation_data):
 
-        def resolve_and_find(source_data, source_value):
-            if isinstance(source_value, cfn_funcs.ResourceRef):
+        def resolve_and_find(translation_data, translation_value):
+            if isinstance(translation_value, cfn_funcs.ResourceRef):
                 return
-            if isinstance(source_value, function.Function):
-                source_value = function.resolve(source_value)
-            if source_value:
+            if isinstance(translation_value, function.Function):
+                translation_value = function.resolve(translation_value)
+            if translation_value:
                 finder = getattr(self.client_plugin, self.finder)
                 if self.entity:
-                    value = finder(self.entity, source_value)
+                    value = finder(self.entity, translation_value)
                 else:
-                    value = finder(source_value)
-                source_data[source_key] = value
+                    value = finder(translation_value)
+                translation_data[translation_key] = value
 
-        if isinstance(source_data, list):
-            for item in source_data:
-                source_value = item.get(source_key)
-                resolve_and_find(item, source_value)
+        if isinstance(translation_data, list):
+            for item in translation_data:
+                translation_value = item.get(translation_key)
+                resolve_and_find(item, translation_value)
         else:
-            source_value = source_data.get(source_key)
-            resolve_and_find(source_data, source_value)
+            translation_value = translation_data.get(translation_key)
+            resolve_and_find(translation_data, translation_value)
 
-    def _exec_delete(self, source_key, source_data, value):
-        if isinstance(source_data, list):
-            for item in source_data:
-                if item.get(source_key) is not None:
-                    del item[source_key]
+    def _exec_delete(self, translation_key, translation_data):
+        if isinstance(translation_data, list):
+            for item in translation_data:
+                if item.get(translation_key) is not None:
+                    del item[translation_key]
         else:
-            del source_data[source_key]
+            del translation_data[translation_key]
