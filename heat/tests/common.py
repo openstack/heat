@@ -102,9 +102,12 @@ class HeatTestCase(testscenarios.WithScenarios,
         project_dir = os.path.abspath(os.path.join(mod_dir, '../../'))
         env_dir = os.path.join(project_dir, 'etc', 'heat',
                                'environment.d')
+        template_dir = os.path.join(project_dir, 'etc', 'heat',
+                                    'templates')
 
         cfg.CONF.set_default('environment_dir', env_dir)
         cfg.CONF.set_override('error_wait_time', None, enforce_type=True)
+        cfg.CONF.set_default('template_dir', template_dir)
         self.addCleanup(cfg.CONF.reset)
 
         messaging.setup("fake://", optional=True)

@@ -70,6 +70,28 @@ If the :file:`my_env.yaml` file from the example above had been put in the
 
     heat stack-create my_stack -P "some_parm=bla" -f my_tmpl.yaml
 
+Global templates
+----------------
+A global template directory allows files to be pre-loaded in the global
+environment. A global template is determined by your cloud operator.
+An entry in the user template takes precedence over the global environment.
+OpenStack includes a default global template, but your cloud operator
+can add additional template entries.
+
+The cloud operator can add new global templates by putting template
+files in a configurable directory wherever the Orchestration engine runs.
+The configuration variable is named ``template_dir`` and is found in the
+``[DEFAULT]`` section of :file:`/etc/heat/heat.conf`. The default for
+that directory is :file:`/etc/heat/templates`. Its contents are
+combined in whatever order the shell delivers them when the service
+starts up, which is the time when these files are read.
+If the :file:`my_tmpl.yaml` file from the example below has been put in the
+``template_dir``, other templates which we used to create stacks could
+contain following way to include `my_tmpl.yaml` in it::
+
+    resourceA:
+      type: {get_file: "my_tmpl.yaml"}
+
 Usage examples
 ~~~~~~~~~~~~~~
 
