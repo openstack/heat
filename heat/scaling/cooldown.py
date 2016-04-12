@@ -33,16 +33,22 @@ class CooldownMixin(object):
             # If not specified, it will be None, same as cooldown == 0
             cooldown = 0
 
-        if 'cooldown' not in metadata:
-            # Note: this is for supporting old version cooldown checking
-            if metadata and cooldown != 0:
-                last_adjust = next(six.iterkeys(metadata))
-                if not timeutils.is_older_than(last_adjust, cooldown):
-                    return False
-        elif cooldown != 0:
-            last_adjust = next(six.iterkeys(metadata['cooldown']))
-            if not timeutils.is_older_than(last_adjust, cooldown):
-                return False
+        if cooldown != 0:
+            try:
+                if 'cooldown' not in metadata:
+                    # Note: this is for supporting old version cooldown logic
+                    if metadata:
+                        last_adjust = next(six.iterkeys(metadata))
+                        if not timeutils.is_older_than(last_adjust, cooldown):
+                            return False
+                else:
+                    last_adjust = next(six.iterkeys(metadata['cooldown']))
+                    if not timeutils.is_older_than(last_adjust, cooldown):
+                        return False
+            except ValueError:
+                # occurs when metadata has only {scaling_in_progress: False}
+                pass
+
         # Assumes _finished_scaling is called
         # after the scaling operation completes
         metadata['scaling_in_progress'] = True
