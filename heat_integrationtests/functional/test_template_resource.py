@@ -890,3 +890,69 @@ resources:
             stack_identifier,
             self.main_template_update,
             files={'resource.yaml': self.nested_templ_update})
+
+
+class TemplateResourceRemovedParamTest(functional_base.FunctionalTestsBase):
+
+    main_template = '''
+heat_template_version: 2013-05-23
+parameters:
+  value1:
+    type: string
+    default: foo
+resources:
+  my_resource:
+    type: resource.yaml
+    properties:
+       value1: {get_param: value1}
+'''
+    nested_templ = '''
+heat_template_version: 2013-05-23
+parameters:
+  value1:
+    type: string
+    default: foo
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value: {get_param: value1}
+'''
+    main_template_update = '''
+heat_template_version: 2013-05-23
+resources:
+  my_resource:
+    type: resource.yaml
+'''
+    nested_templ_update = '''
+heat_template_version: 2013-05-23
+parameters:
+  value1:
+    type: string
+    default: foo
+  value2:
+    type: string
+    default: bar
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value:
+        str_replace:
+          template: VAL1-VAL2
+          params:
+            VAL1: {get_param: value1}
+            VAL2: {get_param: value2}
+'''
+
+    def test_update(self):
+        stack_identifier = self.stack_create(
+            template=self.main_template,
+            environment={'parameters': {'value1': 'spam'}},
+            files={'resource.yaml': self.nested_templ})
+
+        self.update_stack(
+            stack_identifier,
+            self.main_template_update,
+            environment={'parameter_defaults': {'value2': 'egg'}},
+            files={'resource.yaml': self.nested_templ_update}, existing=True)

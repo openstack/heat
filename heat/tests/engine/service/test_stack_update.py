@@ -113,6 +113,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         stk.set_stack_user_project_id('1234')
         self.assertEqual({'KeyName': 'test'}, stk.t.env.params)
 
+        t['parameters']['newparam'] = {'type': 'number'}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
             mock_stack.load.return_value = stk
@@ -148,6 +149,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.assertEqual({'KeyName': 'test', 'removeme': 'foo'},
                          stk.t.env.params)
 
+        t['parameters']['newparam'] = {'type': 'number'}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
             mock_stack.load.return_value = stk
