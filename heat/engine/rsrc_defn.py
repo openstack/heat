@@ -14,7 +14,6 @@ import collections
 import copy
 import itertools
 import operator
-import warnings
 
 import six
 
@@ -28,15 +27,15 @@ __all__ = ['ResourceDefinition']
 
 
 @repr_wrapper
-class ResourceDefinitionCore(object):
+class ResourceDefinition(object):
     """A definition of a resource, independent of any template format."""
 
     class Diff(object):
         """A diff between two versions of the same resource definition."""
 
         def __init__(self, old_defn, new_defn):
-            if not (isinstance(old_defn, ResourceDefinitionCore) and
-                    isinstance(new_defn, ResourceDefinitionCore)):
+            if not (isinstance(old_defn, ResourceDefinition) and
+                    isinstance(new_defn, ResourceDefinition)):
                 raise TypeError
 
             self.old_defn = old_defn
@@ -218,8 +217,8 @@ class ResourceDefinitionCore(object):
                 function.dependencies(data, datapath))
 
         explicit_depends = [] if self._depends is None else self._depends
-        prop_deps = strict_func_deps(self._properties, path(PROPERTIES))
-        metadata_deps = strict_func_deps(self._metadata, path(METADATA))
+        prop_deps = strict_func_deps(self._properties, path('Properties'))
+        metadata_deps = strict_func_deps(self._metadata, path('Metadata'))
 
         # (ricolin) External resource should not depend on any other resources.
         # This operation is not allowed for now.
@@ -242,7 +241,7 @@ class ResourceDefinitionCore(object):
         """
         return properties.Properties(schema, self._properties or {},
                                      function.resolve, self.name, context,
-                                     section=PROPERTIES)
+                                     section='Properties')
 
     def deletion_policy(self):
         """Return the deletion policy for the resource.
@@ -259,7 +258,7 @@ class ResourceDefinitionCore(object):
         """
         return properties.Properties(schema, self._update_policy or {},
                                      function.resolve, self.name, context,
-                                     section=UPDATE_POLICY)
+                                     section='UpdatePolicy')
 
     def metadata(self):
         """Return the resource metadata."""
@@ -307,7 +306,7 @@ class ResourceDefinitionCore(object):
         Return a Diff object that can be used to establish differences between
         this definition and a previous definition of the same resource.
         """
-        if not isinstance(previous, ResourceDefinitionCore):
+        if not isinstance(previous, ResourceDefinition):
             return NotImplemented
 
         return self.Diff(previous, self)
@@ -320,7 +319,7 @@ class ResourceDefinitionCore(object):
         ignored, as are the actual values that any included functions resolve
         to.
         """
-        if not isinstance(other, ResourceDefinitionCore):
+        if not isinstance(other, ResourceDefinition):
             return NotImplemented
 
         return self.render_hot() == other.render_hot()
@@ -360,120 +359,6 @@ class ResourceDefinitionCore(object):
             'args': ', '.join(arg_repr(n) for n in args)
         }
         return '%(classname)s(%(name)s, %(type)s, %(args)s)' % data
-
-
-_KEYS = (
-    TYPE, PROPERTIES, METADATA, DELETION_POLICY, UPDATE_POLICY,
-    DEPENDS_ON, DESCRIPTION,
-) = (
-    'Type', 'Properties', 'Metadata', 'DeletionPolicy', 'UpdatePolicy',
-    'DependsOn', 'Description',
-)
-
-
-class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
-    """A resource definition that also acts like a cfn template snippet.
-
-    This class exists only for backwards compatibility with existing resource
-    plugins and unit tests; it is deprecated and will be replaced with
-    ResourceDefinitionCore, possibly as soon as the Ocata release.
-    """
-
-    _deprecation_msg = (
-        'Reading the ResourceDefinition as if it were a snippet of a '
-        'CloudFormation template is deprecated, and the ability to treat it '
-        'as such will be removed in the future. Resource plugins should use '
-        'the ResourceDefinition API to work with the definition of the '
-        'resource instance.')
-
-    def __eq__(self, other):
-        """Compare this resource definition for equality with another.
-
-        Two resource definitions are considered to be equal if they can be
-        generated from the same template snippet. The name of the resource is
-        ignored, as are the actual values that any included functions resolve
-        to.
-
-        This method can also compare the resource definition to a template
-        snippet. In this case, two snippets are considered equal if they
-        compare equal in a dictionary comparison. (Specifically, this means
-        that intrinsic functions are compared by their results.) This exists
-        solely to not break existing unit tests.
-        """
-        if not isinstance(other, ResourceDefinitionCore):
-            if isinstance(other, collections.Mapping):
-                return dict(self) == other
-
-        return super(ResourceDefinition, self).__eq__(other)
-
-    __hash__ = ResourceDefinitionCore.__hash__
-
-    def __iter__(self):
-        """Iterate over the available CFN template keys.
-
-        This is for backwards compatibility with existing code that expects a
-        parsed-JSON template snippet.
-        """
-        warnings.warn(self._deprecation_msg, DeprecationWarning)
-
-        yield TYPE
-        if self._properties is not None:
-            yield PROPERTIES
-        if self._metadata is not None:
-            yield METADATA
-        if self._deletion_policy is not None:
-            yield DELETION_POLICY
-        if self._update_policy is not None:
-            yield UPDATE_POLICY
-        if self._depends:
-            yield DEPENDS_ON
-        if self.description:
-            yield DESCRIPTION
-
-    def __getitem__(self, key):
-        """Get the specified item from a CFN template snippet.
-
-        This is for backwards compatibility with existing code that expects a
-        parsed-JSON template snippet.
-        """
-        warnings.warn(self._deprecation_msg, DeprecationWarning)
-
-        if key == TYPE:
-            return self.resource_type
-        elif key == PROPERTIES:
-            if self._properties is not None:
-                return self._properties
-        elif key == METADATA:
-            if self._metadata is not None:
-                return self._metadata
-        elif key == DELETION_POLICY:
-            if self._deletion_policy is not None:
-                return self._deletion_policy
-        elif key == UPDATE_POLICY:
-            if self._update_policy is not None:
-                return self._update_policy
-        elif key == DEPENDS_ON:
-            if self._depends:
-                if len(self._depends) == 1:
-                    return self._depends[0]
-                return self._depends
-        elif key == DESCRIPTION:
-            if self.description:
-                return self.description
-
-        raise KeyError(key)
-
-    def __len__(self):
-        """Return the number of available CFN template keys.
-
-        This is for backwards compatibility with existing code that expects a
-        parsed-JSON template snippet.
-        """
-        return len(list(iter(self)))
-
-    def __repr__(self):
-        """Return a string representation of the resource definition."""
-        return 'ResourceDefinition %s' % repr(dict(self))
 
 
 def _hash_data(data):
