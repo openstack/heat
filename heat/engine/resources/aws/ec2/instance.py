@@ -730,8 +730,8 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         return updaters
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if 'Metadata' in tmpl_diff:
-            self.metadata_set(tmpl_diff['Metadata'])
+        if tmpl_diff.metadata_changed():
+            self.metadata_set(json_snippet.metadata())
         updaters = []
         server = None
         if self.TAGS in prop_diff:

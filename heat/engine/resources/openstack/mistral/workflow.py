@@ -549,7 +549,9 @@ class Workflow(signal_responder.SignalResponder,
             if prop in prop_diff:
                 del prop_diff[prop]
         if len(prop_diff) > 0:
-            new_props = self.prepare_properties(tmpl_diff['Properties'])
+            props = json_snippet.properties(self.properties_schema,
+                                            self.context)
+            new_props = self.prepare_properties(props)
             try:
                 workflow = self.client().workflows.update(new_props)
             except Exception as ex:

@@ -217,7 +217,7 @@ class LaunchConfiguration(resource.Resource):
             self._update_stored_properties()
 
     def needs_replace_with_tmpl_diff(self, tmpl_diff):
-        return 'Metadata' in tmpl_diff
+        return tmpl_diff.metadata_changed()
 
     def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()

@@ -650,7 +650,9 @@ class ScalingPolicy(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         asclient = self.auto_scale()
-        args = self._get_args(tmpl_diff['Properties'])
+        props = json_snippet.properties(self.properties_schema,
+                                        self.context)
+        args = self._get_args(props)
         args['policy'] = self._get_policy_id()
         asclient.replace_policy(**args)
 
