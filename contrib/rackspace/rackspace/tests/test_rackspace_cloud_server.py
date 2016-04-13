@@ -545,6 +545,7 @@ class CloudServersValidationTests(common.HeatTestCase):
 
         mock_image = mock.Mock(status='ACTIVE', min_ram=2, min_disk=1)
         mock_image.get.return_value = "memory1"
+        mock_image.__iter__ = mock.Mock(return_value=iter([]))
 
         mock_plugin().get_flavor.return_value = mock_flavor
         mock_plugin().get_image.return_value = mock_image
@@ -564,6 +565,7 @@ class CloudServersValidationTests(common.HeatTestCase):
 
         mock_image = mock.Mock(status='ACTIVE', min_ram=2, min_disk=1)
         mock_image.get.return_value = "!standard1, *"
+        mock_image.__iter__ = mock.Mock(return_value=iter([]))
 
         mock_flavor = mock.Mock(ram=4, disk=4)
         mock_flavor.to_dict.return_value = {
@@ -588,6 +590,7 @@ class CloudServersValidationTests(common.HeatTestCase):
 
         mock_image = mock.Mock(size=1, status='ACTIVE', min_ram=2, min_disk=2)
         mock_image.get.return_value = "standard1"
+        mock_image.__iter__ = mock.Mock(return_value=iter([]))
 
         mock_flavor = mock.Mock(ram=4, disk=4)
         mock_flavor.to_dict.return_value = {
@@ -599,5 +602,62 @@ class CloudServersValidationTests(common.HeatTestCase):
 
         mock_plugin().get_flavor.return_value = mock_flavor
         mock_plugin().get_image.return_value = mock_image
+
+        self.assertIsNone(server.validate())
+
+    def test_validate_image_flavor_empty_metadata(self, mock_client,
+                                                  mock_plugin):
+        server = cloud_server.CloudServer("test", self.rsrcdef, self.mockstack)
+
+        mock_image = mock.Mock(size=1, status='ACTIVE', min_ram=2, min_disk=2)
+        mock_image.get.return_value = ""
+        mock_image.__iter__ = mock.Mock(return_value=iter([]))
+
+        mock_flavor = mock.Mock(ram=4, disk=4)
+        mock_flavor.to_dict.return_value = {
+            'OS-FLV-WITH-EXT-SPECS:extra_specs': {
+                'flavor_classes': '',
+                },
+        }
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+        mock_plugin().get_image.return_value = mock_image
+
+        self.assertIsNone(server.validate())
+
+    def test_validate_image_flavor_no_metadata(self, mock_client, mock_plugin):
+        server = cloud_server.CloudServer("test", self.rsrcdef, self.mockstack)
+
+        mock_image = mock.Mock(size=1, status='ACTIVE', min_ram=2, min_disk=2)
+        mock_image.get.return_value = None
+        mock_image.__iter__ = mock.Mock(return_value=iter([]))
+
+        mock_flavor = mock.Mock(ram=4, disk=4)
+        mock_flavor.to_dict.return_value = {}
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+        mock_plugin().get_image.return_value = mock_image
+
+        self.assertIsNone(server.validate())
+
+    def test_validate_image_flavor_not_base(self, mock_client, mock_plugin):
+        server = cloud_server.CloudServer("test", self.rsrcdef, self.mockstack)
+
+        mock_image = mock.Mock(size=1, status='ACTIVE', min_ram=2, min_disk=2)
+        mock_image.get.return_value = None
+        mock_image.__iter__ = mock.Mock(return_value=iter(
+            ['base_image_ref']))
+        mock_image.__getitem__ = mock.Mock(return_value='1234')
+
+        mock_base_image = mock.Mock(size=1, status='ACTIVE', min_ram=2,
+                                    min_disk=2)
+        mock_base_image.get.return_value = None
+        mock_base_image.__iter__ = mock.Mock(return_value=iter([]))
+
+        mock_flavor = mock.Mock(ram=4, disk=4)
+        mock_flavor.to_dict.return_value = {}
+
+        mock_plugin().get_flavor.return_value = mock_flavor
+        mock_plugin().get_image.side_effect = [mock_image, mock_base_image]
 
         self.assertIsNone(server.validate())
