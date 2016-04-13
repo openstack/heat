@@ -23,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class LoadBalancer(neutron.NeutronResource):
@@ -117,15 +118,24 @@ class LoadBalancer(neutron.NeutronResource):
         )
     }
 
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.VIP_SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
+            ),
+        ]
+
     def handle_create(self):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name()
         )
-
-        self.client_plugin().resolve_subnet(
-            properties, self.VIP_SUBNET, 'vip_subnet_id')
-
+        properties['vip_subnet_id'] = properties.pop(self.VIP_SUBNET)
         lb = self.client().create_loadbalancer(
             {'loadbalancer': properties})['loadbalancer']
         self.resource_id_set(lb['id'])

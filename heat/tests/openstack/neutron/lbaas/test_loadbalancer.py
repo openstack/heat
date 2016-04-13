@@ -42,8 +42,6 @@ class LoadBalancerTest(common.HeatTestCase):
         self.t = template_format.parse(tmpl)
         self.stack = utils.parse_stack(self.t)
         self.lb = self.stack['lb']
-        self.lb.resource_id_set('1234')
-
         self.neutron_client = mock.MagicMock()
         self.lb.client = mock.MagicMock()
         self.lb.client.return_value = self.neutron_client
@@ -52,6 +50,8 @@ class LoadBalancerTest(common.HeatTestCase):
             return_value='123')
         self.lb.client_plugin().client = mock.MagicMock(
             return_value=self.neutron_client)
+        self.lb.translate_properties(self.lb.properties)
+        self.lb.resource_id_set('1234')
 
     def test_create(self):
         self._create_stack()

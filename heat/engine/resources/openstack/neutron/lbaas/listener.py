@@ -21,6 +21,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+from heat.engine import translation
 
 
 class Listener(neutron.NeutronResource):
@@ -137,16 +138,17 @@ class Listener(neutron.NeutronResource):
         )
     }
 
-    def __init__(self, name, definition, stack):
-        super(Listener, self).__init__(name, definition, stack)
-        self._lb_id = None
-
-    @property
-    def lb_id(self):
-        if self._lb_id is None:
-            self._lb_id = self.client_plugin().find_resourceid_by_name_or_id(
-                'loadbalancer', self.properties[self.LOADBALANCER])
-        return self._lb_id
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.LOADBALANCER],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='loadbalancer'
+            ),
+        ]
 
     def validate(self):
         res = super(Listener, self).validate()
@@ -161,16 +163,15 @@ class Listener(neutron.NeutronResource):
                 raise exception.StackValidationFailed(message=msg)
 
     def _check_lb_status(self):
-        return self.client_plugin().check_lb_status(self.lb_id)
+        lb_id = self.properties[self.LOADBALANCER]
+        return self.client_plugin().check_lb_status(lb_id)
 
     def handle_create(self):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
 
-        self.client_plugin().resolve_loadbalancer(
-            properties, self.LOADBALANCER, 'loadbalancer_id')
-
+        properties['loadbalancer_id'] = properties.pop(self.LOADBALANCER)
         return properties
 
     def check_create_complete(self, properties):
