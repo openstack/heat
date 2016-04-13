@@ -55,13 +55,15 @@ class Bay(resource.Resource):
             properties.Schema.INTEGER,
             _('The node count for this bay.'),
             constraints=[constraints.Range(min=1)],
-            update_allowed=True
+            update_allowed=True,
+            default=1
         ),
         MASTER_COUNT: properties.Schema(
             properties.Schema.INTEGER,
             _('The number of master nodes for this bay.'),
             constraints=[constraints.Range(min=1)],
-            update_allowed=True
+            update_allowed=True,
+            default=1
         ),
         DISCOVERY_URL: properties.Schema(
             properties.Schema.STRING,
@@ -118,6 +120,14 @@ class Bay(resource.Resource):
                      for k, v in six.iteritems(prop_diff)]
             self.client().bays.update(self.resource_id, patch)
             return self.resource_id
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        record_reality = {}
+
+        for key in [self.NODE_COUNT, self.MASTER_COUNT]:
+            record_reality.update({key: resource_data.get(key)})
+
+        return record_reality
 
     def check_update_complete(self, id):
         bay = self.client().bays.get(id)
