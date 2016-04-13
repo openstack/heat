@@ -425,3 +425,7 @@ def db_sync(engine, version=None):
 def db_version(engine):
     """Display the current database version."""
     return IMPL.db_version(engine)
+
+
+def reset_stack_status(context, stack_id):
+    return IMPL.reset_stack_status(context, stack_id)
