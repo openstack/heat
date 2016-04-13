@@ -501,15 +501,7 @@ class Resource(object):
         If something has been removed in after which exists in before we set it
         to None.
         """
-        # Create a set containing the keys in both current and update template
-        template_keys = set(six.iterkeys(before))
-        template_keys.update(set(six.iterkeys(after)))
-
-        # Create a set of keys which differ (or are missing/added)
-        changed_keys_set = set([k for k in template_keys
-                                if before.get(k) != after.get(k)])
-
-        return dict((k, after.get(k)) for k in changed_keys_set)
+        return after - before
 
     def update_template_diff_properties(self, after_props, before_props):
         """Return changed Properties between the before and after properties.
@@ -1035,13 +1027,11 @@ class Resource(object):
         """
         if self._needs_update(after, before, after_props, before_props,
                               prev_resource, check_init_complete):
-            tmpl_diff = self.update_template_diff(function.resolve(after),
-                                                  before)
+            tmpl_diff = self.update_template_diff(after.freeze(), before)
             if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
                 raise exception.UpdateReplace(self)
 
-            self.update_template_diff_properties(after_props,
-                                                 before_props)
+            self.update_template_diff_properties(after_props, before_props)
             return True
 
     def _check_restricted_actions(self, actions, after, before,
@@ -1140,8 +1130,7 @@ class Resource(object):
             with self._action_recorder(action, exception.UpdateReplace):
                 after_props.validate()
 
-                tmpl_diff = self.update_template_diff(function.resolve(after),
-                                                      before)
+                tmpl_diff = self.update_template_diff(after.freeze(), before)
                 if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
                     raise exception.UpdateReplace(self)
 

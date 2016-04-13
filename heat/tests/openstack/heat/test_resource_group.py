@@ -19,7 +19,6 @@ import six
 from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
-from heat.engine import function
 from heat.engine.resources.openstack.heat import resource_group
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -1015,8 +1014,7 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
 
         updated_stack = utils.parse_stack(updated)
         updated_grp = updated_stack['group1']
-        updated_grp_json = function.resolve(
-            updated_grp.t)
+        updated_grp_json = updated_grp.t.freeze()
 
         # identify the template difference
         tmpl_diff = updated_grp.update_template_diff(
@@ -1083,7 +1081,7 @@ class RollingUpdateTest(common.HeatTestCase):
                                   'type': 'OverwrittenFnGetRefIdType'}})
         updated_stack = utils.parse_stack(updated)
         updated_grp = updated_stack['group1']
-        updated_grp_json = function.resolve(updated_grp.t)
+        updated_grp_json = updated_grp.t.freeze()
         tmpl_diff = updated_grp.update_template_diff(
             updated_grp_json, current_grp_json)
 
