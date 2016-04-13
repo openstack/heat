@@ -589,29 +589,6 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsNone(new_res.physical_resource_id)
         self.assertEqual(new_tmpl_id, new_res.current_template_id)
 
-    def test_parsed_template(self):
-        join_func = cfn_funcs.Join(None,
-                                   'Fn::Join', [' ', ['bar', 'baz', 'quux']])
-        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
-                                            metadata={'foo': join_func})
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-
-        parsed_tmpl = res.parsed_template()
-        self.assertEqual('Foo', parsed_tmpl['Type'])
-        self.assertEqual('bar baz quux', parsed_tmpl['Metadata']['foo'])
-
-        self.assertEqual({'foo': 'bar baz quux'},
-                         res.parsed_template('Metadata'))
-        self.assertEqual({'foo': 'bar baz quux'},
-                         res.parsed_template('Metadata', {'foo': 'bar'}))
-
-    def test_parsed_template_default(self):
-        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual({}, res.parsed_template('Metadata'))
-        self.assertEqual({'foo': 'bar'},
-                         res.parsed_template('Metadata', {'foo': 'bar'}))
-
     def test_metadata_default(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
