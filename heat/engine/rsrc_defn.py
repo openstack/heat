@@ -14,16 +14,15 @@ import collections
 import copy
 import itertools
 import operator
-from oslo_log import log
+import warnings
+
 import six
 
 from heat.common import exception
-from heat.common.i18n import _LW
 from heat.common.i18n import repr_wrapper
 from heat.engine import function
 from heat.engine import properties
 
-LOG = log.getLogger(__name__)
 
 __all__ = ['ResourceDefinition']
 
@@ -291,11 +290,11 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
     """A resource definition that also acts like a cfn template snippet.
 
     This class exists only for backwards compatibility with existing resource
-    plugins and unit tests; it is deprecated and then could be replaced with
-    ResourceDefinitionCore as soon as M release.
+    plugins and unit tests; it is deprecated and will be replaced with
+    ResourceDefinitionCore, possibly as soon as the Ocata release.
     """
 
-    _deprecation_msg = _LW(
+    _deprecation_msg = (
         'Reading the ResourceDefinition as if it were a snippet of a '
         'CloudFormation template is deprecated, and the ability to treat it '
         'as such will be removed in the future. Resource plugins should use '
@@ -330,7 +329,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
         """
-        LOG.warning(self._deprecation_msg)
+        warnings.warn(self._deprecation_msg, DeprecationWarning)
 
         yield TYPE
         if self._properties is not None:
@@ -352,7 +351,7 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
         """
-        LOG.warning(self._deprecation_msg)
+        warnings.warn(self._deprecation_msg, DeprecationWarning)
 
         if key == TYPE:
             return self.resource_type
@@ -385,8 +384,6 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         This is for backwards compatibility with existing code that expects a
         parsed-JSON template snippet.
         """
-        LOG.warning(self._deprecation_msg)
-
         return len(list(iter(self)))
 
     def __repr__(self):
