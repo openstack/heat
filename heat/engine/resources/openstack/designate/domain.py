@@ -118,6 +118,14 @@ class DesignateDomain(resource.Resource):
     def _show_resource(self):
         return dict(self.client().domains.get(self.resource_id).items())
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        domain_reality = {}
+
+        for key in self.PROPERTIES:
+            domain_reality.update({key: resource_data.get(key)})
+
+        return domain_reality
+
 
 def resource_mapping():
     return {
