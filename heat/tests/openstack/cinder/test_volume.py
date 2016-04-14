@@ -1061,13 +1061,15 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_create_with_image_and_imageRef(self):
         stack_name = 'test_create_with_image_and_imageRef'
         combinations = {'imageRef': 'image-456', 'image': 'image-123'}
-        err_msg = "Cannot use image and imageRef at the same time."
+        err_msg = ("Cannot define the following properties at the same time: "
+                   "['image', 'imageRef'].")
         self.stub_ImageConstraint_validate()
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         vp = stack.t['Resources']['volume2']['Properties']
         vp.pop('size')
         vp.update(combinations)
-        ex = self.assertRaises(ValueError, stack.get, 'volume2')
+        ex = self.assertRaises(exception.ResourcePropertyConflict,
+                               stack.get, 'volume2')
         self.assertEqual(err_msg, six.text_type(ex))
 
     def test_cinder_create_with_size_snapshot_and_image(self):

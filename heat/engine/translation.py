@@ -216,10 +216,8 @@ class TranslationRule(object):
         if isinstance(translation_data, list):
             for item in translation_data:
                 if item.get(self.value_name) and item.get(translation_key):
-                    raise ValueError(_('Cannot use %(key)s and '
-                                       '%(name)s at the same time.')
-                                     % dict(key=translation_key,
-                                            name=self.value_name))
+                    raise exception.ResourcePropertyConflict(
+                        props=[translation_key, self.value_name])
                 elif item.get(self.value_name) is not None:
                     item[translation_key] = item[self.value_name]
                     del item[self.value_name]
@@ -228,10 +226,8 @@ class TranslationRule(object):
         else:
             if (translation_data and translation_data.get(translation_key) and
                     value_data and value_data.get(value_key)):
-                raise ValueError(_('Cannot use %(key)s and '
-                                   '%(name)s at the same time.')
-                                 % dict(key=translation_key,
-                                        name=value_key))
+                raise exception.ResourcePropertyConflict(
+                    props=[translation_key, value_key])
             translation_data[translation_key] = value
             # If value defined with value_path, need to delete value_path
             # property data after it's replacing.
