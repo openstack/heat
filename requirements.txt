@@ -40,7 +40,7 @@ python-keystoneclient!=1.8.0,!=2.1.0,>=1.6.0 # Apache-2.0
 python-magnumclient>=2.0.0 # Apache-2.0
 python-manilaclient>=1.3.0 # Apache-2.0
 python-mistralclient>=1.0.0 # Apache-2.0
-python-neutronclient>=4.1.1 # Apache-2.0
+python-neutronclient>=4.2.0 # Apache-2.0
 python-novaclient!=2.33.0,>=2.29.0 # Apache-2.0
 python-openstackclient>=2.1.0 # Apache-2.0
 python-saharaclient>=0.13.0 # Apache-2.0
