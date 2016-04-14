@@ -339,15 +339,15 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         neutronclient.Client.disconnect_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'segmentation_id': 10,
-                'segmentation_type': u'vlan'
+                'segmentation_id': 0,
+                'segmentation_type': u'flat'
             }
         ).AndRaise(qe.NeutronClientException(status_code=404))
 
         neutronclient.Client.connect_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'segmentation_id': 0,
+                'segmentation_id': 1,
                 'segmentation_type': u'flat'
             }
         ).AndReturn({
@@ -361,8 +361,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         neutronclient.Client.disconnect_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'segmentation_id': 10,
-                'segmentation_type': u'vlan'
+                'segmentation_id': 1,
+                'segmentation_type': u'flat'
             }
         ).AndReturn(None)
 
@@ -372,7 +372,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
         neutronclient.Client.create_network_gateway({
             'network_gateway': {
-                'name': u'NetworkGateway',
+                'name': u'NetworkGatewayUpdate',
                 'devices': [{'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
                              'interface_name': u'breth2'}]
             }
@@ -393,8 +393,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         neutronclient.Client.connect_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'segmentation_id': 10,
-                'segmentation_type': u'vlan'
+                'segmentation_id': 1,
+                'segmentation_type': u'flat'
             }
         ).AndReturn({
             'connection_info': {
@@ -411,7 +411,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # update name
-        snippet_for_update = rsrc_defn.ResourceDefinition(
+        snippet_for_update1 = rsrc_defn.ResourceDefinition(
             rsrc.name,
             rsrc.type(),
             {
@@ -424,17 +424,14 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                     'segmentation_type': 'vlan',
                     'segmentation_id': 10}]
             })
-        prop_diff = {'name': u'NetworkGatewayUpdate'}
-        self.assertIsNone(rsrc.handle_update(snippet_for_update,
-                                             mox.IgnoreArg(),
-                                             prop_diff))
+        scheduler.TaskRunner(rsrc.update, snippet_for_update1)()
 
         # update connections
-        snippet_for_update = rsrc_defn.ResourceDefinition(
+        snippet_for_update2 = rsrc_defn.ResourceDefinition(
             rsrc.name,
             rsrc.type(),
             {
-                'name': u'NetworkGateway',
+                'name': u'NetworkGatewayUpdate',
                 'devices': [{
                     'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
                     'interface_name': u'breth1'}],
@@ -443,27 +440,32 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                     'segmentation_type': u'flat',
                     'segmentation_id': 0}]
             })
-        prop_diff = {
-            'connections': [{
-                'network': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'segmentation_type': u'flat',
-                'segmentation_id': 0}]
-        }
-        self.assertIsNone(rsrc.handle_update(snippet_for_update,
-                                             mox.IgnoreArg(),
-                                             prop_diff))
+        scheduler.TaskRunner(rsrc.update, snippet_for_update2,
+                             snippet_for_update1)()
 
         # update connections once more
-        self.assertIsNone(rsrc.handle_update(snippet_for_update,
-                                             mox.IgnoreArg(),
-                                             prop_diff))
-
-        # update devices
-        snippet_for_update = rsrc_defn.ResourceDefinition(
+        snippet_for_update3 = rsrc_defn.ResourceDefinition(
             rsrc.name,
             rsrc.type(),
             {
-                'name': u'NetworkGateway',
+                'name': u'NetworkGatewayUpdate',
+                'devices': [{
+                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': u'breth1'}],
+                'connections': [{
+                    'network': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'segmentation_type': u'flat',
+                    'segmentation_id': 1}]
+            })
+        scheduler.TaskRunner(rsrc.update, snippet_for_update3,
+                             snippet_for_update2)()
+
+        # update devices
+        snippet_for_update4 = rsrc_defn.ResourceDefinition(
+            rsrc.name,
+            rsrc.type(),
+            {
+                'name': u'NetworkGatewayUpdate',
                 'devices': [{
                     'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
                     'interface_name': u'breth2'}],
@@ -472,14 +474,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                     'segmentation_type': u'vlan',
                     'segmentation_id': 10}]
             })
-        prop_diff = {
-            'devices': [{
-                'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                'interface_name': u'breth2'}]
-        }
-        self.assertIsNone(rsrc.handle_update(snippet_for_update,
-                                             mox.IgnoreArg(),
-                                             prop_diff))
+        scheduler.TaskRunner(rsrc.update, snippet_for_update4,
+                             snippet_for_update3)()
 
         self.m.VerifyAll()
 

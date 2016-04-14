@@ -76,6 +76,7 @@ class VPNService(neutron.NeutronResource):
             properties.Schema.STRING,
             _('Subnet in which the vpn service will be created.'),
             support_status=support.SupportStatus(version='2014.2'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ]
@@ -97,6 +98,7 @@ class VPNService(neutron.NeutronResource):
             properties.Schema.STRING,
             _('The router to which the vpn service will be inserted.'),
             support_status=support.SupportStatus(version='2015.1'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.router')
             ]
@@ -143,18 +145,17 @@ class VPNService(neutron.NeutronResource):
                 properties.TranslationRule.REPLACE,
                 [self.SUBNET],
                 value_path=[self.SUBNET_ID]
+            ),
+            properties.TranslationRule(
+                props,
+                properties.TranslationRule.REPLACE,
+                [self.ROUTER],
+                value_path=[self.ROUTER_ID]
             )
         ]
 
     def _show_resource(self):
         return self.client().show_vpnservice(self.resource_id)['vpnservice']
-
-    def validate(self):
-        super(VPNService, self).validate()
-        self._validate_depr_property_required(
-            self.properties, self.SUBNET, self.SUBNET_ID)
-        self._validate_depr_property_required(
-            self.properties, self.ROUTER, self.ROUTER_ID)
 
     def handle_create(self):
         props = self.prepare_properties(

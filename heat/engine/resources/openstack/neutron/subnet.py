@@ -81,6 +81,7 @@ class Subnet(neutron.NeutronResource):
         NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the attached network.'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -268,8 +269,6 @@ class Subnet(neutron.NeutronResource):
 
     def validate(self):
         super(Subnet, self).validate()
-        self._validate_depr_property_required(self.properties,
-                                              self.NETWORK, self.NETWORK_ID)
         ra_mode = self.properties[self.IPV6_RA_MODE]
         address_mode = self.properties[self.IPV6_ADDRESS_MODE]
         if (self.properties[self.IP_VERSION] == 4) and (

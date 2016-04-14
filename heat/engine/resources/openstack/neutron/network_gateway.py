@@ -115,6 +115,7 @@ class NetworkGateway(neutron.NeutronResource):
                             'The internal network to connect on '
                             'the network gateway.'),
                         support_status=support.SupportStatus(version='2014.2'),
+                        required=True,
                         constraints=[
                             constraints.CustomConstraint('neutron.network')
                         ],
@@ -170,8 +171,6 @@ class NetworkGateway(neutron.NeutronResource):
         connections = self.properties[self.CONNECTIONS]
 
         for connection in connections:
-            self._validate_depr_property_required(
-                connection, self.NETWORK, self.NETWORK_ID)
             segmentation_type = connection[self.SEGMENTATION_TYPE]
             segmentation_id = connection.get(self.SEGMENTATION_ID)
 

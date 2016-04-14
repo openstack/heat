@@ -94,6 +94,7 @@ class Port(neutron.NeutronResource):
               'update, the port will be replaced') %
             {'fixed_ips': FIXED_IPS, 'subnet': FIXED_IP_SUBNET},
             support_status=support.SupportStatus(version='2014.2'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -321,11 +322,6 @@ class Port(neutron.NeutronResource):
                 value_name=self.FIXED_IP_SUBNET_ID
             )
         ]
-
-    def validate(self):
-        super(Port, self).validate()
-        self._validate_depr_property_required(self.properties,
-                                              self.NETWORK, self.NETWORK_ID)
 
     def add_dependencies(self, deps):
         super(Port, self).add_dependencies(deps)

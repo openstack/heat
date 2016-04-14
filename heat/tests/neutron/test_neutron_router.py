@@ -21,7 +21,6 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import properties
 from heat.engine.resources.openstack.neutron import router
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -438,12 +437,6 @@ class NeutronRouterTest(common.HeatTestCase):
         self.assertIn(stack['floating_ip'], required_by)
 
     def test_router_interface(self):
-        self._test_router_interface()
-
-    def test_router_interface_depr_router(self):
-        self._test_router_interface(resolve_router=False)
-
-    def _test_router_interface(self, resolve_router=True):
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
@@ -461,13 +454,12 @@ class NeutronRouterTest(common.HeatTestCase):
         router_key = 'router_id'
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
-        if resolve_router:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'router',
-                '3e46229d-8fce-4733-819a-b5fe630550f8'
-            ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
-            router_key = 'router'
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
+        router_key = 'router'
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
@@ -489,6 +481,11 @@ class NeutronRouterTest(common.HeatTestCase):
     def test_router_interface_with_old_data(self):
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+        ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
@@ -530,24 +527,22 @@ class NeutronRouterTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_router_interface_with_port(self):
-        self._test_router_interface_with_port()
-
-    def test_router_interface_with_deprecated_port(self):
-        self._test_router_interface_with_port(resolve_port=False)
-
-    def _test_router_interface_with_port(self, resolve_port=True):
         port_key = 'port_id'
         neutronclient.Client.add_interface_router(
             'ae478782-53c0-4434-ab16-49900c88016c',
             {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         ).AndReturn(None)
-        if resolve_port:
-            port_key = 'port'
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'port',
-                '9577cafd-8e98-4059-a2e6-8a771b4d318e'
-            ).AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'ae478782-53c0-4434-ab16-49900c88016c'
+        ).AndReturn('ae478782-53c0-4434-ab16-49900c88016c')
+        port_key = 'port'
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'port',
+            '9577cafd-8e98-4059-a2e6-8a771b4d318e'
+        ).AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
 
         neutronclient.Client.remove_interface_router(
             'ae478782-53c0-4434-ab16-49900c88016c',
@@ -861,30 +856,3 @@ class NeutronRouterTest(common.HeatTestCase):
         rsrc = self.create_router(t, stack, 'router')
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
-
-    def test_validate_depr_keys_required_both(self):
-        data = {'router_id': '1234',
-                'router': 'abc'}
-        p = properties.Properties(router.RouterInterface.properties_schema,
-                                  data)
-        self.assertRaises(
-            exception.ResourcePropertyConflict,
-            router.RouterInterface._validate_deprecated_keys,
-            p, 'router', 'router_id')
-
-    def test_validate_depr_keys_required_neither(self):
-        data = {}
-        p = properties.Properties(router.RouterInterface.properties_schema,
-                                  data)
-
-        res = router.RouterInterface._validate_deprecated_keys(
-            p, 'router', 'router_id')
-        self.assertFalse(res)
-
-    def test_validate_depr_keys_required_one(self):
-        data = {'router_id': ''}
-        p = properties.Properties(router.RouterInterface.properties_schema,
-                                  data)
-        res = router.RouterInterface._validate_deprecated_keys(
-            p, 'router', 'router_id')
-        self.assertTrue(res)

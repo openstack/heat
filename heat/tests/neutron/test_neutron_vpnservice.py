@@ -164,9 +164,6 @@ class VPNServiceTest(common.HeatTestCase):
     def test_create(self):
         self._test_create()
 
-    def test_create_router_id(self):
-        self._test_create(resolve_router=False)
-
     def _test_create(self, resolve_neutron=True, resolve_router=True):
         rsrc = self.create_vpnservice(resolve_neutron, resolve_router)
         self.m.ReplayAll()
@@ -175,6 +172,11 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'router',
+            'rou123'
+        ).MultipleTimes().AndReturn('rou123')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',

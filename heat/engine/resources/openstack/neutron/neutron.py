@@ -17,7 +17,6 @@ import warnings
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.engine import properties as properties_module
 from heat.engine import resource
 
 
@@ -54,22 +53,6 @@ class NeutronResource(resource.Resource):
                 six.iterkeys(properties))
             for k in banned_keys.intersection(six.iterkeys(vs)):
                 return '%s not allowed in value_specs' % k
-
-    @staticmethod
-    def _validate_depr_property_required(properties, prop_key, depr_prop_key):
-        if isinstance(properties, properties_module.Properties):
-            prop_value = properties.data.get(prop_key)
-            depr_prop_value = properties.data.get(depr_prop_key)
-        else:
-            prop_value = properties.get(prop_key)
-            depr_prop_value = properties.get(depr_prop_key)
-
-        if prop_value and depr_prop_value:
-            raise exception.ResourcePropertyConflict(prop_key,
-                                                     depr_prop_key)
-        if not prop_value and not depr_prop_value:
-            raise exception.PropertyUnspecifiedError(prop_key,
-                                                     depr_prop_key)
 
     @staticmethod
     def prepare_properties(properties, name):

@@ -60,6 +60,7 @@ class FloatingIP(neutron.NeutronResource):
             properties.Schema.STRING,
             _('Network to allocate floating IP from.'),
             support_status=support.SupportStatus(version='2014.2'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -203,8 +204,6 @@ class FloatingIP(neutron.NeutronResource):
 
     def validate(self):
         super(FloatingIP, self).validate()
-        self._validate_depr_property_required(
-            self.properties, self.FLOATING_NETWORK, self.FLOATING_NETWORK_ID)
         # fixed_ip_address cannot be specified without a port_id
         if self.properties[self.PORT_ID] is None and self.properties[
                 self.FIXED_IP_ADDRESS] is not None:
