@@ -132,6 +132,13 @@ engine_opts = [
                help=_('Number of times to retry when a client encounters an '
                       'expected intermittent error. Set to 0 to disable '
                       'retries.')),
+    # Server host name limit to 53 characters by due to typical default
+    # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
+    cfg.IntOpt('max_server_name_length',
+               default=53,
+               max=53,
+               help=_('Maximum length of a server name to be used '
+                      'in nova.')),
     cfg.IntOpt('max_interface_check_attempts',
                min=1,
                default=10,

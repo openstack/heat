@@ -38,6 +38,7 @@ from heat.engine import translation
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
+cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -577,9 +578,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         ),
     }
 
-    # Server host name limit to 53 characters by due to typical default
-    # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
-    physical_resource_name_limit = 53
+    physical_resource_name_limit = cfg.CONF.max_server_name_length
 
     default_client_name = 'nova'
 

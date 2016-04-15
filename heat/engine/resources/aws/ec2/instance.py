@@ -13,8 +13,11 @@
 
 import copy
 
+from oslo_config import cfg
 from oslo_log import log as logging
 import six
+
+cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -340,9 +343,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         ),
     }
 
-    # Server host name limit to 53 characters by due to typical default
-    # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
-    physical_resource_name_limit = 53
+    physical_resource_name_limit = cfg.CONF.max_server_name_length
 
     default_client_name = 'nova'
 

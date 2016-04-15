@@ -1,0 +1,6 @@
+---
+features:
+    - Adds new 'max_server_name_length' configuration option
+      which defaults to the prior upper bound (53) and can be
+      lowered by users (if they need to, for example due to
+      ldap or other internal name limit restrictions).
