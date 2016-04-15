@@ -11,12 +11,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from magnumclient.openstack.common.apiclient import exceptions as mc_exc
 from magnumclient.v1 import client as magnum_client
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+
+try:
+    from magnumclient.common.apiclient import exceptions as mc_exc
+except ImportError:
+    # NOTE (duvarenkov): For magnumclient versions before 2.0.0.
+    from magnumclient.openstack.common.apiclient import exceptions as mc_exc
 
 CLIENT_NAME = 'magnum'
 
