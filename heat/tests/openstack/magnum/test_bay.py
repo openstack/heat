@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+from magnumclient.common.apiclient import exceptions as mc_exc
 import mock
 from oslo_config import cfg
 import six
@@ -25,12 +26,6 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-try:
-    from magnumclient.common.apiclient import exceptions as mc_exc
-except ImportError:
-    # NOTE (duvarenkov): For magnumclient versions before 2.0.0.
-    from magnumclient.openstack.common.apiclient import exceptions as mc_exc
 
 
 magnum_template = '''
