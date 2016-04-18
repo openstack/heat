@@ -99,7 +99,6 @@ class FakeVolume(object):
 
     def __init__(self, status, **attrs):
         self.status = status
-        self.to_dict = lambda: {'volume': 'info'}
         for key, value in six.iteritems(attrs):
             setattr(self, key, value)
         if 'id' not in attrs:
