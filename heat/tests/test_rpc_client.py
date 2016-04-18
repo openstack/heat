@@ -222,7 +222,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               support_status=None,
                               type_name=None,
                               heat_version=None,
-                              version='1.16')
+                              with_description=False,
+                              version='1.30')
 
     def test_resource_schema(self):
         self._test_engine_api('resource_schema', 'call', type_name="TYPE")

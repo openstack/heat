@@ -2449,9 +2449,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
              {
                  'support_status': None,
                  'type_name': None,
-                 'heat_version': None
+                 'heat_version': None,
+                 'with_description': False
              }),
-            version="1.16"
+            version="1.30"
         ).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.list_resource_types(req,
@@ -2471,9 +2472,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
              {
                  'support_status': None,
                  'type_name': None,
-                 'heat_version': None
+                 'heat_version': None,
+                 'with_description': False
              }),
-            version="1.16"
+            version="1.30"
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 

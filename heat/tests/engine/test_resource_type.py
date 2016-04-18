@@ -65,6 +65,25 @@ class ResourceTypeTest(common.HeatTestCase):
         # Check for a known resource, not listed
         self.assertNotIn('OS::Nova::Server', resources)
 
+    @mock.patch.object(res.Resource, 'is_service_available')
+    def test_list_resource_types_with_descr(self, mock_is_service_available):
+        mock_is_service_available.return_value = True
+        resources = self.eng.list_resource_types(self.ctx,
+                                                 with_description=True)
+        self.assertIsInstance(resources, list)
+        description = ("Heat Template Resource for Designate Domain.\n\n"
+                       "Designate provides DNS-as-a-Service services for "
+                       "OpenStack. So, domain\nis a realm with an "
+                       "identification string, unique in DNS.\n")
+        self.assertIn({'resource_type': 'OS::Designate::Domain',
+                       'description': description}, resources)
+        self.assertIn({'resource_type': 'AWS::RDS::DBInstance',
+                       'description': 'Builtin AWS::RDS::DBInstance'},
+                      resources)
+        self.assertIn({'resource_type': 'AWS::EC2::Instance',
+                       'description': 'No description given'},
+                      resources)
+
     def test_resource_schema(self):
         type_name = 'ResourceWithPropsType'
         expected = {

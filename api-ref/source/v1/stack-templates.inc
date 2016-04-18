@@ -28,6 +28,7 @@ Request
    - name: name
    - version: version
    - support_status: support_status
+   - with_description: with_description
 
 
 Response Parameters
@@ -38,7 +39,7 @@ Response Parameters
    - template_versions: template_versions
    - type: type
    - version: version
-
+   - description: resource_description
 
 
 Response Example
