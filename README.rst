@@ -49,3 +49,4 @@ We have integration with
 * https://git.openstack.org/cgit/openstack/python-mistralclient (workflow service)
 * https://git.openstack.org/cgit/openstack/python-zaqarclient (messaging service)
 * https://git.openstack.org/cgit/openstack/python-monascaclient (monitoring service)
+* https://git.openstack.org/cgit/openstack/python-senlinclient (clustering service)
