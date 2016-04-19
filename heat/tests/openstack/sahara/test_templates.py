@@ -252,8 +252,10 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         rsrc_defn = self.stack.t.resource_definitions(self.stack)['node-group']
         rsrc_defn['Properties']['node_processes'] = [
             'tasktracker', 'datanode']
+        rsrc_defn['Properties']['name'] = 'new-ng-template'
         scheduler.TaskRunner(ngt.update, rsrc_defn)()
-        args = {'node_processes': ['tasktracker', 'datanode']}
+        args = {'node_processes': ['tasktracker', 'datanode'],
+                'name': 'new-ng-template'}
         self.ngt_mgr.update.assert_called_once_with('some_ng_id', **args)
         self.assertEqual((ngt.UPDATE, ngt.COMPLETE), ngt.state)
 
@@ -341,10 +343,12 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
             'cluster-template']
         rsrc_defn['Properties']['plugin_name'] = 'hdp'
         rsrc_defn['Properties']['hadoop_version'] = '1.3.2'
+        rsrc_defn['Properties']['name'] = 'new-cluster-template'
         scheduler.TaskRunner(ct.update, rsrc_defn)()
         args = {
             'plugin_name': 'hdp',
             'hadoop_version': '1.3.2',
+            'name': 'new-cluster-template'
         }
         self.ct_mgr.update.assert_called_once_with('some_ct_id', **args)
         self.assertEqual((ct.UPDATE, ct.COMPLETE), ct.state)
