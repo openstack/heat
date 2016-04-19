@@ -1365,6 +1365,7 @@ class Stack(collections.Mapping):
             # Oldstack is useless when the action is not UPDATE , so we don't
             # need to build it, this can avoid some unexpected errors.
             kwargs = self.get_kwargs_for_cloning()
+            self._ensure_encrypted_param_names_valid()
             oldstack = Stack(self.context, self.name, copy.deepcopy(self.t),
                              **kwargs)
 
@@ -1481,6 +1482,14 @@ class Stack(collections.Mapping):
             return not self.disable_rollback
         else:
             return False
+
+    def _ensure_encrypted_param_names_valid(self):
+        # If encryption was enabled when the stack was created but
+        # then disabled when the stack was updated, env.params and
+        # env.encrypted_param_names will be in an inconsistent
+        # state
+        if not cfg.CONF.encrypt_parameters_and_properties:
+            self.t.env.encrypted_param_names = []
 
     def _message_parser(self, message):
         if message == rpc_api.THREAD_CANCEL:
