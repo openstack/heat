@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev35\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-08 06:11+0000\n"
+"Project-Id-Version: heat 6.0.1.dev82\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-19 06:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -141,15 +141,6 @@ msgstr ""
 #: heat/engine/resource.py:1970
 #, python-format
 msgid "Resource %s does not implement metadata update"
-msgstr ""
-
-#: heat/engine/rsrc_defn.py:298
-msgid ""
-"Reading the ResourceDefinition as if it were a snippet of a "
-"CloudFormation template is deprecated, and the ability to treat it as "
-"such will be removed in the future. Resource plugins should use the "
-"ResourceDefinition API to work with the definition of the resource "
-"instance."
 msgstr ""
 
 #: heat/engine/service.py:322

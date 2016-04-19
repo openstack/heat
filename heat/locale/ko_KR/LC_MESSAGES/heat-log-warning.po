@@ -1,9 +1,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev35\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-07 09:26+0000\n"
+"Project-Id-Version: heat 6.0.1.dev82\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-19 04:16+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -157,17 +157,6 @@ msgstr "32자가 되도록 auth_encryption_key를 업데이트하십시오."
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr "'%s' 미리보기가 아직 구현되지 않음"
-
-msgid ""
-"Reading the ResourceDefinition as if it were a snippet of a CloudFormation "
-"template is deprecated, and the ability to treat it as such will be removed "
-"in the future. Resource plugins should use the ResourceDefinition API to "
-"work with the definition of the resource instance."
-msgstr ""
-"ResourceDefinition을 CloudFormation 템플릿의 스니펫처럼 읽는 기능은 더 이상 "
-"사용되지 않으며, 이러한 기능은 향후 제거될 예정입니다. 자원 플러그인에서는 "
-"ResourceDefinition API를 사용하여 자원 인스턴스 정의에 대한 작업을 수행해야 "
-"합니다."
 
 #, python-format
 msgid ""
