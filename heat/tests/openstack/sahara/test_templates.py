@@ -253,30 +253,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         rsrc_defn['Properties']['node_processes'] = [
             'tasktracker', 'datanode']
         scheduler.TaskRunner(ngt.update, rsrc_defn)()
-        args = {
-            'name': 'node-group-template',
-            'plugin_name': 'vanilla',
-            'hadoop_version': '2.3.0',
-            'flavor_id': 'someflavorid',
-            'description': "",
-            'volumes_per_node': None,
-            'volumes_size': None,
-            'volume_type': 'lvm',
-            'security_groups': None,
-            'auto_security_group': None,
-            'availability_zone': None,
-            'volumes_availability_zone': None,
-            'node_processes': ['tasktracker', 'datanode'],
-            'floating_ip_pool': 'some_pool_id',
-            'node_configs': None,
-            'image_id': None,
-            'is_proxy_gateway': True,
-            'volume_local_to_instance': None,
-            'use_autoconfig': None,
-            'shares': [{'id': 'e45eaabf-9300-42e2-b6eb-9ebc92081f46',
-                        'access_level': 'ro',
-                        'path': None}]
-        }
+        args = {'node_processes': ['tasktracker', 'datanode']}
         self.ngt_mgr.update.assert_called_once_with('some_ng_id', **args)
         self.assertEqual((ngt.UPDATE, ngt.COMPLETE), ngt.state)
 
@@ -366,19 +343,8 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         rsrc_defn['Properties']['hadoop_version'] = '1.3.2'
         scheduler.TaskRunner(ct.update, rsrc_defn)()
         args = {
-            'name': 'test-cluster-template',
             'plugin_name': 'hdp',
             'hadoop_version': '1.3.2',
-            'description': '',
-            'default_image_id': None,
-            'net_id': 'some_network_id',
-            'anti_affinity': None,
-            'node_groups': None,
-            'cluster_configs': None,
-            'use_autoconfig': None,
-            'shares': [{'id': 'e45eaabf-9300-42e2-b6eb-9ebc92081f46',
-                        'access_level': 'ro',
-                        'path': None}]
         }
         self.ct_mgr.update.assert_called_once_with('some_ct_id', **args)
         self.assertEqual((ct.UPDATE, ct.COMPLETE), ct.state)
