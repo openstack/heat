@@ -406,3 +406,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               mark_unhealthy=True,
                               resource_status_reason="Any reason",
                               version='1.26')
+
+    def test_get_environment(self):
+        self._test_engine_api(
+            'get_environment', 'call', stack_identity=self.identity,
+            version='1.28')

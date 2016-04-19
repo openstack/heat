@@ -454,6 +454,16 @@ class StackController(object):
         return templ
 
     @util.identified_stack
+    def environment(self, req, identity):
+        """Get the environment for an existing stack."""
+        env = self.rpc_client.get_environment(req.context, identity)
+
+        if env is None:
+            raise exc.HTTPNotFound()
+
+        return env
+
+    @util.identified_stack
     def update(self, req, identity, body):
         """Update an existing stack with a new template and/or parameters."""
         data = InstantiationData(body)

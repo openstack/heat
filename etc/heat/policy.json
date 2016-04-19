@@ -54,6 +54,7 @@
     "stacks:resource_schema": "rule:deny_stack_user",
     "stacks:show": "rule:deny_stack_user",
     "stacks:template": "rule:deny_stack_user",
+    "stacks:environment": "rule:deny_stack_user",
     "stacks:update": "rule:deny_stack_user",
     "stacks:update_patch": "rule:deny_stack_user",
     "stacks:preview_update": "rule:deny_stack_user",
