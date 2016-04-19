@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev35\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-08 06:11+0000\n"
+"Project-Id-Version: heat 6.0.1.dev82\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-19 06:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -222,12 +222,12 @@ msgstr ""
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service.py:2090
+#: heat/engine/service.py:2095
 #, python-format
 msgid "Service %(service_id)s update failed: %(error)s"
 msgstr ""
 
-#: heat/engine/service.py:2167
+#: heat/engine/service.py:2172
 #, python-format
 msgid "Error while resetting stack: %s"
 msgstr ""

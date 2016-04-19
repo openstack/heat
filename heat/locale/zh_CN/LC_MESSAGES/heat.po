@@ -4,16 +4,12 @@
 #
 # Translators:
 # Xiao Xi LIU <liuxx@cn.ibm.com>, 2014
-# Lucas Palm <lapalm@us.ibm.com>, 2015. #zanata
-# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
-# Gaoxiao Zhu <zhu.gaoxiao@h3c.com>, 2016. #zanata
-# Linda <duleish@cn.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev35\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-07 09:26+0000\n"
+"Project-Id-Version: heat 6.0.1.dev82\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-19 04:16+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1067,13 +1063,6 @@ msgstr "无法暂挂 %s，未设置 resource_id"
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr "无法暂挂 %s，未创建堆栈"
-
-#, python-format
-msgid "Cannot use %(key)s and %(name)s at the same time."
-msgstr "不能同时使用 %(key)s 和 %(name)s。"
-
-msgid "Cannot use network and uuid at the same time."
-msgstr "不能同时使用 network 和 uuid。"
 
 msgid "Captured stderr from the configuration execution."
 msgstr "已从配置执行捕获标准错误。"
@@ -7155,13 +7144,6 @@ msgstr "对于平面网络类型，不允许 segmentation_id。"
 
 msgid "server_id must be specified"
 msgstr "必须指定server_id"
-
-msgid "source_path must be non-empty list with path."
-msgstr "source_path 必须为带有路径的非空列表。"
-
-#, python-format
-msgid "source_path should be a list with path instead of %s."
-msgstr "source_path 应该是带有路径的列表，而不是 %s。"
 
 msgid "stack not found"
 msgstr "找不到堆栈"

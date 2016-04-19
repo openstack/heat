@@ -5,14 +5,12 @@
 # Translators:
 # Mario Cho <hephaex@gmail.com>, 2014
 # Ying Chun Guo <daisy.ycguo@gmail.com>, 2015
-# Lucas Palm <lapalm@us.ibm.com>, 2015. #zanata
-# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev35\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-07 09:26+0000\n"
+"Project-Id-Version: heat 6.0.1.dev82\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-19 04:16+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1110,13 +1108,6 @@ msgstr "%s을(를) 일시중단할 수 없음, 자원 ID가 설정되지 않음"
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr "%s을(를) 일시중단할 수 없음, 스택이 작성되지 않음"
-
-#, python-format
-msgid "Cannot use %(key)s and %(name)s at the same time."
-msgstr "%(key)s과(와) %(name)s을(를) 동시에 사용할 수 없습니다."
-
-msgid "Cannot use network and uuid at the same time."
-msgstr "네트워크와 uuid를 동시에 사용할 수 없습니다."
 
 msgid "Captured stderr from the configuration execution."
 msgstr "구성 실행에서 캡처된 stderr입니다."
@@ -7453,13 +7444,6 @@ msgstr "segmentation_id는 일반 네트워크 유형에 대해 허용되지 않
 
 msgid "server_id must be specified"
 msgstr "server_id를 지정해야 함"
-
-msgid "source_path must be non-empty list with path."
-msgstr "source_path는 경로가 포함된 비어 있지 않은 목록이어야 합니다."
-
-#, python-format
-msgid "source_path should be a list with path instead of %s."
-msgstr "source_path는 %s이(가) 아니라 경로가 있는 목록이어야 합니다."
 
 msgid "stack not found"
 msgstr "스택을 찾을 수 없음"

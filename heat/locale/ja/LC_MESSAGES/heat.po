@@ -6,18 +6,12 @@
 # yfukuda <fukuda.yuko@jp.fujitsu.com>, 2014
 # Satoshi Kodama <s.skk.skk+transifex@gmail.com>, 2013
 # Tomoyuki KATO <tomo@dream.daynight.jp>, 2013
-# Akihiro Motoki <amotoki@gmail.com>, 2015. #zanata
-# KATO Tomoyuki <kato.tomoyuki@jp.fujitsu.com>, 2015. #zanata
-# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
-# Tom Cocozzello <tjcocozz@us.ibm.com>, 2015. #zanata
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
-# Kyohei Moriyama <flogofrein@gmail.com>, 2016. #zanata
-# Tsutomu Kimura <ebb0de2@jp.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev35\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-07 09:26+0000\n"
+"Project-Id-Version: heat 6.0.1.dev82\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-19 04:16+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1144,13 +1138,6 @@ msgstr "%s を中断できません。resource_id が設定されていません
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr "%s を中断できません。スタックは作成されません"
-
-#, python-format
-msgid "Cannot use %(key)s and %(name)s at the same time."
-msgstr "同時に %(key)s と %(name)s を使用することはできません。"
-
-msgid "Cannot use network and uuid at the same time."
-msgstr "ネットワークと UUID を同時に使用することはできません。"
 
 msgid "Captured stderr from the configuration execution."
 msgstr "設定実行から取り込まれた stderr。"
@@ -7659,13 +7646,6 @@ msgstr "segmentation_id はフラットネットワーク形式には使用で�
 
 msgid "server_id must be specified"
 msgstr "server_id の指定は必須です"
-
-msgid "source_path must be non-empty list with path."
-msgstr "source_path は、パスを持つ空ではないリストである必要があります。"
-
-#, python-format
-msgid "source_path should be a list with path instead of %s."
-msgstr "source_path は、%s ではなく パスを持つリストである必要があります。"
 
 msgid "stack not found"
 msgstr "stackが見つかりません"
