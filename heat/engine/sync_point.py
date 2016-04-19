@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import ast
-from oslo_log import log as logging
+import eventlet
+import random
 import six
+
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.objects import sync_point as sync_point_object
@@ -118,14 +121,19 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
     rows_updated = None
     sync_point = None
     input_data = None
+    nconflicts = max(0, len(predecessors) - 2)
+    # limit to 10 seconds
+    max_wt = min(nconflicts * 0.01, 10)
     while not rows_updated:
-        # TODO(sirushtim): Add a conf option to add no. of retries
         sync_point = get(cnxt, entity_id, current_traversal, is_update)
         input_data = deserialize_input_data(sync_point.input_data)
         input_data.update(new_data)
         rows_updated = update_input_data(
             cnxt, entity_id, current_traversal, is_update,
             sync_point.atomic_key, serialize_input_data(input_data))
+        # don't aggresively spin; induce some sleep
+        if not rows_updated:
+            eventlet.sleep(random.uniform(0, max_wt))
 
     waiting = predecessors - set(input_data)
     key = make_key(entity_id, current_traversal, is_update)

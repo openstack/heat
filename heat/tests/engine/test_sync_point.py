@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import mock
+from oslo_db import exception
 
 from heat.engine import sync_point
 from heat.tests import common
@@ -66,3 +67,24 @@ class SyncPointTestCase(common.HeatTestCase):
     def test_serialize_input_data(self):
         res = sync_point.serialize_input_data({(3, 8): None})
         self.assertEqual({'input_data': {u'tuple:(3, 8)': None}}, res)
+
+    @mock.patch('heat.engine.sync_point.update_input_data', return_value=None)
+    @mock.patch('eventlet.sleep', side_effect=exception.DBError)
+    def sync_with_sleep(self, ctx, stack, mock_sleep_time, mock_uid):
+        resource = stack['C']
+        graph = stack.convergence_dependencies.graph()
+
+        mock_callback = mock.Mock()
+        self.assertRaises(exception.DBError, sync_point.sync, ctx, resource.id,
+                          stack.current_traversal, True, mock_callback,
+                          set(graph[(resource.id, True)]), {})
+        return mock_sleep_time
+
+    def test_sync_with_time_throttle(self):
+        ctx = utils.dummy_context()
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        mock_sleep_time = self.sync_with_sleep(ctx, stack)
+        mock_sleep_time.assert_called_once_with(mock.ANY)
