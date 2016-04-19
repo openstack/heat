@@ -1123,6 +1123,34 @@ class StackServiceTest(common.HeatTestCase):
 
         self.assertEqual(0, len(sl))
 
+    def test_get_template(self):
+        # Setup
+        t = template_format.parse(tools.wp_template)
+        tmpl = templatem.Template(t)
+        stack = parser.Stack(self.ctx, 'get_env_stack', tmpl)
+
+        mock_get_stack = self.patchobject(self.eng, '_get_stack')
+        mock_get_stack.return_value = mock.MagicMock()
+        mock_get_stack.return_value.raw_template.template = t
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+
+        # Test
+        found = self.eng.get_template(self.ctx, stack.identifier())
+
+        # Verify
+        self.assertEqual(t, found)
+
+    def test_get_template_no_template(self):
+        # Setup
+        exc = exception.EntityNotFound(entity='stack', name='missing')
+        self.patchobject(self.eng, '_get_stack', side_effect=exc)
+
+        # Test
+        self.assertRaises(dispatcher.ExpectedException,
+                          self.eng.get_template,
+                          self.ctx,
+                          'missing')
+
     def _preview_stack(self, environment_files=None):
         res._register_class('GenericResource1', generic_rsrc.GenericResource)
         res._register_class('GenericResource2', generic_rsrc.GenericResource)
