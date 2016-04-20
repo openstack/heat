@@ -238,7 +238,6 @@ class KeystoneGroupTest(common.HeatTestCase):
 
     def test_group_handle_update(self):
         self.test_group.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_group._stored_properties_data = dict(roles=None)
 
         prop_diff = {group.KeystoneGroup.NAME: 'test_group_1_updated',
                      group.KeystoneGroup.DESCRIPTION: 'Test Group updated',
@@ -262,7 +261,6 @@ class KeystoneGroupTest(common.HeatTestCase):
 
     def test_group_handle_update_default(self):
         self.test_group.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_group._stored_properties_data = dict(domain='default')
 
         prop_diff = {group.KeystoneGroup.DESCRIPTION: 'Test Project updated'}
 
@@ -281,7 +279,6 @@ class KeystoneGroupTest(common.HeatTestCase):
 
     def test_group_handle_delete(self):
         self.test_group.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_group._stored_properties_data = dict(roles=None)
         self.groups.delete.return_value = None
 
         self.assertIsNone(self.test_group.handle_delete())
@@ -294,7 +291,6 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.assertIsNone(self.test_group.handle_delete())
 
     def test_group_handle_delete_not_found(self):
-        self.test_group._stored_properties_data = dict(roles=None)
         exc = self.keystoneclient.NotFound
         self.groups.delete.side_effect = exc
 

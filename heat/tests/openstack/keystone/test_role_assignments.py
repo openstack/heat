@@ -188,19 +188,6 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
             project='project_1')
 
     def test_role_assignment_update_user(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
-
         prop_diff = {
             MixinClass.ROLES: [
                 {
@@ -245,19 +232,6 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
             project='project_1')
 
     def test_role_assignment_update_group(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
-
         prop_diff = {
             MixinClass.ROLES: [
                 {
@@ -316,18 +290,6 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
         self.assertEqual(0, self.roles.revoke.call_count)
 
     def test_role_assignment_delete_user(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
         self.assertIsNone(self.test_role_assignment.delete_assignment(
             user_id='user_1'))
 
@@ -345,18 +307,6 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
             project='project_1')
 
     def test_role_assignment_delete_group(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
         self.assertIsNone(self.test_role_assignment.delete_assignment(
             group_id='group_1'
         ))
@@ -449,19 +399,6 @@ class KeystoneUserRoleAssignmentTest(common.HeatTestCase):
             project='project_1')
 
     def test_user_role_assignment_handle_update(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
-
         prop_diff = {
             MixinClass.ROLES: [
                 {
@@ -506,18 +443,6 @@ class KeystoneUserRoleAssignmentTest(common.HeatTestCase):
             project='project_1')
 
     def test_user_role_assignment_handle_delete(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
         self.assertIsNone(self.test_role_assignment.handle_delete())
 
         # Remove role1-project1-domain1
@@ -587,19 +512,6 @@ class KeystoneGroupRoleAssignmentTest(common.HeatTestCase):
             project='project_1')
 
     def test_group_role_assignment_handle_update(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
-
         prop_diff = {
             MixinClass.ROLES: [
                 {
@@ -644,18 +556,6 @@ class KeystoneGroupRoleAssignmentTest(common.HeatTestCase):
             project='project_1')
 
     def test_group_role_assignment_handle_delete(self):
-        self.test_role_assignment._stored_properties_data = {
-            'roles': [
-                {
-                    'role': 'role_1',
-                    'project': 'project_1'
-                },
-                {
-                    'role': 'role_1',
-                    'domain': 'domain_1'
-                }
-            ]
-        }
         self.assertIsNone(self.test_role_assignment.handle_delete())
 
         # Remove role1-project1-domain1

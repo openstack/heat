@@ -98,7 +98,7 @@ class KeystoneGroup(resource.Resource,
 
             description = prop_diff.get(self.DESCRIPTION)
             domain = (prop_diff.get(self.DOMAIN) or
-                      self._stored_properties_data.get(self.DOMAIN))
+                      self.properties[self.DOMAIN])
             domain_id = self.client_plugin().get_domain_id(domain)
 
             self.client().groups.update(

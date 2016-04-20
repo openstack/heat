@@ -310,7 +310,6 @@ class KeystoneProjectTest(common.HeatTestCase):
 
     def test_project_handle_update_default(self):
         self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_project._stored_properties_data = dict(domain='default')
 
         prop_diff = {project.KeystoneProject.DESCRIPTION:
                      'Test Project updated',
@@ -332,7 +331,6 @@ class KeystoneProjectTest(common.HeatTestCase):
 
     def test_project_handle_update_only_enabled(self):
         self.test_project.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_project._stored_properties_data = dict(domain='default')
         prop_diff = {project.KeystoneProject.ENABLED: False}
 
         self.test_project.handle_update(json_snippet=None,
