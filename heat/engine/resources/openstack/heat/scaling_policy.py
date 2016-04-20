@@ -16,6 +16,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
@@ -161,37 +162,48 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
         if alarm_state != 'alarm':
             raise exception.NoActionRequired()
-        if not self._is_scaling_allowed():
-            LOG.info(_LI("%(name)s NOT performing scaling action, "
-                         "cooldown %(cooldown)s"),
-                     {'name': self.name,
-                      'cooldown': self.properties[self.COOLDOWN]})
-            raise exception.NoActionRequired()
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)
-        changed_size = False
-        try:
-            if group is None:
-                raise exception.NotFound(_('Alarm %(alarm)s could not find '
-                                           'scaling group named "%(group)s"'
-                                           ) % {'alarm': self.name,
-                                                'group': asgn_id})
 
-            LOG.info(_LI('%(name)s Alarm, adjusting Group %(group)s with id '
-                         '%(asgn_id)s by %(filter)s'),
-                     {'name': self.name, 'group': group.name,
-                      'asgn_id': asgn_id,
-                      'filter': self.properties[self.SCALING_ADJUSTMENT]})
-            changed_size = group.adjust(
+        if group is None:
+            raise exception.NotFound(_('Alarm %(alarm)s could not find '
+                                       'scaling group named "%(group)s"'
+                                       ) % {'alarm': self.name,
+                                            'group': asgn_id})
+
+        if not self._is_scaling_allowed():
+            LOG.info(_LI("%(name)s NOT performing scaling action, "
+                         "cooldown %(cooldown)s") % {
+                'name': self.name,
+                'cooldown': self.properties[self.COOLDOWN]})
+            raise exception.NoActionRequired()
+
+        LOG.info(_LI('%(name)s alarm, adjusting group %(group)s with id '
+                     '%(asgn_id)s by %(filter)s') % {
+            'name': self.name, 'group': group.name,
+            'asgn_id': asgn_id,
+            'filter': self.properties[self.SCALING_ADJUSTMENT]})
+
+        size_changed = False
+        try:
+            group.adjust(
                 self.properties[self.SCALING_ADJUSTMENT],
                 self.properties[self.ADJUSTMENT_TYPE],
                 self.properties[self.MIN_ADJUSTMENT_STEP])
+            size_changed = True
+        except Exception as ex:
+            if not isinstance(ex, exception.NoActionRequired):
+                LOG.error(_LE("Error in performing scaling adjustment with "
+                              "%(name)s alarm for group %(group)s.") % {
+                    'name': self.name,
+                    'group': group.name})
+            raise
         finally:
             self._finished_scaling("%s : %s" % (
                 self.properties[self.ADJUSTMENT_TYPE],
                 self.properties[self.SCALING_ADJUSTMENT]),
-                changed_size=changed_size)
+                size_changed=size_changed)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:

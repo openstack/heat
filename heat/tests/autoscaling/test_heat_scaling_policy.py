@@ -74,6 +74,38 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         self.assertIn('Alarm my-policy could '
                       'not find scaling group', six.text_type(ex))
 
+    def test_scaling_policy_adjust_no_action(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        up_policy = self.create_scaling_policy(t, stack,
+                                               'my-policy')
+        group = stack['my-group']
+        self.patchobject(group, 'adjust',
+                         side_effect=exception.NoActionRequired())
+        mock_fin_scaling = self.patchobject(up_policy, '_finished_scaling')
+        with mock.patch.object(up_policy, '_is_scaling_allowed',
+                               return_value=True) as mock_isa:
+            self.assertRaises(exception.NoActionRequired,
+                              up_policy.handle_signal)
+            mock_isa.assert_called_once_with()
+            mock_fin_scaling.assert_called_once_with('change_in_capacity : 1',
+                                                     size_changed=False)
+
+    def test_scaling_policy_adjust_size_changed(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        up_policy = self.create_scaling_policy(t, stack,
+                                               'my-policy')
+        group = stack['my-group']
+        self.patchobject(group, 'adjust')
+        mock_fin_scaling = self.patchobject(up_policy, '_finished_scaling')
+        with mock.patch.object(up_policy, '_is_scaling_allowed',
+                               return_value=True) as mock_isa:
+            self.assertIsNone(up_policy.handle_signal())
+            mock_isa.assert_called_once_with()
+            mock_fin_scaling.assert_called_once_with('change_in_capacity : 1',
+                                                     size_changed=True)
+
     def test_scaling_policy_not_alarm_state(self):
         """If the details don't have 'alarm' then don't progress."""
         t = template_format.parse(as_template)
@@ -92,9 +124,10 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = stack['my-group']
         test = {'current': 'alarm'}
 
-        with mock.patch.object(pol.stack, 'resource_by_refid',
+        with mock.patch.object(group, 'adjust',
                                side_effect=AssertionError) as dont_call:
             with mock.patch.object(pol, '_is_scaling_allowed',
                                    return_value=False) as mock_cip:
@@ -226,7 +259,7 @@ class TestCooldownMixin(common.HeatTestCase):
         reason = 'cool as'
         meta_set = self.patchobject(pol, 'metadata_set')
         self.patchobject(timeutils, 'utcnow', return_value=nowish)
-        pol._finished_scaling(reason)
+        pol._finished_scaling(reason, size_changed=True)
         meta_set.assert_called_once_with(
             {'cooldown': {nowish.isoformat(): reason},
              'scaling_in_progress': False})
