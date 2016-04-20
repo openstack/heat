@@ -17,6 +17,7 @@ import mock
 from heat.common.exception import StackValidationFailed
 from heat.common import grouputils
 from heat.engine.resources.openstack.heat import resource_chain
+from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import utils
 
@@ -187,7 +188,11 @@ class ResourceChainTest(common.HeatTestCase):
         chain = self._create_chain(TEMPLATE)
 
         # Test
-        chain.handle_update(None, None, None)
+        json_snippet = rsrc_defn.ResourceDefinition(
+            'test-chain', 'OS::Heat::ResourceChain',
+            TEMPLATE['resources']['test-chain']['properties'])
+
+        chain.handle_update(json_snippet, None, None)
 
         # Verify
         expected_tmpl = chain.child_template()

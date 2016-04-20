@@ -117,6 +117,8 @@ class ResourceChain(stack_resource.StackResource):
         return self.create_with_template(self.child_template())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
         return self.update_with_template(self.child_template())
 
     def child_template(self):
