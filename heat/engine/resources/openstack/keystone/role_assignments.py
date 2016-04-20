@@ -259,7 +259,7 @@ class KeystoneRoleAssignmentMixin(object):
             (new_role_assignments,
              removed_role_assignments) = self._find_differences(
                 prop_diff.get(self.ROLES),
-                self._stored_properties_data.get(self.ROLES))
+                self.properties[self.ROLES])
 
             if len(new_role_assignments) > 0:
                 if user_id is not None:
@@ -282,17 +282,16 @@ class KeystoneRoleAssignmentMixin(object):
                         removed_role_assignments)
 
     def delete_assignment(self, user_id=None, group_id=None):
-        if self._stored_properties_data.get(self.ROLES) is not None:
+        self._stored_properties_data
+        if self.properties[self.ROLES] is not None:
             if user_id is not None:
                 self._remove_role_assignments_from_user(
                     user_id,
-                    (self._stored_properties_data.
-                     get(self.ROLES)))
+                    (self.properties[self.ROLES]))
             elif group_id is not None:
                 self._remove_role_assignments_from_group(
                     group_id,
-                    (self._stored_properties_data.
-                     get(self.ROLES)))
+                    (self.properties[self.ROLES]))
 
     def validate_assignment_properties(self):
         if self.properties.get(self.ROLES) is not None:

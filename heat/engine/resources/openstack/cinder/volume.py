@@ -684,7 +684,7 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             # we still first detach the old resource so that
             # self.resource_id is not replaced prematurely
             volume_id = self.properties[self.VOLUME_ID]
-            server_id = self._stored_properties_data.get(self.INSTANCE_ID)
+            server_id = self.properties[self.INSTANCE_ID]
             self.client_plugin('nova').detach_volume(server_id,
                                                      self.resource_id)
             prg_detach = progress.VolumeDetachProgress(

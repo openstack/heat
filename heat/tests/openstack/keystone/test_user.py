@@ -184,13 +184,6 @@ class KeystoneUserTest(common.HeatTestCase):
 
     def test_user_handle_update(self):
         self.test_user.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-
-        # Make the existing groups as group1 and group2
-        self.test_user._stored_properties_data = {
-            'groups': ['group1', 'group2'],
-            'domain': 'default'
-        }
-
         # add new group group3 and remove group group2
         prop_diff = {user.KeystoneUser.NAME: 'test_user_1_updated',
                      user.KeystoneUser.DESCRIPTION: 'Test User updated',
@@ -207,8 +200,7 @@ class KeystoneUserTest(common.HeatTestCase):
         # validate user update
         self.users.update.assert_called_once_with(
             user=self.test_user.resource_id,
-            domain=self.test_user._stored_properties_data[
-                user.KeystoneUser.DOMAIN],
+            domain=self.test_user.properties[user.KeystoneUser.DOMAIN],
             name=prop_diff[user.KeystoneUser.NAME],
             description=prop_diff[user.KeystoneUser.DESCRIPTION],
             email=prop_diff[user.KeystoneUser.EMAIL],
@@ -236,13 +228,6 @@ class KeystoneUserTest(common.HeatTestCase):
 
     def test_user_handle_update_password_only(self):
         self.test_user.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-
-        # Make the existing groups as group1 and group2
-        self.test_user._stored_properties_data = {
-            'groups': ['group1', 'group2'],
-            'domain': 'default'
-        }
-
         # Update the password only
         prop_diff = {user.KeystoneUser.PASSWORD: 'passWORD'}
 
@@ -253,8 +238,7 @@ class KeystoneUserTest(common.HeatTestCase):
         # Validate user update
         self.users.update.assert_called_once_with(
             user=self.test_user.resource_id,
-            domain=self.test_user._stored_properties_data[
-                user.KeystoneUser.DOMAIN],
+            domain=self.test_user.properties[user.KeystoneUser.DOMAIN],
             password=prop_diff[user.KeystoneUser.PASSWORD]
         )
 
@@ -264,10 +248,6 @@ class KeystoneUserTest(common.HeatTestCase):
 
     def test_user_handle_delete(self):
         self.test_user.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        self.test_user._stored_properties_data = {
-            'groups': ['group1', 'group2'],
-            'roles': None
-        }
         self.users.delete.return_value = None
 
         self.assertIsNone(self.test_user.handle_delete())
@@ -286,7 +266,6 @@ class KeystoneUserTest(common.HeatTestCase):
         self.assertIsNone(self.test_user.handle_delete())
 
     def test_user_handle_delete_not_found(self):
-        self.test_user._stored_properties_data = dict(groups=None, roles=None)
         exc = self.keystoneclient.NotFound
         self.users.delete.side_effect = exc
 

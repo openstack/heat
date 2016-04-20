@@ -108,7 +108,7 @@ class KeystoneProject(resource.Resource):
             description = prop_diff.get(self.DESCRIPTION)
             enabled = prop_diff.get(self.ENABLED)
             domain = (prop_diff.get(self.DOMAIN) or
-                      self._stored_properties_data.get(self.DOMAIN))
+                      self.properties[self.DOMAIN])
             domain_id = self.client_plugin().get_domain_id(domain)
 
             self.client().projects.update(
