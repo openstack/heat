@@ -322,6 +322,20 @@ class TestGroupAdjust(common.HeatTestCase):
         self.assertEqual(0, resize.call_count)
         self.assertEqual(0, finished_scaling.call_count)
 
+    def test_scaling_update_in_progress(self):
+        """Don't resize when update in progress"""
+        self.group.state_set('UPDATE', 'IN_PROGRESS')
+        resize = self.patchobject(self.group, 'resize')
+        finished_scaling = self.patchobject(self.group, '_finished_scaling')
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.assertRaises(exception.NoActionRequired,
+                          self.group.adjust, 3,
+                          adjustment_type='ExactCapacity')
+        expected_notifies = []
+        self.assertEqual(expected_notifies, notify.call_args_list)
+        self.assertEqual(0, resize.call_count)
+        self.assertEqual(0, finished_scaling.call_count)
+
     def test_scale_up_min_adjustment(self):
         self.patchobject(grouputils, 'get_size', return_value=1)
         resize = self.patchobject(self.group, 'resize')
