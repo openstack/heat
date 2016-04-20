@@ -31,9 +31,9 @@ REMOTE_SCHEMES = ('http', 'https')
 LOCAL_SCHEMES = ('file',)
 
 
-def generate_class_from_template(name, data, env):
+def generate_class_from_template(name, data, param_defaults):
     tmpl = template.Template(template_format.parse(data))
-    props, attrs = TemplateResource.get_schemas(tmpl, env.param_defaults)
+    props, attrs = TemplateResource.get_schemas(tmpl, param_defaults)
     cls = type(name, (TemplateResource,),
                {'properties_schema': props,
                 'attributes_schema': attrs})

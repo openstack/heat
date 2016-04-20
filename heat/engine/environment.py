@@ -192,9 +192,10 @@ class TemplateResourceInfo(ResourceInfo):
             data = template_resource.TemplateResource.get_template_file(
                 self.template_name,
                 allowed_schemes)
-        env = self.registry.environment
+        param_defaults = self.registry.param_defaults
         return template_resource.generate_class_from_template(str(self.name),
-                                                              data, env)
+                                                              data,
+                                                              param_defaults)
 
     def get_class_to_instantiate(self):
         from heat.engine.resources import template_resource
@@ -248,10 +249,10 @@ class GlobResourceInfo(MapResourceInfo):
 class ResourceRegistry(object):
     """By looking at the environment, find the resource implementation."""
 
-    def __init__(self, global_registry, env):
+    def __init__(self, global_registry, param_defaults):
         self._registry = {'resources': {}}
         self.global_registry = global_registry
-        self.environment = env
+        self.param_defaults = param_defaults
 
     def load(self, json_snippet):
         self._load_registry([], json_snippet)
@@ -654,10 +655,10 @@ class Environment(object):
             global_registry = None
             event_sink_classes = {}
 
-        self.registry = ResourceRegistry(global_registry, self)
-        self.registry.load(env.get(env_fmt.RESOURCE_REGISTRY, {}))
-
         self.param_defaults = env.get(env_fmt.PARAMETER_DEFAULTS, {})
+
+        self.registry = ResourceRegistry(global_registry, self.param_defaults)
+        self.registry.load(env.get(env_fmt.RESOURCE_REGISTRY, {}))
 
         self.encrypted_param_names = env.get(env_fmt.ENCRYPTED_PARAM_NAMES, [])
 
