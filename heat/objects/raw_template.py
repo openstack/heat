@@ -18,14 +18,18 @@
 import copy
 
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.common import crypt
 from heat.common import environment_format as env_fmt
+from heat.common.i18n import _LW
 from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
+
+LOG = logging.getLogger(__name__)
 
 
 class RawTemplate(
@@ -54,9 +58,17 @@ class RawTemplate(
                 env_fmt.ENCRYPTED_PARAM_NAMES]
 
             for param_name in encrypted_param_names:
-                method, value = parameters[param_name]
-                decrypted_val = crypt.decrypt(method, value)
-                parameters[param_name] = decrypted_val
+                if (isinstance(parameters[param_name], (list, tuple)) and
+                        len(parameters[param_name]) == 2):
+                    method, enc_value = parameters[param_name]
+                    value = crypt.decrypt(method, enc_value)
+                else:
+                    value = parameters[param_name]
+                    LOG.warning(_LW(
+                        'Encountered already-decrypted data while attempting '
+                        'to decrypt parameter %s.  Please file a Heat bug so '
+                        'this can be fixed.'), param_name)
+                parameters[param_name] = value
             tpl.environment[env_fmt.PARAMETERS] = parameters
 
         tpl._context = context
