@@ -268,23 +268,22 @@ class SaharaNodeGroupTemplate(resource.Resource):
                 entity='network')
             ]
 
-    def _ngt_name(self):
-        name = self.properties[self.NAME]
+    def _ngt_name(self, name):
         if name:
             return name
         return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
-    def _prepare_properties(self, properties):
+    def _prepare_properties(self, props):
         """Prepares the property values."""
-        props = dict((k, v) for k, v in six.iteritems(properties))
         if self.NAME in props:
-            props['name'] = self._ngt_name()
+            props['name'] = self._ngt_name(props[self.NAME])
         if self.FLAVOR in props:
             props['flavor_id'] = props.pop(self.FLAVOR)
         return props
 
     def handle_create(self):
-        args = self._prepare_properties(self.properties)
+        props = dict((k, v) for k, v in six.iteritems(self.properties))
+        args = self._prepare_properties(props)
         node_group_template = self.client().node_group_templates.create(**args)
         LOG.info(_LI("Node Group Template '%s' has been created"),
                  node_group_template.name)
@@ -293,9 +292,6 @@ class SaharaNodeGroupTemplate(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.properties = json_snippet.properties(
-                self.properties_schema,
-                self.context)
             args = self._prepare_properties(prop_diff)
             self.client().node_group_templates.update(self.resource_id, **args)
 
@@ -548,23 +544,22 @@ class SaharaClusterTemplate(resource.Resource):
                 entity='network')
             ]
 
-    def _cluster_template_name(self):
-        name = self.properties[self.NAME]
+    def _cluster_template_name(self, name):
         if name:
             return name
         return re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name())
 
-    def _prepare_properties(self, properties):
+    def _prepare_properties(self, props):
         """Prepares the property values."""
-        props = dict((k, v) for k, v in six.iteritems(properties))
         if self.NAME in props:
-            props['name'] = self._cluster_template_name()
+            props['name'] = self._cluster_template_name(props[self.NAME])
         if self.MANAGEMENT_NETWORK in props:
             props['net_id'] = props.pop(self.MANAGEMENT_NETWORK)
         return props
 
     def handle_create(self):
-        args = self._prepare_properties(self.properties)
+        props = dict((k, v) for k, v in six.iteritems(self.properties))
+        args = self._prepare_properties(props)
         cluster_template = self.client().cluster_templates.create(**args)
         LOG.info(_LI("Cluster Template '%s' has been created"),
                  cluster_template.name)
@@ -573,9 +568,6 @@ class SaharaClusterTemplate(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.properties = json_snippet.properties(
-                self.properties_schema,
-                self.context)
             args = self._prepare_properties(prop_diff)
             self.client().cluster_templates.update(self.resource_id, **args)
 
