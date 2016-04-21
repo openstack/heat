@@ -420,7 +420,7 @@ class EngineService(service.Service):
     def stop(self):
         self._stop_rpc_server()
 
-        if cfg.CONF.convergence_engine:
+        if cfg.CONF.convergence_engine and self.worker_service:
             # Stop the WorkerService
             self.worker_service.stop()
 
