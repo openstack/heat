@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import fnmatch
 import glob
 import itertools
 import os.path
@@ -20,6 +19,7 @@ import re
 
 from oslo_config import cfg
 from oslo_log import log
+from oslo_utils import fnmatch
 import six
 
 from heat.common import environment_format as env_fmt
