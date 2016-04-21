@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import datetime
 import fixtures
 import json
@@ -3272,6 +3273,18 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                          info_logger2.output)
         self.assertNotIn("Successfully processed resource 1",
                          info_logger2.output)
+
+    def test_db_encrypt_no_param_schema(self):
+        t = copy.deepcopy(self.t)
+        del(t['parameters']['param2'])
+        template = {
+            'template': t,
+            'files': {'foo': 'bar'},
+            'environment': {'encrypted_param_names': [],
+                            'parameters': {'param2': 'foo'}}}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
 
     def test_db_encrypt_non_string_param_type(self):
         t = template_format.parse('''
