@@ -154,8 +154,9 @@ engine_opts = [
                       ' update).')),
     cfg.IntOpt('error_wait_time',
                default=240,
-               help=_('Error wait time in seconds for stack action (ie. create'
-                      ' or update).')),
+               help=_('The amount of time in seconds after an error has'
+                      ' occurred that tasks may continue to run before'
+                      ' being cancelled.')),
     cfg.IntOpt('engine_life_check_timeout',
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
