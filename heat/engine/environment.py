@@ -17,6 +17,7 @@ import glob
 import itertools
 import os.path
 import re
+import weakref
 
 from oslo_config import cfg
 from oslo_log import log
@@ -114,11 +115,15 @@ class ResourceInfo(object):
             return MapResourceInfo(registry, path, value)
 
     def __init__(self, registry, path, value):
-        self.registry = registry
+        self._registry = weakref.ref(registry)
         self.path = path
         self.name = path[-1]
         self.value = value
         self.user_resource = True
+
+    @property
+    def registry(self):
+        return self._registry()
 
     def __eq__(self, other):
         if other is None:
