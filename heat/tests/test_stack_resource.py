@@ -200,14 +200,6 @@ class StackResourceTest(StackResourceBaseTest):
         ret = self.parent_resource.prepare_abandon()
         self.assertEqual({}, ret)
 
-    def test_abandon_nested_not_deleted(self):
-        delete_nested = self.patchobject(self.parent_resource, 'delete_nested')
-
-        self.parent_stack.prepare_abandon()
-        self.parent_stack.delete(abandon=True)
-
-        self.assertEqual(0, delete_nested.call_count)
-
     def test_propagated_files(self):
         """Test passing of the files map in the top level to the child.
 
