@@ -180,12 +180,36 @@ class SaharaCluster(resource.Resource):
     entity = 'clusters'
 
     def translation_rules(self, props):
-        return [translation.TranslationRule(
-            props,
-            translation.TranslationRule.REPLACE,
-            [self.IMAGE_ID],
-            value_path=[self.IMAGE]
-        )]
+        rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.REPLACE,
+                [self.IMAGE_ID],
+                value_path=[self.IMAGE]),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.IMAGE_ID],
+                client_plugin=self.client_plugin('glance'),
+                finder='find_image_by_name_or_id')]
+        if self.is_using_neutron():
+            rules.extend([
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    [self.MANAGEMENT_NETWORK],
+                    client_plugin=self.client_plugin('neutron'),
+                    finder='find_resourceid_by_name_or_id',
+                    entity='network')])
+        else:
+            rules.extend([
+                translation.TranslationRule(
+                    props,
+                    translation.TranslationRule.RESOLVE,
+                    [self.MANAGEMENT_NETWORK],
+                    client_plugin=self.client_plugin('nova'),
+                    finder='get_nova_network_id')])
+        return rules
 
     def _cluster_name(self):
         name = self.properties[self.NAME]
@@ -198,10 +222,6 @@ class SaharaCluster(resource.Resource):
         hadoop_version = self.properties[self.HADOOP_VERSION]
         cluster_template_id = self.properties[self.CLUSTER_TEMPLATE_ID]
         image_id = self.properties[self.IMAGE_ID]
-        if image_id:
-            image_id = self.client_plugin(
-                'glance').find_image_by_name_or_id(image_id)
-
         # check that image is provided in case when
         # cluster template is missing one
         cluster_template = self.client().cluster_templates.get(
@@ -214,14 +234,6 @@ class SaharaCluster(resource.Resource):
 
         key_name = self.properties[self.KEY_NAME]
         net_id = self.properties[self.MANAGEMENT_NETWORK]
-        if net_id:
-            if self.is_using_neutron():
-                net_id = self.client_plugin(
-                    'neutron').find_resourceid_by_name_or_id('network',
-                                                             net_id)
-            else:
-                net_id = self.client_plugin('nova').get_nova_network_id(
-                    net_id)
         use_autoconfig = self.properties[self.USE_AUTOCONFIG]
         shares = self.properties[self.SHARES]
 
