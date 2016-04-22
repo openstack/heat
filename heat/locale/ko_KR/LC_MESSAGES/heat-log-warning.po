@@ -1,13 +1,13 @@
-# SeYeon Lee <sy_lee@kr.ibm.com>, 2016. #zanata
+# Sungjin Kang <gang.sungjin@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev30\n"
+"Project-Id-Version: heat 6.0.1.dev1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-29 14:12+0000\n"
+"POT-Creation-Date: 2016-04-07 10:59+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-29 04:11+0000\n"
+"PO-Revision-Date: 2016-04-07 06:57+0000\n"
 "Last-Translator: SeYeon Lee <sy_lee@kr.ibm.com>\n"
 "Language-Team: Korean (South Korea)\n"
 "Language: ko-KR\n"
@@ -30,7 +30,7 @@ msgstr "%(name)s이(가) %(status)s입니다. %(message)s"
 
 #, python-format
 msgid "Access denied to resource %s"
-msgstr "%s 자원에 대한 액세스가 거부됨"
+msgstr "%s 자원에 대한 접근이 거부됨"
 
 #, python-format
 msgid "Attribute %(name)s is not of type %(att_type)s"
@@ -45,7 +45,7 @@ msgstr "%(path)s을(를) %(was)s에서 %(now)s(으)로 변경"
 
 #, python-format
 msgid "Could not process watch state %s for stack"
-msgstr "스택의 감시 상태  %s을(를) 처리할 수 없음"
+msgstr "스택 감시 상태  %s을(를) 처리할 수 없음"
 
 #, python-format
 msgid "Creating generic resource (Type \"%s\")"
@@ -64,8 +64,8 @@ msgid ""
 "Failed to set state of stack %(name)s with traversal ID %(trvsl_id)s, to "
 "%(action)s_%(status)s"
 msgstr ""
-"조회 ID가 %(trvsl_id)s인 %(name)s 스택의 상태를 %(action)s_%(status)s(으)로 "
-"설정하는 데 실패"
+"조회 ID가 %(trvsl_id)s인 %(name)s 스택 상태를 %(action)s_%(status)s(으)로 설"
+"정하는 데 실패"
 
 #, python-format
 msgid ""
@@ -105,7 +105,7 @@ msgstr "%(res)s의 내재적 종속성을 추가하는 중에 발생하는 오�
 
 #, python-format
 msgid "Ignoring error in old property value %(prop_name)s: %(msg)s"
-msgstr "이전 특성 값 %(prop_name)s의 오류 무시: %(msg)s"
+msgstr "이전 특성 값 %(prop_name)s 오류 무시: %(msg)s"
 
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
@@ -120,7 +120,7 @@ msgid "Lock was already released on stack %s!"
 msgstr "%s 스택에서 잠금이 이미 해제되었습니다!"
 
 msgid "Not deleting non heat-domain project"
-msgstr "히트 도메인이 아닌 프로젝트를 삭제하지 않음"
+msgstr "Heat 도메인이 아닌 프로젝트를 삭제하지 않음"
 
 msgid ""
 "OSProfiler is enabled.\n"
@@ -153,7 +153,7 @@ msgstr "'required=True' 옵션을 'default' 값(%s)과 사용하지 않아야 �
 
 #, python-format
 msgid "Overwriting Metadata item for id %s!"
-msgstr "ID %s의 메타데이터 항목 겹쳐쓰기!"
+msgstr "ID %s 메타데이터 항목 겹쳐쓰기!"
 
 msgid "Please update auth_encryption_key to be 32 characters."
 msgstr "32자가 되도록 auth_encryption_key를 업데이트하십시오."

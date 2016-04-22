@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0b4.dev30\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-09 06:32+0000\n"
+"Project-Id-Version: heat 6.0.1.dev1\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-22 06:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,17 +126,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:794
+#: heat/engine/environment.py:801
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:806
+#: heat/engine/environment.py:813
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:810
+#: heat/engine/environment.py:817
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -151,24 +151,24 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:677
+#: heat/engine/resource.py:721
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:1494 heat/engine/resource.py:1541
-#: heat/engine/resource.py:1569
+#: heat/engine/resource.py:1543 heat/engine/resource.py:1590
+#: heat/engine/resource.py:1618
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1574
+#: heat/engine/resource.py:1623
 #, python-format
 msgid ""
 "Error acquiring lock for resource id:%(resource_id)s with "
 "atomic_key:%(atomic_key)s, engine_id:%(rs_engine_id)s/%(engine_id)s"
 msgstr ""
 
-#: heat/engine/resource.py:1884
+#: heat/engine/resource.py:1933
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
@@ -193,21 +193,21 @@ msgid ""
 "previous template stored"
 msgstr ""
 
-#: heat/engine/service.py:1451 heat/engine/service.py:1505
+#: heat/engine/service.py:1455 heat/engine/service.py:1509
 #, python-format
 msgid "Error loading resource type %s from global environment."
 msgstr ""
 
-#: heat/engine/service.py:1933
+#: heat/engine/service.py:1937
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service.py:2083
+#: heat/engine/service.py:2087
 #, python-format
 msgid "Service %(service_id)s update failed: %(error)s"
 msgstr ""
 
-#: heat/engine/service.py:2160
+#: heat/engine/service.py:2164
 #, python-format
 msgid "Error while resetting stack: %s"
 msgstr ""
@@ -222,27 +222,27 @@ msgstr ""
 msgid "Unexpected exception in %(func)s: %(msg)s"
 msgstr ""
 
-#: heat/engine/stack.py:746
+#: heat/engine/stack.py:765
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:1310
+#: heat/engine/stack.py:1330
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:1602
+#: heat/engine/stack.py:1622
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1805
+#: heat/engine/stack.py:1825
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1814
+#: heat/engine/stack.py:1834
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -260,12 +260,12 @@ msgstr ""
 msgid "update_stack"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:73
+#: heat/engine/resources/wait_condition.py:66
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:308
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:320
 msgid "Failed sending error notification"
 msgstr ""
 
@@ -291,7 +291,7 @@ msgid ""
 "pool is configured."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1188
+#: heat/engine/resources/openstack/nova/server.py:1222
 msgid "Error while updating software config transport"
 msgstr ""
 

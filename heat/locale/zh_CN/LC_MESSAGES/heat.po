@@ -6,17 +6,16 @@
 # Xiao Xi LIU <liuxx@cn.ibm.com>, 2014
 # Lucas Palm <lapalm@us.ibm.com>, 2015. #zanata
 # OpenStack Infra <zanata@openstack.org>, 2015. #zanata
-# Gaoxiao Zhu <zhu.gaoxiao@h3c.com>, 2016. #zanata
 # Linda <duleish@cn.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc3.dev7\n"
+"Project-Id-Version: heat 6.0.1.dev1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-30 15:59+0000\n"
+"POT-Creation-Date: 2016-04-07 10:59+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-31 03:31+0000\n"
+"PO-Revision-Date: 2016-04-22 05:52+0000\n"
 "Last-Translator: Linda <duleish@cn.ibm.com>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -101,7 +100,7 @@ msgstr "“%s”不是有效 ARN"
 
 #, python-format
 msgid "\"%s\" is not a valid ARN URL"
-msgstr "“%s”不是有效 ARN URL"
+msgstr "“%s”是无效 ARN URL"
 
 #, python-format
 msgid "\"%s\" is not a valid Heat ARN"
@@ -109,11 +108,11 @@ msgstr "“%s”不是有效 Heat ARN"
 
 #, python-format
 msgid "\"%s\" is not a valid URL"
-msgstr "“%s”不是有效 URL"
+msgstr "“%s”是无效 URL"
 
 #, python-format
 msgid "\"%s\" is not a valid boolean"
-msgstr "“%s”不是有效布尔值"
+msgstr "“%s”是无效布尔值"
 
 #, python-format
 msgid "\"%s\" is not a valid keyword inside a resource definition"
@@ -607,7 +606,7 @@ msgstr "AccessPolicy 资源 %s 未在堆栈中"
 
 #, python-format
 msgid "Action %s not allowed for user"
-msgstr "用户不允许执行动作%s"
+msgstr "不允许用户执行操作 %s"
 
 msgid "Action for the RBAC policy."
 msgstr "RBAC 策略的操作。"
@@ -689,7 +688,7 @@ msgid "Allow or deny action for this firewall rule."
 msgstr "允许或拒绝对此防火墙规则执行操作。"
 
 msgid "Allow orchestration of multiple clouds."
-msgstr "允许由多个云组成的业务流程。"
+msgstr "允许编排多个云。"
 
 msgid ""
 "Allow reauthentication on token expiry, such that long-running tasks may "
@@ -702,7 +701,7 @@ msgid ""
 "Allowed keystone endpoints for auth_uri when multi_cloud is enabled. At "
 "least one endpoint needs to be specified."
 msgstr ""
-"在启用 multi_cloud 的情况下，允许用于 auth_uri 的 Keystone 端点。至少需要指定"
+"在启用 multi_cloud 的情况下，允许对 auth_uri 使用 Keystone 端点。至少需要指定"
 "一个端点。"
 
 msgid ""
@@ -1014,11 +1013,11 @@ msgstr "无法遍历属性路径"
 
 #, python-format
 msgid "Cancelling update when stack is %s"
-msgstr "正在取消堆栈为 %s 时的更新"
+msgstr "堆栈 %s 时正在取消更新"
 
 #, python-format
 msgid "Cannot call %(method)s on orphaned %(objtype)s object"
-msgstr "对于孤立对象 %(objtype)s 无法调用 %(method)s"
+msgstr "无法对孤立对象 %(objtype)s 调用 %(method)s"
 
 #, python-format
 msgid "Cannot check %s, stack not created"
@@ -1086,7 +1085,7 @@ msgstr "已从配置执行捕获标准输出。"
 
 #, python-format
 msgid "Circular Dependency Found: %(cycle)s"
-msgstr "找到循环依赖关系：%(cycle)s"
+msgstr "发现循环依赖关系：%(cycle)s"
 
 msgid "Client entity to poll."
 msgstr "要轮询的客户机实体。"
@@ -1164,7 +1163,7 @@ msgid ""
 "more frequent purges."
 msgstr ""
 "控制每当堆栈的事件超过 max_events_per_stack 时将删减的事件数。请将此项设置为"
-"较小，以通过较频繁的清除保留较多事件。"
+"较低值以通过较频繁的清除保留较多事件。"
 
 msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
@@ -1201,7 +1200,7 @@ msgstr "冷却时间段，以秒计。"
 
 #, python-format
 msgid "Could not bind to %(bind_addr)safter trying for 30 seconds"
-msgstr "在尝试时间达到 30 秒之后未能绑定至 %(bind_addr)s"
+msgstr "尝试 30 秒之后未能绑定至 %(bind_addr)s"
 
 #, python-format
 msgid "Could not confirm resize of server %s"
@@ -1644,7 +1643,7 @@ msgid "Each %(object_name)s must contain a %(sub_section)s key."
 msgstr "每个 %(object_name)s 都必须包含一个 %(sub_section)s 键。"
 
 msgid "Each Output must contain a Value key."
-msgstr "每个输出都必须包含一个“值”键。"
+msgstr "每个输出都必须包含一个 Value 键。"
 
 msgid "Each Resource must contain a Type key."
 msgstr "每个资源都必须包含一个“类型”键。"
@@ -1832,7 +1831,7 @@ msgstr "对共享类型额外指定的键值对。"
 
 #, python-format
 msgid "Failed to attach interface (%(port)s) to server (%(server)s)"
-msgstr "无法将接口 (%(port)s) 附加至服务器 (%(server)s)"
+msgstr "无法将接口 (%(port)s) 连接至服务器 (%(server)s)"
 
 #, python-format
 msgid "Failed to attach volume %(vol)s to server %(srv)s - %(err)s"
@@ -2013,7 +2012,7 @@ msgid "Gateway network for the router."
 msgstr "路由器的网关网络。"
 
 msgid "Generic HeatAPIException, please use specific subclasses!"
-msgstr "发生一般性 HeatAPIException，请使用特定子类！"
+msgstr "发生通用 HeatAPIException，请使用特定子类！"
 
 msgid "Glance image ID or name."
 msgstr "Glance 映像标识或名称。"
@@ -2022,7 +2021,7 @@ msgid "Governs permissions set in manila for the cluster ips."
 msgstr "管理 manila 中为集群 IP 设置的许可权。"
 
 msgid "Granularity to use for age argument, defaults to days."
-msgstr "要用于 age 自变量的粒度，缺省为天。"
+msgstr "要用于 age 自变量的粒度，缺省为天数。"
 
 msgid "HTTP verb to use for signaling output values"
 msgstr "要用于发出输出值的信号的 HTTP 动词"
@@ -2042,8 +2041,8 @@ msgid ""
 "separately, you can move this section to a different file and add it as "
 "another config option."
 msgstr ""
-"Heat 构建修订版。如果宁愿单独管理构建修订版，那么可将此部分移至另一文件并将它"
-"作为另一配置选项添加。"
+"Heat 构建修订版。如果您想要单独管理构建修订版，那么可将此部分移至另一文件并将"
+"它作为另一配置选项添加。"
 
 msgid "Host"
 msgstr "主机"
@@ -2055,7 +2054,7 @@ msgid "Hostname of the instance."
 msgstr "实例的主机名。"
 
 msgid "How long to preserve deleted data."
-msgstr "用于保留已删除的数据的时间。"
+msgstr "已删除数据的保留时长。"
 
 msgid ""
 "How the client will signal the wait condition. CFN_SIGNAL will allow an HTTP "
@@ -2552,7 +2551,7 @@ msgid "Invalid Stack address"
 msgstr "堆栈地址无效"
 
 msgid "Invalid Template URL"
-msgstr "模板URL无效"
+msgstr "无效模板 URL"
 
 #, python-format
 msgid "Invalid URL scheme %s"
@@ -2574,7 +2573,7 @@ msgstr "操作 %s 无效"
 
 #, python-format
 msgid "Invalid action %s specified"
-msgstr "指定的操作 %s 无效"
+msgstr "指定了无效操作 %s"
 
 #, python-format
 msgid "Invalid adopt data: %s"
@@ -2664,7 +2663,7 @@ msgstr "堆栈名称 %s 无效，必须为字符串"
 
 #, python-format
 msgid "Invalid state %(state)s, expecting one of %(expect)s"
-msgstr "状态 %(state)s 无效，期望下列其中一项：%(expect)s"
+msgstr "状态 %(state)s 无效，需要下列其中一项：%(expect)s"
 
 #, python-format
 msgid "Invalid status %s"
@@ -3623,7 +3622,7 @@ msgid "No Template provided."
 msgstr "未提供模板。"
 
 msgid "No action specified"
-msgstr "未指定动作"
+msgstr "未指定操作"
 
 msgid "No constraint expressed"
 msgstr "未表示任何约束"
@@ -3635,7 +3634,7 @@ msgstr "对于 %(fn_name)s 路径，在“文件”部分中找不到任何内�
 
 #, python-format
 msgid "No event %s found"
-msgstr "找不到任何事件 %s"
+msgstr "找不到事件 %s"
 
 #, python-format
 msgid "No event exists with id \"%s\""
@@ -3653,7 +3652,7 @@ msgid "No stack exists with id \"%s\""
 msgstr "不存在任何具有标识“%s”的堆栈"
 
 msgid "No stack name specified"
-msgstr "未指定栈名称"
+msgstr "未指定堆栈名称"
 
 #, python-format
 msgid "No such workflow %s"
@@ -3736,12 +3735,12 @@ msgstr "表示 DPD 超时的秒数。"
 
 msgid ""
 "Number of times to check whether an interface has been attached or detached."
-msgstr "要检查接口是已附加还是已拆离的次数。"
+msgstr "要检查接口是已连接还是已拆离的次数。"
 
 msgid ""
 "Number of times to retry to bring a resource to a non-error state. Set to 0 "
 "to disable retries."
-msgstr "使资源进入无错状态的重试次数。设置为 0 以禁用重试。"
+msgstr "使资源进入无错状态的重试次数。设置为 0 将禁用重试。"
 
 msgid ""
 "Number of times to retry when a client encounters an expected intermittent "
@@ -4273,7 +4272,7 @@ msgstr ""
 "用于解决存在缺陷的 nova/neutron 端口交互（自 Liberty 开始已修正）的替换策略。"
 
 msgid "Request expired or more than 15mins in the future"
-msgstr "请求已到期，或在将来超过 15 分钟"
+msgstr "请求已到期，或在 15 分钟以后"
 
 #, python-format
 msgid "Request limit exceeded: %(message)s"
@@ -4433,7 +4432,7 @@ msgstr "映像可访问性范围。公用或专用。缺省值为 false，表示
 
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
-msgstr "已禁止从租户 %(actual)s 搜索租户 %(target)s。"
+msgstr "已禁止通过租户 %(actual)s 搜索租户 %(target)s。"
 
 msgid "Seconds between running periodic tasks."
 msgstr "运行定期任务之间的秒数。"
@@ -4489,7 +4488,7 @@ msgid "Security service user or group used by tenant."
 msgstr "租户使用的安全服务用户或组。"
 
 msgid "Select deferred auth method, stored password or trusts."
-msgstr "请选择延期的认证方法、已存储密码或信任。"
+msgstr "请选择延迟认证方法、已存储密码或信任。"
 
 msgid "Sequence of characters to build the random string from."
 msgstr "构建随机字符串时要遵循的字符顺序。"
@@ -4677,10 +4676,10 @@ msgid "Stack %(stack_name)s already has an action (%(action)s) in progress."
 msgstr "堆栈 %(stack_name)s 已具有正在进行的操作 (%(action)s)。"
 
 msgid "Stack ID"
-msgstr "栈ID"
+msgstr "堆栈标识"
 
 msgid "Stack Name"
-msgstr "栈名"
+msgstr "堆栈名称"
 
 msgid "Stack name may not contain \"/\""
 msgstr "堆栈名称不能包含“/”"
@@ -4773,8 +4772,8 @@ msgid ""
 "Subset of trustor roles to be delegated to heat. If left unset, all roles of "
 "a user will be delegated to heat when creating a stack."
 msgstr ""
-"要委派给 Heat 的信任者角色的子集。如果保留为取消设置，那么当创建堆栈时，会将"
-"用户的所有角色都委派给 Heat。"
+"要委派给 Heat 的信任者角色的子集。如果保留为不设置，那么创建堆栈时会将用户的"
+"所有角色都委派给 Heat。"
 
 msgid "Supplied metadata for the resources in the group."
 msgstr "对组中资源提供的元数据。"
@@ -4818,18 +4817,18 @@ msgid ""
 "TTL, in seconds, for any cached item in the dogpile.cache region used for "
 "caching of OpenStack service finder functions."
 msgstr ""
-"用于缓存 OpenStack 服务查找器功能的 dogpile.cache 区域中任何已缓存项的 "
-"TTL（以秒计）。"
+"dogpile.cache 区域中用于缓存 OpenStack 服务查找器功能的任何已缓存项的 TTL（以"
+"秒计）。"
 
 msgid ""
 "TTL, in seconds, for any cached item in the dogpile.cache region used for "
 "caching of service extensions."
-msgstr "用于缓存服务扩展的 dogpile.cache 区域中任何已缓存项的 TTL（以秒计）。"
+msgstr "dogpile.cache 区域中用于缓存服务扩展的任何已缓存项的 TTL（以秒计）。"
 
 msgid ""
 "TTL, in seconds, for any cached item in the dogpile.cache region used for "
 "caching of validation constraints."
-msgstr "用于缓存验证约束的 dogpile.cache 区域中任何已缓存项的 TTL（以秒计）。"
+msgstr "dogpile.cache 区域中用于缓存验证约束的任何已缓存项的 TTL（以秒计）。"
 
 msgid "Tag key."
 msgstr "标记键。"
@@ -4868,11 +4867,11 @@ msgid ""
 msgstr ""
 "模板缺省值，用于指示服务器如何接收软件配置所需的元数据。POLL_SERVER_CFN 指示"
 "将允许调用已使用所提供密钥对认证的 cfn API 操作 DescribeStackResource（需要已"
-"启用 heat-api-cfn）。POLL_SERVER_HEAT 指示将允许使用所提供 keystone 证书调用 "
-"Heat API resource-show（需要 keystone v3 API，并已配置 stack_user_* config 选"
-"项）。POLL_TEMP_URL 指示将创建 Swift TempURL 并使用要轮询的元数据填充它（需要"
-"支持 TempURL 的 object-store 端点）。ZAQAR_MESSAGE 指示将创建专用 zaqar 队列"
-"并发布元数据以进行轮询。"
+"启用 heat-api-cfn）。POLL_SERVER_HEAT 指示将允许调用使用所提供 keystone 证书"
+"的 Heat API resource-show（需要 keystone v3 API，并已配置 stack_user_* "
+"config 选项）。POLL_TEMP_URL 指示将创建 Swift TempURL 并使用要轮询的元数据进"
+"行填充（需要支持 TempURL 的 object-store 端点）。ZAQAR_MESSAGE 指示将创建专"
+"用 zaqar 队列并发布元数据以进行轮询。"
 
 msgid ""
 "Template default for how the server should signal to heat with the "
@@ -4887,9 +4886,9 @@ msgstr ""
 "模板缺省值，用于指示服务器如何向 heat 通告部署缺省值。CFN_SIGNAL 指示将允许"
 "对 CFN 密钥对签署的 URL 执行 HTTP POST（需要已启用 heat-api-cfn）。"
 "TEMP_URL_SIGNAL 指示将创建通过 HTTP PUT 通告的 Swift TempURL（需要支持 "
-"TempURL 的 object-store 端点）。HEAT_SIGNAL 指示将允许使用所提供 TempURL 证书"
-"调用 Heat API resource-signal。ZAQAR_SIGNAL 指示将创建使用所提供 keystone 证"
-"书通告的专用 zaqar 队列。"
+"TempURL 的 object-store 端点）。HEAT_SIGNAL 指示将允许调用使用所提供 TempURL "
+"证书的 Heat API resource-signal。ZAQAR_SIGNAL 指示将创建使用所提供 keystone "
+"证书通告的专用 zaqar 队列。"
 
 msgid "Template format version not found."
 msgstr "找不到模板格式版本。"
@@ -5982,7 +5981,7 @@ msgid "The request processing has failed due to an internal error"
 msgstr "由于内部错误，请求处理失败"
 
 msgid "The request signature does not conform to AWS standards"
-msgstr "请求的签名不符合AWS标准"
+msgstr "请求的签名不符合 AWS 标准"
 
 msgid ""
 "The request signature we calculated does not match the signature you provided"
@@ -6463,7 +6462,7 @@ msgstr ""
 "的端点时，才需要设置此项。"
 
 msgid "URL of the Heat waitcondition server."
-msgstr "Heat 等待条件服务器的 URL。"
+msgstr "Heat waitcondition 服务器的 URL。"
 
 msgid ""
 "URL where the data for this image already resides. For example, if the image "
@@ -6509,7 +6508,7 @@ msgid ""
 "Unable to load %(app_name)s from configuration file %(conf_file)s.\n"
 "Got: %(e)r"
 msgstr ""
-"无法从配置文件 %(conf_file)s 装入 %(app_name)s。\n"
+"无法通过配置文件 %(conf_file)s 装入 %(app_name)s。\n"
 "发生错误：%(e)r"
 
 #, python-format
@@ -6518,11 +6517,11 @@ msgstr "找不到配置文件 [%s]"
 
 #, python-format
 msgid "Unexpected action %(action)s"
-msgstr "存在意外操作 %(action)s"
+msgstr "意外操作 %(action)s"
 
 #, python-format
 msgid "Unexpected action %s"
-msgstr "存在意外操作 %s"
+msgstr "意外操作 %s"
 
 #, python-format
 msgid ""
@@ -6646,7 +6645,7 @@ msgid "Updating a stack when it is deleting"
 msgstr "删除堆栈时正在对其进行更新"
 
 msgid "Updating a stack when it is suspended"
-msgstr "当堆栈已暂挂时，正在对其进行更新"
+msgstr "堆栈暂挂时正在对其进行更新"
 
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
@@ -6811,7 +6810,7 @@ msgstr "一个值，可设置此值以针对特定资源触发更新替换。"
 
 #, python-format
 msgid "Version %(objver)s of %(objname)s is not supported"
-msgstr "%(objname)s 的版本 %(objver)s 不被支持"
+msgstr "%(objname)s 的版本 %(objver)s 不受支持"
 
 msgid "Version for the ike policy."
 msgstr "IKE策略的版本。"
@@ -6872,7 +6871,7 @@ msgstr "池中池成员的权重。"
 
 #, python-format
 msgid "Went to status %(resource_status)s due to \"%(status_reason)s\""
-msgstr "因为“%(status_reason)s”变为状态 %(resource_status)s"
+msgstr "已变为状态 %(resource_status)s，因为“%(status_reason)s”"
 
 msgid ""
 "When both ipv6_ra_mode and ipv6_address_mode are set, they must be equal."
@@ -7099,15 +7098,15 @@ msgid ""
 "\"stack_user_domain_name\" without \"stack_domain_admin\" and "
 "\"stack_domain_admin_password\""
 msgstr ""
-"heat.conf 的配置错误，无法指"
-"定“stack_user_domain_id”或“stack_user_domain_name”而不指"
-"定“stack_domain_admin”和“stack_domain_admin_password”"
+"heat.conf 的配置错误，在未指定指"
+"定“stack_domain_admin”和“stack_domain_admin_password”的情况下，不能指"
+"定“stack_user_domain_id”或“stack_user_domain_name” "
 
 msgid "ipv6_ra_mode and ipv6_address_mode are not supported for ipv4."
 msgstr "ipv4 不支持 ipv6_ra_mode 和 ipv6_address_mode。"
 
 msgid "limit cannot be less than 4"
-msgstr "限制不能小于 4"
+msgstr "limit 不能小于 4"
 
 #, python-format
 msgid "metadata setting for resource %s"
@@ -7161,7 +7160,7 @@ msgid "segmentation_id not allowed for flat network type."
 msgstr "对于平面网络类型，不允许 segmentation_id。"
 
 msgid "server_id must be specified"
-msgstr "必须指定server_id"
+msgstr "必须指定 server_id"
 
 msgid "source_path must be non-empty list with path."
 msgstr "source_path 必须为带有路径的非空列表。"

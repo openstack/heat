@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev23\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-29 06:49+0000\n"
+"Project-Id-Version: heat 6.0.1.dev1\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-22 06:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1729,12 +1729,12 @@ msgstr ""
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:1772 heat/engine/stack.py:836
+#: heat/engine/resource.py:1772 heat/engine/stack.py:834
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:1775 heat/engine/stack.py:839
+#: heat/engine/resource.py:1775 heat/engine/stack.py:837
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
@@ -1853,17 +1853,17 @@ msgstr ""
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/stack.py:745
+#: heat/engine/stack.py:743
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:775
+#: heat/engine/stack.py:773
 #, python-format
 msgid "Outputs must contain Output. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/stack.py:783
+#: heat/engine/stack.py:781
 msgid "Each Output must contain a Value key."
 msgstr ""
 
@@ -2619,33 +2619,33 @@ msgstr ""
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:291
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:304
 #, python-format
 msgid "Start resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:312
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:325
 #, python-format
 msgid "End resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:337
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:351
 msgid "MinSize can not be greater than MaxSize"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:341
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:355
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:347
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:361
 msgid "DesiredCapacity must be between MinSize and MaxSize"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:356
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:370
 msgid "Anything other than one VPCZoneIdentifier"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:366
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:380
 msgid "Either 'InstanceId' or 'LaunchConfigurationName' must be provided."
 msgstr ""
 
@@ -4437,7 +4437,7 @@ msgstr ""
 msgid "A url to handle the alarm using native API."
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/scaling_policy.py:175
+#: heat/engine/resources/openstack/heat/scaling_policy.py:176
 #, python-format
 msgid "Alarm %(alarm)s could not find scaling group named \"%(group)s\""
 msgstr ""
@@ -5083,90 +5083,90 @@ msgstr ""
 msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:47
+#: heat/engine/resources/openstack/magnum/baymodel.py:48
 msgid "The bay model name."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:51
+#: heat/engine/resources/openstack/magnum/baymodel.py:52
 msgid "The image name or UUID to use as a base image for this baymodel."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:60
+#: heat/engine/resources/openstack/magnum/baymodel.py:61
 msgid "The flavor of this bay model."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:67
+#: heat/engine/resources/openstack/magnum/baymodel.py:68
 msgid "The flavor of the master node for this bay model."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:74
+#: heat/engine/resources/openstack/magnum/baymodel.py:75
 msgid "The name or id of the nova ssh keypair."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:82
+#: heat/engine/resources/openstack/magnum/baymodel.py:83
 msgid "The external network to attach the Bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:90
+#: heat/engine/resources/openstack/magnum/baymodel.py:91
 msgid "The fixed network to attach the Bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:97
+#: heat/engine/resources/openstack/magnum/baymodel.py:98
 msgid "The DNS nameserver address."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:105
+#: heat/engine/resources/openstack/magnum/baymodel.py:106
 msgid "The size in GB of the docker volume."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:112
+#: heat/engine/resources/openstack/magnum/baymodel.py:113
 msgid "The SSH Authorized Key."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:116
+#: heat/engine/resources/openstack/magnum/baymodel.py:117
 msgid "This attribute has been removed in Magnum"
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:122
+#: heat/engine/resources/openstack/magnum/baymodel.py:123
 msgid "The Container Orchestration Engine for this bay model."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:130
+#: heat/engine/resources/openstack/magnum/baymodel.py:131
 msgid ""
 "The name of the driver used for instantiating container networks. By "
 "default, Magnum will choose the pre-configured network driver based on "
 "COE type."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:137
+#: heat/engine/resources/openstack/magnum/baymodel.py:138
 msgid "The http_proxy address to use for nodes in bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:142
+#: heat/engine/resources/openstack/magnum/baymodel.py:143
 msgid "The https_proxy address to use for nodes in bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:147
+#: heat/engine/resources/openstack/magnum/baymodel.py:148
 msgid ""
 "A comma separated list of addresses for which proxies should not be used "
 "in the bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:153
+#: heat/engine/resources/openstack/magnum/baymodel.py:154
 msgid ""
 "Arbitrary labels in the form of key=value pairs to associate with a "
 "baymodel."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:159
+#: heat/engine/resources/openstack/magnum/baymodel.py:160
 msgid "Disable TLS in the bay."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:165
+#: heat/engine/resources/openstack/magnum/baymodel.py:166
 msgid "Make the baymodel public."
 msgstr ""
 
-#: heat/engine/resources/openstack/magnum/baymodel.py:171
+#: heat/engine/resources/openstack/magnum/baymodel.py:172
 msgid "Enable the docker registry in the bay."
 msgstr ""
 

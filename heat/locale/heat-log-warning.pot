@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc2.dev4\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-21 06:41+0000\n"
+"Project-Id-Version: heat 6.0.1.dev1\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-22 06:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -108,37 +108,37 @@ msgstr ""
 msgid "%(name)s is %(status)s. %(message)s"
 msgstr ""
 
-#: heat/engine/resource.py:523
+#: heat/engine/resource.py:539
 #, python-format
 msgid "Ignoring error in old property value %(prop_name)s: %(msg)s"
 msgstr ""
 
-#: heat/engine/resource.py:1088
+#: heat/engine/resource.py:1104
 #, python-format
 msgid "Resource cannot be updated with it's live state in case of next error: %s"
 msgstr ""
 
-#: heat/engine/resource.py:1493
+#: heat/engine/resource.py:1509
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1579
+#: heat/engine/resource.py:1595
 #, python-format
 msgid "Resource \"%s\" not pre-stored in DB"
 msgstr ""
 
-#: heat/engine/resource.py:1631
+#: heat/engine/resource.py:1647
 #, python-format
 msgid "Failed to unlock resource %s"
 msgstr ""
 
-#: heat/engine/resource.py:1672
+#: heat/engine/resource.py:1688
 #, python-format
 msgid "Resolving 'show' attribute has failed : %s"
 msgstr ""
 
-#: heat/engine/resource.py:1947
+#: heat/engine/resource.py:1963
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -160,17 +160,17 @@ msgid ""
 "upgrading."
 msgstr ""
 
-#: heat/engine/service.py:1605
+#: heat/engine/service.py:1607
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1913
+#: heat/engine/service.py:1915
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1941
+#: heat/engine/service.py:1943
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -189,28 +189,28 @@ msgstr ""
 msgid "Ignoring error adding implicit dependencies for %(res)s: %(err)s"
 msgstr ""
 
-#: heat/engine/stack.py:852
+#: heat/engine/stack.py:850
 #, python-format
 msgid ""
 "Failed to set state of stack %(name)s with traversal ID %(trvsl_id)s, to "
 "%(action)s_%(status)s"
 msgstr ""
 
-#: heat/engine/stack.py:1168 heat/engine/stack.py:1194
+#: heat/engine/stack.py:1166 heat/engine/stack.py:1192
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
 "stack %(action)s"
 msgstr ""
 
-#: heat/engine/stack.py:1239
+#: heat/engine/stack.py:1237
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, not "
 "trigerring rollback."
 msgstr ""
 
-#: heat/engine/stack.py:1948
+#: heat/engine/stack.py:1946
 #, python-format
 msgid ""
 "Failed to store stack %(name)s with traversal ID %(trvsl_id)s, aborting "
@@ -288,7 +288,7 @@ msgstr ""
 msgid "Reverting to legacy user delete path"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:60
+#: heat/engine/resources/wait_condition.py:74
 #, python-format
 msgid "Overwriting Metadata item for id %s!"
 msgstr ""

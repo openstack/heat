@@ -5,20 +5,16 @@
 # Translators:
 # Andreas Jaeger <jaegerandi@gmail.com>, 2014
 # Ettore Atalan <atalanttore@googlemail.com>, 2014
-# Andreas Jaeger <jaegerandi@gmail.com>, 2015. #zanata
-# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
-# Tom Cocozzello <tjcocozz@us.ibm.com>, 2015. #zanata
 # Frank Kloeker <eumel@arcor.de>, 2016. #zanata
-# Monika Wolf <vcomas3@de.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.0.0rc3.dev7\n"
+"Project-Id-Version: heat 6.0.1.dev1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-03-30 15:59+0000\n"
+"POT-Creation-Date: 2016-04-07 10:59+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-06 07:59+0000\n"
+"PO-Revision-Date: 2016-04-10 02:17+0000\n"
 "Last-Translator: Monika Wolf <vcomas3@de.ibm.com>\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -312,7 +308,7 @@ msgstr ""
 
 msgid "'true' if DHCP is enabled for this subnet; 'false' otherwise."
 msgstr ""
-"'True', wenn DHCP für dieses Teilnetz aktiviert ist; andernfalls 'false'. "
+"'True', wenn DHCP für dieses Subnetz aktiviert ist; andernfalls 'false'. "
 
 msgid "A UUID for the set of servers being requested."
 msgstr "Eine UUID für die Gruppe von Servern, die angefordert werden. "
@@ -323,7 +319,7 @@ msgstr ""
 "angegeben"
 
 msgid "A boolean value of default flag."
-msgstr "Ein boolescher Wert des Standardflags."
+msgstr "Ein boolescher Wert des Standardmarkierung."
 
 msgid "A boolean value specifying the administrative status of the network."
 msgstr "Ein boolescher Wert, der den Verwaltungsstatus des Netzes angibt. "
@@ -348,12 +344,12 @@ msgid ""
 "A comma separated list of addresses for which proxies should not be used in "
 "the bay."
 msgstr ""
-"Eine durch Kommas getrennte Liste der Adressen, für die in der Bay keine "
+"Eine durch Komma getrennte Liste der Adressen, für die in der Bay keine "
 "Proxys verwendet werden sollen."
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
-"Eine durch Kommas begrenzte Liste der Server-IP-Adressen (Heat-Erweiterung). "
+"Eine durch Komma begrenzte Liste der Server-IP-Adressen (Heat-Erweiterung). "
 
 msgid "A description of the volume."
 msgstr "Eine Beschreibung des Datenträgers. "
@@ -380,8 +376,8 @@ msgid ""
 msgstr ""
 "Ein Verzeichnis aller Netzadressen mit entsprechender Port-ID. Jedes Netz "
 "hat zwei Schlüssel im Verzeichnis: Netzname und Netz-ID. Die Port-ID kann "
-"über den folgenden Ausdruck abgerufen werden: \"{get_attr: [<Server>, "
-"addresses, <Netzname_oder_Netz-ID>, 0, port]}\"."
+"über den folgenden Ausdruck abgerufen werden: \"{get_attr: [<server>, "
+"addresses, <network name_or_id>, 0, port]}\"."
 
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
@@ -389,9 +385,9 @@ msgid ""
 "\"private_uuid\": [ip3, ip4]}. Each network will have two keys in dict, they "
 "are network name and network id."
 msgstr ""
-"Ein Verzeichnis der zugeordneten Netzadressen im Format: {\"public\": [IP1, "
-"IP2...], \"private\": [IP3, IP4], \"public_uuid\": [IP1, IP2...], "
-"\"private_uuid\": [IP3, IP4]}. Jedes Netz hat zwei Schlüssel im Verzeichnis: "
+"Ein Verzeichnis der zugeordneten Netzadressen im Format: {\"public\": [ip1, "
+"ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
+"\"private_uuid\": [ip3, ip4]}. Jedes Netz hat zwei Schlüssel im Verzeichnis: "
 "Netzname und Netz-ID."
 
 msgid "A dict of key-value pairs output from the stack."
@@ -447,7 +443,7 @@ msgid "A list of all rules for the QoS policy."
 msgstr "Eine Liste aller Regeln für die QoS-Richtlinie."
 
 msgid "A list of all subnet attributes for the port."
-msgstr "Eine Liste aller Teilnetzattribute für den Port. "
+msgstr "Eine Liste aller Subnetzattribute für den Port. "
 
 msgid ""
 "A list of character class and their constraints to generate the random "
@@ -582,8 +578,8 @@ msgid ""
 "value."
 msgstr ""
 "Eine Zuordnung der benutzerdefinierten Metadaten zum Zuordnen zum Konto. "
-"Jeder Schlüssel in der Zuordnung legt für den Header 'X-Account-Meta-{key}' "
-"den entsprechenden Wert fest. "
+"Jeder Schlüssel in der Zuordnung legt für den Kopf X-Account-Meta-{key} den "
+"entsprechenden Wert fest. "
 
 msgid ""
 "A map of user-defined meta data to associate with the container. Each key in "
@@ -591,8 +587,8 @@ msgid ""
 "value."
 msgstr ""
 "Eine Zuordnung der benutzerdefinierten Metadaten zum Zuordnen zum Container. "
-"Jeder Schlüssel in der Zuordnung legt für den Header 'X-Container-Meta-"
-"{key}' den entsprechenden Wert fest. "
+"Jeder Schlüssel in der Zuordnung legt für den Kopf X-Container-Meta-{key} "
+"den entsprechenden Wert fest. "
 
 msgid "A name used to distinguish the volume."
 msgstr "Eine Name zum Unterscheiden des Datenträgers. "
@@ -727,7 +723,7 @@ msgid "Additional MAC/IP address pairs allowed to pass through the port."
 msgstr "Zusätzliche MAC-IP-Adressen-Paare, die den Port durchlaufen dürfen. "
 
 msgid "Additional routes for this subnet."
-msgstr "Zusätzliche Routen für dieses Teilnetz."
+msgstr "Zusätzliche Routen für dieses Subnetz."
 
 msgid "Address family of the address scope, which is 4 or 6."
 msgstr "Adressefamilie des Adressbereichs: 4 oder 6."
@@ -750,7 +746,7 @@ msgid "Administrative state for the ipsec site connection."
 msgstr "Verwaltungsstatus für die Verbindung zur IPSec-Site. "
 
 msgid "Administrative state for the vpn service."
-msgstr "Verwaltungsstatus für den VPN-Service. "
+msgstr "Verwaltungsstatus für den VPN-Dienst. "
 
 msgid ""
 "Administrative state of the firewall. If false (down), firewall does not "
@@ -855,16 +851,16 @@ msgid ""
 "Amount of disk space (in GB) required to boot image. Default value is 0 if "
 "not specified and means no limit on the disk size."
 msgstr ""
-"Menge an Plattenspeicher (in GB), die zum Booten des Image erforderlich ist. "
-"Bei fehlender Angabe ist der Standardwert 0; dies bedeutet, dass die "
+"Menge an Plattenspeicher (in GB), die zum Booten des Abbildes erforderlich "
+"ist. Bei fehlender Angabe ist der Standardwert 0; dies bedeutet, dass die "
 "Plattengröße unbegrenzt ist."
 
 msgid ""
 "Amount of ram (in MB) required to boot image. Default value is 0 if not "
 "specified and means no limit on the ram size."
 msgstr ""
-"Menge an Arbeitsspeicher (in MB), die zum Booten des Image erforderlich ist. "
-"Bei fehlender Angabe ist der Standardwert 0; dies bedeutet, dass die "
+"Menge an Arbeitsspeicher (in MB), die zum Booten des Abbildes erforderlich "
+"ist. Bei fehlender Angabe ist der Standardwert 0; dies bedeutet, dass die "
 "Arbeitsspeichergröße unbegrenzt ist."
 
 msgid "An address scope ID to assign to the subnet pool."
@@ -1060,7 +1056,7 @@ msgid "Availability Zone of the subnet."
 msgstr "Verfügbarkeitszone des Subnetzes."
 
 msgid "Availability zone in which you want the subnet."
-msgstr "Verfügbarkeitszone für das Teilnetz. "
+msgstr "Verfügbarkeitszone für das Subnetz. "
 
 msgid "Availability zone to create servers in."
 msgstr "Verfügbarkeitszone, in der Server erstellt werden sollen."
@@ -1116,10 +1112,10 @@ msgstr ""
 "wenn diese Angabe ausgelassen wird."
 
 msgid "CIDR block notation for this subnet."
-msgstr "CIDR-Block-Notation für dieses Teilnetz. "
+msgstr "CIDR-Block-Notation für dieses Subnetz. "
 
 msgid "CIDR block to apply to subnet."
-msgstr "CIDR-Block zum Anwenden auf das Teilnetz. "
+msgstr "CIDR-Block zum Anwenden auf das Subnetz. "
 
 msgid "CIDR block to apply to the VPC."
 msgstr "CIDR-Block zum Anwenden auf VPC. "
@@ -1280,7 +1276,7 @@ msgid ""
 "Configuration script or manifest which specifies what actual configuration "
 "is performed."
 msgstr ""
-"Konfigurationsscript oder Manifest, das angibt, welche Konfiguration "
+"Konfigurationsscript oder Manifest das angibt, welche Konfiguration "
 "durchgeführt wird. "
 
 msgid "Configure most important configs automatically."
@@ -1498,8 +1494,8 @@ msgstr ""
 
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr ""
-"Standardname oder UUID des Image, das zum Booten von Hadoop-Knoten verwendet "
-"wird."
+"Standardname oder UUID des Abbildes, das zum Booten von Hadoop-Knoten "
+"verwendet wird."
 
 msgid "Default project of keystone user."
 msgstr "Das Standardprojekt des Keystone-Benutzers."
@@ -1677,7 +1673,7 @@ msgid "Description of keystone region."
 msgstr "Beschreibung der Keystone-Region."
 
 msgid "Description of keystone service."
-msgstr "Beschreibung des Keystone-Diensts."
+msgstr "Beschreibung des Keystone-Dienstes."
 
 msgid "Description of keystone user."
 msgstr "Beschreibung des Keystone-Benutzers."
@@ -1707,7 +1703,7 @@ msgid "Description of the firewall."
 msgstr "Beschreibung der Firewall."
 
 msgid "Description of the image."
-msgstr "Beschreibung des Abbilds."
+msgstr "Beschreibung des Abbildes."
 
 msgid "Description of the input."
 msgstr "Beschreibung der Eingabe."
@@ -1734,7 +1730,7 @@ msgid "Description of the volume type."
 msgstr "Beschreibung des Datenträgertyps."
 
 msgid "Description of the volume."
-msgstr "Beschreibung des Volumens."
+msgstr "Beschreibung des Datenträgers."
 
 msgid "Description of this Load Balancer."
 msgstr "Beschreibung dieses Loadbalancers."
@@ -1824,7 +1820,7 @@ msgstr ""
 "v2 entsprechen."
 
 msgid "Disable TLS in the bay."
-msgstr "Inaktivieren Sie TLS in der Bay."
+msgstr "Deaktivieren Sie TLS in der Bay."
 
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback und OnFailure können nicht zusammen verwendet werden"
@@ -2002,7 +1998,7 @@ msgstr "Fehler bei der Auswertung der Vorlage: %s"
 
 #, python-format
 msgid "Error retrieving image list from sahara: %s"
-msgstr "Fehler beim Abrufen der Imageliste von sahara: %s"
+msgstr "Fehler beim Abrufen der Abbildliste von sahara: %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -2066,7 +2062,7 @@ msgstr ""
 
 msgid "Extra specs key-value pairs defined for share type."
 msgstr ""
-"Schlüssel-Wert-Paar der extra Spezifikation für den Typ des "
+"Schlüssel-Wert-Paar der Extra Spezifikation für den Typ des "
 "Freigabeverzeichnisses."
 
 #, python-format
@@ -2219,23 +2215,23 @@ msgstr "Feste IPv4-Adresse für dieses NIC."
 
 msgid "Flag indicating if traffic to or from instance is validated."
 msgstr ""
-"Flag, das angibt, ob Datenverkehr an die Instanz oder von der Instanz "
+"Markierung die angibt, ob Datenverkehr an die Instanz oder von der Instanz "
 "überprüft wird. "
 
 msgid ""
 "Flag to enable/disable port security on the network. It provides the default "
 "value for the attribute of the ports created on this network."
 msgstr ""
-"Flag zum Aktivieren/Inaktivieren der Portsicherheit im Netz. Es stellt den "
-"Standardwert für das Attribut der in diesem Netz erstellten Ports bereit."
+"Markierung zum Aktivieren/Deaktivieren der Portsicherheit im Netz. Es stellt "
+"den Standardwert für das Attribut der in diesem Netz erstellten Ports bereit."
 
 msgid ""
 "Flag to enable/disable port security on the port. When disable this "
 "feature(set it to False), there will be no packages filtering, like security-"
 "group and address-pairs."
 msgstr ""
-"Flag zum Aktivieren/Inaktivieren der Portsicherheit am Port. Bei "
-"Inaktivierung dieses Features (Wert 'False') gibt es keine Paketfilterung, "
+"Flag zum Aktivieren/Deaktivieren der Portsicherheit am Port. Bei "
+"Deaktivierung dieses Features (Wert 'False') gibt es keine Paketfilterung, "
 "wie beispielsweise 'security-group' oder 'address-pairs'."
 
 msgid "Flavor of the instance."
@@ -2248,7 +2244,7 @@ msgid "Friendly name of the router."
 msgstr "Anzeigename des Routers. "
 
 msgid "Friendly name of the subnet."
-msgstr "Anzeigename des Teilnetzes. "
+msgstr "Anzeigename des Subnetzes. "
 
 #, python-format
 msgid "Function \"%s\" must have arguments"
@@ -2439,7 +2435,7 @@ msgid ""
 "ID of resource to apply configuration to. Normally this should be a Nova "
 "server ID."
 msgstr ""
-"ID der Ressource, auf die die Konfiguration angewendet werden soll. Dies ist "
+"ID der Ressource auf die die Konfiguration angewendet werden soll. Dies ist "
 "in der Regel eine Nova-Server-ID."
 
 msgid ""
@@ -2455,7 +2451,7 @@ msgstr "ID des Signals zur Verwendung für das Signalisieren von Ausgabewerten"
 msgid ""
 "ID of software configuration resource to execute when applying to the server."
 msgstr ""
-"ID der Softwarekonfigurationsressource, die beim Anwenden auf den Server "
+"ID der Softwarekonfigurationsressource die beim Anwenden auf den Server "
 "ausgeführt werden."
 
 msgid "ID of the Cluster Template used for Node Groups and configurations."
@@ -2496,7 +2492,7 @@ msgid "ID of the health monitor associated with this pool."
 msgstr "ID des Gesundheitsmonitors, der diesem Pool zugeordnet ist."
 
 msgid "ID of the image to use for the template."
-msgstr "ID des Images, das für die Vorlage verwendet werden soll."
+msgstr "ID des Abbildes, das für die Vorlage verwendet werden soll."
 
 msgid "ID of the load balancer this listener is associated to."
 msgstr "ID des Loadbalancers, dem dieser Listener zugeordnet ist."
@@ -2519,10 +2515,10 @@ msgid "ID of the router."
 msgstr "Kennung des Routers."
 
 msgid "ID of the server being deployed to"
-msgstr "ID des Servers, auf dem implementiert wird"
+msgstr "ID des Servers auf dem implementiert wird"
 
 msgid "ID of the stack this deployment belongs to"
-msgstr "ID des Stack, zu dem diese Implementierung gehört"
+msgstr "ID des Stack zu dem diese Implementierung gehört"
 
 msgid "ID of the tenant to which the RBAC policy will be enforced."
 msgstr "ID des Mandanten, auf den die RBAC-Richtlinie erzwungen wird. "
@@ -2540,7 +2536,7 @@ msgid "ID or name of the external network for the gateway."
 msgstr "ID oder Name des externen Netzes für das Gateway. "
 
 msgid "ID or name of the image to register."
-msgstr "ID oder Name des zu registrierenden Abbilds."
+msgstr "ID oder Name des zu registrierenden Abbildes."
 
 msgid "ID or name of the load balancer with which listener is associated."
 msgstr "ID oder Name des Loadbalancers, dem der Listener zugeordnet ist."
@@ -2559,7 +2555,7 @@ msgid "IP address and port of the pool."
 msgstr "IP-Adresse und Port des Pools. "
 
 msgid "IP address desired in the subnet for this port."
-msgstr "Die im Teilnetz für diesen Port gewünschte IP-Adresse. "
+msgstr "Die im Subnetz für diesen Port gewünschte IP-Adresse. "
 
 msgid "IP address for the VIP."
 msgstr "IP-Adresse der VIP."
@@ -2611,10 +2607,10 @@ msgid "Id of the manila share."
 msgstr "ID der Manila-Freigabeverzeichnisses."
 
 msgid "Id of the tenant owning the firewall policy."
-msgstr "ID des Nutzers, der Eigentümer der Firewallrichtlinie ist."
+msgstr "ID des Nutzers der Eigentümer der Firewallrichtlinie ist."
 
 msgid "Id of the tenant owning the firewall."
-msgstr "ID des Nutzers, der Eigentümer der Firewall ist."
+msgstr "ID des Nutzers der Eigentümer der Firewall ist."
 
 msgid "Identifier of the source instance to replicate."
 msgstr "Die ID der zu replizierenden Quelleninstanz."
@@ -2648,7 +2644,7 @@ msgid ""
 "If configured, it allows to run action or workflow associated with a task "
 "multiple times on a provided list of items."
 msgstr ""
-"Sofern konfiguriert, wird die mehrfache Ausführung von Aktionen oder "
+"Sofern konfiguriert wird die mehrfache Ausführung von Aktionen oder "
 "Arbeitsabläufen anhand einer angegebenen Liste mit Elementen ermöglicht, die "
 "einer Aufgabe zugeordnet sind."
 
@@ -2677,7 +2673,7 @@ msgstr ""
 
 msgid "If specified, the name or ID of the image to create the volume from."
 msgstr ""
-"Wenn angegeben, der Name oder die ID des Image, aus dem der Datenträger "
+"Wenn angegeben, der Name oder die ID des Abbildes, aus dem der Datenträger "
 "erstellt werden soll. "
 
 msgid "If specified, the snapshot to create the volume from."
@@ -2815,7 +2811,7 @@ msgstr ""
 "Angabe, ob ein Router mit hoher Verfügbarkeit erstellt wird. ANMERKUNG: Die "
 "Standardrichtlinieneinstellung in Neutron beschränkt die Verwendung dieser "
 "Eigenschaft auf Benutzer mit Verwaltungsaufgaben. Jetzt unterstützt Neutron "
-"nicht mehr verteilte Routerund Router mit hoher Verfügbarkeit gleichzeitig."
+"nicht mehr verteilte Router und Router mit hoher Verfügbarkeit gleichzeitig."
 
 msgid "Indicates whether this firewall rule is enabled or not."
 msgstr "Gibt an, ob diese Firewallregel aktiviert ist."
@@ -2867,7 +2863,7 @@ msgid ""
 "maximum number allowed by your service provider"
 msgstr ""
 "Die Instanzmetadaten dürfen nicht mehr als %s Einträge enthalten. Dies ist "
-"die vom Service-Provider zugelassene maximale Anzahl"
+"die vom Diensteanbieter zugelassene maximale Anzahl"
 
 msgid "Integer used for ordering the boot disks."
 msgstr "Ganzzahl, die für die Sortierung der Bootdatenträger verwendet wird."
@@ -3070,10 +3066,10 @@ msgid "Ip allocation pools and their ranges."
 msgstr "IP-Zuordnungspools und die zugehörigen Bereiche. "
 
 msgid "Ip of the subnet's gateway."
-msgstr "IP-Adresse des Gateways des Teilnetzes. "
+msgstr "IP-Adresse des Gateways des Subnetzes. "
 
 msgid "Ip version for the subnet."
-msgstr "IP-Version für das Teilnetz. "
+msgstr "IP-Version für das Subnetz. "
 
 msgid "Ip_version for this firewall rule."
 msgstr "Ip_version für diese Firewallregel."
@@ -3199,7 +3195,7 @@ msgid "Keystone user groups."
 msgstr "Keystone-Benutzergruppen."
 
 msgid "Keystone user is enabled or disabled."
-msgstr "Der Keystone-Benutzer ist aktiviert oder inaktiviert."
+msgstr "Der Keystone-Benutzer ist aktiviert oder deaktiviert."
 
 msgid ""
 "Keystone username, a user with roles sufficient to manage users and projects "
@@ -3345,16 +3341,16 @@ msgid "List of subnet prefixes to assign."
 msgstr "Liste der Subnetzpräfixe, die zugeordnet werden sollen."
 
 msgid "List of tags associated with this interface."
-msgstr "Liste der Tags, die dieser Schnittstelle zugeordnet ist. "
+msgstr "Liste der Schlagwörter, die dieser Schnittstelle zugeordnet ist. "
 
 msgid "List of tags to attach to the instance."
-msgstr "Liste der an die Instanz anzuhängenden Tags."
+msgstr "Liste der an die Instanz anzuhängenden Schlagwörter."
 
 msgid "List of tags to attach to this resource."
-msgstr "Liste der an diese Ressource anzuhängenden Tags. "
+msgstr "Liste der an diese Ressource anzuhängenden Schlagwörter. "
 
 msgid "List of tags to be attached to this resource."
-msgstr "Liste der an diese Ressource anzuhängenden Tags. "
+msgstr "Liste der an diese Ressource anzuhängenden Schlagwörter. "
 
 msgid ""
 "List of tasks which should be executed before this task. Used only in "
@@ -3460,7 +3456,7 @@ msgid "Max burst bandwidth in kbps."
 msgstr "Burst-Bandbreite in kpbs."
 
 msgid "Max size of the cluster."
-msgstr "Maximale Größe des Clusters."
+msgstr "Maximalgröße des Clusters."
 
 #, python-format
 msgid "Maximum %s is 1 hour."
@@ -3713,7 +3709,7 @@ msgid ""
 "Name for the image. The name of an image is not unique to a Image Service "
 "node."
 msgstr ""
-"Name für das Image. Der Name eines Image ist nicht nur auf einem Image-"
+"Name für das Abbild. Der Name eines Abbildes ist nicht nur auf einem Image-"
 "Service-Knoten vorhanden."
 
 msgid "Name for the ipsec policy."
@@ -3764,7 +3760,7 @@ msgid "Name of keystone role."
 msgstr "Name der Keystone-Rolle."
 
 msgid "Name of keystone service."
-msgstr "Name des Keystone-Diensts."
+msgstr "Name des Keystone-Dienstes."
 
 msgid "Name of keystone user."
 msgstr "Name des Keystone-Benutzers."
@@ -3815,7 +3811,7 @@ msgid "Name of the cron trigger."
 msgstr "Der Name des Cron-Auslösers."
 
 msgid "Name of the current action being deployed"
-msgstr "Name der Aktion, die derzeit implementiert wird"
+msgstr "Name der Aktion die derzeit implementiert wird"
 
 msgid "Name of the data source."
 msgstr "Name der Datenquelle."
@@ -3928,7 +3924,7 @@ msgid "Name of the volume type."
 msgstr "Name des Datenträgertyps."
 
 msgid "Name of the volume."
-msgstr "Name des Volumens."
+msgstr "Name des Datenträgers."
 
 msgid ""
 "Name of the workflow associated with the task. Can be defined by intrinsic "
@@ -4069,7 +4065,7 @@ msgstr "Verhandlungsmodus für die IKE-Richtlinie. "
 #, python-format
 msgid "Neither image nor bootable volume is specified for instance %s"
 msgstr ""
-"Weder das Image noch der bootfähige Datenträger ist für Instanz %s angegeben"
+"Weder das Abbild noch der bootfähige Datenträger ist für Instanz %s angegeben"
 
 msgid "Network in CIDR notation."
 msgstr "Netz in CIDR-Notation."
@@ -4153,7 +4149,7 @@ msgid "No template specified"
 msgstr "Keine Vorlage angegeben"
 
 msgid "No volume service available."
-msgstr "Kein Volumendienst verfügbar."
+msgstr "Kein Datenträgerdienst verfügbar."
 
 msgid "Node groups."
 msgstr "Knotengruppen."
@@ -4250,7 +4246,7 @@ msgid ""
 msgstr ""
 "Anzahl der Wiederholungsversuche, wenn ein Client einen erwarteten, "
 "sporadisch auftretenden Fehler feststellt. Setzen Sie den Wert auf 0, um "
-"Wiederholungsversuche zu inaktivieren."
+"Wiederholungsversuche zu deaktivieren."
 
 msgid "Number of workers for Heat service."
 msgstr "Anzahl der Worker für den Heat-Dienst."
@@ -4458,7 +4454,7 @@ msgid "Parent network of the subnet."
 msgstr "Übergeordnetes Netzwerk des Subnetzes."
 
 msgid "Parts belonging to this message."
-msgstr "Teile, die zu dieser Nachricht gehören."
+msgstr "Teile die zu dieser Nachricht gehören."
 
 msgid "Password for API authentication"
 msgstr "Passwort für API-Authentifizierung"
@@ -4745,7 +4741,7 @@ msgid "Protocol to balance."
 msgstr "Protokoll für den Lastausgleich. "
 
 msgid "Protocol value for this firewall rule."
-msgstr "Protokollwert für diese Firewall-Regel."
+msgstr "Protokollwert für diese Firewallregel."
 
 msgid ""
 "Provide access to nodes using other nodes of the cluster as proxy gateways."
@@ -4761,7 +4757,7 @@ msgstr ""
 "Verschlüsselungsschlüssel wird aus der Konfigurationsdatei verwendet."
 
 msgid "Provider for this Load Balancer."
-msgstr "Provider für diesen Loadbalancer."
+msgstr "Anbieter für diesen Loadbalancer."
 
 msgid "Provider implementing this load balancer instance."
 msgstr "Provider, der diese Loadbalancerinstanz implementiert."
@@ -4802,7 +4798,7 @@ msgid ""
 "Ref structure that contains the ID of the VPC on which you want to create "
 "the subnet."
 msgstr ""
-"Referenzstruktur, die die VPC-ID enthält, unter der Sie das Teilnetz "
+"Referenzstruktur, die die VPC-ID enthält, unter der Sie das Subnetz "
 "erstellen möchten. "
 
 msgid "Reference to a flavor for creating DB instance."
@@ -4877,7 +4873,7 @@ msgstr ""
 msgid ""
 "Required extra specification. Defines if share drivers handles share servers."
 msgstr ""
-"Erforderliche extra Spezifikation. Definiert, ob Treiber für Freigaben "
+"Erforderliche Extra Spezifikation. Definiert, ob Treiber für Freigaben "
 "Freigabeserver verarbeiten."
 
 #, python-format
@@ -5004,7 +5000,7 @@ msgstr "Schedulerhinweise zum Übermitteln an Nova (Heat-Erweiterung)."
 
 msgid "Schema representing the inputs that this software config is expecting."
 msgstr ""
-"Schema, das die Eingaben darstellt, die diese Softwarekonfiguration "
+"Schema. das die Eingaben darstellt, die diese Softwarekonfiguration "
 "erwartet. "
 
 msgid "Schema representing the outputs that this software config will produce."
@@ -5027,7 +5023,7 @@ msgid ""
 "Scope of image accessibility. Public or private. Default value is False "
 "means private."
 msgstr ""
-"Umfang der Imagezugänglichkeit. Öffentlich oder privat. Der Standardwert "
+"Umfang der Abbildzugänglichkeit. Öffentlich oder privat. Der Standardwert "
 "'False' bedeutet 'privat'."
 
 #, python-format
@@ -5086,10 +5082,10 @@ msgid "Security service domain."
 msgstr "Domäne des Sicherheitsdiensts."
 
 msgid "Security service name."
-msgstr "Name des Sicherheitsdiensts."
+msgstr "Name des Sicherheitsdienstes."
 
 msgid "Security service type."
-msgstr "Typ des Sicherheitsdiensts."
+msgstr "Typ des Sicherheitsdienstes."
 
 msgid "Security service user or group used by tenant."
 msgstr "Vom Mandanten verwendeter Sicherheitsdienstbenutzer oder -gruppe."
@@ -5270,7 +5266,7 @@ msgstr ""
 
 #, python-format
 msgid "Specified subnet %(subnet)s does not belongs to network %(network)s."
-msgstr "Das angegebene Subnetzt %(subnet)s gehört nicht zum Netz %(network)s."
+msgstr "Das angegebene Subnetz %(subnet)s gehört nicht zum Netz %(network)s."
 
 msgid "Specifies a custom discovery url for node discovery."
 msgstr "Gibt eine angepasste Erkennungs-URL für die Knotenerkennung an."
@@ -5365,16 +5361,16 @@ msgid "String value with which to compare."
 msgstr "Zeichenfolgewert, mit dem verglichen werden soll."
 
 msgid "Subnet ID to associate with this interface."
-msgstr "Teilnetz-ID, die dieser Schnittstelle zuzuordnen ist. "
+msgstr "Subnetz-ID, die dieser Schnittstelle zuzuordnen ist. "
 
 msgid "Subnet ID to launch instance in."
-msgstr "Teilnetz-ID zum Starten der Instanz. "
+msgstr "Subnetz-ID zum Starten der Instanz. "
 
 msgid "Subnet ID."
 msgstr "Subnetzkennung."
 
 msgid "Subnet in which the vpn service will be created."
-msgstr "Teilnetz, in dem der VPN-Service erstellt werden soll."
+msgstr "Subnetz, in dem der VPN-Dienst erstellt werden soll."
 
 msgid ""
 "Subnet in which to allocate the IP address for port. Used for creating port, "
@@ -5386,7 +5382,7 @@ msgstr ""
 "Subnetz angegeben ist, sind Netzeigenschaften optional."
 
 msgid "Subnet in which to allocate the IP address for this port."
-msgstr "Teilnetz, in dem die IP-Adresse für diesen Port zuzuordnen ist. "
+msgstr "Subnetz, in dem die IP-Adresse für diesen Port zuzuordnen ist. "
 
 msgid "Subnet name or ID of this member."
 msgstr "Subnetzname oder ID dieses Mitglieds."
@@ -5395,7 +5391,7 @@ msgid "Subnet of external fixed IP address."
 msgstr "Subnetz der externen, festen IP-Adresse."
 
 msgid "Subnet of the vip."
-msgstr "Teilnetz der VIP."
+msgstr "Subnetz der VIP."
 
 msgid "Subnets of this network."
 msgstr "Subnetze dieses Netzwerks."
@@ -5484,13 +5480,13 @@ msgid "Tags to add to the image."
 msgstr "Dem Abbild hinzuzufügende Schlagwörter."
 
 msgid "Tags to attach to instance."
-msgstr "Tags zum Anhängen an die Instanz."
+msgstr "Schlagwörter zum Anhängen an die Instanz."
 
 msgid "Tags to attach to the bucket."
 msgstr "Tags zum Anhängen an den Bucket. "
 
 msgid "Tags to attach to this group."
-msgstr "Tags zum Anhängen an diese Gruppe. "
+msgstr "Schlagwörter zum Anhängen an diese Gruppe. "
 
 msgid "Task description."
 msgstr "Beschreibung der Aufgabe."
@@ -5553,8 +5549,7 @@ msgstr ""
 "Größe (%(limit)s bytes)."
 
 msgid "Template that specifies the stack to be created as a resource."
-msgstr ""
-"Vorlage, die angibt, dass der Stack als Ressource erstellt werden soll."
+msgstr "Vorlage die angibt, dass der Stack als Ressource erstellt werden soll."
 
 #, python-format
 msgid "Template type is not supported: %s"
@@ -5586,7 +5581,7 @@ msgid "Tenant owning the router."
 msgstr "Nutzer, der Eigentümer des Routers ist. "
 
 msgid "Tenant owning the subnet."
-msgstr "Nutzer, der Eigentümer des Teilnetzes ist. "
+msgstr "Nutzer, der Eigentümer des Subnetzes ist. "
 
 #, python-format
 msgid "Testing message %(text)s"
@@ -5633,9 +5628,7 @@ msgid "The Availability Zone where the specified instance is launched."
 msgstr "Die Verfügbarkeitszone, in der die angegebene Instanz gestartet wird. "
 
 msgid "The Availability Zones in which to create the load balancer."
-msgstr ""
-"Die Verfügbarkeitszonen, in denen die Lastausgleichsfunktion erstellt werden "
-"soll. "
+msgstr "Die Verfügbarkeitszonen in der der Loadbalancer erstellt werden soll. "
 
 msgid "The CIDR."
 msgstr "Die CIDR."
@@ -5728,14 +5721,14 @@ msgstr ""
 
 msgid "The ID of the image to create a volume from."
 msgstr ""
-"Die ID des Images, von dem ausgehend ein Datenträger erstellt werden soll."
+"Die ID des Abbildes, von dem ausgehend ein Datenträger erstellt werden soll."
 
 msgid "The ID of the image to create the volume from."
 msgstr ""
-"Die ID des Image, von dem ausgehend der Datenträger erstellt werden soll."
+"Die ID des Abbildes, von dem ausgehend der Datenträger erstellt werden soll."
 
 msgid "The ID of the instance to which the volume attaches."
-msgstr "Die ID der Instanz, an die der Datenträger angehängt ist. "
+msgstr "Die ID der Instanz an die der Datenträger angehängt ist. "
 
 msgid "The ID of the load balancing pool."
 msgstr "Die ID des Lastausgleichpools. "
@@ -5798,7 +5791,7 @@ msgid "The ID or name of the flavor to boot onto."
 msgstr "Die ID oder der Name der Version, die gebootet werden soll. "
 
 msgid "The ID or name of the image to boot with."
-msgstr "Die ID oder der Name des Image, mit dem gebootet werden soll. "
+msgstr "Die ID oder der Name des Abbildes, mit dem gebootet werden soll. "
 
 msgid ""
 "The IDs of the DHCP agent to schedule the network. Note that the default "
@@ -5931,7 +5924,7 @@ msgid "The administrative state of the router."
 msgstr "Der Verwaltungsstatus des Routers."
 
 msgid "The administrative state of the vpn service."
-msgstr "Der Verwaltungsstatus des VPN-Service. "
+msgstr "Der Verwaltungsstatus des VPN-Dienst. "
 
 msgid "The administrative state of this Load Balancer."
 msgstr "Der Verwaltungsstatus dieses Loadbalancers."
@@ -6031,7 +6024,7 @@ msgstr "Der Bucket, den Sie löschen wollten, ist nicht leer (%s)."
 
 msgid "The can be used to unmap a defined device."
 msgstr ""
-"Kann zum Aufheben der Zuordnung eines definierten Service verwendet werden."
+"Kann zum Aufheben der Zuordnung eines definierten Dienstes verwendet werden."
 
 msgid "The certificate or AWS Key ID provided does not exist"
 msgstr ""
@@ -6089,7 +6082,7 @@ msgid "The current size of AutoscalingResourceGroup."
 msgstr "Die aktuelle Größe von AutoscalingResourceGroup."
 
 msgid "The current status of the volume."
-msgstr "Der aktuelle Status des Volumens."
+msgstr "Der aktuelle Status des Datenträgers."
 
 msgid ""
 "The database instance was created, but heat failed to set up the datastore. "
@@ -6147,8 +6140,7 @@ msgid ""
 msgstr ""
 "Die Einheit, in der der Datenträger für die Instanz zugänglich ist. "
 "Möglicherweise wird diese Zuordnung nicht berücksichtigt und es empfiehlt "
-"sich, stattdessen den Pfad /dev/disk/by-id/virtio-<Datenträger-ID> zu "
-"verwenden. "
+"sich, stattdessen den Pfad /dev/disk/by-id/virtio-<VolumeId> zu verwenden. "
 
 msgid ""
 "The direction in which metering rule is applied, either ingress or egress."
@@ -6208,7 +6200,7 @@ msgid "The external network to attach the Bay."
 msgstr "Das externe an die Bay anzuhängende Netz."
 
 msgid "The extra specs key and value pairs of the volume type."
-msgstr "Die Schlüssel-Wert-Paare der extra Spezifikation für den Datenträger."
+msgstr "Die Schlüssel-Wert-Paare der Extra Spezifikation für den Datenträger."
 
 msgid "The fixed network to attach the Bay."
 msgstr "Das feste an die Bay anzuhängende Netz."
@@ -6275,7 +6267,7 @@ msgid "The identifier of the CA to use."
 msgstr "Die ID der zu verwendenden Zertifizierungsstelle."
 
 msgid "The image ID. Glance will generate a UUID if not specified."
-msgstr "Die Image-ID. Bei fehlender Angabe generiert Glance eine UUID."
+msgstr "Die Abbild-ID. Bei fehlender Angabe generiert Glance eine UUID."
 
 msgid "The image name or UUID to use as a base image for this baymodel."
 msgstr ""
@@ -6352,7 +6344,7 @@ msgstr ""
 "definiert sind. Spezifische Vorlagennamen werden nicht unterstützt."
 
 msgid "The list of tags to associate with the volume."
-msgstr "Die Liste der dem Datenträger zuzuordnenden Tags. "
+msgstr "Die Liste der dem Datenträger zuzuordnenden Schlagwörter. "
 
 msgid "The load balancer transport protocol to use."
 msgstr "Das zu verwendende Transportprotokoll für die Lastausgleichsfunktion. "
@@ -6364,8 +6356,7 @@ msgid ""
 msgstr ""
 "Die Position, an der der Datenträger für die Instanz zugänglich ist. "
 "Möglicherweise wird diese Zuordnung nicht berücksichtigt und es empfiehlt "
-"sich, stattdessen den Pfad /dev/disk/by-id/virtio-<Datenträger-ID> zu "
-"verwenden. "
+"sich, stattdessen den Pfad /dev/disk/by-id/virtio-<VolumeId> zu verwenden. "
 
 msgid "The manually assigned alternative public IPv4 address of the server."
 msgstr ""
@@ -6429,7 +6420,7 @@ msgid ""
 msgstr ""
 "Die metrischen Dimensionen, die mit den Alarmdimensionen übereinstimmen "
 "müssen. Es muss mindestens ein Dimensionsschlüssel angegeben werden. Mehrere "
-"Schlüssel werden durch Kommas voneinander getrennt."
+"Schlüssel werden durch Komma voneinander getrennt."
 
 msgid ""
 "The minimum number of characters from this character class that will be in "
@@ -6514,10 +6505,10 @@ msgid "The name of the router."
 msgstr "Der Name des Routers."
 
 msgid "The name of the subnet."
-msgstr "Der Name des Subnetz."
+msgstr "Der Name des Subnetzes."
 
 msgid "The name of the user that the new key will belong to."
-msgstr "Der Name des Benutzers, dem der neue Schlüssel gehören soll. "
+msgstr "Der Name des Benutzers dem der neue Schlüssel gehören soll. "
 
 msgid ""
 "The name of the virtual device. The name must be in the form ephemeralX "
@@ -6718,7 +6709,7 @@ msgstr ""
 "wurde."
 
 msgid "The port being checked."
-msgstr "Der Port, der überprüft wird. "
+msgstr "Der Port der überprüft wird. "
 
 msgid "The port id, either subnet or port_id should be specified."
 msgstr "Die Port-ID sollte angegeben werden, entweder subnet oder port_id."
@@ -6727,7 +6718,7 @@ msgid "The port on which the server will listen."
 msgstr "Der Port, auf dem der Server hört."
 
 msgid "The port, either subnet or port should be specified."
-msgstr "Der Port, entweder Teilnetz oder Port sollte angegeben werden."
+msgstr "Der Port, entweder Subnetz oder Port sollte angegeben werden."
 
 msgid "The pre-shared key string of the ipsec site connection."
 msgstr ""
@@ -6792,7 +6783,7 @@ msgstr ""
 "Modus muss \"remote_group_id\" festgelegt werden."
 
 msgid "The remote subnet(s) in CIDR format of the ipsec site connection."
-msgstr "Die fernen Teilnetze der Verbindung zur IPSec-Site im CIDR-Format. "
+msgstr "Die fernen Subnetze der Verbindung zur IPSec-Site im CIDR-Format. "
 
 msgid "The request is missing an action or operation parameter"
 msgstr "In der Anforderung fehlt eine Aktion oder ein Operationsparameter"
@@ -6827,7 +6818,7 @@ msgid "The router id."
 msgstr "Die Routerkennung."
 
 msgid "The router to which the vpn service will be inserted."
-msgstr "Der Router, bei dem der VPN-Service eingefügt wird."
+msgstr "Der Router, bei dem der VPN-Dienst eingefügt wird."
 
 msgid "The router."
 msgstr "Der Router."
@@ -6890,7 +6881,7 @@ msgid ""
 "Compute service infer the size."
 msgstr ""
 "Die Größe des Datenträgers in GB. Dieser Wert kann leer gelassen werden, "
-"damit der Rechenservice die Größe berechnet. "
+"damit der Compute-Dienst die Größe berechnet. "
 
 msgid ""
 "The size of the volume, in GB. Must be equal or greater than the size of the "
@@ -6899,11 +6890,11 @@ msgid ""
 msgstr ""
 "Die Größe des Datenträgers in GB. Muss größer-gleich der Größe der "
 "Momentaufnahme sein. Dieser Wert kann leer gelassen werden, damit der "
-"Rechenservice die Größe berechnet."
+"Compute-Dienst die Größe berechnet."
 
 msgid "The snapshot the volume was created from, if any."
 msgstr ""
-"Die Momentaufnahme, aus der der Datenträger erstellt wurde, falls vorhanden. "
+"Die Schattenkopie, aus der der Datenträger erstellt wurde, falls vorhanden. "
 
 msgid "The source of certificate request."
 msgstr "Die Quelle der Zertifikatsanforderung."
@@ -6940,7 +6931,7 @@ msgid "The status of the secret."
 msgstr "Der Status des geheimen Schlüssels."
 
 msgid "The status of the vpn service."
-msgstr "Der Status des VPN-Diensts."
+msgstr "Der Status des VPN-Dienstes."
 
 msgid ""
 "The string that was stored. This value is also available by referencing the "
@@ -6955,13 +6946,13 @@ msgstr "Das Subjekt der Zertifikatsanforderung."
 msgid ""
 "The subnet for the port on which the members of the pool will be connected."
 msgstr ""
-"Das Teilnetz für den Port, auf dem die Mitglieder des Pools verbunden werden."
+"Das Subnetz für den Port, auf dem die Mitglieder des Pools verbunden werden."
 
 msgid "The subnet, either subnet or port should be specified."
-msgstr "Das Teilnetz, entweder Teilnetz oder Port sollte angegeben werden."
+msgstr "Das Subnetz, entweder Subnetz oder Port sollte angegeben werden."
 
 msgid "The tag key name."
-msgstr "Der Tagschlüsselname. "
+msgstr "Der Schlagwortschlüsselname. "
 
 msgid "The tag value."
 msgstr "Der Schlagwortwert."
@@ -7041,13 +7032,12 @@ msgstr ""
 
 msgid ""
 "The unique identifier of the router to which the vpn service was inserted."
-msgstr ""
-"Die eindeutige ID des Routers, in den der VPN-Service eingefügt wurde. "
+msgstr "Die eindeutige ID des Routers, in den der VPN-Dienst eingefügt wurde. "
 
 msgid ""
 "The unique identifier of the subnet in which the vpn service was created."
 msgstr ""
-"Die eindeutige ID des Teilnetzes, in dem der VPN-Service erstellt wurde. "
+"Die eindeutige ID des Subnetzes, in dem der VPN-Dienstes erstellt wurde. "
 
 msgid "The unique identifier of the tenant owning the ike policy."
 msgstr "Die eindeutige ID des Nutzers, der Eigentümer der IKE-Richtlinie ist. "
@@ -7062,14 +7052,14 @@ msgstr ""
 "ist. "
 
 msgid "The unique identifier of the tenant owning the vpn service."
-msgstr "Die eindeutige ID des Nutzers, der Eigentümer des VPN-Service ist. "
+msgstr "Die eindeutige ID des Nutzers, der Eigentümer des VPN-Dienstes ist. "
 
 msgid ""
 "The unique identifier of vpn service associated with the ipsec site "
 "connection."
 msgstr ""
 "Die eindeutige ID des der Verbindung zur IPSec-Site zugeordneten VPN-"
-"Service.  "
+"Dienst.  "
 
 msgid ""
 "The user-defined region ID and should unique to the OpenStack deployment. "
@@ -7121,7 +7111,7 @@ msgstr ""
 "für Neutron-Implementierungen, die Bindungserweiterung unterstützen."
 
 msgid "The volume type."
-msgstr "Der Volumentyp."
+msgstr "Der Datenträgertyp."
 
 msgid "The volume used as source, if any."
 msgstr "Der als Quelle verwendete Datenträger, falls vorhanden. "
@@ -7164,16 +7154,16 @@ msgid "This attribute has been removed in Magnum"
 msgstr "Dieses Attribut wurde in Magnum entfernt."
 
 msgid "This endpoint is enabled or disabled."
-msgstr "Dieser Endpunkt ist aktiviert oder inaktiviert."
+msgstr "Dieser Endpunkt ist aktiviert oder deaktiviert."
 
 msgid "This project is enabled or disabled."
-msgstr "Dieses Projekt ist aktiviert oder inaktiviert."
+msgstr "Dieses Projekt ist aktiviert oder deaktiviert."
 
 msgid "This region is enabled or disabled."
-msgstr "Diese Region ist aktiviert oder inaktiviert."
+msgstr "Diese Region ist aktiviert oder deaktiviert."
 
 msgid "This service is enabled or disabled."
-msgstr "Der Dienst ist aktiviert oder inaktiviert."
+msgstr "Der Dienst ist aktiviert oder deaktiviert."
 
 msgid "Threshold to evaluate against."
 msgstr "Schwellenwert für die Auswertung. "
@@ -7294,7 +7284,7 @@ msgstr ""
 "dem OpenStack-Dienst zu verwenden ist."
 
 msgid "Type of keystone Service."
-msgstr "Typ des Keystone-Diensts."
+msgstr "Typ des Keystone-Dienstes."
 
 msgid "Type of receiver."
 msgstr "Typ des Empfängers."
@@ -7329,7 +7319,7 @@ msgid ""
 "internal-db://<uuid>."
 msgstr ""
 "URL für das Aufgabenbinärprogramm. Muss das Format für Swift haben: //"
-"<Container>/<Pfad> oder internal-db://<UUID>."
+"<container>/<path> oder internal-db://<uuid>."
 
 msgid ""
 "URL of TempURL where resource will signal completion and optionally upload "
@@ -7360,8 +7350,8 @@ msgid ""
 "data is stored in swift, you could specify \"swift://example.com/container/"
 "obj\"."
 msgstr ""
-"URL, unter der sich die Daten für dieses Image bereits befinden. Wenn die "
-"Imagedaten beispielsweise in Swift gespeichert sind, könnten Sie \"swift://"
+"URL, unter der sich die Daten für dieses Abbild bereits befinden. Wenn die "
+"Abbilddaten beispielsweise in Swift gespeichert sind, könnten Sie \"swift://"
 "example.com/container/obj\" angeben."
 
 msgid ""
@@ -7372,18 +7362,18 @@ msgid ""
 msgstr ""
 "URLs der Serverkonsolen. Zum Abrufen eines bestimmten Konsolentyps kann der "
 "angeforderte Typ als Parameter an die Funktion get_attr übergeben werden, z. "
-"B. get_attr: [ <Server>, console_urls, novnc ]. Derzeit unterstützte Typen "
+"B. get_attr: [ <server>, console_urls, novnc ]. Derzeit unterstützte Typen "
 "sind novnc, xvpvnc, spice-html5, rdp-html5 und serial."
 
 msgid "UUID of the internal subnet to which the instance will be attached."
-msgstr "UUID des internen Teilnetzes, mit dem die Instanz verbunden sein wird."
+msgstr "UUID des internen Subnetzes, mit dem die Instanz verbunden sein wird."
 
 #, python-format
 msgid ""
 "Unable to find neutron provider '%(provider)s', available providers are "
 "%(providers)s."
 msgstr ""
-"Neutron-Provider '%(provider)s' wurde nicht gefunden. Verfügbare Provider: "
+"Neutron-Anbieter '%(provider)s' wurde nicht gefunden. Verfügbare Anbieter: "
 "%(providers)s."
 
 #, python-format
@@ -7457,7 +7447,7 @@ msgstr "Eindeutige ID für das Netz, das Eigentümer des Ports ist. "
 msgid ""
 "Unique identifier for the router to which the vpn service will be inserted."
 msgstr ""
-"Eindeutige ID für den Router, in den der VPN-Service eingefügt werden soll. "
+"Eindeutige ID für den Router, in den der VPN-Dienst eingefügt werden soll. "
 
 msgid ""
 "Unique identifier for the vpn service associated with the ipsec site "
@@ -7565,7 +7555,7 @@ msgid ""
 "<resource_name> }"
 msgstr ""
 "Verwenden Sie stattdessen den Befehl get_resource|Ref. Beispiel: "
-"{ get_resource : <Ressourcenname> }"
+"{ get_resource : <resource_name> }"
 
 msgid ""
 "Use of this resource is discouraged. Please use OS::Heat::"
@@ -7586,7 +7576,7 @@ msgid ""
 "will be attached; needed only if multiple exist; list length must be exactly "
 "1."
 msgstr ""
-"Nur mit Neutron zum Auflisten des internen Teilnetzes verwenden, mit dem die "
+"Nur mit Neutron zum Auflisten des internen Subnetzes verwenden, mit dem die "
 "Instanz verbunden sein wird; nur erforderlich, wenn mehrere vorhanden sind; "
 "Listenlänge muss genau 1 sein."
 
@@ -7610,7 +7600,7 @@ msgid ""
 "\"{get_attr: [<server name>, networks, <network name>, 0]}\""
 msgstr ""
 "Verwenden Sie das Netzattribut anstelle von first_address. Beispiel: "
-"\"{get_attr: [<Servername>, networks, <Netzname>, 0]}\""
+"\"{get_attr: [<server name>, networks, <network name>, 0]}\""
 
 msgid "Use this resource at your own risk."
 msgstr "Die Verwendung dieser Ressource erfolgt auf eigene Gefahr."
@@ -7694,7 +7684,7 @@ msgid ""
 "integer."
 msgstr ""
 "Wert '%(value)s' ist ungültig für '%(name)s', der nur Ganzzahlen akzeptiert, "
-"dienicht negativ sind."
+"die nicht negativ sind."
 
 #, python-format
 msgid "Value '%s' is not an integer"
@@ -7761,19 +7751,19 @@ msgid "Volume attachment failed"
 msgstr "Anhängen von Datenträger fehlgeschlagen"
 
 msgid "Volume backup failed"
-msgstr "Volumensicherung fehlgeschlagen"
+msgstr "Datenträgersicherung fehlgeschlagen"
 
 msgid "Volume backup restore failed"
 msgstr "Wiederherstellen einer Datenträgersicherung fehlgeschlagen"
 
 msgid "Volume create failed"
-msgstr "Volumenerstellung fehlgeschlagen"
+msgstr "Datenträgererstellung fehlgeschlagen"
 
 msgid "Volume detachment failed"
 msgstr "Abhängen des Datenträgers fehlgeschlagen"
 
 msgid "Volume in use"
-msgstr "Volumen wird benutzt"
+msgstr "Datenträger wird benutzt"
 
 msgid "Volume resize failed"
 msgstr "Größenänderung für Datenträger fehlgeschlagen"
@@ -7874,7 +7864,7 @@ msgid ""
 "Whether the image can be deleted. If the value is True, the image is "
 "protected and cannot be deleted."
 msgstr ""
-"Gibt an, ob das Image gelöscht werden kann. Bei 'True' ist das Image "
+"Gibt an, ob das Abbild gelöscht werden kann. Bei 'True' ist das Abbild "
 "geschützt und kann nicht gelöscht werden."
 
 msgid "Whether the metering label should be shared across all tenants."
@@ -7886,7 +7876,7 @@ msgid "Whether the network contains an external router."
 msgstr "Gibt an, ob das Netz einen externen Router enthält."
 
 msgid "Whether the part content is text or multipart."
-msgstr "Angabe, ob der Inhalt des Teils 'text' oder 'multipart' ist."
+msgstr "Angabe ob der Inhalt des Teils 'text' oder 'multipart' ist."
 
 msgid ""
 "Whether the subnet pool will be shared across all tenants. Note that the "
