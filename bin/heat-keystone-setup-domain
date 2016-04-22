@@ -55,6 +55,18 @@ opts = [
 
 ]
 
+# Setup logging before registering additional options
+logging.register_options(cfg.CONF)
+extra_log_level_defaults = ['urllib3.connectionpool=WARNING']
+logging.set_defaults(
+    logging_context_format_string="%(levelname)s (%(module)s:"
+                                  "%(lineno)d) %(message)s",
+    default_log_levels=(logging.get_default_log_levels() +
+                       extra_log_level_defaults))
+logging.setup(cfg.CONF, 'heat-keystone-setup-domain',
+              version.version_info.version_string())
+
+# Register additional options
 cfg.CONF.register_cli_opts(opts)
 cfg.CONF(sys.argv[1:],
          project='heat',
@@ -79,12 +91,6 @@ insecure = cfg.CONF.insecure
 
 
 def main():
-    log_lvl = logging.DEBUG if DEBUG else logging.WARNING
-    logging.basicConfig(
-        format="%(levelname)s (%(module)s:%(lineno)d) %(message)s",
-        level=log_lvl)
-    logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
-
     client_kwargs = {
         'debug': DEBUG,
         'username': USERNAME,
