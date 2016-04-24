@@ -9,13 +9,13 @@
 # Linda <duleish@cn.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev1\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2016-04-07 10:59+0000\n"
+"Project-Id-Version: heat 6.0.1.dev2\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-22 10:42+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-22 05:52+0000\n"
+"PO-Revision-Date: 2016-04-23 04:10+0000\n"
 "Last-Translator: Linda <duleish@cn.ibm.com>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -474,7 +474,7 @@ msgstr "Nova 名称与所捕获的针对每个服务器的配置执行产生的�
 msgid ""
 "A map of Nova names and captured stdouts from the configuration execution to "
 "each server."
-msgstr "Nova 名称与来自针对每个服务器的配置执行的所捕获标准输出的映射。"
+msgstr "Nova 名称和通过配置执行捕获的标准输出与每个服务器的映射。"
 
 msgid ""
 "A map of Nova names and returned status code from the configuration "
@@ -624,7 +624,7 @@ msgid "Add rule must be used only for lists."
 msgstr "只能对列表使用“添加”规则。"
 
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
-msgstr "允许通过端口传递的其他 MAC/IP 地址对。"
+msgstr "允许通过端口的其他 MAC/IP 地址对。"
 
 msgid "Additional MAC/IP address pairs allowed to pass through the port."
 msgstr "允许通过该端口传递的其他 MAC/IP 地址对。"
@@ -638,7 +638,7 @@ msgstr "地址范围的地址系列（4 或 6）。"
 msgid ""
 "Address of the notification. It could be a valid email address, url or "
 "service key based on notification type."
-msgstr "通知的地址。它可以是有效电子邮件地址、URL 或基于通知类型的服务关键字。"
+msgstr "通知的地址。它可以是基于通知类型的有效电子邮件地址、URL 或服务键。"
 
 msgid ""
 "Address to bind the server. Useful when selecting a particular network "
@@ -656,7 +656,7 @@ msgid ""
 "forward packets and will drop all traffic to/from VMs behind the firewall."
 msgstr ""
 "防火墙的管理状态。如果为 false（关闭），那么防火墙不会转发包，并且会删除至/自"
-"防火墙后的 VM的所有流量。"
+"防火墙后的 VM 的所有流量。"
 
 msgid "Administrative state of the router."
 msgstr "路由器的管理状态。"
@@ -738,7 +738,7 @@ msgstr ""
 
 #, python-format
 msgid "Ambiguous versions (%s)"
-msgstr "版本 (%s) 含糊"
+msgstr "有歧义的版本 (%s) "
 
 msgid ""
 "Amount of disk space (in GB) required to boot image. Default value is 0 if "
@@ -779,7 +779,7 @@ msgstr "发生未知异常。"
 msgid ""
 "Any data structure arbitrarily containing YAQL expressions that defines "
 "workflow output. May be nested."
-msgstr "包含用于定义工作流程输出的 YAQL 表达式的任何数据结构。可能嵌套。"
+msgstr "包含用于定义工作流程输出的 YAQL 表达式的任何数据结构。可嵌套。"
 
 msgid "Anything other than one VPCZoneIdentifier"
 msgstr "除了一个 VPCZoneIdentifier 之外的任何内容"
@@ -1081,7 +1081,7 @@ msgid "Captured stderr from the configuration execution."
 msgstr "已从配置执行捕获标准错误。"
 
 msgid "Captured stdout from the configuration execution."
-msgstr "已从配置执行捕获标准输出。"
+msgstr "已通过配置执行捕获标准输出。"
 
 #, python-format
 msgid "Circular Dependency Found: %(cycle)s"
@@ -1220,7 +1220,7 @@ msgstr "未能访存远程模板“%(url)s”：%(exc)s"
 
 #, python-format
 msgid "Could not load %(name)s: %(error)s"
-msgstr "未能装入 %(name)s：%(error)s"
+msgstr "无法装入 %(name)s：%(error)s"
 
 #, python-format
 msgid "Could not retrieve template: %s"
@@ -1343,7 +1343,7 @@ msgid ""
 msgstr "定义延迟（以秒计），Mistral 引擎在启动任务前应等待此时间段。"
 
 msgid "Defines a pattern how task should be repeated in case of an error."
-msgstr "定义一种模式，此模式确定发生错误时如何再次执行该任务。"
+msgstr "定义一种模式，此模式确定发生错误后如何再次执行该任务。"
 
 msgid ""
 "Defines a period of time in seconds after which a task will be failed "
@@ -1558,7 +1558,7 @@ msgid "DesiredCapacity must be between MinSize and MaxSize"
 msgstr "DesiredCapacity 必须介于 MinSize 与 MaxSize 之间"
 
 msgid "Destination IP address or CIDR."
-msgstr "目的IP地址或无类间或路由。"
+msgstr "目标 IP 地址或 CIDR。"
 
 msgid "Destination ip_address for this firewall rule."
 msgstr "此防火墙规则的目标 ip_address。"
@@ -1646,7 +1646,7 @@ msgid "Each Output must contain a Value key."
 msgstr "每个输出都必须包含一个 Value 键。"
 
 msgid "Each Resource must contain a Type key."
-msgstr "每个资源都必须包含一个“类型”键。"
+msgstr "每个资源都必须包含一个 Type 键。"
 
 msgid "Ebs is missing, this is required when specifying BlockDeviceMappings."
 msgstr "缺少 Ebs，指定 BlockDeviceMappings 时需要此项。"
@@ -2024,7 +2024,7 @@ msgid "Granularity to use for age argument, defaults to days."
 msgstr "要用于 age 自变量的粒度，缺省为天数。"
 
 msgid "HTTP verb to use for signaling output values"
-msgstr "要用于发出输出值的信号的 HTTP 动词"
+msgstr "要用于通告输出值的 HTTP 动词"
 
 msgid "Hadoop cluster name."
 msgstr "Hadoop 集群名称。"
@@ -2084,7 +2084,7 @@ msgid ""
 msgstr ""
 "有关服务器如何接收软件配置所需的元数据。POLL_SERVER_CFN 指示将允许调用已使用"
 "所提供密钥对认证的 cfn API 操作 DescribeStackResource。POLL_SERVER_HEAT 指示"
-"将允许使用所提供 keystone 证书调用 Heat API resource-show。POLL_TEMP_URL 指示"
+"将允许调用使用所提供 keystone 证书 Heat API resource-show。POLL_TEMP_URL 指示"
 "将创建 Swift TempURL 并使用要轮询的元数据进行填充。ZAQAR_MESSAGE 指示将创建专"
 "用 zaqar 队列并发布元数据以进行轮询。"
 
@@ -2103,7 +2103,7 @@ msgid ""
 msgstr ""
 "服务器应如何向 heat 通告部署输出值。CFN_SIGNAL 指示将允许向 CFN 密钥对签署的 "
 "URL 执行 HTTP POST。TEMP_URL_SIGNAL 指示将创建通过 HTTP PUT 通告的 Swift "
-"TempURL。HEAT_SIGNAL 指示将允许使用所提供的 keystone 证书调用 Heat API "
+"TempURL。HEAT_SIGNAL 指示将允许调用使用所提供的 keystone 证书的 Heat API "
 "resource-signal。ZAQAR_SIGNAL 指示将创建使用所提供的 keystone 证书通告的专用 "
 "zaqar 队列。NO_SIGNAL 将导致资源进入 COMPLETE 状态而不等待任何信号。"
 
@@ -2148,7 +2148,7 @@ msgid "ID of project for API authentication"
 msgstr "API认证的项目ID"
 
 msgid "ID of queue to use for signaling output values"
-msgstr "用于通告输出值的的队列的标识"
+msgstr "用于通告输出值的队列的标识"
 
 msgid ""
 "ID of resource to apply configuration to. Normally this should be a Nova "
@@ -2161,7 +2161,7 @@ msgid ""
 msgstr "主机上用于导出网络文件系统的服务器（VM，等等...）的标识。"
 
 msgid "ID of signal to use for signaling output values"
-msgstr "要用于发出输出值的信号的信号标识"
+msgstr "要用于通告输出值的信号的标识"
 
 msgid ""
 "ID of software configuration resource to execute when applying to the server."
@@ -2219,7 +2219,7 @@ msgid "ID of the router used as gateway, set when associated with a port."
 msgstr "用作网关的路由器的标识，在与端口关联时设置。"
 
 msgid "ID of the router."
-msgstr "路由ID。"
+msgstr "路由标识。"
 
 msgid "ID of the server being deployed to"
 msgstr "要部署至的服务器的标识"
@@ -2287,7 +2287,7 @@ msgid "IP address of the vip."
 msgstr "vip 的 IP 地址。"
 
 msgid "IP address to allow through this port."
-msgstr "要通过此端口允许的 IP 地址。"
+msgstr "允许通过此端口的 IP 地址。"
 
 msgid "IP address to use if the port has multiple addresses."
 msgstr "要使用的 IP 地址（如果端口具有多个地址）。"
@@ -2719,7 +2719,7 @@ msgid "Ip version for the subnet."
 msgstr "子网的 IP 版本。"
 
 msgid "Ip_version for this firewall rule."
-msgstr "此防火墙规则的 Ip_version。"
+msgstr "此防火墙规则的 ip_version。"
 
 msgid "It defines an executor to which task action should be sent to."
 msgstr "它定义应将任务操作发送至的执行程序。"
@@ -3017,7 +3017,7 @@ msgid "MAC address of the port."
 msgstr "端口的 MAC 地址。"
 
 msgid "MAC address to allow through this port."
-msgstr "要通过此端口允许的 MAC 地址。"
+msgstr "允许通过此端口的 MAC 地址。"
 
 msgid "MAC address to give to this port."
 msgstr "要向此端口提供的 MAC 地址。"
@@ -3273,7 +3273,7 @@ msgid ""
 msgstr "映像的名称。映像的名称对映像服务节点并非唯一。"
 
 msgid "Name for the ipsec policy."
-msgstr "IPSec策略的名称。"
+msgstr "IPSec 策略的名称。"
 
 msgid "Name for the ipsec site connection."
 msgstr "IPSec 站点连接的名称。"
@@ -3956,7 +3956,7 @@ msgid "Payload exceeds maximum allowed size"
 msgstr "有效内容超过最大允许大小"
 
 msgid "Perfect forward secrecy for the ipsec policy."
-msgstr "IPSec 策略的完全正向保密。"
+msgstr "IPSec 策略的完美前向保密。"
 
 msgid "Perfect forward secrecy in lowercase for the ike policy."
 msgstr "ike 策略的完全正向保密（以小写表示）。"
@@ -4041,7 +4041,7 @@ msgid "Port security enabled of the network."
 msgstr "网络的已启用端口安全性。"
 
 msgid "Port security enabled of the port."
-msgstr "端口的已启用端口安全性。"
+msgstr "已对端口启用端口安全性。"
 
 msgid "Position of the rule within the firewall policy."
 msgstr "该规则在防火墙策略内的位置"
@@ -4376,7 +4376,7 @@ msgstr ""
 
 #, python-format
 msgid "Resources must contain Resource. Found a [%s] instead"
-msgstr "资源必须包含“资源”。但发现包含的是 [%s]"
+msgstr "资源必须包含 Resource。但发现包含的是 [%s]"
 
 msgid ""
 "Resources that users are allowed to access by the DescribeStackResource API."
@@ -4628,7 +4628,7 @@ msgid "Software config with id %s not found"
 msgstr "找不到标识为 %s 的软件配置"
 
 msgid "Source IP address or CIDR."
-msgstr "源IP地址或无类间或路由。"
+msgstr "源 IP 地址或 CIDR。"
 
 msgid "Source ip_address for this firewall rule."
 msgstr "此防火墙规则的源 ip_address。"
@@ -5006,7 +5006,7 @@ msgstr ""
 "示意外的非预期的行为。应避免。"
 
 msgid "The HTTP method used for requests by the monitor of type HTTP."
-msgstr "用于通过类型为 HTTP 的监视器进行的请求的 HTTP 方法。"
+msgstr "用于通过类型为 HTTP 的监视器发出的请求的 HTTP 方法。"
 
 msgid ""
 "The HTTP path used in the HTTP request used by the monitor to test a member "
@@ -5148,7 +5148,7 @@ msgid "The QoS policy ID attached to this network."
 msgstr "附加至此网络的 QoS 策略标识。"
 
 msgid "The QoS policy ID attached to this port."
-msgstr "附加至此端口的 QoS 策略标识。"
+msgstr "连接至此端口的 QoS 策略标识。"
 
 #, python-format
 msgid "The Referenced Attribute (%(resource)s %(key)s) is incorrect."
@@ -5449,8 +5449,8 @@ msgid ""
 "(ingress) for that instance. An egress rule is applied to traffic leaving "
 "the instance."
 msgstr ""
-"应用安全组规则的方向。对于计算实例，进入权安全组规则与该实例的引入（进入）流"
-"量匹配。外出权规则应用于离开该实例的流量。"
+"应用安全组规则的方向。对于计算实例，进入安全组规则与该实例的引入（进入）流量"
+"匹配。外出规则应用于离开该实例的流量。"
 
 msgid "The directory to search for environment files."
 msgstr "用于搜索环境文件的目录。"
@@ -5465,7 +5465,7 @@ msgid "The encoding format used to provide the payload data."
 msgstr "用于提供有效数据的加密格式。"
 
 msgid "The encryption algorithm of the ipsec policy."
-msgstr "IPSec策略的加密算法。"
+msgstr "IPSec 策略的加密算法。"
 
 msgid "The encryption algorithm or mode. For example, aes-xts-plain64."
 msgstr "加密算法或方式，例如，aes-xts-plain64。"
@@ -5719,13 +5719,13 @@ msgid "The name of the hosted zone that is associated with the LoadBalancer."
 msgstr "与负载均衡器关联的托管区域的名称。"
 
 msgid "The name of the ike policy."
-msgstr "IKE策略的名称。"
+msgstr "ike 策略的名称。"
 
 msgid "The name of the index document."
 msgstr "索引文档的名称。"
 
 msgid "The name of the ipsec policy."
-msgstr "IPSec策略的名称。"
+msgstr "IPSec 策略的名称。"
 
 msgid "The name of the ipsec site connection."
 msgstr "IPSec 站点连接的名称。"
@@ -5897,10 +5897,10 @@ msgid "The payload of the created public key, if available."
 msgstr "所创建公钥的有效内容（如果提供）。"
 
 msgid "The perfect forward secrecy of the ike policy."
-msgstr "ike 策略的完全正向保密。"
+msgstr "ike 策略的完美前向保密。"
 
 msgid "The perfect forward secrecy of the ipsec policy."
-msgstr "IPSec 策略的完全正向保密。"
+msgstr "IPSec 策略的完美前向保密。"
 
 #, python-format
 msgid "The personality property may not contain greater than %s entries."
@@ -6001,7 +6001,7 @@ msgid "The route mode of the ipsec site connection."
 msgstr "IPSec 站点连接的路由方式。"
 
 msgid "The router id."
-msgstr "路由ID。"
+msgstr "路由标识。"
 
 msgid "The router to which the vpn service will be inserted."
 msgstr "将对其插入 VPN 服务的路由器。"
@@ -6245,7 +6245,7 @@ msgid "The values of the \"for_each\" argument to \"%s\" must be lists"
 msgstr "针对“%s”的“for_each”自变量的值必须为列表"
 
 msgid "The version of the ike policy."
-msgstr "IKE策略的版本。"
+msgstr "ike 策略的版本。"
 
 msgid ""
 "The vnic type to be bound on the neutron port. To support SR-IOV PCI "
@@ -6813,7 +6813,7 @@ msgid "Version %(objver)s of %(objname)s is not supported"
 msgstr "%(objname)s 的版本 %(objver)s 不受支持"
 
 msgid "Version for the ike policy."
-msgstr "IKE策略的版本。"
+msgstr "ike 策略的版本。"
 
 msgid "Version of Hadoop running on instances."
 msgstr "实例上运行的 Hadoop 的版本。"
@@ -6921,7 +6921,7 @@ msgid ""
 "update."
 msgstr ""
 "地址范围是否应与其他租户共享。请注意，缺省策略设置将此属性的使用对象限制为仅"
-"管理用户。并将共享地址范围的的更改限制为不与更新共享。"
+"管理用户。并将共享地址范围的更改限制为不与更新共享。"
 
 msgid "Whether the flavor is shared across all projects."
 msgstr "是否在所有项目间共享该类型。"
