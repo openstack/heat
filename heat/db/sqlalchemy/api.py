@@ -39,6 +39,7 @@ from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy import utils as db_utils
+from heat.engine import environment as heat_environment
 from heat.rpc import api as rpc_api
 
 CONF = cfg.CONF
@@ -1385,3 +1386,43 @@ def _get_batch(session, ctxt, query, model, batch_size=50):
             for result in results:
                 yield result
             last_batch_marker = results[-1].id
+
+
+def reset_stack_status(context, stack_id, stack=None):
+    if stack is None:
+        stack = model_query(context, models.Stack).get(stack_id)
+
+    if stack is None:
+        raise exception.NotFound(_('Stack with id %s not found') % stack_id)
+
+    session = _session(context)
+    with session.begin():
+        query = model_query(context, models.Resource).filter_by(
+            status='IN_PROGRESS', stack_id=stack_id)
+        query.update({'status': 'FAILED',
+                      'status_reason': 'Stack status manually reset'})
+
+        query = model_query(context, models.ResourceData)
+        query = query.join(models.Resource)
+        query = query.filter_by(stack_id=stack_id)
+        query = query.filter(
+            models.ResourceData.key.in_(heat_environment.HOOK_TYPES))
+        data_ids = [data.id for data in query]
+
+        if data_ids:
+            query = model_query(context, models.ResourceData)
+            query = query.filter(models.ResourceData.id.in_(data_ids))
+            query.delete(synchronize_session='fetch')
+
+    query = model_query(context, models.Stack).filter_by(owner_id=stack_id)
+    for child in query:
+        reset_stack_status(context, child.id, child)
+
+    with session.begin():
+        if stack.status == 'IN_PROGRESS':
+            stack.status = 'FAILED'
+            stack.status_reason = 'Stack status manually reset'
+
+        session.query(
+            models.StackLock
+        ).filter_by(stack_id=stack_id).delete()

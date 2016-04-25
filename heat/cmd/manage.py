@@ -98,6 +98,18 @@ def do_resource_data_list():
         print(print_format % (k, data[k]))
 
 
+def do_reset_stack_status():
+    print(_("Warning: this command is potentially destructive and only "
+            "intended to recover from specific crashes."))
+    print(_("It is advised to shutdown all Heat engines beforehand."))
+    print(_("Continue ? [y/N]"))
+    data = raw_input()
+    if not data.lower().startswith('y'):
+        return
+    ctxt = context.get_admin_context()
+    db_api.reset_stack_status(ctxt, CONF.command.stack_id)
+
+
 def purge_deleted():
     """Remove database records that have been previously soft deleted."""
     utils.purge_deleted(CONF.command.age, CONF.command.granularity)
@@ -156,6 +168,11 @@ def add_command_parsers(subparsers):
     parser.set_defaults(func=do_resource_data_list)
     parser.add_argument('resource_id',
                         help=_('Stack resource id'))
+
+    parser = subparsers.add_parser('reset_stack_status')
+    parser.set_defaults(func=do_reset_stack_status)
+    parser.add_argument('stack_id',
+                        help=_('Stack id'))
 
     ServiceManageCommand.add_service_parsers(subparsers)
 

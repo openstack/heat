@@ -3249,3 +3249,52 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         self.assertNotEqual(enc_params['param3'], dec_params['param3'])
         self.assertEqual('bar', dec_params['param2'])
         self.assertEqual('12345', dec_params['param3'])
+
+
+class ResetStackStatusTests(common.HeatTestCase):
+
+    def setUp(self):
+        super(ResetStackStatusTests, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.template = create_raw_template(self.ctx)
+        self.user_creds = create_user_creds(self.ctx)
+        self.stack = create_stack(self.ctx, self.template, self.user_creds)
+
+    def test_status_reset(self):
+        db_api.stack_update(self.ctx, self.stack.id, {'status': 'IN_PROGRESS'})
+        db_api.stack_lock_create(self.stack.id, UUID1)
+        db_api.reset_stack_status(self.ctx, self.stack.id)
+        self.assertEqual('FAILED', self.stack.status)
+        self.assertEqual('Stack status manually reset',
+                         self.stack.status_reason)
+        self.assertEqual(True, db_api.stack_lock_release(self.stack.id, UUID1))
+
+    def test_resource_reset(self):
+        resource_progress = create_resource(self.ctx, self.stack,
+                                            status='IN_PROGRESS')
+        resource_complete = create_resource(self.ctx, self.stack)
+        db_api.reset_stack_status(self.ctx, self.stack.id)
+        self.assertEqual('complete', resource_complete.status)
+        self.assertEqual('FAILED', resource_progress.status)
+
+    def test_hook_reset(self):
+        resource = create_resource(self.ctx, self.stack)
+        resource.context = self.ctx
+        create_resource_data(self.ctx, resource, key="pre-create")
+        create_resource_data(self.ctx, resource)
+        db_api.reset_stack_status(self.ctx, self.stack.id)
+
+        vals = db_api.resource_data_get_all(self.ctx, resource.id)
+        self.assertEqual({'test_resource_key': 'test_value'}, vals)
+
+    def test_nested_stack(self):
+        db_api.stack_update(self.ctx, self.stack.id, {'status': 'IN_PROGRESS'})
+        child = create_stack(self.ctx, self.template, self.user_creds,
+                             owner_id=self.stack.id)
+        grandchild = create_stack(self.ctx, self.template, self.user_creds,
+                                  owner_id=child.id, status='IN_PROGRESS')
+        resource = create_resource(self.ctx, grandchild, status='IN_PROGRESS')
+        db_api.reset_stack_status(self.ctx, self.stack.id)
+        self.assertEqual('FAILED', grandchild.status)
+        self.assertEqual('FAILED', resource.status)
+        self.assertEqual('FAILED', self.stack.status)
