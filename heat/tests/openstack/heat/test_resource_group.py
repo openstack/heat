@@ -1011,8 +1011,7 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         # load current stack
         current_stack = utils.parse_stack(current)
         current_grp = current_stack['group1']
-        current_grp_json = function.resolve(
-            current_grp.t)
+        current_grp_json = current_grp.frozen_definition()
 
         updated_stack = utils.parse_stack(updated)
         updated_grp = updated_stack['group1']
@@ -1070,8 +1069,7 @@ class RollingUpdateTest(common.HeatTestCase):
         current = copy.deepcopy(template)
         self.current_stack = utils.parse_stack(current)
         self.current_grp = self.current_stack['group1']
-        current_grp_json = function.resolve(
-            self.current_grp.t)
+        current_grp_json = self.current_grp.frozen_definition()
         prop_diff, tmpl_diff = None, None
         updated = tmpl_with_updt_policy() if (
             with_policy) else copy.deepcopy(template)

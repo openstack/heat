@@ -230,7 +230,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
         # get the json snippet for the current InstanceGroup resource
         current_grp = current_stack['JobServerGroup']
-        current_snippets = dict((n, r.parsed_template())
+        current_snippets = dict((n, r.frozen_definition())
                                 for n, r in current_stack.items())
         current_grp_json = current_snippets[current_grp.name]
 
