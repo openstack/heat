@@ -20,7 +20,6 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine import function
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -701,7 +700,7 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         # get the updated json snippet for the InstanceGroup resource in the
         # context of the current stack
         updated_grp = updated_stack['WebServerGroup']
-        updated_grp_json = function.resolve(updated_grp.t)
+        updated_grp_json = updated_grp.t.freeze()
 
         # identify the template difference
         tmpl_diff = updated_grp.update_template_diff(

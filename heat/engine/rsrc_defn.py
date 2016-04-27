@@ -31,6 +31,37 @@ __all__ = ['ResourceDefinition']
 class ResourceDefinitionCore(object):
     """A definition of a resource, independent of any template format."""
 
+    class Diff(object):
+        """A diff between two versions of the same resource definition."""
+
+        def __init__(self, old_defn, new_defn):
+            if not (isinstance(old_defn, ResourceDefinitionCore) and
+                    isinstance(new_defn, ResourceDefinitionCore)):
+                raise TypeError
+
+            self.old_defn = old_defn
+            self.new_defn = new_defn
+
+        def properties_changed(self):
+            """Return True if the resource properties have changed."""
+            return self.old_defn._properties != self.new_defn._properties
+
+        def metadata_changed(self):
+            """Return True if the resource metadata has changed."""
+            return self.old_defn._metadata != self.new_defn._metadata
+
+        def update_policy_changed(self):
+            """Return True if the resource update policy has changed."""
+            return self.old_defn._update_policy != self.new_defn._update_policy
+
+        def __bool__(self):
+            """Return True if anything has changed."""
+            return (self.properties_changed() or
+                    self.metadata_changed() or
+                    self.update_policy_changed())
+
+        __nonzero__ = __bool__
+
     DELETION_POLICIES = (
         DELETE, RETAIN, SNAPSHOT,
     ) = (
@@ -100,6 +131,9 @@ class ResourceDefinitionCore(object):
         intrinsic functions). Named arguments passed to this method override
         the values passed as arguments to the constructor.
         """
+        if getattr(self, '_frozen', False) and not overrides:
+            return self
+
         def arg_item(attr_name):
             name = attr_name.lstrip('_')
             if name in overrides:
@@ -227,6 +261,17 @@ class ResourceDefinitionCore(object):
 
         return self._rendering
 
+    def __sub__(self, previous):
+        """Calculate the difference between this definition and a previous one.
+
+        Return a Diff object that can be used to establish differences between
+        this definition and a previous definition of the same resource.
+        """
+        if not isinstance(previous, ResourceDefinitionCore):
+            return NotImplemented
+
+        return self.Diff(previous, self)
+
     def __eq__(self, other):
         """Compare this resource definition for equality with another.
 
@@ -300,6 +345,51 @@ class ResourceDefinition(ResourceDefinitionCore, collections.Mapping):
         'as such will be removed in the future. Resource plugins should use '
         'the ResourceDefinition API to work with the definition of the '
         'resource instance.')
+
+    class Diff(ResourceDefinitionCore.Diff, collections.Mapping):
+        """A resource definition diff that acts like a cfn template snippet.
+
+        This class exists only for backwards compatibility with existing
+        resource plugins and unit tests; it is deprecated and could be removed
+        as soon as the Ocata release. Prefer using the API directly rather than
+        treating the diff as a dict containing the differences between two cfn
+        template snippets.
+        """
+
+        _deprecation_msg = (
+            'Reading the ResourceDefinition Diff as if it were a diff of two '
+            'snippets from CloudFormation templates is deprecated, and the '
+            'ability to treat it as such will be removed in the future. '
+            'Resource plugins should use the ResourceDefinition.Diff API and '
+            'the ResourceDefinition API to detect changes in the definition '
+            'and work with the new definition of the resource.')
+
+        def __contains__(self, key):
+            warnings.warn(self._deprecation_msg, DeprecationWarning)
+
+            if key == PROPERTIES:
+                return self.properties_changed()
+            elif key == METADATA:
+                return self.metadata_changed()
+            elif key == UPDATE_POLICY:
+                return self.update_policy_changed()
+            else:
+                return False
+
+        def __iter__(self):
+            return (k for k in _KEYS if k in self)
+
+        def __getitem__(self, key):
+            if key not in self:
+                raise KeyError
+            return self.new_defn.get(key)
+
+        def __len__(self):
+            return len(list(iter(self)))
+
+        def __repr__(self):
+            """Return a string representation of the diff."""
+            return 'ResourceDefinition.Diff %s' % repr(dict(self))
 
     def __eq__(self, other):
         """Compare this resource definition for equality with another.

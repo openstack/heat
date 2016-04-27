@@ -331,7 +331,6 @@ class LoadbalancerReloadTest(common.HeatTestCase):
                                                     u'LoadBalancerPort': u'80',
                                                     u'Protocol': u'HTTP'}],
                                     u'AvailabilityZones': ['abc', 'xyz']},
-                    u'DeletionPolicy': 'Delete',
                     u'Metadata': {}}
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
