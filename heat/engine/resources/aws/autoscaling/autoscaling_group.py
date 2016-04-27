@@ -259,7 +259,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         """
         if tmpl_diff:
             # parse update policy
-            if 'UpdatePolicy' in tmpl_diff:
+            if tmpl_diff.update_policy_changed():
                 up = json_snippet.update_policy(self.update_policy_schema,
                                                 self.context)
                 self.update_policy = up
