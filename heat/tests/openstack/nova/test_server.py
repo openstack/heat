@@ -35,6 +35,7 @@ from heat.engine.clients.os import zaqar
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
+from heat.engine.resources.openstack.nova import server_network_mixin
 from heat.engine.resources import scheduler_hints as sh
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -4395,7 +4396,9 @@ class ServerInternalPortTest(common.HeatTestCase):
             mock.call('test_server', 3344),
             mock.call('test_server', 5566)])
 
-    def test_restore_ports_after_rollback(self):
+    @mock.patch.object(server_network_mixin.ServerNetworkMixin,
+                       'store_external_ports')
+    def test_restore_ports_after_rollback(self, store_ports):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
             'test', tmpl_server_with_network_id)
         server.resource_id = 'existing_server'
@@ -4403,6 +4406,8 @@ class ServerInternalPortTest(common.HeatTestCase):
         external_port_ids = [{'id': 5566}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
+        self.patchobject(nova.NovaClientPlugin, '_check_active')
+        nova.NovaClientPlugin._check_active.side_effect = [False, True]
 
         # add data to old server in backup stack
         old_server = mock.Mock()
@@ -4420,6 +4425,8 @@ class ServerInternalPortTest(common.HeatTestCase):
 
         server.restore_prev_rsrc()
 
+        self.assertEqual(2, nova.NovaClientPlugin._check_active.call_count)
+
         # check, that ports were detached from new server
         nova.NovaClientPlugin.interface_detach.assert_has_calls([
             mock.call('existing_server', 1122),
@@ -4432,12 +4439,16 @@ class ServerInternalPortTest(common.HeatTestCase):
             mock.call('old_server', 3344),
             mock.call('old_server', 5566)])
 
-    def test_restore_ports_after_rollback_attach_failed(self):
+    @mock.patch.object(server_network_mixin.ServerNetworkMixin,
+                       'store_external_ports')
+    def test_restore_ports_after_rollback_attach_failed(self, store_ports):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
             'test', tmpl_server_with_network_id)
         server.resource_id = 'existing_server'
         port_ids = [{'id': 1122}, {'id': 3344}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids)}
+        self.patchobject(nova.NovaClientPlugin, '_check_active')
+        nova.NovaClientPlugin._check_active.return_value = True
 
         # add data to old server in backup stack
         old_server = mock.Mock()
@@ -4465,10 +4476,14 @@ class ServerInternalPortTest(common.HeatTestCase):
                       '(old_server)',
                       six.text_type(exc))
 
-    def test_restore_ports_after_rollback_convergence(self):
+    @mock.patch.object(server_network_mixin.ServerNetworkMixin,
+                       'store_external_ports')
+    def test_restore_ports_after_rollback_convergence(self, store_ports):
         t = template_format.parse(tmpl_server_with_network_id)
         stack = utils.parse_stack(t)
         stack.store()
+        self.patchobject(nova.NovaClientPlugin, '_check_active')
+        nova.NovaClientPlugin._check_active.return_value = True
 
         # mock resource from previous template
         prev_rsrc = stack['server']
