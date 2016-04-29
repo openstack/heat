@@ -411,6 +411,25 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         self._wait_for_stack_status(**kwargs)
 
+    def cancel_update_stack(self, stack_identifier,
+                            expected_status='ROLLBACK_COMPLETE'):
+
+        stack_name = stack_identifier.split('/')[0]
+
+        self.updated_time[stack_identifier] = self.client.stacks.get(
+            stack_identifier, resolve_outputs=False).updated_time
+
+        self.client.actions.cancel_update(stack_name)
+
+        kwargs = {'stack_identifier': stack_identifier,
+                  'status': expected_status}
+        if expected_status in ['ROLLBACK_COMPLETE']:
+            # To trigger rollback you would intentionally fail the stack
+            # Hence check for rollback failures
+            kwargs['failure_pattern'] = '^ROLLBACK_FAILED$'
+
+        self._wait_for_stack_status(**kwargs)
+
     def preview_update_stack(self, stack_identifier, template,
                              environment=None, files=None, parameters=None,
                              tags=None, disable_rollback=True,
