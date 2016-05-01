@@ -4,18 +4,16 @@
 #
 # Translators:
 # Xiao Xi LIU <liuxx@cn.ibm.com>, 2014
-# Lucas Palm <lapalm@us.ibm.com>, 2015. #zanata
-# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
 # Linda <duleish@cn.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev2\n"
+"Project-Id-Version: heat 6.0.1.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-22 10:42+0000\n"
+"POT-Creation-Date: 2016-04-25 17:19+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-23 04:10+0000\n"
+"PO-Revision-Date: 2016-04-28 08:37+0000\n"
 "Last-Translator: Linda <duleish@cn.ibm.com>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -25,7 +23,7 @@ msgstr ""
 
 #, python-format
 msgid "\"%%s\" is not a valid keyword inside a %s definition"
-msgstr "在 %s 定义内，“%%s”不是有效关键字"
+msgstr "在 %s 定义内，“%%s”是无效关键字"
 
 #, python-format
 msgid "\"%(fn_name)s\": %(err)s"
@@ -120,7 +118,7 @@ msgstr "在资源定义内，“%s”不是有效的关键字"
 
 #, python-format
 msgid "\"%s\" is not a valid template section"
-msgstr "“%s”不是有效的模板部分"
+msgstr "“%s”是无效模板部分"
 
 #, python-format
 msgid "\"%s\" must operate on a list"
@@ -136,7 +134,7 @@ msgstr "“%s”参数必须是映射"
 
 #, python-format
 msgid "\"%s\" params must be a map"
-msgstr "参数\"%s\"必须为map类型"
+msgstr "“%s”参数必须是映射"
 
 #, python-format
 msgid "\"%s\" params must be strings or numbers"
@@ -196,7 +194,7 @@ msgstr "找不到 %(lc)s (%(ref)s) 引用。"
 msgid ""
 "%(lc)s (%(ref)s) requires a reference to the configuration not just the name "
 "of the resource."
-msgstr "%(lc)s (%(ref)s) 需要对配置的引用，而不是仅需要资源的名称。"
+msgstr "%(lc)s (%(ref)s) 需要对配置的引用，而不仅仅是资源的名称。"
 
 #, python-format
 msgid "%(len)d of %(count)d received"
@@ -315,7 +313,7 @@ msgstr "字符类及要据其生成随机字符串的对应 %(min)s约束。"
 msgid ""
 "A character sequence and its corresponding %(min)s constraint to generate "
 "the random string from."
-msgstr "字符序列及要据其生成随机字符串的对应 %(min)s约束。"
+msgstr "字符序列及要据其生成随机字符串的对应 %(min)s 约束。"
 
 msgid ""
 "A comma separated list of addresses for which proxies should not be used in "
@@ -326,7 +324,7 @@ msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr "服务器 IP 地址的逗号定界列表。（Heat 扩展）。"
 
 msgid "A description of the volume."
-msgstr "云硬盘的描述信息。"
+msgstr "卷的描述信息。"
 
 msgid ""
 "A device name where the volume will be attached in the system at /dev/"
@@ -373,13 +371,13 @@ msgstr "当状态过渡至警报时要调用的 URL (webhook) 的列表。"
 msgid ""
 "A list of URLs (webhooks) to invoke when state transitions to insufficient-"
 "data."
-msgstr "当状态过渡至数据不足时要调用的 URL (webhook) 的的列表。"
+msgstr "当状态过渡至数据不足时要调用的 URL (webhook) 的列表。"
 
 msgid "A list of URLs (webhooks) to invoke when state transitions to ok."
 msgstr "当状态过渡至正常时要调用的 URL (webhook) 的列表。"
 
 msgid "A list of access rules that define access from IP to Share."
-msgstr "用于定义通过 IP 访问共享的访问规则的列表。"
+msgstr "用于定义通过 IP 访问共享项的访问规则的列表。"
 
 msgid "A list of actions to execute when state transitions to alarm."
 msgstr "当状态过渡至警报时要执行的操作的列表。"
@@ -464,7 +462,7 @@ msgid "A map containing all headers for the container."
 msgstr "包含容器的所有头的映射。"
 
 msgid "A map of Nova names and IDs to apply configuration to."
-msgstr "要将配置应用于的 Nova 名称和标识的映射。"
+msgstr "要应用配置的 Nova 名称和标识的映射。"
 
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution to "
@@ -538,7 +536,7 @@ msgstr "范围限制必须指定最小值和/或最大值。"
 
 msgid ""
 "A reference to the wait condition handle used to signal this wait condition."
-msgstr "对用于为此等待条件发出信号的等待条件句柄的引用。"
+msgstr "对用于通告此等待条件的等待条件句柄的引用。"
 
 msgid ""
 "A signed url to create executions for workflows specified in Workflow "
@@ -701,8 +699,8 @@ msgid ""
 "Allowed keystone endpoints for auth_uri when multi_cloud is enabled. At "
 "least one endpoint needs to be specified."
 msgstr ""
-"在启用 multi_cloud 的情况下，允许对 auth_uri 使用 Keystone 端点。至少需要指定"
-"一个端点。"
+"在启用 multi_cloud 的情况下，允许对 auth_uri 使用的 Keystone 端点。至少需要指"
+"定一个端点。"
 
 msgid ""
 "Allowed tenancy of instances launched in the VPC. default - any tenancy; "
@@ -1240,7 +1238,7 @@ msgid "Cron expression."
 msgstr "cron 表达式。"
 
 msgid "Current share status."
-msgstr "当前共享状态。"
+msgstr "当前共享项状态。"
 
 msgid "Custom LoadBalancer template can not be found"
 msgstr "找不到定制负载均衡器模板"
@@ -1298,7 +1296,7 @@ msgstr ""
 "%(allowed)s。"
 
 msgid "Datetime when a share was created."
-msgstr "创建共享的日期时间。"
+msgstr "创建共享项的日期时间。"
 
 msgid ""
 "Dead Peer Detection protocol configuration for the ipsec site connection."
@@ -1388,7 +1386,7 @@ msgstr "正在删除进行中的快照"
 
 #, python-format
 msgid "Deleting non-empty container (%(id)s) when %(prop)s is False"
-msgstr "当 %(prop)s 为 False 时，正在删除非空容器 (%(id)s)"
+msgstr "%(prop)s 为 False 时删除非空容器 (%(id)s)"
 
 #, python-format
 msgid "Delimiter for %s must be string"
@@ -1407,7 +1405,7 @@ msgstr "已退出部署，返回了非零状态码：%s"
 
 #, python-format
 msgid "Deployment to server failed: %s"
-msgstr "部署至云主机失败：%s"
+msgstr "部署至服务器失败：%s"
 
 #, python-format
 msgid "Deployment with id %s not found"
@@ -1756,13 +1754,13 @@ msgstr "为用户 %s 创建 EC2 密钥对时出错"
 msgid ""
 "Error during applying access rules to share \"{0}\". The root cause of the "
 "problem is the following: {1}."
-msgstr "对共享“{0}”应用访问规则时出错。问题的根本原因如下：{1}。"
+msgstr "对共享项“{0}”应用访问规则时出错。问题的根本原因如下：{1}。"
 
 msgid "Error during creation of share \"{0}\""
-msgstr "创建共享“{0}”时出错"
+msgstr "创建共享项“{0}”时出错"
 
 msgid "Error during deleting share \"{0}\"."
-msgstr "删除共享“{0}”时出错"
+msgstr "删除共享项“{0}”时出错"
 
 #, python-format
 msgid "Error parsing template: %s"
@@ -1794,7 +1792,7 @@ msgid "Expected 1 external network, found %d"
 msgstr "需要 1 个外部网络，找到 %d 个"
 
 msgid "Export locations of share."
-msgstr "导出共享位置。"
+msgstr "导出共享项位置。"
 
 msgid "Expression of the alarm to evaluate."
 msgstr "要求值的警报表达式。"
@@ -1827,7 +1825,7 @@ msgid ""
 msgstr "要包含在请求中的额外参数。参数通常特定于所安装硬件或扩展。"
 
 msgid "Extra specs key-value pairs defined for share type."
-msgstr "对共享类型额外指定的键值对。"
+msgstr "对共享类型定义的额外规范键值对。"
 
 #, python-format
 msgid "Failed to attach interface (%(port)s) to server (%(server)s)"
@@ -1874,7 +1872,7 @@ msgid "Failed to restore volume %(vol)s from backup %(backup)s - %(err)s"
 msgstr "无法从备份 %(backup)s 复原卷 %(vol)s - %(err)s"
 
 msgid "Failed to retrieve template"
-msgstr "获取模板失败"
+msgstr "检索模板失败"
 
 #, python-format
 msgid "Failed to retrieve template data: %s"
@@ -1945,8 +1943,8 @@ msgid ""
 "has changed. By default, actions are called each time the threshold is "
 "reached."
 msgstr ""
-"False 以触发操作（当达到阈值并且警报的状态更改时）。缺省情况下，每次达到阈值"
-"时都会调用操作。"
+"为 False 时将触发操作（当达到阈值并且警报的状态更改时）。缺省情况下，每次达到"
+"阈值时都会调用操作。"
 
 #, python-format
 msgid "Field %(field)s of %(objname)s is not an instance of Field"
@@ -2002,7 +2000,7 @@ msgstr "函数“%s”用法：[\"<algorithm>\", \"<value>\"]"
 
 msgid ""
 "Gap, in seconds, to determine whether the given token is about to expire."
-msgstr "用于确定给定令牌到期的时间间隔（以秒计）。"
+msgstr "用于确定给定令牌是否即将到期的时间间隔（以秒计）。"
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -2068,7 +2066,7 @@ msgid ""
 msgstr ""
 "客户机如何通告等待条件。CFN_SIGNAL 指示将允许向 CFN 密钥对签署的 URL 执行 "
 "HTTP POST。TEMP_URL_SIGNAL 指示将创建通过 HTTP PUT 通告的 Swift TempURL。"
-"HEAT_SIGNAL 指示将允许使用所提供的 keystone 证书调用 Heat API resource-"
+"HEAT_SIGNAL 指示将允许调用使用所提供的 keystone 证书的 Heat API resource-"
 "signal。ZAQAR_SIGNAL 指示将创建使用所提供的 keystone 证书通告的专用 zaqar 队"
 "列。TOKEN_SIGNAL 将允许对带有所提供 keystone 令牌的 Heat API 端点执行 HTTP "
 "POST。NO_SIGNAL 将导致资源进入 COMPLETE 状态而不等待任何信号。"
@@ -2145,7 +2143,7 @@ msgid "ID of network to create a port on."
 msgstr "要在其上创建端口的网络的标识。"
 
 msgid "ID of project for API authentication"
-msgstr "API认证的项目ID"
+msgstr "API 认证的项目的标识"
 
 msgid "ID of queue to use for signaling output values"
 msgstr "用于通告输出值的队列的标识"
@@ -2225,7 +2223,7 @@ msgid "ID of the server being deployed to"
 msgstr "要部署至的服务器的标识"
 
 msgid "ID of the stack this deployment belongs to"
-msgstr "此部署所属的栈ID"
+msgstr "此部署所属的堆栈的标识"
 
 msgid "ID of the tenant to which the RBAC policy will be enforced."
 msgstr "将对其实施 RBAC 策略的租户的标识。"
@@ -2294,7 +2292,7 @@ msgstr "要使用的 IP 地址（如果端口具有多个地址）。"
 
 msgid ""
 "IP or other address information about guest that allowed to access to Share."
-msgstr "有关允许访问共享的访客的 IP 或其他地址信息。"
+msgstr "有关允许访问共享项的访客的 IP 或其他地址信息。"
 
 msgid "IPv6 RA (Router Advertisement) mode."
 msgstr "IPv6 RA（路由器广告）方式。"
@@ -2361,16 +2359,16 @@ msgid "If set, then the server's certificate will not be verified."
 msgstr "如果已设置，那么将不验证服务器的证书。"
 
 msgid "If specified, the backup to create the volume from."
-msgstr "如果已指定，那么表示要从其创建卷的备份。"
+msgstr "如果已指定，那么表示要通过其创建卷的备份。"
 
 msgid "If specified, the backup used as the source to create the volume."
 msgstr "如果已指定，那么表示用作创建卷的源的备份。"
 
 msgid "If specified, the name or ID of the image to create the volume from."
-msgstr "如果已指定，那么表示要从其创建卷的映像的名称或标识。"
+msgstr "如果已指定，那么表示要通过其创建卷的映像的名称或标识。"
 
 msgid "If specified, the snapshot to create the volume from."
-msgstr "如果已指定，那么表示要从其创建卷的快照。"
+msgstr "如果已指定，那么表示要通过其创建卷的快照。"
 
 msgid "If specified, the type of volume to use, mapping to a specific backend."
 msgstr "如果已指定，那么表示要使用的卷（映射至特定后端）的类型。"
@@ -3005,7 +3003,7 @@ msgstr "要与此池相关联的侦听器名称或标识。"
 msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
-msgstr "要在每个集群节点上安装该共享的本地路径。缺省为 '/mnt/{share_id}'。"
+msgstr "要在每个集群节点上安装该共享项的本地路径。缺省为 '/mnt/{share_id}'。"
 
 msgid "Location of the SSL certificate file to use for SSL mode."
 msgstr "要用于 SSL 方式的 SSL 证书文件的位置。"
@@ -3097,7 +3095,7 @@ msgid ""
 msgstr "在连接超时之前供监视器等待该连接建立的最长时间，以秒计。"
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
-msgstr "一个租户可同时持有的最大活动堆栈数。"
+msgstr "任一租户可同时持有的最大活动堆栈数。"
 
 msgid "Maximum prefix size that can be allocated from the subnet pool."
 msgstr "可从子网池分配的最大前缀大小。"
@@ -3124,7 +3122,7 @@ msgid "Member list items must be strings"
 msgstr "成员列表项必须是字符串"
 
 msgid "Member list must be a list"
-msgstr "成员列表必须为一个列表"
+msgstr "成员列表必须是列表"
 
 msgid "Members associated with this pool."
 msgstr "与此池相关联的成员。"
@@ -3149,7 +3147,7 @@ msgid "Metadata key-values defined for profile."
 msgstr "对概要文件定义的元数据键/值。"
 
 msgid "Metadata key-values defined for share."
-msgstr "为共享定义的元数据链值。"
+msgstr "为共享项定义的元数据链值。"
 
 msgid "Meter name watched by the alarm."
 msgstr "警报监视的计量表名称。"
@@ -3503,8 +3501,8 @@ msgid ""
 "Name or ID of shared filesystem type. Types defines some share filesystem "
 "profiles that will be used for share creation."
 msgstr ""
-"共享文件系统类型的名称或标识。类型定义将用于创建共享的一些共享文件系统概要文"
-"件。"
+"共享文件系统类型的名称或标识。类型定义将用于创建共享项的一些共享文件系统概要"
+"文件。"
 
 msgid "Name or ID of shared network defined for shared filesystem."
 msgstr "对共享文件系统定义的共享网络的名称或标识。"
@@ -3630,7 +3628,7 @@ msgstr "未表示任何约束"
 #, python-format
 msgid ""
 "No content found in the \"files\" section for %(fn_name)s path: %(file_key)s"
-msgstr "对于 %(fn_name)s 路径，在“文件”部分中找不到任何内容：%(file_key)s"
+msgstr "对于 %(fn_name)s 路径，在“files”部分中找不到任何内容：%(file_key)s"
 
 #, python-format
 msgid "No event %s found"
@@ -3928,7 +3926,7 @@ msgid "Parts belonging to this message."
 msgstr "属于此消息的部件。"
 
 msgid "Password for API authentication"
-msgstr "API认证的密码"
+msgstr "API 认证的密码"
 
 msgid "Password for accessing the data source URL."
 msgstr "要访问数据源 URL 的密码。"
@@ -3948,6 +3946,11 @@ msgstr "用户使用的密码。"
 #, python-format
 msgid "Path components in \"%s\" must be strings"
 msgstr "“%s”中的路径部分必须是字符串"
+
+#, python-format
+msgid ""
+"Path components in '%s' must be a string that can be parsed into an integer."
+msgstr "“%s”中的路径部分必须是可解析为整数的字符串。"
 
 msgid "Path components in attributes must be strings"
 msgstr "属性中的路径部分必须为字符串"
@@ -4062,7 +4065,7 @@ msgid "Private IP address of the specified instance."
 msgstr "所指定实例的专用 IP 地址。"
 
 msgid "Project ID"
-msgstr "项目ID"
+msgstr "项目标识"
 
 msgid ""
 "Projects to add volume type access to. NOTE: This property is only supported "
@@ -4538,13 +4541,13 @@ msgid "Severity of the alarm."
 msgstr "警报的严重性。"
 
 msgid "Share description."
-msgstr "共享描述。"
+msgstr "共享项描述。"
 
 msgid "Share host."
 msgstr "共享主机。"
 
 msgid "Share name."
-msgstr "共享名称。"
+msgstr "共享项名称。"
 
 msgid "Share network description."
 msgstr "共享网络描述。"
@@ -4621,7 +4624,7 @@ msgstr "找不到标识为 %s 的快照"
 
 msgid ""
 "SnapshotId is missing, this is required when specifying BlockDeviceMappings."
-msgstr "缺少 SnapshotId，指定BlockDeviceMappings 时需要此项。"
+msgstr "缺少 SnapshotId，指定 BlockDeviceMappings 时需要此项。"
 
 #, python-format
 msgid "Software config with id %s not found"
@@ -4883,7 +4886,7 @@ msgid ""
 "will create a dedicated zaqar queue to be signaled using the provided "
 "keystone credentials."
 msgstr ""
-"模板缺省值，用于指示服务器如何向 heat 通告部署缺省值。CFN_SIGNAL 指示将允许"
+"模板缺省值，用于指示服务器如何向 heat 通告部署输出值。CFN_SIGNAL 指示将允许"
 "对 CFN 密钥对签署的 URL 执行 HTTP POST（需要已启用 heat-api-cfn）。"
 "TEMP_URL_SIGNAL 指示将创建通过 HTTP PUT 通告的 Swift TempURL（需要支持 "
 "TempURL 的 object-store 端点）。HEAT_SIGNAL 指示将允许调用使用所提供 TempURL "
@@ -5058,7 +5061,7 @@ msgid "The ID of the image to create a volume from."
 msgstr "要从其创建卷的映像的标识。"
 
 msgid "The ID of the image to create the volume from."
-msgstr "要从其创建卷的映像的标识。"
+msgstr "要通过其创建卷的映像的标识。"
 
 msgid "The ID of the instance to which the volume attaches."
 msgstr "卷连接至的实例的标识。"
@@ -5073,7 +5076,7 @@ msgid "The ID of the server to which the volume attaches."
 msgstr "卷连接至的服务器的标识。"
 
 msgid "The ID of the snapshot to create a volume from."
-msgstr "要从其创建卷的快照的标识。"
+msgstr "要通过其创建卷的快照的标识。"
 
 msgid ""
 "The ID of the tenant which will own the network. Only administrative users "
@@ -5357,8 +5360,8 @@ msgid ""
 "This string property has to be understood by in-instance tools running "
 "inside deployed servers."
 msgstr ""
-"用于在服务器上实际地应用配置的配置工具。此字符串属性必须能够由已部署的服务器"
-"内运行的“实例中”工具所理解。"
+"用于在服务器上实际应用配置的配置工具。此字符串属性必须能够由已部署的服务器内"
+"运行的“实例中”工具所理解。"
 
 msgid "The content of the CSR. Only for certificate orders."
 msgstr "CSR 的内容。仅适用于证书指令。"
@@ -5394,7 +5397,7 @@ msgid ""
 msgstr "IPSec 站点连接的已终止同级检测协议配置。"
 
 msgid "The decrypted secret payload."
-msgstr "已解密的密钥有效类型。"
+msgstr "已解密密钥的有效内容。"
 
 msgid ""
 "The default cloud-init user set up for each image (e.g. \"ubuntu\" for "
@@ -5638,7 +5641,7 @@ msgid ""
 msgstr "此负载均衡器许可的最大连接数。缺省为 -1，表示无限制。"
 
 msgid "The maximum number of resources to create at once."
-msgstr "要立即创建的最大资源数。"
+msgstr "要一次性创建的最大资源数。"
 
 msgid "The maximum number of resources to replace at once."
 msgstr "一次要替换的最大资源数。"
@@ -5812,7 +5815,7 @@ msgstr "容器中存储的字节数。"
 msgid ""
 "The number of consecutive health probe failures required before moving the "
 "instance to the unhealthy state"
-msgstr "将实例移至不正常状态之前需要的连续运行状况探测器失败次数"
+msgstr "将实例转为不正常状态之前需要的连续运行状况探测器失败次数"
 
 msgid ""
 "The number of consecutive health probe successes required before moving the "
@@ -6043,7 +6046,7 @@ msgid "The size of the swap, in MB."
 msgstr "交换的大小，以 MB 计。"
 
 msgid "The size of the volume in GB."
-msgstr "以GB为单位的卷大小。"
+msgstr "以 GB 为单位的卷大小。"
 
 msgid ""
 "The size of the volume in GB. On update only increase in size is supported."
@@ -6063,7 +6066,7 @@ msgstr ""
 "计算服务推断大小。"
 
 msgid "The snapshot the volume was created from, if any."
-msgstr "已从其创建卷的快照（如果有）。"
+msgstr "已通过其创建卷的快照（如果有）。"
 
 msgid "The source of certificate request."
 msgstr "证书请求的源。"
@@ -6121,7 +6124,7 @@ msgid "The tag key name."
 msgstr "标记键名。"
 
 msgid "The tag value."
-msgstr "标注值。"
+msgstr "标记值。"
 
 msgid "The template is not a JSON object or YAML mapping."
 msgstr "该模板不是 JSON 对象或 YAML 映射。"
@@ -6431,7 +6434,7 @@ msgid "Type of the volume to create on Cinder backend."
 msgstr "要在 Cinder 后端上创建的卷类型。"
 
 msgid "URL for API authentication"
-msgstr "API认证的URL"
+msgstr "API 认证的 URL"
 
 msgid "URL for the data source."
 msgstr "数据源的 URL。"
@@ -6596,14 +6599,14 @@ msgid "Unknown key(s) %s"
 msgstr "键 %s 未知"
 
 msgid "Unknown share_status during creation of share \"{0}\""
-msgstr "创建共享“{0}”期间出现未知 share_status"
+msgstr "创建共享项“{0}”期间出现未知 share_status"
 
 #, python-format
 msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
 msgstr "创建支架“%(name)s” 时出现未知状态 - %(reason)s"
 
 msgid "Unknown status during deleting share \"{0}\""
-msgstr "删除共享“{0}”期间出现未知状态"
+msgstr "删除共享项“{0}”期间出现未知状态"
 
 #, python-format
 msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
@@ -6668,7 +6671,7 @@ msgid ""
 "1."
 msgstr ""
 "仅与 Neutron 配合使用，以列示实例将连接至的内部子网；仅当多项存在时才需要；列"
-"表长必须正好为1。"
+"表长度必须正好为1。"
 
 #, python-format
 msgid "Use property %s"
@@ -6705,7 +6708,7 @@ msgid "User %s in invalid project"
 msgstr "用户 %s 处于无效项目中"
 
 msgid "User ID for API authentication"
-msgstr "API认证的用户ID"
+msgstr "API 认证的用户标识"
 
 msgid "User data script to be executed by cloud-init."
 msgstr "要由 cloud-init 执行的用户数据脚本。"
@@ -6723,7 +6726,7 @@ msgid "Username associated with the AccessKey."
 msgstr "与访问码关联的用户名。"
 
 msgid "Username for API authentication"
-msgstr "API认证的用户名"
+msgstr "API 认证的用户名"
 
 msgid "Username for accessing the data source URL."
 msgstr "要访问数据源 URL 的用户名。"
@@ -6816,7 +6819,7 @@ msgid "Version for the ike policy."
 msgstr "ike 策略的版本。"
 
 msgid "Version of Hadoop running on instances."
-msgstr "实例上运行的 Hadoop 的版本。"
+msgstr "对实例运行的 Hadoop 的版本。"
 
 msgid "Version of IP address."
 msgstr "IP 地址的版本。"
@@ -6834,16 +6837,16 @@ msgid "Volume backup restore failed"
 msgstr "卷备份复原失败"
 
 msgid "Volume create failed"
-msgstr "创建云硬盘失败"
+msgstr "创建卷失败"
 
 msgid "Volume detachment failed"
-msgstr "与卷断开连接失败"
+msgstr "卷拆离失败"
 
 msgid "Volume in use"
 msgstr "正在使用卷"
 
 msgid "Volume resize failed"
-msgstr "调整云硬盘大小失败"
+msgstr "调整卷大小失败"
 
 msgid "Volumes per node."
 msgstr "每个节点的卷数。"
@@ -7060,7 +7063,7 @@ msgstr "应对“解析”规则指定 client_plugin 和查找器"
 
 #, python-format
 msgid "could not find user %s"
-msgstr "无法找到用户%s"
+msgstr "无法找到用户 %s"
 
 msgid "deployment_id must be specified"
 msgstr "必须指定 deployment_id"

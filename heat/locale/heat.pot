@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev1\n"
+"Project-Id-Version: heat 6.0.1.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-22 06:38+0000\n"
+"POT-Creation-Date: 2016-05-01 07:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2017,19 +2017,19 @@ msgstr ""
 #: heat/engine/cfn/functions.py:306 heat/engine/cfn/functions.py:312
 #: heat/engine/cfn/functions.py:360 heat/engine/cfn/functions.py:366
 #: heat/engine/cfn/functions.py:418 heat/engine/cfn/functions.py:424
-#: heat/engine/hot/functions.py:380 heat/engine/hot/functions.py:389
-#: heat/engine/hot/functions.py:453 heat/engine/hot/functions.py:658
-#: heat/engine/hot/functions.py:668
+#: heat/engine/hot/functions.py:389 heat/engine/hot/functions.py:398
+#: heat/engine/hot/functions.py:462 heat/engine/hot/functions.py:667
+#: heat/engine/hot/functions.py:677
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:321 heat/engine/hot/functions.py:400
+#: heat/engine/cfn/functions.py:321 heat/engine/hot/functions.py:409
 #, python-format
 msgid "\"%s\" must operate on a list"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:325 heat/engine/hot/functions.py:407
+#: heat/engine/cfn/functions.py:325 heat/engine/hot/functions.py:416
 #, python-format
 msgid "\"%s\" delimiter must be a string"
 msgstr ""
@@ -2054,17 +2054,17 @@ msgstr ""
 msgid "\"%s\" parameters must be a mapping"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:434 heat/engine/hot/functions.py:278
+#: heat/engine/cfn/functions.py:434 heat/engine/hot/functions.py:287
 #, python-format
 msgid "\"%s\" template must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:437 heat/engine/hot/functions.py:281
+#: heat/engine/cfn/functions.py:437 heat/engine/hot/functions.py:290
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:443 heat/engine/hot/functions.py:287
+#: heat/engine/cfn/functions.py:443 heat/engine/hot/functions.py:296
 #, python-format
 msgid "\"%s\" param placeholders must be strings"
 msgstr ""
@@ -2273,119 +2273,126 @@ msgstr ""
 msgid "Path components in \"%s\" must be strings"
 msgstr ""
 
-#: heat/engine/hot/functions.py:107 heat/engine/hot/functions.py:194
+#: heat/engine/hot/functions.py:88
+#, python-format
+msgid ""
+"Path components in '%s' must be a string that can be parsed into an "
+"integer."
+msgstr ""
+
+#: heat/engine/hot/functions.py:116 heat/engine/hot/functions.py:203
 #, python-format
 msgid "Argument to \"%s\" must be a list"
 msgstr ""
 
-#: heat/engine/hot/functions.py:111
+#: heat/engine/hot/functions.py:120
 #, python-format
 msgid ""
 "Arguments to \"%s\" must be of the form [resource_name, attribute, "
 "(path), ...]"
 msgstr ""
 
-#: heat/engine/hot/functions.py:184
+#: heat/engine/hot/functions.py:193
 #, python-format
 msgid ""
 "Arguments to \"%s\" can be of the next forms: [resource_name] or "
 "[resource_name, attribute, (path), ...]"
 msgstr ""
 
-#: heat/engine/hot/functions.py:247 heat/engine/hot/functions.py:526
+#: heat/engine/hot/functions.py:256 heat/engine/hot/functions.py:535
 #, python-format
 msgid "Arguments to \"%s\" must be a map"
 msgstr ""
 
-#: heat/engine/hot/functions.py:259
+#: heat/engine/hot/functions.py:268
 #, python-format
 msgid "\"str_replace\" syntax should be %s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:301
+#: heat/engine/hot/functions.py:310
 #, python-format
 msgid ""
 "\"%(name)s\" params must be strings, numbers, list or map. Failed to json"
 " serialize %(value)s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:307
+#: heat/engine/hot/functions.py:316
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
 msgstr ""
 
-#: heat/engine/hot/functions.py:334
+#: heat/engine/hot/functions.py:343
 #, python-format
 msgid "Argument to \"%s\" must be a string"
 msgstr ""
 
-#: heat/engine/hot/functions.py:341
+#: heat/engine/hot/functions.py:350
 #, python-format
 msgid ""
 "No content found in the \"files\" section for %(fn_name)s path: "
 "%(file_key)s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:411
+#: heat/engine/hot/functions.py:420
 #, python-format
 msgid "Items to join must be string, map or list not %s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:421
+#: heat/engine/hot/functions.py:430
 #, python-format
 msgid "Items to join must be string, map or list. %s failed json serialization"
 msgstr ""
 
-#: heat/engine/hot/functions.py:445
+#: heat/engine/hot/functions.py:454
 #, python-format
 msgid "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 msgstr ""
 
-#: heat/engine/hot/functions.py:462
+#: heat/engine/hot/functions.py:471
 msgid "Incorrect arguments: Items to merge must be maps."
 msgstr ""
 
-#: heat/engine/hot/functions.py:499
+#: heat/engine/hot/functions.py:508
 #, python-format
 msgid "The function %s is not supported in this version of HOT."
 msgstr ""
 
-#: heat/engine/hot/functions.py:539
+#: heat/engine/hot/functions.py:548
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:546
+#: heat/engine/hot/functions.py:555
 #, python-format
 msgid "The \"for_each\" argument to \"%s\" must contain a map"
 msgstr ""
 
-#: heat/engine/hot/functions.py:550 heat/engine/hot/functions.py:575
+#: heat/engine/hot/functions.py:559 heat/engine/hot/functions.py:584
 #, python-format
 msgid "The values of the \"for_each\" argument to \"%s\" must be lists"
 msgstr ""
 
-#: heat/engine/hot/functions.py:601
+#: heat/engine/hot/functions.py:610
 #, python-format
 msgid "Argument to function \"%s\" must be a list of strings"
 msgstr ""
 
-#: heat/engine/hot/functions.py:605
+#: heat/engine/hot/functions.py:614
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr ""
 
-#: heat/engine/hot/functions.py:614
+#: heat/engine/hot/functions.py:623
 #, python-format
 msgid "Algorithm must be one of %s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:677
+#: heat/engine/hot/functions.py:686
 #, python-format
 msgid "Incorrect index to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
 
-#: heat/engine/hot/functions.py:683
+#: heat/engine/hot/functions.py:692
 #, python-format
 msgid "Incorrect index to \"%(fn_name)s\" should be between 0 and %(max_index)s"
 msgstr ""

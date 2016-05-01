@@ -6,13 +6,13 @@
 # Jennifer <cristxu@tw.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev2\n"
+"Project-Id-Version: heat 6.0.1.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-22 10:42+0000\n"
+"POT-Creation-Date: 2016-04-25 17:19+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-18 09:02+0000\n"
+"PO-Revision-Date: 2016-04-29 09:55+0000\n"
 "Last-Translator: Jennifer <cristxu@tw.ibm.com>\n"
 "Language: zh-TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -3958,6 +3958,11 @@ msgstr "使用者所使用的密碼。"
 #, python-format
 msgid "Path components in \"%s\" must be strings"
 msgstr "\"%s\" 中的路徑元件必須是字串"
+
+#, python-format
+msgid ""
+"Path components in '%s' must be a string that can be parsed into an integer."
+msgstr "'%s' 中的路徑元件必須是可剖析為整數的字串。"
 
 msgid "Path components in attributes must be strings"
 msgstr "屬性中的路徑元件必須是字串"
