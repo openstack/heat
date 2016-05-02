@@ -80,6 +80,8 @@ class WorkerService(service.Service):
         super(WorkerService, self).start()
 
     def stop(self):
+        if self._rpc_server is None:
+            return
         # Stop rpc connection at first for preventing new requests
         LOG.info(_LI("Stopping %(topic)s in engine %(engine)s."),
                  {'topic': self.topic, 'engine': self.engine_id})
