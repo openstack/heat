@@ -141,6 +141,26 @@ outputs:
                                  self.check_autoscale_complete,
                                  asg.physical_resource_id, expected_resources)
 
+    def test_asg_cooldown(self):
+        cooldown_tmpl = self.template.replace('cooldown: 0',
+                                              'cooldown: 10')
+        stack_id = self.stack_create(template=cooldown_tmpl,
+                                     expected_status='CREATE_COMPLETE')
+        stack = self.client.stacks.get(stack_id)
+        asg_size = self._stack_output(stack, 'asg_size')
+        # Ensure that initial desired capacity is met
+        self.assertEqual(3, asg_size)
+
+        # send scale up signal.
+        # Since cooldown is in effect, number of resources should not change
+        asg = self.client.resources.get(stack_id, 'random_group')
+        expected_resources = 3
+        self.client.resources.signal(stack_id, 'scale_up_policy')
+        test.call_until_true(self.conf.build_timeout,
+                             self.conf.build_interval,
+                             self.check_autoscale_complete,
+                             asg.physical_resource_id, expected_resources)
+
     def test_path_attrs(self):
         stack_id = self.stack_create(template=self.template)
         expected_resources = {'random_group': 'OS::Heat::AutoScalingGroup',
