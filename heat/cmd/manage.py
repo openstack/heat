@@ -108,9 +108,11 @@ def do_crypt_parameters_and_properties():
     ctxt = context.get_admin_context()
     prev_encryption_key = CONF.command.previous_encryption_key
     if CONF.command.crypt_operation == "encrypt":
-        utils.encrypt_parameters_and_properties(ctxt, prev_encryption_key)
+        utils.encrypt_parameters_and_properties(
+            ctxt, prev_encryption_key, CONF.command.verbose_update_params)
     elif CONF.command.crypt_operation == "decrypt":
-        utils.decrypt_parameters_and_properties(ctxt, prev_encryption_key)
+        utils.decrypt_parameters_and_properties(
+            ctxt, prev_encryption_key, CONF.command.verbose_update_params)
 
 
 def add_command_parsers(subparsers):
@@ -151,6 +153,9 @@ def add_command_parsers(subparsers):
                         default=None,
                         help=_('Provide old encryption key. New encryption'
                                ' key would be used from config file.'))
+    parser.add_argument('--verbose-update-params', action='store_true',
+                        help=_('Print an INFO message when processing of each '
+                               'raw_template or resource begins or ends'))
 
     parser = subparsers.add_parser('resource_data_list')
     parser.set_defaults(func=do_resource_data_list)

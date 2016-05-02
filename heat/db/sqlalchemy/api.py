@@ -35,6 +35,7 @@ from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
+from heat.common.i18n import _LI
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
@@ -1224,7 +1225,8 @@ def db_version(engine):
     return migration.db_version(engine)
 
 
-def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
+def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
+                                         verbose=False):
     """Encrypt parameters and properties for all templates in db.
 
     :param ctxt: RPC context
@@ -1233,6 +1235,8 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
     :param batch_size: number of templates requested from db in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
+    :param verbose: log an INFO message when processing of each raw_template or
+                    resource begins or ends
     :return: list of exceptions encountered during encryption
     """
     from heat.engine import template
@@ -1244,6 +1248,9 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 session=session, ctxt=ctxt, query=query,
                 model=models.RawTemplate, batch_size=batch_size):
             try:
+                if verbose:
+                    LOG.info(_LI("Processing raw_template %(id)d..."),
+                             {'id': raw_template.id})
                 tmpl = template.Template.load(
                     ctxt, raw_template.id, raw_template)
                 param_schemata = tmpl.param_schemata()
@@ -1277,6 +1284,10 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                                   'template %(id)d'), {'id': raw_template.id})
                 excs.append(exc)
                 continue
+            finally:
+                if verbose:
+                    LOG.info(_LI("Finished processing raw_template "
+                                 "%(id)d."), {'id': raw_template.id})
 
         query = session.query(models.Resource).filter(
             ~models.Resource.properties_data.is_(None),
@@ -1285,6 +1296,9 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 session=session, ctxt=ctxt, query=query, model=models.Resource,
                 batch_size=batch_size):
             try:
+                if verbose:
+                    LOG.info(_LI("Processing resource %(id)d..."),
+                             {'id': resource.id})
                 result = {}
                 if not resource.properties_data:
                     continue
@@ -1304,10 +1318,16 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                                   'resource %(id)d'), {'id': resource.id})
                 excs.append(exc)
                 continue
+            finally:
+                if verbose:
+                    LOG.info(_LI("Finished processing resource "
+                                 "%(id)d."), {'id': resource.id})
+
         return excs
 
 
-def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
+def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
+                                         verbose=False):
     """Decrypt parameters and properties for all templates in db.
 
     :param ctxt: RPC context
@@ -1316,6 +1336,8 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
     :param batch_size: number of templates requested from db in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
+    :param verbose: log an INFO message when processing of each raw_template or
+                    resource begins or ends
     :return: list of exceptions encountered during decryption
     """
     session = get_session()
@@ -1326,6 +1348,9 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 session=session, ctxt=ctxt, query=query,
                 model=models.RawTemplate, batch_size=batch_size):
             try:
+                if verbose:
+                    LOG.info(_LI("Processing raw_template %(id)d..."),
+                             {'id': raw_template.id})
                 parameters = raw_template.environment['parameters']
                 encrypted_params = raw_template.environment[
                     'encrypted_param_names']
@@ -1344,6 +1369,10 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                                   'template %(id)d'), {'id': raw_template.id})
                 excs.append(exc)
                 continue
+            finally:
+                if verbose:
+                    LOG.info(_LI("Finished processing raw_template "
+                                 "%(id)d."), {'id': raw_template.id})
 
         query = session.query(models.Resource).filter(
             ~models.Resource.properties_data.is_(None),
@@ -1352,6 +1381,9 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                 session=session, ctxt=ctxt, query=query, model=models.Resource,
                 batch_size=batch_size):
             try:
+                if verbose:
+                    LOG.info(_LI("Processing resource %(id)d..."),
+                             {'id': resource.id})
                 result = {}
                 for prop_name, prop_value in resource.properties_data.items():
                     method, value = prop_value
@@ -1370,6 +1402,10 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50):
                                   'resource %(id)d'), {'id': resource.id})
                 excs.append(exc)
                 continue
+            finally:
+                if verbose:
+                    LOG.info(_LI("Finished processing resource "
+                                 "%(id)d."), {'id': resource.id})
         return excs
 
 
