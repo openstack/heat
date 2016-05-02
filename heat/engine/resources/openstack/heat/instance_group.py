@@ -276,8 +276,8 @@ class InstanceGroup(stack_resource.StackResource):
     def _update_timeout(self, batch_cnt, pause_sec):
         total_pause_time = pause_sec * max(batch_cnt - 1, 0)
         if total_pause_time >= self.stack.timeout_secs():
-            msg = _('The current %s will result in stack update '
-                    'timeout.') % rsrc_defn.UPDATE_POLICY
+            msg = _('The current update policy will result in stack update '
+                    'timeout.')
             raise ValueError(msg)
         return self.stack.timeout_secs() - total_pause_time
 
