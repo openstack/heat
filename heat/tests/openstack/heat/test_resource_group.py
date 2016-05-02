@@ -1021,8 +1021,7 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
             updated_grp_json, current_grp_json)
         updated_policy = (updated_grp_json['UpdatePolicy']
                           if 'UpdatePolicy' in updated_grp_json else None)
-        expected = {u'UpdatePolicy': updated_policy}
-        self.assertEqual(expected, tmpl_diff)
+        self.assertTrue(tmpl_diff.update_policy_changed())
 
         # test application of the new update policy in handle_update
         update_snippet = rsrc_defn.ResourceDefinition(

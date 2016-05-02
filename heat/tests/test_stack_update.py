@@ -550,7 +550,7 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         mock_upd.assert_called_once_with(
             tmpl2['Resources']['AResource'],
-            {'Properties': {'Foo': 'xyz'}},
+            mock.ANY,
             {'Foo': 'xyz'})
 
     def test_update_modify_replace_failed_delete(self):

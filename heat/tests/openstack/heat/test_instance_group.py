@@ -325,14 +325,6 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         mock_members = self.patchobject(grouputils, 'get_member_refids')
         mock_members.return_value = ['aaaabbbbcccc']
 
-        # Check that the Fn::GetAZs is correctly resolved
-        expected = {u'Properties': {'Instances': ['aaaabbbbcccc'],
-                                    u'Listeners': [{u'InstancePort': u'80',
-                                                    u'LoadBalancerPort': u'80',
-                                                    u'Protocol': u'HTTP'}],
-                                    u'AvailabilityZones': ['abc', 'xyz']},
-                    u'Metadata': {}}
-
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         lb = stack['ElasticLoadBalancer']
         lb.state_set(lb.CREATE, lb.COMPLETE)
@@ -340,7 +332,7 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         group = stack['WebServerGroup']
         group._lb_reload()
         lb.handle_update.assert_called_once_with(
-            mock.ANY, expected,
+            mock.ANY, mock.ANY,
             {'Instances': ['aaaabbbbcccc']})
 
 
