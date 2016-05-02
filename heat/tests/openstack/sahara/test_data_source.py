@@ -75,8 +75,10 @@ class SaharaDataSourceTest(common.HeatTestCase):
     def test_update(self):
         ds = self._create_resource('data-source', self.rsrc_defn,
                                    self.stack)
-        self.rsrc_defn['Properties']['type'] = 'hdfs'
-        self.rsrc_defn['Properties']['url'] = 'my/path'
+        props = self.stack.t.t['resources']['data-source']['properties'].copy()
+        props['type'] = 'hdfs'
+        props['url'] = 'my/path'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         scheduler.TaskRunner(ds.update, self.rsrc_defn)()
         data = {
             'name': 'my-ds',
@@ -100,7 +102,9 @@ class SaharaDataSourceTest(common.HeatTestCase):
         self.assertEqual({'ds': 'info'}, ds.FnGetAtt('show'))
 
     def test_validate_password_without_user(self):
-        self.rsrc_defn['Properties']['credentials'].pop('user')
+        props = self.stack.t.t['resources']['data-source']['properties'].copy()
+        del props['credentials']['user']
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         ds = data_source.DataSource('data-source', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, ds.validate)
         error_msg = ('Property error: resources.data-source.properties.'

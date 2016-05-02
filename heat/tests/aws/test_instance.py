@@ -124,6 +124,7 @@ class InstancesTest(common.HeatTestCase):
         stack_name = '%s_s' % name
         tmpl, self.stack = self._get_test_template(stack_name, image_id,
                                                    volumes=volumes)
+        self.instance_props = tmpl.t['Resources']['WebServer']['Properties']
         resource_defns = tmpl.resource_definitions(self.stack)
         instance = instances.Instance(name, resource_defns['WebServer'],
                                       self.stack)
@@ -723,8 +724,9 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_type')
 
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['InstanceType'] = 'm1.small'
+        update_props = self.instance_props.copy()
+        update_props['InstanceType'] = 'm1.small'
+        update_template = instance.t.freeze(properties=update_props)
 
         def side_effect(*args):
             return 2 if args[0] == 'm1.small' else 1
@@ -786,8 +788,9 @@ class InstancesTest(common.HeatTestCase):
         self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
                          return_value=1)
 
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['InstanceType'] = 'm1.small'
+        update_props = self.instance_props.copy()
+        update_props['InstanceType'] = 'm1.small'
+        update_template = instance.t.freeze(properties=update_props)
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
 
@@ -850,9 +853,13 @@ class InstancesTest(common.HeatTestCase):
             {'NetworkInterfaceId': '34b752ec-14de-416a-8722-9531015e04a5',
              'DeviceIndex': '3'}]
 
-        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+        before_props = self.instance_props.copy()
+        before_props['NetworkInterfaces'] = old_interfaces
+        update_props = self.instance_props.copy()
+        update_props['NetworkInterfaces'] = new_interfaces
+        update_template = instance.t.freeze(properties=update_props)
+        instance.t = instance.t.freeze(properties=before_props)
+        instance.reparse()
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -889,9 +896,13 @@ class InstancesTest(common.HeatTestCase):
             {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
              'DeviceIndex': '2'}]
 
-        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+        before_props = self.instance_props.copy()
+        before_props['NetworkInterfaces'] = old_interfaces
+        update_props = self.instance_props.copy()
+        update_props['NetworkInterfaces'] = new_interfaces
+        update_template = instance.t.freeze(properties=update_props)
+        instance.t = instance.t.freeze(properties=before_props)
+        instance.reparse()
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -925,9 +936,13 @@ class InstancesTest(common.HeatTestCase):
             {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
              'DeviceIndex': '1'}]
 
-        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+        before_props = self.instance_props.copy()
+        before_props['NetworkInterfaces'] = old_interfaces
+        update_props = self.instance_props.copy()
+        update_props['NetworkInterfaces'] = new_interfaces
+        update_template = instance.t.freeze(properties=update_props)
+        instance.t = instance.t.freeze(properties=before_props)
+        instance.reparse()
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -961,9 +976,13 @@ class InstancesTest(common.HeatTestCase):
             {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
              'DeviceIndex': '1'}]
 
-        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+        before_props = self.instance_props.copy()
+        before_props['NetworkInterfaces'] = old_interfaces
+        update_props = self.instance_props.copy()
+        update_props['NetworkInterfaces'] = new_interfaces
+        update_template = instance.t.freeze(properties=update_props)
+        instance.t = instance.t.freeze(properties=before_props)
+        instance.reparse()
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -1001,8 +1020,9 @@ class InstancesTest(common.HeatTestCase):
                                        'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
                                        '10.0.0.4')
 
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+        update_props = self.instance_props.copy()
+        update_props['NetworkInterfaces'] = new_interfaces
+        update_template = instance.t.freeze(properties=update_props)
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -1037,8 +1057,9 @@ class InstancesTest(common.HeatTestCase):
                                        'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
                                        '10.0.0.4')
 
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['NetworkInterfaces'] = []
+        update_props = self.instance_props.copy()
+        update_props['NetworkInterfaces'] = []
+        update_template = instance.t.freeze(properties=update_props)
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -1069,12 +1090,18 @@ class InstancesTest(common.HeatTestCase):
                                        '10.0.0.4')
         subnet_id = '8c1aaddf-e49e-4f28-93ea-ca9f0b3c6240'
         nics = [{'port-id': 'ea29f957-cd35-4364-98fb-57ce9732c10d'}]
+
+        before_props = self.instance_props.copy()
         if old_interfaces is not None:
-            instance.t['Properties']['NetworkInterfaces'] = old_interfaces
-        update_template = copy.deepcopy(instance.t)
+            before_props['NetworkInterfaces'] = old_interfaces
+        update_props = self.instance_props.copy()
         if new_interfaces is not None:
-            update_template['Properties']['NetworkInterfaces'] = new_interfaces
-        update_template['Properties']['SubnetId'] = subnet_id
+            update_props['NetworkInterfaces'] = new_interfaces
+        update_props['SubnetId'] = subnet_id
+
+        update_template = instance.t.freeze(properties=update_props)
+        instance.t = instance.t.freeze(properties=before_props)
+        instance.reparse()
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
 
@@ -1133,8 +1160,9 @@ class InstancesTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['ImageId'] = 'mustreplace'
+        update_props = self.instance_props.copy()
+        update_props['ImageId'] = 'mustreplace'
+        update_template = instance.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(instance.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 

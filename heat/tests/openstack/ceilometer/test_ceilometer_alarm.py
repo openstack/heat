@@ -668,8 +668,8 @@ class CombinationAlarmTest(common.HeatTestCase):
             time_constraints=[],
             severity='low'
         ).AndReturn(FakeCeilometerAlarm())
-        snippet = template_format.parse(combination_alarm_template)
-        self.stack = utils.parse_stack(snippet)
+        self.tmpl = template_format.parse(combination_alarm_template)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return alarm.CombinationAlarm(
             'CombinAlarm', resource_defns['CombinAlarm'], self.stack)
@@ -707,8 +707,9 @@ class CombinationAlarmTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['alarm_ids'] = ['alarm1', 'alarm3']
+        props = self.tmpl['Resources']['CombinAlarm']['Properties'].copy()
+        props['alarm_ids'] = ['alarm1', 'alarm3']
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 

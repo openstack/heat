@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import uuid
 
 from heat.common import template_format
@@ -74,7 +73,7 @@ class ServerTagsTest(common.HeatTestCase):
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags
         resource_defns = template.resource_definitions(self.stack)
-        instance = instances.Instance(stack_name,
+        instance = instances.Instance('WebServer',
                                       resource_defns['WebServer'], self.stack)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
@@ -84,12 +83,12 @@ class ServerTagsTest(common.HeatTestCase):
         metadata = instance.metadata_get()
         server_userdata = instance.client_plugin().build_userdata(
             metadata,
-            instance.t['Properties']['UserData'],
+            instance.properties['UserData'],
             'ec2-user')
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
         nova.NovaClientPlugin.build_userdata(
             metadata,
-            instance.t['Properties']['UserData'],
+            instance.properties['UserData'],
             'ec2-user').AndReturn(server_userdata)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -138,8 +137,10 @@ class ServerTagsTest(common.HeatTestCase):
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
-        update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['Tags'] = new_tags
+        snippet = instance.stack.t.t['Resources'][instance.name]
+        props = snippet['Properties'].copy()
+        props['Tags'] = new_tags
+        update_template = instance.t.freeze(properties=props)
         scheduler.TaskRunner(instance.update, update_template)()
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()

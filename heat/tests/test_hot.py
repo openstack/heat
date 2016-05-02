@@ -1391,11 +1391,13 @@ class HotStackTest(common.HeatTestCase):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
 
         generic_rsrc.ResourceWithProps.update_template_diff(
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'xyz'}},
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'abc'}}
-        ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'xyz'}),
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'abc'})
+            ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1435,11 +1437,13 @@ class HotStackTest(common.HeatTestCase):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
 
         generic_rsrc.ResourceWithProps.update_template_diff(
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'xyz'}},
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'abc'}}
-        ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'xyz'}),
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'abc'})
+            ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)

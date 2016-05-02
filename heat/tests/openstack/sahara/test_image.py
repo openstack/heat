@@ -40,8 +40,8 @@ resources:
 class SaharaImageTest(common.HeatTestCase):
     def setUp(self):
         super(SaharaImageTest, self).setUp()
-        t = template_format.parse(sahara_image_template)
-        self.stack = utils.parse_stack(t)
+        self.tmpl = template_format.parse(sahara_image_template)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['sahara-image']
         self.client = mock.Mock()
@@ -68,8 +68,10 @@ class SaharaImageTest(common.HeatTestCase):
 
     def test_update(self):
         img = self._create_resource('sahara-image', self.rsrc_defn, self.stack)
-        self.rsrc_defn['Properties']['tags'] = []
-        self.rsrc_defn['Properties']['description'] = 'test image'
+        props = self.tmpl['resources']['sahara-image']['properties'].copy()
+        props['tags'] = []
+        props['description'] = 'test image'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         scheduler.TaskRunner(img.update, self.rsrc_defn)()
         tags_update_calls = [
             mock.call('12345', ['vanilla', '1.2.1']),

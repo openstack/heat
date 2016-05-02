@@ -127,6 +127,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.fake_ngt = FakeNodeGroupTemplate()
 
         self.t = template_format.parse(node_group_template)
+        self.ngt_props = self.t['resources']['node-group']['properties']
 
     def _init_ngt(self, template):
         self.stack = utils.parse_stack(template)
@@ -249,10 +250,10 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
 
     def test_update(self):
         ngt = self._create_ngt(self.t)
-        rsrc_defn = self.stack.t.resource_definitions(self.stack)['node-group']
-        rsrc_defn['Properties']['node_processes'] = [
-            'tasktracker', 'datanode']
-        rsrc_defn['Properties']['name'] = 'new-ng-template'
+        props = self.ngt_props.copy()
+        props['node_processes'] = ['tasktracker', 'datanode']
+        props['name'] = 'new-ng-template'
+        rsrc_defn = ngt.t.freeze(properties=props)
         scheduler.TaskRunner(ngt.update, rsrc_defn)()
         args = {'node_processes': ['tasktracker', 'datanode'],
                 'name': 'new-ng-template'}
@@ -341,9 +342,11 @@ class SaharaClusterTemplateTest(common.HeatTestCase):
         ct = self._create_ct(self.t)
         rsrc_defn = self.stack.t.resource_definitions(self.stack)[
             'cluster-template']
-        rsrc_defn['Properties']['plugin_name'] = 'hdp'
-        rsrc_defn['Properties']['hadoop_version'] = '1.3.2'
-        rsrc_defn['Properties']['name'] = 'new-cluster-template'
+        props = self.t['resources']['cluster-template']['properties'].copy()
+        props['plugin_name'] = 'hdp'
+        props['hadoop_version'] = '1.3.2'
+        props['name'] = 'new-cluster-template'
+        rsrc_defn = rsrc_defn.freeze(properties=props)
         scheduler.TaskRunner(ct.update, rsrc_defn)()
         args = {
             'plugin_name': 'hdp',

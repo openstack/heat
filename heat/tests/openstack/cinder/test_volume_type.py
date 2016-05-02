@@ -61,12 +61,16 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         volume_type_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         value.id = volume_type_id
         self.volume_types.create.return_value = value
-        self.my_volume_type.t['Properties']['is_public'] = is_public
+        tmpl = self.stack.t.t
+        props = tmpl['resources']['my_volume_type']['properties'].copy()
+        props['is_public'] = is_public
         if projects:
-            self.my_volume_type.t['Properties']['projects'] = projects
+            props['projects'] = projects
             project = collections.namedtuple('Project', ['id'])
             stub_projects = [project(p) for p in projects]
             self.project_list.side_effect = [p for p in stub_projects]
+        self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
+        self.my_volume_type.reparse()
         self.my_volume_type.handle_create()
         self.volume_types.create.assert_called_once_with(
             name='volumeBackend', is_public=is_public, description=None)
@@ -166,8 +170,12 @@ class CinderVolumeTypeTest(common.HeatTestCase):
             self.my_volume_type.resource_id, 'id3')
 
     def test_validate_projects_in_v1(self):
-        self.my_volume_type.t['Properties']['is_public'] = False
-        self.my_volume_type.t['Properties']['projects'] = ['id1']
+        tmpl = self.stack.t.t
+        props = tmpl['resources']['my_volume_type']['properties'].copy()
+        props['is_public'] = False
+        props['projects'] = ['id1']
+        self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
+        self.my_volume_type.reparse()
         self.cinderclient.volume_api_version = 1
         self.stub_KeystoneProjectConstraint()
         ex = self.assertRaises(exception.NotSupported,
@@ -176,8 +184,12 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.assertEqual(expected, six.text_type(ex))
 
     def test_validate_projects_when_public(self):
-        self.my_volume_type.t['Properties']['projects'] = ['id1']
-        self.my_volume_type.t['Properties']['is_public'] = True
+        tmpl = self.stack.t.t
+        props = tmpl['resources']['my_volume_type']['properties'].copy()
+        props['is_public'] = True
+        props['projects'] = ['id1']
+        self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
+        self.my_volume_type.reparse()
         self.cinderclient.volume_api_version = 2
         self.stub_KeystoneProjectConstraint()
         ex = self.assertRaises(exception.StackValidationFailed,
@@ -187,8 +199,12 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.assertEqual(expected, six.text_type(ex))
 
     def test_validate_projects_when_private(self):
-        self.my_volume_type.t['Properties']['projects'] = ['id1']
-        self.my_volume_type.t['Properties']['is_public'] = False
+        tmpl = self.stack.t.t
+        props = tmpl['resources']['my_volume_type']['properties'].copy()
+        props['is_public'] = False
+        props['projects'] = ['id1']
+        self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
+        self.my_volume_type.reparse()
         self.cinderclient.volume_api_version = 2
         self.stub_KeystoneProjectConstraint()
         self.assertIsNone(self.my_volume_type.validate())

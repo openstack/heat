@@ -86,7 +86,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties']['min_disk'] = -1
+        props = stack.t.t['resources']['image']['properties'].copy()
+        props['min_disk'] = -1
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = ('Property error: resources.image.properties.min_disk: '
                      '-1 is out of range (min: 0, max: None)')
         self._test_validate(image, error_msg)
@@ -99,7 +102,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties']['min_ram'] = -1
+        props = stack.t.t['resources']['image']['properties'].copy()
+        props['min_ram'] = -1
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = ('Property error: resources.image.properties.min_ram: '
                      '-1 is out of range (min: 0, max: None)')
         self._test_validate(image, error_msg)
@@ -112,7 +118,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties'].pop('disk_format')
+        props = stack.t.t['resources']['image']['properties'].copy()
+        del props['disk_format']
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = 'Property disk_format not assigned'
         self._test_validate(image, error_msg)
 
@@ -124,7 +133,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties']['disk_format'] = 'incorrect_format'
+        props = stack.t.t['resources']['image']['properties'].copy()
+        props['disk_format'] = 'incorrect_format'
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = ('Property error: '
                      'resources.image.properties.disk_format: '
                      '"incorrect_format" is not an allowed value '
@@ -139,7 +151,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties'].pop('container_format')
+        props = stack.t.t['resources']['image']['properties'].copy()
+        del props['container_format']
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = 'Property container_format not assigned'
         self._test_validate(image, error_msg)
 
@@ -151,7 +166,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties']['container_format'] = 'incorrect_format'
+        props = stack.t.t['resources']['image']['properties'].copy()
+        props['container_format'] = 'incorrect_format'
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = ('Property error: '
                      'resources.image.properties.container_format: '
                      '"incorrect_format" is not an allowed value '
@@ -166,7 +184,10 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties'].pop('location')
+        props = stack.t.t['resources']['image']['properties'].copy()
+        del props['location']
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = 'Property location not assigned'
         self._test_validate(image, error_msg)
 
@@ -177,8 +198,11 @@ class GlanceImageTest(common.HeatTestCase):
             template.Template(tpl)
         )
         image = stack['image']
-        image.t['Properties']['disk_format'] = 'raw'
-        image.t['Properties']['container_format'] = 'ari'
+        props = stack.t.t['resources']['image']['properties'].copy()
+        props['disk_format'] = 'raw'
+        props['container_format'] = 'ari'
+        image.t = image.t.freeze(properties=props)
+        image.reparse()
         error_msg = ("Invalid mix of disk and container formats. When "
                      "setting a disk or container format to one of 'aki', "
                      "'ari', or 'ami', the container and disk formats must "

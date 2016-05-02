@@ -20,6 +20,7 @@ from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import environment
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack
@@ -405,11 +406,13 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
-        mock_upd.assert_called_once_with(
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'xyz'}},
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'abc'}})
+        after = rsrc_defn.ResourceDefinition('AResource',
+                                             'ResourceWithPropsType',
+                                             properties={'Foo': 'xyz'})
+        before = rsrc_defn.ResourceDefinition('AResource',
+                                              'ResourceWithPropsType',
+                                              properties={'Foo': 'abc'})
+        mock_upd.assert_called_once_with(after, before)
 
     def test_update_replace_create_hook(self):
         tmpl = {
@@ -549,7 +552,8 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
         mock_upd.assert_called_once_with(
-            tmpl2['Resources']['AResource'],
+            rsrc_defn.ResourceDefinition('AResource', 'ResourceWithPropsType',
+                                         properties={'Foo': 'xyz'}),
             mock.ANY,
             {'Foo': 'xyz'})
 

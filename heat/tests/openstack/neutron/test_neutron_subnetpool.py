@@ -185,7 +185,7 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                      rsrc.t)
+                                                      rsrc.t._properties)
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, {}))
         update_subnetpool.assert_not_called()
 

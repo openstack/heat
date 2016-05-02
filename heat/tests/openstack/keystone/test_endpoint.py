@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 import mock
 
 from heat.engine import constraints
@@ -61,9 +63,15 @@ class KeystoneEndpointTest(common.HeatTestCase):
         return value
 
     def _setup_endpoint_resource(self, stack_name, use_default=False):
+        tmpl_data = copy.deepcopy(keystone_endpoint_template)
+        if use_default:
+            props = tmpl_data['resources']['test_endpoint']['properties']
+            del props['name']
+            del props['enabled']
+
         test_stack = stack.Stack(
             self.ctx, stack_name,
-            template.Template(keystone_endpoint_template)
+            template.Template(tmpl_data)
         )
 
         r_endpoint = test_stack['test_endpoint']
@@ -71,10 +79,6 @@ class KeystoneEndpointTest(common.HeatTestCase):
         r_endpoint.client.return_value = self.keystoneclient
         r_endpoint.client_plugin = mock.MagicMock()
         r_endpoint.client_plugin.return_value = self.keystone_client_plugin
-
-        if use_default:
-            del r_endpoint.t['Properties']['name']
-            del r_endpoint.t['Properties']['enabled']
 
         return r_endpoint
 

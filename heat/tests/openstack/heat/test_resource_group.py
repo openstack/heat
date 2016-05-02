@@ -407,11 +407,15 @@ class ResourceGroupTest(common.HeatTestCase):
         res_prop['listprop'] = list(res_prop['listprop'])
         self.assertEqual(expect, nested)
 
-        res_def = snip['Properties']['resource_def']
+        props = copy.deepcopy(templ['resources']['group1']['properties'])
+        res_def = props['resource_def']
         res_def['properties']['Foo'] = "Bar___foo__"
-        res_def['properties']['listprop'] = ["__foo___0", "__foo___1",
+        res_def['properties']['listprop'] = ["__foo___0",
+                                             "__foo___1",
                                              "__foo___2"]
         res_def['type'] = "ResourceWithListProp__foo__"
+        snip = snip.freeze(properties=props)
+
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
             "heat_template_version": "2015-04-30",
@@ -517,9 +521,11 @@ class ResourceGroupTest(common.HeatTestCase):
 
     def test_handle_create_with_batching(self):
         stack = utils.parse_stack(tmpl_with_default_updt_policy())
-        snip = stack.t.resource_definitions(stack)['group1']
-        snip['UpdatePolicy']['batch_create'] = {'max_batch_size': 3}
-        snip['Properties']['count'] = 10
+        defn = stack.t.resource_definitions(stack)['group1']
+        props = stack.t.t['resources']['group1']['properties'].copy()
+        props['count'] = 10
+        update_policy = {'batch_create': {'max_batch_size': 3}}
+        snip = defn.freeze(properties=props, update_policy=update_policy)
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.patchobject(scheduler.TaskRunner, 'start')
         checkers = resgrp.handle_create()
@@ -1019,25 +1025,15 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         # identify the template difference
         tmpl_diff = updated_grp.update_template_diff(
             updated_grp_json, current_grp_json)
-        updated_policy = (updated_grp_json['UpdatePolicy']
-                          if 'UpdatePolicy' in updated_grp_json else None)
         self.assertTrue(tmpl_diff.update_policy_changed())
 
         # test application of the new update policy in handle_update
-        update_snippet = rsrc_defn.ResourceDefinition(
-            current_grp.name,
-            current_grp.type(),
-            properties=updated_grp_json['Properties'],
-            update_policy=updated_policy)
-
         current_grp._try_rolling_update = mock.Mock()
         current_grp._assemble_nested_for_size = mock.Mock()
         self.patchobject(scheduler.TaskRunner, 'start')
-        current_grp.handle_update(update_snippet, tmpl_diff, None)
-        if updated_policy is None:
-            self.assertEqual({}, current_grp.update_policy.data)
-        else:
-            self.assertEqual(updated_policy, current_grp.update_policy.data)
+        current_grp.handle_update(updated_grp_json, tmpl_diff, None)
+        self.assertEqual(updated_grp_json._update_policy or {},
+                         current_grp.update_policy.data)
 
     def test_update_policy_added(self):
         self.validate_update_policy_diff(template,
@@ -1084,17 +1080,10 @@ class RollingUpdateTest(common.HeatTestCase):
         tmpl_diff = updated_grp.update_template_diff(
             updated_grp_json, current_grp_json)
 
-        updated_policy = updated_grp_json[
-            'UpdatePolicy']if 'UpdatePolicy' in updated_grp_json else None
-        update_snippet = rsrc_defn.ResourceDefinition(
-            self.current_grp.name,
-            self.current_grp.type(),
-            properties=updated_grp_json['Properties'],
-            update_policy=updated_policy)
         self.current_grp._replace = mock.Mock(return_value=[])
         self.current_grp._assemble_nested = mock.Mock()
         self.patchobject(scheduler.TaskRunner, 'start')
-        self.current_grp.handle_update(update_snippet, tmpl_diff, prop_diff)
+        self.current_grp.handle_update(updated_grp_json, tmpl_diff, prop_diff)
 
     def test_update_without_policy_prop_diff(self):
         self.check_with_update(with_diff=True)
