@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import copy
 
 from heatclient import exc
 from heatclient.v1 import stacks
@@ -584,7 +583,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         rsrc = self.create_remote_stack()
 
-        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        props = dict(rsrc.properties)
         props['parameters']['name'] = 'bar'
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                       rsrc.type(),
@@ -612,7 +611,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
     def test_update_with_replace(self):
         rsrc = self.create_remote_stack()
 
-        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        props = dict(rsrc.properties)
         props['context']['region_name'] = 'RegionOne'
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                       rsrc.type(),
@@ -627,7 +626,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         rsrc = self.create_remote_stack()
 
-        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        props = dict(rsrc.properties)
         props['parameters']['name'] = 'bar'
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                       rsrc.type(),
@@ -650,7 +649,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         rsrc = self.create_remote_stack()
 
-        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        props = dict(rsrc.properties)
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                       rsrc.type(),
                                                       props)
@@ -683,7 +682,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc = self.create_remote_stack()
         rsrc.state_set(rsrc.CHECK, rsrc.FAILED)
 
-        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        props = dict(rsrc.properties)
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                       rsrc.type(),
                                                       props)

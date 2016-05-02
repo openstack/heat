@@ -350,7 +350,7 @@ class CeilometerAlarm(resource.Resource):
         #    to ceilometer.
         wr = watchrule.WatchRule(context=self.context,
                                  watch_name=self.physical_resource_name(),
-                                 rule=self.parsed_template('Properties'),
+                                 rule=dict(self.properties),
                                  stack_id=self.stack.id)
         wr.state = wr.CEILOMETER_CONTROLLED
         wr.store()
