@@ -70,14 +70,13 @@ class ClientManager(object):
     def __init__(self, conf):
         self.conf = conf
         if self.conf.auth_url.find('/v'):
-            self.v2_auth_url = self.conf.auth_url.replace('/v3', '/v2.0')
             self.auth_version = self.conf.auth_url.split('/v')[1]
         else:
             raise ValueError(_('Incorrectly specified auth_url config: no '
                                'version found.'))
-
         self.insecure = self.conf.disable_ssl_certificate_validation
         self.ca_file = self.conf.ca_file
+
         self.identity_client = self._get_identity_client()
         self.orchestration_client = self._get_orchestration_client()
         self.compute_client = self._get_compute_client()
@@ -131,19 +130,10 @@ class ClientManager(object):
     def _get_compute_client(self):
 
         region = self.conf.region
-
-        client_args = (
-            self.conf.username,
-            self.conf.password,
-            self.conf.tenant_name,
-            # novaclient can not use v3 url
-            self.v2_auth_url
-        )
-
         # Create our default Nova client to use in testing
         return nova_client.Client(
             self.NOVA_API_VERSION,
-            *client_args,
+            session=self.identity_client.session,
             service_type='compute',
             endpoint_type='publicURL',
             region_name=region,
@@ -155,12 +145,8 @@ class ClientManager(object):
     def _get_network_client(self):
 
         return neutron_client.Client(
-            username=self.conf.username,
-            password=self.conf.password,
-            tenant_name=self.conf.tenant_name,
+            session=self.identity_client.session,
             endpoint_type='publicURL',
-            # neutronclient can not use v3 url
-            auth_url=self.v2_auth_url,
             insecure=self.insecure,
             ca_cert=self.ca_file)
 
@@ -169,11 +155,7 @@ class ClientManager(object):
         endpoint_type = 'publicURL'
         return cinder_client.Client(
             self.CINDERCLIENT_VERSION,
-            self.conf.username,
-            self.conf.password,
-            self.conf.tenant_name,
-            # cinderclient can not use v3 url
-            self.v2_auth_url,
+            session=self.identity_client.session,
             region_name=region,
             endpoint_type=endpoint_type,
             insecure=self.insecure,
@@ -181,6 +163,7 @@ class ClientManager(object):
             http_log_debug=True)
 
     def _get_object_client(self):
+        # swiftclient does not support keystone sessions yet
         args = {
             'auth_version': self.auth_version,
             'tenant_name': self.conf.tenant_name,
@@ -194,8 +177,6 @@ class ClientManager(object):
         return swift_client.Connection(**args)
 
     def _get_metering_client(self):
-        user_domain_name = self.conf.user_domain_name
-        project_domain_name = self.conf.project_domain_name
         try:
             endpoint = self.identity_client.get_endpoint_url('metering',
                                                              self.conf.region)
@@ -203,22 +184,12 @@ class ClientManager(object):
             return None
         else:
             args = {
-                'username': self.conf.username,
-                'password': self.conf.password,
-                'tenant_name': self.conf.tenant_name,
-                'auth_url': self.conf.auth_url,
+                'session': self.identity_client.session,
                 'insecure': self.insecure,
                 'cacert': self.ca_file,
                 'region_name': self.conf.region,
                 'endpoint_type': 'publicURL',
                 'service_type': 'metering',
             }
-            # ceilometerclient can't ignore domain details for
-            # v2 auth_url
-            if self.auth_version == '3':
-                args.update(
-                    {'user_domain_name': user_domain_name,
-                     'project_domain_name': project_domain_name})
-
             return ceilometer_client.Client(self.CEILOMETER_VERSION,
                                             endpoint, **args)
