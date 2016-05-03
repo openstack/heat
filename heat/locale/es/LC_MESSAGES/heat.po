@@ -9,13 +9,13 @@
 # Eugènia Torrella <tester03@es.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev2\n"
+"Project-Id-Version: heat 6.0.1.dev8\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-22 10:42+0000\n"
+"POT-Creation-Date: 2016-05-02 00:41+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-26 09:48+0000\n"
+"PO-Revision-Date: 2016-05-02 10:06+0000\n"
 "Last-Translator: Eugènia Torrella <tester03@es.ibm.com>\n"
 "Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -169,11 +169,11 @@ msgstr "%(a)s se ha detenido hasta que se borre el gancho %(h)s"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
-msgstr "%(action)s no está soportada para el recurso."
+msgstr "La acción %(action)s no está soportada para este recurso."
 
 #, python-format
 msgid "%(action)s is restricted for resource."
-msgstr "%(action)s está restringida para este recurso."
+msgstr "La acción %(action)s está restringida para este recurso."
 
 #, python-format
 msgid "%(desired_capacity)s must be between %(min_size)s and %(max_size)s"
@@ -185,7 +185,7 @@ msgstr "%(error)s%(path)s%(message)s"
 
 #, python-format
 msgid "%(feature)s is not supported."
-msgstr "%(feature)s no está soportada."
+msgstr "La característica %(feature)s no está soportada."
 
 #, python-format
 msgid ""
@@ -234,15 +234,15 @@ msgstr ""
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
-msgstr "no se puede especificar %(prop1)s sin %(prop2)s."
+msgstr "No se puede especificar %(prop1)s sin %(prop2)s."
 
 #, python-format
 msgid ""
 "%(prop1)s property should only be specified for %(prop2)s with value "
 "%(value)s."
 msgstr ""
-"Solo se debe especificar la propiedad %(prop1)s para %(prop2)s con el valor "
-"%(value)s."
+"Solo se debería especificar la propiedad %(prop1)s para %(prop2)s con el "
+"valor %(value)s."
 
 #, python-format
 msgid "%(resource)s: Invalid attribute %(key)s"
@@ -313,7 +313,7 @@ msgid "A UUID for the set of servers being requested."
 msgstr "Un UUID para el conjunto de servidores que se estaban solicitando."
 
 msgid "A bad or out-of-range value was supplied"
-msgstr "Un valor incorrecto o fuera de rango estuvo proporcionado"
+msgstr "Se ha proporcionado un valor incorrecto o fuera de rango"
 
 msgid "A boolean value of default flag."
 msgstr "Un valor booleano del distintivo predeterminado."
@@ -674,8 +674,8 @@ msgstr "Nombre de instancia compatible con AWS."
 
 msgid "AWS query string is malformed, does not adhere to AWS spec"
 msgstr ""
-"cadena de consulta AWS esta formada incorrectamente, no se adhiere a la "
-"especificación AWS"
+"La cadena de consulta de AWS está formada incorrectamente, no se adhiere a "
+"la especificación de AWS"
 
 msgid "Access policies to apply to the user."
 msgstr "Políticas de acceso a aplicar al usuario."
@@ -732,8 +732,8 @@ msgid ""
 "Address to bind the server. Useful when selecting a particular network "
 "interface."
 msgstr ""
-"Dirección para enlazar el servidor. Útil al seleccionar una red particular "
-"interfaz."
+"Dirección para enlazar el servidor. Útil al seleccionar una interfaz de red "
+"en particular."
 
 msgid "Administrative state for the ipsec site connection."
 msgstr "Estado administrativo para la conexión del sitio ipsec."
@@ -985,7 +985,7 @@ msgstr "Los argumentos en %s no se han resuelto por completo"
 #, python-format
 msgid "At least one of the following properties must be specified: %(props)s"
 msgstr ""
-"Se debe especificar la menos una de las siguientes propiedades: %(props)s"
+"Se debe especificar al menos una de las siguientes propiedades: %(props)s"
 
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
@@ -1158,7 +1158,7 @@ msgstr "No se puede comprobar %s, pila no creada"
 #, python-format
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr ""
-"No se puede definir las siguientes propiedades al mismo tiempo: %(props)s."
+"No se pueden definir las siguientes propiedades al mismo tiempo: %(props)s."
 
 #, python-format
 msgid ""
@@ -1304,9 +1304,9 @@ msgid ""
 "max_events_per_stack. Set this lower to keep more events at the expense of "
 "more frequent purges."
 msgstr ""
-"Controla cuántos sucesos se podarán siempre que se superen los sucesos de "
-"una pila max_events_per_stack. Establezca esto en un valor más bajo para "
-"conservar más sucesos a expensas de depuraciones más frecuentes."
+"Controla cuántos sucesos se podarán cuando se superen los sucesos de una "
+"pila max_events_per_stack. Establézcalo en un valor más bajo para conservar "
+"más sucesos a expensas de depuraciones más frecuentes."
 
 msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
@@ -1595,7 +1595,7 @@ msgid "Deployment with id %s not found"
 msgstr "Despliegue con id %s no encontrado"
 
 msgid "Deprecated."
-msgstr "Descontinuado."
+msgstr "En desuso."
 
 msgid ""
 "Describe time constraints for the alarm. Only evaluate the alarm if the time "
@@ -1806,7 +1806,7 @@ msgid "Disk format of image."
 msgstr "Formato de disco de la imagen."
 
 msgid "Does not contain a valid AWS Access Key or certificate"
-msgstr "No contiene una clave AWS Access Key o un certificádo válido"
+msgstr "No contiene un certificado o una clave de acceso de AWS  válidos"
 
 msgid "Domain email."
 msgstr "Correo electrónico del dominio."
@@ -1844,8 +1844,8 @@ msgid ""
 "Egress rules are only allowed when Neutron is used and the 'VpcId' property "
 "is set."
 msgstr ""
-"Reglas de egreso sólo se permiten cuando Neutron está un uso y la propiedad "
-"'VpcId' esta definida."
+"Las reglas de egreso sólo se permiten cuando se utilice Neutron y se haya "
+"definido la propiedad 'VpcId'."
 
 #, python-format
 msgid "Either %(net)s or %(port)s must be provided."
@@ -1881,11 +1881,13 @@ msgstr "Habilitar el recurso heredado OS::Heat::CWLiteAlarm."
 
 msgid "Enable the preview Stack Abandon feature."
 msgstr ""
-"Habilitar la característica Stack Abandon (abandono de pila) de vista previa."
+"Habilitar la característica de vista previa de abandono de pila (Stack "
+"Abandon)."
 
 msgid "Enable the preview Stack Adopt feature."
 msgstr ""
-"Habilitar la característica Stack Adopt (adopción de pila) de vista previa."
+"Habilitar la característica de vista previa de adopción de pila (Stack "
+"Adopt)."
 
 msgid ""
 "Enables Source NAT on the router gateway. NOTE: The default policy setting "
@@ -1985,7 +1987,7 @@ msgstr "Error al validar el valor '%(value)s': %(message)s"
 
 msgid "Error wait time in seconds for stack action (ie. create or update)."
 msgstr ""
-"Tiempo de espera de error en segundos para la acción de apilar (por ejemplo, "
+"Tiempo de espera de error en segundos por cada acción de pila (por ejemplo, "
 "crear o actualizar)."
 
 msgid "Ethertype of the traffic."
@@ -2241,7 +2243,7 @@ msgid "Gateway network for the router."
 msgstr "Red de pasarela para el direccionador."
 
 msgid "Generic HeatAPIException, please use specific subclasses!"
-msgstr "HeatAPIException genérica, por favor use sub-classes especificas!"
+msgstr "HeatAPIException genérica, por favor use subclases especificas!"
 
 msgid "Glance image ID or name."
 msgstr "ID o nombre de imagen de Glance."
@@ -2251,8 +2253,8 @@ msgstr "Governa los permisos definidos en Manila para las IP del clúster."
 
 msgid "Granularity to use for age argument, defaults to days."
 msgstr ""
-"Granularidad para el uso del argumento de envejecimiento, predeterminado a "
-"días."
+"Granularidad para el uso del argumento de envejecimiento, el valor "
+"predeterminado es días."
 
 msgid "HTTP verb to use for signaling output values"
 msgstr "Verbo HTTP a utilizar para indicar valores de salida"
@@ -2262,7 +2264,7 @@ msgstr "Nombre de clúster de Hadoop."
 
 #, python-format
 msgid "Header X-Auth-Url \"%s\" not an allowed endpoint"
-msgstr "Cabecera X-Auth-Url \"%s\" no es un punto de acceso permitido"
+msgstr "La cabecera X-Auth-Url \"%s\" no es un punto de acceso permitido"
 
 msgid "Health probe timeout, in seconds."
 msgstr "Tiempo de espera de análisis de salud, en segundos."
@@ -2280,13 +2282,13 @@ msgid "Host"
 msgstr "Host"
 
 msgid "Hostname"
-msgstr "Nombre del host"
+msgstr "Nombre de host"
 
 msgid "Hostname of the instance."
 msgstr "Nombre de host de la instancia."
 
 msgid "How long to preserve deleted data."
-msgstr "Cuanto tiempo a preservár datos borrados."
+msgstr "Tiempo durante el cual se preservarán los datos borrados."
 
 msgid ""
 "How the client will signal the wait condition. CFN_SIGNAL will allow an HTTP "
@@ -2629,7 +2631,7 @@ msgstr ""
 "especificadas actualmente son: %(exclusive_options)s."
 
 msgid "If set, then the server's certificate will not be verified."
-msgstr "Si establecido, el certificado del servidor no va a estár verificado."
+msgstr "Si está establecido, el certificado del servidor no se verificará."
 
 msgid "If specified, the backup to create the volume from."
 msgstr ""
@@ -2704,7 +2706,7 @@ msgid "Image status is required to be %(cstatus)s not %(wstatus)s."
 msgstr "El estado de la imagen tiene que ser  %(cstatus)s y no %(wstatus)s."
 
 msgid "Incompatible parameters were used together"
-msgstr "Parámetros incompatibles estaban usados juntos"
+msgstr "Se han utilizado parámetros incompatibles conjuntamente"
 
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be one of: %(allowed)s"
@@ -2847,7 +2849,7 @@ msgid "Invalid Property %s"
 msgstr "Propiedad %s no válida"
 
 msgid "Invalid Stack address"
-msgstr "Dirección de Pila inválida"
+msgstr "Dirección de pila no válida"
 
 msgid "Invalid Template URL"
 msgstr "Plantilla de URL inválida"
@@ -3369,7 +3371,7 @@ msgstr ""
 
 msgid "Location of the SSL key file to use for enabling SSL mode."
 msgstr ""
-"Ubicación del archivo de claves SSL a utilizar para habilitar la modalidad "
+"Ubicación del archivo de clave SSL a utilizar para habilitar la modalidad "
 "SSL."
 
 msgid "MAC address of the port."
@@ -3428,28 +3430,29 @@ msgid ""
 "Maximum events that will be available per stack. Older events will be "
 "deleted when this is reached. Set to 0 for unlimited events per stack."
 msgstr ""
-"Eventos máximo disponible por cada pila. Eventos anteriores serán borrados "
-"cuando este valor sea alcanzado. Define a 0 para eventos ilimitados por pila."
+"Máximo de sucesos que habrá disponibles por pila. Los sucesos anteriores se "
+"borrarán cuando se alcance este valor. Establézcalo en 0 para que haya un "
+"número ilimitado de sucesos por pila."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
 "need to be increased when using large tokens (typically those generated by "
 "the Keystone v3 API with big service catalogs)."
 msgstr ""
-"Tamaño de línea máximo de cabeceras de mensaje que se deben aceptar. Es "
-"posible que max_header_line se necesite incrementar al utilizar señales "
-"grandes (normalmente las generadas por la API de Keystone v3 con catálogos "
-"de servicio grandes)."
+"Tamaño de línea máximo de las cabeceras de mensaje a aceptar. Es posible que "
+"se tenga que incrementar max_header_line al utilizar señales grandes "
+"(normalmente las generadas por la API de Keystone v3 con catálogos de "
+"servicio grandes)."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
 "need to be increased when using large tokens (typically those generated by "
 "the Keystone v3 API with big service catalogs.)"
 msgstr ""
-"Tamaño de línea máximo de cabeceras de mensaje que se deben aceptar. Es "
-"posible que max_header_line se necesite incrementar al utilizar señales "
-"grandes (normalmente las generadas por la API de Keystone v3 con catálogos "
-"de servicio grandes.)"
+"Tamaño de línea máximo de las cabeceras de mensaje a aceptar. Es posible que "
+"se tenga que incrementar max_header_line al utilizar señales grandes "
+"(normalmente las generadas por la API de Keystone v3 con catálogos de "
+"servicio grandes.)"
 
 msgid "Maximum number of instances in the group."
 msgstr "Número máximo de instancias en el grupo."
@@ -3493,7 +3496,7 @@ msgstr ""
 "ilimitado."
 
 msgid "Maximum resources per stack exceeded."
-msgstr "Se ha superado los recursos máximos por pila."
+msgstr "Se ha superado el número máximo de recursos por pila."
 
 msgid ""
 "Maximum transmission unit size (in bytes) for the ipsec site connection."
@@ -3623,7 +3626,7 @@ msgstr ""
 #, python-format
 msgid "Multiple physical resources were found with name (%(name)s)."
 msgstr ""
-"Múltiples recursos físicos fueron encontrados con el nombre (%(name)s)."
+"Se han en contrado múltiples recursos físicos con el nombre (%(name)s)."
 
 #, python-format
 msgid "Multiple routers found with name %s"
@@ -4091,14 +4094,14 @@ msgid "No stack exists with id \"%s\""
 msgstr "No existe ninguna pila con el id \"%s\""
 
 msgid "No stack name specified"
-msgstr "Nombre de pila no especificada"
+msgstr "No se ha especificado ningún nombre de pila"
 
 #, python-format
 msgid "No such workflow %s"
 msgstr "No existe el flujo de trabajo %s"
 
 msgid "No template specified"
-msgstr "Plantilla no especificada"
+msgstr "No se ha especificado ninguna plantilla"
 
 msgid "No volume service available."
 msgstr "No hay ningún servicio de volumen disponible."
@@ -4188,14 +4191,14 @@ msgid ""
 "Number of times to retry to bring a resource to a non-error state. Set to 0 "
 "to disable retries."
 msgstr ""
-"Número de veces que se reintenta poner un recurso en un estado distinto de "
+"Número de veces que se reintentará poner un recurso en un estado distinto de "
 "error. Establézcalo en 0 para inhabilitar los reintentos."
 
 msgid ""
 "Number of times to retry when a client encounters an expected intermittent "
 "error. Set to 0 to disable retries."
 msgstr ""
-"Número de veces que se reintenta cuando un cliente encuentra un error "
+"Número de veces que se reintentará cuando un cliente encuentra un error "
 "intermitente esperado. Establézcalo en 0 para inhabilitar los reintentos."
 
 msgid "Number of workers for Heat service."
@@ -4205,7 +4208,7 @@ msgid ""
 "Number of workers for Heat service. Default value 0 means, that service will "
 "start number of workers equal number of cores on server."
 msgstr ""
-"Número de trabajadores del servicio del Heat. El valor predeterminado 0 "
+"Número de trabajadores del servicio de Heat. El valor predeterminado 0 "
 "significa que el servicio se iniciará con un número de trabajadores igual al "
 "número de núcleos del servidor."
 
@@ -4226,7 +4229,7 @@ msgstr ""
 
 #, python-format
 msgid "Object action %(action)s failed because: %(reason)s"
-msgstr "La acción objeto %(action)s falló debido a: %(reason)s"
+msgstr "La acción de objeto %(action)s ha fallado debido a: %(reason)s"
 
 msgid ""
 "On update, enables heat to collect existing resource properties from reality "
@@ -4292,7 +4295,7 @@ msgid "Optional PEM-formatted certificate chain file."
 msgstr "Certificado opcional en archivo de cadena en formato PEM."
 
 msgid "Optional PEM-formatted file that contains the private key."
-msgstr "Archivo opcional en formato PEM conteniendo la clave privada."
+msgstr "Archivo opcional en formato PEM que contiene la clave privada."
 
 msgid "Optional filename to associate with part."
 msgstr "Nombre de archivo opcional a asociar con la parte."
@@ -4425,6 +4428,13 @@ msgstr "Contraseña utilizada por el usuario."
 #, python-format
 msgid "Path components in \"%s\" must be strings"
 msgstr "Los componentes de vía de acceso en \"%s\" deben ser series"
+
+#, python-format
+msgid ""
+"Path components in '%s' must be a string that can be parsed into an integer."
+msgstr ""
+"Los componentes de vía de acceso en  '%s' deben ser cadenas que se puedan "
+"analizar a un entero."
 
 msgid "Path components in attributes must be strings"
 msgstr "Los componentes de vía de acceso en los atributos deben ser series"
@@ -4790,17 +4800,17 @@ msgstr ""
 "Liberty."
 
 msgid "Request expired or more than 15mins in the future"
-msgstr "Solicitud expirada o más de 15 minutos en el futúro"
+msgstr "Solicitud caducada o más de 15 minutos en el futuro"
 
 #, python-format
 msgid "Request limit exceeded: %(message)s"
 msgstr "Se ha superado el límite de solicitud: %(message)s"
 
 msgid "Request missing required header X-Auth-Url"
-msgstr "Solicitud sin cabecera requisita X-Auth-Url"
+msgstr "Solicitar la cabecera X-Auth-Url obligatoria que falta"
 
 msgid "Request was denied due to request throttling"
-msgstr "Solicitud denegada debido a desaceleración de solicitudes"
+msgstr "Solicitud denegada debido a la desaceleración de solicitudes"
 
 #, python-format
 msgid ""
@@ -4889,7 +4899,7 @@ msgid "Resource update failed"
 msgstr "Ha fallado la actualización del recurso."
 
 msgid "Resource with the name requested already exists"
-msgstr "Recurso con el nombre solicitado ya existe"
+msgstr "Ya existe un recurso con el nombre solicitado"
 
 msgid ""
 "ResourceInError: resources.remote_stack: Went to status UPDATE_FAILED due to "
@@ -4975,7 +4985,8 @@ msgstr ""
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
 msgstr ""
-"Buscando Inquilino %(target)s desde Inquilino %(actual)s esta prohibido."
+"Está prohibido buscar el arrendatario %(target)s desde el arrendatario "
+"%(actual)s."
 
 msgid "Seconds between running periodic tasks."
 msgstr "Segundos transcurridos entre la ejecución de tareas periódicas."
@@ -5070,7 +5081,7 @@ msgid "Service misconfigured"
 msgstr "Servicio mal configurado"
 
 msgid "Service temporarily unavailable"
-msgstr "Servicio está temporalmente no disponible"
+msgstr "El servicio está temporalmente no disponible"
 
 msgid "Set of parameters passed to this stack."
 msgstr "Conjunto de parámetros pasados a esta pila."
@@ -5244,7 +5255,7 @@ msgstr ""
 
 #, python-format
 msgid "Stack %(stack_name)s already has an action (%(action)s) in progress."
-msgstr "La Pila %(stack_name)s ya tiene una acción (%(action)s) en progreso."
+msgstr "La pila %(stack_name)s ya tiene una acción (%(action)s) en curso."
 
 msgid "Stack ID"
 msgstr "ID de pila"
@@ -5373,7 +5384,7 @@ msgid "Sync Point %s not found"
 msgstr "No se ha encontrado el punto de sincronización %s "
 
 msgid "System SIGHUP signal received."
-msgstr "Se ha recibido señal de sistema SIGHUP."
+msgstr "Se ha recibido una señal de sistema SIGHUP."
 
 msgid "TCP or UDP port on which to listen for client traffic."
 msgstr "Puerto TCP o UDP en el que escuchar el tráfico de cliente."
@@ -5461,8 +5472,8 @@ msgstr ""
 "proporcionadas (requiere la API de la v3 de keystone y las opciones de "
 "configuración stack_user_* configuradas). POLL_TEMP_URL creará y "
 "cumplimentará un TempURL de Swift con metadatos para sondeo (requiere un "
-"punto final almacén de objetos que admitaTempURL). ZAQAR_MESSAGE creará una "
-"cola zaqar dedicada y publicará los metadatos para el sondeo."
+"punto final de almacén de objetos que admitaTempURL). ZAQAR_MESSAGE creará "
+"una cola zaqar dedicada y publicará los metadatos para el sondeo."
 
 msgid ""
 "Template default for how the server should signal to heat with the "
@@ -5566,7 +5577,8 @@ msgid "The API paste config file to use."
 msgstr "El archivo de configuración de pegar de API a utilizar"
 
 msgid "The AWS Access Key ID needs a subscription for the service"
-msgstr "La cuenta AWS Access Key ID necesita una subscripción para el servicio"
+msgstr ""
+"El ID de clave de acceso de AWS necesita una subscripción para el servicio"
 
 msgid "The Availability Zone where the specified instance is launched."
 msgstr "La zona de disponibilidad donde se inicia la instancia especificada."
@@ -5770,7 +5782,7 @@ msgstr "El ID de política de QoS conectado a este puerto."
 
 #, python-format
 msgid "The Referenced Attribute (%(resource)s %(key)s) is incorrect."
-msgstr "El Atributo Referenciado (%(resource)s %(key)s) esta incorrecto."
+msgstr "El Atributo Referenciado (%(resource)s %(key)s) no es correcto."
 
 #, python-format
 msgid "The Resource %s requires replacement."
@@ -5780,12 +5792,12 @@ msgstr "El recurso %s requiere reemplazo."
 msgid ""
 "The Resource (%(resource_name)s) could not be found in Stack %(stack_name)s."
 msgstr ""
-"El Recurso (%(resource_name)s) no se pudo encontrar en la Pila "
+"No se ha podido encontrar el recurso (%(resource_name)s) en la pila "
 "%(stack_name)s."
 
 #, python-format
 msgid "The Resource (%(resource_name)s) is not available."
-msgstr "El Recurso (%(resource_name)s) no está disponible."
+msgstr "El recurso (%(resource_name)s) no está disponible."
 
 msgid "The SSH Authorized Key."
 msgstr "La clave SSH autorizada."
@@ -5841,10 +5853,10 @@ msgstr "La subred VIP del equilibrador de carga."
 
 #, python-format
 msgid "The Watch Rule (%(watch_name)s) could not be found."
-msgstr "La Regla de Observación (%(watch_name)s) no se ha podido encontrar."
+msgstr "No se ha podido encontrar la regla de observación (%(watch_name)s)."
 
 msgid "The action or operation requested is invalid"
-msgstr "La acción o operación solicitada es invalída"
+msgstr "La acción u operación solicitada no es válida"
 
 msgid "The action to be executed when the receiver is signaled."
 msgstr "Acción a ejecutar cuando se señala el receptor."
@@ -5964,7 +5976,7 @@ msgstr ""
 "Puede utilizarse para anular la correlación de un dispositivo definido."
 
 msgid "The certificate or AWS Key ID provided does not exist"
-msgstr "El certificado o AWS Key ID proporcionado no existe"
+msgstr "El certificado o el ID de clave de AWS proporcionado no existe"
 
 msgid "The channel for receiving signals."
 msgstr "El canal para recibir señales."
@@ -6624,7 +6636,7 @@ msgid "The port id, either subnet or port_id should be specified."
 msgstr "Se debe especificar el id de puerto, subnet o port_id."
 
 msgid "The port on which the server will listen."
-msgstr "El puerto en el cual el servidor escuchará."
+msgstr "El puerto en el cual el servidor estará a la escucha."
 
 msgid "The port, either subnet or port should be specified."
 msgstr "El puerto; debe especificarse la subred o el puerto."
@@ -6649,7 +6661,7 @@ msgid "The public key."
 msgstr "La clave pública."
 
 msgid "The query string is malformed"
-msgstr "La cadena de consulta esta formada incorrectamente"
+msgstr "La cadena de consulta está formada incorrectamente"
 
 msgid "The query to filter the metrics."
 msgstr "La consulta para filtrar las métricas."
@@ -6699,10 +6711,10 @@ msgid "The request is missing an action or operation parameter"
 msgstr "A la petición le falta una acción o un parámetro de operación"
 
 msgid "The request processing has failed due to an internal error"
-msgstr "La solicitud procesada ha fallado debido a un error interno"
+msgstr "El proceso de la solicitud ha fallado debido a un error interno"
 
 msgid "The request signature does not conform to AWS standards"
-msgstr "La firma de solicitud no se conforma a los estándares de AWS"
+msgstr "La firma de solicitud no se ajusta a los estándares de AWS"
 
 msgid ""
 "The request signature we calculated does not match the signature you provided"
@@ -6809,7 +6821,7 @@ msgstr "El origen de la solicitud de certificado."
 #, python-format
 msgid "The specified reference \"%(resource)s\" (in %(key)s) is incorrect."
 msgstr ""
-"La referencia especificada \"%(resource)s\" (in %(key)s) esta incorrecta."
+"La referencia especificada \"%(resource)s\" (in %(key)s) no es correcta."
 
 msgid "The start and end addresses for the allocation pools."
 msgstr "Las direcciónes iniciales y finales para los bancos de asignación."
@@ -7062,6 +7074,9 @@ msgstr ""
 "Se ha producido un error al cargar la definición del tipo de recurso global "
 "%(type_name)s."
 
+msgid "This attribute has been removed in Magnum"
+msgstr "Este atributo se ha eliminado en Magnum"
+
 msgid "This endpoint is enabled or disabled."
 msgstr "Este punto final está habilitado o deshabilitado."
 
@@ -7103,8 +7118,8 @@ msgstr ""
 
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr ""
-"Tiempo de espera en segúndos para una acción de pila (por ejemplo, creár o "
-"actualizár)."
+"Tiempo de espera en segundos por cada acción de pila (por ejemplo, crear o "
+"actualizar)."
 
 msgid ""
 "Timezone for the time constraint (eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."
@@ -7457,7 +7472,7 @@ msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr "Actualizar a las propiedades %(props)s de %(name)s (%(res)s)"
 
 msgid "Updated At"
-msgstr "Actualizado el"
+msgstr "Actualizado a las"
 
 msgid "Updating a stack when it is deleting"
 msgstr "Actualización de una pila cuando se está suprimiendo"
@@ -7581,7 +7596,7 @@ msgid ""
 "stopped to use this."
 msgstr ""
 "Los valores válidos son cifrar o descifrar. Se deben detener los procesos "
-"del  motor de Heat para utilizar esto."
+"del  motor de Heat para utilizar esta opción."
 
 #, python-format
 msgid "Value \"%(val)s\" is invalid for data type \"%(type)s\"."
@@ -7647,7 +7662,7 @@ msgstr ""
 
 #, python-format
 msgid "Version %(objver)s of %(objname)s is not supported"
-msgstr "Versión %(objver)s de %(objname)s no está soportada"
+msgstr "La versión %(objver)s de %(objname)s no está soportada"
 
 msgid "Version for the ike policy."
 msgstr "Versión para la política ike."
