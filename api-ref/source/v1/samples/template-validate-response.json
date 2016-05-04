@@ -1,0 +1,41 @@
+{
+    "Description": "A template that provides a single server instance.",
+    "Parameters": {
+        "server-size": {
+            "default": "1GB Standard Instance",
+            "description": "Server size",
+            "type": "String",
+            "constraints": [
+                {
+                    "allowed_values": [
+                        "512MB Standard Instance",
+                        "1GB Standard Instance",
+                        "4GB Standard Instance",
+                        "8GB Standard Instance"
+                    ],
+                    "description": "Must be a valid server size."
+                }
+            ]
+        },
+        "key_name": {
+            "description": "Keypair name for SSH access to the server",
+            "required": true,
+            "type": "String"
+        },
+        "server_name": {
+            "default": "My server",
+            "description": "My server",
+            "type": "String"
+        }
+    },
+    "ParameterGroups": [
+        {
+            "label": "Parameter groups",
+            "description": "My parameter groups",
+            "parameters": [
+                "param_name-1",
+                "param_name-2"
+            ]
+        }
+    ]
+}

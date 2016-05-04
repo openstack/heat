@@ -1,0 +1,19 @@
+{
+    "software_deployment": {
+        "status": "COMPLETE",
+        "server_id": "ec14c864-096e-4e27-bb8a-2c2b4dc6f3f5",
+        "config_id": "3d5ec2a8-7004-43b6-a7f6-542bdbe9d434",
+        "output_values": {
+            "deploy_stdout": "Writing to /tmp/baaaaa\nWritten to /tmp/baaaaa\n",
+            "deploy_stderr": "+ echo Writing to /tmp/baaaaa\n+ echo fooooo\n+ cat /tmp/baaaaa\n+ echo -n The file /tmp/baaaaa contains fooooo for server ec14c864-096e-4e27-bb8a-2c2b4dc6f3f5 during CREATE\n+ echo Written to /tmp/baaaaa\n+ echo Output to stderr\nOutput to stderr\n",
+            "deploy_status_code": 0,
+            "result": "The file /tmp/baaaaa contains fooooo for server ec14c864-096e-4e27-bb8a-2c2b4dc6f3f5 during CREATE"
+        },
+        "input_values": null,
+        "action": "CREATE",
+        "status_reason": "Outputs received",
+        "id": "06e87bcc-33a2-4bce-aebd-533e698282d3",
+        "creation_time": "2015-01-31T15:12:36Z",
+        "updated_time": "2015-01-31T15:18:21Z"
+    }
+}

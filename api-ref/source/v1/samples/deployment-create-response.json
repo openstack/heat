@@ -1,0 +1,14 @@
+{
+    "software_deployment": {
+        "status": "IN_PROGRESS",
+        "server_id": "ec14c864-096e-4e27-bb8a-2c2b4dc6f3f5",
+        "config_id": "8da95794-2ad9-4979-8ae5-739ce314c5cd",
+        "output_values": null,
+        "input_values": null,
+        "action": "CREATE",
+        "status_reason": "Deploy data available",
+        "id": "ef422fa5-719a-419e-a10c-72e3a367b0b8",
+        "creation_time": "2015-01-31T15:12:36Z",
+        "updated_time": "2015-01-31T15:18:21Z"
+    }
+}

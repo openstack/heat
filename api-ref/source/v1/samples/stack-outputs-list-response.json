@@ -1,0 +1,10 @@
+{
+    "outputs": [
+        {
+            "output_key": "output name",
+            "output_value": "output value",
+            "description": "output description",
+            "output_error": null
+        }
+    ]
+}

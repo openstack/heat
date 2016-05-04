@@ -1,0 +1,12 @@
+{
+    "snapshots": [
+        {
+            "id": "7c4e1ef4-bf1b-41ab-a0c8-ce01f4ffdfa1",
+            "name": "vol_snapshot",
+            "status": "IN_PROGRESS",
+            "status_reason": null,
+            "creation_time": "2015-08-04T20:57:55Z",
+            "data": null
+        }
+    ]
+}

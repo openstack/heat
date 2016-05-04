@@ -1,0 +1,33 @@
+{
+    "adopt_stack_data": {
+        "action": "CREATE",
+        "id": "bxxxxx4-0xx2-4xx1-axx6-exxxxxxxc",
+        "name": "teststack",
+        "resources": {
+            "MyServer": {
+                "action": "CREATE",
+                "metadata": {},
+                "name": "MyServer",
+                "resource_data": {},
+                "resource_id": "cxxxx3-dxx3-4xx-bxx2-3xxxxxxxxa",
+                "status": "COMPLETE",
+                "type": "OS::Trove::Instance"
+            }
+        },
+        "status": "COMPLETE",
+        "template": {
+            "heat_template_version": "2013-05-23",
+            "resources": {
+                "MyServer": {
+                    "type": "OS::Trove::Instance",
+                    "properties": {
+                        "flavor": "m1.small",
+                        "size": 10
+                    }
+                }
+            }
+        }
+    },
+    "stack_name": "{stack_name}",
+    "timeout_mins": "{timeout_mins}"
+}
