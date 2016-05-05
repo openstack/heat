@@ -287,8 +287,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             return sd
 
     def _check_complete(self):
-        sd = self.rpc_client().check_software_deployment(
-            self.context, self.resource_id, self.stack.time_remaining())
+        sd = self.rpc_client().show_software_deployment(
+            self.context, self.resource_id)
         status = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS]
         if status == SoftwareDeployment.COMPLETE:
             return True
