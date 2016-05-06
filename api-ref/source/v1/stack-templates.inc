@@ -271,6 +271,7 @@ Request
 
    - tenant_id: tenant_id
    - type_name: type_name
+   - with_description: with_description
 
 
 Response Parameters
@@ -285,6 +286,7 @@ Response Parameters
    - attributes: attributes
    - type: type
    - properties: properties
+   - description: resource_description
    - resource_type: resource_type
 
 

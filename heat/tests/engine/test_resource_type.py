@@ -115,9 +115,11 @@ class ResourceTypeTest(common.HeatTestCase):
                 'message': None,
                 'previous_status': None
             },
+            'description': 'No description given'
         }
 
-        schema = self.eng.resource_schema(self.ctx, type_name=type_name)
+        schema = self.eng.resource_schema(self.ctx, type_name=type_name,
+                                          with_description=True)
         self.assertEqual(expected, schema)
 
     def test_resource_schema_with_attr_type(self):
@@ -140,7 +142,7 @@ class ResourceTypeTest(common.HeatTestCase):
                 'version': None,
                 'message': None,
                 'previous_status': None
-            },
+            }
         }
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)

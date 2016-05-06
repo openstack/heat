@@ -659,9 +659,11 @@ class StackController(object):
         }
 
     @util.policy_enforce
-    def resource_schema(self, req, type_name):
+    def resource_schema(self, req, type_name, with_description=False):
         """Returns the schema of the given resource type."""
-        return self.rpc_client.resource_schema(req.context, type_name)
+        return self.rpc_client.resource_schema(
+            req.context, type_name,
+            self._extract_bool_param('with_description', with_description))
 
     @util.policy_enforce
     def generate_template(self, req, type_name):
