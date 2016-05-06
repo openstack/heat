@@ -598,7 +598,9 @@ class ResourceTest(common.HeatTestCase):
                                                       metadata={'foo': 456})
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff(update_snippet, tmpl)
-        self.assertEqual({'Metadata': {'foo': 456}}, diff)
+        self.assertFalse(diff.properties_changed())
+        self.assertTrue(diff.metadata_changed())
+        self.assertFalse(diff.update_policy_changed())
 
     def test_update_template_diff_changed_add(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
@@ -606,7 +608,9 @@ class ResourceTest(common.HeatTestCase):
                                                       metadata={'foo': 123})
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff(update_snippet, tmpl)
-        self.assertEqual({'Metadata': {'foo': 123}}, diff)
+        self.assertFalse(diff.properties_changed())
+        self.assertTrue(diff.metadata_changed())
+        self.assertFalse(diff.update_policy_changed())
 
     def test_update_template_diff_changed_remove(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
@@ -614,7 +618,9 @@ class ResourceTest(common.HeatTestCase):
         update_snippet = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff(update_snippet, tmpl)
-        self.assertEqual({'Metadata': None}, diff)
+        self.assertFalse(diff.properties_changed())
+        self.assertTrue(diff.metadata_changed())
+        self.assertFalse(diff.update_policy_changed())
 
     def test_update_template_diff_properties_none(self):
         before_props = {}
@@ -924,11 +930,10 @@ class ResourceTest(common.HeatTestCase):
         utmpl = rsrc_defn.ResourceDefinition('test_resource',
                                              'GenericResourceType',
                                              {'Foo': 'xyz'})
-        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, tmpl_diff, prop_diff).AndReturn(None)
+            utmpl, mock.ANY, prop_diff).AndReturn(None)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(res.update, utmpl)()
@@ -951,10 +956,9 @@ class ResourceTest(common.HeatTestCase):
                                              'GenericResourceType',
                                              {'Foo': 'xyz'})
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
-        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, tmpl_diff, prop_diff).AndRaise(exception.UpdateReplace(
+            utmpl, mock.ANY, prop_diff).AndRaise(exception.UpdateReplace(
                 res.name))
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
@@ -977,10 +981,9 @@ class ResourceTest(common.HeatTestCase):
                                              'GenericResourceType',
                                              {'Foo': 'xyz'})
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
-        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, tmpl_diff, prop_diff).AndRaise(exception.UpdateReplace())
+            utmpl, mock.ANY, prop_diff).AndRaise(exception.UpdateReplace())
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         updater = scheduler.TaskRunner(res.update, utmpl)

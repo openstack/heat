@@ -559,8 +559,7 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         updated_policy = (updated_grp.properties['rolling_updates']
                           if 'rolling_updates' in updated_grp.properties.data
                           else None)
-        self.assertEqual(updated_policy,
-                         tmpl_diff['Properties'].get('rolling_updates'))
+        self.assertTrue(tmpl_diff.properties_changed())
 
         # test application of the new update policy in handle_update
         update_snippet = rsrc_defn.ResourceDefinition(
