@@ -34,13 +34,14 @@ which has follow options:
     - DEPRECATED. Object with this status is available, but using it in
       code or templates is undesirable. As usual, can be reference in message
       to new object, which can be used instead of deprecated resource.
-    - HIDDEN. Object with this status is unavailable and can't be used
-      anywhere else. Old stacks with such object continue running.
-      All new stacks cannot be created with such object. HIDDEN status
-      notifies, that object is unavailable for using in templates, because can
-      be deleted later. Object with HIDDEN status is not displaying in
-      resource-type-show and in documentation. See below more details about
-      removing and deprecating process.
+    - HIDDEN. The last step in the deprecation process. Old stacks
+      containing resources in this status will continue
+      functioning. Certain functionality is disabled for resources in
+      this status (resource-type-list, resource-type-show, and
+      resource-type-template). Resources in HIDDEN status are not
+      included in the documentation. A known limitation is that new
+      stacks can be created with HIDDEN resources. See below for more
+      details about the removal and deprecation process.
     - UNSUPPORTED. Resources with UNSUPPORTED status are not supported by Heat
       team, i.e. user can use it, but it may be broken.
 
