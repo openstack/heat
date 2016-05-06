@@ -36,6 +36,9 @@ class HeatCustomGuidelines(object):
             # Skip resources, which defined as template resource in environment
             if cls.__module__ == 'heat.engine.resources.template_resource':
                 continue
+            # Skip discovered plugin resources
+            if cls.__module__ == 'heat.engine.plugins':
+                continue
             if (lambda module: True
                 if [path for path in exclude if path in module]
                     else False)(cls.__module__.replace('.', '/')):
