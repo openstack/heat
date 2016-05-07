@@ -4,18 +4,16 @@
 #
 # Translators:
 # Rafael Rivero <rafael@cloudscaling.com>, 2014
-# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
-# Tom Cocozzello <tjcocozz@us.ibm.com>, 2015. #zanata
 # Eugènia Torrella <tester03@es.ibm.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev10\n"
+"Project-Id-Version: heat 6.0.1.dev11\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-05-05 07:24+0000\n"
+"POT-Creation-Date: 2016-05-06 08:34+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-05-05 12:09+0000\n"
+"PO-Revision-Date: 2016-05-06 10:02+0000\n"
 "Last-Translator: Eugènia Torrella <tester03@es.ibm.com>\n"
 "Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -452,7 +450,7 @@ msgstr ""
 "cual se genera la cadena aleatoria."
 
 msgid "A list of cluster instance IPs."
-msgstr "Una lista de ID de instancias de clúster.."
+msgstr "Una lista de ID de instancias de clúster."
 
 msgid "A list of clusters to which this policy is attached."
 msgstr "Una lista de clústeres a los que está conectada esta política."
@@ -645,13 +643,13 @@ msgstr ""
 "que no es necesario que sea exclusivo."
 
 msgid "A string specifying physical network mapping for the network."
-msgstr "Una cadena que especifica la correlación de red física para la red."
+msgstr "Una cadena que especifica la correlación de red física de la red."
 
 msgid "A string specifying the provider network type for the network."
-msgstr "Una cadena que especifica el tipo de red de proveedor para la red."
+msgstr "Una cadena que especifica el tipo de red de proveedor de la red."
 
 msgid "A string specifying the segmentation id for the network."
-msgstr "Una cadena que especifica el id de segmentación para la red."
+msgstr "Una cadena que especifica el id de segmentación de la red."
 
 msgid "A symbolic name for this port."
 msgstr "Nombre simbólico para este puerto."
@@ -737,7 +735,7 @@ msgstr ""
 "en particular."
 
 msgid "Administrative state for the ipsec site connection."
-msgstr "Estado administrativo para la conexión del sitio ipsec."
+msgstr "Estado administrativo para la conexión de sitio ipsec."
 
 msgid "Administrative state for the vpn service."
 msgstr "Estado administrativo del servicio vpn."
@@ -875,7 +873,7 @@ msgstr ""
 "redes conectadas, ip fijas, puerto, etc."
 
 msgid "An unknown error occurred in crypto utils."
-msgstr "Ha ocurrido un error desconocido en crypto utils."
+msgstr "Se ha producido un error desconocido en crypto utils."
 
 msgid "An unknown exception occurred."
 msgstr "Se ha producido una excepcion desconocida"
@@ -1075,7 +1073,7 @@ msgstr "Correlaciones de dispositivo de bloque v2 para este servidor."
 #, python-format
 msgid "Block size of %(given)d is too big, max = %(maximum)d"
 msgstr ""
-"Tamaño de bloque de %(given)d es demasiado grande, máximo = %(maximum)d"
+"El tamaño de bloque de %(given)d es demasiado grande, máximo = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1266,7 +1264,7 @@ msgstr ""
 "se realiza."
 
 msgid "Configure most important configs automatically."
-msgstr "Configure las configuraciones más importantes de forma automática."
+msgstr "Configure los parámetros más importantes de forma automática."
 
 #, python-format
 msgid "Confirm resize for server %s failed"
@@ -1460,8 +1458,8 @@ msgstr "Fecha y hora en que se ha creado un recurso compartido."
 msgid ""
 "Dead Peer Detection protocol configuration for the ipsec site connection."
 msgstr ""
-"Configuración de protocolo de detección de igual muerto para la conexión de "
-"sitio ipsec."
+"Configuración de protocolo de detección de igual inactivo para la conexión "
+"de sitio ipsec."
 
 msgid "Dead engines are removed."
 msgstr "Los motores inactivos se eliminan."
@@ -1663,7 +1661,7 @@ msgid "Description of the Node Group Template."
 msgstr "Descripción de la plantilla del grupo de nodos."
 
 msgid "Description of the Sahara Group Template."
-msgstr "Descripción de la plantilla del grupo Sahara."
+msgstr "Descripción de la plantilla de grupo Sahara."
 
 msgid "Description of the alarm."
 msgstr "Descripción de la alarma."
@@ -2249,7 +2247,7 @@ msgid "Glance image ID or name."
 msgstr "ID o nombre de imagen de Glance."
 
 msgid "Governs permissions set in manila for the cluster ips."
-msgstr "Governa los permisos definidos en Manila para las IP del clúster."
+msgstr "Gobierna los permisos definidos en Manila para las IP del clúster."
 
 msgid "Granularity to use for age argument, defaults to days."
 msgstr ""
@@ -2439,13 +2437,13 @@ msgstr ""
 "restringe el uso de esta propiedad a usuarios administrativos solamente."
 
 msgid "ID of the Node Group Template."
-msgstr "ID de la plantilla de grupos de nodos."
+msgstr "ID de la plantilla del grupos de nodos."
 
 msgid "ID of the VPNGateway to attach to the VPC."
 msgstr "ID de la pasarela VPN a adjuntar a VPC."
 
 msgid "ID of the default image to use for the template."
-msgstr "ID de la imagen predeterminada para utilizar con la plantilla."
+msgstr "ID de la imagen predeterminada a utilizar para la plantilla."
 
 msgid "ID of the default pool this listener is associated to."
 msgstr ""
@@ -2490,7 +2488,7 @@ msgid "ID of the stack this deployment belongs to"
 msgstr "ID de la pila a la que pertenece este despliegue"
 
 msgid "ID of the tenant to which the RBAC policy will be enforced."
-msgstr "Id del arrendatario al que se aplicará la política RBAC."
+msgstr "ID del arrendatario al que se aplicará la política RBAC."
 
 msgid "ID of the tenant who owns the health monitor."
 msgstr "ID del arrendatario propietario del supervisor de estado."
@@ -3098,8 +3096,8 @@ msgstr "Pares de clave/valor a asociar con el volumen."
 
 msgid "Keypair added to instances to make them accessible for user."
 msgstr ""
-"Par de claves añadido a las instancias para que pueda acceder a ellas el "
-"usuario."
+"Par de claves añadido a las instancias para que el usuario pueda acceder a "
+"las mismas."
 
 msgid "Keypair secret key."
 msgstr "Clave secreta del par de claves."
@@ -3169,7 +3167,7 @@ msgstr ""
 
 #, python-format
 msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "Longitud de %(given)d es demasiado larga, máxima = %(maximum)d"
+msgstr "La longitud de %(given)d es demasiado larga, máxima = %(maximum)d"
 
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
@@ -3241,7 +3239,7 @@ msgid "List of network interfaces to create on instance."
 msgstr "Lista de interfaces de red a crear en la instancia."
 
 msgid "List of processes to enable anti-affinity for."
-msgstr "Lista de procesos para habilitar la anti-afinidad."
+msgstr "Lista de procesos para los que habilitar la anti-afinidad."
 
 msgid "List of processes to run on every node."
 msgstr "Lista de procesos para ejecutar en cada nodo."
@@ -3361,7 +3359,7 @@ msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
 msgstr ""
-"Ruta local en cada nodo de clúster en el que se vaya a montar el recurso "
+"Ruta local en cada nodo de clúster en el que se montará el recurso "
 "compartido. El valor predeterminado es '/mnt/{share_id}'."
 
 msgid "Location of the SSL certificate file to use for SSL mode."
@@ -3413,7 +3411,7 @@ msgid "Max bandwidth in kbps."
 msgstr "Ancho de banda máximo en kbps."
 
 msgid "Max burst bandwidth in kbps."
-msgstr "Ráfaga máxima de ancho de banda en kbps."
+msgstr "Ráfaga de ancho de banda máxima en kbps."
 
 msgid "Max size of the cluster."
 msgstr "Tamaño máximo del clúster."
@@ -3635,7 +3633,7 @@ msgid "Must specify 'InstanceId' if you specify 'EIP'."
 msgstr "Debe especificar 'InstanceId' si indica 'EIP'."
 
 msgid "Name for the Sahara Cluster Template."
-msgstr "Nombre de la plantilla de clústeres Sahara"
+msgstr "Nombre de la plantilla de clúster Sahara"
 
 msgid "Name for the Sahara Node Group Template."
 msgstr "Nombre de la plantilla del grupo de nodos Sahara"
@@ -4148,7 +4146,7 @@ msgid "Nova network id."
 msgstr "ID de red de Nova."
 
 msgid "Number of VCPUs for the flavor."
-msgstr "Número de VCPU para el tipo."
+msgstr "Número de VCPU del tipo."
 
 msgid "Number of backlog requests to configure the socket with."
 msgstr "Número de solicitudes de retraso con las que configurar el socket."
@@ -4246,8 +4244,9 @@ msgid ""
 "One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
 "be set for the specified network of server \"%(server)s\"."
 msgstr ""
-"Se debe establecer una de las propiedades \"%(id)s\", \"%(port_id)s\" o "
-"\"%(subnet)s\" para la red o el servidor especificado \"%(server)s\"."
+"Se debe establecer una de las propiedades siguientes: \"%(id)s\", "
+"\"%(port_id)s\" o \"%(subnet)s\" para la red o el servidor especificado "
+"\"%(server)s\"."
 
 #, python-format
 msgid ""
@@ -4527,7 +4526,7 @@ msgid "Pool creation failed due to vip"
 msgstr "La creación de la agrupación ha fallado debido a la vip"
 
 msgid "Pool from which floating IP is allocated."
-msgstr "Agrupación de la que se asignan la IP flotante."
+msgstr "Agrupación desde la que se asigna la IP flotante."
 
 msgid "Port number on which the servers are running on the members."
 msgstr "Número de puerto en el que los servidores se ejecutan en los miembros."
@@ -4547,7 +4546,7 @@ msgid "Position of the rule within the firewall policy."
 msgstr "Posición de la regla en la política de cortafuegos."
 
 msgid "Pre-shared key string for the ipsec site connection."
-msgstr "cadena de clave precompartida para la conexión de sitio ipsec."
+msgstr "Cadena de claves precompartida para la conexión de sitio ipsec."
 
 msgid "Prefix length for subnet allocation from subnet pool."
 msgstr ""
@@ -4791,7 +4790,7 @@ msgstr ""
 "remoto o FQDN."
 
 msgid "Remote subnet(s) in CIDR format."
-msgstr "Subred(es) remotas en formato CIDR."
+msgstr "Subred(es) remota(s) en formato CIDR."
 
 msgid ""
 "Replacement policy used to work around flawed nova/neutron port interaction "
@@ -5072,7 +5071,7 @@ msgid "Server name."
 msgstr "Nombre de servidor."
 
 msgid "Server to assign floating IP to."
-msgstr "Servidor al que asignar IP flotante."
+msgstr "Servidor al que asignar la IP flotante."
 
 #, python-format
 msgid ""
@@ -5539,7 +5538,7 @@ msgid "Tenant owning the pool."
 msgstr "Arrendatario propietario de la agrupación."
 
 msgid "Tenant owning the port."
-msgstr "Proyecto propietario del puerto."
+msgstr "Arrendatario propietario del puerto."
 
 msgid "Tenant owning the router."
 msgstr "Arrendatario propietario del direccionador."
@@ -5875,7 +5874,7 @@ msgid "The administrative state of the health monitor."
 msgstr "El estado administrativo del supervisor de estado."
 
 msgid "The administrative state of the ipsec site connection."
-msgstr "El estado administrativo de la conexión del sitio ipsec."
+msgstr "El estado administrativo de la conexión de sitio ipsec."
 
 msgid "The administrative state of the pool member."
 msgstr "El estado administrativo del miembro de agrupación."
@@ -5948,7 +5947,7 @@ msgid "The authentication hash algorithm used by the ike policy."
 msgstr "El algoritmo hash de autenticación utilizado por la política IKE."
 
 msgid "The authentication mode of the ipsec site connection."
-msgstr "La modalidad de autenticación de la conexión del sitio ipsec."
+msgstr "La modalidad de autenticación de la conexión de sitio ipsec."
 
 msgid "The availability zone in which the volume is located."
 msgstr "La zona de disponibilidad en la que está ubicado el volumen."
@@ -6049,8 +6048,8 @@ msgstr ""
 msgid ""
 "The dead peer detection protocol configuration of the ipsec site connection."
 msgstr ""
-"La configuración de protocolo de detección de igual muerto de la conexión "
-"del sitio ipsec."
+"La configuración de protocolo de detección de igual inactivo de la conexión "
+"de sitio ipsec."
 
 msgid "The decrypted secret payload."
 msgstr "La carga útil secreta sin cifrar."
@@ -6074,7 +6073,7 @@ msgid "The description of the ipsec policy."
 msgstr "La descripción de la política ipsec."
 
 msgid "The description of the ipsec site connection."
-msgstr "La descripción de la conexión del sitio ipsec."
+msgstr "La descripción de la conexión de sitio ipsec."
 
 msgid "The description of the vpn service."
 msgstr "La descripción del servicio vpn."
@@ -6224,7 +6223,7 @@ msgstr ""
 "modelo de bahía."
 
 msgid "The initiator of the ipsec site connection."
-msgstr "El iniciador de la conexión del sitio ipsec."
+msgstr "El iniciador de la conexión de sitio ipsec."
 
 msgid "The input string to be stored."
 msgstr "La cadena de entrada a almacenar."
@@ -6556,7 +6555,7 @@ msgid "The number of seconds to wait between batches."
 msgstr "El número de segundos que se espera entre lotes."
 
 msgid "The number of seconds to wait for the cluster actions."
-msgstr "El número de segundos que se espera para acciones de clúster."
+msgstr "El número de segundos que se esperará para acciones de clúster."
 
 msgid ""
 "The number of seconds to wait for the correct number of signals to arrive."
@@ -6737,7 +6736,7 @@ msgid "The resource %s is already being updated."
 msgstr "El recurso %s ya se está actualizando."
 
 msgid "The resource href of the queue."
-msgstr "El href del recurso de la cola."
+msgstr "El href de recurso de la cola."
 
 msgid "The route mode of the ipsec site connection."
 msgstr "La modalidad de ruta de la conexión del sitio ipsec."
@@ -6947,14 +6946,14 @@ msgid ""
 "The unique identifier of ike policy associated with the ipsec site "
 "connection."
 msgstr ""
-"El identificador exclusivo de la política ike asociada con la conexión del "
+"El identificador exclusivo de la política ike asociada con la conexión de "
 "sitio ipsec."
 
 msgid ""
 "The unique identifier of ipsec policy associated with the ipsec site "
 "connection."
 msgstr ""
-"El identificador exclusivo de la política ipsec asociada con la conexión del "
+"El identificador exclusivo de la política ipsec asociada con la conexión de "
 "sitio ipsec."
 
 msgid ""
@@ -7364,14 +7363,14 @@ msgid ""
 "Unique identifier for the ike policy associated with the ipsec site "
 "connection."
 msgstr ""
-"Identificador exclusivo para la política ike asociada con la conexión del "
+"Identificador exclusivo para la política ike asociada con la conexión de "
 "sitio ipsec."
 
 msgid ""
 "Unique identifier for the ipsec policy associated with the ipsec site "
 "connection."
 msgstr ""
-"Identificador exclusivo para la política ipsec asociada con la conexión del "
+"Identificador exclusivo para la política ipsec asociada con la conexión de "
 "sitio ipsec."
 
 msgid "Unique identifier for the network owning the port."
@@ -7387,7 +7386,7 @@ msgid ""
 "Unique identifier for the vpn service associated with the ipsec site "
 "connection."
 msgstr ""
-"Identificador exclusivo para el servicio vpn asociado con la conexión del "
+"Identificador exclusivo para el servicio vpn asociado con la conexión de "
 "sitio ipsec."
 
 msgid ""
@@ -7677,7 +7676,7 @@ msgid "Version for the ike policy."
 msgstr "Versión de la política ike."
 
 msgid "Version of Hadoop running on instances."
-msgstr "Versión de Hadoop ejecutándose en instancias."
+msgstr "Versión de Hadoop que se ejecuta en las instancias."
 
 msgid "Version of IP address."
 msgstr "Versión de la dirección IP."
@@ -8054,7 +8053,7 @@ msgid "segmentation_id must be specified for using vlan"
 msgstr "Se debe especificar segmentation_id para utilizar vlan"
 
 msgid "segmentation_id not allowed for flat network type."
-msgstr "segmentation_id no está permitido para tipo de red plana."
+msgstr "segmentation_id no está permitido para el tipo de red plana."
 
 msgid "server_id must be specified"
 msgstr "Se debe especificar server_id"
