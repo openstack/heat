@@ -1,0 +1,11 @@
+{
+    "stack": {
+        "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+        "links": [
+            {
+                "href": "http://192.168.123.200:8004/v1/eb1c63a4f77141548385f113a28f0f52/stacks/teststack/3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+                "rel": "self"
+            }
+        ]
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "versions": [
+        {
+            "status": "CURRENT",
+            "id": "v1.0",
+            "links": [
+                {
+                    "href": "http://23.253.228.211:8000/v1/",
+                    "rel": "self"
+                }
+            ]
+        }
+    ]
+}

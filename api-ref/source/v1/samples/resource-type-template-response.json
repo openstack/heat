@@ -1,0 +1,50 @@
+{
+    "HeatTemplateFormatVersion": "2012-12-12",
+    "Outputs": {
+        "private_key": {
+            "Description": "The private key if it has been saved.",
+            "Value": "{\"Fn::GetAtt\": [\"KeyPair\", \"private_key\"]}"
+        },
+        "public_key": {
+            "Description": "The public key.",
+            "Value": "{\"Fn::GetAtt\": [\"KeyPair\", \"public_key\"]}"
+        }
+    },
+    "Parameters": {
+        "name": {
+            "Description": "The name of the key pair.",
+            "Type": "String"
+        },
+        "public_key": {
+            "Description": "The optional public key. This allows users to supply the public key from a pre-existing key pair. If not supplied, a new key pair will be generated.",
+            "Type": "String"
+        },
+        "save_private_key": {
+            "AllowedValues": [
+                true,
+                "true",
+                false,
+                "false"
+            ],
+            "Default": false,
+            "Description": "true if the system should remember a generated private key; false otherwise.",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "KeyPair": {
+            "Properties": {
+                "name": {
+                    "Ref": "name"
+                },
+                "public_key": {
+                    "Ref": "public_key"
+                },
+                "save_private_key": {
+                    "Ref": "save_private_key"
+                }
+            },
+            "Type": "OS::Nova::KeyPair"
+        }
+    }
+}

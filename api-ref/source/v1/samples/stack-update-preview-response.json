@@ -1,0 +1,67 @@
+{
+    "unchanged": [
+        {
+            "updated_time": "datetime",
+            "resource_name": "",
+            "physical_resource_id": "{resource id or ''}",
+            "resource_action": "CREATE",
+            "resource_status": "COMPLETE",
+            "resource_status_reason": "",
+            "resource_type": "restype",
+            "stack_identity": "{stack_id}",
+            "stack_name": "{stack_name}"
+        }
+    ],
+    "updated": [
+        {
+            "updated_time": "datetime",
+            "resource_name": "",
+            "physical_resource_id": "{resource id or ''}",
+            "resource_action": "CREATE",
+            "resource_status": "COMPLETE",
+            "resource_status_reason": "",
+            "resource_type": "restype",
+            "stack_identity": "{stack_id}",
+            "stack_name": "{stack_name}"
+        }
+    ],
+    "replaced": [
+        {
+            "updated_time": "datetime",
+            "resource_name": "",
+            "physical_resource_id": "{resource id or ''}",
+            "resource_action": "CREATE",
+            "resource_status": "COMPLETE",
+            "resource_status_reason": "",
+            "resource_type": "restype",
+            "stack_identity": "{stack_id}",
+            "stack_name": "{stack_name}"
+        }
+    ],
+    "added": [
+        {
+            "updated_time": "datetime",
+            "resource_name": "",
+            "physical_resource_id": "{resource id or ''}",
+            "resource_action": "CREATE",
+            "resource_status": "COMPLETE",
+            "resource_status_reason": "",
+            "resource_type": "restype",
+            "stack_identity": "{stack_id}",
+            "stack_name": "{stack_name}"
+        }
+    ],
+    "deleted": [
+        {
+            "updated_time": "datetime",
+            "resource_name": "",
+            "physical_resource_id": "{resource id or ''}",
+            "resource_action": "CREATE",
+            "resource_status": "COMPLETE",
+            "resource_status_reason": "",
+            "resource_type": "restype",
+            "stack_identity": "{stack_id}",
+            "stack_name": "{stack_name}"
+        }
+    ]
+}

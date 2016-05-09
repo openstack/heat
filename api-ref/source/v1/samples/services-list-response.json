@@ -1,0 +1,30 @@
+{
+    "services": [
+        {
+            "status": "up",
+            "binary": "heat-engine",
+            "report_interval": 60,
+            "engine_id": "9d9242c3-4b9e-45e1-9e74-7615fbf20e5d",
+            "created_at": "2015-02-03T05:55:59.000000",
+            "hostname": "mrkanag",
+            "updated_at": "2015-02-03T05:57:59.000000",
+            "topic": "engine",
+            "host": "engine-1",
+            "deleted_at": null,
+            "id": "e1908f44-42f9-483f-b778-bc814072c33d"
+        },
+        {
+            "status": "down",
+            "binary": "heat-engine",
+            "report_interval": 60,
+            "engine_id": "2d2434bf-adb6-4453-9c6b-b22fb8bd2306",
+            "created_at": "2015-02-03T06:03:14.000000",
+            "hostname": "mrkanag",
+            "updated_at": "2015-02-03T06:09:55.000000",
+            "topic": "engine",
+            "host": "engine",
+            "deleted_at": null,
+            "id": "582b5657-6db7-48ad-8483-0096350faa21"
+        }
+    ]
+}

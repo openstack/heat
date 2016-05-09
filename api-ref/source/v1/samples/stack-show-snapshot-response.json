@@ -1,0 +1,47 @@
+{
+    "snapshot": {
+        "id": "7c4e1ef4-bf1b-41ab-a0c8-ce01f4ffdfa1",
+        "name": "vol_snapshot",
+        "status": "COMPLETE",
+        "status_reason": "Stack SNAPSHOT completed successfully",
+        "creation_time": "2015-08-04T20:57:55Z",
+        "data": {
+            "status": "COMPLETE",
+            "name": "stack_vol1",
+            "stack_user_project_id": "fffa11067b1c48129ddfb78fba2bf09f",
+            "environment": {
+                "parameters": {},
+                "resource_registry": {
+                    "resources": {}
+                }
+            },
+            "template": {
+                "heat_template_version": "2013-05-23",
+                "resources": {
+                    "volume": {
+                        "type": "OS::Cinder::Volume",
+                        "properties": {
+                            "size": 1
+                        }
+                    }
+                }
+            },
+            "action": "SNAPSHOT",
+            "project_id": "ecdb08032cd042179692a1b148f6565e",
+            "id": "656452c2-e151-40da-8704-c844e69b485c",
+            "resources": {
+                "volume": {
+                    "status": "COMPLETE",
+                    "name": "volume",
+                    "resource_data": {
+                        "backup_id": "99108cf8-398f-461b-a043-bdceb7c9f572"
+                    },
+                    "resource_id": "3ab8cf79-807b-4c40-b743-0655f91e072f",
+                    "action": "SNAPSHOT",
+                    "type": "OS::Cinder::Volume",
+                    "metadata": {}
+                }
+            }
+        }
+    }
+}

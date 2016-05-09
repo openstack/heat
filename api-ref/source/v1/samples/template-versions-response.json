@@ -1,0 +1,32 @@
+{
+    "template_versions": [
+        {
+            "version": "heat_template_version.2014-10-16",
+            "type": "hot"
+        },
+        {
+            "version": "heat_template_version.2015-04-30",
+            "type": "hot"
+        },
+        {
+            "version": "HeatTemplateFormatVersion.2012-12-12",
+            "type": "cfn"
+        },
+        {
+            "version": "heat_template_version.2015-10-15",
+            "type": "hot"
+        },
+        {
+            "version": "AWSTemplateFormatVersion.2010-09-09",
+            "type": "cfn"
+        },
+        {
+            "version": "heat_template_version.2013-05-23",
+            "type": "hot"
+        },
+        {
+            "version": "heat_template_version.2016-04-08",
+            "type": "hot"
+        }
+    ]
+}

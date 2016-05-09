@@ -1,0 +1,168 @@
+{
+    "stack": {
+        "capabilities": [],
+        "creation_time": "2015-01-31T15:12:36Z",
+        "description": "HOT template for Nova Server resource.\n",
+        "disable_rollback": true,
+        "id": "None",
+        "links": [
+            {
+                "href": "http://192.168.122.102:8004/v1/6e18cc2bdbeb48a5basad2dc499f6804/stacks/test_stack/None",
+                "rel": "self"
+            }
+        ],
+        "notification_topics": [],
+        "parameters": {
+            "OS::project_id": "6e18cc2bdbeb48a5basad2dc499f6804",
+            "OS::stack_id": "None",
+            "OS::stack_name": "teststack",
+            "admin_user": "cloud-user",
+            "flavor": "m1.small",
+            "image": "F20-cfg",
+            "key_name": "heat_key",
+            "server_name": "MyServer"
+        },
+        "parent": null,
+        "resources": [
+            {
+                "attributes": {},
+                "description": "",
+                "metadata": {},
+                "physical_resource_id": "",
+                "properties": {
+                    "description": "Ping and SSH",
+                    "name": "the_sg",
+                    "rules": [
+                        {
+                            "direction": "ingress",
+                            "ethertype": "IPv4",
+                            "port_range_max": null,
+                            "port_range_min": null,
+                            "protocol": "icmp",
+                            "remote_group_id": null,
+                            "remote_ip_prefix": null,
+                            "remote_mode": "remote_ip_prefix"
+                        },
+                        {
+                            "direction": "ingress",
+                            "ethertype": "IPv4",
+                            "port_range_max": 65535,
+                            "port_range_min": 1,
+                            "protocol": "tcp",
+                            "remote_group_id": null,
+                            "remote_ip_prefix": null,
+                            "remote_mode": "remote_ip_prefix"
+                        },
+                        {
+                            "direction": "ingress",
+                            "ethertype": "IPv4",
+                            "port_range_max": 65535,
+                            "port_range_min": 1,
+                            "protocol": "udp",
+                            "remote_group_id": null,
+                            "remote_ip_prefix": null,
+                            "remote_mode": "remote_ip_prefix"
+                        }
+                    ]
+                },
+                "required_by": [
+                    "server1"
+                ],
+                "resource_action": "INIT",
+                "resource_identity": {
+                    "path": "/resources/the_sg_res",
+                    "stack_id": "None",
+                    "stack_name": "teststack",
+                    "tenant": "6e18cc2bdbeb48a5b3cad2dc499f6804"
+                },
+                "resource_name": "the_sg_res",
+                "resource_status": "COMPLETE",
+                "resource_status_reason": "",
+                "resource_type": "OS::Neutron::SecurityGroup",
+                "stack_identity": {
+                    "path": "",
+                    "stack_id": "None",
+                    "stack_name": "teststack",
+                    "tenant": "6e18cc2bdbeb48a5b3cad2dc499f6804"
+                },
+                "stack_name": "teststack",
+                "updated_time": "2015-01-31T15:12:36Z"
+            },
+            {
+                "attributes": {
+                    "accessIPv4": "",
+                    "accessIPv6": "",
+                    "addresses": "",
+                    "console_urls": "",
+                    "first_address": "",
+                    "instance_name": "",
+                    "name": "MyServer",
+                    "networks": "",
+                    "show": ""
+                },
+                "description": "",
+                "metadata": {},
+                "physical_resource_id": "",
+                "properties": {
+                    "admin_pass": null,
+                    "admin_user": "cloud-user",
+                    "availability_zone": null,
+                    "block_device_mapping": null,
+                    "config_drive": null,
+                    "diskConfig": null,
+                    "flavor": "m1.small",
+                    "flavor_update_policy": "RESIZE",
+                    "image": "F20-cfg",
+                    "image_update_policy": "REPLACE",
+                    "key_name": "heat_key",
+                    "metadata": {
+                        "ha_stack": "None"
+                    },
+                    "name": "MyServer",
+                    "networks": [
+                        {
+                            "fixed_ip": null,
+                            "network": "private",
+                            "port": null,
+                            "uuid": null
+                        }
+                    ],
+                    "personality": {},
+                    "reservation_id": null,
+                    "scheduler_hints": null,
+                    "security_groups": [
+                        "None"
+                    ],
+                    "software_config_transport": "POLL_SERVER_CFN",
+                    "user_data": "",
+                    "user_data_format": "HEAT_CFNTOOLS"
+                },
+                "required_by": [],
+                "resource_action": "INIT",
+                "resource_identity": {
+                    "path": "/resources/hello_world",
+                    "stack_id": "None",
+                    "stack_name": "teststack",
+                    "tenant": "6e18cc2bdbeb48a3433cad2dc499sdf32234"
+                },
+                "resource_name": "hello_world",
+                "resource_status": "COMPLETE",
+                "resource_status_reason": "",
+                "resource_type": "OS::Nova::Server",
+                "stack_identity": {
+                    "path": "",
+                    "stack_id": "None",
+                    "stack_name": "teststack",
+                    "tenant": "6e18cc2bdbeb48a3433cad2dc499sdf32234"
+                },
+                "stack_name": "teststack",
+                "updated_time": "2015-01-31T15:12:36Z"
+            }
+        ],
+        "stack_name": "test_stack",
+        "stack_owner": "admin",
+        "template_description": "HOT template for Nova Server resource.\n",
+        "timeout_mins": null,
+        "updated_time": null
+    }
+}

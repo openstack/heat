@@ -1,0 +1,32 @@
+{
+    "software_config": {
+        "inputs": [
+            {
+                "default": null,
+                "type": "String",
+                "name": "foo",
+                "description": null
+            },
+            {
+                "default": null,
+                "type": "String",
+                "name": "bar",
+                "description": null
+            }
+        ],
+        "group": "script",
+        "name": "a-config-we5zpvyu7b5o",
+        "outputs": [
+            {
+                "type": "String",
+                "name": "result",
+                "error_output": false,
+                "description": null
+            }
+        ],
+        "creation_time": "2015-01-31T15:12:36Z",
+        "id": "ddee7aca-aa32-4335-8265-d436b20db4f1",
+        "config": "#!/bin/sh -x\necho \"Writing to /tmp/$bar\"\necho $foo > /tmp/$bar\necho -n \"The file /tmp/$bar contains `cat /tmp/$bar` for server $deploy_server_id during $deploy_action\" > $heat_outputs_path.result\necho \"Written to /tmp/$bar\"\necho \"Output to stderr\" 1>&2",
+        "options": null
+    }
+}
