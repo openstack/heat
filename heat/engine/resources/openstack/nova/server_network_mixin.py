@@ -88,7 +88,8 @@ class ServerNetworkMixin(object):
                         'network': net}
                     raise exception.StackValidationFailed(message=msg)
 
-    def _create_internal_port(self, net_data, net_number):
+    def _create_internal_port(self, net_data, net_number,
+                              security_groups=None):
         name = _('%(server)s-port-%(number)s') % {'server': self.name,
                                                   'number': net_number}
 
@@ -104,6 +105,11 @@ class ServerNetworkMixin(object):
         # we should add fixed_ips only if subnet or ip were provided
         if body:
             kwargs.update({'fixed_ips': [body]})
+
+        if security_groups:
+            sec_uuids = self.client_plugin(
+                'neutron').get_secgroup_uuids(security_groups)
+            kwargs['security_groups'] = sec_uuids
 
         port = self.client('neutron').create_port({'port': kwargs})['port']
 
@@ -181,7 +187,7 @@ class ServerNetworkMixin(object):
         for port_id in new_ports:
             self._data_update_ports(port_id, 'add', port_type='external_ports')
 
-    def _build_nics(self, networks):
+    def _build_nics(self, networks, security_groups=None):
         if not networks:
             return None
 
@@ -193,7 +199,9 @@ class ServerNetworkMixin(object):
             if net.get(self.NETWORK_PORT):
                 nic_info['port-id'] = net[self.NETWORK_PORT]
             elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
-                nic_info['port-id'] = self._create_internal_port(net, idx)
+                nic_info['port-id'] = self._create_internal_port(
+                    net, idx, security_groups)
+
             # if nic_info including 'port-id', do not set ip for nic
             if not nic_info.get('port-id'):
                 if net.get(self.NETWORK_FIXED_IP):
@@ -273,7 +281,8 @@ class ServerNetworkMixin(object):
             if net is not None:
                 net['port'] = props['port']
 
-    def calculate_networks(self, old_nets, new_nets, ifaces):
+    def calculate_networks(self, old_nets, new_nets, ifaces,
+                           security_groups=None):
         remove_ports = []
         add_nets = []
         attach_first_free_port = False
@@ -328,8 +337,8 @@ class ServerNetworkMixin(object):
             if net.get(self.NETWORK_PORT):
                 handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
             elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
-                handler_kwargs['port_id'] = self._create_internal_port(net,
-                                                                       idx)
+                handler_kwargs['port_id'] = self._create_internal_port(
+                    net, idx, security_groups)
 
             add_nets.append(handler_kwargs)
 
