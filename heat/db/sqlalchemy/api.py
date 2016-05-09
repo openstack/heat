@@ -442,6 +442,7 @@ def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
     if tenant_safe:
         query = query.filter_by(tenant=context.tenant_id)
 
+    query = query.options(orm.subqueryload("tags"))
     if tags:
         for tag in tags:
             tag_alias = orm_aliased(models.StackTag)
