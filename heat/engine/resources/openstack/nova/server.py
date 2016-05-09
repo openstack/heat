@@ -858,7 +858,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         scheduler_hints = self._scheduler_hints(
             self.properties[self.SCHEDULER_HINTS])
 
-        nics = self._build_nics(self.properties[self.NETWORKS])
+        nics = self._build_nics(self.properties[self.NETWORKS],
+                                security_groups=security_groups)
         block_device_mapping = self._build_block_device_mapping(
             self.properties[self.BLOCK_DEVICE_MAPPING])
         block_device_mapping_v2 = self._build_block_device_mapping_v2(
@@ -1129,12 +1130,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         updaters = []
         new_networks = prop_diff.get(self.NETWORKS)
         old_networks = self.properties[self.NETWORKS]
+        security_groups = self.properties[self.SECURITY_GROUPS]
 
         if not server:
             server = self.client().servers.get(self.resource_id)
         interfaces = server.interface_list()
         remove_ports, add_nets = self.calculate_networks(
-            old_networks, new_networks, interfaces)
+            old_networks, new_networks, interfaces, security_groups)
 
         for port in remove_ports:
             updaters.append(
