@@ -314,9 +314,11 @@ def format_stack_resource(resource, detail=True, with_props=False,
         rpc_api.RES_REQUIRED_BY: resource.required_by(),
     }
 
-    if resource.has_nested():
+    try:
         res[rpc_api.RES_NESTED_STACK_ID] = dict(
-            resource.nested().identifier())
+            resource.nested_identifier())
+    except (AttributeError, TypeError):
+        pass
 
     if resource.stack.parent_resource_name:
         res[rpc_api.RES_PARENT_RESOURCE] = resource.stack.parent_resource_name
