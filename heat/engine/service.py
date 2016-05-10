@@ -1462,15 +1462,39 @@ class EngineService(service.Service):
         return result
 
     def list_template_versions(self, cnxt):
+        def find_version_class(versions, cls):
+            for version in versions:
+                if version['class'] is cls:
+                    return version
+
         mgr = templatem._get_template_extension_manager()
         _template_classes = [(name, mgr[name].plugin)
                              for name in mgr.names()]
         versions = []
-        for t in _template_classes:
+        for t in sorted(_template_classes):  # Sort to ensure dates come first
             if issubclass(t[1], cfntemplate.CfnTemplate):
-                versions.append({'version': t[0], 'type': 'cfn'})
+                type = 'cfn'
             else:
-                versions.append({'version': t[0], 'type': 'hot'})
+                type = 'hot'
+
+            # Official versions are in '%Y-%m-%d' format. Default
+            # version aliases are the Heat release code name
+            try:
+                datetime.datetime.strptime(t[0].split('.')[-1], '%Y-%m-%d')
+                versions.append({'version': t[0], 'type': type,
+                                 'class': t[1], 'aliases': []})
+            except ValueError:
+                version = find_version_class(versions, t[1])
+                if version is not None:
+                    version['aliases'].append(t[0])
+                else:
+                    raise exception.InvalidTemplateVersions(version=t[0])
+
+        # 'class' was just used to find the version that the alias
+        # maps to. Remove it so it will not show up in the output
+        for version in versions:
+            del version['class']
+
         return versions
 
     def list_template_functions(self, cnxt, template_version):
