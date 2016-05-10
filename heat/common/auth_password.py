@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keystoneclient import exceptions as keystone_exceptions
-from keystoneclient import session
+from keystoneauth1 import exceptions as keystone_exceptions
+from keystoneauth1 import session
 from webob import exc
 
 from heat.common import config
@@ -34,7 +34,7 @@ class KeystonePasswordAuthProtocol(object):
     def __init__(self, app, conf):
         self.app = app
         self.conf = conf
-        self.session = session.Session.construct(self._ssl_options())
+        self.session = session.Session(**config.get_ssl_options('keystone'))
 
     def __call__(self, env, start_response):
         """Authenticate incoming request."""
@@ -104,13 +104,6 @@ class KeystonePasswordAuthProtocol(object):
         }
 
         return headers
-
-    def _ssl_options(self):
-        opts = {'cacert': config.get_client_option('keystone', 'ca_file'),
-                'insecure': config.get_client_option('keystone', 'insecure'),
-                'cert': config.get_client_option('keystone', 'cert_file'),
-                'key': config.get_client_option('keystone', 'key_file')}
-        return opts
 
 
 def filter_factory(global_conf, **local_conf):

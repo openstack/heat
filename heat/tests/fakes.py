@@ -18,8 +18,8 @@ wrong the tests might raise AssertionError. I've indicated in comments the
 places where actual behavior differs from the spec.
 """
 
-from keystoneclient import auth
-from keystoneclient import session
+from keystoneauth1 import plugin
+from keystoneauth1 import session
 
 from heat.common import context
 
@@ -73,7 +73,7 @@ class FakeClient(object):
         pass
 
 
-class FakeAuth(auth.BaseAuthPlugin):
+class FakeAuth(plugin.BaseAuthPlugin):
 
     def __init__(self, auth_token='abcd1234', only_services=None):
         self.auth_token = auth_token

@@ -16,9 +16,9 @@ from ceilometerclient import client as ceilometer_client
 from cinderclient import client as cinder_client
 from heat.common.i18n import _
 from heatclient import client as heat_client
-from keystoneclient.auth.identity.generic import password
-from keystoneclient import exceptions as kc_exceptions
-from keystoneclient import session
+from keystoneauth1 import exceptions as kc_exceptions
+from keystoneauth1.identity.generic import password
+from keystoneauth1 import session
 from neutronclient.v2_0 import client as neutron_client
 from novaclient import client as nova_client
 from swiftclient import client as swift_client
@@ -51,10 +51,7 @@ class KeystoneWrapperClient(object):
     def get_endpoint_url(self, service_type, region=None):
         kwargs = {
             'service_type': service_type,
-            'endpoint_type': 'publicURL'}
-        if region:
-            kwargs.update({'attr': 'region',
-                           'filter_value': region})
+            'region_name': region}
         return self.auth_ref.service_catalog.url_for(**kwargs)
 
 

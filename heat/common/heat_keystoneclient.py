@@ -17,9 +17,9 @@ import collections
 import uuid
 import weakref
 
-from keystoneclient.auth.identity import v3 as kc_auth_v3
+from keystoneauth1.identity import v3 as kc_auth_v3
+from keystoneauth1 import session
 import keystoneclient.exceptions as kc_exception
-from keystoneclient import session
 from keystoneclient.v3 import client as kc_v3
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -76,7 +76,7 @@ class KeystoneClientV3(object):
         self._domain_admin_auth = None
         self._domain_admin_client = None
 
-        self.session = session.Session.construct(self._ssl_options())
+        self.session = session.Session(**config.get_ssl_options('keystone'))
         self.v3_endpoint = self.context.keystone_v3_endpoint
 
         if self.context.trust_id:
@@ -175,13 +175,6 @@ class KeystoneClientV3(object):
                     raise exception.AuthorizationFailure()
 
         return client
-
-    def _ssl_options(self):
-        opts = {'cacert': config.get_client_option('keystone', 'ca_file'),
-                'insecure': config.get_client_option('keystone', 'insecure'),
-                'cert': config.get_client_option('keystone', 'cert_file'),
-                'key': config.get_client_option('keystone', 'key_file')}
-        return opts
 
     def create_trust_context(self):
         """Create a trust using the trustor identity in the current context.

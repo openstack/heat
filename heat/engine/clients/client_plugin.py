@@ -16,11 +16,11 @@ import functools
 import sys
 import weakref
 
-from keystoneclient import auth
-from keystoneclient.auth.identity import v2
-from keystoneclient.auth.identity import v3
-from keystoneclient import exceptions
-from keystoneclient import session
+from keystoneauth1 import exceptions
+from keystoneauth1.identity import v2
+from keystoneauth1.identity import v3
+from keystoneauth1 import plugin
+from keystoneauth1 import session
 from oslo_config import cfg
 import requests
 import six
@@ -130,12 +130,8 @@ class ClientPlugin(object):
         # authentication requests so there is no reason to construct it fresh
         # for every client plugin. It should be global and shared amongst them.
         if not self._keystone_session_obj:
-            o = {'cacert': self._get_client_option('keystone', 'ca_file'),
-                 'insecure': self._get_client_option('keystone', 'insecure'),
-                 'cert': self._get_client_option('keystone', 'cert_file'),
-                 'key': self._get_client_option('keystone', 'key_file')}
-
-            self._keystone_session_obj = session.Session.construct(o)
+            self._keystone_session_obj = session.Session(
+                **config.get_ssl_options('keystone'))
 
         return self._keystone_session_obj
 
@@ -205,8 +201,8 @@ class ClientPlugin(object):
             kc = self.clients.client('keystone').client
 
             auth_plugin = self.context.auth_plugin
-            endpoint = auth_plugin.get_endpoint(None,
-                                                interface=auth.AUTH_INTERFACE)
+            endpoint = auth_plugin.get_endpoint(
+                None, interface=plugin.AUTH_INTERFACE)
             token = auth_plugin.get_token(None)
             project_id = auth_plugin.get_project_id(None)
 
