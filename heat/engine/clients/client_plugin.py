@@ -26,6 +26,7 @@ import requests
 import six
 
 from heat.common import config
+from heat.common import exception as heat_exception
 from heat.common.i18n import _
 
 cfg.CONF.import_opt('client_retry_limit', 'heat.common.config')
@@ -99,10 +100,15 @@ class ClientPlugin(object):
     # types, so its used in list format
     service_types = []
 
+    # To make the backward compatibility with existing resource plugins
+    default_version = None
+
+    supported_versions = []
+
     def __init__(self, context):
         self._context = weakref.ref(context)
         self._clients = weakref.ref(context.clients)
-        self._client = None
+        self.invalidate()
         self._keystone_session_obj = None
 
     @property
@@ -135,23 +141,38 @@ class ClientPlugin(object):
 
     def invalidate(self):
         """Invalidate/clear any cached client."""
-        self._client = None
+        self._client_instances = {}
 
-    def client(self):
-        if not self._client:
-            self._client = self._create()
-        elif (cfg.CONF.reauthentication_auth_method == 'trusts'
+    def client(self, version=None):
+        if not version:
+            version = self.default_version
+
+        if version in self._client_instances:
+            if (cfg.CONF.reauthentication_auth_method == 'trusts'
                 and self.context.auth_plugin.auth_ref.will_expire_soon(
                     cfg.CONF.stale_token_duration)):
-            # If the token is near expiry, force creating a new client,
-            # which will get a new token via another call to auth_token
-            # We also have to invalidate all other cached clients
-            self.clients.invalidate_plugins()
-            self._client = self._create()
-        return self._client
+                # If the token is near expiry, force creating a new client,
+                # which will get a new token via another call to auth_token
+                # We also have to invalidate all other cached clients
+                self.clients.invalidate_plugins()
+            else:
+                return self._client_instances[version]
+
+        # Back-ward compatibility
+        if version is None:
+            self._client_instances[version] = self._create()
+        else:
+            if version not in self.supported_versions:
+                raise heat_exception.InvalidServiceVersion(
+                    version=version,
+                    service=self._get_service_name())
+
+            self._client_instances[version] = self._create(version=version)
+
+        return self._client_instances[version]
 
     @abc.abstractmethod
-    def _create(self):
+    def _create(self, version=None):
         """Return a newly created client."""
         pass
 

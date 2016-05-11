@@ -30,7 +30,7 @@ class BarbicanClientPluginTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.barbican_plugin = c.client_plugin('barbican')
-        self.barbican_plugin._client = self.barbican_client
+        self.barbican_plugin.client = lambda: self.barbican_client
 
     def test_create(self):
         context = utils.dummy_context()

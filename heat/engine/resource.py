@@ -609,10 +609,10 @@ class Resource(object):
         """
         return [r.name for r in self.stack.dependencies.required_by(self)]
 
-    def client(self, name=None):
+    def client(self, name=None, version=None):
         client_name = name or self.default_client_name
         assert client_name, "Must specify client name"
-        return self.stack.clients.client(client_name)
+        return self.stack.clients.client(client_name, version)
 
     def client_plugin(self, name=None):
         client_name = name or self.default_client_name

@@ -32,7 +32,7 @@ class NeutronClientPluginTestCase(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.neutron_plugin = c.client_plugin('neutron')
-        self.neutron_plugin._client = self.neutron_client
+        self.neutron_plugin.client = lambda: self.neutron_client
 
 
 class NeutronClientPluginTest(NeutronClientPluginTestCase):

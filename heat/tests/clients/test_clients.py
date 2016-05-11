@@ -155,7 +155,6 @@ class ClientsTest(common.HeatTestCase):
         obj.get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
-        obj._client = None
         heat = obj.client()
         heat_cached = obj.client()
         self.assertEqual(heat, heat_cached)
@@ -414,7 +413,7 @@ class TestClientPluginsInitialise(common.HeatTestCase):
             self.assertIsNotNone(plugin)
             self.assertEqual(c, plugin.clients)
             self.assertEqual(con, plugin.context)
-            self.assertIsNone(plugin._client)
+            self.assertEqual({}, plugin._client_instances)
             self.assertTrue(clients.has_client(plugin_name))
             self.assertIsInstance(plugin.service_types, list)
             self.assertTrue(len(plugin.service_types) >= 1,
@@ -430,7 +429,9 @@ class TestClientPluginsInitialise(common.HeatTestCase):
             plugin = c.client_plugin(plugin_name)
             self.assertIsNotNone(plugin)
         c.invalidate_plugins()
-        self.assertEqual(len(plugin_types), mock_invalidate.call_count)
+        # while client plugin is initialized and while client is invoked
+        # its being invalidated, so the count will be doubled
+        self.assertEqual(len(plugin_types) * 2, mock_invalidate.call_count)
 
 
 class TestIsNotFound(common.HeatTestCase):

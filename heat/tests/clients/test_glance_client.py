@@ -31,7 +31,7 @@ class GlanceUtilsTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.glance_plugin = c.client_plugin('glance')
-        self.glance_plugin._client = self.glance_client
+        self.glance_plugin.client = lambda: self.glance_client
         self.my_image = mock.MagicMock()
 
     def test_find_image_by_name_or_id(self):

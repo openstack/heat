@@ -38,7 +38,7 @@ class NovaClientPluginTestCase(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.nova_plugin = c.client_plugin('nova')
-        self.nova_plugin._client = self.nova_client
+        self.nova_plugin.client = lambda: self.nova_client
 
 
 class NovaClientPluginTest(NovaClientPluginTestCase):
@@ -628,7 +628,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.nova_plugin = c.client_plugin('nova')
-        self.nova_plugin._client = self.nova_client
+        self.nova_plugin.client = lambda: self.nova_client
         self.server = mock.Mock()
         self.console_method = getattr(self.server,
                                       'get_%s_console' % self.srv_method)

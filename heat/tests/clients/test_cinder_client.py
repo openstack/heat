@@ -31,7 +31,7 @@ class CinderClientPluginTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.cinder_plugin = c.client_plugin('cinder')
-        self.cinder_plugin._client = self.cinder_client
+        self.cinder_plugin.client = lambda: self.cinder_client
 
     def test_get_volume(self):
         """Tests the get_volume function."""

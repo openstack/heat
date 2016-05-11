@@ -64,10 +64,13 @@ class OpenStackClients(object):
             self._client_plugins[name] = client_plugin
             return client_plugin
 
-    def client(self, name):
+    def client(self, name, version=None):
         client_plugin = self.client_plugin(name)
         if client_plugin:
-            return client_plugin.client()
+            if version:
+                return client_plugin.client(version=version)
+            else:
+                return client_plugin.client()
 
         if name in self._clients:
             return self._clients[name]
