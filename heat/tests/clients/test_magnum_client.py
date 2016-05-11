@@ -11,18 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import importutils
-import testtools
-
 from heat.tests import common
 from heat.tests import utils
-
-magnum_client = importutils.try_import('magnumclient.v1.client')
 
 
 class MagnumClientPluginTest(common.HeatTestCase):
 
-    @testtools.skipIf(magnum_client is None, 'Tests the magnum client')
     def test_create(self):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('magnum')
