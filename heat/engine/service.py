@@ -360,7 +360,7 @@ class EngineService(service.Service):
         self.manage_thread_grp.add_thread(create_watch_tasks)
 
     def start(self):
-        self.engine_id = stack_lock.StackLock.generate_engine_id()
+        self.engine_id = service_utils.generate_engine_id()
         if self.thread_group_mgr is None:
             self.thread_group_mgr = ThreadGroupManager()
         self.listener = EngineListener(self.host, self.engine_id,
@@ -1145,7 +1145,7 @@ class EngineService(service.Service):
             self.thread_group_mgr.send(current_stack.id, cancel_message)
 
         # Another active engine has the lock
-        elif stack_lock.StackLock.engine_alive(cnxt, engine_id):
+        elif service_utils.engine_alive(cnxt, engine_id):
             cancel_result = self._remote_call(
                 cnxt, engine_id, self.listener.SEND,
                 stack_identity=stack_identity, message=cancel_message)
@@ -1375,7 +1375,7 @@ class EngineService(service.Service):
             self.thread_group_mgr.stop(stack.id)
 
         # Another active engine has the lock
-        elif stack_lock.StackLock.engine_alive(cnxt, acquire_result):
+        elif service_utils.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
                 cnxt, acquire_result, self.listener.STOP_STACK,
                 stack_identity=stack_identity)

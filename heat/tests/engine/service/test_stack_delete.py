@@ -14,6 +14,7 @@ import mock
 from oslo_messaging.rpc import dispatcher
 
 from heat.common import exception
+from heat.common import service_utils
 from heat.engine import service
 from heat.engine import stack as parser
 from heat.engine import stack_lock
@@ -124,7 +125,7 @@ class StackDeleteTest(common.HeatTestCase):
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
-    @mock.patch.object(stack_lock.StackLock, 'engine_alive')
+    @mock.patch.object(service_utils, 'engine_alive')
     def test_stack_delete_other_engine_active_lock_failed(self, mock_alive,
                                                           mock_try, mock_load):
         OTHER_ENGINE = "other-engine-fake-uuid"
@@ -157,7 +158,7 @@ class StackDeleteTest(common.HeatTestCase):
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
-    @mock.patch.object(stack_lock.StackLock, 'engine_alive')
+    @mock.patch.object(service_utils, 'engine_alive')
     @mock.patch.object(stack_lock.StackLock, 'acquire')
     def test_stack_delete_other_engine_active_lock_succeeded(
             self, mock_acquire, mock_alive, mock_try, mock_load):
@@ -191,7 +192,7 @@ class StackDeleteTest(common.HeatTestCase):
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
-    @mock.patch.object(stack_lock.StackLock, 'engine_alive')
+    @mock.patch.object(service_utils, 'engine_alive')
     @mock.patch.object(stack_lock.StackLock, 'acquire')
     def test_stack_delete_other_dead_engine_active_lock(
             self, mock_acquire, mock_alive, mock_try, mock_load):

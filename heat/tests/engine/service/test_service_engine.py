@@ -222,7 +222,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.common.messaging.get_rpc_client',
                 return_value=mock.Mock())
-    @mock.patch('heat.engine.stack_lock.StackLock.generate_engine_id',
+    @mock.patch('heat.common.service_utils.generate_engine_id',
                 return_value='sample-uuid')
     @mock.patch('heat.engine.service.ThreadGroupManager',
                 return_value=mock.Mock())
@@ -259,7 +259,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.common.messaging.get_rpc_client',
                 return_value=mock.Mock())
-    @mock.patch('heat.engine.stack_lock.StackLock.generate_engine_id',
+    @mock.patch('heat.common.service_utils.generate_engine_id',
                 return_value=mock.Mock())
     @mock.patch('heat.engine.service.ThreadGroupManager',
                 return_value=mock.Mock())
@@ -389,7 +389,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.common.messaging.get_rpc_client',
                 return_value=mock.Mock())
-    @mock.patch('heat.engine.stack_lock.StackLock.generate_engine_id',
+    @mock.patch('heat.common.service_utils.generate_engine_id',
                 return_value=mock.Mock())
     @mock.patch('heat.engine.service.ThreadGroupManager',
                 return_value=mock.Mock())
