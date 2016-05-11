@@ -294,7 +294,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.28'
+    RPC_API_VERSION = '1.29'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -645,7 +645,8 @@ class EngineService(service.Service):
                                            nested_depth=0, user_creds_id=None,
                                            stack_user_project_id=None,
                                            convergence=False,
-                                           parent_resource_name=None):
+                                           parent_resource_name=None,
+                                           template_id=None):
         common_params = api.extract_args(args)
 
         # If it is stack-adopt, use parameters from adopt_stack_data
@@ -661,10 +662,13 @@ class EngineService(service.Service):
             new_params.update(params.get(rpc_api.STACK_PARAMETERS, {}))
             params[rpc_api.STACK_PARAMETERS] = new_params
 
-        self._merge_environments(environment_files, files, params)
-        env = environment.Environment(params)
-
-        tmpl = templatem.Template(template, files=files, env=env)
+        if template_id is not None:
+            tmpl = templatem.Template.load(cnxt, template_id)
+            env = tmpl.env
+        else:
+            self._merge_environments(environment_files, files, params)
+            env = environment.Environment(params)
+            tmpl = templatem.Template(template, files=files, env=env)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
         stack = parser.Stack(cnxt, stack_name, tmpl,
@@ -745,7 +749,8 @@ class EngineService(service.Service):
     def create_stack(self, cnxt, stack_name, template, params, files,
                      args, environment_files=None,
                      owner_id=None, nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None, parent_resource_name=None):
+                     stack_user_project_id=None, parent_resource_name=None,
+                     template_id=None):
         """Create a new stack using the template provided.
 
         Note that at this stage the template has already been fetched from the
@@ -768,6 +773,7 @@ class EngineService(service.Service):
         :param stack_user_project_id: the parent stack_user_project_id for
                          nested stacks
         :param parent_resource_name: the parent resource name
+        :param template_id: the ID of a pre-stored template in the DB
         """
         LOG.info(_LI('Creating stack %s'), stack_name)
 
@@ -799,7 +805,8 @@ class EngineService(service.Service):
         stack = self._parse_template_and_validate_stack(
             cnxt, stack_name, template, params, files, environment_files,
             args, owner_id, nested_depth, user_creds_id,
-            stack_user_project_id, convergence, parent_resource_name)
+            stack_user_project_id, convergence, parent_resource_name,
+            template_id)
 
         self.resource_enforcer.enforce_stack(stack)
         stack_id = stack.store()
@@ -820,7 +827,7 @@ class EngineService(service.Service):
         return dict(stack.identifier())
 
     def _prepare_stack_updates(self, cnxt, current_stack, template, params,
-                               files, args):
+                               files, args, template_id=None):
         """Return the current and updated stack for a given transition.
 
         Changes *will not* be persisted, this is a helper method for
@@ -832,6 +839,7 @@ class EngineService(service.Service):
         :param params: Stack Input Params
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
+        :param template_id: the ID of a pre-stored template in the DB
         """
 
         # Now parse the template and any parameters for the updated
@@ -850,6 +858,9 @@ class EngineService(service.Service):
 
             new_files = current_stack.t.files.copy()
             new_files.update(files or {})
+
+            assert template_id is None, \
+                "Cannot specify template_id with PARAM_EXISTING"
 
             if template is not None:
                 new_template = template
@@ -881,8 +892,11 @@ class EngineService(service.Service):
                 if key not in tmpl.param_schemata():
                     new_env.params.pop(key)
         else:
-            tmpl = templatem.Template(template, files=files,
-                                      env=environment.Environment(params))
+            if template_id is not None:
+                tmpl = templatem.Template.load(cnxt, template_id)
+            else:
+                tmpl = templatem.Template(template, files=files,
+                                          env=environment.Environment(params))
 
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
@@ -903,7 +917,7 @@ class EngineService(service.Service):
                                      **current_kwargs)
 
         invalid_params = current_stack.parameters.immutable_params_modified(
-            updated_stack.parameters, params)
+            updated_stack.parameters, tmpl.env.params)
         if invalid_params:
             raise exception.ImmutableParameterModified(*invalid_params)
 
@@ -917,7 +931,7 @@ class EngineService(service.Service):
 
     @context.request_context
     def update_stack(self, cnxt, stack_identity, template, params,
-                     files, args, environment_files=None):
+                     files, args, environment_files=None, template_id=None):
         """Update an existing stack based on the provided template and params.
 
         Note that at this stage the template has already been fetched from the
@@ -932,6 +946,7 @@ class EngineService(service.Service):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param template_id: the ID of a pre-stored template in the DB
         """
         # Handle server-side environment file resolution
         self._merge_environments(environment_files, files, params)
@@ -955,7 +970,7 @@ class EngineService(service.Service):
             raise exception.NotSupported(feature=msg)
 
         tmpl, current_stack, updated_stack = self._prepare_stack_updates(
-            cnxt, current_stack, template, params, files, args)
+            cnxt, current_stack, template, params, files, args, template_id)
 
         if current_stack.convergence:
             current_stack.thread_group_mgr = self.thread_group_mgr

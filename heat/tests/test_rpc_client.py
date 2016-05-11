@@ -166,18 +166,24 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         call_kwargs['user_creds_id'] = None
         call_kwargs['stack_user_project_id'] = None
         call_kwargs['parent_resource_name'] = None
+        call_kwargs['template_id'] = None
         expected_message = self.rpcapi.make_msg('create_stack', **call_kwargs)
         kwargs['expected_message'] = expected_message
         self._test_engine_api('create_stack', 'call', **kwargs)
 
     def test_update_stack(self):
+        kwargs = dict(stack_identity=self.identity,
+                      template={u'Foo': u'bar'},
+                      params={u'InstanceType': u'm1.xlarge'},
+                      files={},
+                      environment_files=['foo.yaml'],
+                      args=mock.ANY)
+        call_kwargs = copy.deepcopy(kwargs)
+        call_kwargs['template_id'] = None
+        expected_message = self.rpcapi.make_msg('update_stack', **call_kwargs)
         self._test_engine_api('update_stack', 'call',
-                              stack_identity=self.identity,
-                              template={u'Foo': u'bar'},
-                              params={u'InstanceType': u'm1.xlarge'},
-                              files={},
-                              environment_files=['foo.yaml'],
-                              args=mock.ANY)
+                              expected_message=expected_message,
+                              **kwargs)
 
     def test_preview_update_stack(self):
         self._test_engine_api('preview_update_stack', 'call',
