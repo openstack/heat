@@ -38,7 +38,6 @@ definition using only predefined properties. For example, the template below
 could be used to deploy a single compute instance:
 
 .. code-block:: yaml
-  :linenos:
 
   heat_template_version: 2015-04-30
 
@@ -88,7 +87,6 @@ The following example extends the previous template to provide parameters for
 the key pair, image and flavor properties of the resource:
 
 .. code-block:: yaml
-  :linenos:
 
   heat_template_version: 2015-04-30
 
@@ -133,7 +131,6 @@ following example defines a default value ``m1.small`` for the
 ``flavor`` property:
 
 .. code-block:: yaml
-  :linenos:
 
    parameters:
      flavor:
@@ -153,7 +150,6 @@ stack details and can be accessed by any user in the same tenant. To hide the
 value of a parameter, use the ``hidden`` boolean attribute of the parameter:
 
 .. code-block:: yaml
-  :linenos:
 
    parameters:
      database_password:
@@ -171,7 +167,6 @@ The following example restricts the ``flavor`` parameter to a list of three
 possible values:
 
 .. code-block:: yaml
-  :linenos:
 
    parameters:
      flavor:
@@ -185,7 +180,6 @@ possible values:
 The following example defines multiple constraints for a password definition:
 
 .. code-block:: yaml
-  :linenos:
 
    parameters:
      database_password:
