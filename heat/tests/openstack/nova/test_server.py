@@ -1195,6 +1195,31 @@ class ServersTest(common.HeatTestCase):
                         'server "%s".') % server.name,
                       six.text_type(ex))
 
+    def test_server_validate_with_network_floating_ip(self):
+        stack_name = 'srv_net_floating_ip'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        # create a server with 'uuid' and 'network' properties
+        tmpl['Resources']['WebServer']['Properties']['networks'] = (
+            [{'floating_ip': '172.24.4.14',
+              'network': '6b1688bb-18a0-4754-ab05-19daaedc5871'}])
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_validate_net_floating_ip',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id')
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        self.assertIn(_('Property "floating_ip" is not supported if '
+                        'only "network" is specified, because the '
+                        'corresponding port can not be retrieved.'),
+                      six.text_type(ex))
+
     def test_server_validate_with_port_fixed_ip(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)

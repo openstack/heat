@@ -36,6 +36,7 @@ class ServerNetworkMixin(object):
         port = network.get(self.NETWORK_PORT)
         subnet = network.get(self.NETWORK_SUBNET)
         fixed_ip = network.get(self.NETWORK_FIXED_IP)
+        floating_ip = network.get(self.NETWORK_FLOATING_IP)
 
         if net_id is None and port is None and subnet is None:
             msg = _('One of the properties "%(id)s", "%(port_id)s" '
@@ -57,6 +58,18 @@ class ServerNetworkMixin(object):
             raise exception.ResourcePropertyConflict(
                 "/".join([self.NETWORKS, self.NETWORK_FIXED_IP]),
                 "/".join([self.NETWORKS, self.NETWORK_PORT]))
+
+        # if user only specifies network and floating ip, floating ip
+        # can't be associated as the the neutron port isn't created/managed
+        # by heat
+        if floating_ip is not None and self.is_using_neutron():
+            if net_id is not None and port is None and subnet is None:
+                msg = _('Property "%(fip)s" is not supported if only '
+                        '"%(net)s" is specified, because the corresponding '
+                        'port can not be retrieved.'
+                        ) % dict(fip=self.NETWORK_FLOATING_IP,
+                                 net=self.NETWORK_ID)
+                raise exception.StackValidationFailed(message=msg)
 
     def _validate_belonging_subnet_to_net(self, network):
         if network.get(self.NETWORK_PORT) is None and self.is_using_neutron():
