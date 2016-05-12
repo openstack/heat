@@ -238,6 +238,46 @@ class RequestContext(context.RequestContext):
         return self._auth_plugin
 
 
+class StoredContext(RequestContext):
+    def _load_keystone_data(self):
+        self._keystone_loaded = True
+        auth_ref = self.clients.client('keystone').auth_ref
+
+        self.roles = auth_ref.role_names
+        self.user_domain = auth_ref.user_domain_id
+        self.project_domain = auth_ref.project_domain_id
+
+    @property
+    def roles(self):
+        if not getattr(self, '_keystone_loaded', False):
+            self._load_keystone_data()
+        return self._roles
+
+    @roles.setter
+    def roles(self, roles):
+        self._roles = roles
+
+    @property
+    def user_domain(self):
+        if not getattr(self, '_keystone_loaded', False):
+            self._load_keystone_data()
+        return self._user_domain
+
+    @user_domain.setter
+    def user_domain(self, user_domain):
+        self._user_domain = user_domain
+
+    @property
+    def project_domain(self):
+        if not getattr(self, '_keystone_loaded', False):
+            self._load_keystone_data()
+        return self._project_domain
+
+    @project_domain.setter
+    def project_domain(self, project_domain):
+        self._project_domain = project_domain
+
+
 def get_admin_context(show_deleted=False):
     return RequestContext(is_admin=True, show_deleted=show_deleted)
 
