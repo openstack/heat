@@ -2096,14 +2096,14 @@ class EngineService(service.Service):
                      report_interval=cfg.CONF.periodic_interval)
             )
             self.service_id = service_ref['id']
-            LOG.info(_LI('Service %s is started'), self.service_id)
+            LOG.debug('Service %s is started' % self.service_id)
 
         try:
             service_objects.Service.update_by_id(
                 cnxt,
                 self.service_id,
                 dict(deleted_at=None))
-            LOG.info(_LI('Service %s is updated'), self.service_id)
+            LOG.debug('Service %s is updated' % self.service_id)
         except Exception as ex:
             LOG.error(_LE('Service %(service_id)s update '
                           'failed: %(error)s'),
@@ -2124,7 +2124,7 @@ class EngineService(service.Service):
                 continue
             if service_ref['updated_at'] < time_line:
                 # hasn't been updated, assuming it's died.
-                LOG.info(_LI('Service %s was aborted'), service_ref['id'])
+                LOG.debug('Service %s was aborted' % service_ref['id'])
                 service_objects.Service.delete(cnxt, service_ref['id'])
 
     def set_stack_and_resource_to_failed(self, stack):
