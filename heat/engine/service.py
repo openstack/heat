@@ -1735,7 +1735,7 @@ class EngineService(service.Service):
             raise exception.EntityNotFound(entity='Resource',
                                            name=physical_resource_id)
 
-        stack = parser.Stack.load(cnxt, stack_id=rs.stack.id)
+        stack = parser.Stack.load(cnxt, stack_id=rs.stack_id)
         resource = stack[rs.name]
 
         return dict(resource.identifier())
