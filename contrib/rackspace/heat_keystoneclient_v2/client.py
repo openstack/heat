@@ -13,6 +13,8 @@
 
 """Client Library for Keystone Resources."""
 
+import weakref
+
 from keystoneclient.v2_0 import client as kc
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -48,13 +50,19 @@ class KeystoneClientV2(object):
         # get a new trust-token even if context.auth_token is set.
         #
         # - context.auth_url is expected to contain the v2.0 keystone endpoint
-        self.context = context
+        self._context = weakref.ref(context)
         self._client = None
 
         if self.context.trust_id:
             # Create a connection to the v2 API, with the trust_id, this
             # populates self.context.auth_token with a trust-scoped token
             self._client = self._v2_client_init()
+
+    @property
+    def context(self):
+        ctxt = self._context()
+        assert ctxt is not None, "Need a reference to the context"
+        return ctxt
 
     @property
     def client(self):
