@@ -373,6 +373,19 @@ def resource_get_all_active_by_stack(context, stack_id):
     return dict((res.id, res) for res in results)
 
 
+def resource_get_all_by_root_stack(context, stack_id, filters=None):
+    query = model_query(
+        context, models.Resource
+    ).filter_by(
+        root_stack_id=stack_id
+    ).options(orm.joinedload("data"))
+
+    query = db_filters.exact_filter(query, models.Resource, filters)
+    results = query.all()
+
+    return dict((res.id, res) for res in results)
+
+
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = soft_delete_aware_query(
         context, models.Stack

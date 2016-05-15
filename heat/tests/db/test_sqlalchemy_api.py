@@ -2278,6 +2278,50 @@ class DBAPIResourceTest(common.HeatTestCase):
         for rsrc_id, res in resources.items():
             self.assertIn(res.name, ['res2', 'res3', 'res4', 'res5', 'res6'])
 
+    def test_resource_get_all_by_root_stack(self):
+        self.stack1 = create_stack(self.ctx, self.template, self.user_creds)
+        self.stack2 = create_stack(self.ctx, self.template, self.user_creds)
+
+        create_resource(self.ctx, self.stack, name='res1',
+                        root_stack_id=self.stack.id)
+        create_resource(self.ctx, self.stack, name='res2',
+                        root_stack_id=self.stack.id)
+        create_resource(self.ctx, self.stack, name='res3',
+                        root_stack_id=self.stack.id)
+        create_resource(self.ctx, self.stack1, name='res4',
+                        root_stack_id=self.stack.id)
+
+        # Test for all resources in a stack
+        resources = db_api.resource_get_all_by_root_stack(
+            self.ctx, self.stack.id)
+        self.assertEqual(4, len(resources))
+        resource_names = [r.name for r in resources.values()]
+        self.assertEqual(['res1', 'res2', 'res3', 'res4'],
+                         sorted(resource_names))
+
+        # Test for resources matching single entry
+        resources = db_api.resource_get_all_by_root_stack(
+            self.ctx, self.stack.id, filters=dict(name='res1'))
+        self.assertEqual(1, len(resources))
+        resource_names = [r.name for r in resources.values()]
+        self.assertEqual(['res1'], resource_names)
+        self.assertEqual(1, len(resources))
+
+        # Test for resources matching multi entry
+        resources = db_api.resource_get_all_by_root_stack(
+            self.ctx, self.stack.id, filters=dict(name=[
+                'res1',
+                'res2'
+            ])
+        )
+        self.assertEqual(2, len(resources))
+        resource_names = [r.name for r in resources.values()]
+        self.assertEqual(['res1', 'res2'],
+                         sorted(resource_names))
+
+        self.assertEqual({}, db_api.resource_get_all_by_root_stack(
+            self.ctx, self.stack2.id))
+
 
 class DBAPIStackLockTest(common.HeatTestCase):
     def setUp(self):
