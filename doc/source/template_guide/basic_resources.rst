@@ -28,7 +28,6 @@ The following example creates a simple instance, booted from an image, and
 connecting to the ``private`` network:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       instance:
@@ -62,7 +61,6 @@ The following example demonstrates the use of the ``port`` and ``network``
 properties:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       instance_port:
@@ -103,7 +101,6 @@ ports 80 and 443 (web server) and associates this security group to an instance
 port:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       web_secgroup:
@@ -153,7 +150,6 @@ The following example creates an instance and a floating IP, and associate the
 floating IP to the instance:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       floating_ip:
@@ -186,7 +182,6 @@ the :ref:`OS::Neutron::FloatingIPAssociation` resource to associate the
 floating IP to a port:
 
 .. code-block:: yaml
-   :linenos:
 
     parameters:
       net:
@@ -219,7 +214,6 @@ the floating IP. However the approach mentioned above will work better
 with stack updates.
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       instance_port:
@@ -246,7 +240,6 @@ The ``key_name`` attribute of the :ref:`OS::Nova::Server` resource defines
 the key pair to use to enable SSH remote access:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       my_instance:
@@ -273,7 +266,6 @@ The following example creates a new key pair and uses it as authentication key
 for an instance:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       my_key:
@@ -307,7 +299,6 @@ Use the :ref:`OS::Neutron::Net` resource to create a network, and the
 :ref:`OS::Neutron::Subnet` resource to provide a subnet for this network:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       new_net:
@@ -328,7 +319,6 @@ Use the :ref:`OS::Neutron::Router` resource to create a router. You can
 define its gateway with the ``external_gateway_info`` property:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       router1:
@@ -340,7 +330,6 @@ You can connect subnets to routers with the
 :ref:`OS::Neutron::RouterInterface` resource:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       subnet1_interface:
@@ -361,7 +350,6 @@ The following example creates a network stack:
 In this example, the ``public`` network is an existing shared network:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       internal_net:
@@ -397,7 +385,6 @@ volume.
 For example:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       my_new_volume:
@@ -409,7 +396,6 @@ The volumes that you create are empty by default. Use the ``image`` property to
 create a bootable volume from an existing image:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       my_new_bootable_volume:
@@ -426,7 +412,6 @@ properties to create a new volume from an existing source.
 For example, to create a new volume from a backup:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       another_volume:
@@ -446,7 +431,6 @@ The following example creates a volume and an instance, and attaches the volume
 to the instance:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       new_volume:
@@ -476,7 +460,6 @@ The following example creates a bootable volume from an image, and uses it to
 boot an instance:
 
 .. code-block:: yaml
-   :linenos:
 
     resources:
       bootable_volume:
