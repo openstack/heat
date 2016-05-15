@@ -350,7 +350,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         deployment_id = deployment['id']
         res = self.engine.signal_software_deployment(
             self.ctx, deployment_id, {}, None)
-        self.assertEqual('deployment succeeded', res)
+        self.assertEqual('deployment %s succeeded' % deployment_id, res)
 
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
@@ -373,7 +373,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             deployment_id,
             {'foo': 'bar', 'deploy_status_code': 0},
             None)
-        self.assertEqual('deployment succeeded', result)
+        self.assertEqual('deployment %s succeeded' % deployment_id, result)
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
         self.assertEqual('COMPLETE', sd.status)
@@ -400,7 +400,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                 'deploy_stderr': 'Its gone Pete Tong'
             },
             None)
-        self.assertEqual('deployment failed (-1)', result)
+        self.assertEqual('deployment %s failed (-1)' % deployment_id, result)
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
         self.assertEqual('FAILED', sd.status)
@@ -431,7 +431,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                 'deploy_stderr': 'Its gone Pete Tong'
             },
             None)
-        self.assertEqual('deployment failed', result)
+        self.assertEqual('deployment %s failed' % deployment_id, result)
 
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)

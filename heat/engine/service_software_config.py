@@ -275,9 +275,10 @@ class SoftwareConfigService(service.Service):
             status_reasons[output_status_code] = _(
                 'Deployment exited with non-zero status code: %s'
             ) % details.get(output_status_code)
-            event_reason = 'deployment failed (%s)' % status_code
+            event_reason = 'deployment %s failed (%s)' % (deployment_id,
+                                                          status_code)
         else:
-            event_reason = 'deployment succeeded'
+            event_reason = 'deployment %s succeeded' % deployment_id
 
         for output in sd.config.config['outputs'] or []:
             out_key = output['name']
@@ -286,7 +287,7 @@ class SoftwareConfigService(service.Service):
                 if output.get('error_output', False):
                     status = rpc_api.SOFTWARE_DEPLOYMENT_FAILED
                     status_reasons[out_key] = details[out_key]
-                    event_reason = 'deployment failed'
+                    event_reason = 'deployment %s failed' % deployment_id
 
         for out_key in rpc_api.SOFTWARE_DEPLOYMENT_OUTPUTS:
             ov[out_key] = details.get(out_key)
