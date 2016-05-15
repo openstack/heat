@@ -33,15 +33,15 @@ class HeatCustomGuidelines(object):
         global_env = resources.global_env()
         for resource_type in global_env.get_types():
             cls = global_env.get_class(resource_type)
+            module = cls.__module__
             # Skip resources, which defined as template resource in environment
-            if cls.__module__ == 'heat.engine.resources.template_resource':
+            if module == 'heat.engine.resources.template_resource':
                 continue
             # Skip discovered plugin resources
-            if cls.__module__ == 'heat.engine.plugins':
+            if module == 'heat.engine.plugins':
                 continue
-            if (lambda module: True
-                if [path for path in exclude if path in module]
-                    else False)(cls.__module__.replace('.', '/')):
+            path = module.replace('.', '/')
+            if any(path.startswith(excl_path) for excl_path in exclude):
                 continue
             self.resources_classes.append(cls)
 
