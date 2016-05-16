@@ -749,7 +749,8 @@ class WebHook(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         asclient = self.auto_scale()
-        args = self._get_args(json_snippet['Properties'])
+        args = self._get_args(json_snippet.properties(self.properties_schema,
+                                                      self.context))
         args['webhook'] = self.resource_id
         asclient.replace_webhook(**args)
 

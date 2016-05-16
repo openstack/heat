@@ -1112,7 +1112,7 @@ class RollingUpdateTest(common.HeatTestCase):
         self.stack.timeout_secs = mock.Mock(return_value=200)
         err = self.assertRaises(ValueError, self.current_grp._update_timeout,
                                 3, 100)
-        self.assertIn('The current UpdatePolicy will result in stack update '
+        self.assertIn('The current update policy will result in stack update '
                       'timeout.', six.text_type(err))
 
     def test_update_time_sufficient(self):

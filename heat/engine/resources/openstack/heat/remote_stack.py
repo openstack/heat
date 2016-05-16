@@ -227,11 +227,8 @@ class RemoteStack(resource.Resource):
         # Always issue an update to the remote stack and let the individual
         # resources in it decide if they need updating.
         if self.resource_id:
-            snippet = json_snippet.get('Properties', {})
-            self.properties = properties.Properties(self.properties_schema,
-                                                    snippet,
-                                                    function.resolve,
-                                                    self.name)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
 
             params = self.properties[self.PARAMETERS]
             env = environment.get_child_environment(self.stack.env, params)
