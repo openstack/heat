@@ -15,6 +15,7 @@
 
 import collections
 import uuid
+import weakref
 
 from keystoneclient.auth.identity import v3 as kc_auth_v3
 import keystoneclient.exceptions as kc_exception
@@ -69,7 +70,7 @@ class KeystoneClientV3(object):
         #
         # - context.auth_url is expected to contain a versioned keystone
         #   path, we will work with either a v2.0 or v3 path
-        self.context = context
+        self._context = weakref.ref(context)
         self._client = None
         self._admin_auth = None
         self._domain_admin_auth = None
@@ -95,6 +96,12 @@ class KeystoneClientV3(object):
         self.domain_admin_password = cfg.CONF.stack_domain_admin_password
 
         LOG.debug('Using stack domain %s' % self.stack_domain)
+
+    @property
+    def context(self):
+        ctxt = self._context()
+        assert ctxt is not None, "Need a reference to the context"
+        return ctxt
 
     @property
     def stack_domain(self):
