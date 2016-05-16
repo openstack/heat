@@ -31,6 +31,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
+from heat.objects import raw_template
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock
 from heat.rpc import api as rpc_api
@@ -266,7 +267,7 @@ class StackResource(resource.Resource):
             timeout_mins = self.stack.timeout_mins
         stack_user_project_id = self.stack.stack_user_project_id
 
-        kwargs = self._stack_kwargs(user_params, child_template)
+        kwargs = self._stack_kwargs(user_params, child_template, adopt_data)
 
         adopt_data_str = None
         if adopt_data is not None:
@@ -293,11 +294,18 @@ class StackResource(resource.Resource):
             'parent_resource_name': self.name
         })
         with self.translate_remote_exceptions:
-            result = self.rpc_client()._create_stack(self.context, **kwargs)
+            result = None
+            try:
+                result = self.rpc_client()._create_stack(self.context,
+                                                         **kwargs)
+            finally:
+                if adopt_data is None and not result:
+                    raw_template.RawTemplate.delete(self.context,
+                                                    kwargs['template_id'])
 
         self.resource_id_set(result['stack_id'])
 
-    def _stack_kwargs(self, user_params, child_template):
+    def _stack_kwargs(self, user_params, child_template, adopt_data=None):
 
         if user_params is None:
             user_params = self.child_params()
@@ -311,11 +319,20 @@ class StackResource(resource.Resource):
 
         parsed_template = self._child_parsed_template(child_template,
                                                       child_env)
-        return {
-            'template': parsed_template.t,
-            'params': child_env.user_env_as_dict(),
-            'files': parsed_template.files
-        }
+        if adopt_data is None:
+            template_id = parsed_template.store(self.context)
+            return {
+                'template_id': template_id,
+                'template': None,
+                'params': None,
+                'files': None,
+            }
+        else:
+            return {
+                'template': parsed_template.t,
+                'params': child_env.user_env_as_dict(),
+                'files': parsed_template.files,
+            }
 
     def raise_local_exception(self, ex):
         warnings.warn('raise_local_exception() is deprecated. Use the '
@@ -439,7 +456,14 @@ class StackResource(resource.Resource):
             'args': {rpc_api.PARAM_TIMEOUT: timeout_mins}
         })
         with self.translate_remote_exceptions:
-            self.rpc_client().update_stack(self.context, **kwargs)
+            result = None
+            try:
+                result = self.rpc_client()._update_stack(self.context,
+                                                         **kwargs)
+            finally:
+                if not result:
+                    raw_template.RawTemplate.delete(self.context,
+                                                    kwargs['template_id'])
         return cookie
 
     def check_update_complete(self, cookie=None):
