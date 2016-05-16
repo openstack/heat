@@ -44,9 +44,4 @@ iniset heat_integrationtests.conf DEFAULT admin_password $OS_PASSWORD
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
 iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
 
-# Skip some tests for convergence until it is fixed
-if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
-    iniset heat_integrationtests.conf DEFAULT skip_functional_test_list 'StackValidationTest'
-fi
-
 cat heat_integrationtests.conf
