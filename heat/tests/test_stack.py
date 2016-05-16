@@ -2363,6 +2363,49 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('foo', params.get('param1'))
         self.assertEqual('new_bar', params.get('param2'))
 
+    def test_parameters_created_encrypted_updated_decrypted(self):
+        """Test stack loading with disabled parameter value validation."""
+        tmpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+
+        # Create the stack with encryption enabled
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
+                              enforce_type=True)
+        env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
+        self.stack = stack.Stack(self.ctx, 'test',
+                                 template.Template(tmpl, env=env1))
+        self.stack.store()
+
+        # Update the stack with encryption disabled
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
+                              enforce_type=True)
+        loaded_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id)
+        loaded_stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
+                               'for_update')
+        env2 = environment.Environment({'param1': 'foo', 'param2': 'new_bar'})
+        new_stack = stack.Stack(self.ctx, 'test_update',
+                                template.Template(tmpl, env=env2))
+
+        self.assertEqual(['param2'], loaded_stack.env.encrypted_param_names)
+
+        # Without the fix for bug #1572294, loaded_stack.update() will
+        # blow up with "ValueError: too many values to unpack"
+        loaded_stack.update(new_stack)
+
+        self.assertEqual([], loaded_stack.env.encrypted_param_names)
+
     def test_parameters_stored_decrypted_successful_load(self):
         """Test stack loading with disabled parameter value validation."""
         tmpl = template_format.parse('''
