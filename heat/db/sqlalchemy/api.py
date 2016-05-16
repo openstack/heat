@@ -530,6 +530,8 @@ def stack_create(context, values):
     return stack_ref
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def stack_update(context, stack_id, values, exp_trvsl=None):
     stack = stack_get(context, stack_id)
 

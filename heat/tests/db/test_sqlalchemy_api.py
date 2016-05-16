@@ -1750,6 +1750,15 @@ class DBAPIStackTest(common.HeatTestCase):
                                       exp_trvsl=diff_uuid)
         self.assertFalse(updated)
 
+    @mock.patch.object(time, 'sleep')
+    def test_stack_update_retries_on_deadlock(self, sleep):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        with mock.patch('sqlalchemy.orm.query.Query.update',
+                        side_effect=db_exception.DBDeadlock) as mock_update:
+            self.assertRaises(db_exception.DBDeadlock,
+                              db_api.stack_update, self.ctx, stack.id, {})
+            self.assertEqual(4, mock_update.call_count)
+
     def test_stack_set_status_release_lock(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         values = {
