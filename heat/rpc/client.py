@@ -49,6 +49,7 @@ class EngineClient(object):
         1.26 - Add mark_unhealthy
         1.27 - Add check_software_deployment
         1.28 - Add environment_show call
+        1.29 - Add template_id to create_stack/update_stack
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -249,7 +250,8 @@ class EngineClient(object):
     def _create_stack(self, ctxt, stack_name, template, params, files,
                       args, environment_files=None,
                       owner_id=None, nested_depth=0, user_creds_id=None,
-                      stack_user_project_id=None, parent_resource_name=None):
+                      stack_user_project_id=None, parent_resource_name=None,
+                      template_id=None):
         """Internal interface for engine-to-engine communication via RPC.
 
         Allows some additional options which should not be exposed to users via
@@ -260,6 +262,7 @@ class EngineClient(object):
         :param user_creds_id: user_creds record for nested stack
         :param stack_user_project_id: stack user project for nested stack
         :param parent_resource_name: the parent resource name
+        :param template_id: the ID of a pre-stored template in the DB
         """
         return self.call(
             ctxt, self.make_msg('create_stack', stack_name=stack_name,
@@ -270,8 +273,9 @@ class EngineClient(object):
                                 nested_depth=nested_depth,
                                 user_creds_id=user_creds_id,
                                 stack_user_project_id=stack_user_project_id,
-                                parent_resource_name=parent_resource_name),
-            version='1.23')
+                                parent_resource_name=parent_resource_name,
+                                template_id=template_id),
+            version='1.29')
 
     def update_stack(self, ctxt, stack_identity, template, params,
                      files, args, environment_files=None):
@@ -290,6 +294,20 @@ class EngineClient(object):
                names included in the files dict
         :type  environment_files: list or None
         """
+        return self._update_stack(ctxt, stack_identity, template, params,
+                                  files, args,
+                                  environment_files=environment_files)
+
+    def _update_stack(self, ctxt, stack_identity, template, params,
+                      files, args, environment_files=None,
+                      template_id=None):
+        """Internal interface for engine-to-engine communication via RPC.
+
+        Allows an additional option which should not be exposed to users via
+        the API:
+
+        :param template_id: the ID of a pre-stored template in the DB
+        """
         return self.call(ctxt,
                          self.make_msg('update_stack',
                                        stack_identity=stack_identity,
@@ -297,8 +315,9 @@ class EngineClient(object):
                                        params=params,
                                        files=files,
                                        environment_files=environment_files,
-                                       args=args),
-                         version='1.23')
+                                       args=args,
+                                       template_id=template_id),
+                         version='1.29')
 
     def preview_update_stack(self, ctxt, stack_identity, template, params,
                              files, args, environment_files=None):

@@ -129,6 +129,58 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         # Verify
         mock_merge.assert_called_once_with(environment_files, None, params)
 
+    def test_stack_update_nested(self):
+        stack_name = 'service_update_nested_test_stack'
+        old_stack = tools.get_stack(stack_name, self.ctx)
+        sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
+        s = stack_object.Stack.get_by_id(self.ctx, sid)
+
+        stk = tools.get_stack(stack_name, self.ctx)
+        tmpl_id = stk.t.store()
+
+        # prepare mocks
+        mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
+        mock_load = self.patchobject(stack.Stack, 'load',
+                                     return_value=old_stack)
+        mock_tmpl = self.patchobject(templatem.Template, 'load',
+                                     return_value=stk.t)
+
+        mock_validate = self.patchobject(stk, 'validate', return_value=None)
+        event_mock = mock.Mock()
+        self.patchobject(grevent, 'Event', return_value=event_mock)
+
+        # do update
+        api_args = {'timeout_mins': 60}
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       None, None, None, api_args,
+                                       template_id=tmpl_id)
+
+        # assertions
+        self.assertEqual(old_stack.identifier(), result)
+        self.assertIsInstance(result, dict)
+        self.assertTrue(result['stack_id'])
+        self.assertEqual([event_mock], self.man.thread_group_mgr.events)
+        mock_tmpl.assert_called_once_with(self.ctx, tmpl_id)
+        mock_stack.assert_called_once_with(
+            self.ctx, stk.name, stk.t,
+            convergence=False,
+            current_traversal=old_stack.current_traversal,
+            prev_raw_template_id=None,
+            current_deps=None,
+            disable_rollback=True,
+            nested_depth=0,
+            owner_id=None,
+            parent_resource=None,
+            stack_user_project_id='1234',
+            strict_validate=True,
+            tenant_id='test_tenant_id',
+            timeout_mins=60,
+            user_creds_id=u'1',
+            username='test_username')
+        mock_load.assert_called_once_with(self.ctx, stack=s)
+        mock_validate.assert_called_once_with()
+
     def test_stack_update_existing_parameters(self):
         # Use a template with existing parameters, then update the stack
         # with a template containing additional parameters and ensure all
@@ -723,7 +775,6 @@ parameters:
 
         self.ctx = utils.dummy_context(password=None)
         stack_name = 'test_update_immutable_parameters'
-        params = {}
         old_stack = tools.get_stack(stack_name, self.ctx,
                                     template=template)
         sid = old_stack.store()
@@ -734,15 +785,12 @@ parameters:
         self.patchobject(self.man, '_get_stack', return_value=s)
         self.patchobject(stack, 'Stack', return_value=old_stack)
         self.patchobject(stack.Stack, 'load', return_value=old_stack)
-        self.patchobject(templatem, 'Template', return_value=old_stack.t)
-        self.patchobject(environment, 'Environment',
-                         return_value=old_stack.env)
 
         params = {'param1': 'bar'}
         exc = self.assertRaises(dispatcher.ExpectedException,
                                 self.man.update_stack,
                                 self.ctx, old_stack.identifier(),
-                                templatem.Template(template), params,
+                                old_stack.t.t, params,
                                 None, {})
         self.assertEqual(exception.ImmutableParameterModified, exc.exc_info[0])
         self.assertEqual('The following parameters are immutable and may not '

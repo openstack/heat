@@ -1351,7 +1351,8 @@ class Stack(collections.Mapping):
         # Save a copy of the new template.  To avoid two DB writes
         # we store the ID at the same time as the action/status
         prev_tmpl_id = self.prev_raw_template_id
-        bu_tmpl = copy.deepcopy(newstack.t)
+        # newstack.t may have been pre-stored, so save with that one
+        bu_tmpl, newstack.t = newstack.t, copy.deepcopy(newstack.t)
         self.prev_raw_template_id = bu_tmpl.store()
         self.action = action
         self.status = self.IN_PROGRESS
