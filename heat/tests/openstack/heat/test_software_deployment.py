@@ -12,11 +12,15 @@
 #    under the License.
 
 import copy
+
+import datetime
 import re
 import uuid
 
 import mock
 import six
+
+from oslo_utils import timeutils
 
 from heat.common import exception as exc
 from heat.common.i18n import _
@@ -27,6 +31,7 @@ from heat.engine.resources.openstack.heat import software_deployment as sd
 from heat.engine import rsrc_defn
 from heat.engine import stack as parser
 from heat.engine import template
+from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import utils
 
@@ -42,6 +47,21 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                     'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
                     'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
                     'input_values': {'foo': 'bar'},
+                }
+            }
+        }
+    }
+
+    template_with_timeout = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Resources': {
+            'deployment_mysql': {
+                'Type': 'OS::Heat::SoftwareDeployment',
+                'Properties': {
+                    'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+                    'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
+                    'input_values': {'foo': 'bar'},
+                    'timeout': 5,
                 }
             }
         }
@@ -290,11 +310,13 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         return sc
 
     def mock_deployment(self):
-        sd = {
-            'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2'
+        mock_sd = {
+            'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
+            rpc_api.SOFTWARE_DEPLOYMENT_CREATION_TIME: datetime.datetime.now(),
+            rpc_api.SOFTWARE_DEPLOYMENT_ACTION: 'CREATE',
         }
-        self.rpc_client.create_software_deployment.return_value = sd
-        return sd
+        self.rpc_client.create_software_deployment.return_value = mock_sd
+        return mock_sd
 
     def test_handle_create(self):
         self._create_stack(self.template_no_signal)
@@ -548,80 +570,166 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.mock_deployment()
         self.rpc_client.show_software_deployment.return_value = sd
 
+        create_data = (sd, datetime.datetime.now())
         sd['status'] = self.deployment.COMPLETE
-        self.assertTrue(self.deployment.check_create_complete(sd))
+        self.assertTrue(self.deployment.check_create_complete(create_data))
         sd['status'] = self.deployment.IN_PROGRESS
-        self.assertFalse(self.deployment.check_create_complete(sd))
+        self.assertFalse(self.deployment.check_create_complete(create_data))
+
+    def test_check_create_complete_timeout(self):
+        # Setup
+        self._create_stack(self.template_with_timeout)
+        mock_sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+
+        # Test
+        create_data = (mock_sd,
+                       timeutils.utcnow() - datetime.timedelta(seconds=10))
+        e = self.assertRaises(exc.Error,
+                              self.deployment.check_create_complete,
+                              create_data)
+
+        # Verify
+        self.assertIn('CREATE', e.message)
+        self.assertIn('after 5s', e.message)
 
     def test_check_create_complete_none(self):
         self._create_stack(self.template)
-        self.assertTrue(self.deployment.check_create_complete(sd=None))
+        create_data = (None, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_create_complete(create_data))
 
     def test_check_update_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
         self.rpc_client.show_software_deployment.return_value = sd
 
+        update_data = (sd, datetime.datetime.now())
         sd['status'] = self.deployment.COMPLETE
-        self.assertTrue(self.deployment.check_update_complete(sd))
+        self.assertTrue(self.deployment.check_update_complete(update_data))
 
         sd['status'] = self.deployment.IN_PROGRESS
-        self.assertFalse(self.deployment.check_update_complete(sd))
+        self.assertFalse(self.deployment.check_update_complete(update_data))
 
     def test_check_update_complete_none(self):
         self._create_stack(self.template)
-        self.assertTrue(self.deployment.check_update_complete(sd=None))
+        update_data = (None, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_update_complete(update_data))
+
+    def test_check_update_timeout(self):
+        # Setup
+        self._create_stack(self.template_with_timeout)
+        mock_sd = self.mock_deployment()
+        mock_sd[rpc_api.SOFTWARE_DEPLOYMENT_ACTION] = 'UPDATE'
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+
+        # Test
+        update_data = (mock_sd,
+                       timeutils.utcnow() - datetime.timedelta(seconds=10))
+        e = self.assertRaises(exc.Error,
+                              self.deployment.check_update_complete,
+                              update_data)
+
+        # Verify
+        self.assertIn('UPDATE', e.message)
+        self.assertIn('after 5s', e.message)
 
     def test_check_suspend_complete(self):
         self._create_stack(self.template)
-        sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        mock_sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = mock_sd
 
-        sd['status'] = self.deployment.COMPLETE
-        self.assertTrue(self.deployment.check_suspend_complete(sd))
+        suspend_data = (mock_sd, datetime.datetime.now())
 
-        sd['status'] = self.deployment.IN_PROGRESS
-        self.assertFalse(self.deployment.check_suspend_complete(sd))
+        mock_sd['status'] = self.deployment.COMPLETE
+        self.assertTrue(self.deployment.check_suspend_complete(suspend_data))
+
+        mock_sd['status'] = self.deployment.IN_PROGRESS
+        self.assertFalse(self.deployment.check_suspend_complete(suspend_data))
 
     def test_check_suspend_complete_none(self):
         self._create_stack(self.template)
-        self.assertTrue(self.deployment.check_suspend_complete(sd=None))
+        suspend_data = (None, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_suspend_complete(suspend_data))
+
+    def test_check_suspend_complete_timeout(self):
+        # Setup
+        self._create_stack(self.template_with_timeout)
+        mock_sd = self.mock_deployment()
+        mock_sd[rpc_api.SOFTWARE_DEPLOYMENT_ACTION] = 'SUSPEND'
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+
+        # Test
+        suspend_data = (mock_sd,
+                        timeutils.utcnow() - datetime.timedelta(seconds=10))
+        e = self.assertRaises(exc.Error,
+                              self.deployment.check_suspend_complete,
+                              suspend_data)
+
+        # Verify
+        self.assertIn('SUSPEND', e.message)
+        self.assertIn('after 5s', e.message)
 
     def test_check_resume_complete(self):
         self._create_stack(self.template)
-        sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        mock_sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = mock_sd
 
-        sd['status'] = self.deployment.COMPLETE
-        self.assertTrue(self.deployment.check_resume_complete(sd))
+        resume_data = (mock_sd, datetime.datetime.now())
 
-        sd['status'] = self.deployment.IN_PROGRESS
-        self.assertFalse(self.deployment.check_resume_complete(sd))
+        mock_sd['status'] = self.deployment.COMPLETE
+        self.assertTrue(self.deployment.check_resume_complete(resume_data))
+
+        mock_sd['status'] = self.deployment.IN_PROGRESS
+        self.assertFalse(self.deployment.check_resume_complete(resume_data))
 
     def test_check_resume_complete_none(self):
         self._create_stack(self.template)
-        self.assertTrue(self.deployment.check_resume_complete(sd=None))
+        resume_data = (None, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_resume_complete(resume_data))
+
+    def test_check_resume_complete_timeout(self):
+        # Setup
+        self._create_stack(self.template_with_timeout)
+        mock_sd = self.mock_deployment()
+        mock_sd[rpc_api.SOFTWARE_DEPLOYMENT_ACTION] = 'RESUME'
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+
+        # Test
+        resume_data = (mock_sd,
+                       timeutils.utcnow() - datetime.timedelta(seconds=10))
+        e = self.assertRaises(exc.Error,
+                              self.deployment.check_resume_complete,
+                              resume_data)
+
+        # Verify
+        self.assertIn('RESUME', e.message)
+        self.assertIn('after 5s', e.message)
 
     def test_check_create_complete_error(self):
         self._create_stack(self.template)
         sd = {
             'status': self.deployment.FAILED,
-            'status_reason': 'something wrong'
+            'status_reason': 'something wrong',
+            rpc_api.SOFTWARE_DEPLOYMENT_CREATION_TIME: datetime.datetime.now(),
         }
+        create_data = (sd, datetime.datetime.now())
         self.rpc_client.show_software_deployment.return_value = sd
         err = self.assertRaises(
-            exc.Error, self.deployment.check_create_complete, sd)
+            exc.Error, self.deployment.check_create_complete, create_data)
         self.assertEqual(
             'Deployment to server failed: something wrong', six.text_type(err))
 
     def test_handle_delete(self):
         self._create_stack(self.template)
-        sd = self.mock_deployment()
-        self.rpc_client.show_software_deployment.return_value = sd
+        mock_sd = self.mock_deployment()
+        mock_sd['server_id'] = 'b509edfb-1448-4b57-8cb1-2e31acccbb8a'
+        mock_sd['status'] = self.deployment.COMPLETE
+        self.rpc_client.show_software_deployment.return_value = mock_sd
 
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         self.deployment.handle_delete()
-        self.deployment.check_delete_complete()
+        delete_data = (mock_sd, datetime.datetime.now())
+        self.deployment.check_delete_complete(delete_data)
         self.assertEqual(
             (self.ctx, self.deployment.resource_id),
             self.rpc_client.delete_software_deployment.call_args[0])
@@ -630,7 +738,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self._create_stack(self.template_delete_suspend_resume)
         self.mock_software_config()
         sd = self.mock_deployment()
-        self.assertEqual(sd, self.deployment.handle_delete())
+        self.assertEqual(sd, self.deployment.handle_delete()[0])
 
     def test_delete_complete(self):
         self._create_stack(self.template_delete_suspend_resume)
@@ -644,7 +752,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.rpc_client.show_software_deployment.return_value = mock_sd
         self.rpc_client.update_software_deployment.return_value = mock_sd
-        self.assertEqual(mock_sd, self.deployment.handle_delete())
+        self.assertEqual(mock_sd, self.deployment.handle_delete()[0])
         self.assertEqual({
             'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'DELETE',
@@ -653,11 +761,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
 
+        delete_data = (mock_sd, datetime.datetime.now())
         mock_sd['status'] = self.deployment.IN_PROGRESS
-        self.assertFalse(self.deployment.check_delete_complete(mock_sd))
+        self.assertFalse(self.deployment.check_delete_complete(delete_data))
 
         mock_sd['status'] = self.deployment.COMPLETE
-        self.assertTrue(self.deployment.check_delete_complete(mock_sd))
+        self.assertTrue(self.deployment.check_delete_complete(delete_data))
 
     def test_delete_complete_missing_server(self):
         """Tests deleting a deployment when the server disappears"""
@@ -677,8 +786,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.rpc_client.show_software_deployment.return_value = mock_sd
         self.rpc_client.update_software_deployment.return_value = mock_sd
 
+        delete_data = (mock_sd, datetime.datetime.now())
         mock_sd['status'] = self.deployment.COMPLETE
-        self.assertTrue(self.deployment.check_delete_complete(mock_sd))
+        self.assertTrue(self.deployment.check_delete_complete(delete_data))
 
         mock_get_server.assert_called_once_with(mock_sd['server_id'])
 
@@ -689,15 +799,19 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.mock_software_config()
         derived_sc = self.mock_derived_software_config()
-        sd = self.mock_deployment()
-        sd['config_id'] = derived_sc['id']
-        self.rpc_client.show_software_deployment.return_value = sd
+        mock_sd = self.mock_deployment()
+        mock_sd['config_id'] = derived_sc['id']
+        mock_sd['server_id'] = 'b509edfb-1448-4b57-8cb1-2e31acccbb8a'
+        mock_sd['status'] = self.deployment.COMPLETE
+        self.rpc_client.show_software_deployment.return_value = mock_sd
 
         nf = exc.NotFound
         self.rpc_client.delete_software_deployment.side_effect = nf
         self.rpc_client.delete_software_config.side_effect = nf
-        self.assertIsNone(self.deployment.handle_delete())
-        self.assertTrue(self.deployment.check_delete_complete())
+        self.assertIsNone(self.deployment.handle_delete()[0])
+        delete_data = (mock_sd, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_delete_complete(
+            delete_data=delete_data))
         self.assertEqual(
             (self.ctx, derived_sc['id']),
             self.rpc_client.delete_software_config.call_args[0])
@@ -706,11 +820,32 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self._create_stack(self.template)
         deployment_id = None
         self.deployment.resource_id = deployment_id
-        self.assertIsNone(self.deployment.handle_delete())
+        self.assertIsNone(self.deployment.handle_delete()[0])
 
     def test_check_delete_complete_none(self):
         self._create_stack(self.template)
-        self.assertTrue(self.deployment.check_delete_complete())
+        delete_data = (None, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_delete_complete(
+            delete_data=delete_data))
+
+    def test_check_delete_timeout(self):
+        # Setup
+        self._create_stack(self.template_with_timeout)
+        mock_sd = self.mock_deployment()
+        mock_sd[rpc_api.SOFTWARE_DEPLOYMENT_ACTION] = 'DELETE'
+        mock_sd['server_id'] = 'b509edfb-1448-4b57-8cb1-2e31acccbb8a'
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+
+        # Test
+        delete_data = (mock_sd,
+                       timeutils.utcnow() - datetime.timedelta(seconds=10))
+        e = self.assertRaises(exc.Error,
+                              self.deployment.check_delete_complete,
+                              delete_data)
+
+        # Verify
+        self.assertIn('DELETE', e.message)
+        self.assertIn('after 5s', e.message)
 
     def test_check_delete_complete_delete_sd(self):
         # handle_delete will return None if NO_SIGNAL,
@@ -720,7 +855,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.mock_deployment()
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         self.rpc_client.show_software_deployment.return_value = sd
-        self.assertTrue(self.deployment.check_delete_complete())
+        delete_data = (None, datetime.datetime.now())
+        self.assertTrue(self.deployment.check_delete_complete(
+            delete_data=delete_data))
         self.assertEqual(
             (self.ctx, self.deployment.resource_id),
             self.rpc_client.delete_software_deployment.call_args[0])
@@ -770,9 +907,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.mock_software_config()
         derived_sc = self.mock_derived_software_config()
-        sd = self.mock_deployment()
+        mock_sd = self.mock_deployment()
 
-        self.rpc_client.show_software_deployment.return_value = sd
+        suspend_data = resume_data = (mock_sd, datetime.datetime.now())
+
+        self.rpc_client.show_software_deployment.return_value = mock_sd
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
 
         # first, handle the suspend
@@ -786,11 +925,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
 
-        sd['status'] = 'IN_PROGRESS'
-        self.assertFalse(self.deployment.check_suspend_complete(sd))
+        mock_sd['status'] = 'IN_PROGRESS'
+        self.assertFalse(self.deployment.check_suspend_complete(suspend_data))
 
-        sd['status'] = 'COMPLETE'
-        self.assertTrue(self.deployment.check_suspend_complete(sd))
+        mock_sd['status'] = 'COMPLETE'
+        self.assertTrue(self.deployment.check_suspend_complete(suspend_data))
 
         # now, handle the resume
         self.deployment.handle_resume()
@@ -803,11 +942,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
 
-        sd['status'] = 'IN_PROGRESS'
-        self.assertFalse(self.deployment.check_resume_complete(sd))
+        mock_sd['status'] = 'IN_PROGRESS'
+        self.assertFalse(self.deployment.check_resume_complete(resume_data))
 
-        sd['status'] = 'COMPLETE'
-        self.assertTrue(self.deployment.check_resume_complete(sd))
+        mock_sd['status'] = 'COMPLETE'
+        self.assertTrue(self.deployment.check_resume_complete(resume_data))
 
     def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
@@ -986,9 +1125,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertIsNotNone(self.deployment.handle_update(
             json_snippet=snippet, tmpl_diff=None, prop_diff=prop_diff))
         # ... but it must not trigger for SUSPEND, RESUME and DELETE
-        self.assertIsNone(self.deployment.handle_suspend())
-        self.assertIsNone(self.deployment.handle_resume())
-        self.assertIsNone(self.deployment.handle_delete())
+        self.assertIsNone(self.deployment.handle_suspend()[0])
+        self.assertIsNone(self.deployment.handle_resume()[0])
+        self.assertIsNone(self.deployment.handle_delete()[0])
 
     def test_handle_action_for_component(self):
         self._create_stack(self.template)
@@ -1047,7 +1186,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.rpc_client.show_software_deployment.return_value = sd
 
         self.assertIsNotNone(self.deployment.handle_create())
-        self.assertIsNone(self.deployment.handle_delete())
+        self.assertIsNone(self.deployment.handle_delete()[0])
 
     def test_get_temp_url(self):
         dep_data = {}
