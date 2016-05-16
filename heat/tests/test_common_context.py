@@ -206,6 +206,29 @@ class TestRequestContext(common.HeatTestCase):
                                            auth_url='http://abc/v3',
                                            trust_id=None)
 
+    def test_cache(self):
+        ctx = context.RequestContext.from_dict(self.ctx)
+
+        class Class1(object):
+            pass
+
+        class Class2(object):
+            pass
+
+        self.assertEqual(0, len(ctx._object_cache))
+
+        cache1 = ctx.cache(Class1)
+        self.assertIsInstance(cache1, Class1)
+        self.assertEqual(1, len(ctx._object_cache))
+
+        cache1a = ctx.cache(Class1)
+        self.assertEqual(cache1, cache1a)
+        self.assertEqual(1, len(ctx._object_cache))
+
+        cache2 = ctx.cache(Class2)
+        self.assertIsInstance(cache2, Class2)
+        self.assertEqual(2, len(ctx._object_cache))
+
 
 class RequestContextMiddlewareTest(common.HeatTestCase):
 
