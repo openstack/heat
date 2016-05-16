@@ -22,7 +22,7 @@ Error response codes:
 Request
 -------
 
-.. rest_parameters:: parameters.yaml
+This operation does not accept a request body.
 
 
 

@@ -43,9 +43,7 @@ Request Example
 Response Example
 ----------------
 
-.. literalinclude:: 
-   :language: javascript
-
+This operation does not return a response body.
 
 
 
@@ -84,8 +82,7 @@ Request Example
 Response Example
 ----------------
 
-.. literalinclude:: 
-   :language: javascript
+This operation does not return a response body.
 
 
 
@@ -125,9 +122,7 @@ Request Example
 Response Example
 ----------------
 
-.. literalinclude:: 
-   :language: javascript
-
+This operation does not return a response body.
 
 
 
@@ -166,8 +161,7 @@ Request Example
 Response Example
 ----------------
 
-.. literalinclude:: 
-   :language: javascript
+This operation does not return a response body.
 
 
 
