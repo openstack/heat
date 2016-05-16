@@ -34,6 +34,8 @@ class CinderEncryptedVolumeType(resource.Resource):
 
     entity = 'volume_encryption_types'
 
+    required_service_extension = 'encryption'
+
     PROPERTIES = (
         PROVIDER, CONTROL_LOCATION, CIPHER, KEY_SIZE, VOLUME_TYPE
     ) = (

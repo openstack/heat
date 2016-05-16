@@ -15,6 +15,7 @@ import mock
 import six
 
 from heat.common import exception
+from heat.engine.clients.os import cinder as c_plugin
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
@@ -39,6 +40,8 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         super(CinderVolumeTypeTest, self).setUp()
 
         self.ctx = utils.dummy_context()
+        self.patchobject(c_plugin.CinderClientPlugin, 'has_extension',
+                         return_value=True)
         self.stack = stack.Stack(
             self.ctx, 'cinder_volume_type_test_stack',
             template.Template(volume_type_template)
