@@ -154,7 +154,7 @@ class CloudWatchAlarm(resource.Resource):
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context,
                                  watch_name=self.physical_resource_name(),
-                                 rule=self.parsed_template('Properties'),
+                                 rule=dict(self.properties),
                                  stack_id=self.stack.id)
         wr.store()
 
@@ -168,7 +168,7 @@ class CloudWatchAlarm(resource.Resource):
             wr = loader(self.context,
                         watch_name=self.physical_resource_name())
 
-            wr.rule = self.parsed_template('Properties')
+            wr.rule = dict(self.properties)
             wr.store()
 
     def handle_delete(self):

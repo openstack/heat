@@ -14,6 +14,7 @@
 import base64
 import contextlib
 import datetime as dt
+import warnings
 import weakref
 
 from oslo_config import cfg
@@ -346,10 +347,10 @@ class Resource(object):
     def __eq__(self, other):
         """Allow == comparison of two resources."""
         # For the purposes of comparison, we declare two resource objects
-        # equal if their names and parsed_templates are the same
+        # equal if their names and resolved templates are the same
         if isinstance(other, Resource):
-            return (self.name == other.name) and (
-                self.parsed_template() == other.parsed_template())
+            return ((self.name == other.name) and
+                    (self.t.freeze() == other.t.freeze()))
         return NotImplemented
 
     def __ne__(self, other):
@@ -481,12 +482,16 @@ class Resource(object):
         May be limited to only one section of the data, in which case a default
         value may also be supplied.
         """
-        default = default or {}
+        warnings.warn('Resource.parsed_template() is deprecated and will be '
+                      'removed in the Ocata release. Use the '
+                      'ResourceDefinition API instead.',
+                      DeprecationWarning)
+
+        frozen = self.t.freeze()
         if section is None:
-            template = self.t
-        else:
-            template = self.t.get(section, default)
-        return function.resolve(template)
+            return frozen
+
+        return frozen.get(section, default or {})
 
     def frozen_definition(self):
         if self._stored_properties_data is not None:
