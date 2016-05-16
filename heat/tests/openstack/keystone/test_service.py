@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 import mock
 
 from heat.engine import properties
@@ -52,20 +54,22 @@ class KeystoneServiceTest(common.HeatTestCase):
         self.keystone_client_plugin = mock.MagicMock()
 
     def _setup_service_resource(self, stack_name, use_default=False):
+        tmpl_data = copy.deepcopy(keystone_service_template)
+        if use_default:
+            props = tmpl_data['resources']['test_service']['properties']
+            del props['name']
+            del props['enabled']
+            del props['description']
+
         test_stack = stack.Stack(
             self.ctx, stack_name,
-            template.Template(keystone_service_template)
+            template.Template(tmpl_data)
         )
         r_service = test_stack['test_service']
         r_service.client = mock.MagicMock()
         r_service.client.return_value = self.keystoneclient
         r_service.client_plugin = mock.MagicMock()
         r_service.client_plugin.return_value = self.keystone_client_plugin
-
-        if use_default:
-            del r_service.t['Properties']['name']
-            del r_service.t['Properties']['enabled']
-            del r_service.t['Properties']['description']
 
         return r_service
 

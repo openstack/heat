@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import mock
 import six
 from troveclient.openstack.common.apiclient import exceptions as troveexc
@@ -76,8 +77,8 @@ class TroveClusterTest(common.HeatTestCase):
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
-        t = template_format.parse(stack_template)
-        self.stack = utils.parse_stack(t)
+        self.tmpl = template_format.parse(stack_template)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['cluster']
 
@@ -144,7 +145,9 @@ class TroveClusterTest(common.HeatTestCase):
         self.assertIsNone(tc.validate())
 
     def test_validate_invalid_dsversion(self):
-        self.rsrc_defn['Properties']['datastore_version'] = '2.6.2'
+        props = self.tmpl['resources']['cluster']['properties'].copy()
+        props['datastore_version'] = '2.6.2'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
         error_msg = ('Datastore version 2.6.2 for datastore type mongodb is '
@@ -154,7 +157,9 @@ class TroveClusterTest(common.HeatTestCase):
     def test_validate_invalid_flavor(self):
         self.troveclient.flavors.get.side_effect = troveexc.NotFound()
         self.troveclient.flavors.find.side_effect = troveexc.NotFound()
-        self.rsrc_defn['Properties']['instances'][0]['flavor'] = 'm1.small'
+        props = copy.deepcopy(self.tmpl['resources']['cluster']['properties'])
+        props['instances'][0]['flavor'] = 'm1.small'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
         error_msg = ("Property error: "

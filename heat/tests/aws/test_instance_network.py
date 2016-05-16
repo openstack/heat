@@ -228,12 +228,12 @@ class instancesTest(common.HeatTestCase):
         # need to resolve the template functions
         server_userdata = instance.client_plugin().build_userdata(
             metadata,
-            instance.t['Properties']['UserData'],
+            instance.properties['UserData'],
             'ec2-user')
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
         nova.NovaClientPlugin.build_userdata(
             metadata,
-            instance.t['Properties']['UserData'],
+            instance.properties['UserData'],
             'ec2-user').AndReturn(server_userdata)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -288,12 +288,12 @@ class instancesTest(common.HeatTestCase):
         # need to resolve the template functions
         server_userdata = instance.client_plugin().build_userdata(
             metadata,
-            instance.t['Properties']['UserData'],
+            instance.properties['UserData'],
             'ec2-user')
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
         nova.NovaClientPlugin.build_userdata(
             metadata,
-            instance.t['Properties']['UserData'],
+            instance.properties['UserData'],
             'ec2-user').AndReturn(server_userdata)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')

@@ -74,8 +74,9 @@ class SaharaJobBinaryTest(common.HeatTestCase):
     def test_update(self):
         jb = self._create_resource('job-binary', self.rsrc_defn,
                                    self.stack)
-        self.rsrc_defn['Properties']['url'] = (
-            'internal-db://94b8821d-1ce7-4131-8364-a6c6d85ad57b')
+        props = self.stack.t.t['resources']['job-binary']['properties'].copy()
+        props['url'] = 'internal-db://94b8821d-1ce7-4131-8364-a6c6d85ad57b'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         scheduler.TaskRunner(jb.update, self.rsrc_defn)()
         data = {
             'name': 'my-jb',
@@ -114,7 +115,9 @@ class SaharaJobBinaryTest(common.HeatTestCase):
         self.assertEqual({'jb': 'info'}, jb.FnGetAtt('show'))
 
     def test_validate_invalid_url(self):
-        self.rsrc_defn['Properties']['url'] = 'internal-db://38273f82'
+        props = self.stack.t.t['resources']['job-binary']['properties'].copy()
+        props['url'] = 'internal-db://38273f82'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         jb = job_binary.JobBinary('job-binary', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, jb.validate)
         error_msg = ('resources.job-binary.properties: internal-db://38273f82 '
@@ -122,7 +125,9 @@ class SaharaJobBinaryTest(common.HeatTestCase):
         self.assertEqual(error_msg, six.text_type(ex))
 
     def test_validate_password_without_user(self):
-        self.rsrc_defn['Properties']['credentials'].pop('user')
+        props = self.stack.t.t['resources']['job-binary']['properties'].copy()
+        props['credentials'].pop('user')
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
         jb = job_binary.JobBinary('job-binary', self.rsrc_defn, self.stack)
         ex = self.assertRaises(exception.StackValidationFailed, jb.validate)
         error_msg = ('Property error: resources.job-binary.properties.'

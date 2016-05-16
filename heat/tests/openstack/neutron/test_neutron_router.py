@@ -224,7 +224,10 @@ class NeutronRouterTest(common.HeatTestCase):
         props['distributed'] = True
         stack = utils.parse_stack(t)
         rsrc = stack['router']
-        rsrc.t['Properties'].pop('l3_agent_ids')
+        update_props = props.copy()
+        del update_props['l3_agent_ids']
+        rsrc.t = rsrc.t.freeze(properties=update_props)
+        rsrc.reparse()
         exc = self.assertRaises(exception.ResourcePropertyConflict,
                                 rsrc.validate)
         self.assertIn('distributed, ha', six.text_type(exc))
@@ -942,11 +945,12 @@ class NeutronRouterTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
         rsrc = self.create_router(t, stack, 'router')
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['external_gateway_info'] = {
+        props = t['resources']['router']['properties'].copy()
+        props['external_gateway_info'] = {
             "network": "other_public",
             "enable_snat": False
         }
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 

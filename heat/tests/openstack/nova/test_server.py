@@ -252,6 +252,7 @@ class ServersTest(common.HeatTestCase):
         server_name = str(name) if override_name else None
         tmpl, self.stack = self._get_test_template(stack_name, server_name,
                                                    image_id)
+        self.server_props = tmpl.t['Resources']['WebServer']['Properties']
         resource_defns = tmpl.resource_definitions(self.stack)
         server = servers.Server(str(name), resource_defns['WebServer'],
                                 self.stack)
@@ -563,8 +564,8 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         (tmpl, stack) = self._setup_test_stack(stack_name)
         self.stack = stack
-        tmpl['Resources']['WebServer']['Properties'][
-            'user_data_format'] = 'SOFTWARE_CONFIG'
+        self.server_props = tmpl['Resources']['WebServer']['Properties']
+        self.server_props['user_data_format'] = 'SOFTWARE_CONFIG'
         if md is not None:
             tmpl['Resources']['WebServer']['Metadata'] = md
 
@@ -644,6 +645,7 @@ class ServersTest(common.HeatTestCase):
         props['software_config_transport'] = 'POLL_SERVER_HEAT'
         if md is not None:
             tmpl.t['Resources']['WebServer']['Metadata'] = md
+        self.server_props = props
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -710,6 +712,7 @@ class ServersTest(common.HeatTestCase):
         props['software_config_transport'] = 'POLL_TEMP_URL'
         if md is not None:
             tmpl.t['Resources']['WebServer']['Metadata'] = md
+        self.server_props = props
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -790,6 +793,7 @@ class ServersTest(common.HeatTestCase):
         props['software_config_transport'] = 'ZAQAR_MESSAGE'
         if md is not None:
             tmpl.t['Resources']['WebServer']['Metadata'] = md
+        self.server_props = props
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -1448,9 +1452,9 @@ class ServersTest(common.HeatTestCase):
         sc.url = 'http://192.0.2.2'
         self.patchobject(swift.SwiftClientPlugin, '_create',
                          return_value=sc)
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties'][
-            'software_config_transport'] = 'POLL_TEMP_URL'
+        update_props = self.server_props.copy()
+        update_props['software_config_transport'] = 'POLL_TEMP_URL'
+        update_template = server.t.freeze(properties=update_props)
 
         self.rpc_client = mock.MagicMock()
         server._rpc_client = self.rpc_client
@@ -1491,8 +1495,9 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get',
                          return_value=return_server)
         set_meta_mock = self.patchobject(self.fc.servers, 'set_meta')
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['metadata'] = new_meta
+        update_props = self.server_props.copy()
+        update_props['metadata'] = new_meta
+        update_template = server.t.freeze(properties=update_props)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         set_meta_mock.assert_called_with(
@@ -1514,8 +1519,9 @@ class ServersTest(common.HeatTestCase):
 
         # If we're going to call set_meta() directly we
         # need to handle the serialization ourselves.
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['metadata'] = new_meta
+        update_props = self.server_props.copy()
+        update_props['metadata'] = new_meta
+        update_template = server.t.freeze(properties=update_props)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         set_meta_mock.assert_called_with(
@@ -1531,8 +1537,9 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get',
                          return_value=return_server)
         set_meta_mock = self.patchobject(self.fc.servers, 'set_meta')
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['metadata'] = new_meta
+        update_props = self.server_props.copy()
+        update_props['metadata'] = new_meta
+        update_template = server.t.freeze(properties=update_props)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         set_meta_mock.assert_called_with(
@@ -1547,8 +1554,9 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get',
                          return_value=new_return_server)
         del_meta_mock = self.patchobject(self.fc.servers, 'delete_meta')
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['metadata'] = new_meta
+        update_props = self.server_props.copy()
+        update_props['metadata'] = new_meta
+        update_template = server.t.freeze(properties=update_props)
 
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
@@ -1564,8 +1572,9 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_update')
         new_name = 'new_name'
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['name'] = new_name
+        update_props = self.server_props.copy()
+        update_props['name'] = new_name
+        update_template = server.t.freeze(properties=update_props)
 
         self.patchobject(self.fc.servers, 'get',
                          return_value=return_server)
@@ -1581,8 +1590,9 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'change_password')
         new_password = 'new_password'
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['admin_pass'] = new_password
+        update_props = self.server_props.copy()
+        update_props['admin_pass'] = new_password
+        update_template = server.t.freeze(properties=update_props)
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(return_server, 'change_password')
@@ -1602,8 +1612,9 @@ class ServersTest(common.HeatTestCase):
         return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'srv_update')
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['flavor'] = 'm1.small'
+        update_props = self.server_props.copy()
+        update_props['flavor'] = 'm1.small'
+        update_template = server.t.freeze(properties=update_props)
 
         def set_status(status):
             return_server.status = status
@@ -1633,8 +1644,9 @@ class ServersTest(common.HeatTestCase):
         return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'srv_update2')
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['flavor'] = 'm1.small'
+        update_props = self.server_props.copy()
+        update_props['flavor'] = 'm1.small'
+        update_template = server.t.freeze(properties=update_props)
 
         def set_status(status):
             return_server.status = status
@@ -1668,8 +1680,9 @@ class ServersTest(common.HeatTestCase):
         server_resource = self._create_test_server(server,
                                                    'resize_server')
         # prepare template with resized server
-        update_template = copy.deepcopy(server_resource.t)
-        update_template['Properties']['flavor'] = 'm1.small'
+        update_props = self.server_props.copy()
+        update_props['flavor'] = 'm1.small'
+        update_template = server_resource.t.freeze(properties=update_props)
 
         # define status transition when server resize
         # ACTIVE(initial) -> ACTIVE -> RESIZE -> VERIFY_RESIZE
@@ -1700,13 +1713,14 @@ class ServersTest(common.HeatTestCase):
     def test_server_update_server_flavor_replace(self, mock_replace):
         stack_name = 'update_flvrep'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        tmpl['Resources']['WebServer']['Properties'][
-            'flavor_update_policy'] = 'REPLACE'
+        server_props = tmpl['Resources']['WebServer']['Properties']
+        server_props['flavor_update_policy'] = 'REPLACE'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_server_update_flavor_replace',
                                 resource_defns['WebServer'], stack)
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['flavor'] = 'm1.small'
+        update_props = server_props.copy()
+        update_props['flavor'] = 'm1.small'
+        update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
@@ -1718,12 +1732,13 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('server_server_update_flavor_replace',
                                 resource_defns['WebServer'], stack)
 
-        update_template = copy.deepcopy(server.t)
+        update_props = tmpl.t['Resources']['WebServer']['Properties'].copy()
         # confirm that when flavor_update_policy is changed during
         # the update then the updated policy is followed for a flavor
         # update
-        update_template['Properties']['flavor_update_policy'] = 'REPLACE'
-        update_template['Properties']['flavor'] = 'm1.small'
+        update_props['flavor_update_policy'] = 'REPLACE'
+        update_props['flavor'] = 'm1.small'
+        update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
@@ -1737,8 +1752,9 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('server_update_userdata_replace',
                                 resource_defns['WebServer'], stack)
 
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['user_data'] = 'changed'
+        update_props = tmpl.t['Resources']['WebServer']['Properties'].copy()
+        update_props['user_data'] = 'changed'
+        update_template = server.t.freeze(properties=update_props)
         server.action = server.CREATE
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
@@ -1756,9 +1772,10 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('server_update_userdata_ignore',
                                 resource_defns['WebServer'], stack)
 
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['user_data'] = 'changed'
-        update_template['Properties']['user_data_update_policy'] = 'IGNORE'
+        update_props = tmpl.t['Resources']['WebServer']['Properties'].copy()
+        update_props['user_data'] = 'changed'
+        update_props['user_data_update_policy'] = 'IGNORE'
+        update_template = server.t.freeze(properties=update_props)
         server.action = server.CREATE
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
@@ -1774,8 +1791,9 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('server_update_image_replace',
                                 resource_defns['WebServer'], stack)
         image_id = self.getUniqueString()
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = image_id
+        update_props = tmpl.t['Resources']['WebServer']['Properties'].copy()
+        update_props['image'] = image_id
+        update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
@@ -1791,12 +1809,16 @@ class ServersTest(common.HeatTestCase):
         new_image = 'F17-x86_64-gold'
         # current test demonstrate updating when image_update_policy was not
         # changed, so image_update_policy will be used from self.properties
-        server.t['Properties']['image_update_policy'] = policy
+        before_props = self.server_props.copy()
+        before_props['image_update_policy'] = policy
+        server.t = server.t.freeze(properties=before_props)
+        server.reparse()
 
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = new_image
+        update_props = before_props.copy()
+        update_props['image'] = new_image
         if password:
-            update_template['Properties']['admin_pass'] = password
+            update_props['admin_pass'] = password
+        update_template = server.t.freeze(properties=update_props)
 
         mock_rebuild = self.patchobject(self.fc.servers, 'rebuild')
 
@@ -1857,9 +1879,13 @@ class ServersTest(common.HeatTestCase):
         new_image = 'F17-x86_64-gold'
         # current test demonstrate updating when image_update_policy was not
         # changed, so image_update_policy will be used from self.properties
-        server.t['Properties']['image_update_policy'] = 'REBUILD'
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = new_image
+        before_props = self.server_props.copy()
+        before_props['image_update_policy'] = 'REBUILD'
+        update_props = before_props.copy()
+        update_props['image'] = new_image
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
+        server.reparse()
         mock_rebuild = self.patchobject(self.fc.servers, 'rebuild')
 
         def set_status(status):
@@ -1883,9 +1909,10 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'update_prop')
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = 'F17-x86_64-gold'
-        update_template['Properties']['image_update_policy'] = 'REPLACE'
+        update_props = self.server_props.copy()
+        update_props['image'] = 'F17-x86_64-gold'
+        update_props['image_update_policy'] = 'REPLACE'
+        update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
@@ -2964,12 +2991,11 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server, 'networks_update')
 
         new_networks = [{'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = new_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = new_networks
+        update_template = server.t.freeze(properties=update_props)
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
-        # to make sure, that old_networks will be None
-        self.assertFalse(hasattr(server.t['Properties'], 'networks'))
 
         iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                        '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
@@ -2994,13 +3020,11 @@ class ServersTest(common.HeatTestCase):
 
         new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                          'fixed_ip': '1.2.3.4'}]
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = new_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = new_networks
+        update_template = server.t.freeze(properties=update_props)
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
-
-        # to make sure, that old_networks will be None
-        self.assertFalse(hasattr(server.t['Properties'], 'networks'))
 
         iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                        '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
@@ -3022,13 +3046,11 @@ class ServersTest(common.HeatTestCase):
         new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                          'fixed_ip': '1.2.3.4',
                          'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = new_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = new_networks
+        update_template = server.t.freeze(properties=update_props)
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
-
-        # to make sure, that old_networks will be None
-        self.assertFalse(hasattr(server.t['Properties'], 'networks'))
 
         iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                        '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
@@ -3059,9 +3081,13 @@ class ServersTest(common.HeatTestCase):
              'fixed_ip': '1.2.3.4'},
             {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
 
-        server.t['Properties']['networks'] = old_networks
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = new_networks
+        before_props = self.server_props.copy()
+        before_props['networks'] = old_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = new_networks
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
+        # server.reparse()
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
@@ -3100,9 +3126,13 @@ class ServersTest(common.HeatTestCase):
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '31.32.33.34'}]
 
-        server.t['Properties']['networks'] = old_networks
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = None
+        before_props = self.server_props.copy()
+        before_props['networks'] = old_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = None
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
+        # server.reparse()
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
@@ -3137,9 +3167,13 @@ class ServersTest(common.HeatTestCase):
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '31.32.33.34'}]
 
-        server.t['Properties']['networks'] = old_networks
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = []
+        before_props = self.server_props.copy()
+        before_props['networks'] = old_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = []
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
+        # server.reparse()
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
@@ -3172,9 +3206,10 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'my_server')
 
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = 'F17-x86_64-gold'
-        update_template['Properties']['image_update_policy'] = 'REPLACE'
+        update_props = self.server_props.copy()
+        update_props['image'] = 'F17-x86_64-gold'
+        update_props['image_update_policy'] = 'REPLACE'
+        update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(exception.UpdateReplace, updater)
 
@@ -3190,8 +3225,9 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(glance.GlanceClientPlugin,
                          'find_image_by_name_or_id',
                          side_effect=[1, ex])
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = 'Update Image'
+        update_props = self.server_props.copy()
+        update_props['image'] = 'Update Image'
+        update_template = server.t.freeze(properties=update_props)
 
         # update
         updater = scheduler.TaskRunner(server.update, update_template)

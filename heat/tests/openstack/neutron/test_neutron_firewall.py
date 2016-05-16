@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
 import six
@@ -105,6 +103,7 @@ class FirewallTest(common.HeatTestCase):
 
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
+        self.fw_props = snippet['resources']['firewall']['properties']
         return firewall.Firewall(
             'firewall', resource_defns['firewall'], self.stack)
 
@@ -211,8 +210,9 @@ class FirewallTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['admin_state_up'] = False
+        props = self.fw_props.copy()
+        props['admin_state_up'] = False
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
@@ -256,6 +256,7 @@ class FirewallPolicyTest(common.HeatTestCase):
 
         snippet = template_format.parse(firewall_policy_template)
         self.stack = utils.parse_stack(snippet)
+        self.tmpl = snippet
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return firewall.FirewallPolicy(
             'firewall_policy', resource_defns['firewall_policy'], self.stack)
@@ -358,8 +359,9 @@ class FirewallPolicyTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['firewall_rules'] = ['3', '4']
+        props = self.tmpl['resources']['firewall_policy']['properties'].copy()
+        props['firewall_rules'] = ['3', '4']
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
@@ -386,6 +388,7 @@ class FirewallRuleTest(common.HeatTestCase):
 
         snippet = template_format.parse(firewall_rule_template)
         self.stack = utils.parse_stack(snippet)
+        self.tmpl = snippet
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return firewall.FirewallRule(
             'firewall_rule', resource_defns['firewall_rule'], self.stack)
@@ -401,7 +404,10 @@ class FirewallRuleTest(common.HeatTestCase):
         snippet = template_format.parse(firewall_rule_template)
         stack = utils.parse_stack(snippet)
         rsrc = stack['firewall_rule']
-        rsrc.t['Properties']['protocol'] = 'None'
+        props = dict(rsrc.properties)
+        props['protocol'] = 'None'
+        rsrc.t = rsrc.t.freeze(properties=props)
+        rsrc.reparse()
         self.assertRaises(exception.StackValidationFailed, rsrc.validate)
 
     def test_create_with_protocol_any(self):
@@ -414,9 +420,9 @@ class FirewallRuleTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         snippet = template_format.parse(firewall_rule_template)
+        snippet['resources']['firewall_rule']['properties']['protocol'] = 'any'
         stack = utils.parse_stack(snippet)
         rsrc = stack['firewall_rule']
-        rsrc.t['Properties']['protocol'] = 'any'
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -514,8 +520,9 @@ class FirewallRuleTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['protocol'] = 'icmp'
+        props = self.tmpl['resources']['firewall_rule']['properties'].copy()
+        props['protocol'] = 'icmp'
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
@@ -527,7 +534,8 @@ class FirewallRuleTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         # update to 'any' protocol
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['protocol'] = 'any'
+        props = self.tmpl['resources']['firewall_rule']['properties'].copy()
+        props['protocol'] = 'any'
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()

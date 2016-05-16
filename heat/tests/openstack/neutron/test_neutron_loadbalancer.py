@@ -190,6 +190,7 @@ class HealthMonitorTest(common.HeatTestCase):
 
         snippet = template_format.parse(health_monitor_template)
         self.stack = utils.parse_stack(snippet)
+        self.tmpl = snippet
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.HealthMonitor(
             'monitor', resource_defns['monitor'], self.stack)
@@ -291,8 +292,9 @@ class HealthMonitorTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['delay'] = 10
+        props = self.tmpl['resources']['monitor']['properties'].copy()
+        props['delay'] = 10
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
@@ -326,6 +328,7 @@ class PoolTest(common.HeatTestCase):
         else:
             snippet = template_format.parse(pool_template_deprecated)
         self.stack = utils.parse_stack(snippet)
+        self.tmpl = snippet
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
@@ -799,8 +802,9 @@ class PoolTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['admin_state_up'] = False
+        props = self.tmpl['resources']['pool']['properties'].copy()
+        props['admin_state_up'] = False
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
@@ -847,8 +851,9 @@ class PoolTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['monitors'] = ['mon123', 'mon789']
+        props = snippet['resources']['pool']['properties'].copy()
+        props['monitors'] = ['mon123', 'mon789']
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
@@ -874,6 +879,7 @@ class PoolMemberTest(common.HeatTestCase):
         ).AndReturn({'member': {'id': 'member5678'}})
         snippet = template_format.parse(member_template)
         self.stack = utils.parse_stack(snippet)
+        self.tmpl = snippet
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.PoolMember(
             'member', resource_defns['member'], self.stack)
@@ -927,8 +933,9 @@ class PoolMemberTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['pool_id'] = 'pool456'
+        props = self.tmpl['resources']['member']['properties'].copy()
+        props['pool_id'] = 'pool456'
+        update_template = rsrc.t.freeze(properties=props)
 
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
@@ -1001,8 +1008,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['members'] = ['5678']
+        props = dict(rsrc.properties)
+        props['members'] = ['5678']
+        update_template = rsrc.t.freeze(properties=props)
 
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
@@ -1015,8 +1023,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['members'] = []
+        props = dict(rsrc.properties)
+        props['members'] = []
+        update_template = rsrc.t.freeze(properties=props)
 
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)

@@ -96,9 +96,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['name'] = 'super-blog'
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['name'] = 'super-blog'
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
             docker.Client())
@@ -136,11 +137,11 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['port_bindings'] = {
-            '80/tcp': [{'HostPort': '80'}]}
-        definition['Properties']['links'] = {'db': 'mysql'}
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['port_bindings'] = {'80/tcp': [{'HostPort': '80'}]}
+        props['links'] = {'db': 'mysql'}
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
             docker.Client())
@@ -228,10 +229,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['restart_policy'] = {
-            'Name': 'no', 'MaximumRetryCount': 0}
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
@@ -247,10 +248,11 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['restart_policy'] = {
-            'Name': 'on-failure', 'MaximumRetryCount': 10}
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['restart_policy'] = {'Name': 'on-failure',
+                                   'MaximumRetryCount': 10}
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
@@ -266,10 +268,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['restart_policy'] = {
-            'Name': 'always', 'MaximumRetryCount': 0}
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['restart_policy'] = {'Name': 'always', 'MaximumRetryCount': 0}
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
@@ -285,10 +287,11 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['cap_add'] = ['NET_ADMIN']
-        definition['Properties']['cap_drop'] = ['MKNOD']
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['cap_add'] = ['NET_ADMIN']
+        props['cap_drop'] = ['MKNOD']
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
@@ -304,9 +307,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['read_only'] = True
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['read_only'] = True
         resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         get_client_mock.return_value.set_api_version('1.17')
@@ -322,9 +326,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties'][arg] = value
+        props = t['Resources']['Blog']['Properties'].copy()
+        props[arg] = value
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         get_client_mock.return_value.set_api_version(low_version)
@@ -348,9 +353,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['cpu_shares'] = 512
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['cpu_shares'] = 512
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
@@ -368,7 +374,8 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['devices'] = (
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['devices'] = (
             [{'path_on_host': '/dev/sda',
               'path_in_container': '/dev/xvdc',
               'permissions': 'r'},
@@ -376,7 +383,7 @@ class DockerContainerTest(common.HeatTestCase):
               'path_in_container': '/dev/xvdd',
               'permissions': 'rw'}])
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
@@ -393,13 +400,14 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['devices'] = (
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['devices'] = (
             [{'path_on_host': '/dev/sdb',
               'path_in_container': '/dev/xvdc',
               'permissions': 'r'}])
-        definition['Properties']['privileged'] = True
+        props['privileged'] = True
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
@@ -420,11 +428,11 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['devices'] = (
-            [{'path_on_host': '/dev/sda',
-              'permissions': 'rwm'}])
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['devices'] = [{'path_on_host': '/dev/sda',
+                             'permissions': 'rwm'}]
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
@@ -440,9 +448,10 @@ class DockerContainerTest(common.HeatTestCase):
         t = template_format.parse(template)
         self.stack = utils.parse_stack(t)
         definition = self.stack.t.resource_definitions(self.stack)['Blog']
-        definition['Properties']['cpu_set'] = '0-8,16-24,28'
+        props = t['Resources']['Blog']['Properties'].copy()
+        props['cpu_set'] = '0-8,16-24,28'
         my_resource = docker_container.DockerContainer(
-            'Blog', definition, self.stack)
+            'Blog', definition.freeze(properties=props), self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
         get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())

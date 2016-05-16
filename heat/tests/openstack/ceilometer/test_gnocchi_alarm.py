@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 import mock
 import mox
 
@@ -121,8 +119,8 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
             time_constraints=[],
             severity='low',
         ).AndReturn(FakeCeilometerAlarm())
-        snippet = template_format.parse(gnocchi_resources_alarm_template)
-        self.stack = utils.parse_stack(snippet)
+        self.tmpl = template_format.parse(gnocchi_resources_alarm_template)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.CeilometerGnocchiResourcesAlarm(
             'GnoResAlarm', resource_defns['GnoResAlarm'], self.stack)
@@ -138,9 +136,9 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['resource_id'] = (
-            'd3d6c642-921e-4fc2-9c5f-15d9a5afb598')
+        props = self.tmpl['resources']['GnoResAlarm']['properties']
+        props['resource_id'] = 'd3d6c642-921e-4fc2-9c5f-15d9a5afb598'
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
@@ -242,9 +240,9 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
             time_constraints=[],
             severity='low',
         ).AndReturn(FakeCeilometerAlarm())
-        snippet = template_format.parse(
+        self.tmpl = template_format.parse(
             gnocchi_aggregation_by_metrics_alarm_template)
-        self.stack = utils.parse_stack(snippet)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.CeilometerGnocchiAggregationByMetricsAlarm(
             'GnoAggregationByMetricsAlarm',
@@ -262,10 +260,11 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['metrics'] = [
-            'd3d6c642-921e-4fc2-9c5f-15d9a5afb598',
-            'bc60f822-18a0-4a0c-94e7-94c554b00901']
+        snippet = self.tmpl['resources']['GnoAggregationByMetricsAlarm']
+        props = snippet['properties'].copy()
+        props['metrics'] = ['d3d6c642-921e-4fc2-9c5f-15d9a5afb598',
+                            'bc60f822-18a0-4a0c-94e7-94c554b00901']
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
@@ -319,9 +318,9 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
             time_constraints=[],
             severity='low',
         ).AndReturn(FakeCeilometerAlarm())
-        snippet = template_format.parse(
+        self.tmpl = template_format.parse(
             gnocchi_aggregation_by_resources_alarm_template)
-        self.stack = utils.parse_stack(snippet)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.CeilometerGnocchiAggregationByResourcesAlarm(
             'GnoAggregationByResourcesAlarm',
@@ -338,9 +337,10 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['query'] = (
-            '{"=": {"server_group": "my_new_group"}}')
+        snippet = self.tmpl['resources']['GnoAggregationByResourcesAlarm']
+        props = snippet['properties'].copy()
+        props['query'] = '{"=": {"server_group": "my_new_group"}}'
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 

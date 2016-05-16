@@ -561,14 +561,9 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
                           else None)
         self.assertTrue(tmpl_diff.properties_changed())
 
-        # test application of the new update policy in handle_update
-        update_snippet = rsrc_defn.ResourceDefinition(
-            current_grp.name,
-            current_grp.type(),
-            properties=updated_grp.t['Properties'])
         current_grp._try_rolling_update = mock.MagicMock()
         current_grp.resize = mock.MagicMock()
-        current_grp.handle_update(update_snippet, tmpl_diff, None)
+        current_grp.handle_update(updated_grp_json, tmpl_diff, None)
         if updated_policy is None:
             self.assertIsNone(
                 current_grp.properties.data.get('rolling_updates'))

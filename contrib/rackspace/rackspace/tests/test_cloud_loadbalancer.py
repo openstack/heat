@@ -316,26 +316,28 @@ class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
 
+        self.lb_props = {
+            "name": "test-clb",
+            "nodes": [{"addresses": ["166.78.103.141"],
+                       "port": 80,
+                       "condition": "ENABLED"}],
+            "protocol": "HTTP",
+            "port": 80,
+            "virtualIps": [
+                {"type": "PUBLIC", "ipVersion": "IPV6"}],
+            "algorithm": 'LEAST_CONNECTIONS',
+            "connectionThrottle": {'maxConnectionRate': 1000},
+            'timeout': 110,
+            'contentCaching': 'DISABLED'
+        }
+
         self.lb_template = {
             "AWSTemplateFormatVersion": "2010-09-09",
             "Description": "fawef",
             "Resources": {
                 self._get_lb_resource_name(): {
                     "Type": "Rackspace::Cloud::LoadBalancer",
-                    "Properties": {
-                        "name": "test-clb",
-                        "nodes": [{"addresses": ["166.78.103.141"],
-                                   "port": 80,
-                                   "condition": "ENABLED"}],
-                        "protocol": "HTTP",
-                        "port": 80,
-                        "virtualIps": [
-                            {"type": "PUBLIC", "ipVersion": "IPV6"}],
-                        "algorithm": 'LEAST_CONNECTIONS',
-                        "connectionThrottle": {'maxConnectionRate': 1000},
-                        'timeout': 110,
-                        'contentCaching': 'DISABLED'
-                    }
+                    "Properties": self.lb_props,
                 }
             }
         }
@@ -812,9 +814,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
+        props = copy.deepcopy(self.lb_props)
         expected_ip = '172.168.1.4'
-        update_template['Properties']['nodes'] = [
+        props['nodes'] = [
             {"addresses": ["166.78.103.141"],
              "port": 80,
              "condition": "ENABLED",
@@ -825,6 +827,7 @@ class LoadBalancerTest(common.HeatTestCase):
              "condition": "ENABLED",
              "type": "PRIMARY",
              "weight": 1}]
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -894,9 +897,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
+        props = copy.deepcopy(self.lb_props)
         expected_ip = '4.4.4.4'
-        update_template['Properties']['nodes'] = [
+        props['nodes'] = [
             {"addresses": ["1.1.1.1"], "port": 80, "condition": "ENABLED",
              "type": "PRIMARY", "weight": 1},
             {"addresses": ["2.2.2.2"], "port": 80, "condition": "DISABLED",
@@ -904,6 +907,7 @@ class LoadBalancerTest(common.HeatTestCase):
             {"addresses": [expected_ip], "port": 80, "condition": "ENABLED",
              "type": "PRIMARY", "weight": 1}
         ]
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -978,8 +982,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['name'] = "updated_name"
+        props = copy.deepcopy(self.lb_props)
+        props['name'] = "updated_name"
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1005,8 +1010,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['name'] = "updated_name"
+        props = copy.deepcopy(self.lb_props)
+        props['name'] = "updated_name"
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1060,8 +1066,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['name'] = "updated_name"
+        props = copy.deepcopy(self.lb_props)
+        props['name'] = "updated_name"
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1085,9 +1092,10 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['name'] = "updated_name"
-        update_template['Properties']['algorithm'] = "RANDOM"
+        props = copy.deepcopy(self.lb_props)
+        props['name'] = "updated_name"
+        props['algorithm'] = "RANDOM"
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1115,8 +1123,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['algorithm'] = "RANDOM"
+        props = copy.deepcopy(self.lb_props)
+        props['algorithm'] = "RANDOM"
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1143,8 +1152,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['protocol'] = "IMAPS"
+        props = copy.deepcopy(self.lb_props)
+        props['protocol'] = "IMAPS"
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1174,8 +1184,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['httpsRedirect'] = True
+        props = copy.deepcopy(template['Resources'][rsrc.name]['Properties'])
+        props['httpsRedirect'] = True
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1261,8 +1272,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['halfClosed'] = True
+        props = copy.deepcopy(self.lb_props)
+        props['halfClosed'] = True
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1286,8 +1298,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['port'] = 1234
+        props = copy.deepcopy(self.lb_props)
+        props['port'] = 1234
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1311,8 +1324,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['timeout'] = 120
+        props = copy.deepcopy(self.lb_props)
+        props['timeout'] = 120
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1336,12 +1350,13 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['healthMonitor'] = {
+        props = copy.deepcopy(self.lb_props)
+        props['healthMonitor'] = {
             'type': "HTTP", 'delay': 10, 'timeout': 10,
             'attemptsBeforeDeactivation': 4, 'path': "/",
             'statusRegex': "^[234][0-9][0-9]$", 'bodyRegex': ".* testing .*",
             'hostHeader': "example.com"}
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.StubOutWithMock(fake_lb, 'get_health_monitor')
         fake_lb.get_health_monitor().AndReturn({})
@@ -1379,8 +1394,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['healthMonitor']
+        update_template = rsrc.t.freeze(properties=self.lb_props)
 
         self.m.StubOutWithMock(fake_lb, 'get_health_monitor')
         fake_lb.get_health_monitor().AndReturn(
@@ -1406,8 +1420,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['sessionPersistence'] = 'SOURCE_IP'
+        props = copy.deepcopy(self.lb_props)
+        props['sessionPersistence'] = 'SOURCE_IP'
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.ReplayAll()
 
@@ -1430,8 +1445,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['sessionPersistence']
+        update_template = rsrc.t.freeze(properties=self.lb_props)
 
         self.m.ReplayAll()
 
@@ -1447,10 +1461,15 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['sslTermination'] = {
-            'securePort': 443, 'privatekey': private_key, 'certificate': cert,
-            'secureTrafficOnly': False, 'intermediateCertificate': ''}
+        props = copy.deepcopy(self.lb_props)
+        props['sslTermination'] = {
+            'securePort': 443,
+            'privatekey': private_key,
+            'certificate': cert,
+            'secureTrafficOnly': False,
+            'intermediateCertificate': ''
+        }
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.StubOutWithMock(fake_lb, 'get_ssl_termination')
         fake_lb.get_ssl_termination().AndReturn({})
@@ -1497,8 +1516,7 @@ class LoadBalancerTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
 
         self.m.UnsetStubs()
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['sslTermination']
+        update_template = rsrc.t.freeze(properties=self.lb_props)
 
         self.m.StubOutWithMock(rsrc.clb, 'get')
         rsrc.clb.get(mox.IgnoreArg()).MultipleTimes().AndReturn(
@@ -1527,8 +1545,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['metadata'] = {'a': 1, 'b': 2}
+        props = copy.deepcopy(self.lb_props)
+        props['metadata'] = {'a': 1, 'b': 2}
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.StubOutWithMock(fake_lb, 'get_metadata')
         fake_lb.get_metadata().AndReturn({})
@@ -1557,8 +1576,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['metadata']
+        update_template = rsrc.t.freeze(properties=self.lb_props)
 
         self.m.StubOutWithMock(fake_lb, 'get_metadata')
         fake_lb.get_metadata().AndReturn({'a': 1, 'b': 2})
@@ -1584,8 +1602,9 @@ class LoadBalancerTest(common.HeatTestCase):
             '<html><head><title>Service Unavailable</title></head><body><h2>'
             'Service Unavailable</h2>The service is unavailable</body></html>')
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['errorPage'] = error_page
+        props = copy.deepcopy(self.lb_props)
+        props['errorPage'] = error_page
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.StubOutWithMock(fake_lb, 'get_error_page')
         fake_lb.get_error_page().AndReturn(
@@ -1627,8 +1646,7 @@ class LoadBalancerTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
 
         self.m.UnsetStubs()
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['errorPage']
+        update_template = rsrc.t.freeze(properties=self.lb_props)
 
         self.m.StubOutWithMock(rsrc.clb, 'get')
         rsrc.clb.get(mox.IgnoreArg()).MultipleTimes().AndReturn(
@@ -1655,8 +1673,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['connectionLogging'] = True
+        props = copy.deepcopy(self.lb_props)
+        props['connectionLogging'] = True
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
@@ -1688,8 +1707,7 @@ class LoadBalancerTest(common.HeatTestCase):
         fake_lb2.connection_logging = False
         rsrc.clb.get(mox.IgnoreArg()).AndReturn(fake_lb2)
 
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['connectionLogging']
+        update_template = rsrc.t.freeze(properties=self.lb_props)
 
         self.m.ReplayAll()
 
@@ -1712,8 +1730,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['connectionLogging'] = False
+        props = copy.deepcopy(self.lb_props)
+        props['connectionLogging'] = False
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.ReplayAll()
 
@@ -1729,9 +1748,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['connectionThrottle'] = {
-            'maxConnections': 1000}
+        props = copy.deepcopy(self.lb_props)
+        props['connectionThrottle'] = {'maxConnections': 1000}
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.StubOutWithMock(fake_lb, 'add_connection_throttle')
         self.m.StubOutWithMock(fake_lb, 'get_connection_throttle')
@@ -1768,8 +1787,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['connectionThrottle']
+        props = copy.deepcopy(self.lb_props)
+        del props['connectionThrottle']
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.StubOutWithMock(fake_lb, 'get_connection_throttle')
         fake_lb.get_connection_throttle().AndReturn({
@@ -1793,8 +1813,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['contentCaching'] = 'ENABLED'
+        props = copy.deepcopy(self.lb_props)
+        props['contentCaching'] = 'ENABLED'
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1823,8 +1844,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        del update_template['Properties']['contentCaching']
+        props = copy.deepcopy(self.lb_props)
+        del props['contentCaching']
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -1854,8 +1876,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['contentCaching'] = 'DISABLED'
+        props = copy.deepcopy(self.lb_props)
+        props['contentCaching'] = 'DISABLED'
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -2051,9 +2074,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
+        props = copy.deepcopy(self.lb_props)
         expected_ip = '172.168.1.4'
-        update_template['Properties']['nodes'] = [
+        props['nodes'] = [
             {"addresses": ["166.78.103.141"],
              "port": 80,
              "condition": "DRAINING",
@@ -2064,6 +2087,7 @@ class LoadBalancerTest(common.HeatTestCase):
              "condition": "DRAINING",
              "type": "PRIMARY",
              "weight": 1}]
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -2100,8 +2124,8 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['nodes'] = [
+        props = copy.deepcopy(self.lb_props)
+        props['nodes'] = [
             {"addresses": ["166.78.103.141"],
              "port": 80,
              "condition": "ENABLED",
@@ -2112,6 +2136,7 @@ class LoadBalancerTest(common.HeatTestCase):
              "condition": "ENABLED",
              "type": "PRIMARY",
              "weight": 1}]
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')
@@ -2160,10 +2185,9 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['nodes'] = [
-            {"addresses": ["166.78.103.141"],
-             "port": 80}]
+        props = copy.deepcopy(self.lb_props)
+        props['nodes'] = [{"addresses": ["166.78.103.141"], "port": 80}]
+        update_template = rsrc.t.freeze(properties=props)
 
         self.m.UnsetStubs()
         self.m.StubOutWithMock(rsrc.clb, 'get')

@@ -94,7 +94,7 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
         self.client.security_services.get.return_value = value
         scheduler.TaskRunner(ss.create)()
         args = self.client.security_services.create.call_args[1]
-        self.assertEqual(self.rsrc_defn['Properties'], args)
+        self.assertEqual(self.rsrc_defn._properties, args)
         self.assertEqual('12345', ss.resource_id)
         return ss
 

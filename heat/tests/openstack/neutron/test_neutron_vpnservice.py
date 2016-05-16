@@ -454,8 +454,9 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
             'con123', {'ipsec_site_connection': {'admin_state_up': False}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['admin_state_up'] = False
+        props = dict(rsrc.properties)
+        props['admin_state_up'] = False
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
 
@@ -598,8 +599,9 @@ class IKEPolicyTest(common.HeatTestCase):
                                                   'name': 'New IKEPolicy'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['name'] = 'New IKEPolicy'
+        props = dict(rsrc.properties)
+        props['name'] = 'New IKEPolicy'
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
 
@@ -743,6 +745,8 @@ class IPsecPolicyTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['name'] = 'New IPsecPolicy'
+        props = dict(rsrc.properties)
+        props['name'] = 'New IPsecPolicy'
+        update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()

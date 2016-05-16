@@ -128,27 +128,25 @@ class LoadBalancerTest(common.HeatTestCase):
         md.metadata_set.assert_called_once_with(expected_md)
 
     def test_loadbalancer_validate_hchk_good(self):
-        rsrc = self.setup_loadbalancer()
-        rsrc._parse_nested_stack = mock.Mock()
         hc = {
             'Target': 'HTTP:80/',
             'HealthyThreshold': '3',
             'UnhealthyThreshold': '5',
             'Interval': '30',
             'Timeout': '5'}
-        rsrc.t['Properties']['HealthCheck'] = hc
+        rsrc = self.setup_loadbalancer(hc=hc)
+        rsrc._parse_nested_stack = mock.Mock()
         self.assertIsNone(rsrc.validate())
 
     def test_loadbalancer_validate_hchk_int_gt_tmo(self):
-        rsrc = self.setup_loadbalancer()
-        rsrc._parse_nested_stack = mock.Mock()
         hc = {
             'Target': 'HTTP:80/',
             'HealthyThreshold': '3',
             'UnhealthyThreshold': '5',
             'Interval': '30',
             'Timeout': '35'}
-        rsrc.t['Properties']['HealthCheck'] = hc
+        rsrc = self.setup_loadbalancer(hc=hc)
+        rsrc._parse_nested_stack = mock.Mock()
         self.assertEqual(
             {'Error': 'Interval must be larger than Timeout'},
             rsrc.validate())
@@ -159,12 +157,15 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc = self.setup_loadbalancer()
         self.assertRaises(exception.StackValidationFailed, rsrc.validate)
 
-    def setup_loadbalancer(self, include_magic=True, cache_data=None):
+    def setup_loadbalancer(self, include_magic=True, cache_data=None, hc=None):
         template = template_format.parse(lb_template)
         if not include_magic:
             del template['Parameters']['KeyName']
             del template['Parameters']['LbFlavor']
             del template['Parameters']['LbImageId']
+        if hc is not None:
+            props = template['Resources']['LoadBalancer']['Properties']
+            props['HealthCheck'] = hc
         self.stack = utils.parse_stack(template, cache_data=cache_data)
 
         resource_name = 'LoadBalancer'

@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 import mock
 
 from heat.common import exception
@@ -59,8 +57,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
-        t = template_format.parse(stack_template)
-        self.stack = utils.parse_stack(t)
+        self.tmpl = template_format.parse(stack_template)
+        self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['share_network']
 
@@ -150,12 +148,13 @@ class ManilaShareNetworkTest(common.HeatTestCase):
 
     def test_update(self):
         net = self._create_network('share_network', self.rsrc_defn, self.stack)
-        update_template = copy.deepcopy(net.t)
-        update_template['Properties']['name'] = 'a'
-        update_template['Properties']['description'] = 'b'
-        update_template['Properties']['neutron_network'] = 'c'
-        update_template['Properties']['neutron_subnet'] = 'd'
-        update_template['Properties']['security_services'] = ['7', '8']
+        props = self.tmpl['resources']['share_network']['properties'].copy()
+        props['name'] = 'a'
+        props['description'] = 'b'
+        props['neutron_network'] = 'c'
+        props['neutron_subnet'] = 'd'
+        props['security_services'] = ['7', '8']
+        update_template = net.t.freeze(properties=props)
         scheduler.TaskRunner(net.update, update_template)()
         self.assertEqual((net.UPDATE, net.COMPLETE), net.state)
 
@@ -174,8 +173,9 @@ class ManilaShareNetworkTest(common.HeatTestCase):
 
     def test_update_security_services(self):
         net = self._create_network('share_network', self.rsrc_defn, self.stack)
-        update_template = copy.deepcopy(net.t)
-        update_template['Properties']['security_services'] = ['7', '8']
+        props = self.tmpl['resources']['share_network']['properties'].copy()
+        props['security_services'] = ['7', '8']
+        update_template = net.t.freeze(properties=props)
         scheduler.TaskRunner(net.update, update_template)()
         self.assertEqual((net.UPDATE, net.COMPLETE), net.state)
         called = net.client().share_networks.update.called
@@ -189,8 +189,9 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         net = self._create_network('share_network', self.rsrc_defn, self.stack)
         self.client.share_networks.remove_security_service.side_effect = (
             Exception())
-        update_template = copy.deepcopy(net.t)
-        update_template['Properties']['security_services'] = []
+        props = self.tmpl['resources']['share_network']['properties'].copy()
+        props['security_services'] = []
+        update_template = net.t.freeze(properties=props)
         run = scheduler.TaskRunner(net.update, update_template)
         self.assertRaises(exception.ResourceFailure, run)
 
