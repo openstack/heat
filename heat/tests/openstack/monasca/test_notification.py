@@ -14,7 +14,6 @@
 import mock
 
 from heat.engine.clients.os import monasca as client_plugin
-from heat.engine import resource
 from heat.engine.resources.openstack.monasca import notification
 from heat.engine import stack
 from heat.engine import template
@@ -39,27 +38,13 @@ sample_template = {
 RESOURCE_TYPE = 'OS::Monasca::Notification'
 
 
-class MonascaNotification(notification.MonascaNotification):
-    """This class overrides the is_service_available to return True.
-
-    Monasca service is not available by default. So, this class overrides
-    the is_service_available to return True.
-    """
-    @classmethod
-    def is_service_available(cls, context):
-        return True
-
-
 class MonascaNotificationTest(common.HeatTestCase):
 
     def setUp(self):
         super(MonascaNotificationTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-        # As monascaclient is not part of requirements.txt, RESOURCE_TYPE is
-        # not registered by default. For testing, its registered here
-        resource._register_class(RESOURCE_TYPE,
-                                 MonascaNotification)
+
         self.stack = stack.Stack(
             self.ctx, 'test_stack',
             template.Template(sample_template)
@@ -153,14 +138,6 @@ class MonascaNotificationTest(common.HeatTestCase):
         self.assertIsNone(self.test_resource.handle_delete())
 
     def test_resource_handle_delete_not_found(self):
-        # TODO(skraynev): remove it when monasca client will be
-        #                 merged in global requirements
-        class NotFound(Exception):
-            pass
-
-        client_plugin.monasca_exc = mock.Mock()
-        client_plugin.monasca_exc.NotFound = NotFound
-
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         mock_notification_delete = self.test_client.notifications.delete
         mock_notification_delete.side_effect = (
