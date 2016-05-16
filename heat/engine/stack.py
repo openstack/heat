@@ -281,6 +281,8 @@ class Stack(collections.Mapping):
             # We don't store roles in the user_creds table, so disable the
             # policy check for admin by setting is_admin=False.
             creds['is_admin'] = False
+            creds['overwrite'] = False
+
             return common_context.RequestContext.from_dict(creds)
         else:
             msg = _("Attempt to use stored_context with no user_creds")

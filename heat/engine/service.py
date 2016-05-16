@@ -19,6 +19,7 @@ import socket
 
 import eventlet
 from oslo_config import cfg
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_serialization import jsonutils
@@ -113,9 +114,11 @@ class ThreadGroupManager(object):
             }
         return trace_info
 
-    def _start_with_trace(self, trace, func, *args, **kwargs):
+    def _start_with_trace(self, cnxt, trace, func, *args, **kwargs):
         if trace:
             profiler.init(**trace)
+        if cnxt is not None:
+            cnxt.update_store()
         return func(*args, **kwargs)
 
     def start(self, stack_id, func, *args, **kwargs):
@@ -131,7 +134,8 @@ class ThreadGroupManager(object):
             except BaseException:
                 pass
 
-        th = self.groups[stack_id].add_thread(self._start_with_trace,
+        req_cnxt = oslo_context.get_current()
+        th = self.groups[stack_id].add_thread(self._start_with_trace, req_cnxt,
                                               self._serialize_profile_info(),
                                               func, *args, **kwargs)
         th.link(log_exceptions)

@@ -220,8 +220,9 @@ class KeystoneClientV3(object):
             raise exception.MissingCredentialError(
                 required=_("roles %s") % roles)
 
-        trust_context = context.RequestContext.from_dict(
-            self.context.to_dict())
+        context_data = self.context.to_dict()
+        context_data['overwrite'] = False
+        trust_context = context.RequestContext.from_dict(context_data)
         trust_context.trust_id = trust.id
         trust_context.trustor_user_id = trustor_user_id
         return trust_context

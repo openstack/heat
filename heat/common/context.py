@@ -86,7 +86,9 @@ class RequestContext(context.RequestContext):
                                              show_deleted=show_deleted,
                                              request_id=request_id,
                                              user_domain=user_domain_id,
-                                             project_domain=project_domain_id)
+                                             project_domain=project_domain_id,
+                                             roles=roles,
+                                             overwrite=overwrite)
 
         self.username = username
         self.user_id = user_id
@@ -96,7 +98,6 @@ class RequestContext(context.RequestContext):
         self.tenant_id = tenant_id
         self.auth_token_info = auth_token_info
         self.auth_url = auth_url
-        self.roles = roles or []
         self._session = None
         self._clients = None
         self.trust_id = trust_id
