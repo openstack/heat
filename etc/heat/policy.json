@@ -1,5 +1,5 @@
 {
-    "context_is_admin":  "role:admin",
+    "context_is_admin":  "role:admin and auth_token_info.token.is_admin_project:True",
     "deny_stack_user": "not role:heat_stack_user",
     "deny_everybody": "!",
 

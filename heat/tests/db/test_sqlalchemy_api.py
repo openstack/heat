@@ -1847,8 +1847,16 @@ class DBAPIStackTest(common.HeatTestCase):
     def test_stack_get_can_return_a_stack_from_different_tenant(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         self.ctx.tenant_id = 'abc'
+        # with tenant_safe = False
         ret_stack = db_api.stack_get(self.ctx, stack.id,
                                      show_deleted=False, tenant_safe=False)
+        self.assertEqual(stack.id, ret_stack.id)
+        self.assertEqual('db_test_stack_name', ret_stack.name)
+
+        # with ctx.is_admin = True
+        self.ctx.is_admin = True
+        ret_stack = db_api.stack_get(self.ctx, stack.id,
+                                     show_deleted=False)
         self.assertEqual(stack.id, ret_stack.id)
         self.assertEqual('db_test_stack_name', ret_stack.name)
 
@@ -1932,6 +1940,21 @@ class DBAPIStackTest(common.HeatTestCase):
                       **val) for val in values]
 
         stacks = db_api.stack_get_all(self.ctx, tenant_safe=False)
+        self.assertEqual(5, len(stacks))
+
+    def test_stack_get_all_with_admin_context(self):
+        values = [
+            {'tenant': UUID1},
+            {'tenant': UUID1},
+            {'tenant': UUID2},
+            {'tenant': UUID2},
+            {'tenant': UUID2},
+        ]
+        [create_stack(self.ctx, self.template, self.user_creds,
+                      **val) for val in values]
+
+        self.ctx.is_admin = True
+        stacks = db_api.stack_get_all(self.ctx)
         self.assertEqual(5, len(stacks))
 
     def test_stack_count_all_with_regular_tenant(self):
