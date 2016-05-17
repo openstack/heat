@@ -12,7 +12,9 @@
 #    under the License.
 
 import datetime
+import fixtures
 import json
+import logging
 import time
 import uuid
 
@@ -3213,6 +3215,72 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         resources[0].properties_data = None
         self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
             ctx, cfg.CONF.auth_encryption_key))
+
+    def test_db_encrypt_decrypt_verbose_on(self):
+        info_logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] %("
+                                "message)s"))
+        ctx = utils.dummy_context()
+        template = self._create_template()
+        user_creds = create_user_creds(ctx)
+        stack = create_stack(ctx, template, user_creds)
+        create_resource(ctx, stack, name='res1')
+
+        db_api.db_encrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=True)
+        self.assertIn("Processing raw_template 1", info_logger.output)
+        self.assertIn("Processing resource 1", info_logger.output)
+        self.assertIn("Finished processing raw_template 1",
+                      info_logger.output)
+        self.assertIn("Finished processing resource 1", info_logger.output)
+
+        info_logger2 = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] %("
+                                "message)s"))
+
+        db_api.db_decrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=True)
+        self.assertIn("Processing raw_template 1", info_logger2.output)
+        self.assertIn("Processing resource 1", info_logger2.output)
+        self.assertIn("Finished processing raw_template 1",
+                      info_logger2.output)
+        self.assertIn("Finished processing resource 1", info_logger2.output)
+
+    def test_db_encrypt_decrypt_verbose_off(self):
+        info_logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] %("
+                                "message)s"))
+        ctx = utils.dummy_context()
+        template = self._create_template()
+        user_creds = create_user_creds(ctx)
+        stack = create_stack(ctx, template, user_creds)
+        create_resource(ctx, stack, name='res1')
+
+        db_api.db_encrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=False)
+        self.assertNotIn("Processing raw_template 1", info_logger.output)
+        self.assertNotIn("Processing resource 1", info_logger.output)
+        self.assertNotIn("Successfully processed raw_template 1",
+                         info_logger.output)
+        self.assertNotIn("Successfully processed resource 1",
+                         info_logger.output)
+
+        info_logger2 = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] %("
+                                "message)s"))
+
+        db_api.db_decrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=False)
+        self.assertNotIn("Processing raw_template 1", info_logger2.output)
+        self.assertNotIn("Processing resource 1", info_logger2.output)
+        self.assertNotIn("Successfully processed raw_template 1",
+                         info_logger2.output)
+        self.assertNotIn("Successfully processed resource 1",
+                         info_logger2.output)
 
     def test_db_encrypt_non_string_param_type(self):
         t = template_format.parse('''
