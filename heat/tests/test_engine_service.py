@@ -483,13 +483,6 @@ class StackServiceTest(common.HeatTestCase):
 
     @tools.stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
-        self.m.StubOutWithMock(parser.Stack, '_from_db')
-        parser.Stack._from_db(
-            self.ctx, mox.IgnoreArg(),
-            resolve_data=False
-        ).AndReturn(self.stack)
-
-        self.m.ReplayAll()
         sl = self.eng.list_stacks(self.ctx)
 
         self.assertEqual(1, len(sl))
@@ -503,9 +496,7 @@ class StackServiceTest(common.HeatTestCase):
             self.assertIn('stack_status', s)
             self.assertIn('stack_status_reason', s)
             self.assertIn('description', s)
-            self.assertIn('WordPress', s['description'])
-
-        self.m.VerifyAll()
+            self.assertEqual('', s['description'])
 
     @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_passes_marker_info(self, mock_stack_get_all):

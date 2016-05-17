@@ -22,6 +22,7 @@ from oslo_versionedobjects import fields
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import identifier
 from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
@@ -210,3 +211,7 @@ class Stack(
     def get_status(cls, context, stack_id):
         """Return action and status for the given stack."""
         return db_api.stack_get_status(context, stack_id)
+
+    def identifier(self):
+        """Return an identifier for this stack."""
+        return identifier.HeatIdentifier(self.tenant, self.name, self.id)

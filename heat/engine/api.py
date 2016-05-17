@@ -217,7 +217,7 @@ def format_stack(stack, preview=False, resolve_outputs=True):
         rpc_api.STACK_ID: dict(stack.identifier()),
         rpc_api.STACK_CREATION_TIME: created_time.isoformat(),
         rpc_api.STACK_UPDATED_TIME: updated_time,
-        rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO(?) Not implemented yet
+        rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO(therve) Not implemented
         rpc_api.STACK_PARAMETERS: stack.parameters.map(six.text_type),
         rpc_api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         rpc_api.STACK_TMPL_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
@@ -243,6 +243,35 @@ def format_stack(stack, preview=False, resolve_outputs=True):
         info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack,
                                                            stack.outputs,
                                                            resolve_value=True)
+
+    return info
+
+
+def format_stack_db_object(stack):
+    """Return a summary representation of the given stack.
+
+    Given a stack versioned db object, return a representation of the given
+    stack for a stack listing.
+    """
+    updated_time = stack.updated_at and stack.updated_at.isoformat()
+    created_time = stack.created_at
+    tags = None
+    if stack.tags:
+        tags = [t.tag for t in stack.tags]
+    info = {
+        rpc_api.STACK_ID: dict(stack.identifier()),
+        rpc_api.STACK_NAME: stack.name,
+        rpc_api.STACK_DESCRIPTION: '',
+        rpc_api.STACK_ACTION: stack.action,
+        rpc_api.STACK_STATUS: stack.status,
+        rpc_api.STACK_STATUS_DATA: stack.status_reason,
+        rpc_api.STACK_CREATION_TIME: created_time.isoformat(),
+        rpc_api.STACK_UPDATED_TIME: updated_time,
+        rpc_api.STACK_OWNER: stack.username,
+        rpc_api.STACK_PARENT: stack.owner_id,
+        rpc_api.STACK_USER_PROJECT_ID: stack.stack_user_project_id,
+        rpc_api.STACK_TAGS: tags,
+    }
 
     return info
 
