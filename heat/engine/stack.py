@@ -172,6 +172,7 @@ class Stack(collections.Mapping):
         self._dependencies = None
         self._access_allowed_handlers = {}
         self._db_resources = None
+        self._tags = tags
         self.adopt_stack_data = adopt_stack_data
         self.stack_user_project_id = stack_user_project_id
         self.created_time = created_time
@@ -229,6 +230,19 @@ class Stack(collections.Mapping):
             self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
         else:
             self.outputs = {}
+
+    @property
+    def tags(self):
+        if self._tags is None:
+            tags = stack_tag_object.StackTagList.get(
+                self.context, self.id)
+            if tags:
+                self._tags = [t.tag for t in tags]
+        return self._tags
+
+    @tags.setter
+    def tags(self, value):
+        self._tags = value
 
     @property
     def worker_client(self):
@@ -494,9 +508,6 @@ class Stack(collections.Mapping):
                  use_stored_context=False, cache_data=None):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
-        tags = None
-        if stack.tags:
-            tags = [t.tag for t in stack.tags]
         return cls(context, stack.name, template,
                    stack_id=stack.id,
                    action=stack.action, status=stack.status,
@@ -512,7 +523,7 @@ class Stack(collections.Mapping):
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
                    use_stored_context=use_stored_context,
                    username=stack.username, convergence=stack.convergence,
-                   current_traversal=stack.current_traversal, tags=tags,
+                   current_traversal=stack.current_traversal,
                    prev_raw_template_id=stack.prev_raw_template_id,
                    current_deps=stack.current_deps, cache_data=cache_data)
 

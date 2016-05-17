@@ -60,7 +60,6 @@ class Stack(
         'current_deps': heat_fields.JsonField(),
         'prev_raw_template_id': fields.IntegerField(),
         'prev_raw_template': fields.ObjectField('RawTemplate'),
-        'tags': fields.ObjectField('StackTagList'),
         'parent_resource_name': fields.StringField(nullable=True),
     }
 
@@ -71,9 +70,6 @@ class Stack(
                 stack['raw_template'] = (
                     raw_template.RawTemplate.get_by_id(
                         context, db_stack['raw_template_id']))
-            elif field == 'tags':
-                stack['tags'] = stack_tag.StackTagList.from_db_object(
-                    context, db_stack.get(field))
             else:
                 stack[field] = db_stack.__dict__.get(field)
         stack._context = context
@@ -215,3 +211,7 @@ class Stack(
     def identifier(self):
         """Return an identifier for this stack."""
         return identifier.HeatIdentifier(self.tenant, self.name, self.id)
+
+    @property
+    def tags(self):
+        return stack_tag.StackTagList.get(self._context, self.id)
