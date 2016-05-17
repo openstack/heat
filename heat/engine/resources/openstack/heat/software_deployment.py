@@ -600,7 +600,9 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     properties_schema = {
         SERVERS: properties.Schema(
             properties.Schema.MAP,
-            _('A map of Nova names and IDs to apply configuration to.'),
+            _('A map of names and server IDs to apply configuration to. The '
+              'name is arbitrary and is used as the Heat resource name '
+              'for the corresponding deployment.'),
             update_allowed=True
         ),
         CONFIG: _sd_ps[CONFIG],
