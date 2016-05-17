@@ -244,9 +244,9 @@ class StackResourcesServiceTest(common.HeatTestCase):
         mock_load.return_value = self.stack
         resources = six.itervalues(self.stack)
         self.stack.iter_resources = mock.Mock(return_value=resources)
-        resources = self.eng.list_stack_resources(self.ctx,
-                                                  self.stack.identifier(),
-                                                  2)
+        self.eng.list_stack_resources(self.ctx,
+                                      self.stack.identifier(),
+                                      2)
         self.stack.iter_resources.assert_called_once_with(2,
                                                           filters=None)
 
@@ -256,12 +256,54 @@ class StackResourcesServiceTest(common.HeatTestCase):
         mock_load.return_value = self.stack
         resources = six.itervalues(self.stack)
         self.stack.iter_resources = mock.Mock(return_value=resources)
-        resources = self.eng.list_stack_resources(self.ctx,
-                                                  self.stack.identifier(),
-                                                  99)
+        self.eng.list_stack_resources(self.ctx,
+                                      self.stack.identifier(),
+                                      99)
         max_depth = cfg.CONF.max_nested_stack_depth
         self.stack.iter_resources.assert_called_once_with(max_depth,
                                                           filters=None)
+
+    @mock.patch.object(stack.Stack, 'load')
+    @tools.stack_context('service_resources_list_test_stack')
+    def test_stack_resources_filter_id(self, mock_load):
+        mock_load.return_value = self.stack
+        resources = six.itervalues(self.stack)
+        self.stack.iter_resources = mock.Mock(return_value=resources)
+        filters = {'physical_resource_id': '123'}
+        self.eng.list_stack_resources(self.ctx,
+                                      self.stack.identifier(),
+                                      filters=filters)
+        expected_filters = {'nova_instance': '123'}
+        self.stack.iter_resources.assert_called_once_with(
+            0, filters=expected_filters)
+
+    @mock.patch.object(stack.Stack, 'load')
+    @tools.stack_context('service_resources_list_test_stack')
+    def test_stack_resources_filter_type(self, mock_load):
+        mock_load.return_value = self.stack
+        resources = six.itervalues(self.stack)
+        self.stack.iter_resources = mock.Mock(return_value=resources)
+        filters = {'type': 'AWS::EC2::Instance'}
+        resources = self.eng.list_stack_resources(self.ctx,
+                                                  self.stack.identifier(),
+                                                  filters=filters)
+        self.stack.iter_resources.assert_called_once_with(
+            0, filters={})
+        self.assertIn('AWS::EC2::Instance', resources[0]['resource_type'])
+
+    @mock.patch.object(stack.Stack, 'load')
+    @tools.stack_context('service_resources_list_test_stack')
+    def test_stack_resources_filter_type_not_found(self, mock_load):
+        mock_load.return_value = self.stack
+        resources = six.itervalues(self.stack)
+        self.stack.iter_resources = mock.Mock(return_value=resources)
+        filters = {'type': 'NonExisted'}
+        resources = self.eng.list_stack_resources(self.ctx,
+                                                  self.stack.identifier(),
+                                                  filters=filters)
+        self.stack.iter_resources.assert_called_once_with(
+            0, filters={})
+        self.assertEqual(0, len(resources))
 
     @mock.patch.object(stack.Stack, 'load')
     def test_stack_resources_list_deleted_stack(self, mock_load):

@@ -1772,10 +1772,24 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
         stack = parser.Stack.load(cnxt, stack=s)
         depth = min(nested_depth, cfg.CONF.max_nested_stack_depth)
+        res_type = None
+        if filters is not None:
+            filters = api.translate_filters(filters)
+            # There is not corresponding for `type` column in Resource table,
+            # so sqlalchemy filters can't be used.
+            res_type = filters.pop('type', None)
 
+        def filter_type(res_iter):
+            for res in res_iter:
+                if res_type not in res.type():
+                    continue
+                yield res
+        if res_type is None:
+            rsrcs = stack.iter_resources(depth, filters=filters)
+        else:
+            rsrcs = filter_type(stack.iter_resources(depth, filters=filters))
         return [api.format_stack_resource(resource, detail=with_detail)
-                for resource in stack.iter_resources(depth,
-                                                     filters=filters)]
+                for resource in rsrcs]
 
     @context.request_context
     def stack_suspend(self, cnxt, stack_identity):
