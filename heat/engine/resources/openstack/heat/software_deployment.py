@@ -72,12 +72,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     PROPERTIES = (
         CONFIG, SERVER, INPUT_VALUES,
-        DEPLOY_ACTIONS, NAME, SIGNAL_TRANSPORT,
-        TIMEOUT,
+        DEPLOY_ACTIONS, NAME, SIGNAL_TRANSPORT
     ) = (
         'config', 'server', 'input_values',
-        'actions', 'name', 'signal_transport',
-        'timeout',
+        'actions', 'name', 'signal_transport'
     )
 
     ALLOWED_DEPLOY_ACTIONS = (
@@ -169,17 +167,6 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             constraints=[
                 constraints.AllowedValues(SIGNAL_TRANSPORTS),
             ]
-        ),
-        TIMEOUT: properties.Schema(
-            properties.Schema.INTEGER,
-            description=_('The maximum number of seconds to wait for the '
-                          'deployment to signal it has been completed. Once '
-                          'the timeout is reached, the deployment will be '
-                          'marked as failed.'),
-            constraints=[
-                constraints.Range(1, 43200),
-            ],
-            support_status=support.SupportStatus(version='7.0.0'),
         ),
     }
 
@@ -299,20 +286,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             # does not need fixing re LP bug #1393268
             return sd
 
-    def _check_complete(self, started_at):
+    def _check_complete(self):
         sd = self.rpc_client().show_software_deployment(
             self.context, self.resource_id)
-
-        if started_at:
-            timeout = self.properties[self.TIMEOUT]
-            if timeout and timeutils.is_older_than(started_at, timeout):
-                msg = _('Deployment %(action)s started at %(started)s timed '
-                        'out after %(timeout)ss seconds')
-                msg_data = {'started': started_at,
-                            'action': sd[rpc_api.SOFTWARE_DEPLOYMENT_ACTION],
-                            'timeout': timeout}
-                raise exception.Error(msg % msg_data)
-
         status = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS]
         if status == SoftwareDeployment.COMPLETE:
             return True
@@ -475,41 +451,33 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return inputs
 
     def handle_create(self):
-        started_at = timeutils.utcnow()
-        return self._handle_action(self.CREATE), started_at
+        return self._handle_action(self.CREATE)
 
-    def check_create_complete(self, create_data):
-        sd, started_at = create_data
+    def check_create_complete(self, sd):
         if not sd:
             return True
-        return self._check_complete(started_at)
+        return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        started_at = timeutils.utcnow()
         if prop_diff:
             self.properties = json_snippet.properties(self.properties_schema,
                                                       self.context)
 
-        return self._handle_action(self.UPDATE), started_at
+        return self._handle_action(self.UPDATE)
 
-    def check_update_complete(self, update_data):
-        sd, started_at = update_data
+    def check_update_complete(self, sd):
         if not sd:
             return True
-        return self._check_complete(started_at)
+        return self._check_complete()
 
     def handle_delete(self):
-        started_at = timeutils.utcnow()
         try:
-            return self._handle_action(self.DELETE), started_at
+            return self._handle_action(self.DELETE)
         except Exception as ex:
             self.rpc_client().ignore_error_named(ex, 'NotFound')
 
-    def check_delete_complete(self, delete_data=None):
-        sd, started_at = delete_data
-        if (not sd or
-                not self._server_exists(sd) or
-                self._check_complete(started_at)):
+    def check_delete_complete(self, sd=None):
+        if not sd or not self._server_exists(sd) or self._check_complete():
             self._delete_resource()
             return True
 
@@ -532,24 +500,20 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self._delete_derived_config(derived_config_id)
 
     def handle_suspend(self):
-        started_at = timeutils.utcnow()
-        return self._handle_action(self.SUSPEND), started_at
+        return self._handle_action(self.SUSPEND)
 
-    def check_suspend_complete(self, suspend_data):
-        sd, started_at = suspend_data
+    def check_suspend_complete(self, sd):
         if not sd:
             return True
-        return self._check_complete(started_at)
+        return self._check_complete()
 
     def handle_resume(self):
-        started_at = timeutils.utcnow()
-        return self._handle_action(self.RESUME), started_at
+        return self._handle_action(self.RESUME)
 
-    def check_resume_complete(self, resume_data):
-        sd, started_at = resume_data
+    def check_resume_complete(self, sd):
         if not sd:
             return True
-        return self._check_complete(started_at)
+        return self._check_complete()
 
     def handle_signal(self, details):
         return self.rpc_client().signal_software_deployment(
