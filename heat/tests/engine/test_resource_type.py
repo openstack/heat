@@ -45,7 +45,11 @@ class ResourceTypeTest(common.HeatTestCase):
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
         self.assertEqual(set(['OS::Heat::HARestarter',
                               'OS::Heat::SoftwareDeployments',
-                              'OS::Heat::StructuredDeployments']),
+                              'OS::Heat::StructuredDeployments',
+                              'OS::Neutron::HealthMonitor',
+                              'OS::Neutron::LoadBalancer',
+                              'OS::Neutron::Pool',
+                              'OS::Neutron::PoolMember']),
                          set(resources))
 
     @mock.patch.object(res.Resource, 'is_service_available')
