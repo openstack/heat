@@ -15,7 +15,9 @@ import collections
 import copy
 import datetime
 import eventlet
+import fixtures
 import json
+import logging
 import time
 
 import mock
@@ -2405,6 +2407,48 @@ class StackTest(common.HeatTestCase):
         loaded_stack.update(new_stack)
 
         self.assertEqual([], loaded_stack.env.encrypted_param_names)
+
+    def test_parameters_inconsistent_encrypted_param_names(self):
+        tmpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        warning_logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.WARNING,
+                                format="%(levelname)8s [%(name)s] %("
+                                "message)s"))
+
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
+                              enforce_type=True)
+
+        env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
+        self.stack = stack.Stack(self.ctx, 'test',
+                                 template.Template(tmpl, env=env1))
+        self.stack.store()
+
+        loaded_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id)
+        loaded_stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
+                               'for_update')
+
+        env2 = environment.Environment({'param1': 'foo', 'param2': 'new_bar'})
+
+        # Put inconsistent encrypted_param_names data in the environment
+        env2.encrypted_param_names = ['param1']
+        new_stack = stack.Stack(self.ctx, 'test_update',
+                                template.Template(tmpl, env=env2))
+        self.assertIsNone(loaded_stack.update(new_stack))
+        self.assertIn('Encountered already-decrypted data',
+                      warning_logger.output)
 
     def test_parameters_stored_decrypted_successful_load(self):
         """Test stack loading with disabled parameter value validation."""
