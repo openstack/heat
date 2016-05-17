@@ -451,7 +451,10 @@ class StackResource(resource.Resource):
         stack_identity = dict(stack.identifier())
 
         try:
-            self.rpc_client().delete_stack(self.context, stack_identity)
+            if self.abandon_in_progress:
+                self.rpc_client().abandon_stack(self.context, stack_identity)
+            else:
+                self.rpc_client().delete_stack(self.context, stack_identity)
         except Exception as ex:
             self.rpc_client().ignore_error_named(ex, 'NotFound')
 

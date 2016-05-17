@@ -208,6 +208,18 @@ class StackResourceTest(StackResourceBaseTest):
 
         self.assertEqual(0, delete_nested.call_count)
 
+    def test_abandon_nested_sends_rpc_abandon(self):
+        rpcc = mock.Mock()
+        self.parent_resource.rpc_client = rpcc
+        self.parent_resource.nested = mock.MagicMock()
+
+        self.parent_resource.prepare_abandon()
+        self.parent_resource.delete_nested()
+
+        rpcc.return_value.abandon_stack.assert_called_once_with(
+            self.parent_resource.context, mock.ANY)
+        rpcc.return_value.delete_stack.assert_not_called()
+
     def test_propagated_files(self):
         """Test passing of the files map in the top level to the child.
 
