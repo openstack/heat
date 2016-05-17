@@ -460,6 +460,7 @@ class EngineService(service.Service):
         :param cnxt: RPC context.
         :param stack_name: Name or UUID of the stack to look up.
         """
+        s = None
         if uuidutils.is_uuid_like(stack_name):
             s = stack_object.Stack.get_by_id(
                 cnxt,
@@ -467,15 +468,11 @@ class EngineService(service.Service):
                 show_deleted=True)
             # may be the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
-            if not s:
-                s = stack_object.Stack.get_by_name(cnxt, stack_name)
-        else:
+        if not s:
             s = stack_object.Stack.get_by_name(cnxt, stack_name)
-        if s:
-            stack = parser.Stack.load(cnxt, stack=s)
-            return dict(stack.identifier())
-        else:
+        if not s:
             raise exception.EntityNotFound(entity='Stack', name=stack_name)
+        return dict(s.identifier())
 
     def _get_stack(self, cnxt, stack_identity, show_deleted=False):
         identity = identifier.HeatIdentifier(**stack_identity)
