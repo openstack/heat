@@ -280,7 +280,8 @@ class Resource(BASE, HeatBase, StateAware):
                              default=lambda: str(uuid.uuid4()),
                              unique=True)
     name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    nova_instance = sqlalchemy.Column('nova_instance', sqlalchemy.String(255))
+    physical_resource_id = sqlalchemy.Column('nova_instance',
+                                             sqlalchemy.String(255))
     # odd name as "metadata" is reserved
     rsrc_metadata = sqlalchemy.Column('rsrc_metadata', types.Json)
 

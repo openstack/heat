@@ -1413,7 +1413,7 @@ def create_stack(ctx, template, user_creds, **kwargs):
 def create_resource(ctx, stack, **kwargs):
     values = {
         'name': 'test_resource_name',
-        'nova_instance': UUID1,
+        'physical_resource_id': UUID1,
         'action': 'create',
         'status': 'complete',
         'status_reason': 'create_complete',
@@ -2113,7 +2113,7 @@ class DBAPIResourceTest(common.HeatTestCase):
         ret_res = db_api.resource_get(self.ctx, res.id)
         self.assertIsNotNone(ret_res)
         self.assertEqual('test_resource_name', ret_res.name)
-        self.assertEqual(UUID1, ret_res.nova_instance)
+        self.assertEqual(UUID1, ret_res.physical_resource_id)
         self.assertEqual('create', ret_res.action)
         self.assertEqual('complete', ret_res.status)
         self.assertEqual('create_complete', ret_res.status_reason)
@@ -2148,7 +2148,7 @@ class DBAPIResourceTest(common.HeatTestCase):
 
         ret_res = db_api.resource_get_by_physical_resource_id(self.ctx, UUID1)
         self.assertIsNotNone(ret_res)
-        self.assertEqual(UUID1, ret_res.nova_instance)
+        self.assertEqual(UUID1, ret_res.physical_resource_id)
 
         self.assertIsNone(db_api.resource_get_by_physical_resource_id(self.ctx,
                                                                       UUID2))
