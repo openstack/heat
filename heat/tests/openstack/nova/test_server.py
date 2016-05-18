@@ -3096,9 +3096,6 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[3]
         return_server.id = '9102'
 
-        self.patchobject(neutronclient.Client, 'create_port',
-                         return_value={'port': {'id': 'abcd1234'}})
-
         server = self._create_test_server(return_server, 'update_subnet')
         # set old properties for 'networks' and 'security_groups'
         server.t['Properties']['networks'] = [
@@ -3752,12 +3749,15 @@ class ServerInternalPortTest(common.HeatTestCase):
         t, stack, server = self._return_template_stack_and_rsrc_defn('test',
                                                                      tmpl)
         self.patchobject(server, '_validate_belonging_subnet_to_net')
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'get_secgroup_uuids', return_value=['5566'])
         self.port_create.return_value = {'port': {'id': '111222'}}
         data_set = self.patchobject(resource.Resource, 'data_set')
 
         network = [{'network': '4321', 'subnet': '1234',
                     'fixed_ip': '127.0.0.1'}]
-        server._build_nics(network)
+        security_groups = ['test_sec']
+        server._build_nics(network, security_groups)
 
         self.port_create.assert_called_once_with(
             {'port': {'name': 'server-port-0',
@@ -3765,7 +3765,8 @@ class ServerInternalPortTest(common.HeatTestCase):
                       'fixed_ips': [{
                           'ip_address': '127.0.0.1',
                           'subnet_id': '1234'
-                      }]}})
+                      }],
+                      'security_groups': ['5566']}})
         data_set.assert_called_once_with('internal_ports',
                                          '[{"id": "111222"}]')
 
