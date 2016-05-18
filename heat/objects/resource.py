@@ -53,7 +53,7 @@ class Resource(
         'stack_id': fields.StringField(),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
-        'nova_instance': fields.StringField(nullable=True),
+        'physical_resource_id': fields.StringField(nullable=True),
         'name': fields.StringField(nullable=True),
         'status': fields.StringField(nullable=True),
         'status_reason': fields.StringField(nullable=True),

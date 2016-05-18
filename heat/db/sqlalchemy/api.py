@@ -159,7 +159,7 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
 
 def resource_get_by_physical_resource_id(context, physical_resource_id):
     results = (model_query(context, models.Resource)
-               .filter_by(nova_instance=physical_resource_id)
+               .filter_by(physical_resource_id=physical_resource_id)
                .all())
 
     for result in results:

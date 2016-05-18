@@ -246,7 +246,7 @@ class Resource(object):
 
     def _load_data(self, resource):
         """Load the resource state from its DB representation."""
-        self.resource_id = resource.nova_instance
+        self.resource_id = resource.physical_resource_id
         self.action = resource.action
         self.status = resource.status
         self.status_reason = resource.status_reason
@@ -1499,7 +1499,9 @@ class Resource(object):
         if self.id is not None:
             try:
                 resource_objects.Resource.update_by_id(
-                    self.context, self.id, {'nova_instance': self.resource_id})
+                    self.context,
+                    self.id,
+                    {'physical_resource_id': self.resource_id})
             except Exception as ex:
                 LOG.warning(_LW('db error %s'), ex)
 
@@ -1516,7 +1518,7 @@ class Resource(object):
                   'status': self.status,
                   'status_reason': self.status_reason,
                   'stack_id': self.stack.id,
-                  'nova_instance': self.resource_id,
+                  'physical_resource_id': self.resource_id,
                   'name': self.name,
                   'rsrc_metadata': metadata,
                   'properties_data': properties_data,
@@ -1568,7 +1570,7 @@ class Resource(object):
             'replaces': self.replaces,
             'replaced_by': self.replaced_by,
             'current_template_id': self.current_template_id,
-            'nova_instance': self.resource_id,
+            'physical_resource_id': self.resource_id,
             'root_stack_id': self.root_stack_id
         }
         if prev_action == self.INIT:

@@ -537,7 +537,7 @@ class ResourceTest(common.HeatTestCase):
 
         self.assertEqual(new_id, res.replaced_by)
         self.assertEqual(res.id, new_res.replaces)
-        self.assertIsNone(new_res.nova_instance)
+        self.assertIsNone(new_res.physical_resource_id)
         self.assertEqual(new_tmpl_id, new_res.current_template_id)
 
     def test_parsed_template(self):
