@@ -184,8 +184,7 @@ Request
 Response Example
 ----------------
 
-.. literalinclude:: 
-   :language: javascript
+This operation does not return a response body.
 
 
 
