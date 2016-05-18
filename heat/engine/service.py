@@ -2110,8 +2110,6 @@ class EngineService(service.Service):
                 service_objects.Service.delete(cnxt, service_ref['id'])
 
     def set_stack_and_resource_to_failed(self, stack):
-        reason = ('Engine went down during stack %s' % stack.action)
-        stack.state_set(stack.action, stack.FAILED, six.text_type(reason))
         for name, rsrc in six.iteritems(stack.resources):
             if rsrc.status == rsrc.IN_PROGRESS:
                 status_reason = ('Engine went down '
@@ -2119,6 +2117,8 @@ class EngineService(service.Service):
                 rsrc.state_set(rsrc.action,
                                rsrc.FAILED,
                                six.text_type(status_reason))
+        reason = ('Engine went down during stack %s' % stack.action)
+        stack.state_set(stack.action, stack.FAILED, six.text_type(reason))
 
     def reset_stack_status(self):
         cnxt = context.get_admin_context()
