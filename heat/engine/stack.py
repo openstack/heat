@@ -79,16 +79,22 @@ def reset_state_on_error(func):
         errmsg = None
         try:
             return func(stack, *args, **kwargs)
-        except BaseException as exc:
+        except Exception as exc:
             with excutils.save_and_reraise_exception():
                 errmsg = six.text_type(exc)
                 LOG.error(_LE('Unexpected exception in %(func)s: %(msg)s'),
                           {'func': func.__name__, 'msg': errmsg})
+        except BaseException as exc:
+            with excutils.save_and_reraise_exception():
+                exc_type = type(exc).__name__
+                errmsg = '%s(%s)' % (exc_type, six.text_type(exc))
+                LOG.info(_LI('Stopped due to %(msg)s in %(func)s'),
+                         {'func': func.__name__, 'msg': errmsg})
         finally:
             if stack.status == stack.IN_PROGRESS:
-                msg = _("Unexpected returning while IN_PROGRESS.")
+                rtnmsg = _("Unexpected exit while IN_PROGRESS.")
                 stack.state_set(stack.action, stack.FAILED,
-                                errmsg if errmsg is not None else msg)
+                                errmsg if errmsg is not None else rtnmsg)
                 assert errmsg is not None, "Returned while IN_PROGRESS."
 
     return handle_exceptions
