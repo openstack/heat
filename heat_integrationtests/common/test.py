@@ -377,7 +377,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         env = environment or {}
         env_files = files or {}
         parameters = parameters or {}
-        stack_name = stack_identifier.split('/')[0]
 
         self.updated_time[stack_identifier] = self.client.stacks.get(
             stack_identifier, resolve_outputs=False).updated_time
@@ -385,7 +384,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self._handle_in_progress(
             self.client.stacks.update,
             stack_id=stack_identifier,
-            stack_name=stack_name,
             template=template,
             files=env_files,
             disable_rollback=disable_rollback,
@@ -410,11 +408,9 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         env = environment or {}
         env_files = files or {}
         parameters = parameters or {}
-        stack_name = stack_identifier.split('/')[0]
 
         return self.client.stacks.preview_update(
             stack_id=stack_identifier,
-            stack_name=stack_name,
             template=template,
             files=env_files,
             disable_rollback=disable_rollback,
@@ -558,8 +554,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 'SUSPEND' in self.conf.skip_test_stack_action_list):
             self.addCleanup(self._stack_delete, stack_identifier)
             self.skipTest('Testing Stack suspend disabled in conf, skipping')
-        stack_name = stack_identifier.split('/')[0]
-        self._handle_in_progress(self.client.actions.suspend, stack_name)
+        self._handle_in_progress(self.client.actions.suspend, stack_identifier)
         # improve debugging by first checking the resource's state.
         self._wait_for_all_resource_status(stack_identifier,
                                            'SUSPEND_COMPLETE')
@@ -570,8 +565,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 'RESUME' in self.conf.skip_test_stack_action_list):
             self.addCleanup(self._stack_delete, stack_identifier)
             self.skipTest('Testing Stack resume disabled in conf, skipping')
-        stack_name = stack_identifier.split('/')[0]
-        self._handle_in_progress(self.client.actions.resume, stack_name)
+        self._handle_in_progress(self.client.actions.resume, stack_identifier)
         # improve debugging by first checking the resource's state.
         self._wait_for_all_resource_status(stack_identifier,
                                            'RESUME_COMPLETE')
