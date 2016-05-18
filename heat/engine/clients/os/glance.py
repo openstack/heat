@@ -28,8 +28,11 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [IMAGE] = ['image']
 
-    def _create(self):
+    supported_versions = [V1, V2] = ['1', '2']
 
+    default_version = V1
+
+    def _create(self, version=None):
         con = self.context
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.IMAGE,
@@ -46,7 +49,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
             'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
         }
 
-        return gc.Client('1', endpoint, **args)
+        return gc.Client(version, endpoint, **args)
 
     def _find_with_attr(self, entity, **kwargs):
         """Find a item for entity with attributes matching ``**kwargs``."""

@@ -72,6 +72,7 @@ class GlanceImageTest(common.HeatTestCase):
         self.my_image.client = glance
         glance.return_value = self.glanceclient
         self.images = self.glanceclient.images
+        self.image_tags = self.glanceclient.image_tags
 
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -214,8 +215,33 @@ class GlanceImageTest(common.HeatTestCase):
         image_id = '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
         value.id = image_id
         self.images.create.return_value = value
+        self.image_tags.update.return_value = None
+        self.my_image.t['Properties']['tags'] = ['tag1']
         self.my_image.handle_create()
+
         self.assertEqual(image_id, self.my_image.resource_id)
+        self.image_tags.update.assert_called_once_with(
+            self.my_image.resource_id,
+            'tag1')
+
+    def test_image_handle_update(self):
+        self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+        self.my_image.t['Properties']['tags'] = ['tag1']
+        prop_diff = {'tags': ['tag2']}
+
+        self.my_image.handle_update(json_snippet=None,
+                                    tmpl_diff=None,
+                                    prop_diff=prop_diff)
+
+        self.image_tags.update.assert_called_once_with(
+            self.my_image.resource_id,
+            'tag2'
+        )
+        self.image_tags.delete.assert_called_once_with(
+            self.my_image.resource_id,
+            'tag1'
+        )
 
     def test_image_show_resource_v1(self):
         self.glanceclient.version = 1.0
@@ -257,7 +283,8 @@ class GlanceImageTest(common.HeatTestCase):
             'is_public': False,
             'min_disk': 0,
             'min_ram': 0,
-            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
+            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+            'tags': []
         }
         if version == 1.0:
             image = mock.MagicMock()
@@ -279,7 +306,8 @@ class GlanceImageTest(common.HeatTestCase):
             'is_public': False,
             'min_disk': 0,
             'min_ram': 0,
-            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995'
+            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+            'tags': []
         }
         if version == 1.0:
             expected.update({'location': 'stub'})
