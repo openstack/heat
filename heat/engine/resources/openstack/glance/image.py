@@ -30,10 +30,11 @@ class GlanceImage(resource.Resource):
 
     PROPERTIES = (
         NAME, IMAGE_ID, IS_PUBLIC, MIN_DISK, MIN_RAM, PROTECTED,
-        DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS
+        DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS, EXTRA_PROPERTIES
     ) = (
         'name', 'id', 'is_public', 'min_disk', 'min_ram', 'protected',
-        'disk_format', 'container_format', 'location', 'tags'
+        'disk_format', 'container_format', 'location', 'tags',
+        'extra_properties'
     )
 
     properties_schema = {
@@ -108,6 +109,13 @@ class GlanceImage(resource.Resource):
             _('List of image tags.'),
             update_allowed=True,
             support_status=support.SupportStatus(version='7.0.0')
+        ),
+        EXTRA_PROPERTIES: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary properties to associate with the image.'),
+            update_allowed=True,
+            default={},
+            support_status=support.SupportStatus(version='7.0.0')
         )
     }
 
@@ -120,6 +128,7 @@ class GlanceImage(resource.Resource):
                     if v is not None)
 
         tags = args.pop(self.TAGS, [])
+        args['properties'] = args.pop(self.EXTRA_PROPERTIES, {})
         image_id = self.client().images.create(**args).id
         self.resource_id_set(image_id)
 
@@ -154,6 +163,19 @@ class GlanceImage(resource.Resource):
                         version=self.client_plugin().V2).image_tags.delete(
                         self.resource_id,
                         tag)
+
+        if self.EXTRA_PROPERTIES in prop_diff:
+            old_properties = self.properties.get(self.EXTRA_PROPERTIES) or {}
+            new_properties = prop_diff[self.EXTRA_PROPERTIES]
+            remove_props = list(set(old_properties) - set(new_properties))
+
+            # Though remove_props defaults to None within the glanceclient,
+            # setting it to a list (possibly []) every time ensures only one
+            # calling format to images.update
+            self.client(version=self.client_plugin().V2).images.update(
+                self.resource_id,
+                remove_props,
+                **new_properties)
 
     def _show_resource(self):
         if self.glance().version == 1.0:

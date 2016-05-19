@@ -230,7 +230,8 @@ class GlanceImageTest(common.HeatTestCase):
             min_disk=10,
             min_ram=512,
             name=u'cirros_image',
-            protected=False
+            protected=False,
+            properties={}
         )
         self.image_tags.update.assert_called_once_with(
             self.my_image.resource_id,
@@ -250,6 +251,16 @@ class GlanceImageTest(common.HeatTestCase):
             'tag1'
         )
 
+    def _handle_update_properties(self, prop_diff):
+        self.my_image.handle_update(json_snippet=None,
+                                    tmpl_diff=None,
+                                    prop_diff=prop_diff)
+
+        self.images.update.assert_called_once_with(
+            self.my_image.resource_id,
+            [],
+            **prop_diff['extra_properties'])
+
     def test_image_handle_update(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
@@ -257,6 +268,9 @@ class GlanceImageTest(common.HeatTestCase):
         prop_diff = {'tags': ['tag2']}
 
         self._handle_update_tags(prop_diff)
+
+        prop_diff = {'extra_properties': {'key1': 'value1', 'key2': 'value2'}}
+        self._handle_update_properties(prop_diff)
 
     def test_image_handle_update_remove_tags(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
@@ -324,7 +338,8 @@ class GlanceImageTest(common.HeatTestCase):
             'min_disk': 0,
             'min_ram': 0,
             'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
-            'tags': []
+            'tags': [],
+            'extra_properties': {}
         }
         if version == 1.0:
             image = mock.MagicMock()
@@ -347,7 +362,8 @@ class GlanceImageTest(common.HeatTestCase):
             'min_disk': 0,
             'min_ram': 0,
             'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
-            'tags': []
+            'tags': [],
+            'extra_properties': {}
         }
         if version == 1.0:
             expected.update({'location': 'stub'})
