@@ -12,6 +12,7 @@
 #    under the License.
 
 import contextlib
+import itertools
 
 import eventlet
 import six
@@ -24,13 +25,17 @@ from heat.tests import common
 
 
 class DummyTask(object):
-    def __init__(self, num_steps=3):
+    def __init__(self, num_steps=3, delays=None):
         self.num_steps = num_steps
+        if delays is not None:
+            self.delays = iter(delays)
+        else:
+            self.delays = itertools.repeat(None)
 
     def __call__(self, *args, **kwargs):
         for i in range(1, self.num_steps + 1):
             self.do_step(i, *args, **kwargs)
-            yield
+            yield next(self.delays)
 
     def do_step(self, step_num, *args, **kwargs):
         pass
@@ -329,6 +334,45 @@ class TaskTest(common.HeatTestCase):
         task.do_step(1).AndReturn(None)
         scheduler.TaskRunner._sleep(0).AndReturn(None)
         task.do_step(2).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        task.do_step(3).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(task)()
+
+    def test_run_delays(self):
+        task = DummyTask(delays=itertools.repeat(2))
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        task.do_step(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(0).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        task.do_step(2).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        task.do_step(3).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(task)()
+
+    def test_run_delays_dynamic(self):
+        task = DummyTask(delays=[2, 4, 1])
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        task.do_step(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(0).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        task.do_step(2).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
         scheduler.TaskRunner._sleep(1).AndReturn(None)
         task.do_step(3).AndReturn(None)
         scheduler.TaskRunner._sleep(1).AndReturn(None)
@@ -878,6 +922,35 @@ class WrapperTaskTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(task)()
+
+    def test_parent_yield_value(self):
+        @scheduler.wrappertask
+        def parent_task():
+            yield
+            yield 3
+            yield iter([1, 2, 4])
+
+        task = parent_task()
+
+        self.assertIsNone(next(task))
+        self.assertEqual(3, next(task))
+        self.assertEqual([1, 2, 4], list(next(task)))
+
+    def test_child_yield_value(self):
+        def child_task():
+            yield
+            yield 3
+            yield iter([1, 2, 4])
+
+        @scheduler.wrappertask
+        def parent_task():
+            yield child_task()
+
+        task = parent_task()
+
+        self.assertIsNone(next(task))
+        self.assertEqual(3, next(task))
+        self.assertEqual([1, 2, 4], list(next(task)))
 
     def test_child_exception(self):
         class MyException(Exception):
