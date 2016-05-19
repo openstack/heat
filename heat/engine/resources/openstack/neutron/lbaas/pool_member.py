@@ -93,7 +93,9 @@ class PoolMember(neutron.NeutronResource):
             _('Subnet name or ID of this member.'),
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
-            ]
+            ],
+            # Make this required untill bug #1585100 is resolved.
+            required=True
         ),
     }
 
@@ -156,9 +158,7 @@ class PoolMember(neutron.NeutronResource):
         self.client_plugin().resolve_pool(
             properties, self.POOL, 'pool_id')
         properties.pop('pool_id')
-
-        if self.SUBNET in properties:
-            properties['subnet_id'] = properties.pop(self.SUBNET)
+        properties['subnet_id'] = properties.pop(self.SUBNET)
         return properties
 
     def check_create_complete(self, properties):
