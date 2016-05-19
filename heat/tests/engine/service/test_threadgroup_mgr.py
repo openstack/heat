@@ -14,6 +14,8 @@
 import eventlet
 import mock
 
+from oslo_context import context
+
 from heat.engine import service
 from heat.tests import common
 
@@ -61,7 +63,7 @@ class ThreadGroupManagerTest(common.HeatTestCase):
 
         self.assertEqual(self.tg_mock, thm.groups['test'])
         self.tg_mock.add_thread.assert_called_with(
-            thm._start_with_trace, None,
+            thm._start_with_trace, context.get_current(), None,
             self.f, *self.fargs, **self.fkwargs)
         self.assertEqual(ret, self.tg_mock.add_thread())
 

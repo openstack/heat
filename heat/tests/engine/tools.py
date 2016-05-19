@@ -305,13 +305,9 @@ class DummyThreadGroup(object):
     def stop_timers(self):
         pass
 
-    def add_thread(self, callback, *args, **kwargs):
-        # just to make _start_with_trace() easier to test:
-        # callback == _start_with_trace
-        # args[0] == trace_info
-        # args[1] == actual_callback
-        callback = args[1]
-        self.threads.append(callback)
+    def add_thread(self, callback, cnxt, trace, func, *args, **kwargs):
+        # callback here is _start_with_trace(); func is the 'real' callback
+        self.threads.append(func)
         return DummyThread()
 
     def stop(self, graceful=False):

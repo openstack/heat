@@ -118,7 +118,8 @@ class RemoteStack(resource.Resource):
 
         # Build RequestContext from existing one
         dict_ctxt = self.context.to_dict()
-        dict_ctxt.update({'region_name': self._region_name})
+        dict_ctxt.update({'region_name': self._region_name,
+                          'overwrite': False})
         self._local_context = context.RequestContext.from_dict(dict_ctxt)
         return self._local_context
 
