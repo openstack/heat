@@ -60,6 +60,20 @@ def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
 
 
+class PollDelay(Exception):
+    """Exception to delay polling of the resource.
+
+    This exception may be raised by a Resource subclass's check_*_complete()
+    methods to indicate that it need not be polled again immediately. If this
+    exception is raised, the check_*_complete() method will not be called
+    again until the nth time that the resource becomes eligible for polling.
+    A PollDelay period of 1 is equivalent to returning False.
+    """
+    def __init__(self, period):
+        assert period >= 1
+        self.period = period
+
+
 @six.python_2_unicode_compatible
 class Resource(object):
     ACTIONS = (
@@ -744,8 +758,16 @@ class Resource(object):
             handler_data = handler(*args)
             yield
             if callable(check):
-                while not check(handler_data):
-                    yield
+                while True:
+                    try:
+                        done = check(handler_data)
+                    except PollDelay as delay:
+                        yield delay.period
+                    else:
+                        if done:
+                            break
+                        else:
+                            yield
 
     @scheduler.wrappertask
     def _do_action(self, action, pre_func=None, resource_data=None):
