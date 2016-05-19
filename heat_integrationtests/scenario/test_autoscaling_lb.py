@@ -48,14 +48,6 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
                 resp.add(r.text)
         self.assertEqual(expected_num, len(resp))
 
-    def autoscale_complete(self, stack_id, expected_num):
-        res_list = self.client.resources.list(stack_id)
-        all_res_complete = all(res.resource_status in ('UPDATE_COMPLETE',
-                                                       'CREATE_COMPLETE')
-                               for res in res_list)
-        all_res = len(res_list) == expected_num
-        return all_res and all_res_complete
-
     def test_autoscaling_loadbalancer_neutron(self):
         """Check work of AutoScaing and Neutron LBaaS v1 resource in Heat.
 
@@ -111,7 +103,7 @@ class AutoscalingLoadBalancerTest(scenario_base.ScenarioTestsBase):
         asg = self.client.resources.get(sid, 'asg')
         test.call_until_true(self.conf.build_timeout,
                              self.conf.build_interval,
-                             self.autoscale_complete,
+                             self.check_autoscale_complete,
                              asg.physical_resource_id, 2)
 
         # Check number of distinctive responses, must now be 2
