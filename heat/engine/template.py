@@ -213,6 +213,11 @@ class Template(collections.Mapping):
         """Remove a resource from the template."""
         self.t.get(self.RESOURCES, {}).pop(name)
 
+    def remove_all_resources(self):
+        """Remove all the resources from the template."""
+        if self.RESOURCES in self.t:
+            self.t.update({self.RESOURCES: {}})
+
     def parse(self, stack, snippet):
         return parse(self.functions, stack, snippet)
 
@@ -258,7 +263,8 @@ class Template(collections.Mapping):
 
     @classmethod
     def create_empty_template(cls,
-                              version=('heat_template_version', '2015-04-30')):
+                              version=('heat_template_version', '2015-04-30'),
+                              from_template=None):
         """Create an empty template.
 
         Creates a new empty template with given version. If version is
@@ -270,8 +276,15 @@ class Template(collections.Mapping):
         "2015-04-30")
         :returns: A new empty template.
         """
-        tmpl = {version[0]: version[1]}
-        return cls(tmpl)
+        if from_template:
+            # remove resources from the template and return; keep the
+            # env and other things intact
+            tmpl = copy.deepcopy(from_template)
+            tmpl.remove_all_resources()
+            return tmpl
+        else:
+            tmpl = {version[0]: version[1]}
+            return cls(tmpl)
 
 
 def parse(functions, stack, snippet):

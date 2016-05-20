@@ -973,6 +973,26 @@ class TemplateTest(common.HeatTestCase):
         self.assertEqual({}, empty_template['resources'])
         self.assertEqual({}, empty_template['outputs'])
 
+    def test_create_empty_template_from_another_template(self):
+        res_param_template = template_format.parse('''{
+          "HeatTemplateFormatVersion" : "2012-12-12",
+          "Parameters" : {
+            "foo" : { "Type" : "String" },
+            "blarg" : { "Type" : "String", "Default": "quux" }
+          },
+          "Resources" : {
+            "foo" : { "Type" : "GenericResourceType" },
+            "blarg" : { "Type" : "GenericResourceType" }
+          }
+        }''')
+
+        env = environment.Environment({'foo': 'bar'})
+        hot_tmpl = template.Template(res_param_template, env)
+        empty_template = template.Template.create_empty_template(
+            from_template=hot_tmpl)
+        self.assertEqual({}, empty_template['Resources'])
+        self.assertEqual(hot_tmpl.env, empty_template.env)
+
 
 class TemplateFnErrorTest(common.HeatTestCase):
     scenarios = [
