@@ -1,0 +1,5 @@
+---
+features:
+  - OS::Monasca::AlarmDefinition and OS::Monasca::Notification resource
+    plug-ins are now supported by heat community as monasca became
+    offcial OpenStack project.
