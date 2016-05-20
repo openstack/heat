@@ -36,6 +36,8 @@ class CinderVolumeType(resource.Resource):
 
     entity = 'volume_types'
 
+    required_service_extension = 'os-types-manage'
+
     PROPERTIES = (
         NAME, METADATA, IS_PUBLIC, DESCRIPTION, PROJECTS,
     ) = (

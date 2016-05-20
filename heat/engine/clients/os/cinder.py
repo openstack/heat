@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
+from heat.engine.clients import os as os_client
 from heat.engine import constraints
 
 
@@ -67,6 +68,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
                  volume_api_version)
 
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
+        extensions = cc.discover_extensions(client_version)
         args = {
             'service_type': service_type,
             'auth_url': con.auth_url or '',
@@ -77,7 +79,8 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug'),
             'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
+            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
+            'extensions': extensions
         }
 
         client = cc.Client(client_version, **args)
@@ -89,6 +92,15 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         client.volume_api_version = volume_api_version
 
         return client
+
+    @os_client.MEMOIZE_EXTENSIONS
+    def _list_extensions(self):
+        extensions = self.client().list_extensions.show_all()
+        return set(extension.alias for extension in extensions)
+
+    def has_extension(self, alias):
+        """Check if specific extension is present."""
+        return alias in self._list_extensions()
 
     def get_volume(self, volume):
         try:
