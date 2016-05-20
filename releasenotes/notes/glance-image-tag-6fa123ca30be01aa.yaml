@@ -1,0 +1,4 @@
+---
+features:
+  - OS::Glance::Image resource plug-in is updated to support tagging
+    when image is created or updated as part of stack.
