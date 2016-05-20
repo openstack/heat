@@ -265,20 +265,6 @@ class StackResourcesServiceTest(common.HeatTestCase):
 
     @mock.patch.object(stack.Stack, 'load')
     @tools.stack_context('service_resources_list_test_stack')
-    def test_stack_resources_filter_id(self, mock_load):
-        mock_load.return_value = self.stack
-        resources = six.itervalues(self.stack)
-        self.stack.iter_resources = mock.Mock(return_value=resources)
-        filters = {'physical_resource_id': '123'}
-        self.eng.list_stack_resources(self.ctx,
-                                      self.stack.identifier(),
-                                      filters=filters)
-        expected_filters = {'nova_instance': '123'}
-        self.stack.iter_resources.assert_called_once_with(
-            0, filters=expected_filters)
-
-    @mock.patch.object(stack.Stack, 'load')
-    @tools.stack_context('service_resources_list_test_stack')
     def test_stack_resources_filter_type(self, mock_load):
         mock_load.return_value = self.stack
         resources = six.itervalues(self.stack)
