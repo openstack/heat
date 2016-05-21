@@ -1385,8 +1385,7 @@ class StackServiceTest(common.HeatTestCase):
             mock.call(self.ctx, 'bar', tenant_safe=False, eager_load=True),
         ])
         mock_stack_load.assert_called_once_with(self.ctx,
-                                                stack=db_stack,
-                                                use_stored_context=True)
+                                                stack=db_stack)
         self.assertTrue(lock2.release.called)
         mock_thread.start_with_acquired_lock.assert_called_once_with(
             fake_stack, lock1,
