@@ -209,12 +209,6 @@ class Stack(collections.Mapping):
 
         if use_stored_context:
             self.context = self.stored_context()
-            self.context.roles = self.context.clients.client(
-                'keystone').auth_ref.role_names
-            self.context.user_domain = self.context.clients.client(
-                'keystone').auth_ref.user_domain_id
-            self.context.project_domain = self.context.clients.client(
-                'keystone').auth_ref.project_domain_id
 
         self.clients = self.context.clients
 
@@ -283,7 +277,7 @@ class Stack(collections.Mapping):
             creds['is_admin'] = False
             creds['overwrite'] = False
 
-            return common_context.RequestContext.from_dict(creds)
+            return common_context.StoredContext.from_dict(creds)
         else:
             msg = _("Attempt to use stored_context with no user_creds")
             raise exception.Error(msg)
