@@ -133,19 +133,6 @@ class GetAttThenSelect(cfn_funcs.GetAtt):
         path_components = function.resolve(self._path_components)
         return attributes.select_from_attribute(attribute, path_components)
 
-    def dep_attrs(self, resource_name):
-        if self._resource().name == resource_name:
-            path = function.resolve(self._path_components)
-            attr = [function.resolve(self._attribute)]
-            if path:
-                attrs = [tuple(attr + path)]
-            else:
-                attrs = attr
-        else:
-            attrs = []
-        return itertools.chain(function.dep_attrs(self.args, resource_name),
-                               attrs)
-
 
 class GetAtt(GetAttThenSelect):
     """A function for resolving resource attributes.
@@ -170,6 +157,19 @@ class GetAtt(GetAttThenSelect):
             return r.FnGetAtt(attribute, *path_components)
         else:
             return None
+
+    def dep_attrs(self, resource_name):
+        if self._resource().name == resource_name:
+            path = function.resolve(self._path_components)
+            attr = [function.resolve(self._attribute)]
+            if path:
+                attrs = [tuple(attr + path)]
+            else:
+                attrs = attr
+        else:
+            attrs = []
+        return itertools.chain(function.dep_attrs(self.args, resource_name),
+                               attrs)
 
 
 class GetAttAllAttributes(GetAtt):
