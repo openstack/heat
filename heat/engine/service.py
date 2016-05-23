@@ -2198,7 +2198,8 @@ class EngineService(service.Service):
                         lock.release()
                         continue
 
-                    stk = parser.Stack.load(cnxt, stack=s)
+                    stk = parser.Stack.load(cnxt, stack=s,
+                                            use_stored_context=True)
                     LOG.info(_LI('Engine %(engine)s went down when stack '
                                  '%(stack_id)s was in action %(action)s'),
                              {'engine': engine_id, 'action': stk.action,
