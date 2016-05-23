@@ -70,7 +70,8 @@ List stack events
 
 .. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/events
 
-Lists events for a stack.
+Lists events for a stack based on filtering parameters like resource
+name, status, type, action. These parameters could be used multiple times.
 
 
 Normal response codes: 200

@@ -100,7 +100,9 @@ List resources
 
 .. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources
 
-Lists resources in a stack.
+Lists resources in a stack based on filtering parameters like resource
+name, status, type, action, id and physical_resource_id. These parameters could
+be used multiple times.
 
 
 Normal response codes: 200
@@ -117,6 +119,12 @@ Request
    - stack_id: stack_id
    - nested_depth: nested_depth
    - with_detail: with_detail
+   - name: resource_name
+   - status: resource_status
+   - type: resource_type
+   - action: resource_action
+   - id: logical_resource_id
+   - physical_resource_id: physical_resource_id
 
 
 Response Parameters

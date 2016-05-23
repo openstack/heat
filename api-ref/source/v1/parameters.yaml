@@ -163,9 +163,7 @@ owner_id:
   type: string
 resource_action:
   description: |
-    Filters the event list by a resource action. You
-    can use this filter multiple times to filter by multiple resource
-    actions. Valid resource actions are ``ADOPT``, ``CHECK``,
+    Stack resource action. Valid resource actions are ``ADOPT``, ``CHECK``,
     ``CREATE``, ``DELETE``, ``INIT``, ``RESTORE``, ``RESUME``,
     ``ROLLBACK``, ``SNAPSHOT``, ``SUSPEND``, and ``UPDATE``.
   in: query
@@ -181,19 +179,15 @@ resource_name_2:
   type: string
 resource_status:
   description: |
-    Filters the event list by a resource status. You
-    can use this filter multiple times to filter by multiple resource
-    statuses. Valid resource statuses are ``COMPLETE``, ``FAILED``,
-    and ``IN_PROGRESS``.
+    Stack resource status. Valid resource statuses are ``COMPLETE``,
+    ``FAILED`` and ``IN_PROGRESS``.
   in: query
   required: false
   type: string
 resource_type:
   description: |
-    Filters the event list by a resource type. You
-    can use this filter multiple times to filter by multiple resource
-    types. Valid resource types include ``OS::Cinder::Volume``,
-    ``OS::Nova::Server``, ``OS::Neutron::Port``, and so on.
+    Stack resource type. Valid resource types include ``OS::Cinder::Volume``,
+    ``OS::Nova::Server``, ``OS::Neutron::Port`` and so on.
   in: query
   required: false
   type: string
