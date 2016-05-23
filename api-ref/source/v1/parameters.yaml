@@ -70,6 +70,12 @@ type_name:
   in: path
   required: false
   type: string
+template_version:
+  description: |
+    The version of the heat template.
+  in: path
+  required: true
+  type: string
 
 # variables in query
 action_3:

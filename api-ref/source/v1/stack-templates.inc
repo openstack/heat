@@ -4,6 +4,34 @@
 Templates
 =========
 
+List template functions
+=======================
+
+.. rest_method::  GET /v1/{tenant_id}/template_versions/{template_version}/functions
+
+Lists all available functions for a template version.
+
+
+Normal response codes: 200
+Error response codes:401,400,
+
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - template_version: template_version
+
+
+Response Example
+----------------
+
+.. literalinclude:: samples/template-functions-list-response.json
+   :language: javascript
+
+
 
 
 

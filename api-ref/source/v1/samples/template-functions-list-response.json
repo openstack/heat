@@ -1,0 +1,44 @@
+{
+    "template_functions": [
+        {
+            "functions": "Fn::Select",
+            "description": "A function for selecting an item from a list or map."
+        },
+        {
+            "functions": "repeat",
+            "description": "A function for iterating over a list of items."
+        },
+        {
+            "functions": "resource_facade",
+            "description": "A function for retrieving data in a parent provider template."
+        },
+        {
+            "functions": "list_join",
+            "description": "A function for joining strings."
+        },
+        {
+            "functions": "str_replace",
+            "description": "A function for performing string substitutions."
+        },
+        {
+            "functions": "get_attr",
+            "description": "A function for resolving resource attributes."
+        },
+        {
+            "functions": "get_param",
+            "description": "A function for resolving parameter references."
+        },
+        {
+            "functions": "get_file",
+            "description": "A function for including a file inline."
+        },
+        {
+            "functions": "digest",
+            "description": "A function for performing digest operations."
+        },
+        {
+            "functions": "get_resource",
+            "description": "A function for resolving resource references."
+        }
+    ]
+}
