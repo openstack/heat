@@ -150,6 +150,7 @@ resources:
     properties:
       value: Test
       fail: {get_param: do_fail}
+      wait_secs: 1
 '''
 
     def setUp(self):
