@@ -179,7 +179,7 @@ class ThreadGroupManager(object):
             """Callback function that will be passed to GreenThread.link().
 
             Persist the stack state to COMPLETE and FAILED close to
-            releasing the lock to avoid race condtitions.
+            releasing the lock to avoid race conditions.
             """
             if stack is not None and stack.action not in (
                     stack.DELETE, stack.ROLLBACK, stack.UPDATE):
@@ -2221,7 +2221,9 @@ class EngineService(service.Service):
                         continue
 
                     stk = parser.Stack.load(cnxt, stack=s,
-                                            use_stored_context=True)
+                                            service_check_defer=True,
+                                            resource_validate=False,
+                                            resolve_data=False)
                     LOG.info(_LI('Engine %(engine)s went down when stack '
                                  '%(stack_id)s was in action %(action)s'),
                              {'engine': engine_id, 'action': stk.action,
