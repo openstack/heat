@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keystoneauth1.identity import v3 as ks_v3_auth
+from keystoneauth1.identity import generic as ks_auth
 from keystoneauth1 import session as ks_session
 from keystoneclient import exceptions as keystone_exc
 import mox
@@ -120,10 +120,10 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.response_headers = dict(headers)
 
     def test_valid_v2_request(self):
-        mock_auth = self.m.CreateMock(ks_v3_auth.Password)
-        self.m.StubOutWithMock(ks_v3_auth, 'Password')
+        mock_auth = self.m.CreateMock(ks_auth.Password)
+        self.m.StubOutWithMock(ks_auth, 'Password')
 
-        ks_v3_auth.Password(
+        ks_auth.Password(
             auth_url=self.config['auth_uri'],
             password='goodpassword',
             project_id='tenant_id1',
@@ -144,14 +144,14 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_valid_v3_request(self):
-        mock_auth = self.m.CreateMock(ks_v3_auth.Password)
-        self.m.StubOutWithMock(ks_v3_auth, 'Password')
+        mock_auth = self.m.CreateMock(ks_auth.Password)
+        self.m.StubOutWithMock(ks_auth, 'Password')
 
-        ks_v3_auth.Password(auth_url=self.config['auth_uri'],
-                            password='goodpassword',
-                            project_id='tenant_id1',
-                            user_domain_id='domain1',
-                            username='user_name1').AndReturn(mock_auth)
+        ks_auth.Password(auth_url=self.config['auth_uri'],
+                         password='goodpassword',
+                         project_id='tenant_id1',
+                         user_domain_id='domain1',
+                         username='user_name1').AndReturn(mock_auth)
 
         m = mock_auth.get_access(mox.IsA(ks_session.Session))
         m.AndReturn(TOKEN_V3_RESPONSE)
@@ -169,13 +169,13 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_request_with_bad_credentials(self):
-        self.m.StubOutWithMock(ks_v3_auth, 'Password')
+        self.m.StubOutWithMock(ks_auth, 'Password')
 
-        m = ks_v3_auth.Password(auth_url=self.config['auth_uri'],
-                                password='badpassword',
-                                project_id='tenant_id1',
-                                user_domain_id='domain1',
-                                username='user_name1')
+        m = ks_auth.Password(auth_url=self.config['auth_uri'],
+                             password='badpassword',
+                             project_id='tenant_id1',
+                             user_domain_id='domain1',
+                             username='user_name1')
         m.AndRaise(keystone_exc.Unauthorized(401))
 
         self.m.ReplayAll()

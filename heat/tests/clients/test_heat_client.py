@@ -17,7 +17,7 @@ import uuid
 from keystoneauth1 import access as ks_access
 from keystoneauth1 import exceptions as kc_exception
 from keystoneauth1.identity import access as ks_auth_access
-from keystoneauth1.identity import v3 as ks_auth_v3
+from keystoneauth1.identity import generic as ks_auth
 from keystoneauth1 import loading as ks_loading
 from keystoneauth1 import session as ks_session
 from keystoneauth1 import token_endpoint as ks_token_endpoint
@@ -49,7 +49,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.mock_ks_v3_client_domain_mngr = self.m.CreateMock(
             kc_v3_domains.DomainManager)
         self.m.StubOutWithMock(kc_v3, "Client")
-        self.m.StubOutWithMock(ks_auth_v3, 'Password')
+        self.m.StubOutWithMock(ks_auth, 'Password')
         self.m.StubOutWithMock(ks_token_endpoint, 'Token')
         self.m.StubOutWithMock(ks_auth_access, 'AccessInfoPlugin')
         self.m.StubOutWithMock(ks_loading, 'load_auth_from_conf_options')
@@ -85,13 +85,13 @@ class KeystoneClientTest(common.HeatTestCase):
         mock_ks_auth = self.m.CreateMockAnything()
         mock_ks_auth.get_token(mox.IsA(ks_session.Session)).AndReturn('tok')
 
-        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                                password='adminsecret',
-                                domain_id='adomain123',
-                                domain_name=None,
-                                user_domain_id='adomain123',
-                                user_domain_name=None,
-                                username='adminuser123')
+        m = ks_auth.Password(auth_url='http://server.test:5000/v3',
+                             password='adminsecret',
+                             domain_id='adomain123',
+                             domain_name=None,
+                             user_domain_id='adomain123',
+                             user_domain_name=None,
+                             username='adminuser123')
         m.AndReturn(mock_ks_auth)
 
         n = kc_v3.Client(session=mox.IsA(ks_session.Session),
@@ -100,26 +100,30 @@ class KeystoneClientTest(common.HeatTestCase):
 
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
 
-    def _stubs_v3(self, method='token', trust_scoped=True,
-                  user_id=None, auth_ref=None, client=True, project_id=None,
-                  stub_trust_context=False):
+    def _stubs_auth(self, method='token', trust_scoped=True,
+                    user_id=None, auth_ref=None, client=True, project_id=None,
+                    stub_trust_context=False, version=3):
         mock_auth_ref = self.m.CreateMockAnything()
         mock_ks_auth = self.m.CreateMockAnything()
 
         if method == 'token':
             p = ks_token_endpoint.Token(token='abcd1234',
                                         endpoint='http://server.test:5000/v3')
-        elif method == 'auth_ref':
+        elif method == 'auth_ref' and version == 3:
             p = ks_auth_access.AccessInfoPlugin(
-                auth_url='http://server.test:5000/v3',
-                auth_ref=mox.IsA(ks_access.AccessInfo))
+                auth_ref=mox.IsA(ks_access.AccessInfoV3),
+                auth_url='http://server.test:5000/v3')
+        elif method == 'auth_ref' and version == 2:
+            p = ks_auth_access.AccessInfoPlugin(
+                auth_ref=mox.IsA(ks_access.AccessInfoV2),
+                auth_url='http://server.test:5000/v3')
 
         elif method == 'password':
-            p = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                                    username='test_username',
-                                    password='password',
-                                    project_id=project_id or 'test_tenant_id',
-                                    user_domain_id='adomain123')
+            p = ks_auth.Password(auth_url='http://server.test:5000/v3',
+                                 username='test_username',
+                                 password='password',
+                                 project_id=project_id or 'test_tenant_id',
+                                 user_domain_id='adomain123')
 
         elif method == 'trust':
             p = ks_loading.load_auth_from_conf_options(cfg.CONF,
@@ -153,7 +157,7 @@ class KeystoneClientTest(common.HeatTestCase):
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -189,7 +193,7 @@ class KeystoneClientTest(common.HeatTestCase):
     def test_create_stack_user_error_norole(self):
         """Test error path when no role is found."""
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -248,7 +252,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stubs_v3()
+        self._stubs_auth()
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'auser123'
@@ -323,7 +327,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stubs_v3()
+        self._stubs_auth()
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         self.mock_ks_v3_client.users.delete(user='user123').AndReturn(None)
         self.m.ReplayAll()
@@ -380,7 +384,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test deleting a stack user."""
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -401,7 +405,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test creating the client, token auth."""
 
-        self._stubs_v3()
+        self._stubs_auth()
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -418,7 +422,9 @@ class KeystoneClientTest(common.HeatTestCase):
 
         expected_auth_ref = {'token': {'id': 'ctx_token', 'expires': '123'},
                              'version': 'v2.0'}
-        self._stubs_v3(method='auth_ref', auth_ref=expected_auth_ref)
+        self._stubs_auth(method='auth_ref',
+                         auth_ref=expected_auth_ref,
+                         version=2)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -440,7 +446,7 @@ class KeystoneClientTest(common.HeatTestCase):
                              'expires': '456',
                              'version': 'v3',
                              'methods': []}
-        self._stubs_v3(method='auth_ref', auth_ref=expected_auth_ref)
+        self._stubs_auth(method='auth_ref', auth_ref=expected_auth_ref)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -457,7 +463,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test creating the client, password auth."""
 
-        self._stubs_v3(method='password')
+        self._stubs_auth(method='password')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -486,7 +492,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test create_trust_context with existing trust_id."""
 
-        self._stubs_v3(method='trust')
+        self._stubs_auth(method='trust')
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.m.ReplayAll()
@@ -514,9 +520,9 @@ class KeystoneClientTest(common.HeatTestCase):
             id = 'atrust123'
 
         self._stub_admin_auth()
-        mock_ks_auth, mock_auth_ref = self._stubs_v3(user_id='5678',
-                                                     project_id='42',
-                                                     stub_trust_context=True)
+        mock_ks_auth, mock_auth_ref = self._stubs_auth(user_id='5678',
+                                                       project_id='42',
+                                                       stub_trust_context=True)
 
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
@@ -555,9 +561,9 @@ class KeystoneClientTest(common.HeatTestCase):
 
         self._stub_admin_auth()
 
-        mock_auth, mock_auth_ref = self._stubs_v3(user_id='5678',
-                                                  project_id='42',
-                                                  stub_trust_context=True)
+        mock_auth, mock_auth_ref = self._stubs_auth(user_id='5678',
+                                                    project_id='42',
+                                                    stub_trust_context=True)
 
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
@@ -614,7 +620,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test consuming a trust when initializing."""
 
-        self._stubs_v3(method='trust')
+        self._stubs_auth(method='trust')
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.m.ReplayAll()
@@ -633,7 +639,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test consuming a trust when initializing, error scoping."""
 
-        self._stubs_v3(method='trust', trust_scoped=False)
+        self._stubs_auth(method='trust', trust_scoped=False)
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.m.ReplayAll()
@@ -651,7 +657,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test consuming a trust when initializing, impersonation error."""
 
-        self._stubs_v3(method='trust', user_id='wrong_user_id')
+        self._stubs_auth(method='trust', user_id='wrong_user_id')
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.m.ReplayAll()
@@ -669,7 +675,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test trust_id is takes precedence username/password specified."""
 
-        self._stubs_v3(method='trust')
+        self._stubs_auth(method='trust')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -683,7 +689,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test trust_id takes precedence when token specified."""
 
-        self._stubs_v3(method='trust')
+        self._stubs_auth(method='trust')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -698,7 +704,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test delete_trust when deleting trust."""
 
-        self._stubs_v3()
+        self._stubs_auth()
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
@@ -713,7 +719,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test delete_trust when trust already deleted."""
 
-        self._stubs_v3()
+        self._stubs_auth()
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
@@ -729,7 +735,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test disabling a stack user."""
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -746,7 +752,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test enabling a stack user."""
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -793,7 +799,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stubs_v3()
+        self._stubs_auth()
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         self.mock_ks_v3_client.users.update(user='user123', enabled=True
                                             ).AndReturn(None)
@@ -858,7 +864,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stubs_v3()
+        self._stubs_auth()
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         self.mock_ks_v3_client.users.update(user='user123', enabled=False
                                             ).AndReturn(None)
@@ -930,7 +936,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stubs_v3()
+        self._stubs_auth()
         self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
         self.mock_ks_v3_client.credentials.delete(
             'acredentialid').AndReturn(None)
@@ -984,7 +990,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test creating ec2 credentials."""
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1056,7 +1062,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test creating ec2 credentials for domain user, fallback path."""
         self._clear_domain_override()
 
-        self._stubs_v3()
+        self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1093,7 +1099,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test getting ec2 credential by id."""
 
         user_id = 'atestuser'
-        self._stubs_v3(user_id=user_id)
+        self._stubs_auth(user_id=user_id)
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1143,7 +1149,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test getting ec2 credential by access."""
 
         user_id = 'atestuser'
-        self._stubs_v3(user_id=user_id)
+        self._stubs_auth(user_id=user_id)
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1171,7 +1177,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test deleting ec2 credential by id."""
 
         user_id = 'atestuser'
-        self._stubs_v3(user_id=user_id)
+        self._stubs_auth(user_id=user_id)
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1198,7 +1204,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test deleting ec2 credential by access."""
 
         user_id = 'atestuser'
-        self._stubs_v3(user_id=user_id)
+        self._stubs_auth(user_id=user_id)
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1335,11 +1341,11 @@ class KeystoneClientTest(common.HeatTestCase):
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
 
     def _stub_domain_user_pw_auth(self):
-        ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                            user_id='duser',
-                            password='apassw',
-                            project_id='aproject',
-                            user_domain_id='adomain123').AndReturn('dummyauth')
+        ks_auth.Password(auth_url='http://server.test:5000/v3',
+                         user_id='duser',
+                         password='apassw',
+                         project_id='aproject',
+                         user_domain_id='adomain123').AndReturn('dummyauth')
 
     def test_stack_domain_user_token(self):
         """Test stack_domain_user_token function."""
@@ -1347,11 +1353,10 @@ class KeystoneClientTest(common.HeatTestCase):
         mock_ks_auth = self.m.CreateMockAnything()
         mock_ks_auth.get_token(mox.IsA(ks_session.Session)).AndReturn(dum_tok)
 
-        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                                password='apassw',
-                                project_id='aproject',
-                                user_id='duser',
-                                include_catalog=False)
+        m = ks_auth.Password(auth_url='http://server.test:5000/v3',
+                             password='apassw',
+                             project_id='aproject',
+                             user_id='duser')
         m.AndReturn(mock_ks_auth)
 
         self.m.ReplayAll()
@@ -1388,7 +1393,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def _test_url_for(self, service_url, expected_kwargs, ctx=None, **kwargs):
         """Testing url_for depending on different ways to pass region name."""
-        mock_ks_auth, mock_auth_ref = self._stubs_v3(client=False)
+        mock_ks_auth, mock_auth_ref = self._stubs_auth(client=False)
         mock_ks_auth.get_endpoint(mox.IsA(ks_session.Session),
                                   **expected_kwargs).AndReturn(service_url)
 
@@ -1489,13 +1494,13 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
             a.domain_id = domain_id
             mock_ks_auth.get_access(mox.IsA(ks_session.Session)).AndReturn(a)
 
-        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                                password='adminsecret',
-                                domain_id=None,
-                                domain_name='fake_domain_name',
-                                user_domain_id=None,
-                                user_domain_name='fake_domain_name',
-                                username='adminuser123')
+        m = ks_auth.Password(auth_url='http://server.test:5000/v3',
+                             password='adminsecret',
+                             domain_id=None,
+                             domain_name='fake_domain_name',
+                             user_domain_id=None,
+                             user_domain_name='fake_domain_name',
+                             username='adminuser123')
 
         m.AndReturn(mock_ks_auth)
 
@@ -1506,12 +1511,12 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
 
     def _stub_domain_user_pw_auth(self):
-        ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                            user_id='duser',
-                            password='apassw',
-                            project_id='aproject',
-                            user_domain_name='fake_domain_name'
-                            ).AndReturn('dummyauth')
+        ks_auth.Password(auth_url='http://server.test:5000/v3',
+                         user_id='duser',
+                         password='apassw',
+                         project_id='aproject',
+                         user_domain_name='fake_domain_name'
+                         ).AndReturn('dummyauth')
 
     def test_enable_stack_domain_user_error_project(self):
         p = super(KeystoneClientTestDomainName, self)
