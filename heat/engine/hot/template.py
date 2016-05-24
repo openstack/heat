@@ -411,6 +411,9 @@ class HOTemplate20161014(HOTemplate20160408):
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.ReplaceJson,
 
+        # functions added since 20161014
+        'yaql': hot_funcs.Yaql,
+
         # functions added since 20151015
         'map_merge': hot_funcs.MapMerge,
 

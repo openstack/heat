@@ -57,6 +57,10 @@ hot_mitaka_tpl_empty = template_format.parse('''
 heat_template_version: 2016-04-08
 ''')
 
+hot_newton_tpl_empty = template_format.parse('''
+heat_template_version: 2016-10-14
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -832,6 +836,60 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual('role1', resolved['role1'])
         self.assertEqual('role2', resolved['role2'])
+
+    def test_yaql(self):
+        snippet = {'yaql': {'expression': '$.data.var1.sum()',
+                   'data': {'var1': [1, 2, 3, 4]}}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual(10, resolved)
+
+    def test_yaql_invalid_data(self):
+        snippet = {'yaql': {'expression': '$.data.var1.sum()',
+                   'data': 'mustbeamap'}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = 'The "data" argument to "yaql" must contain a map.'
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_yaql_bogus_keys(self):
+        snippet = {'yaql': {'expression': '1 + 3',
+                            'data': 'mustbeamap',
+                            'bogus': ""}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        self.assertRaises(KeyError, self.resolve, snippet, tmpl)
+
+    def test_yaql_invalid_syntax(self):
+        snippet = {'yaql': {'wrong': 'wrong_expr',
+                   'wrong_data': 'mustbeamap'}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        self.assertRaises(KeyError, self.resolve, snippet, tmpl)
+
+    def test_yaql_non_map_args(self):
+        snippet = {'yaql': 'invalid'}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = 'Arguments to "yaql" must be a map.'
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_yaql_invalid_expression(self):
+        snippet = {'yaql': {'expression': 'invalid(',
+                   'data': {'var1': [1, 2, 3, 4]}}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        yaql = tmpl.parse(None, snippet)
+        self.assertRaises(ValueError, function.validate, yaql)
+
+    def test_yaql_data_as_function(self):
+        snippet = {'yaql': {'expression': '$.data.var1.len()',
+                   'data': {
+                       'var1': {'list_join': ['', ['1', '2']]}
+                   }
+        }}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual(2, resolved)
 
     def test_repeat(self):
         """Test repeat function."""
