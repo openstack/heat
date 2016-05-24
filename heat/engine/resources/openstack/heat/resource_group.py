@@ -308,18 +308,17 @@ class ResourceGroup(stack_resource.StackResource):
         # with any additional names
         rsrc_names = set(current_blacklist)
 
-        if nested:
-            for r in self.properties[self.REMOVAL_POLICIES]:
-                if self.REMOVAL_RSRC_LIST in r:
-                    # Tolerate string or int list values
-                    for n in r[self.REMOVAL_RSRC_LIST]:
-                        str_n = six.text_type(n)
-                        if str_n in nested:
-                            rsrc_names.add(str_n)
-                            continue
-                        rsrc = nested.resource_by_refid(str_n)
-                        if rsrc:
-                            rsrc_names.add(rsrc.name)
+        for r in self.properties[self.REMOVAL_POLICIES]:
+            if self.REMOVAL_RSRC_LIST in r:
+                # Tolerate string or int list values
+                for n in r[self.REMOVAL_RSRC_LIST]:
+                    str_n = six.text_type(n)
+                    if not nested or str_n in nested:
+                        rsrc_names.add(str_n)
+                        continue
+                    rsrc = nested.resource_by_refid(str_n)
+                    if rsrc:
+                        rsrc_names.add(rsrc.name)
 
         # If the blacklist has changed, update the resource data
         if rsrc_names != set(current_blacklist):
