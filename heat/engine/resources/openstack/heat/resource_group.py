@@ -109,9 +109,9 @@ class ResourceGroup(stack_resource.StackResource):
     )
 
     ATTRIBUTES = (
-        REFS, ATTR_ATTRIBUTES,
+        REFS, REFS_MAP, ATTR_ATTRIBUTES,
     ) = (
-        'refs', 'attributes',
+        'refs', 'refs_map', 'attributes',
     )
 
     properties_schema = {
@@ -199,6 +199,12 @@ class ResourceGroup(stack_resource.StackResource):
         REFS: attributes.Schema(
             _("A list of resource IDs for the resources in the group."),
             type=attributes.Schema.LIST
+        ),
+        REFS_MAP: attributes.Schema(
+            _("A map of resource names to IDs for the resources in "
+              "the group."),
+            type=attributes.Schema.MAP,
+            support_status=support.SupportStatus(version='7.0.0'),
         ),
         ATTR_ATTRIBUTES: attributes.Schema(
             _("A map of resource names to the specified attribute of each "
@@ -418,6 +424,10 @@ class ResourceGroup(stack_resource.StackResource):
         if key == self.REFS:
             vals = [grouputils.get_rsrc_id(self, key, False, n) for n in names]
             return attributes.select_from_attribute(vals, path)
+        if key == self.REFS_MAP:
+            refs_map = {n: grouputils.get_rsrc_id(self, key, False, n)
+                        for n in names}
+            return refs_map
         if key == self.ATTR_ATTRIBUTES:
             if not path:
                 raise exception.InvalidTemplateAttribute(

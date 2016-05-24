@@ -786,6 +786,12 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertEqual(expected[1], resg.FnGetAtt("refs", 1))
         self.assertIsNone(resg.FnGetAtt("refs", 2))
 
+    def test_aggregate_refs_map(self):
+        resg = self._create_dummy_stack()
+        found = resg.FnGetAtt("refs_map")
+        expected = {'0': 'ID-0', '1': 'ID-1'}
+        self.assertEqual(expected, found)
+
     def test_aggregate_outputs(self):
         """Test outputs aggregation."""
         expected = {'0': ['foo', 'bar'], '1': ['foo', 'bar']}
