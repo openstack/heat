@@ -11,8 +11,6 @@
 #    under the License.
 
 
-from heat_integrationtests.common import clients
-from heat_integrationtests.common import config
 from heat_integrationtests.functional import functional_base
 
 test_encryption_vol_type = {
@@ -44,16 +42,10 @@ class EncryptionVolTypeTest(functional_base.FunctionalTestsBase):
         super(EncryptionVolTypeTest, self).setUp()
         if not self.conf.admin_username or not self.conf.admin_password:
             self.skipTest('No admin creds found, skipping')
-        self.conf = config.init_conf()
         # cinder security policy usage of volume type is limited
         # to being used by administrators only.
-        # Temporarily switch to admin
-        self.conf.username = self.conf.admin_username
-        self.conf.password = self.conf.admin_password
-        self.conf.tenant_name = 'admin'
-        self.manager = clients.ClientManager(self.conf)
-        self.client = self.manager.orchestration_client
-        self.volume_client = self.manager.volume_client
+        # Switch to admin
+        self.setup_clients_for_admin()
 
     def check_stack(self, sid):
         vt = 'my_volume_type'

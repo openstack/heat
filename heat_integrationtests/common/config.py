@@ -35,6 +35,9 @@ IntegrationTestGroup = [
                default=(os.environ.get('OS_PROJECT_NAME') or
                         os.environ.get('OS_TENANT_NAME')),
                help="Tenant name to use for API requests."),
+    cfg.StrOpt('admin_tenant_name',
+               default='admin',
+               help="Admin tenant name to use for admin API requests."),
     cfg.StrOpt('auth_url',
                default=os.environ.get('OS_AUTH_URL'),
                help="Full URI of the OpenStack Identity API (Keystone)"),

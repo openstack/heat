@@ -81,8 +81,16 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                              'No username configured')
         self.assertIsNotNone(self.conf.password,
                              'No password configured')
+        self.setup_clients(self.conf)
+        self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
+        self.updated_time = {}
+        if self.conf.disable_ssl_certificate_validation:
+            self.verify_cert = False
+        else:
+            self.verify_cert = self.conf.ca_file or True
 
-        self.manager = clients.ClientManager(self.conf)
+    def setup_clients(self, conf):
+        self.manager = clients.ClientManager(conf)
         self.identity_client = self.manager.identity_client
         self.orchestration_client = self.manager.orchestration_client
         self.compute_client = self.manager.compute_client
@@ -90,12 +98,19 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.volume_client = self.manager.volume_client
         self.object_client = self.manager.object_client
         self.metering_client = self.manager.metering_client
-        self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
-        self.updated_time = {}
-        if self.conf.disable_ssl_certificate_validation:
-            self.verify_cert = False
-        else:
-            self.verify_cert = self.conf.ca_file or True
+
+        self.client = self.orchestration_client
+
+    def setup_clients_for_admin(self):
+        self.assertIsNotNone(self.conf.admin_username,
+                             'No admin username configured')
+        self.assertIsNotNone(self.conf.admin_password,
+                             'No admin password configured')
+        conf = config.init_conf()
+        conf.username = self.conf.admin_username
+        conf.password = self.conf.admin_password
+        conf.tenant_name = self.conf.admin_tenant_name
+        self.setup_clients(conf)
 
     def get_remote_client(self, server_or_ip, username, private_key=None):
         if isinstance(server_or_ip, six.string_types):

@@ -20,7 +20,6 @@ class FunctionalTestsBase(test.HeatIntegrationTest):
     def setUp(self):
         super(FunctionalTestsBase, self).setUp()
         self.check_skip()
-        self.client = self.orchestration_client
 
     def check_skip(self):
         test_cls_name = reflection.get_class_name(self, fully_qualified=False)

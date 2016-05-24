@@ -21,8 +21,6 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
     def setUp(self):
         super(ScenarioTestsBase, self).setUp()
         self.check_skip()
-
-        self.client = self.orchestration_client
         self.sub_dir = 'templates'
         self.assign_keypair()
 

@@ -19,6 +19,9 @@
 # Tenant name to use for API requests. (string value)
 #tenant_name = <None>
 
+# Admin tenant name to use for admin API requests. (string value)
+#admin_tenant_name = admin
+
 # Full URI of the OpenStack Identity API (Keystone) (string value)
 #auth_url = <None>
 
