@@ -33,11 +33,12 @@ from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LW
 
-LOG = logging.getLogger('heat.common.keystoneclient')
+LOG = logging.getLogger('heat.engine.clients.keystoneclient')
 
 AccessKey = collections.namedtuple('AccessKey', ['id', 'access', 'secret'])
 
-_default_keystone_backend = "heat.common.heat_keystoneclient.KeystoneClientV3"
+_default_keystone_backend = (
+    'heat.engine.clients.os.keystone.heat_keystoneclient.KsClientWrapper')
 
 keystone_opts = [
     cfg.StrOpt('keystone_backend',
@@ -47,7 +48,7 @@ keystone_opts = [
 cfg.CONF.register_opts(keystone_opts)
 
 
-class KeystoneClientV3(object):
+class KsClientWrapper(object):
     """Wrap keystone client so we can encapsulate logic used in resources.
 
     Note this is intended to be initialized from a resource on a per-session
@@ -558,7 +559,7 @@ class KeystoneClient(object):
 
     def __new__(cls, context):
         if cfg.CONF.keystone_backend == _default_keystone_backend:
-            return KeystoneClientV3(context)
+            return KsClientWrapper(context)
         else:
             return importutils.import_object(
                 cfg.CONF.keystone_backend,
