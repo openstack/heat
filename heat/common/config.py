@@ -84,7 +84,9 @@ service_opts = [
                default=5,
                help=_('Maximum depth allowed when using nested stacks.')),
     cfg.IntOpt('num_engine_workers',
-               help=_('Number of heat-engine processes to fork and run.'))]
+               help=_('Number of heat-engine processes to fork and run. '
+                      'Will default to either to 4 or number of CPUs on '
+                      'the host, whichever is greater.'))]
 
 engine_opts = [
     cfg.ListOpt('plugin_dirs',
