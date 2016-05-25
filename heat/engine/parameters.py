@@ -340,6 +340,9 @@ class StringParam(Parameter):
     def _validate(self, val, context):
         self.schema.validate_value(val, context)
 
+    def value(self):
+        return self.schema.to_schema_type(super(StringParam, self).value())
+
 
 class ParsedParameter(Parameter):
     """A template parameter with cached parsed value."""

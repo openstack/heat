@@ -195,7 +195,7 @@ class Schema(collections.Mapping):
             elif self.type == self.NUMBER:
                 return Schema.str_to_num(value)
             elif self.type == self.STRING:
-                return str(value)
+                return six.text_type(value)
             elif self.type == self.BOOLEAN:
                 return strutils.bool_from_string(str(value), strict=True)
         except ValueError:

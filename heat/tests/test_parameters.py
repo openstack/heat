@@ -73,7 +73,21 @@ class ParameterTestCommon(common.HeatTestCase):
                               expected='True',
                               allowed_value=[False],
                               zero=False,
-                              default=True))
+                              default=True)),
+        ('type_int_string', dict(p_type='String',
+                                 inst=parameters.StringParam,
+                                 value='111',
+                                 expected='111',
+                                 allowed_value=['111'],
+                                 zero='',
+                                 default='0')),
+        ('type_string_json', dict(p_type='Json',
+                                  inst=parameters.JsonParam,
+                                  value={'1': 1},
+                                  expected='{"1": 1}',
+                                  allowed_value=[{'2': '2'}],
+                                  zero={},
+                                  default={'3': 3}))
     ]
 
     def test_new_param(self):
