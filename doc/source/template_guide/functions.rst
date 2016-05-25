@@ -338,3 +338,28 @@ Usage
 
 
 Returns ``{'key': 'door', 'colour': 'green'}``.
+
+----------
+Fn::Equals
+----------
+Compares whether two values are equal. And returns true if the
+two values are equal or false if they aren't.
+
+Parameters
+~~~~~~~~~~
+value1:
+    A value of any type that you want to compare.
+
+value2:
+    A value of any type that you want to compare.
+
+Usage
+~~~~~
+
+.. code-block:: yaml
+
+  {'Fn::Equals': [{'Ref': 'env_type'}, 'prod']}
+
+
+Returns true if the param 'env_type' equals to 'prod',
+otherwise returns false.

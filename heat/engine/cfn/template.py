@@ -214,3 +214,21 @@ class HeatTemplate(CfnTemplate):
         'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
         'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
     }
+
+
+class HeatTemplate20161014(HeatTemplate):
+    functions = {
+        'Fn::FindInMap': cfn_funcs.FindInMap,
+        'Fn::GetAZs': cfn_funcs.GetAZs,
+        'Ref': cfn_funcs.Ref,
+        'Fn::GetAtt': cfn_funcs.GetAtt,
+        'Fn::Select': cfn_funcs.Select,
+        'Fn::Join': cfn_funcs.Join,
+        'Fn::Split': cfn_funcs.Split,
+        'Fn::Replace': cfn_funcs.Replace,
+        'Fn::Base64': cfn_funcs.Base64,
+        'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
+        'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
+        # supports Fn::Equals in Newton
+        'Fn::Equals': cfn_funcs.Equals,
+    }

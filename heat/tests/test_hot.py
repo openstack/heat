@@ -891,6 +891,43 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual(2, resolved)
 
+    def test_equals(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2016-10-14
+        parameters:
+          env_type:
+            type: string
+            default: 'test'
+        ''')
+        snippet = {'equals': [{'get_param': 'env_type'}, 'prod']}
+        # when param 'env_type' is 'test', equals function resolve to false
+        tmpl = template.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_equals_false', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertFalse(resolved)
+        # when param 'env_type' is 'prod', equals function resolve to true
+        tmpl = template.Template(hot_tpl,
+                                 env=environment.Environment(
+                                     {'env_type': 'prod'}))
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_equals_true', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertTrue(resolved)
+
+    def test_equals_invalid_args(self):
+        tmpl = template.Template(hot_newton_tpl_empty)
+
+        snippet = {'equals': ['test', 'prod', 'invalid']}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Arguments to "equals" must be of the form: '
+                      '[value_1, value_2]', six.text_type(exc))
+
+        snippet = {'equals': "invalid condition"}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Arguments to "equals" must be of the form: '
+                      '[value_1, value_2]', six.text_type(exc))
+
     def test_repeat(self):
         """Test repeat function."""
         snippet = {'repeat': {'template': 'this is %var%',
