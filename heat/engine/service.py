@@ -1344,7 +1344,8 @@ class EngineService(service.Service):
         self.resource_enforcer.enforce_stack(stack)
 
         if stack.convergence and cfg.CONF.convergence_engine:
-            template = templatem.Template.create_empty_template()
+            template = templatem.Template.create_empty_template(
+                from_template=stack.t)
             stack.thread_group_mgr = self.thread_group_mgr
             stack.converge_stack(template=template, action=stack.DELETE)
             return
