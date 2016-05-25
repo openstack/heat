@@ -482,19 +482,19 @@ class Stack(collections.Mapping):
                  tags_any=None, not_tags=None, not_tags_any=None):
         stacks = stack_object.Stack.get_all(
             context,
-            limit,
-            sort_keys,
-            marker,
-            sort_dir,
-            filters,
-            tenant_safe,
-            show_deleted,
-            show_nested,
-            show_hidden,
-            tags,
-            tags_any,
-            not_tags,
-            not_tags_any) or []
+            limit=limit,
+            sort_keys=sort_keys,
+            marker=marker,
+            sort_dir=sort_dir,
+            filters=filters,
+            tenant_safe=tenant_safe,
+            show_deleted=show_deleted,
+            show_nested=show_nested,
+            show_hidden=show_hidden,
+            tags=tags,
+            tags_any=tags_any,
+            not_tags=not_tags,
+            not_tags_any=not_tags_any)
         for stack in stacks:
             try:
                 yield cls._from_db(context, stack, resolve_data=resolve_data)

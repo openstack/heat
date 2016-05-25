@@ -109,8 +109,26 @@ class Stack(
         return stack
 
     @classmethod
-    def get_all(cls, context, *args, **kwargs):
-        db_stacks = db_api.stack_get_all(context, *args, **kwargs)
+    def get_all(cls, context, limit=None, sort_keys=None, marker=None,
+                sort_dir=None, filters=None, tenant_safe=True,
+                show_deleted=False, show_nested=False, show_hidden=False,
+                tags=None, tags_any=None, not_tags=None,
+                not_tags_any=None):
+        db_stacks = db_api.stack_get_all(
+            context,
+            limit=limit,
+            sort_keys=sort_keys,
+            marker=marker,
+            sort_dir=sort_dir,
+            filters=filters,
+            tenant_safe=tenant_safe,
+            show_deleted=show_deleted,
+            show_nested=show_nested,
+            show_hidden=show_hidden,
+            tags=tags,
+            tags_any=tags_any,
+            not_tags=not_tags,
+            not_tags_any=not_tags_any)
         for db_stack in db_stacks:
             try:
                 yield cls._from_db_object(context, cls(context), db_stack)
