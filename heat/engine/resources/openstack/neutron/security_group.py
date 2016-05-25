@@ -227,10 +227,8 @@ class SecurityGroup(neutron.NeutronResource):
         else:
             for rule in sec['security_group_rules']:
                 if to_delete is None or to_delete(rule):
-                    try:
+                    with self.client_plugin().ignore_not_found:
                         self.client().delete_security_group_rule(rule['id'])
-                    except Exception as ex:
-                        self.client_plugin().ignore_not_found(ex)
 
     def handle_delete(self):
         if self.resource_id is None:
