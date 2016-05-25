@@ -14,10 +14,10 @@
 ====================================
 Heat Stack Lifecycle Scheduler Hints
 ====================================
-This is a mechanism whereby when heat processes a stack Server or Volume
-resource, the stack id, root stack id, stack resource uuid, stack resource
-name and the path in the stack can be passed to nova and cinder by heat as
-scheduler hints, to the configured schedulers for nova and cinder.
+This is a mechanism whereby when heat processes a stack with Server or Volume
+resources, the stack id, root stack id, stack resource uuid, stack resource
+name and the path in the stack can be passed by heat to nova and cinder as
+scheduler hints.
 
 
 Enabling the scheduler hints
@@ -29,9 +29,8 @@ The hints
 ---------
 When heat processes a stack, and the feature is enabled, the stack id, root
 stack id, stack resource uuid, stack resource name, and the path in the stack
-(as a list of tuple, (stackresourcename, stackname)) will be passed to nova
-and cinder by heat as scheduler hints, to the configured schedulers for
-nova and cinder.
+(as a list of tuple, (stackresourcename, stackname)) will be passed  by heat
+to nova and cinder as scheduler hints.
 
 Purpose
 -------
