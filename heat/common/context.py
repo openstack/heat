@@ -111,6 +111,17 @@ class RequestContext(context.RequestContext):
         else:
             self.is_admin = is_admin
 
+        # context scoped cache dict where the key is a class of the type of
+        # object being cached and the value is the cache implementation class
+        self._object_cache = {}
+
+    def cache(self, cache_cls):
+        cache = self._object_cache.get(cache_cls)
+        if not cache:
+            cache = cache_cls()
+            self._object_cache[cache_cls] = cache
+        return cache
+
     @property
     def session(self):
         if self._session is None:
