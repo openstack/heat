@@ -101,6 +101,7 @@ class SoftwareConfigService(service.Service):
         rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
         if not rs:
             return
+        cnxt.session.refresh(rs)
         deployments = self.metadata_software_deployments(cnxt, server_id)
         md = rs.rsrc_metadata or {}
         md['deployments'] = deployments

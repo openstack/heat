@@ -38,8 +38,9 @@ cfg.CONF.import_opt('encrypt_parameters_and_properties', 'heat.common.config')
 def retry_on_conflict(func):
     def is_conflict(ex):
         return isinstance(ex, exception.ConcurrentTransaction)
+
     wrapper = retrying.retry(stop_max_attempt_number=11,
-                             wait_random_min=0.0, wait_random_max=2.0,
+                             wait_random_min=0, wait_random_max=2000,
                              retry_on_exception=is_conflict)
     return wrapper(func)
 
