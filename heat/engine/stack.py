@@ -286,38 +286,32 @@ class Stack(collections.Mapping):
     def resources(self):
         return self._find_resources()
 
-    def _find_resources(self, filters=None):
+    def _find_resources(self):
         if self._resources is None:
             res_defns = self.t.resource_definitions(self)
 
-            if not filters:
-                self._resources = dict((name,
-                                        resource.Resource(name, data, self))
-                                       for (name, data) in res_defns.items())
-            else:
-                self._resources = dict()
-                self._db_resources = dict()
-                for rsc in six.itervalues(
-                        resource_objects.Resource.get_all_by_stack(
-                            self.context, self.id, True, filters)):
-                    self._db_resources[rsc.name] = rsc
-                    res = resource.Resource(rsc.name,
-                                            res_defns[rsc.name],
-                                            self)
-                    self._resources[rsc.name] = res
-
-            # There is no need to continue storing the db resources
-            # after resource creation
-            self._db_resources = None
+            self._resources = dict((name,
+                                    resource.Resource(name, data, self))
+                                   for (name, data) in res_defns.items())
 
         return self._resources
+
+    def _find_filtered_resources(self, filters):
+        for rsc in six.itervalues(
+                resource_objects.Resource.get_all_by_stack(
+                    self.context, self.id, True, filters)):
+            yield self.resources[rsc.name]
 
     def iter_resources(self, nested_depth=0, filters=None):
         """Iterates over all the resources in a stack.
 
         Iterating includes nested stacks up to `nested_depth` levels below.
         """
-        for res in six.itervalues(self._find_resources(filters)):
+        if not filters:
+            resources = six.itervalues(self.resources)
+        else:
+            resources = self._find_filtered_resources(filters)
+        for res in resources:
             yield res
 
             if not res.has_nested() or nested_depth == 0:
