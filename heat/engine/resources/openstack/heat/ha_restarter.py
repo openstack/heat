@@ -34,7 +34,10 @@ class Restarter(signal_responder.SignalResponder):
           'any type of resource. Note that HARestarter does *not* actually '
           'restart servers - it deletes and then recreates them. It also does '
           'the same to all dependent resources, and may therefore exhibit '
-          'unexpected and undesirable behaviour. Avoid.'),
+          'unexpected and undesirable behaviour. Instead, use the '
+          'mark-unhealthy API to mark a resource as needing replacement, and '
+          'then a stack update to perform the replacement while respecting  '
+          'the dependencies and not deleting them unnecessarily.'),
         version='2015.1'
     )
 
