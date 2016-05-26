@@ -119,20 +119,21 @@ class StackResource(resource.Resource):
                                                     prev_resource)
         except StopIteration:
             with excutils.save_and_reraise_exception():
-                stack_identity = identifier.HeatIdentifier(
-                    self.context.tenant_id,
-                    self.physical_resource_name(),
-                    self.resource_id)
+                stack_identity = self.nested_identifier()
                 self.rpc_client().stack_cancel_update(
                     self.context,
                     dict(stack_identity),
                     cancel_with_rollback=False)
 
-    def has_nested(self):
-        if self.nested() is not None:
-            return True
+    def nested_identifier(self):
+        return identifier.HeatIdentifier(
+            self.context.tenant_id,
+            self.physical_resource_name(),
+            self.resource_id)
 
-        return False
+    def has_nested(self):
+        # This class and its subclasses manage nested stacks
+        return True
 
     def nested(self):
         """Return a Stack object representing the nested (child) stack.
@@ -497,10 +498,7 @@ class StackResource(resource.Resource):
         if stack is None:
             raise exception.Error(_('Cannot suspend %s, stack not created')
                                   % self.name)
-        stack_identity = identifier.HeatIdentifier(
-            self.context.tenant_id,
-            self.physical_resource_name(),
-            self.resource_id)
+        stack_identity = self.nested_identifier()
         self.rpc_client().stack_suspend(self.context, dict(stack_identity))
 
     def check_suspend_complete(self, cookie=None):
@@ -511,10 +509,7 @@ class StackResource(resource.Resource):
         if stack is None:
             raise exception.Error(_('Cannot resume %s, stack not created')
                                   % self.name)
-        stack_identity = identifier.HeatIdentifier(
-            self.context.tenant_id,
-            self.physical_resource_name(),
-            self.resource_id)
+        stack_identity = self.nested_identifier()
         self.rpc_client().stack_resume(self.context, dict(stack_identity))
 
     def check_resume_complete(self, cookie=None):
@@ -526,10 +521,7 @@ class StackResource(resource.Resource):
             raise exception.Error(_('Cannot check %s, stack not created')
                                   % self.name)
 
-        stack_identity = identifier.HeatIdentifier(
-            self.context.tenant_id,
-            self.physical_resource_name(),
-            self.resource_id)
+        stack_identity = self.nested_identifier()
         self.rpc_client().stack_check(self.context, dict(stack_identity))
 
     def check_check_complete(self, cookie=None):

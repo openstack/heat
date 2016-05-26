@@ -206,8 +206,8 @@ class FormatTest(common.HeatTestCase):
     def test_format_stack_resource_with_nested_stack(self):
         res = self.stack['generic4']
         nested_id = {'foo': 'bar'}
-        res.nested = mock.Mock()
-        res.nested.return_value.identifier.return_value = nested_id
+        res.nested_identifier = mock.Mock()
+        res.nested_identifier.return_value = nested_id
 
         formatted = api.format_stack_resource(res, False)
         self.assertEqual(nested_id, formatted[rpc_api.RES_NESTED_STACK_ID])
@@ -229,6 +229,7 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_ID,
             rpc_api.RES_STACK_ID,
             rpc_api.RES_STACK_NAME,
+            rpc_api.RES_NESTED_STACK_ID,
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
@@ -251,6 +252,7 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_ID,
             rpc_api.RES_STACK_ID,
             rpc_api.RES_STACK_NAME,
+            rpc_api.RES_NESTED_STACK_ID,
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
@@ -261,12 +263,10 @@ class FormatTest(common.HeatTestCase):
         res = self.stack['generic4']
         nested_id = {'foo': 'bar'}
 
-        res.nested = mock.MagicMock()
-        res.nested.return_value.identifier.return_value = nested_id
-        res.nested.return_value.__len__.return_value = 0
+        res.nested_identifier = mock.Mock()
+        res.nested_identifier.return_value = nested_id
 
         formatted = api.format_stack_resource(res, False)
-        res.nested.return_value.identifier.assert_called_once_with()
         self.assertEqual(nested_id, formatted[rpc_api.RES_NESTED_STACK_ID])
 
     def test_format_stack_resource_required_by(self):
