@@ -354,7 +354,7 @@ represented by text scripts, for example:
         type: OS::Nova::Server
         properties:
           # flavor, image etc
-          user_data_format: RAW
+          user_data_format: SOFTWARE_CONFIG
           user_data: {get_resource: boot_script}
 
 The resource :ref:`OS::Heat::CloudConfig` allows Cloud-init_ cloud-config to
@@ -383,7 +383,7 @@ valid cloud-config are done.
         type: OS::Nova::Server
         properties:
           # flavor, image etc
-          user_data_format: RAW
+          user_data_format: SOFTWARE_CONFIG
           user_data: {get_resource: boot_config}
 
 The resource :ref:`OS::Heat::MultipartMime` allows multiple
@@ -431,7 +431,7 @@ resources to be combined into a single Cloud-init_ multi-part message:
         type: OS::Nova::Server
         properties:
           # flavor, image etc
-          user_data_format: RAW
+          user_data_format: SOFTWARE_CONFIG
           user_data: {get_resource: server_init}
 
 
