@@ -1454,7 +1454,7 @@ class EngineService(service.Service):
                              for name in mgr.names()]
         versions = []
         for t in _template_classes:
-            if t[1] in [cfntemplate.CfnTemplate, cfntemplate.HeatTemplate]:
+            if issubclass(t[1], cfntemplate.CfnTemplate):
                 versions.append({'version': t[0], 'type': 'cfn'})
             else:
                 versions.append({'version': t[0], 'type': 'hot'})
