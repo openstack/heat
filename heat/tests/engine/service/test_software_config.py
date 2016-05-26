@@ -649,8 +649,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'deployments': {'deploy': 'this'}
         }
 
-        self.engine.software_config._push_metadata_software_deployments(
-            self.ctx, '1234', None)
+        with mock.patch.object(self.ctx.session, 'refresh'):
+            self.engine.software_config._push_metadata_software_deployments(
+                self.ctx, '1234', None)
         res_upd.assert_called_once_with(
             self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
         put.side_effect = Exception('Unexpected requests.put')
@@ -674,12 +675,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         deployments = {'deploy': 'this'}
         md_sd.return_value = deployments
 
-        self.assertRaises(
-            exception.ConcurrentTransaction,
-            self.engine.software_config._push_metadata_software_deployments,
-            self.ctx,
-            '1234',
-            None)
+        with mock.patch.object(self.ctx.session, 'refresh'):
+            f = self.engine.software_config._push_metadata_software_deployments
+            self.assertRaises(
+                exception.ConcurrentTransaction,
+                f,
+                self.ctx,
+                '1234',
+                None)
         # retry ten times then the final failure
         self.assertEqual(11, res_upd.call_count)
         put.assert_not_called()
@@ -709,9 +712,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'original': 'metadata',
             'deployments': {'deploy': 'this'}
         }
-
-        self.engine.software_config._push_metadata_software_deployments(
-            self.ctx, '1234', None)
+        with mock.patch.object(self.ctx.session, 'refresh'):
+            self.engine.software_config._push_metadata_software_deployments(
+                self.ctx, '1234', None)
         res_upd.assert_called_once_with(
             self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 
@@ -748,8 +751,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'deployments': {'deploy': 'this'}
         }
 
-        self.engine.software_config._push_metadata_software_deployments(
-            self.ctx, '1234', 'project1')
+        with mock.patch.object(self.ctx.session, 'refresh'):
+            self.engine.software_config._push_metadata_software_deployments(
+                self.ctx, '1234', 'project1')
         res_upd.assert_called_once_with(
             self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 
@@ -917,8 +921,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         zaqar_client.queue.return_value = queue
         queue.pop.return_value = [mock.Mock(body='ok')]
 
-        deployment = self._create_software_deployment(
-            status='IN_PROGRESS', config_id=config['id'])
+        with mock.patch.object(self.ctx.session, 'refresh'):
+            deployment = self._create_software_deployment(
+                status='IN_PROGRESS', config_id=config['id'])
 
         deployment_id = deployment['id']
         self.assertEqual(
