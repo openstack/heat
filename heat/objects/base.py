@@ -14,6 +14,8 @@
 
 """Heat common internal object model"""
 
+import weakref
+
 from oslo_versionedobjects import base as ovoo_base
 
 
@@ -24,3 +26,18 @@ class HeatObjectRegistry(ovoo_base.VersionedObjectRegistry):
 class HeatObject(ovoo_base.VersionedObject):
     OBJ_PROJECT_NAMESPACE = 'heat'
     VERSION = '1.0'
+
+    @property
+    def _context(self):
+        if self._contextref is None:
+            return
+        ctxt = self._contextref()
+        assert ctxt is not None, "Need a reference to the context"
+        return ctxt
+
+    @_context.setter
+    def _context(self, context):
+        if context:
+            self._contextref = weakref.ref(context)
+        else:
+            self._contextref = None
