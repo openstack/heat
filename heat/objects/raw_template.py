@@ -32,14 +32,21 @@ from heat.objects import fields as heat_fields
 LOG = logging.getLogger(__name__)
 
 
+@heat_base.HeatObjectRegistry.register
 class RawTemplate(
     heat_base.HeatObject,
     base.VersionedObjectDictCompat,
     base.ComparableVersionedObject,
 ):
+    # Version 1.0: Initial version
+    # Version 1.1: Added files_id
+    VERSION = '1.1'
+
     fields = {
-        'id': fields.StringField(),
+        'id': fields.IntegerField(),
+        # TODO(cwolfe): remove deprecated files in future release
         'files': heat_fields.JsonField(nullable=True),
+        'files_id': fields.IntegerField(nullable=True),
         'template': heat_fields.JsonField(),
         'environment': heat_fields.JsonField(),
     }
@@ -98,6 +105,10 @@ class RawTemplate(
 
     @classmethod
     def update_by_id(cls, context, template_id, values):
+        # Only save template files in the new raw_template_files
+        # table, not in the old location of raw_template.files
+        if 'files_id' in values and values['files_id']:
+            values['files'] = None
         return cls._from_db_object(
             context, cls(),
             db_api.raw_template_update(context, template_id, values))

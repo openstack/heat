@@ -221,7 +221,7 @@ class StackResourceTest(StackResourceBaseTest):
         """
         self.parent_stack.t.files["foo"] = "bar"
         parsed_t = self.parent_resource._parse_child_template(self.templ, None)
-        self.assertEqual({"foo": "bar"}, parsed_t.files)
+        self.assertEqual({"foo": "bar"}, parsed_t.files.files)
 
     @mock.patch('heat.engine.environment.get_child_environment')
     @mock.patch.object(stack_resource.parser, 'Stack')
@@ -313,7 +313,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.child_params = mock.Mock(return_value={})
         self.parent_resource.preview()
         self.stack = self.parent_resource.nested()
-        self.assertEqual({"foo": "bar"}, self.stack.t.files)
+        self.assertEqual({"foo": "bar"}, self.stack.t.files.files)
 
     def test_preview_validates_nested_resources(self):
         parent_t = self.parent_stack.t

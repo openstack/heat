@@ -23,6 +23,7 @@ from stevedore import extension
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import environment
+from heat.engine import template_files
 from heat.objects import raw_template as template_object
 
 __all__ = ['Template']
@@ -127,13 +128,17 @@ class Template(collections.Mapping):
         if t is None:
             t = template_object.RawTemplate.get_by_id(context, template_id)
         env = environment.Environment(t.environment)
-        return cls(t.template, template_id=template_id, files=t.files, env=env)
+        # support loading the legacy t.files, but modern templates will
+        # have a t.files_id
+        t_files = t.files or t.files_id
+        return cls(t.template, template_id=template_id, env=env,
+                   files=t_files)
 
     def store(self, context=None):
         """Store the Template in the database and return its ID."""
         rt = {
             'template': self.t,
-            'files': self.files,
+            'files_id': self.files.store(),
             'environment': self.env.user_env_as_dict()
         }
         if self.id is None:
@@ -142,6 +147,14 @@ class Template(collections.Mapping):
         else:
             template_object.RawTemplate.update_by_id(context, self.id, rt)
         return self.id
+
+    @property
+    def files(self):
+        return self._template_files
+
+    @files.setter
+    def files(self, files):
+        self._template_files = template_files.TemplateFiles(files)
 
     def __iter__(self):
         """Return an iterator over the section names."""

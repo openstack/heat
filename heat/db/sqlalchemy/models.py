@@ -96,8 +96,20 @@ class RawTemplate(BASE, HeatBase):
     __tablename__ = 'raw_template'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     template = sqlalchemy.Column(types.Json)
+    # legacy column
     files = sqlalchemy.Column(types.Json)
+    # modern column, reference to raw_template_files
+    files_id = sqlalchemy.Column(
+        sqlalchemy.Integer(),
+        sqlalchemy.ForeignKey('raw_template_files.id'))
     environment = sqlalchemy.Column('environment', types.Json)
+
+
+class RawTemplateFiles(BASE, HeatBase):
+    """Where template files json dicts are stored."""
+    __tablename__ = 'raw_template_files'
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    files = sqlalchemy.Column(types.Json)
 
 
 class StackTag(BASE, HeatBase):
