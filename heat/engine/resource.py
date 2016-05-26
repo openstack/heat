@@ -1084,19 +1084,7 @@ class Resource(object):
                 raise exception.ResourceActionRestricted(action='replace')
             raise
 
-    @scheduler.wrappertask
-    def update(self, after, before=None, prev_resource=None):
-        """Return a task to update the resource.
-
-        Subclasses should provide a handle_update() method to customise update,
-        the base-class handle_update will fail by default.
-        """
-        action = self.UPDATE
-
-        assert isinstance(after, rsrc_defn.ResourceDefinition)
-
-        if before is None:
-            before = self.frozen_definition()
+    def _prepare_update_props(self, after, before):
 
         before_props = before.properties(self.properties_schema,
                                          self.context)
@@ -1123,6 +1111,40 @@ class Resource(object):
                 LOG.warning(_LW("Resource cannot be updated with it's "
                                 "live state in case of next "
                                 "error: %s"), six.text_type(ex))
+        return after_props, before_props
+
+    def _prepare_update_replace(self, action):
+        try:
+            if (self.stack.action == 'ROLLBACK' and
+                    self.stack.status == 'IN_PROGRESS' and
+                    not cfg.CONF.convergence_engine):
+                # handle case, when it's rollback and we should restore
+                # old resource
+                self.restore_prev_rsrc()
+            else:
+                self.prepare_for_replace()
+        except Exception as e:
+            # if any exception happen, we should set the resource to
+            # FAILED, then raise ResourceFailure
+            failure = exception.ResourceFailure(e, self, action)
+            self.state_set(action, self.FAILED, six.text_type(failure))
+            raise failure
+
+    @scheduler.wrappertask
+    def update(self, after, before=None, prev_resource=None):
+        """Return a task to update the resource.
+
+        Subclasses should provide a handle_update() method to customise update,
+        the base-class handle_update will fail by default.
+        """
+        action = self.UPDATE
+
+        assert isinstance(after, rsrc_defn.ResourceDefinition)
+        if before is None:
+            before = self.frozen_definition()
+
+        after_props, before_props = self._prepare_update_props(
+            after, before)
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_PRE_UPDATE)
@@ -1179,21 +1201,7 @@ class Resource(object):
             raise failure
         except exception.UpdateReplace:
             # catch all UpdateReplace exceptions
-            try:
-                if (self.stack.action == 'ROLLBACK' and
-                        self.stack.status == 'IN_PROGRESS' and
-                        not cfg.CONF.convergence_engine):
-                    # handle case, when it's rollback and we should restore
-                    # old resource
-                    self.restore_prev_rsrc()
-                else:
-                    self.prepare_for_replace()
-            except Exception as e:
-                # if any exception happen, we should set the resource to
-                # FAILED, then raise ResourceFailure
-                failure = exception.ResourceFailure(e, self, action)
-                self.state_set(action, self.FAILED, six.text_type(failure))
-                raise failure
+            self._prepare_update_replace(action)
             raise
 
         yield self._break_if_required(
