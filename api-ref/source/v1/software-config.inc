@@ -106,7 +106,7 @@ Response Parameters
    - action: action
    - status_reason: status_reason
    - id: id
-
+   - software_deployment: software_deployment
 
 
 Response Example
@@ -198,7 +198,7 @@ Response Parameters
    - creation_time: creation_time
    - config: config
    - options: options
-
+   - software_config: software_config
 
 
 Response Example
@@ -249,7 +249,7 @@ Response Parameters
    - action: action
    - status_reason: status_reason
    - id: id
-
+   - software_deployment: software_deployment
 
 
 Response Example
@@ -309,7 +309,7 @@ Response Parameters
    - action: action
    - status_reason: status_reason
    - id: id
-
+   - software_deployment: software_deployment
 
 
 Response Example
@@ -377,7 +377,7 @@ Response Parameters
    - creation_time: creation_time
    - config: config
    - options: options
-
+   - software_config: software_config
 
 
 Response Example

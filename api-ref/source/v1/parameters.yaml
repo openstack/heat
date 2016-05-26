@@ -1221,6 +1221,18 @@ snapshots:
   in: body
   required: true
   type: array
+software_config:
+  description: |
+    The ``software_config`` object.
+  in: body
+  required: true
+  type: object
+software_deployment:
+  description: |
+    The ``software_deployment`` object.
+  in: body
+  required: true
+  type: object
 stack:
   description: |
     The ``stack`` object.
