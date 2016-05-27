@@ -69,8 +69,7 @@ class StackWatch(object):
         admin_context = context.get_admin_context()
         db_stack = stack_object.Stack.get_by_id(admin_context,
                                                 sid,
-                                                tenant_safe=False,
-                                                eager_load=True)
+                                                tenant_safe=False)
         if not db_stack:
             LOG.error(_LE("Unable to retrieve stack %s for periodic task"),
                       sid)

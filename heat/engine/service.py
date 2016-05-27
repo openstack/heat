@@ -481,8 +481,7 @@ class EngineService(service.Service):
         s = stack_object.Stack.get_by_id(
             cnxt,
             identity.stack_id,
-            show_deleted=show_deleted,
-            eager_load=True)
+            show_deleted=show_deleted)
 
         if s is None:
             raise exception.EntityNotFound(entity='Stack',
@@ -2292,8 +2291,7 @@ class EngineService(service.Service):
                     s = stack_object.Stack.get_by_id(
                         cnxt,
                         stack_id,
-                        tenant_safe=False,
-                        eager_load=True)
+                        tenant_safe=False)
                     if s.status != parser.Stack.IN_PROGRESS:
                         lock.release()
                         continue

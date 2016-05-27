@@ -265,8 +265,7 @@ class WatchRule(object):
         else:
             s = stack_object.Stack.get_by_id(
                 self.context,
-                self.stack_id,
-                eager_load=True)
+                self.stack_id)
             stk = stack.Stack.load(self.context, stack=s)
             if (stk.action != stk.DELETE
                     and stk.status == stk.COMPLETE):

@@ -68,8 +68,10 @@ class Stack(
         for field in stack.fields:
             if field == 'raw_template':
                 stack['raw_template'] = (
-                    raw_template.RawTemplate.get_by_id(
-                        context, db_stack['raw_template_id']))
+                    raw_template.RawTemplate.from_db_object(
+                        context,
+                        raw_template.RawTemplate(),
+                        db_stack['raw_template']))
             else:
                 stack[field] = db_stack.__dict__.get(field)
         stack._context = context
