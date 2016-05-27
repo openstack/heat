@@ -197,6 +197,16 @@ class TestCooldownMixin(common.HeatTestCase):
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         self.assertTrue(pol._is_scaling_allowed())
 
+    def test_no_cooldown_no_scaling_in_progress(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
+
+        # no cooldown entry in the metadata
+        previous_meta = {'scaling_in_progress': False}
+        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
+        self.assertTrue(pol._is_scaling_allowed())
+
     def test_metadata_is_written(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
