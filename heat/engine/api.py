@@ -575,3 +575,10 @@ def format_snapshot(snapshot):
         rpc_api.SNAPSHOT_CREATION_TIME: snapshot.created_at.isoformat(),
     }
     return result
+
+
+def build_resource_description(docstring):
+    if docstring is not None:
+        return '\n'.join(map(lambda x: x.strip(), docstring.split('\n')))
+    else:
+        return _('No description given')

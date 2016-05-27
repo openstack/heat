@@ -624,12 +624,22 @@ class StackController(object):
         support_status = req.params.get('support_status')
         type_name = req.params.get('name')
         version = req.params.get('version')
+        if req.params.get('with_description') is not None:
+            with_description = self._extract_bool_param(
+                'with_description',
+                req.params.get('with_description'))
+        else:
+            # Add backward compatibility support for case when heatclient
+            # version is lower than version with this parameter.
+            with_description = False
         return {
             'resource_types':
-            self.rpc_client.list_resource_types(req.context,
-                                                support_status=support_status,
-                                                type_name=type_name,
-                                                heat_version=version)}
+            self.rpc_client.list_resource_types(
+                req.context,
+                support_status=support_status,
+                type_name=type_name,
+                heat_version=version,
+                with_description=with_description)}
 
     @util.policy_enforce
     def list_template_versions(self, req):

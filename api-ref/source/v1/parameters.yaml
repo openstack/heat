@@ -1589,4 +1589,15 @@ updated_time_3:
   in: body
   required: true
   type: string
-
+with_description:
+  description: |
+    Either display resource type's description or not. Default is ``false``
+  in: query
+  required: false
+  type: boolean
+resource_description:
+  description: |
+    Displays resource type's description.
+  in: body
+  required: false
+  type: string

@@ -50,6 +50,7 @@ class EngineClient(object):
         1.27 - Add check_software_deployment
         1.28 - Add environment_show call
         1.29 - Add template_id to create_stack/update_stack
+        1.30 - Add possibility to resource_type_* return descriptions
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -431,19 +432,23 @@ class EngineClient(object):
                             ctxt,
                             support_status=None,
                             type_name=None,
-                            heat_version=None):
+                            heat_version=None,
+                            with_description=False):
         """Get a list of valid resource types.
 
         :param ctxt: RPC context.
         :param support_status: Support status of resource type
         :param type_name: Resource type's name (regular expression allowed)
-        :param version: Heat version
+        :param heat_version: Heat version
+        :param with_description: Either return resource type description or not
         """
-        return self.call(ctxt, self.make_msg('list_resource_types',
-                                             support_status=support_status,
-                                             type_name=type_name,
-                                             heat_version=heat_version),
-                         version='1.16')
+        return self.call(ctxt,
+                         self.make_msg('list_resource_types',
+                                       support_status=support_status,
+                                       type_name=type_name,
+                                       heat_version=heat_version,
+                                       with_description=with_description),
+                         version='1.30')
 
     def list_template_versions(self, ctxt):
         """Get a list of available template versions.

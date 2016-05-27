@@ -574,7 +574,8 @@ class ResourceRegistry(object):
                   cnxt=None,
                   support_status=None,
                   type_name=None,
-                  version=None):
+                  version=None,
+                  with_description=False):
         """Return a list of valid resource types."""
 
         # validate the support status
@@ -627,7 +628,21 @@ class ResourceRegistry(object):
             return (version is None or
                     cls.get_class().support_status.version == version)
 
-        return [name for name, cls in six.iteritems(self._registry)
+        def resource_description(name, cls, with_description):
+            if not with_description:
+                return name
+            if cls.description == 'Plugin':
+                rsrc = cls.value
+            elif cls.description == 'Template':
+                rsrc = cls.get_class()
+            else:
+                rsrc = None
+            return {
+                'resource_type': name,
+                'description': rsrc.__doc__}
+
+        return [resource_description(name, cls, with_description)
+                for name, cls in six.iteritems(self._registry)
                 if (is_resource(name) and
                     name_matches(name) and
                     status_matches(cls) and
@@ -723,11 +738,13 @@ class Environment(object):
                   cnxt=None,
                   support_status=None,
                   type_name=None,
-                  version=None):
+                  version=None,
+                  with_description=False):
         return self.registry.get_types(cnxt,
                                        support_status=support_status,
                                        type_name=type_name,
-                                       version=version)
+                                       version=version,
+                                       with_description=with_description)
 
     def get_resource_info(self, resource_type, resource_name=None,
                           registry_type=None, ignore=None):
