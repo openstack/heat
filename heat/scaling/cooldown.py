@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common.exception import NotFound
 from oslo_utils import timeutils
 import six
 
@@ -64,4 +65,7 @@ class CooldownMixin(object):
             now = timeutils.utcnow().isoformat()
             metadata['cooldown'] = {now: cooldown_reason}
         metadata['scaling_in_progress'] = False
-        self.metadata_set(metadata)
+        try:
+            self.metadata_set(metadata)
+        except NotFound:
+            pass
