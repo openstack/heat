@@ -109,6 +109,7 @@ Request
    - template_url: template_url
    - template: template
    - tenant_id: tenant_id
+   - ignore_errors: ignore_errors
 
 Request Example
 ---------------

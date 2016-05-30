@@ -306,6 +306,14 @@ with_detail:
   in: query
   required: false
   type: boolean
+ignore_errors:
+  description: |
+    List of comma separated error codes to ignore.
+# TODO(kanagaraj-manickam) add the cross reference to the API to retrieve the
+# list of error code supported, once its made available in heat.
+  in: query
+  required: false
+  type: string
 
 # variables in body
 Description:
