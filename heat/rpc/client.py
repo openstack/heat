@@ -469,13 +469,17 @@ class EngineClient(object):
             'list_template_functions', template_version=template_version),
             version='1.13')
 
-    def resource_schema(self, ctxt, type_name):
+    def resource_schema(self, ctxt, type_name, with_description=False):
         """Get the schema for a resource type.
 
         :param ctxt: RPC context.
+        :param with_description: Return resource with description or not.
         """
-        return self.call(ctxt, self.make_msg('resource_schema',
-                                             type_name=type_name))
+        return self.call(ctxt,
+                         self.make_msg('resource_schema',
+                                       type_name=type_name,
+                                       with_description=with_description),
+                         version='1.30')
 
     def generate_template(self, ctxt, type_name, template_type='cfn'):
         """Generate a template based on the specified type.

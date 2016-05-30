@@ -1490,11 +1490,12 @@ class EngineService(service.Service):
                 )
         return functions
 
-    def resource_schema(self, cnxt, type_name):
+    def resource_schema(self, cnxt, type_name, with_description=False):
         """Return the schema of the specified type.
 
         :param cnxt: RPC context.
         :param type_name: Name of the resource type to obtain the schema of.
+        :param with_description: Return result with description or not.
         """
         self.resource_enforcer.enforce(cnxt, type_name)
         try:
@@ -1535,13 +1536,18 @@ class EngineService(service.Service):
                 schema = attributes.Schema.from_attribute(schema_data)
                 yield name, dict(schema)
 
-        return {
+        result = {
             rpc_api.RES_SCHEMA_RES_TYPE: type_name,
             rpc_api.RES_SCHEMA_PROPERTIES: dict(properties_schema()),
             rpc_api.RES_SCHEMA_ATTRIBUTES: dict(attributes_schema()),
             rpc_api.RES_SCHEMA_SUPPORT_STATUS:
-                resource_class.support_status.to_dict(),
+                resource_class.support_status.to_dict()
         }
+        if with_description:
+            docstring = resource_class.__doc__
+            description = api.build_resource_description(docstring)
+            result[rpc_api.RES_SCHEMA_DESCRIPTION] = description
+        return result
 
     def generate_template(self, cnxt, type_name, template_type='cfn'):
         """Generate a template based on the specified type.

@@ -2610,7 +2610,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('resource_schema', {'type_name': type_name})
+            ('resource_schema', {'type_name': type_name,
+                                 'with_description': False}),
+            version='1.30'
         ).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.resource_schema(req,
@@ -2629,7 +2631,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('resource_schema', {'type_name': type_name})
+            ('resource_schema', {'type_name': type_name,
+                                 'with_description': False}),
+            version='1.30'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 
@@ -2650,7 +2654,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('resource_schema', {'type_name': type_name})
+            ('resource_schema', {'type_name': type_name,
+                                 'with_description': False}),
+            version='1.30'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 
