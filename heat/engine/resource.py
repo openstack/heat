@@ -1734,7 +1734,7 @@ class Resource(object):
             if self.client_plugin().is_not_found(ex):
                 raise exception.EntityNotFound(
                     entity='Resource', name=self.name)
-            raise ex
+            raise
         return resource_data
 
     def parse_live_resource_data(self, resource_properties, resource_data):

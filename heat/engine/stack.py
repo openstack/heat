@@ -762,7 +762,7 @@ class Stack(collections.Mapping):
                 if ignorable_errors and ex.error_code in ignorable_errors:
                     result = None
                 else:
-                    raise ex
+                    raise
             except AssertionError:
                 raise
             except Exception as ex:

@@ -62,7 +62,7 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
                 raise exception.EntityNotFound(
                     entity="Secret",
                     name=secret_ref)
-            raise ex
+            raise
 
     def get_container_by_ref(self, container_ref):
         try:
@@ -73,7 +73,7 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
                 raise exception.EntityNotFound(
                     entity="Container",
                     name=container_ref)
-            raise ex
+            raise
 
 
 class SecretConstraint(constraints.BaseCustomConstraint):
