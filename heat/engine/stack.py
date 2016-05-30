@@ -17,6 +17,7 @@ import datetime
 import functools
 import itertools
 import re
+import warnings
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -1823,6 +1824,12 @@ class Stack(collections.Mapping):
         stop resource_name and all that depend on it
         start resource_name and all that depend on it
         """
+        warnings.warn("Stack.restart_resource() is horribly broken and will "
+                      "never be fixed. If you're using it in a resource type "
+                      "other than HARestarter, don't. And don't use "
+                      "HARestarter either.",
+                      DeprecationWarning)
+
         deps = self.dependencies[self[resource_name]]
         failed = False
 
