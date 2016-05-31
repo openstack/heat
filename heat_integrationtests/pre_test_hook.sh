@@ -41,13 +41,9 @@ echo -e '[cache]\nenabled=True\n' >> $localconf
 echo -e '[[post-config|/etc/neutron/neutron_vpnaas.conf]]\n' >> $localconf
 echo -e '[service_providers]\nservice_provider=VPN:openswan:neutron_vpnaas.services.vpn.service_drivers.ipsec.IPsecVPNDriver:default\n' >> $localconf
 
-# TODO (MRV) Temp hack to use just the no-op octavia drivers for functional tests
+# Use the lbaas v2 namespace driver for devstack integration testing since
+# octavia uses nested vms.
 if [[ $OVERRIDE_ENABLED_SERVICES =~ "q-lbaasv2" ]]
 then
-  echo "DISABLE_AMP_IMAGE_BUILD=True" >> $localrc_path
-  echo -e '[[post-config|/etc/octavia/octavia.conf]]\n' >> $localconf
-  echo -e '[controller_worker]\n' >> $localconf
-  echo -e 'amphora_driver = amphora_noop_driver\n' >> $localconf
-  echo -e 'compute_driver = compute_noop_driver\n' >> $localconf
-  echo -e 'network_driver = network_noop_driver\n' >> $localconf
+  echo "NEUTRON_LBAAS_SERVICE_PROVIDERV2=LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default" >> $localrc_path
 fi
