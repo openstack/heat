@@ -559,15 +559,22 @@ class EngineService(service.Service):
         if filters is not None:
             filters = api.translate_filters(filters)
 
-        stacks = parser.Stack.load_all(cnxt, limit, marker, sort_keys,
-                                       sort_dir, filters, tenant_safe,
-                                       show_deleted, resolve_data=False,
-                                       show_nested=show_nested,
-                                       show_hidden=show_hidden,
-                                       tags=tags, tags_any=tags_any,
-                                       not_tags=not_tags,
-                                       not_tags_any=not_tags_any)
-        return [api.format_stack(stack) for stack in stacks]
+        stacks = stack_object.Stack.get_all(
+            cnxt,
+            limit,
+            sort_keys,
+            marker,
+            sort_dir,
+            filters,
+            tenant_safe,
+            show_deleted,
+            show_nested,
+            show_hidden,
+            tags,
+            tags_any,
+            not_tags,
+            not_tags_any) or []
+        return [api.format_stack_db_object(stack) for stack in stacks]
 
     @context.request_context
     def count_stacks(self, cnxt, filters=None, tenant_safe=True,
