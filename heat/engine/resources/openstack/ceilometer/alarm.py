@@ -318,12 +318,13 @@ class CeilometerAlarm(resource.Resource):
         # make sure the matching_metadata appears in the query like this:
         # {field: metadata.$prefix.x, ...}
         for m_k, m_v in six.iteritems(mmd):
-            if m_k.startswith('metadata.%s' % prefix):
-                key = m_k
-            elif m_k.startswith(prefix):
-                key = 'metadata.%s' % m_k
-            else:
-                key = 'metadata.%s%s' % (prefix, m_k)
+            key = 'metadata.%s' % prefix
+            if m_k.startswith('metadata.'):
+                m_k = m_k[len('metadata.'):]
+            if m_k.startswith('metering.') or m_k.startswith('user_metadata.'):
+                # check prefix
+                m_k = m_k.split('.', 1)[-1]
+            key = '%s%s' % (key, m_k)
             # NOTE(prazumovsky): type of query value must be a string, but
             # matching_metadata value type can not be a string, so we
             # must convert value to a string type.

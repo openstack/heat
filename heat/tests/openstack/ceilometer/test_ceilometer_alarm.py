@@ -351,6 +351,23 @@ class CeilometerAlarmTest(common.HeatTestCase):
                            'value': u'foo', 'op': 'eq'}]
         self.assertEqual(expected_query, query)
 
+    def test_alarm_metadata_correct_query_key(self):
+        t = template_format.parse(alarm_template)
+        properties = t['Resources']['MEMAlarmHigh']['Properties']
+        # Test that meter_name is not in NOVA_METERS
+        properties[alarm.CeilometerAlarm.METER_NAME] = 'memory_util'
+        properties['matching_metadata'] = {'metadata.user_metadata.groupname':
+                                           'foo'}
+        self.stack = self.create_stack(template=json.dumps(t))
+
+        rsrc = self.stack['MEMAlarmHigh']
+        rsrc.properties.data = rsrc.cfn_to_ceilometer(self.stack, properties)
+        self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
+        query = rsrc.properties.data['threshold_rule']['query']
+        expected_query = [{'field': u'metadata.metering.groupname',
+                           'value': u'foo', 'op': 'eq'}]
+        self.assertEqual(expected_query, query)
+
     def test_mem_alarm_high_correct_matching_metadata(self):
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
