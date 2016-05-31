@@ -558,19 +558,19 @@ class EngineService(service.Service):
 
         stacks = stack_object.Stack.get_all(
             cnxt,
-            limit,
-            sort_keys,
-            marker,
-            sort_dir,
-            filters,
-            tenant_safe,
-            show_deleted,
-            show_nested,
-            show_hidden,
-            tags,
-            tags_any,
-            not_tags,
-            not_tags_any) or []
+            limit=limit,
+            sort_keys=sort_keys,
+            marker=marker,
+            sort_dir=sort_dir,
+            filters=filters,
+            tenant_safe=tenant_safe,
+            show_deleted=show_deleted,
+            show_nested=show_nested,
+            show_hidden=show_hidden,
+            tags=tags,
+            tags_any=tags_any,
+            not_tags=not_tags,
+            not_tags_any=not_tags_any)
         return [api.format_stack_db_object(stack) for stack in stacks]
 
     @context.request_context
@@ -2203,7 +2203,7 @@ class EngineService(service.Service):
         stacks = stack_object.Stack.get_all(cnxt,
                                             filters=filters,
                                             tenant_safe=False,
-                                            show_nested=True) or []
+                                            show_nested=True)
         for s in stacks:
             stack_id = s.id
             lock = stack_lock.StackLock(cnxt, stack_id, self.engine_id)
