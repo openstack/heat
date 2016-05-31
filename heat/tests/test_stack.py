@@ -347,7 +347,6 @@ class StackTest(common.HeatTestCase):
                              username=mox.IgnoreArg(),
                              convergence=False,
                              current_traversal=self.stack.current_traversal,
-                             tags=mox.IgnoreArg(),
                              prev_raw_template_id=None,
                              current_deps=None, cache_data=None)
 
@@ -1275,6 +1274,23 @@ class StackTest(common.HeatTestCase):
         ctx_expected = ctx_init.to_dict()
         ctx_expected['auth_token'] = None
         self.assertEqual(ctx_expected, self.stack.stored_context().to_dict())
+
+    def test_tags_property_get_set(self):
+        self.stack = stack.Stack(self.ctx, 'stack_tags', self.tmpl)
+        self.stack.store()
+        stack_id = self.stack.id
+        test_stack = stack.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertIsNone(test_stack.tags)
+
+        self.stack = stack.Stack(self.ctx, 'stack_name', self.tmpl)
+        self.stack.tags = ['tag1', 'tag2']
+        self.assertEqual(['tag1', 'tag2'], self.stack._tags)
+        self.stack.store()
+        stack_id = self.stack.id
+        test_stack = stack.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertIsNone(test_stack._tags)
+        self.assertEqual(['tag1', 'tag2'], test_stack.tags)
+        self.assertEqual(['tag1', 'tag2'], test_stack._tags)
 
     def test_load_reads_tags(self):
         self.stack = stack.Stack(self.ctx, 'stack_tags', self.tmpl)
