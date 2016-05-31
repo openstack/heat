@@ -897,7 +897,7 @@ class TemplateTest(common.HeatTestCase):
                           template.Template(empty_template))
         error = self.assertRaises(ValueError,
                                   self.resolve, snippet, stk.t, stk)
-        self.assertIn(list(six.iterkeys(snippet))[0], six.text_type(error))
+        self.assertIn(next(iter(snippet)), six.text_type(error))
 
     def test_resource_facade_missing_deletion_policy(self):
         snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
@@ -937,7 +937,7 @@ class TemplateTest(common.HeatTestCase):
             }
         })
         self.assertEqual(expected_description, tmpl['Description'])
-        self.assertNotIn('Parameters', six.iterkeys(tmpl))
+        self.assertNotIn('Parameters', tmpl.keys())
 
     def test_add_resource(self):
         cfn_tpl = template_format.parse('''
@@ -1158,8 +1158,7 @@ class TemplateFnErrorTest(common.HeatTestCase):
         error = self.assertRaises(self.expect,
                                   resolve,
                                   self.snippet)
-        self.assertIn(list(six.iterkeys(self.snippet))[0],
-                      six.text_type(error))
+        self.assertIn(next(iter(self.snippet)), six.text_type(error))
 
 
 class ResolveDataTest(common.HeatTestCase):

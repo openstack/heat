@@ -163,7 +163,7 @@ class ResourcePages(compat.Directive):
     def contribute_hot_syntax(self, parent):
         section = self._section(parent, _('HOT Syntax'), '%s-hot')
         props = []
-        for prop_key in sorted(six.iterkeys(self.props_schemata)):
+        for prop_key in sorted(self.props_schemata.keys()):
             prop = self.props_schemata[prop_key]
             if (prop.implemented
                     and prop.support_status.status == support.SUPPORTED):
@@ -363,7 +363,7 @@ def _filter_resources(prefix=None, path=None, statuses=None):
 
     statuses = statuses or []
     filtered_resources = {}
-    for name in sorted(six.iterkeys(all_resources)):
+    for name in sorted(all_resources.keys()):
         if prefix_match(name):
             for cls in all_resources.get(name):
                 if (path_match(cls) and status_match(cls) and

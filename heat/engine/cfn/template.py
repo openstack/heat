@@ -155,8 +155,7 @@ class CfnTemplate(template.Template):
 
             deletion_policy = function.resolve(data.get(RES_DELETION_POLICY))
             if deletion_policy is not None:
-                if deletion_policy not in six.iterkeys(
-                        self.deletion_policies):
+                if deletion_policy not in self.deletion_policies:
                     msg = _('Invalid deletion policy "%s"') % deletion_policy
                     raise exception.StackValidationFailed(message=msg)
                 else:

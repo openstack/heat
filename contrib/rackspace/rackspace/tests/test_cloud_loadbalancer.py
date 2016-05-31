@@ -1379,7 +1379,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_health_monitor_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         hm = {'type': "HTTP", 'delay': 10, 'timeout': 10,
               'attemptsBeforeDeactivation': 4, 'path': "/",
               'statusRegex': "^[234][0-9][0-9]$", 'bodyRegex': ".* testing .*",
@@ -1433,7 +1433,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_session_persistence_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties'][
             'sessionPersistence'] = "SOURCE_IP"
         expected_body = copy.deepcopy(self.expected_body)
@@ -1493,7 +1493,7 @@ class LoadBalancerTest(common.HeatTestCase):
             'securePort': 443, 'privatekey': private_key, 'certificate': cert,
             'intermediateCertificate': '', 'secureTrafficOnly': False}
         ssl_termination_api = copy.deepcopy(ssl_termination_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties']['sslTermination'] = (
             ssl_termination_template)
         # The SSL termination config is done post-creation, so no need
@@ -1563,7 +1563,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_metadata_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties']['metadata'] = {
             'a': 1, 'b': 2}
         expected_body = copy.deepcopy(self.expected_body)
@@ -1622,7 +1622,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_errorpage_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         error_page = (
             '<html><head><title>Service Unavailable</title></head><body><h2>'
             'Service Unavailable</h2>The service is unavailable</body></html>')
@@ -1685,7 +1685,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_connection_logging_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties'][
             'connectionLogging'] = True
         expected_body = copy.deepcopy(self.expected_body)
@@ -1718,7 +1718,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_connection_logging_disable(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties'][
             'connectionLogging'] = True
         expected_body = copy.deepcopy(self.expected_body)
@@ -1773,7 +1773,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_connection_throttle_delete(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties'][
             'connectionThrottle'] = {'maxConnections': 1000}
         expected_body = copy.deepcopy(self.expected_body)
@@ -1833,7 +1833,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_content_caching_deleted(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties'][
             'contentCaching'] = 'ENABLED'
         # Enabling the content cache is done post-creation, so no need
@@ -1864,7 +1864,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_content_caching_disable(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         template['Resources'][lb_name]['Properties'][
             'contentCaching'] = 'ENABLED'
         # Enabling the content cache is done post-creation, so no need
@@ -2168,7 +2168,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def test_update_nodes_defaults(self):
         template = copy.deepcopy(self.lb_template)
-        lb_name = list(six.iterkeys(template['Resources']))[0]
+        lb_name = next(iter(template['Resources']))
         tmpl_node = template['Resources'][lb_name]['Properties']['nodes'][0]
         tmpl_node['type'] = "PRIMARY"
         tmpl_node['condition'] = "ENABLED"

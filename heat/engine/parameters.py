@@ -501,9 +501,9 @@ class Parameters(collections.Mapping):
         self.non_pseudo_param_keys = [p for p in self.params if p not in
                                       self.PSEUDO_PARAMETERS]
 
-        for pd in six.iterkeys(param_defaults):
-            if pd in self.params:
-                self.params[pd].set_default(param_defaults[pd])
+        for pd_name, param_default in param_defaults.items():
+            if pd_name in self.params:
+                self.params[pd_name].set_default(param_default)
 
     def validate(self, validate_value=True, context=None):
         """Validates all parameters.

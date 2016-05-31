@@ -10,7 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -38,12 +37,11 @@ class NeutronResource(resource.Resource):
         Also ensures that shared and tenant_id is not specified
         in value_specs.
         """
-        if 'value_specs' in six.iterkeys(properties):
-            vs = properties.get('value_specs')
-            banned_keys = set(['shared', 'tenant_id']).union(
-                six.iterkeys(properties))
-            for k in banned_keys.intersection(six.iterkeys(vs)):
-                return '%s not allowed in value_specs' % k
+        if 'value_specs' in properties:
+            banned_keys = set(['shared', 'tenant_id']).union(set(properties))
+            found = banned_keys.intersection(set(properties['value_specs']))
+            if found:
+                return '%s not allowed in value_specs' % ', '.join(found)
 
     @staticmethod
     def prepare_properties(properties, name):
@@ -58,7 +56,7 @@ class NeutronResource(resource.Resource):
         props = dict((k, v) for k, v in properties.items()
                      if v is not None)
 
-        if 'name' in six.iterkeys(properties):
+        if 'name' in properties:
             props.setdefault('name', name)
 
         if 'value_specs' in props:

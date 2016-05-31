@@ -290,7 +290,7 @@ def format_resource_attributes(resource, with_attr=None):
     # including the ones are not represented in response of show API, such as
     # 'console_urls' for nova server, user can view it by taking with_attr
     # parameter
-    if 'show' in six.iterkeys(resolver):
+    if 'show' in resolver:
         show_attr = resolve('show', resolver)
         # check if 'show' resolved to dictionary. so it's not None
         if isinstance(show_attr, collections.Mapping):
@@ -302,7 +302,7 @@ def format_resource_attributes(resource, with_attr=None):
             # remove 'show' attribute if it's None or not a mapping
             # then resolve all attributes manually
             del resolver._attributes['show']
-    attributes = set(list(six.iterkeys(resolver)) + with_attr)
+    attributes = set(resolver) | set(with_attr)
     return dict((attr, resolve(attr, resolver))
                 for attr in attributes)
 
@@ -315,7 +315,7 @@ def format_resource_properties(resource):
             return None
 
     return dict((prop, get_property(prop))
-                for prop in six.iterkeys(resource.properties_schema))
+                for prop in resource.properties_schema.keys())
 
 
 def format_stack_resource(resource, detail=True, with_props=False,

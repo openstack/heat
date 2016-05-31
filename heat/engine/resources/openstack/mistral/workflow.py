@@ -380,7 +380,7 @@ class Workflow(signal_responder.SignalResponder,
                 raise exception.StackValidationFailed(
                     error=_('Signal data error'),
                     message=message)
-            for key in six.iterkeys(inputs):
+            for key in inputs:
                 if (self.properties.get(self.INPUT) is None or
                         key not in self.properties.get(self.INPUT)):
                     message = _('Unknown input %s') % key

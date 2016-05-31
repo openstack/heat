@@ -1158,7 +1158,7 @@ class HOTemplateTest(common.HeatTestCase):
                                   {'foo': {'Type': 'String',
                                            'Required': True}}})
         self.assertEqual(expected_description, tmpl['description'])
-        self.assertNotIn('parameters', six.iterkeys(tmpl))
+        self.assertNotIn('parameters', tmpl.keys())
 
     def test_invalid_hot_version(self):
         """Test HOT version check.
@@ -1241,7 +1241,7 @@ class HOTemplateTest(common.HeatTestCase):
                                   self.resolve,
                                   snippet,
                                   stack.t, stack)
-        self.assertIn(list(six.iterkeys(snippet))[0], six.text_type(error))
+        self.assertIn(next(iter(snippet)), six.text_type(error))
 
     def test_resource_facade_missing_deletion_policy(self):
         snippet = {'resource_facade': 'deletion_policy'}
@@ -1266,7 +1266,7 @@ class HOTemplateTest(common.HeatTestCase):
         error = self.assertRaises(exception.InvalidTemplateVersion,
                                   function.validate,
                                   stack.t.parse(stack, snippet))
-        self.assertIn(next(six.iterkeys(snippet)), six.text_type(error))
+        self.assertIn(next(iter(snippet)), six.text_type(error))
 
     def test_add_resource(self):
         hot_tpl = template_format.parse('''
