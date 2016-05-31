@@ -31,6 +31,16 @@ resources:
     properties:
       network: {get_resource: net}
       cidr: 11.11.11.0/24
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: the_sg
+      description: Ping and SSH
+      rules:
+      - protocol: icmp
+      - protocol: tcp
+        port_range_min: 22
+        port_range_max: 22
   server:
     type: OS::Nova::Server
     properties:
@@ -39,6 +49,8 @@ resources:
       networks:
         - subnet: {get_resource: subnet}
           fixed_ip: 11.11.11.11
+      security_groups:
+        - {get_resource: security_group}
 outputs:
   networks:
     value: {get_attr: [server, networks]}
@@ -55,7 +67,7 @@ class CreateServerTest(functional_base.FunctionalTestsBase):
         output = self._stack_output(stack, output_key)
         return output
 
-    def test_create_server_with_subnet_fixed_ip(self):
+    def test_create_server_with_subnet_fixed_ip_sec_group(self):
         parms = {'flavor': self.conf.minimal_instance_type,
                  'image': self.conf.minimal_image_ref}
         stack_identifier = self.stack_create(
@@ -64,3 +76,9 @@ class CreateServerTest(functional_base.FunctionalTestsBase):
             parameters=parms)
         networks = self.get_outputs(stack_identifier, 'networks')
         self.assertEqual(['11.11.11.11'], networks['my_net'])
+
+        server_resource = self.client.resources.get(
+            stack_identifier, 'server')
+        server_id = server_resource.physical_resource_id
+        server = self.compute_client.servers.get(server_id)
+        self.assertEqual([{"name": "the_sg"}], server.security_groups)
