@@ -500,7 +500,7 @@ class OSDBInstance(resource.Resource):
                         LOG.warning(_LW("Unexpected instance state change "
                                         "during update. Retrying."))
                         return False
-                raise exc
+                raise
         return True
 
     def _update_name(self, instance, name):

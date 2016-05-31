@@ -107,7 +107,7 @@ class Policy(resource.Resource):
                         self.client_plugin().is_not_found(ex)):
                     bd['finished'] = True
                 else:
-                    raise ex
+                    raise
 
     def add_bindings(self, bindings):
         for bd in bindings:

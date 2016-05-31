@@ -59,7 +59,7 @@ class MistralClientPlugin(client_plugin.ClientPlugin):
                 raise exception.EntityNotFound(
                     entity="Workflow",
                     name=workflow_identifier)
-            raise ex
+            raise
 
 
 class WorkflowConstraint(constraints.BaseCustomConstraint):
