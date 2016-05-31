@@ -35,16 +35,10 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
         con = self.context
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        endpoint = self.url_for(service_type=self.DATA_PROCESSING,
-                                endpoint_type=endpoint_type)
         args = {
+            'endpoint_type': endpoint_type,
             'service_type': self.DATA_PROCESSING,
-            'input_auth_token': self.auth_token,
-            'auth_url': con.auth_url,
-            'project_name': con.tenant,
-            'sahara_url': endpoint,
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file')
+            'session': con.keystone_session
         }
         client = sahara_client.Client('1.1', **args)
         return client

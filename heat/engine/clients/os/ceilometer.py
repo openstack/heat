@@ -29,24 +29,13 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
 
         con = self.context
-        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        endpoint = self.url_for(service_type=self.METERING,
-                                endpoint_type=endpoint_type)
+        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         aodh_endpoint = self.url_for(service_type=self.ALARMING,
-                                     endpoint_type=endpoint_type)
+                                     endpoint_type=interface)
         args = {
-            'auth_url': con.auth_url,
+            'session': con.keystone_session,
+            'interface': interface,
             'service_type': self.METERING,
-            'project_name': con.project_name,
-            'token': lambda: self.auth_token,
-            'user_domain_id': con.user_domain,
-            'project_domain_id': con.project_domain,
-            'endpoint_type': endpoint_type,
-            'os_endpoint': endpoint,
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'cert_file': self._get_client_option(CLIENT_NAME, 'cert_file'),
-            'key_file': self._get_client_option(CLIENT_NAME, 'key_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
             'aodh_endpoint': aodh_endpoint
         }
 

@@ -34,7 +34,9 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
     DEFAULT_TTL = 3600
 
     def _create(self):
-        return self.create_for_tenant(self.context.tenant_id, self.auth_token)
+        return self.create_for_tenant(
+            self.context.tenant_id,
+            self.context.keystone_session.get_token())
 
     def create_for_tenant(self, tenant_id, token):
         con = self.context

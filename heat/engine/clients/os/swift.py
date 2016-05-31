@@ -48,7 +48,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
             'user': con.username,
             'key': None,
             'authurl': None,
-            'preauthtoken': self.auth_token,
+            'preauthtoken': con.keystone_session.get_token(),
             'preauthurl': self.url_for(service_type=self.OBJECT_STORE,
                                        endpoint_type=endpoint_type),
             'os_options': {'endpoint_type': endpoint_type},

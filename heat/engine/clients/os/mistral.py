@@ -29,10 +29,9 @@ class MistralClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.WORKFLOW_V2,
                                 endpoint_type=endpoint_type)
-
         args = {
             'mistral_url': endpoint,
-            'auth_token': self.auth_token
+            'auth_token': self.context.keystone_session.get_token()
         }
 
         client = mistral_client.client(**args)

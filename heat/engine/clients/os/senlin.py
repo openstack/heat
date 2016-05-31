@@ -32,9 +32,10 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         args = {
             'auth_url': con.auth_url,
             'project_id': con.tenant_id,
-            'token': self.auth_token,
+            'token': con.keystone_session.get_token(),
             'user_id': con.user_id,
             'auth_plugin': 'token',
+
         }
         return client.Client(self.VERSION, **args)
 

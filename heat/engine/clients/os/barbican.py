@@ -26,12 +26,11 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
     service_types = [KEY_MANAGER] = ['key-manager']
 
     def _create(self):
-        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        endpoint = self.url_for(service_type=self.KEY_MANAGER,
-                                endpoint_type=endpoint_type)
+        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         client = barbican_client.Client(
-            session=self.context.keystone_session, endpoint=endpoint)
-
+            session=self.context.keystone_session,
+            service_type=self.KEY_MANAGER,
+            interface=interface)
         return client
 
     def is_not_found(self, ex):

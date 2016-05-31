@@ -19,14 +19,13 @@ import weakref
 
 from keystoneauth1 import exceptions as ks_exception
 from keystoneauth1.identity import generic as ks_auth
-from keystoneauth1 import session
+
 from keystoneclient.v3 import client as kc_v3
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 
-from heat.common import config
 from heat.common import context
 from heat.common import exception
 from heat.common.i18n import _
@@ -77,7 +76,7 @@ class KsClientWrapper(object):
         self._domain_admin_auth = None
         self._domain_admin_client = None
 
-        self.session = session.Session(**config.get_ssl_options('keystone'))
+        self.session = self.context.keystone_session
         self.v3_endpoint = self.context.keystone_v3_endpoint
 
         if self.context.trust_id:
@@ -153,8 +152,7 @@ class KsClientWrapper(object):
         return self._domain_admin_client
 
     def _v3_client_init(self):
-        client = kc_v3.Client(session=self.session,
-                              auth=self.context.auth_plugin)
+        client = kc_v3.Client(session=self.session)
 
         if hasattr(self.context.auth_plugin, 'get_access'):
             # NOTE(jamielennox): get_access returns the current token without

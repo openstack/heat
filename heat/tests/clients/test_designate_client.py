@@ -11,11 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-import six
-
 from designateclient import exceptions as designate_exceptions
 from designateclient import v1 as designate_client
+import mock
+import six
 
 from heat.common import exception as heat_exception
 from heat.engine.clients.os import designate as client
@@ -43,40 +42,18 @@ class DesignateDomainConstraintTest(common.HeatTestCase):
 
 
 class DesignateClientPluginTest(common.HeatTestCase):
+
     @mock.patch.object(designate_client, 'Client')
-    @mock.patch.object(client.DesignateClientPlugin, '_get_client_args')
-    def test_client(self,
-                    get_client_args,
-                    client_designate):
-        args = dict(
-            auth_url='auth_url',
-            project_id='project_id',
-            token=lambda: '',
-            os_endpoint='os_endpoint',
-            cacert='cacert',
-            insecure='insecure'
-        )
-        get_client_args.return_value = args
-
-        client_plugin = client.DesignateClientPlugin(
-            context=mock.MagicMock()
-        )
+    def test_client(self, client_designate):
+        context = mock.Mock()
+        session = mock.Mock()
+        context.keystone_session = session
+        client_plugin = client.DesignateClientPlugin(context)
         client_plugin.client()
-
-        # Make sure the right args are created
-        get_client_args.assert_called_once_with(
-            service_name='designate',
-            service_type='dns'
-        )
 
         # Make sure proper client is created with expected args
         client_designate.assert_called_once_with(
-            auth_url='auth_url',
-            project_id='project_id',
-            token='',
-            endpoint='os_endpoint',
-            cacert='cacert',
-            insecure='insecure'
+            endpoint_type='publicURL', service_type='dns', session=session
         )
 
 

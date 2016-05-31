@@ -106,6 +106,7 @@ class KeystoneClientTest(common.HeatTestCase):
         mock_auth_ref = self.m.CreateMockAnything()
         mock_ks_auth = self.m.CreateMockAnything()
 
+        self.patchobject(mock_ks_auth, 'get_auth_ref')
         if method == 'token':
             p = ks_token_endpoint.Token(token='abcd1234',
                                         endpoint='http://server.test:5000/v3')
@@ -138,8 +139,7 @@ class KeystoneClientTest(common.HeatTestCase):
         p.AndReturn(mock_ks_auth)
 
         if client:
-            c = kc_v3.Client(session=mox.IsA(ks_session.Session),
-                             auth=mock_ks_auth)
+            c = kc_v3.Client(session=mox.IsA(ks_session.Session))
             c.AndReturn(self.mock_ks_v3_client)
 
             if stub_trust_context:
@@ -220,6 +220,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test creating a stack domain user."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -277,6 +278,7 @@ class KeystoneClientTest(common.HeatTestCase):
     def test_create_stack_domain_user_error_norole(self):
         """Test creating a stack domain user, no role error path."""
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         self._stub_domain_admin_client(domain_id=None)
@@ -296,6 +298,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test deleting a stack domain user."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -340,6 +343,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test deleting a stack domain user, wrong domain."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -362,6 +366,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test deleting a stack domain user, wrong project."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -484,9 +489,8 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
         ctx.username = None
         ctx.password = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertRaises(exception.AuthorizationFailure,
-                          heat_ks_client._v3_client_init)
+                          heat_keystoneclient.KeystoneClient, ctx)
 
     def test_create_trust_context_trust_id(self):
 
@@ -596,6 +600,7 @@ class KeystoneClientTest(common.HeatTestCase):
         cfg.CONF.clear_override('stack_domain_admin_password')
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.username = None
         ctx.password = None
         ctx.trust_id = None
@@ -778,6 +783,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test enabling a stack domain user."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -813,6 +819,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test enabling a stack domain user, wrong project."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -828,6 +835,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test enabling a stack domain user, wrong domain."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -843,6 +851,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test disabling a stack domain user."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -878,6 +887,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test disabling a stack domain user, wrong project."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -893,6 +903,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test disabling a stack domain user, wrong domain."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -906,6 +917,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def test_delete_stack_domain_user_keypair(self):
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -949,6 +961,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def test_delete_stack_domain_user_keypair_error_project(self):
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -964,6 +977,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def test_delete_stack_domain_user_keypair_error_domain(self):
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         # mock keystone client functions
@@ -1028,6 +1042,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self._stub_domain_admin_client(domain_id=None)
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         ex_data = {'access': 'dummy_access2',
@@ -1167,6 +1182,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test getting ec2 credential error path."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
@@ -1223,6 +1239,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test deleting ec2 credential error path."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
 
         self.m.ReplayAll()
@@ -1234,6 +1251,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test the create_stack_domain_project function."""
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         expected_name = '%s-astack' % ctx.tenant_id
 
@@ -1257,7 +1275,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
-
+        self.patchobject(ctx, '_create_auth_plugin')
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertEqual(ctx.tenant_id,
                          heat_ks_client.create_stack_domain_project('astack'))
@@ -1277,6 +1295,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
@@ -1292,6 +1311,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
@@ -1307,6 +1327,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
@@ -1325,6 +1346,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
@@ -1336,6 +1358,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self._clear_domain_override()
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
@@ -1350,9 +1373,10 @@ class KeystoneClientTest(common.HeatTestCase):
     def test_stack_domain_user_token(self):
         """Test stack_domain_user_token function."""
         dum_tok = 'dummytoken'
+        ctx = utils.dummy_context()
         mock_ks_auth = self.m.CreateMockAnything()
         mock_ks_auth.get_token(mox.IsA(ks_session.Session)).AndReturn(dum_tok)
-
+        self.patchobject(ctx, '_create_auth_plugin')
         m = ks_auth.Password(auth_url='http://server.test:5000/v3',
                              password='apassw',
                              project_id='aproject',
@@ -1361,7 +1385,6 @@ class KeystoneClientTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        ctx = utils.dummy_context()
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         token = heat_ks_client.stack_domain_user_token(user_id='duser',
@@ -1373,6 +1396,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test stack_domain_user_token error path."""
         self._clear_domain_override()
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
+
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertRaises(exception.Error,
@@ -1386,6 +1411,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self._clear_domain_override()
 
         ctx = utils.dummy_context()
+        self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertIsNone(heat_ks_client.delete_stack_domain_project(
@@ -1492,7 +1518,8 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         if domain_id:
             a = self.m.CreateMockAnything()
             a.domain_id = domain_id
-            mock_ks_auth.get_access(mox.IsA(ks_session.Session)).AndReturn(a)
+            mock_ks_auth.get_access(
+                mox.IsA(ks_session.Session)).AndReturn(a)
 
         m = ks_auth.Password(auth_url='http://server.test:5000/v3',
                              password='adminsecret',

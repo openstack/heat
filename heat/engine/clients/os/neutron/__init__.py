@@ -30,19 +30,11 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
 
         con = self.context
-
-        endpoint_type = self._get_client_option('neutron', 'endpoint_type')
-        endpoint = self.url_for(service_type=self.NETWORK,
-                                endpoint_type=endpoint_type)
-
+        interface = self._get_client_option('neutron', 'endpoint_type')
         args = {
-            'auth_url': con.auth_url,
+            'session': con.keystone_session,
             'service_type': self.NETWORK,
-            'token': self.auth_token,
-            'endpoint_url': endpoint,
-            'endpoint_type': endpoint_type,
-            'ca_cert': self._get_client_option('neutron', 'ca_file'),
-            'insecure': self._get_client_option('neutron', 'insecure')
+            'interface': interface
         }
 
         return nc.Client(**args)

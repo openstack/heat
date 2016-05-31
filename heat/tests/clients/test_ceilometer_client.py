@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from ceilometerclient.openstack.common.apiclient import client as cc
+from ceilometerclient.v2 import client as cc
 
 from heat.tests import common
 from heat.tests import utils
@@ -20,10 +20,8 @@ from heat.tests import utils
 class CeilometerClientPluginTest(common.HeatTestCase):
 
     def test_create(self):
-        self.patchobject(cc.HTTPClient, 'client_request')
+        self.patchobject(cc.Client, '_get_alarm_client')
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('ceilometer')
         client = plugin.client()
         self.assertIsNotNone(client.alarms)
-        self.assertEqual('http://server.test:5000/v2.0',
-                         client.auth_plugin.opts['auth_url'])

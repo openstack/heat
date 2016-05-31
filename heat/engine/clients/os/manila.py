@@ -29,14 +29,11 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        endpoint = self.url_for(service_type=self.SHARE,
-                                endpoint_type=endpoint_type)
-
         args = {
-            'service_catalog_url': endpoint,
-            'input_auth_token': self.auth_token
+            'endpoint_type': endpoint_type,
+            'service_type': self.SHARE,
+            'session': self.context.keystone_session
         }
-
         client = manila_client.Client(MANILACLIENT_VERSION, **args)
         return client
 

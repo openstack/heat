@@ -67,30 +67,19 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         LOG.info(_LI('Creating Cinder client with volume API version %d.'),
                  volume_api_version)
 
-        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
+        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         extensions = cc.discover_extensions(client_version)
         args = {
+            'session': con.keystone_session,
+            'extensions': extensions,
+            'interface': interface,
             'service_type': service_type,
-            'auth_url': con.auth_url or '',
-            'project_id': con.tenant_id,
-            'username': None,
-            'api_key': None,
-            'endpoint_type': endpoint_type,
             'http_log_debug': self._get_client_option(CLIENT_NAME,
-                                                      'http_log_debug'),
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
-            'extensions': extensions
+                                                      'http_log_debug')
         }
 
         client = cc.Client(client_version, **args)
-        management_url = self.url_for(service_type=service_type,
-                                      endpoint_type=endpoint_type)
-        client.client.auth_token = self.auth_token
-        client.client.management_url = management_url
-
         client.volume_api_version = volume_api_version
-
         return client
 
     @os_client.MEMOIZE_EXTENSIONS

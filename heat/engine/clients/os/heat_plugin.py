@@ -30,27 +30,18 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
                      CLOUDFORMATION] = ['orchestration', 'cloudformation']
 
     def _create(self):
-        args = {
-            'auth_url': self.context.auth_url,
-            'token': self.auth_token,
-            'username': None,
-            'password': None,
-            'ca_file': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'cert_file': self._get_client_option(CLIENT_NAME, 'cert_file'),
-            'key_file': self._get_client_option(CLIENT_NAME, 'key_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
-        }
-
         endpoint = self.get_heat_url()
+        args = {}
         if self._get_client_option(CLIENT_NAME, 'url'):
             # assume that the heat API URL is manually configured because
             # it is not in the keystone catalog, so include the credentials
             # for the standalone auth_password middleware
             args['username'] = self.context.username
             args['password'] = self.context.password
-            del(args['token'])
 
-        return hc.Client('1', endpoint, **args)
+        return hc.Client('1', endpoint,
+                         session=self.context.keystone_session,
+                         **args)
 
     def is_not_found(self, ex):
         return isinstance(ex, exc.HTTPNotFound)

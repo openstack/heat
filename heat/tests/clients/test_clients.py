@@ -205,7 +205,8 @@ class ClientPluginTest(common.HeatTestCase):
     def test_get_client_args(self):
         ctxt = mock.Mock()
         plugin = FooClientsPlugin(ctxt)
-
+        self.patchobject(ctxt.keystone_session, 'get_token',
+                         return_value='5678')
         plugin.url_for = mock.Mock(return_value='sample_endpoint_url')
         plugin.context.auth_url = 'sample_auth_url'
         plugin.context.tenant_id = 'sample_project_id'
@@ -239,7 +240,7 @@ class ClientPluginTest(common.HeatTestCase):
                          'invalid project_id')
 
         self.assertEqual('5678',
-                         args['token'](),
+                         args['token'],
                          'invalid auth_token')
 
         self.assertEqual('sample_endpoint_url',

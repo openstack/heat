@@ -33,22 +33,12 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         con = self.context
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
+            'endpoint_type': endpoint_type,
             'service_type': self.DATABASE,
-            'auth_url': con.auth_url or '',
-            'proxy_token': con.auth_token,
-            'username': None,
-            'password': None,
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure'),
-            'endpoint_type': endpoint_type
+            'session': con.keystone_session
         }
 
         client = tc.Client('1.0', **args)
-        management_url = self.url_for(service_type=self.DATABASE,
-                                      endpoint_type=endpoint_type)
-        client.client.auth_token = self.auth_token
-        client.client.management_url = management_url
-
         return client
 
     def validate_datastore(self, datastore_type, datastore_version,

@@ -92,14 +92,6 @@ class ClientPlugin(object):
         """Return a newly created client."""
         pass
 
-    @property
-    def auth_token(self):
-        # Always use the auth_token from the keystone_session, as
-        # this may be refreshed if the context contains credentials
-        # which allow reissuing of a new token before the context
-        # auth_token expiry (e.g trust_id or username/password)
-        return self.context.keystone_session.get_token()
-
     def url_for(self, **kwargs):
         keystone_session = self.context.keystone_session
 
@@ -181,7 +173,7 @@ class ClientPlugin(object):
             'auth_url': self.context.auth_url,
             'service_type': service_type,
             'project_id': self.context.tenant_id,
-            'token': lambda: self.auth_token,
+            'token': self.context.keystone_session.get_token(),
             'endpoint_type': endpoint_type,
             'os_endpoint': endpoint,
             'cacert': self._get_client_option(service_name, 'ca_file'),
@@ -191,8 +183,6 @@ class ClientPlugin(object):
         }
 
         return args
-        # FIXME(kanagaraj-manickam) Update other client plugins to leverage
-        # this method (bug 1461041)
 
     def does_endpoint_exist(self,
                             service_type,

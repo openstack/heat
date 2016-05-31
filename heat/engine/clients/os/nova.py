@@ -63,29 +63,18 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        management_url = self.url_for(service_type=self.COMPUTE,
-                                      endpoint_type=endpoint_type)
         extensions = nc.discover_extensions(NOVA_API_VERSION)
 
         args = {
-            'project_id': self.context.tenant_id,
-            'auth_url': self.context.auth_url,
-            'auth_token': self.auth_token,
-            'service_type': self.COMPUTE,
-            'username': None,
-            'api_key': None,
+            'session': self.context.keystone_session,
             'extensions': extensions,
-            'endpoint_type': endpoint_type,
+            'interface': endpoint_type,
+            'service_type': self.COMPUTE,
             'http_log_debug': self._get_client_option(CLIENT_NAME,
-                                                      'http_log_debug'),
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
+                                                      'http_log_debug')
         }
 
         client = nc.Client(NOVA_API_VERSION, **args)
-
-        client.client.set_management_url(management_url)
-
         return client
 
     def is_not_found(self, ex):

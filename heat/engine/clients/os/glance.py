@@ -35,22 +35,11 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self, version=None):
         con = self.context
-        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        endpoint = self.url_for(service_type=self.IMAGE,
-                                endpoint_type=endpoint_type)
-        args = {
-            'auth_url': con.auth_url,
-            'service_type': self.IMAGE,
-            'project_id': con.tenant_id,
-            'token': self.auth_token,
-            'endpoint_type': endpoint_type,
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'cert_file': self._get_client_option(CLIENT_NAME, 'cert_file'),
-            'key_file': self._get_client_option(CLIENT_NAME, 'key_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
-        }
+        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
 
-        return gc.Client(version, endpoint, **args)
+        return gc.Client(version, session=con.keystone_session,
+                         interface=interface,
+                         service_type=self.IMAGE)
 
     def _find_with_attr(self, entity, **kwargs):
         """Find a item for entity with attributes matching ``**kwargs``."""

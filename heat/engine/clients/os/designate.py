@@ -30,15 +30,10 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
     service_types = [DNS] = ['dns']
 
     def _create(self):
-        args = self._get_client_args(service_name=CLIENT_NAME,
-                                     service_type=self.DNS)
-
-        return client.Client(auth_url=args['auth_url'],
-                             project_id=args['project_id'],
-                             token=args['token'](),
-                             endpoint=args['os_endpoint'],
-                             cacert=args['cacert'],
-                             insecure=args['insecure'])
+        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
+        return client.Client(session=self.context.keystone_session,
+                             endpoint_type=endpoint_type,
+                             service_type=self.DNS)
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)

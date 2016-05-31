@@ -30,12 +30,12 @@ class BaseVolume(resource.Resource):
 
             vol = cinder.volumes.get(vol_id)
             kwargs = self._fetch_name_and_description(
-                cinder.volume_api_version)
+                cinder.version)
             cinder.volumes.update(vol_id, **kwargs)
         else:
             kwargs = self._create_arguments()
             kwargs.update(self._fetch_name_and_description(
-                cinder.volume_api_version))
+                cinder.version))
             vol = cinder.volumes.create(**kwargs)
         self.resource_id_set(vol.id)
 
