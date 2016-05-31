@@ -17,8 +17,7 @@ import sys
 import weakref
 
 from keystoneauth1 import exceptions
-from keystoneauth1.identity import v2
-from keystoneauth1.identity import v3
+from keystoneauth1.identity import generic
 from keystoneauth1 import plugin
 from keystoneauth1 import session
 from oslo_config import cfg
@@ -27,7 +26,6 @@ import six
 
 from heat.common import config
 from heat.common import exception as heat_exception
-from heat.common.i18n import _
 
 cfg.CONF.import_opt('client_retry_limit', 'heat.common.config')
 
@@ -198,31 +196,13 @@ class ClientPlugin(object):
         try:
             url = get_endpoint()
         except exceptions.EmptyCatalog:
-            kc = self.clients.client('keystone').client
-
             auth_plugin = self.context.auth_plugin
             endpoint = auth_plugin.get_endpoint(
                 None, interface=plugin.AUTH_INTERFACE)
             token = auth_plugin.get_token(None)
-            project_id = auth_plugin.get_project_id(None)
-
-            if kc.version == 'v3':
-                token_obj = v3.Token(endpoint, token, project_id=project_id)
-                catalog_key = 'catalog'
-                access_key = 'token'
-            elif kc.version == 'v2.0':
-                endpoint = endpoint.replace('v3', 'v2.0')
-                token_obj = v2.Token(endpoint, token, tenant_id=project_id)
-                catalog_key = 'serviceCatalog'
-                access_key = 'access'
-            else:
-                raise exceptions.Error(_("Unknown Keystone version"))
-
-            auth_ref = token_obj.get_auth_ref(self._keystone_session)
-
-            if catalog_key in auth_ref:
-                access_info = self.context.auth_token_info[access_key]
-                access_info[catalog_key] = auth_ref[catalog_key]
+            token_obj = generic.Token(endpoint, token)
+            auth_ref = token_obj.get_access(self._keystone_session)
+            if auth_ref.has_service_catalog():
                 self.context.reload_auth_plugin()
                 url = get_endpoint()
 

@@ -18,7 +18,7 @@ from glanceclient import exc as glance_exc
 from glanceclient.openstack.common.apiclient import exceptions as g_a_exc
 from heatclient import client as heatclient
 from heatclient import exc as heat_exc
-from keystoneauth1.identity import v3
+from keystoneauth1.identity import generic
 from keystoneclient import exceptions as keystone_exc
 from manilaclient import exceptions as manila_exc
 import mock
@@ -295,7 +295,7 @@ class ClientPluginTest(common.HeatTestCase):
                          plugin.url_for(service_type='foo'))
         self.assertTrue(con.auth_plugin.get_endpoint.called)
 
-    @mock.patch.object(v3, "Token", name="v3_token")
+    @mock.patch.object(generic, "Token", name="v3_token")
     def test_get_missing_service_catalog(self, mock_v3):
         class FakeKeystone(fakes.FakeKeystoneClient):
             def __init__(self):
@@ -323,7 +323,7 @@ class ClientPluginTest(common.HeatTestCase):
         self.assertEqual('http://192.0.2.1/bar',
                          plugin.url_for(service_type='bar'))
 
-    @mock.patch.object(v3, "Token", name="v3_token")
+    @mock.patch.object(generic, "Token", name="v3_token")
     def test_endpoint_not_found(self, mock_v3):
         class FakeKeystone(fakes.FakeKeystoneClient):
             def __init__(self):
@@ -343,8 +343,11 @@ class ClientPluginTest(common.HeatTestCase):
 
         mock_token_obj = mock.Mock()
         mock_v3.return_value = mock_token_obj
-        mock_token_obj.get_auth_ref.return_value = {'no_catalog': 'without'}
-
+        mock_access = mock.Mock()
+        self.patchobject(mock_token_obj, 'get_access',
+                         return_value=mock_access)
+        self.patchobject(mock_access, 'has_service_catalog',
+                         return_value=False)
         plugin = FooClientsPlugin(con)
 
         self.assertRaises(keystone_exc.EndpointNotFound,
