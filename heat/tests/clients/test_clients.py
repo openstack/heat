@@ -18,7 +18,7 @@ from glanceclient import exc as glance_exc
 from glanceclient.openstack.common.apiclient import exceptions as g_a_exc
 from heatclient import client as heatclient
 from heatclient import exc as heat_exc
-from keystoneclient.auth.identity import v3
+from keystoneauth1.identity import v3
 from keystoneclient import exceptions as keystone_exc
 from manilaclient import exceptions as manila_exc
 import mock

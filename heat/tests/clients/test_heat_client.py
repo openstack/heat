@@ -14,13 +14,13 @@
 import json
 import uuid
 
-from keystoneclient import access as ks_access
-from keystoneclient import auth as ks_auth
-from keystoneclient.auth.identity import access as ks_auth_access
-from keystoneclient.auth.identity import v3 as ks_auth_v3
-from keystoneclient.auth import token_endpoint as ks_token_endpoint
-import keystoneclient.exceptions as kc_exception
-from keystoneclient import session as ks_session
+from keystoneauth1 import access as ks_access
+from keystoneauth1 import exceptions as kc_exception
+from keystoneauth1.identity import access as ks_auth_access
+from keystoneauth1.identity import v3 as ks_auth_v3
+from keystoneauth1 import loading as ks_loading
+from keystoneauth1 import session as ks_session
+from keystoneauth1 import token_endpoint as ks_token_endpoint
 from keystoneclient.v3 import client as kc_v3
 from keystoneclient.v3 import domains as kc_v3_domains
 import mox
@@ -52,7 +52,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.StubOutWithMock(ks_auth_v3, 'Password')
         self.m.StubOutWithMock(ks_token_endpoint, 'Token')
         self.m.StubOutWithMock(ks_auth_access, 'AccessInfoPlugin')
-        self.m.StubOutWithMock(ks_auth, 'load_from_conf_options')
+        self.m.StubOutWithMock(ks_loading, 'load_auth_from_conf_options')
 
         cfg.CONF.set_override('auth_uri', 'http://server.test:5000/v2.0',
                               group='keystone_authtoken', enforce_type=True)
@@ -77,7 +77,8 @@ class KeystoneClientTest(common.HeatTestCase):
         else:
             a.AndRaise(kc_exception.Unauthorized)
 
-        m = ks_auth.load_from_conf_options(cfg.CONF, 'trustee', trust_id=None)
+        m = ks_loading.load_auth_from_conf_options(
+            cfg.CONF, 'trustee', trust_id=None)
         m.AndReturn(mock_ks_auth)
 
     def _stub_domain_admin_client(self, domain_id=None):
@@ -121,9 +122,9 @@ class KeystoneClientTest(common.HeatTestCase):
                                     user_domain_id='adomain123')
 
         elif method == 'trust':
-            p = ks_auth.load_from_conf_options(cfg.CONF,
-                                               'trustee',
-                                               trust_id='atrust123')
+            p = ks_loading.load_auth_from_conf_options(cfg.CONF,
+                                                       'trustee',
+                                                       trust_id='atrust123')
 
             mock_auth_ref.user_id = user_id or 'trustor_user_id'
             mock_auth_ref.project_id = project_id or 'test_tenant_id'

@@ -482,6 +482,21 @@ def get_client_option(client, option):
     return getattr(cfg.CONF.clients, option)
 
 
+def get_ssl_options(client):
+    # Look for the ssl options in the [clients_${client}] section
+    cacert = get_client_option(client, 'ca_file')
+    insecure = get_client_option(client, 'insecure')
+    cert = get_client_option(client, 'cert_file')
+    key = get_client_option(client, 'key_file')
+    if insecure:
+        verify = False
+    else:
+        verify = cacert or True
+    if cert and key:
+        cert = (cert, key)
+    return {'verify': verify, 'cert': cert}
+
+
 def set_config_defaults():
     """This method updates all configuration default values."""
     # CORS Defaults
