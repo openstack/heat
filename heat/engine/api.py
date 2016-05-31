@@ -212,11 +212,13 @@ def format_stack(stack, preview=False, resolve_outputs=True):
     """
     updated_time = stack.updated_time and stack.updated_time.isoformat()
     created_time = stack.created_time or timeutils.utcnow()
+    deleted_time = stack.deleted_time and stack.deleted_time.isoformat()
     info = {
         rpc_api.STACK_NAME: stack.name,
         rpc_api.STACK_ID: dict(stack.identifier()),
         rpc_api.STACK_CREATION_TIME: created_time.isoformat(),
         rpc_api.STACK_UPDATED_TIME: updated_time,
+        rpc_api.STACK_DELETION_TIME: deleted_time,
         rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO(therve) Not implemented
         rpc_api.STACK_PARAMETERS: stack.parameters.map(six.text_type),
         rpc_api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
@@ -255,6 +257,8 @@ def format_stack_db_object(stack):
     """
     updated_time = stack.updated_at and stack.updated_at.isoformat()
     created_time = stack.created_at
+    deleted_time = stack.deleted_at and stack.deleted_at.isoformat()
+
     tags = None
     if stack.tags:
         tags = [t.tag for t in stack.tags]
@@ -267,6 +271,7 @@ def format_stack_db_object(stack):
         rpc_api.STACK_STATUS_DATA: stack.status_reason,
         rpc_api.STACK_CREATION_TIME: created_time.isoformat(),
         rpc_api.STACK_UPDATED_TIME: updated_time,
+        rpc_api.STACK_DELETION_TIME: deleted_time,
         rpc_api.STACK_OWNER: stack.username,
         rpc_api.STACK_PARENT: stack.owner_id,
         rpc_api.STACK_USER_PROJECT_ID: stack.stack_user_project_id,

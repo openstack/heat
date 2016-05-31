@@ -17,7 +17,8 @@
             "tags": null,
             "parent": null,
             "stack_owner": null,
-            "stack_user_project_id": "71510cbd459a49ac989ca1055de7038b"
+            "stack_user_project_id": "71510cbd459a49ac989ca1055de7038b",
+            "deletion_time": null
         }
     ]
 }

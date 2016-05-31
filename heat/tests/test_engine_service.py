@@ -469,6 +469,8 @@ class StackServiceTest(common.HeatTestCase):
         for s in sl:
             self.assertIn('creation_time', s)
             self.assertIn('updated_time', s)
+            self.assertIn('deletion_time', s)
+            self.assertIsNone(s['deletion_time'])
             self.assertIn('stack_identity', s)
             self.assertIsNotNone(s['stack_identity'])
             self.assertIn('stack_name', s)
@@ -892,6 +894,8 @@ class StackServiceTest(common.HeatTestCase):
         s = sl[0]
         self.assertIn('creation_time', s)
         self.assertIn('updated_time', s)
+        self.assertIn('deletion_time', s)
+        self.assertIsNone(s['deletion_time'])
         self.assertIn('stack_identity', s)
         self.assertIsNotNone(s['stack_identity'])
         self.assertIn('stack_name', s)
@@ -913,6 +917,8 @@ class StackServiceTest(common.HeatTestCase):
         s = sl[0]
         self.assertIn('creation_time', s)
         self.assertIn('updated_time', s)
+        self.assertIn('deletion_time', s)
+        self.assertIsNone(s['deletion_time'])
         self.assertIn('stack_identity', s)
         self.assertIsNotNone(s['stack_identity'])
         self.assertIn('stack_name', s)

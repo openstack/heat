@@ -567,6 +567,7 @@ Response Parameters
    - tags: tags
    - creation_time: creation_time
    - updated_time: updated_time
+   - deletion_time: deleted_at
    - stack_status: stack_status
    - stack_owner: owner_id
    - stack_user_project_id: stack_user_project_id

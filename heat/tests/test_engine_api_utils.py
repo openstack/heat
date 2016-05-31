@@ -346,6 +346,7 @@ class FormatTest(common.HeatTestCase):
         expected_stack_info = {
             'capabilities': [],
             'creation_time': '1970-01-01T00:00:00',
+            'deletion_time': None,
             'description': 'No description',
             'disable_rollback': True,
             'notification_topics': [],

@@ -128,7 +128,7 @@ class Stack(collections.Mapping):
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
                  current_deps=None, cache_data=None, resource_validate=True,
-                 service_check_defer=False):
+                 service_check_defer=False, deleted_time=None):
 
         """Initialise the Stack.
 
@@ -178,6 +178,7 @@ class Stack(collections.Mapping):
         self.stack_user_project_id = stack_user_project_id
         self.created_time = created_time
         self.updated_time = updated_time
+        self.deleted_time = deleted_time
         self.user_creds_id = user_creds_id
         self.nested_depth = nested_depth
         self.convergence = convergence
@@ -529,7 +530,8 @@ class Stack(collections.Mapping):
                    current_traversal=stack.current_traversal,
                    prev_raw_template_id=stack.prev_raw_template_id,
                    current_deps=stack.current_deps, cache_data=cache_data,
-                   nested_depth=stack.nested_depth)
+                   nested_depth=stack.nested_depth,
+                   deleted_time=stack.deleted_at)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.
