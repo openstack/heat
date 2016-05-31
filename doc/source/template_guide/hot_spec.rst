@@ -644,9 +644,9 @@ update_policy
     This attribute is optional.
 
 deletion_policy
-    Deletion policy for the resource. Which type of deletion policy is
-    supported depends on the type of the current resource.
-    This attribute is optional.
+    Deletion policy for the resource. The allowed deletion policies are
+    ``Delete``, ``Retain``, and ``Snapshot``.
+    This attribute is optional; the default policy is ``Delete``.
 
 Depending on the type of resource, the resource block might include more
 resource specific data.
