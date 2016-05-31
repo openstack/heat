@@ -126,6 +126,8 @@ class StackResource(resource.Resource):
                     cancel_with_rollback=False)
 
     def nested_identifier(self):
+        if not self.resource_id:
+            raise AttributeError()
         return identifier.HeatIdentifier(
             self.context.tenant_id,
             self.physical_resource_name(),

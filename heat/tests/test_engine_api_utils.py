@@ -229,7 +229,6 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_ID,
             rpc_api.RES_STACK_ID,
             rpc_api.RES_STACK_NAME,
-            rpc_api.RES_NESTED_STACK_ID,
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
@@ -252,7 +251,6 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_ID,
             rpc_api.RES_STACK_ID,
             rpc_api.RES_STACK_NAME,
-            rpc_api.RES_NESTED_STACK_ID,
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
