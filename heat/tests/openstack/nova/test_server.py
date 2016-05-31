@@ -81,6 +81,23 @@ resources:
       networks: [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
 '''
 
+with_port_template = '''
+heat_template_version: 2015-04-30
+resources:
+  port:
+    type: OS::Neutron::Port
+    properties:
+      network: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.small
+      networks:
+        - port: {get_resource: port}
+          fixed_ip: 10.0.0.99
+'''
+
 bdm_v2_template = '''
 heat_template_version: 2015-04-30
 resources:
@@ -1220,21 +1237,33 @@ class ServersTest(common.HeatTestCase):
                         'corresponding port can not be retrieved.'),
                       six.text_type(ex))
 
-    def test_server_validate_with_port_fixed_ip(self):
-        stack_name = 'srv_net'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-        tmpl['Resources']['WebServer']['Properties']['networks'] = (
-            [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-              'fixed_ip': '10.0.0.99'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
-                         return_value=self.fc)
+    def test_server_validate_port_fixed_ip(self):
+        stack_name = 'port_with_fixed_ip'
+        (tmpl, stack) = self._setup_test_stack(stack_name,
+                                               test_templ=with_port_template)
+
         resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_validate_with_networks',
-                                resource_defns['WebServer'], stack)
+
+        server = servers.Server('validate_port_reference_fixed_ip',
+                                resource_defns['server'], stack)
+
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
                          return_value=self.mock_image)
         self.patchobject(nova.NovaClientPlugin, 'get_flavor',
                          return_value=self.mock_flavor)
+
+        error = self.assertRaises(exception.ResourcePropertyConflict,
+                                  server.validate)
+        self.assertEqual("Cannot define the following properties at the same "
+                         "time: networks/fixed_ip, networks/port.",
+                         six.text_type(error))
+        # test if the 'port' doesn't reference with non-created resource
+        tmpl['Resources']['server']['Properties']['networks'] = (
+            [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+              'fixed_ip': '10.0.0.99'}])
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('with_port_fixed_ip',
+                                resource_defns['server'], stack)
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id')
         error = self.assertRaises(exception.ResourcePropertyConflict,
@@ -1244,15 +1273,30 @@ class ServersTest(common.HeatTestCase):
                          six.text_type(error))
 
     def test_server_validate_with_port_not_using_neutron(self):
+        test_templ = with_port_template.replace('fixed_ip: 10.0.0.99', '')
         stack_name = 'with_port_in_nova_network'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-        tmpl['Resources']['WebServer']['Properties']['networks'] = (
-            [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
-                         return_value=self.fc)
+        (tmpl, stack) = self._setup_test_stack(stack_name,
+                                               test_templ=test_templ)
         self.patchobject(servers.Server,
                          'is_using_neutron', return_value=False)
 
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('port_reference_use_nova_network',
+                                resource_defns['server'], stack)
+
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  server.validate)
+        self.assertEqual('Property "port" is supported only for Neutron.',
+                         six.text_type(error))
+
+        # test if port doesn't reference with non-created resource
+        tmpl['Resources']['server']['Properties']['networks'] = (
+            [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}])
         # We're patching neutron finder here as constraint validation
         # does not check if neutron is enabled or not. This would be
         # fixed in a subsequent patch.
@@ -1261,11 +1305,8 @@ class ServersTest(common.HeatTestCase):
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('validate_port_in_nova_network',
-                                resource_defns['WebServer'], stack)
-        self.patchobject(glance.GlanceClientPlugin, 'get_image',
-                         return_value=self.mock_image)
-        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
-                         return_value=self.mock_flavor)
+                                resource_defns['server'], stack)
+
         error = self.assertRaises(exception.StackValidationFailed,
                                   server.validate)
         self.assertEqual('Property "port" is supported only for Neutron.',
