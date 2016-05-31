@@ -1,0 +1,6 @@
+---
+features:
+  - Add `template_dir` to config. Normally heat has template directory
+    `/etc/heat/templates`. This change makes it more official. In the future,
+    it is possible to implement features like access templates directly from
+    global template environment.
