@@ -250,21 +250,19 @@ class HOTemplate20130523(template.Template):
         return dict((name, self.rsrc_defn_from_snippet(name, data))
                     for name, data in parsed_resources.items())
 
-    @staticmethod
-    def rsrc_defn_from_snippet(name, data):
+    @classmethod
+    def rsrc_defn_from_snippet(cls, name, data):
         depends = data.get(RES_DEPENDS_ON)
         if isinstance(depends, six.string_types):
             depends = [depends]
 
         deletion_policy = function.resolve(data.get(RES_DELETION_POLICY))
         if deletion_policy is not None:
-            if deletion_policy not in six.iterkeys(
-                    HOTemplate20130523.deletion_policies):
+            if deletion_policy not in cls.deletion_policies:
                 msg = _('Invalid deletion policy "%s"') % deletion_policy
                 raise exception.StackValidationFailed(message=msg)
             else:
-                deletion_policy = HOTemplate20130523.deletion_policies[
-                    deletion_policy]
+                deletion_policy = cls.deletion_policies[deletion_policy]
         kwargs = {
             'resource_type': data.get(RES_TYPE),
             'properties': data.get(RES_PROPERTIES),
