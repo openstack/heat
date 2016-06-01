@@ -142,8 +142,10 @@ class ClientPlugin(object):
             version = self.default_version
 
         if version in self._client_instances:
+            auth_ref = self.context.auth_plugin.get_auth_ref(
+                self._keystone_session)
             if (cfg.CONF.reauthentication_auth_method == 'trusts'
-                and self.context.auth_plugin.auth_ref.will_expire_soon(
+                and auth_ref.will_expire_soon(
                     cfg.CONF.stale_token_duration)):
                 # If the token is near expiry, force creating a new client,
                 # which will get a new token via another call to auth_token
