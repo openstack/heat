@@ -68,7 +68,12 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
             _('The size of the volume in GB. '
-              'On update only increase in size is supported.'),
+              'On update only increase in size is supported. This property '
+              'is required unless property %(backup)s or %(vol)s or '
+              '%(snapshot)s is specified.')
+            % dict(backup=BACKUP_ID,
+                   vol=SOURCE_VOLID,
+                   snapshot=SNAPSHOT_ID),
             update_allowed=True,
             constraints=[
                 constraints.Range(min=1),
@@ -553,29 +558,30 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     def _build_exclusive_options(self):
         exclusive_options = []
+        allow_no_size_options = []
         if self.properties.get(self.SNAPSHOT_ID):
             exclusive_options.append(self.SNAPSHOT_ID)
+            allow_no_size_options.append(self.SNAPSHOT_ID)
         if self.properties.get(self.SOURCE_VOLID):
             exclusive_options.append(self.SOURCE_VOLID)
+            allow_no_size_options.append(self.SOURCE_VOLID)
         if self.properties.get(self.IMAGE):
             exclusive_options.append(self.IMAGE)
         if self.properties.get(self.IMAGE_REF):
             exclusive_options.append(self.IMAGE_REF)
-        return exclusive_options
+        return exclusive_options, allow_no_size_options
 
     def _validate_create_sources(self):
-        exclusive_options = self._build_exclusive_options()
+        exclusive_options, allow_no_size_ops = self._build_exclusive_options()
         size = self.properties.get(self.SIZE)
-        if size is None and len(exclusive_options) != 1:
+        if (size is None and
+                (len(allow_no_size_ops) != 1 or len(exclusive_options) != 1)):
             msg = (_('If neither "%(backup_id)s" nor "%(size)s" is '
-                     'provided, one and only one of '
-                     '"%(image)s", "%(image_ref)s", "%(source_vol)s", '
+                     'provided, one and only one of "%(source_vol)s", '
                      '"%(snapshot_id)s" must be specified, but currently '
                      'specified options: %(exclusive_options)s.')
                    % {'backup_id': self.BACKUP_ID,
                       'size': self.SIZE,
-                      'image': self.IMAGE,
-                      'image_ref': self.IMAGE_REF,
                       'source_vol': self.SOURCE_VOLID,
                       'snapshot_id': self.SNAPSHOT_ID,
                       'exclusive_options': exclusive_options})
