@@ -513,6 +513,54 @@ class HOTemplateTest(common.HeatTestCase):
                                  {'get_attr': ['rg', 'name']}]}
         self.assertEqual('', self.resolve(snippet, tmpl, stack))
 
+    def test_deletion_policy_titlecase(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2016-10-14
+        resources:
+          del:
+            type: OS::Heat::None
+            deletion_policy: Delete
+          ret:
+            type: OS::Heat::None
+            deletion_policy: Retain
+          snap:
+            type: OS::Heat::None
+            deletion_policy: Snapshot
+        ''')
+
+        rsrc_defns = template.Template(hot_tpl).resource_definitions(None)
+
+        self.assertEqual(rsrc_defn.ResourceDefinition.DELETE,
+                         rsrc_defns['del'].deletion_policy())
+        self.assertEqual(rsrc_defn.ResourceDefinition.RETAIN,
+                         rsrc_defns['ret'].deletion_policy())
+        self.assertEqual(rsrc_defn.ResourceDefinition.SNAPSHOT,
+                         rsrc_defns['snap'].deletion_policy())
+
+    def test_deletion_policy(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2016-10-14
+        resources:
+          del:
+            type: OS::Heat::None
+            deletion_policy: delete
+          ret:
+            type: OS::Heat::None
+            deletion_policy: retain
+          snap:
+            type: OS::Heat::None
+            deletion_policy: snapshot
+        ''')
+
+        rsrc_defns = template.Template(hot_tpl).resource_definitions(None)
+
+        self.assertEqual(rsrc_defn.ResourceDefinition.DELETE,
+                         rsrc_defns['del'].deletion_policy())
+        self.assertEqual(rsrc_defn.ResourceDefinition.RETAIN,
+                         rsrc_defns['ret'].deletion_policy())
+        self.assertEqual(rsrc_defn.ResourceDefinition.SNAPSHOT,
+                         rsrc_defns['snap'].deletion_policy())
+
     def test_str_replace(self):
         """Test str_replace function."""
 
