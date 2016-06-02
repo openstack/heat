@@ -24,9 +24,9 @@ from six.moves.urllib import parse as urlparse
 from heat.tests import fakes
 
 
-NOVACLIENT_VERSION = "2"
+NOVA_API_VERSION = "2.1"
 
-Client = base_client.Client(NOVACLIENT_VERSION).__class__
+Client = base_client.Client(NOVA_API_VERSION).__class__
 
 
 def fake_exception(status_code=404, message=None, details=None):

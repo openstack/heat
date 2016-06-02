@@ -49,7 +49,7 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         ext_mock = self.patchobject(nc, 'discover_extensions')
         plugin = context.clients.client_plugin('nova')
         client = plugin.client()
-        ext_mock.assert_called_once_with('2')
+        ext_mock.assert_called_once_with('2.1')
         self.assertIsNotNone(client.servers)
 
     def test_get_ip(self):

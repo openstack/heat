@@ -40,7 +40,7 @@ from heat.engine import constraints
 LOG = logging.getLogger(__name__)
 
 
-NOVACLIENT_VERSION = "2"
+NOVA_API_VERSION = "2.1"
 CLIENT_NAME = 'nova'
 
 
@@ -65,7 +65,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         management_url = self.url_for(service_type=self.COMPUTE,
                                       endpoint_type=endpoint_type)
-        extensions = nc.discover_extensions(NOVACLIENT_VERSION)
+        extensions = nc.discover_extensions(NOVA_API_VERSION)
 
         args = {
             'project_id': self.context.tenant_id,
@@ -82,7 +82,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
         }
 
-        client = nc.Client(NOVACLIENT_VERSION, **args)
+        client = nc.Client(NOVA_API_VERSION, **args)
 
         client.client.set_management_url(management_url)
 
