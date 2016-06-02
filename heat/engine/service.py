@@ -1061,7 +1061,7 @@ class EngineService(service.Service):
                 def _n_deleted(stk, deleted):
                     for rsrc in deleted:
                         deleted_rsrc = stk.resources.get(rsrc)
-                        if deleted_rsrc.has_nested() and deleted_rsrc.nested():
+                        if deleted_rsrc.has_nested():
                             nested_stk = deleted_rsrc.nested()
                             nested_rsrc = nested_stk.resources.keys()
                             n_fmt = fmt_action_map(
@@ -1075,7 +1075,7 @@ class EngineService(service.Service):
                 def _n_added(stk, added):
                     for rsrc in added:
                         added_rsrc = stk.resources.get(rsrc)
-                        if added_rsrc.has_nested() and added_rsrc.nested():
+                        if added_rsrc.has_nested():
                             nested_stk = added_rsrc.nested()
                             nested_rsrc = nested_stk.resources.keys()
                             n_fmt = fmt_action_map(
@@ -1088,10 +1088,7 @@ class EngineService(service.Service):
                 for rsrc in act['updated']:
                     current_rsrc = current.resources.get(rsrc)
                     updated_rsrc = updated.resources.get(rsrc)
-                    if (current_rsrc.has_nested()
-                            and current_rsrc.nested()
-                            and updated_rsrc.has_nested()
-                            and updated_rsrc.nested()):
+                    if current_rsrc.has_nested() and updated_rsrc.has_nested():
                         current_nested = current_rsrc.nested()
                         updated_nested = updated_rsrc.nested()
                         update_task = update.StackUpdate(
