@@ -8,9 +8,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev82\n"
+"Project-Id-Version: heat 6.0.1.dev352\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-19 04:16+0000\n"
+"POT-Creation-Date: 2016-06-02 03:51+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -481,9 +481,6 @@ msgstr "필수 입력 매개변수가 누락됨"
 
 msgid "A map containing all headers for the container."
 msgstr "컨테이너의 모든 헤더를 포함하는 맵입니다."
-
-msgid "A map of Nova names and IDs to apply configuration to."
-msgstr "구성을 적용할 Nova 이름 및 ID의 맵입니다."
 
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution to "
@@ -1841,9 +1838,6 @@ msgstr "'%(value)s' 값을 검증하는 중 오류 발생"
 #, python-format
 msgid "Error validating value '%(value)s': %(message)s"
 msgstr "'%(value)s' 값을 검증하는 중 오류 발생: %(message)s"
-
-msgid "Error wait time in seconds for stack action (ie. create or update)."
-msgstr "스택 조치(즉, 작성 또는 업데이트)에 대한 오류 대기 시간(초)입니다."
 
 msgid "Ethertype of the traffic."
 msgstr "트래픽의 이더타입입니다."
@@ -3841,9 +3835,6 @@ msgstr "Flavor의 VCPU 수입니다."
 msgid "Number of backlog requests to configure the socket with."
 msgstr "소켓을 구성하기 위한 백로그 요청 수입니다."
 
-msgid "Number of heat-engine processes to fork and run."
-msgstr "분기 실행(fork) 및 실행할 히트 엔진 프로세스 수입니다."
-
 msgid "Number of instances in the Node group."
 msgstr "노드 그룹의 인스턴스 수입니다."
 
@@ -5185,19 +5176,6 @@ msgstr "지정된 버킷의 DNS 이름입니다."
 msgid "The DNS nameserver address."
 msgstr "DNS 네임 서버 주소입니다."
 
-msgid ""
-"The HARestarter resource type is deprecated and will be removed in a future "
-"release of Heat, once it has support for auto-healing any type of resource. "
-"Note that HARestarter does *not* actually restart servers - it deletes and "
-"then recreates them. It also does the same to all dependent resources, and "
-"may therefore exhibit unexpected and undesirable behaviour. Avoid."
-msgstr ""
-"HARestarter 자원 타입은 더 이상 사용되지 않으므로, 모든 자원 타입에 대해 자"
-"동 수정을 지원하게 되면,  향후 Heat 릴리스에서 제거됩니다. HARestarter에서는 "
-"실제로 서버를 다시 시작하지 \"않습니다\". 서버를 삭제한 후 다시 작성합니다. "
-"종속된 모든 자원에 대해서도 동일한 작업을 수행하므로, 예상치 못한 바람직하지 "
-"않은 동작이 수행될 수 있습니다. 이 문제를 방지하십시오."
-
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr "유형 HTTP의 모니터에 의한 요청에 사용되는 HTTP 메소드입니다."
 
@@ -5572,10 +5550,6 @@ msgid ""
 msgstr ""
 "특성 파일 \"%(path)s\"의 컨텐츠가 최대 허용 특성 파일 크기(%(max_size)s 바이"
 "트)보다 큽니다."
-
-#, python-format
-msgid "The current %s will result in stack update timeout."
-msgstr "현재 %s은(는) 스택 업데이트 제한시간 초과되었습니다."
 
 msgid "The current size of AutoscalingResourceGroup."
 msgstr "AutoscalingResourceGroup의 현재 크기입니다."
@@ -6790,9 +6764,6 @@ msgstr ""
 "예상치 못한 특성: %(unexpected)s. 이러한 특성만 %(type)s 타입의 순서에 허용"
 "됨: %(allowed)s."
 
-msgid "Unexpected returning while IN_PROGRESS."
-msgstr "IN_PROGRESS 중에 예상치 않게 리턴."
-
 msgid "Unique identifier for the device."
 msgstr "디바이스의 공유 ID입니다."
 
@@ -6830,9 +6801,6 @@ msgstr "메트릭의 단위입니다."
 
 msgid "Unknown"
 msgstr "알 수 없음"
-
-msgid "Unknown Keystone version"
-msgstr "알 수 없는 키스톤 버전"
 
 #, python-format
 msgid "Unknown Property %s"

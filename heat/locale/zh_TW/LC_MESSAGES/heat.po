@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev82\n"
+"Project-Id-Version: heat 6.0.1.dev352\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-19 04:16+0000\n"
+"POT-Creation-Date: 2016-06-02 03:51+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -460,9 +460,6 @@ msgstr "遺漏了必要的輸入參數"
 
 msgid "A map containing all headers for the container."
 msgstr "儲存器的所有標頭所在的對映。"
-
-msgid "A map of Nova names and IDs to apply configuration to."
-msgstr "要將配置套用至的 Nova 名稱與 ID 對映。"
 
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution to "
@@ -1769,9 +1766,6 @@ msgstr "驗證值 '%(value)s' 時發生錯誤"
 #, python-format
 msgid "Error validating value '%(value)s': %(message)s"
 msgstr "驗證值 '%(value)s' 時發生錯誤：%(message)s"
-
-msgid "Error wait time in seconds for stack action (ie. create or update)."
-msgstr "堆疊動作（例如，建立或更新）的錯誤等待時間（以秒為單位）。"
 
 msgid "Ethertype of the traffic."
 msgstr "資料流量的乙太網路類型。"
@@ -3703,9 +3697,6 @@ msgstr "用於該特性的 VCPU 數目。"
 msgid "Number of backlog requests to configure the socket with."
 msgstr "要配置給 Socket 的待辦事項要求數目。"
 
-msgid "Number of heat-engine processes to fork and run."
-msgstr "要分出及執行的 Heat 引擎處理程序數目。"
-
 msgid "Number of instances in the Node group."
 msgstr "節點群組中的實例數。"
 
@@ -4989,18 +4980,6 @@ msgstr "所指定儲存區的 DNS 名稱。"
 msgid "The DNS nameserver address."
 msgstr "DNS 名稱伺服器位址。"
 
-msgid ""
-"The HARestarter resource type is deprecated and will be removed in a future "
-"release of Heat, once it has support for auto-healing any type of resource. "
-"Note that HARestarter does *not* actually restart servers - it deletes and "
-"then recreates them. It also does the same to all dependent resources, and "
-"may therefore exhibit unexpected and undesirable behaviour. Avoid."
-msgstr ""
-"HARestarter 資源類型已遭到淘汰，並且將在 Heat 的未來版本中予以移除，它曾經支"
-"援自動療癒任何類型的資源。請注意，HARestarter 實際上*不*重新啟動伺服器 - 它會"
-"刪除並隨後重建它們。它還對所有相依資源執行相同的動作，因此可能會展示非預期和"
-"不需要的行為。應避免。"
-
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr "用於 HTTP 類型監視器所發出要求的 HTTP 方法。"
 
@@ -5363,10 +5342,6 @@ msgid ""
 msgstr ""
 "特質檔案 \"%(path)s\" 的內容，超過了所容許的特質檔案大小上限（%(max_size)s 個"
 "位元組）。"
-
-#, python-format
-msgid "The current %s will result in stack update timeout."
-msgstr "現行 %s 將導致堆疊更新逾時。"
 
 msgid "The current size of AutoscalingResourceGroup."
 msgstr "AutoscalingResourceGroup 的現行大小。"
@@ -6525,9 +6500,6 @@ msgstr ""
 "非預期的內容：%(unexpected)s。%(type)s 類型的順序只容許使用下列內容："
 "%(allowed)s。"
 
-msgid "Unexpected returning while IN_PROGRESS."
-msgstr "IN_PROGRESS 時返回非預期的結果。"
-
 msgid "Unique identifier for the device."
 msgstr "裝置的唯一 ID。"
 
@@ -6565,9 +6537,6 @@ msgstr "度量的單位。"
 
 msgid "Unknown"
 msgstr "未知"
-
-msgid "Unknown Keystone version"
-msgstr "不明的 Keystone 版本"
 
 #, python-format
 msgid "Unknown Property %s"

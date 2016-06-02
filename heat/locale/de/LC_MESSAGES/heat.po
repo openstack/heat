@@ -8,14 +8,14 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev82\n"
+"Project-Id-Version: heat 6.0.1.dev352\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-19 04:16+0000\n"
+"POT-Creation-Date: 2016-06-02 03:51+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-06 07:59+0000\n"
-"Last-Translator: Monika Wolf <vcomas3@de.ibm.com>\n"
+"PO-Revision-Date: 2016-06-01 11:02+0000\n"
+"Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.0\n"
@@ -520,9 +520,6 @@ msgstr "Ein obligatorischer Eingabeparameter fehlt"
 msgid "A map containing all headers for the container."
 msgstr "Eine Zuordnung mit allen Headern für den Container. "
 
-msgid "A map of Nova names and IDs to apply configuration to."
-msgstr "Eine Zuordnung von Nova-Namen und IDs zum Anwenden der Konfiguration. "
-
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution to "
 "each server."
@@ -971,6 +968,10 @@ msgid "Arguments to \"%s\" must be a map"
 msgstr "Argumente für \"%s\" müssen eine Zuordnung sein"
 
 #, python-format
+msgid "Arguments to \"%s\" must be a map."
+msgstr "Argumente für \"%s\" müssen eine Zuordnung sein."
+
+#, python-format
 msgid "Arguments to \"%s\" must be of the form [index, collection]"
 msgstr "Argumente für \"%s\" müssen im Format [Index, Sammlung] sein"
 
@@ -1064,6 +1065,10 @@ msgstr "Verfügbarkeitszone zum Starten der Instanz. "
 
 msgid "Backend authentication failed"
 msgstr "Back-End-Authentifizierung fehlgeschlagen"
+
+#, python-format
+msgid "Bad expression %s."
+msgstr "Fehlerhafter Ausdruck: %s"
 
 msgid "Binary"
 msgstr "Binärdatei"
@@ -1995,11 +2000,6 @@ msgstr "Fehler beim Validieren des Werts '%(value)s'"
 #, python-format
 msgid "Error validating value '%(value)s': %(message)s"
 msgstr "Fehler beim Validieren des Werts '%(value)s': %(message)s"
-
-msgid "Error wait time in seconds for stack action (ie. create or update)."
-msgstr ""
-"Fehlerwartezeit in Sekunden für Stackaktion (d. h. erstellen oder "
-"aktualisieren)."
 
 msgid "Ethertype of the traffic."
 msgstr "Ethernet-Typ des Datenverkehrs. "
@@ -2988,6 +2988,10 @@ msgid ""
 msgstr ""
 "Ungültiger 'restricted_action'-Typ \"%(value)s\" für Ressource. Zulässige "
 "'restricted_action'-Typen: %(types)s"
+
+#, python-format
+msgid "Invalid service %(service)s version %(version)s"
+msgstr "Ungültiger Service %(service)s Version %(version)s"
 
 #, python-format
 msgid ""
@@ -4187,9 +4191,6 @@ msgstr ""
 "Anzahl der Rückstandanforderungen, mit denen der Socket konfiguriert werden "
 "soll. "
 
-msgid "Number of heat-engine processes to fork and run."
-msgstr "Anzahl an Heat-Engine-Prozessen zum Verzweigen und Ausführen."
-
 msgid "Number of instances in the Node group."
 msgstr "Anzahl der Instanzen in der Knotengruppe. "
 
@@ -5295,6 +5296,9 @@ msgstr "Stack-ID"
 msgid "Stack Name"
 msgstr "Stack Name"
 
+msgid "Stack id"
+msgstr "Stack-ID"
+
 msgid "Stack name may not contain \"/\""
 msgstr "Der Stackname darf kein \"/\" enthalten"
 
@@ -5631,21 +5635,6 @@ msgstr "Der DNS-Name des angegebenen Buckets. "
 
 msgid "The DNS nameserver address."
 msgstr "Die DNS-Namensserveradresse."
-
-msgid ""
-"The HARestarter resource type is deprecated and will be removed in a future "
-"release of Heat, once it has support for auto-healing any type of resource. "
-"Note that HARestarter does *not* actually restart servers - it deletes and "
-"then recreates them. It also does the same to all dependent resources, and "
-"may therefore exhibit unexpected and undesirable behaviour. Avoid."
-msgstr ""
-"Der HARestarter-Ressourcentyp ist veraltet und wird in einem zukünftigen "
-"Heat-Release entfernt, sobald es Unterstützung für die automatische "
-"Reparatur beliebiger Ressourcentypen gibt. Beachten Sie, dass HARestarter "
-"nicht tatsächlich Server erneut startet: Er löscht sie und erstellt sie "
-"anschließend erneut. Darüber hinaus macht er dasselbe mit allen abhängigen "
-"Ressourcen. Dies kann daher unerwartetes und nicht gewünschtes Verhalten "
-"auslösen. Vermeiden Sie es, HARestarter zu verwenden."
 
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr ""
@@ -6060,10 +6049,6 @@ msgid ""
 msgstr ""
 "Der Inhalt der Persönlichkeitsdatei \"%(path)s\" ist größer als die maximal "
 "zulässige Größe der Persönlichkeitsdatei (%(max_size)s Byte). "
-
-#, python-format
-msgid "The current %s will result in stack update timeout."
-msgstr "Aktuelles %s führt zu Stack-Aktualisierungszeitlimitüberschreitung."
 
 msgid "The current size of AutoscalingResourceGroup."
 msgstr "Die aktuelle Größe von AutoscalingResourceGroup."
@@ -7412,9 +7397,6 @@ msgstr ""
 "Nicht erwartete Eigenschaften: %(unexpected)s. Es sind nur die folgenden "
 "Eigenschaften für Anfragen vom Typ %(type)s zulässig: %(allowed)s."
 
-msgid "Unexpected returning while IN_PROGRESS."
-msgstr "Unerwartete Rückgabe bei Status IN_PROGRESS."
-
 msgid "Unique identifier for the device."
 msgstr "Eindeutige ID für die Einheit. "
 
@@ -7461,9 +7443,6 @@ msgstr "Einheit für den Messwert. "
 
 msgid "Unknown"
 msgstr "Unbekannt"
-
-msgid "Unknown Keystone version"
-msgstr "Unbekannte Keystone-Version"
 
 #, python-format
 msgid "Unknown Property %s"

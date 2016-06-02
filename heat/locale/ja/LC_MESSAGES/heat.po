@@ -9,9 +9,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev82\n"
+"Project-Id-Version: heat 6.0.1.dev352\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-19 04:16+0000\n"
+"POT-Creation-Date: 2016-06-02 03:51+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -488,9 +488,6 @@ msgstr "必須の入力パラメーターが欠落しています"
 
 msgid "A map containing all headers for the container."
 msgstr "コンテナーのすべてのヘッダーを含むマップ。"
-
-msgid "A map of Nova names and IDs to apply configuration to."
-msgstr "設定を適用する先の Nova 名または ID のマップ。"
 
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution to "
@@ -1891,9 +1888,6 @@ msgstr "値 '%(value)s' の検証エラー"
 #, python-format
 msgid "Error validating value '%(value)s': %(message)s"
 msgstr "値 '%(value)s' の検証エラー: %(message)s"
-
-msgid "Error wait time in seconds for stack action (ie. create or update)."
-msgstr "スタックアクション (作成または更新) のエラー待ち時間 (秒)。"
 
 msgid "Ethertype of the traffic."
 msgstr "トラフィックのイーサネットタイプ。"
@@ -3945,9 +3939,6 @@ msgstr "フレーバーの VCPU 数。"
 msgid "Number of backlog requests to configure the socket with."
 msgstr "ソケットを設定するためのバックログ要求の数。"
 
-msgid "Number of heat-engine processes to fork and run."
-msgstr "フォークおよび実行する heat-engine プロセスの数。"
-
 msgid "Number of instances in the Node group."
 msgstr "ノードグループ内のインスタンス数。"
 
@@ -5338,20 +5329,6 @@ msgstr "指定されたバケットの DNS 名。"
 msgid "The DNS nameserver address."
 msgstr "DNS ネームサーバーのアドレス。"
 
-msgid ""
-"The HARestarter resource type is deprecated and will be removed in a future "
-"release of Heat, once it has support for auto-healing any type of resource. "
-"Note that HARestarter does *not* actually restart servers - it deletes and "
-"then recreates them. It also does the same to all dependent resources, and "
-"may therefore exhibit unexpected and undesirable behaviour. Avoid."
-msgstr ""
-"HARestarter のリソースタイプは提供を終了する予定であり、あらゆるタイプのリ"
-"ソースの自動修復をサポートするようになった時点で、Heat の将来のリリースから削"
-"除されます。HARestarter は実際にサーバーの再起動を行うわけではなく、サーバー"
-"の削除と再作成を行います。また、このリソースタイプはあらゆる従属リソースの削"
-"除と再作成を行うため、好ましくない不測の挙動を示す場合があります。このリソー"
-"スタイプの使用は回避してください。"
-
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr "タイプ HTTP のモニターで要求に使用される HTTP メソッド。"
 
@@ -5735,10 +5712,6 @@ msgid ""
 msgstr ""
 "パーソナリティーファイル \"%(path)s\" の内容が、許可されているパーソナリ"
 "ティーファイルの最大容量 (%(max_size)s バイト) を超えています。"
-
-#, python-format
-msgid "The current %s will result in stack update timeout."
-msgstr "現行 %s によりスタック更新がタイムアウトになります。"
 
 msgid "The current size of AutoscalingResourceGroup."
 msgstr "AutoscalingResourceGroup の現行サイズ。"
@@ -6976,10 +6949,6 @@ msgstr ""
 "予期しないプロパティー: %(unexpected)s。%(type)s タイプの注文に対しては以下の"
 "プロパティーのみが許容されます: %(allowed)s"
 
-#, fuzzy
-msgid "Unexpected returning while IN_PROGRESS."
-msgstr "IN_PROGRESS 中に予測しない値が返されました。"
-
 msgid "Unique identifier for the device."
 msgstr "デバイスの固有 ID。"
 
@@ -7017,9 +6986,6 @@ msgstr "メトリックの単位。"
 
 msgid "Unknown"
 msgstr "不明"
-
-msgid "Unknown Keystone version"
-msgstr "不明な Keystone バージョン"
 
 #, python-format
 msgid "Unknown Property %s"

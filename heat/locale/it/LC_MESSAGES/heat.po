@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev82\n"
+"Project-Id-Version: heat 6.0.1.dev352\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-19 04:16+0000\n"
+"POT-Creation-Date: 2016-06-02 03:51+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -511,9 +511,6 @@ msgstr "Un parametro di input obbligatorio è mancante"
 
 msgid "A map containing all headers for the container."
 msgstr "Una mappa contenente tutte le intestazioni per il contenitore."
-
-msgid "A map of Nova names and IDs to apply configuration to."
-msgstr "Una mappa di nomi ed ID Nova a cui applicare la configurazione."
 
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution to "
@@ -1971,10 +1968,6 @@ msgstr "Errore di convalida del valore '%(value)s'"
 #, python-format
 msgid "Error validating value '%(value)s': %(message)s"
 msgstr "Errore di convalida del valore '%(value)s': %(message)s"
-
-msgid "Error wait time in seconds for stack action (ie. create or update)."
-msgstr ""
-"Errore Tempo di attesa in secondi per l'azione (ossia crea o aggiorna)."
 
 msgid "Ethertype of the traffic."
 msgstr "Ethertype del traffico."
@@ -4111,9 +4104,6 @@ msgstr "Numero di VCPU per il flavor."
 msgid "Number of backlog requests to configure the socket with."
 msgstr "Numero di richieste di backlog con cui configurare il socket."
 
-msgid "Number of heat-engine processes to fork and run."
-msgstr "Numero di processi del motore heat da sbloccare ed eseguire."
-
 msgid "Number of instances in the Node group."
 msgstr "Numero di istanze nel gruppo di nodi."
 
@@ -5533,19 +5523,6 @@ msgstr "Il nome DNS del bucket specificato."
 msgid "The DNS nameserver address."
 msgstr "L'indirizzo del server dei nomi DNS."
 
-msgid ""
-"The HARestarter resource type is deprecated and will be removed in a future "
-"release of Heat, once it has support for auto-healing any type of resource. "
-"Note that HARestarter does *not* actually restart servers - it deletes and "
-"then recreates them. It also does the same to all dependent resources, and "
-"may therefore exhibit unexpected and undesirable behaviour. Avoid."
-msgstr ""
-"Il tipo di risorsa HARestarter è obsoleto e verrà rimosso in una release "
-"futura di Heat, una volta avuto il supporto per la riparazione automatica di "
-"qualsiasi tipo di risorsa. HARestarter *non* riavvia realmente i server, li "
-"elimina e li crea di nuovo. Fa lo stesso per tutte le risorse dipendenti e "
-"può quindi presentare un comportamento imprevisto e indesiderabile. Evitare."
-
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr "Il metodo HTTP utilizzato per le richieste dal monitor di tipo HTTP."
 
@@ -5940,10 +5917,6 @@ msgid ""
 msgstr ""
 "Il contenuto del file di personalità \"%(path)s\" è più grande della "
 "dimensione massima consentita del file di personalità (%(max_size)s byte)."
-
-#, python-format
-msgid "The current %s will result in stack update timeout."
-msgstr "L'attuale %s determinerà un timeout di aggiornamento dello stack."
 
 msgid "The current size of AutoscalingResourceGroup."
 msgstr "La dimensione corrente di AutoscalingResourceGroup."
@@ -7260,9 +7233,6 @@ msgstr ""
 "Proprietà impreviste: %(unexpected)s. Solo queste proprietà sono consentite "
 "per tipo di ordine %(type)s: %(allowed)s."
 
-msgid "Unexpected returning while IN_PROGRESS."
-msgstr "Restituzione imprevista mentre IN_PROGRESS."
-
 msgid "Unique identifier for the device."
 msgstr "Identificativo univoco per il dispositivo."
 
@@ -7311,9 +7281,6 @@ msgstr "Unità per la metrica."
 
 msgid "Unknown"
 msgstr "Sconosciuto"
-
-msgid "Unknown Keystone version"
-msgstr "Versione keystone sconosciuta"
 
 #, python-format
 msgid "Unknown Property %s"
