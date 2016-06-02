@@ -14,12 +14,12 @@
 import collections
 import copy
 import datetime
-import eventlet
-import fixtures
 import json
 import logging
 import time
 
+import eventlet
+import fixtures
 import mock
 import mox
 from oslo_config import cfg

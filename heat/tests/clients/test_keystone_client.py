@@ -11,25 +11,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from keystoneclient import exceptions as keystone_exceptions
 import mock
 import six
 
-from keystoneclient import exceptions as keystone_exceptions
-
 from heat.common import exception
-from heat.engine.clients.os import keystone as client
+from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import keystone_constraints as ks_constr
 from heat.tests import common
 
 
 class KeystoneRoleConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,),
-                         client.KeystoneRoleConstraint.expected_exceptions,
-                         "KeystoneRoleConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound,),
+            ks_constr.KeystoneRoleConstraint.expected_exceptions,
+            "KeystoneRoleConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneRoleConstraint()
+        constraint = ks_constr.KeystoneRoleConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_role_id.return_value = None
@@ -47,12 +48,13 @@ class KeystoneRoleConstraintTest(common.HeatTestCase):
 class KeystoneProjectConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,),
-                         client.KeystoneProjectConstraint.expected_exceptions,
-                         "KeystoneProjectConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound,),
+            ks_constr.KeystoneProjectConstraint.expected_exceptions,
+            "KeystoneProjectConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneProjectConstraint()
+        constraint = ks_constr.KeystoneProjectConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_project_id.return_value = None
@@ -70,12 +72,13 @@ class KeystoneProjectConstraintTest(common.HeatTestCase):
 class KeystoneGroupConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,),
-                         client.KeystoneGroupConstraint.expected_exceptions,
-                         "KeystoneGroupConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound,),
+            ks_constr.KeystoneGroupConstraint.expected_exceptions,
+            "KeystoneGroupConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneGroupConstraint()
+        constraint = ks_constr.KeystoneGroupConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_group_id.return_value = None
@@ -93,12 +96,13 @@ class KeystoneGroupConstraintTest(common.HeatTestCase):
 class KeystoneDomainConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,),
-                         client.KeystoneDomainConstraint.expected_exceptions,
-                         "KeystoneDomainConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound,),
+            ks_constr.KeystoneDomainConstraint.expected_exceptions,
+            "KeystoneDomainConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneDomainConstraint()
+        constraint = ks_constr.KeystoneDomainConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_domain_id.return_value = None
@@ -118,13 +122,13 @@ class KeystoneServiceConstraintTest(common.HeatTestCase):
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,
-                          exception.KeystoneServiceNameConflict,),
-                         client.KeystoneServiceConstraint.expected_exceptions,
-                         "KeystoneServiceConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound, exception.KeystoneServiceNameConflict,),
+            ks_constr.KeystoneServiceConstraint.expected_exceptions,
+            "KeystoneServiceConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneServiceConstraint()
+        constraint = ks_constr.KeystoneServiceConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_service_id.return_value = self.sample_uuid
@@ -143,12 +147,13 @@ class KeystoneServiceConstraintTest(common.HeatTestCase):
 class KeystoneUserConstraintTest(common.HeatTestCase):
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,),
-                         client.KeystoneUserConstraint.expected_exceptions,
-                         "KeystoneUserConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound,),
+            ks_constr.KeystoneUserConstraint.expected_exceptions,
+            "KeystoneUserConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneUserConstraint()
+        constraint = ks_constr.KeystoneUserConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_user_id.return_value = None
@@ -167,12 +172,13 @@ class KeystoneRegionConstraintTest(common.HeatTestCase):
     sample_uuid = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
     def test_expected_exceptions(self):
-        self.assertEqual((exception.EntityNotFound,),
-                         client.KeystoneRegionConstraint.expected_exceptions,
-                         "KeystoneRegionConstraint expected exceptions error")
+        self.assertEqual(
+            (exception.EntityNotFound,),
+            ks_constr.KeystoneRegionConstraint.expected_exceptions,
+            "KeystoneRegionConstraint expected exceptions error")
 
     def test_constraint(self):
-        constraint = client.KeystoneRegionConstraint()
+        constraint = ks_constr.KeystoneRegionConstraint()
         client_mock = mock.MagicMock()
         client_plugin_mock = mock.MagicMock()
         client_plugin_mock.get_region_id.return_value = self.sample_uuid
@@ -203,14 +209,14 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         super(KeystoneClientPluginServiceTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_service_id(self, client_keystone):
 
         self._client.client.services.get.return_value = (self
                                                          ._get_mock_service())
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -219,7 +225,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         self._client.client.services.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_service_id_with_name(self, client_keystone):
         self._client.client.services.get.side_effect = (keystone_exceptions
                                                         .NotFound)
@@ -228,7 +234,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -240,7 +246,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         self._client.client.services.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_service_id_with_name_conflict(self, client_keystone):
         self._client.client.services.get.side_effect = (keystone_exceptions
                                                         .NotFound)
@@ -250,7 +256,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -267,7 +273,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         self._client.client.services.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_service_id_not_found(self, client_keystone):
         self._client.client.services.get.side_effect = (keystone_exceptions
                                                         .NotFound)
@@ -275,7 +281,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -307,13 +313,13 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
         super(KeystoneClientPluginRoleTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_role_id(self, client_keystone):
         self._client.client.roles.get.return_value = (self
                                                       ._get_mock_role())
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -322,7 +328,7 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
         self._client.client.roles.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_role_id_with_name(self, client_keystone):
         self._client.client.roles.get.side_effect = (keystone_exceptions
                                                      .NotFound)
@@ -331,7 +337,7 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -343,7 +349,7 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
         self._client.client.roles.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_role_id_not_found(self, client_keystone):
         self._client.client.roles.get.side_effect = (keystone_exceptions
                                                      .NotFound)
@@ -351,7 +357,7 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -383,13 +389,13 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
         super(KeystoneClientPluginProjectTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_project_id(self, client_keystone):
         self._client.client.projects.get.return_value = (self
                                                          ._get_mock_project())
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -398,7 +404,7 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
         self._client.client.projects.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_project_id_with_name(self, client_keystone):
         self._client.client.projects.get.side_effect = (keystone_exceptions
                                                         .NotFound)
@@ -407,7 +413,7 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -419,7 +425,7 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
         self._client.client.projects.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_project_id_not_found(self, client_keystone):
         self._client.client.projects.get.side_effect = (keystone_exceptions
                                                         .NotFound)
@@ -427,7 +433,7 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -459,13 +465,13 @@ class KeystoneClientPluginDomainTest(common.HeatTestCase):
         super(KeystoneClientPluginDomainTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_domain_id(self, client_keystone):
         self._client.client.domains.get.return_value = (self
                                                         ._get_mock_domain())
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -474,7 +480,7 @@ class KeystoneClientPluginDomainTest(common.HeatTestCase):
         self._client.client.domains.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_domain_id_with_name(self, client_keystone):
         self._client.client.domains.get.side_effect = (keystone_exceptions
                                                        .NotFound)
@@ -483,7 +489,7 @@ class KeystoneClientPluginDomainTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -495,7 +501,7 @@ class KeystoneClientPluginDomainTest(common.HeatTestCase):
         self._client.client.domains.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_domain_id_not_found(self, client_keystone):
         self._client.client.domains.get.side_effect = (keystone_exceptions
                                                        .NotFound)
@@ -503,7 +509,7 @@ class KeystoneClientPluginDomainTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -535,13 +541,13 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
         super(KeystoneClientPluginGroupTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_group_id(self, client_keystone):
         self._client.client.groups.get.return_value = (self
                                                        ._get_mock_group())
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -550,7 +556,7 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
         self._client.client.groups.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_group_id_with_name(self, client_keystone):
         self._client.client.groups.get.side_effect = (keystone_exceptions
                                                       .NotFound)
@@ -559,7 +565,7 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -571,7 +577,7 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
         self._client.client.groups.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_group_id_not_found(self, client_keystone):
         self._client.client.groups.get.side_effect = (keystone_exceptions
                                                       .NotFound)
@@ -579,7 +585,7 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -611,12 +617,12 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
         super(KeystoneClientPluginUserTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_user_id(self, client_keystone):
         self._client.client.users.get.return_value = self._get_mock_user()
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -625,7 +631,7 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
         self._client.client.users.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_user_id_with_name(self, client_keystone):
         self._client.client.users.get.side_effect = (keystone_exceptions
                                                      .NotFound)
@@ -634,7 +640,7 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
         ]
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -646,14 +652,14 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
         self._client.client.users.list.assert_called_once_with(
             name=self.sample_name)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_user_id_not_found(self, client_keystone):
         self._client.client.users.get.side_effect = (keystone_exceptions
                                                      .NotFound)
         self._client.client.users.list.return_value = []
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -685,12 +691,12 @@ class KeystoneClientPluginRegionTest(common.HeatTestCase):
         super(KeystoneClientPluginRegionTest, self).setUp()
         self._client = mock.MagicMock()
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_region_id(self, client_keystone):
         self._client.client.regions.get.return_value = self._get_mock_region()
 
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 
@@ -699,12 +705,12 @@ class KeystoneClientPluginRegionTest(common.HeatTestCase):
         self._client.client.regions.get.assert_called_once_with(
             self.sample_uuid)
 
-    @mock.patch.object(client.KeystoneClientPlugin, 'client')
+    @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_region_id_not_found(self, client_keystone):
         self._client.client.regions.get.side_effect = (keystone_exceptions
                                                        .NotFound)
         client_keystone.return_value = self._client
-        client_plugin = client.KeystoneClientPlugin(
+        client_plugin = keystone.KeystoneClientPlugin(
             context=mock.MagicMock()
         )
 

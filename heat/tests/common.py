@@ -29,6 +29,7 @@ from heat.engine.clients.os import barbican
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import keystone_constraints as ks_constr
 from heat.engine.clients.os.neutron import neutron_constraints as neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import sahara
@@ -40,7 +41,6 @@ from heat.engine import scheduler
 from heat.tests import fakes
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-
 
 TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN,
                           'sqlalchemy': logging.WARN,
@@ -292,7 +292,7 @@ class HeatTestCase(testscenarios.WithScenarios,
         validate.return_value = True
 
     def stub_KeystoneProjectConstraint(self):
-        validate = self.patchobject(keystone.KeystoneProjectConstraint,
+        validate = self.patchobject(ks_constr.KeystoneProjectConstraint,
                                     'validate')
         validate.return_value = True
 

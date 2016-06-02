@@ -12,18 +12,18 @@
 #    under the License.
 
 import copy
-import fixtures
-from oslo_log import log as logging
 import time
 
-from keystoneclient import exceptions as kc_exceptions
+import fixtures
+from keystoneauth1 import exceptions as kc_exceptions
 import mock
+from oslo_log import log as logging
 
 from heat.common import exception
-from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
 from heat.common import timeutils
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import heat_keystoneclient as hkc
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template

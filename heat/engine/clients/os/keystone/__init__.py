@@ -14,11 +14,8 @@
 from keystoneclient import exceptions
 
 from heat.common import exception
-from heat.common import heat_keystoneclient as hkc
 from heat.engine.clients import client_plugin
-from heat.engine import constraints
-
-CLIENT_NAME = 'keystone'
+from heat.engine.clients.os.keystone import heat_keystoneclient as hkc
 
 
 class KeystoneClientPlugin(client_plugin.ClientPlugin):
@@ -132,63 +129,3 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         except exceptions.NotFound:
             raise exception.EntityNotFound(entity='KeystoneRegion',
                                            name=region)
-
-
-class KeystoneBaseConstraint(constraints.BaseCustomConstraint):
-
-    resource_client_name = CLIENT_NAME
-    entity = None
-
-    def validate_with_client(self, client, resource_id):
-        # when user specify empty value in template, do not get the
-        # responding resource from backend, otherwise an error will happen
-        if resource_id == '':
-            raise exception.EntityNotFound(entity=self.entity,
-                                           name=resource_id)
-
-        super(KeystoneBaseConstraint, self).validate_with_client(client,
-                                                                 resource_id)
-
-
-class KeystoneRoleConstraint(KeystoneBaseConstraint):
-
-    resource_getter_name = 'get_role_id'
-    entity = 'KeystoneRole'
-
-
-class KeystoneDomainConstraint(KeystoneBaseConstraint):
-
-    resource_getter_name = 'get_domain_id'
-    entity = 'KeystoneDomain'
-
-
-class KeystoneProjectConstraint(KeystoneBaseConstraint):
-
-    resource_getter_name = 'get_project_id'
-    entity = 'KeystoneProject'
-
-
-class KeystoneGroupConstraint(KeystoneBaseConstraint):
-
-    resource_getter_name = 'get_group_id'
-    entity = 'KeystoneGroup'
-
-
-class KeystoneServiceConstraint(KeystoneBaseConstraint):
-
-    expected_exceptions = (exception.EntityNotFound,
-                           exception.KeystoneServiceNameConflict,)
-    resource_getter_name = 'get_service_id'
-    entity = 'KeystoneService'
-
-
-class KeystoneUserConstraint(KeystoneBaseConstraint):
-
-    resource_getter_name = 'get_user_id'
-    entity = 'KeystoneUser'
-
-
-class KeystoneRegionConstraint(KeystoneBaseConstraint):
-
-    resource_getter_name = 'get_region_id'
-    entity = 'KeystoneRegion'

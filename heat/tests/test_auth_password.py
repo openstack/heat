@@ -26,7 +26,8 @@ from heat.common import auth_password
 from heat.tests import common
 
 
-cfg.CONF.import_opt('keystone_backend', 'heat.common.heat_keystoneclient')
+cfg.CONF.import_opt('keystone_backend',
+                    'heat.engine.clients.os.keystone.heat_keystoneclient')
 
 
 EXPECTED_ENV_RESPONSE = {

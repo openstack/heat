@@ -29,7 +29,7 @@ import six
 
 from heat.common import config
 from heat.common import exception
-from heat.common import heat_keystoneclient
+from heat.engine.clients.os.keystone import heat_keystoneclient
 from heat.tests import common
 from heat.tests import utils
 
