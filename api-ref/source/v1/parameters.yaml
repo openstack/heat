@@ -778,6 +778,18 @@ hostname:
   in: body
   required: true
   type: string
+host:
+  description: |
+    The host for the service.
+  in: body
+  required: true
+  type: string
+engine_id:
+  description: |
+    The ID of engine service.
+  in: body
+  required: true
+  type: string
 id:
   description: |
     The UUID of the heat engine.

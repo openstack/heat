@@ -14,8 +14,8 @@ Show orchestration engine status
 
 Enables administrative users to view details for all orchestration engines.
 
-Orchestration engine details include ``engine_id``, topic name,
-last updated time, health status, and host name.
+Orchestration engine details include engine id, binary, topic name, host, 
+report interval, last updated time, health status, and host name.
 
 Troubleshooting
 
@@ -45,10 +45,12 @@ Response Parameters
    - status: status
    - binary: binary
    - report_interval: report_interval
+   - engine_id: engine_id
    - created_at: created_at
    - hostname: hostname
    - updated_at: updated_at
    - topic: topic
+   - host: host
    - services: services
    - deleted_at: deleted_at
    - id: id
