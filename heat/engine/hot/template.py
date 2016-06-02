@@ -296,7 +296,7 @@ class HOTemplate20141016(HOTemplate20130523):
 
         'Fn::Select': cfn_funcs.Select,
 
-        # functions removed from 20130523
+        # functions removed from 2014-10-16
         'Fn::GetAZs': hot_funcs.Removed,
         'Fn::Join': hot_funcs.Removed,
         'Fn::Split': hot_funcs.Removed,
@@ -310,7 +310,6 @@ class HOTemplate20141016(HOTemplate20130523):
 
 class HOTemplate20150430(HOTemplate20141016):
     functions = {
-        'digest': hot_funcs.Digest,
         'get_attr': hot_funcs.GetAtt,
         'get_file': hot_funcs.GetFile,
         'get_param': hot_funcs.GetParam,
@@ -322,7 +321,10 @@ class HOTemplate20150430(HOTemplate20141016):
 
         'Fn::Select': cfn_funcs.Select,
 
-        # functions removed from 20130523
+        # functions added in 2015-04-30
+        'digest': hot_funcs.Digest,
+
+        # functions removed from 2014-10-16
         'Fn::GetAZs': hot_funcs.Removed,
         'Fn::Join': hot_funcs.Removed,
         'Fn::Split': hot_funcs.Removed,
@@ -336,7 +338,6 @@ class HOTemplate20150430(HOTemplate20141016):
 
 class HOTemplate20151015(HOTemplate20150430):
     functions = {
-        'digest': hot_funcs.Digest,
         'get_attr': hot_funcs.GetAttAllAttributes,
         'get_file': hot_funcs.GetFile,
         'get_param': hot_funcs.GetParam,
@@ -346,13 +347,16 @@ class HOTemplate20151015(HOTemplate20150430):
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.ReplaceJson,
 
-        # functions added since 20150430
+        # functions added in 2015-04-30
+        'digest': hot_funcs.Digest,
+
+        # functions added in 2015-10-15
         'str_split': hot_funcs.StrSplit,
 
-        # functions removed from 20150430
+        # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
 
-        # functions removed from 20130523
+        # functions removed from 2014-10-16
         'Fn::GetAZs': hot_funcs.Removed,
         'Fn::Join': hot_funcs.Removed,
         'Fn::Split': hot_funcs.Removed,
@@ -366,7 +370,6 @@ class HOTemplate20151015(HOTemplate20150430):
 
 class HOTemplate20160408(HOTemplate20151015):
     functions = {
-        'digest': hot_funcs.Digest,
         'get_attr': hot_funcs.GetAttAllAttributes,
         'get_file': hot_funcs.GetFile,
         'get_param': hot_funcs.GetParam,
@@ -376,16 +379,19 @@ class HOTemplate20160408(HOTemplate20151015):
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.ReplaceJson,
 
-        # functions added since 20151015
-        'map_merge': hot_funcs.MapMerge,
+        # functions added in 2015-04-30
+        'digest': hot_funcs.Digest,
 
-        # functions added since 20150430
+        # functions added in 2015-10-15
         'str_split': hot_funcs.StrSplit,
 
-        # functions removed from 20150430
+        # functions added in 2016-04-08
+        'map_merge': hot_funcs.MapMerge,
+
+        # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
 
-        # functions removed from 20130523
+        # functions removed from 2014-10-16
         'Fn::GetAZs': hot_funcs.Removed,
         'Fn::Join': hot_funcs.Removed,
         'Fn::Split': hot_funcs.Removed,
@@ -399,7 +405,6 @@ class HOTemplate20160408(HOTemplate20151015):
 
 class HOTemplate20161014(HOTemplate20160408):
     functions = {
-        'digest': hot_funcs.Digest,
         'get_attr': hot_funcs.GetAttAllAttributes,
         'get_file': hot_funcs.GetFile,
         'get_param': hot_funcs.GetParam,
@@ -409,22 +414,23 @@ class HOTemplate20161014(HOTemplate20160408):
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.ReplaceJson,
 
-        # functions added since 20161014
-        'yaql': hot_funcs.Yaql,
+        # functions added in 2015-04-30
+        'digest': hot_funcs.Digest,
 
-        # functions added since 20161014
-        'equals': cfn_funcs.Equals,
-
-        # functions added since 20151015
-        'map_merge': hot_funcs.MapMerge,
-
-        # functions added since 20150430
+        # functions added in 2015-10-15
         'str_split': hot_funcs.StrSplit,
 
-        # functions removed from 20150430
+        # functions added in 2016-04-08
+        'map_merge': hot_funcs.MapMerge,
+
+        # functions added in 2016-10-14
+        'yaql': hot_funcs.Yaql,
+        'equals': cfn_funcs.Equals,
+
+        # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
 
-        # functions removed from 20130523
+        # functions removed from 2014-10-16
         'Fn::GetAZs': hot_funcs.Removed,
         'Fn::Join': hot_funcs.Removed,
         'Fn::Split': hot_funcs.Removed,
