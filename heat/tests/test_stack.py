@@ -233,7 +233,7 @@ class StackTest(common.HeatTestCase):
                                  template.Template(tpl),
                                  status_reason='blarg')
 
-        def get_more(nested_depth=0):
+        def get_more(nested_depth=0, filters=None):
             yield 'X'
             yield 'Y'
             yield 'Z'
@@ -279,6 +279,45 @@ class StackTest(common.HeatTestCase):
         # And returns the resource A
         self.assertEqual('A', all_resources[0].name)
 
+    @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
+    @mock.patch('heat.engine.resource.Resource')
+    def test_iter_resources_nested_with_filters(self, mock_resource,
+                                                mock_db_call):
+        mock_rsc = mock.Mock()
+        mock_rsc.name = 'A'
+        mock_db_call.return_value = {'A': mock_rsc}
+        mock_resource.return_value = mock_rsc
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+                   {'A': {'Type': 'StackResourceType'},
+                    'B': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg')
+
+        def get_more(nested_depth=0, filters=None):
+            if filters:
+                yield 'X'
+
+        self.stack['A'].nested = mock.Mock()
+        self.stack['B'].nested = mock.Mock()
+        self.stack['A'].nested.return_value.iter_resources = mock.Mock(
+            side_effect=get_more)
+        self.stack['B'].nested.return_value.iter_resources = mock.Mock(
+            side_effect=get_more)
+
+        all_resources = list(self.stack.iter_resources(
+            nested_depth=1,
+            filters=dict(name=['A'])
+        ))
+
+        # Verify, the db query is called with expected filter
+        mock_db_call.assert_called_once_with(self.ctx,
+                                             self.stack.id,
+                                             dict(name=['A']))
+        # Returns three resources (1 first level + 2 second level)
+        self.assertEqual(3, len(all_resources))
+
     @mock.patch.object(stack.Stack, 'db_resource_get')
     def test_iter_resources_cached(self, mock_drg):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -298,7 +337,7 @@ class StackTest(common.HeatTestCase):
                                  status_reason='blarg',
                                  cache_data=cache_data)
 
-        def get_more(nested_depth=0):
+        def get_more(nested_depth=0, filters=None):
             yield 'X'
             yield 'Y'
             yield 'Z'
