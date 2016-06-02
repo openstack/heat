@@ -264,7 +264,37 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('B', self.stack.resource_get('B').name)
         self.assertIsNone(self.stack.resource_get('C'))
 
-    def test_iter_resources_with_nested(self):
+    @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
+    def test_iter_resources(self, mock_db_call):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg')
+        self.stack.store()
+
+        mock_rsc_a = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_a.name = 'A'
+        mock_rsc_b = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_b.name = 'B'
+        mock_db_call.return_value = {
+            'A': mock_rsc_a,
+            'B': mock_rsc_b
+        }
+
+        all_resources = list(self.stack.iter_resources())
+
+        # Verify, the db query is called with expected filter
+        mock_db_call.assert_called_once_with(self.ctx, self.stack.id)
+
+        # And returns the resources
+        names = sorted([r.name for r in all_resources])
+        self.assertEqual(['A', 'B'], names)
+
+    @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
+    def test_iter_resources_with_nested(self, mock_db_call):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
                {'A': {'Type': 'StackResourceType'},
@@ -272,6 +302,17 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
                                  status_reason='blarg')
+
+        self.stack.store()
+
+        mock_rsc_a = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_a.name = 'A'
+        mock_rsc_b = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_b.name = 'B'
+        mock_db_call.return_value = {
+            'A': mock_rsc_a,
+            'B': mock_rsc_b
+        }
 
         def get_more(nested_depth=0, filters=None):
             yield 'X'
@@ -291,28 +332,31 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(5, len(all_resources))
 
     @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
-    @mock.patch('heat.engine.resource.Resource')
-    def test_iter_resources_with_filters(self, mock_resource, mock_db_call):
-        mock_rsc = mock.MagicMock()
-        mock_rsc.name = 'A'
-        mock_db_call.return_value = {'A': mock_rsc}
-        mock_resource.return_value = mock_rsc
+    def test_iter_resources_with_filters(self, mock_db_call):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
-               {'A': {'Type': 'StackResourceType'},
+               {'A': {'Type': 'GenericResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
                                  status_reason='blarg')
+        self.stack.store()
+
+        mock_rsc = mock.MagicMock()
+        mock_rsc.name = 'A'
+        mock_rsc.current_template_id = self.stack.t.id
+        mock_db_call.return_value = {'A': mock_rsc}
 
         all_resources = list(self.stack.iter_resources(
             filters=dict(name=['A'])
         ))
 
         # Verify, the db query is called with expected filter
-        mock_db_call.assert_called_once_with(self.ctx,
-                                             self.stack.id,
-                                             dict(name=['A']))
+        mock_db_call.assert_has_calls([
+            mock.call(self.ctx, self.stack.id, dict(name=['A'])),
+            mock.call(self.ctx, self.stack.id),
+        ])
+
         # Make sure it returns only one resource.
         self.assertEqual(1, len(all_resources))
 
@@ -320,13 +364,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('A', all_resources[0].name)
 
     @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
-    @mock.patch('heat.engine.resource.Resource')
-    def test_iter_resources_nested_with_filters(self, mock_resource,
-                                                mock_db_call):
-        mock_rsc = mock.Mock()
-        mock_rsc.name = 'A'
-        mock_db_call.return_value = {'A': mock_rsc}
-        mock_resource.return_value = mock_rsc
+    def test_iter_resources_nested_with_filters(self, mock_db_call):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
                    {'A': {'Type': 'StackResourceType'},
@@ -334,6 +372,17 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(tpl),
                                  status_reason='blarg')
+
+        self.stack.store()
+
+        mock_rsc_a = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_a.name = 'A'
+        mock_rsc_b = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_b.name = 'B'
+        mock_db_call.return_value = {
+            'A': mock_rsc_a,
+            'B': mock_rsc_b
+        }
 
         def get_more(nested_depth=0, filters=None):
             if filters:
@@ -352,50 +401,13 @@ class StackTest(common.HeatTestCase):
         ))
 
         # Verify, the db query is called with expected filter
-        mock_db_call.assert_called_once_with(self.ctx,
-                                             self.stack.id,
-                                             dict(name=['A']))
+        mock_db_call.assert_has_calls([
+            mock.call(self.ctx, self.stack.id),
+            mock.call(self.ctx, self.stack.id, dict(name=['A'])),
+        ])
+
         # Returns three resources (1 first level + 2 second level)
         self.assertEqual(3, len(all_resources))
-
-    @mock.patch.object(stack.Stack, 'db_resource_get')
-    def test_iter_resources_cached(self, mock_drg):
-        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
-               'Resources':
-               {'A': {'Type': 'StackResourceType'},
-                'B': {'Type': 'GenericResourceType'}}}
-
-        cache_data = {'A': {'reference_id': 'A-id', 'uuid': mock.ANY,
-                            'id': mock.ANY, 'action': 'CREATE',
-                            'status': 'COMPLETE'},
-                      'B': {'reference_id': 'B-id', 'uuid': mock.ANY,
-                            'id': mock.ANY, 'action': 'CREATE',
-                            'status': 'COMPLETE'}}
-
-        self.stack = stack.Stack(self.ctx, 'test_stack',
-                                 template.Template(tpl),
-                                 status_reason='blarg',
-                                 cache_data=cache_data)
-
-        def get_more(nested_depth=0, filters=None):
-            yield 'X'
-            yield 'Y'
-            yield 'Z'
-
-        self.stack['A'].nested = mock.MagicMock()
-        self.stack['A'].nested.return_value.iter_resources = mock.MagicMock(
-            side_effect=get_more)
-
-        resource_generator = self.stack.iter_resources()
-        self.assertIsNot(resource_generator, list)
-
-        first_level_resources = list(resource_generator)
-        self.assertEqual(2, len(first_level_resources))
-        all_resources = list(self.stack.iter_resources(1))
-        self.assertEqual(5, len(all_resources))
-
-        # A cache supplied means we should never query the database.
-        self.assertFalse(mock_drg.called)
 
     def test_load_parent_resource(self):
         self.stack = stack.Stack(self.ctx, 'load_parent_resource', self.tmpl,

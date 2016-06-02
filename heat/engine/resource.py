@@ -637,7 +637,12 @@ class Resource(object):
         Returns a list of names of resources that depend on this resource
         directly.
         """
-        return [r.name for r in self.stack.dependencies.required_by(self)]
+        try:
+            return [r.name for r in self.stack.dependencies.required_by(self)]
+        except KeyError:
+            # for convergence, fall back to building from needed_by
+            return [r.name for r in self.stack.resources.values()
+                    if r.id in self.needed_by]
 
     def client(self, name=None, version=None):
         client_name = name or self.default_client_name

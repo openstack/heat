@@ -298,11 +298,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
         mock_load.return_value = stk
         tools.clean_up_stack(stk)
         resources = self.eng.list_stack_resources(self.ctx, stack_id)
-        self.assertEqual(1, len(resources))
-
-        res = resources[0]
-        self.assertEqual('DELETE', res['resource_action'])
-        self.assertEqual('COMPLETE', res['resource_status'])
+        self.assertEqual(0, len(resources))
 
     @mock.patch.object(service.EngineService, '_get_stack')
     def test_stack_resources_list_nonexist_stack(self, mock_get):
