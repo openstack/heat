@@ -51,6 +51,8 @@ class EngineClient(object):
         1.28 - Add environment_show call
         1.29 - Add template_id to create_stack/update_stack
         1.30 - Add possibility to resource_type_* return descriptions
+        1.31 - Add nested_depth to list_events, when nested_depth is specified
+               add root_stack_id to response
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -494,7 +496,8 @@ class EngineClient(object):
                          version='1.9')
 
     def list_events(self, ctxt, stack_identity, filters=None, limit=None,
-                    marker=None, sort_keys=None, sort_dir=None,):
+                    marker=None, sort_keys=None, sort_dir=None,
+                    nested_depth=None):
         """Lists all events associated with a given stack.
 
         It supports pagination (``limit`` and ``marker``),
@@ -508,6 +511,7 @@ class EngineClient(object):
         :param marker: the ID of the last event in the previous page
         :param sort_keys: an array of fields used to sort the list
         :param sort_dir: the direction of the sort ('asc' or 'desc').
+        :param nested_depth: Levels of nested stacks to list events for.
         """
         return self.call(ctxt, self.make_msg('list_events',
                                              stack_identity=stack_identity,
@@ -515,7 +519,9 @@ class EngineClient(object):
                                              limit=limit,
                                              marker=marker,
                                              sort_keys=sort_keys,
-                                             sort_dir=sort_dir))
+                                             sort_dir=sort_dir,
+                                             nested_depth=nested_depth),
+                         version='1.31')
 
     def describe_stack_resource(self, ctxt, stack_identity, resource_name,
                                 with_attr=False):

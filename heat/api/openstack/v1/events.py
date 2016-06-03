@@ -69,8 +69,14 @@ def format_event(req, event, keys=None):
         else:
             yield (key, value)
 
-    return dict(itertools.chain.from_iterable(
+    ev = dict(itertools.chain.from_iterable(
         transform(k, v) for k, v in event.items()))
+
+    root_stack_id = event.get(rpc_api.EVENT_ROOT_STACK_ID)
+    if root_stack_id:
+        root_identifier = identifier.HeatIdentifier(**root_stack_id)
+        ev['links'].append(util.make_link(req, root_identifier, 'root_stack'))
+    return ev
 
 
 class EventController(object):
@@ -86,14 +92,16 @@ class EventController(object):
         self.rpc_client = rpc_client.EngineClient()
 
     def _event_list(self, req, identity, detail=False, filters=None,
-                    limit=None, marker=None, sort_keys=None, sort_dir=None):
+                    limit=None, marker=None, sort_keys=None, sort_dir=None,
+                    nested_depth=None):
         events = self.rpc_client.list_events(req.context,
                                              identity,
                                              filters=filters,
                                              limit=limit,
                                              marker=marker,
                                              sort_keys=sort_keys,
-                                             sort_dir=sort_dir)
+                                             sort_dir=sort_dir,
+                                             nested_depth=nested_depth)
         keys = None if detail else summary_keys
 
         return [format_event(req, e, keys) for e in events]
@@ -106,6 +114,7 @@ class EventController(object):
             'marker': util.PARAM_TYPE_SINGLE,
             'sort_dir': util.PARAM_TYPE_SINGLE,
             'sort_keys': util.PARAM_TYPE_MULTI,
+            'nested_depth': util.PARAM_TYPE_SINGLE,
         }
         filter_whitelist = {
             'resource_status': util.PARAM_TYPE_MIXED,
@@ -115,14 +124,15 @@ class EventController(object):
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
-        key = rpc_api.PARAM_LIMIT
-        if key in params:
-            try:
-                limit = param_utils.extract_int(key, params[key],
-                                                allow_zero=True)
-            except ValueError as e:
-                raise exc.HTTPBadRequest(six.text_type(e))
-            params[key] = limit
+
+        int_params = (rpc_api.PARAM_LIMIT, rpc_api.PARAM_NESTED_DEPTH)
+        try:
+            for key in int_params:
+                if key in params:
+                    params[key] = param_utils.extract_int(
+                        key, params[key], allow_zero=True)
+        except ValueError as e:
+            raise exc.HTTPBadRequest(six.text_type(e))
 
         if resource_name is None:
             if not filter_params:

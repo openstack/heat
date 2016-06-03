@@ -50,9 +50,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self._test_resource_index('a3455d8c-9f88-404d-a85b-5315293e67de',
                                   mock_enforce)
 
-    def _test_resource_index(self, event_id, mock_enforce):
+    def test_resource_index_nested_depth(self, mock_enforce):
+        self._test_resource_index('a3455d8c-9f88-404d-a85b-5315293e67de',
+                                  mock_enforce, nested_depth=1)
+
+    def _test_resource_index(self, event_id, mock_enforce, nested_depth=None):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         res_name = 'WikiDatabase'
+        params = {}
+        if nested_depth:
+            params['nested_depth'] = nested_depth
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
         res_identity = identifier.ResourceIdentifier(resource_name=res_name,
@@ -61,9 +68,11 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                                                  **res_identity)
 
         req = self._get(stack_identity._tenant_path() +
-                        '/resources/' + res_name + '/events')
+                        '/resources/' + res_name + '/events',
+                        params=params)
 
         kwargs = {'stack_identity': stack_identity,
+                  'nested_depth': nested_depth,
                   'limit': None, 'sort_keys': None, 'marker': None,
                   'sort_dir': None, 'filters': {'resource_name': res_name}}
 
@@ -82,9 +91,14 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
+        if nested_depth:
+            engine_resp[0]['root_stack_id'] = dict(stack_identity)
+
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context, ('list_events', kwargs)
+            req.context,
+            ('list_events', kwargs),
+            version='1.31'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -111,6 +125,10 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 }
             ]
         }
+        if nested_depth:
+            expected['events'][0]['links'].append(
+                {'href': self._url(stack_identity), 'rel': 'root_stack'}
+            )
 
         self.assertEqual(expected, result)
         self.m.VerifyAll()
@@ -155,7 +173,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('filters', engine_args)
         self.assertIn('resource_name', engine_args['filters'])
         self.assertEqual(res_name, engine_args['filters']['resource_name'])
@@ -202,7 +220,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('filters', engine_args)
         self.assertIn('resource_name', engine_args['filters'])
         self.assertIn('resource1', engine_args['filters']['resource_name'])
@@ -227,7 +245,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
-        kwargs = {'stack_identity': stack_identity,
+        kwargs = {'stack_identity': stack_identity, 'nested_depth': None,
                   'limit': None, 'sort_keys': None, 'marker': None,
                   'sort_dir': None, 'filters': {'resource_name': res_name}}
 
@@ -249,7 +267,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', kwargs)
+            ('list_events', kwargs),
+            version='1.31'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -287,7 +306,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
-        kwargs = {'stack_identity': stack_identity,
+        kwargs = {'stack_identity': stack_identity, 'nested_depth': None,
                   'limit': None, 'sort_keys': None, 'marker': None,
                   'sort_dir': None, 'filters': None}
 
@@ -295,7 +314,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', kwargs)
+            ('list_events', kwargs),
+            version='1.31'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 
@@ -336,7 +356,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events')
 
-        kwargs = {'stack_identity': stack_identity,
+        kwargs = {'stack_identity': stack_identity, 'nested_depth': None,
                   'limit': None, 'sort_keys': None, 'marker': None,
                   'sort_dir': None, 'filters': {'resource_name': res_name}}
 
@@ -344,7 +364,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', kwargs)
+            ('list_events', kwargs),
+            version='1.31'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -380,7 +401,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertEqual(10, engine_args['limit'])
         self.assertIn('sort_keys', engine_args)
@@ -469,7 +490,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None,
+                  'sort_dir': None, 'nested_depth': None,
                   'filters': {'resource_name': res_name, 'uuid': event_id}}
 
         engine_resp = [
@@ -491,7 +512,8 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', kwargs)
+            ('list_events', kwargs),
+            version='1.31'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -536,13 +558,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None,
+                  'sort_dir': None, 'nested_depth': None,
                   'filters': {'resource_name': res_name, 'uuid': '42'}}
 
         engine_resp = []
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context, ('list_events', kwargs)).AndReturn(engine_resp)
+            req.context,
+            ('list_events', kwargs),
+            version='1.31'
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNotFound,
@@ -565,13 +590,15 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         kwargs = {'stack_identity': stack_identity,
                   'limit': None, 'sort_keys': None, 'marker': None,
-                  'sort_dir': None,
+                  'sort_dir': None, 'nested_depth': None,
                   'filters': {'resource_name': res_name, 'uuid': '42'}}
 
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context, ('list_events', kwargs)
+            req.context,
+            ('list_events', kwargs),
+            version='1.31'
         ).AndRaise(tools.to_remote_error(error))
         self.m.ReplayAll()
 
@@ -647,7 +674,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('filters', engine_args)
         self.assertIn('resource_name', engine_args['filters'])
         self.assertIn(res_name, engine_args['filters']['resource_name'])
