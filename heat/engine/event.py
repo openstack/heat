@@ -17,8 +17,6 @@ import six
 import oslo_db.exception
 from oslo_log import log as logging
 
-from heat.common import exception
-from heat.common.i18n import _
 from heat.common import identifier
 from heat.objects import event as event_object
 
@@ -53,25 +51,6 @@ class Event(object):
         self.uuid = uuid
         self.timestamp = timestamp
         self.id = id
-
-    @classmethod
-    def load(cls, context, event_id, event=None, stack=None):
-        """Retrieve an Event from the database."""
-        from heat.engine import stack as parser
-
-        ev = (event if event is not None else
-              event_object.Event.get_by_id(context, event_id))
-        if ev is None:
-            message = _('No event exists with id "%s"') % str(event_id)
-            raise exception.NotFound(message)
-
-        st = (stack if stack is not None else
-              parser.Stack.load(context, ev.stack_id))
-
-        return cls(context, st, ev.resource_action, ev.resource_status,
-                   ev.resource_status_reason, ev.physical_resource_id,
-                   ev.resource_properties, ev.resource_name,
-                   ev.resource_type, ev.uuid, ev.created_at, ev.id)
 
     def store(self):
         """Store the Event in the database."""

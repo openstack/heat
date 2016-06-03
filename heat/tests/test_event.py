@@ -14,9 +14,7 @@
 import mock
 from oslo_config import cfg
 import oslo_db.exception
-from oslo_utils import timeutils
 
-from heat.common import exception
 from heat.engine import event
 from heat.engine import rsrc_defn
 from heat.engine import stack
@@ -103,73 +101,6 @@ class EventTest(EventCommon):
     def setUp(self):
         super(EventTest, self).setUp()
         self._setup_stack(tmpl)
-
-    def test_load(self):
-        self.resource.resource_id_set('resource_physical_id')
-
-        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties,
-                        self.resource.name, self.resource.type())
-
-        e.store()
-        self.assertIsNotNone(e.id)
-
-        loaded_e = event.Event.load(self.ctx, e.id)
-
-        self.assertEqual(self.stack.id, loaded_e.stack.id)
-        self.assertEqual(self.resource.name, loaded_e.resource_name)
-        self.assertEqual('wibble', loaded_e.physical_resource_id)
-        self.assertEqual('TEST', loaded_e.action)
-        self.assertEqual('IN_PROGRESS', loaded_e.status)
-        self.assertEqual('Testing', loaded_e.reason)
-        self.assertIsNotNone(loaded_e.timestamp)
-        self.assertEqual({'Foo': 'goo'}, loaded_e.resource_properties)
-
-    def test_load_with_timestamp(self):
-        self.resource.resource_id_set('resource_physical_id')
-        timestamp = timeutils.utcnow()
-
-        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties,
-                        self.resource.name, self.resource.type(),
-                        timestamp=timestamp)
-
-        e.store()
-        self.assertIsNotNone(e.id)
-
-        loaded_e = event.Event.load(self.ctx, e.id)
-
-        self.assertEqual(timestamp, loaded_e.timestamp)
-
-    def test_load_no_event(self):
-        with mock.patch("heat.objects.event.Event") as event_mock:
-            event_mock.get_by_id.return_value = None
-            self.assertRaisesRegex(exception.NotFound,
-                                   "^No event exists with id",
-                                   event.Event.load, self.ctx, 1)
-
-    def test_load_given_stack_event(self):
-        self.resource.resource_id_set('resource_physical_id')
-
-        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties,
-                        self.resource.name, self.resource.type())
-
-        e.store()
-        self.assertIsNotNone(e.id)
-
-        ev = event_object.Event.get_by_id(self.ctx, e.id)
-
-        loaded_e = event.Event.load(self.ctx, e.id, stack=self.stack, event=ev)
-
-        self.assertEqual(self.stack.id, loaded_e.stack.id)
-        self.assertEqual(self.resource.name, loaded_e.resource_name)
-        self.assertEqual('wibble', loaded_e.physical_resource_id)
-        self.assertEqual('TEST', loaded_e.action)
-        self.assertEqual('IN_PROGRESS', loaded_e.status)
-        self.assertEqual('Testing', loaded_e.reason)
-        self.assertIsNotNone(loaded_e.timestamp)
-        self.assertEqual({'Foo': 'goo'}, loaded_e.resource_properties)
 
     def test_store_caps_events(self):
         cfg.CONF.set_override('event_purge_batch_size', 1, enforce_type=True)

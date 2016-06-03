@@ -47,7 +47,6 @@ from heat.engine import attributes
 from heat.engine.cfn import template as cfntemplate
 from heat.engine import clients
 from heat.engine import environment
-from heat.engine import event as evt
 from heat.engine.hot import functions as hot_functions
 from heat.engine import parameter_groups
 from heat.engine import properties
@@ -1592,8 +1591,10 @@ class EngineService(service.Service):
         :param sort_dir: the direction of the sort ('asc' or 'desc').
         """
 
+        stacks = {}
         if stack_identity is not None:
             st = self._get_stack(cnxt, stack_identity, show_deleted=True)
+            stacks[st.id] = st
 
             events = event_object.Event.get_all_by_stack(
                 cnxt,
@@ -1611,16 +1612,18 @@ class EngineService(service.Service):
                 sort_dir=sort_dir,
                 filters=filters)
 
-        stacks = {}
-
-        def get_stack(stack_id):
+        def get_stack_identifier(stack_id):
             if stack_id not in stacks:
-                stacks[stack_id] = parser.Stack.load(cnxt, stack_id)
-            return stacks[stack_id]
+                s = stack_object.Stack.get_by_id(
+                    cnxt,
+                    stack_id,
+                    show_deleted=True)
+                if not s:
+                    return
+                stacks[stack_id] = s
+            return stacks[stack_id].identifier()
 
-        return [api.format_event(evt.Event.load(cnxt,
-                                                e.id, e,
-                                                get_stack(e.stack_id)))
+        return [api.format_event(e, get_stack_identifier(e.stack_id))
                 for e in events]
 
     def _authorize_stack_user(self, cnxt, stack, resource_name):

@@ -379,20 +379,17 @@ def format_stack_preview(stack):
     return fmt_stack
 
 
-def format_event(event):
-    stack_identifier = event.stack.identifier()
-    event_timestamp = event.timestamp or timeutils.utcnow()
-
+def format_event(event, stack_identifier):
     result = {
-        rpc_api.EVENT_ID: dict(event.identifier()),
+        rpc_api.EVENT_ID: dict(event.identifier(stack_identifier)),
         rpc_api.EVENT_STACK_ID: dict(stack_identifier),
         rpc_api.EVENT_STACK_NAME: stack_identifier.stack_name,
-        rpc_api.EVENT_TIMESTAMP: event_timestamp.isoformat(),
+        rpc_api.EVENT_TIMESTAMP: event.created_at.isoformat(),
         rpc_api.EVENT_RES_NAME: event.resource_name,
         rpc_api.EVENT_RES_PHYSICAL_ID: event.physical_resource_id,
-        rpc_api.EVENT_RES_ACTION: event.action,
-        rpc_api.EVENT_RES_STATUS: event.status,
-        rpc_api.EVENT_RES_STATUS_DATA: event.reason,
+        rpc_api.EVENT_RES_ACTION: event.resource_action,
+        rpc_api.EVENT_RES_STATUS: event.resource_status,
+        rpc_api.EVENT_RES_STATUS_DATA: event.resource_status_reason,
         rpc_api.EVENT_RES_TYPE: event.resource_type,
         rpc_api.EVENT_RES_PROPERTIES: event.resource_properties,
     }
