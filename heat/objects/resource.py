@@ -135,16 +135,28 @@ class Resource(
             resource_id2)
 
     @classmethod
-    def get_all_by_stack(cls, context, stack_id, key_id=False, filters=None):
-        resources_db = db_api.resource_get_all_by_stack(context,
-                                                        stack_id, key_id,
+    def get_all_by_stack(cls, context, stack_id, filters=None):
+        resources_db = db_api.resource_get_all_by_stack(context, stack_id,
                                                         filters)
         resources = [
             (
-                resource_key,
+                resource_name,
                 cls._from_db_object(cls(context), context, resource_db)
             )
-            for resource_key, resource_db in six.iteritems(resources_db)
+            for resource_name, resource_db in six.iteritems(resources_db)
+        ]
+        return dict(resources)
+
+    @classmethod
+    def get_all_active_by_stack(cls, context, stack_id):
+        resources_db = db_api.resource_get_all_active_by_stack(context,
+                                                               stack_id)
+        resources = [
+            (
+                resource_id,
+                cls._from_db_object(cls(context), context, resource_db)
+            )
+            for resource_id, resource_db in six.iteritems(resources_db)
         ]
         return dict(resources)
 

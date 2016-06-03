@@ -341,7 +341,7 @@ def resource_create(context, values):
     return resource_ref
 
 
-def resource_get_all_by_stack(context, stack_id, key_id=False, filters=None):
+def resource_get_all_by_stack(context, stack_id, filters=None):
     query = model_query(
         context, models.Resource
     ).filter_by(
@@ -354,10 +354,23 @@ def resource_get_all_by_stack(context, stack_id, key_id=False, filters=None):
     if not results:
         raise exception.NotFound(_("no resources for stack_id %s were found")
                                  % stack_id)
-    if key_id:
-        return dict((res.id, res) for res in results)
-    else:
-        return dict((res.name, res) for res in results)
+
+    return dict((res.name, res) for res in results)
+
+
+def resource_get_all_active_by_stack(context, stack_id):
+    filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
+    subquery = model_query(context, models.Resource.id).filter_by(**filters)
+
+    results = model_query(context, models.Resource).filter_by(
+        stack_id=stack_id).filter(
+        models.Resource.id.notin_(subquery.as_scalar())
+    ).options(orm.joinedload("data")).all()
+
+    if not results:
+        raise exception.NotFound(_("no active resources for stack_id %s were"
+                                   " found") % stack_id)
+    return dict((res.id, res) for res in results)
 
 
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):

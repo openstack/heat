@@ -272,7 +272,6 @@ class StackTest(common.HeatTestCase):
         # Verify, the db query is called with expected filter
         mock_db_call.assert_called_once_with(self.ctx,
                                              self.stack.id,
-                                             True,
                                              dict(name=['A']))
         # Make sure it returns only one resource.
         self.assertEqual(1, len(all_resources))
