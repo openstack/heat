@@ -13,6 +13,7 @@
 
 import mock
 
+from heat.common import exception
 from heat.engine.clients.os import monasca as client_plugin
 from heat.engine.resources.openstack.monasca import notification
 from heat.engine import stack
@@ -29,7 +30,8 @@ sample_template = {
             'properties': {
                 'name': 'test-notification',
                 'type': 'webhook',
-                'address': 'http://localhost:80/'
+                'address': 'http://localhost:80/',
+                'period': 60
             }
         }
     }
@@ -69,6 +71,15 @@ class MonascaNotificationTest(common.HeatTestCase):
 
         return value
 
+    def test_validate_success_no_period(self):
+        self.test_resource.properties.data.pop('period')
+        self.test_resource.validate()
+
+    def test_validate_invalid_type_with_period(self):
+        self.test_resource.properties.data['type'] = self.test_resource.EMAIL
+        self.assertRaises(exception.StackValidationFailed,
+                          self.test_resource.validate)
+
     def test_resource_handle_create(self):
         mock_notification_create = self.test_client.notifications.create
         mock_resource = self._get_mock_resource()
@@ -87,6 +98,9 @@ class MonascaNotificationTest(common.HeatTestCase):
             'http://localhost:80/',
             self.test_resource.properties.get(
                 notification.MonascaNotification.ADDRESS))
+        self.assertEqual(
+            60, self.test_resource.properties.get(
+                notification.MonascaNotification.PERIOD))
 
         self.test_resource.data_set = mock.Mock()
         self.test_resource.handle_create()
@@ -94,7 +108,8 @@ class MonascaNotificationTest(common.HeatTestCase):
         args = dict(
             name='test-notification',
             type='webhook',
-            address='http://localhost:80/'
+            address='http://localhost:80/',
+            period=60
         )
 
         mock_notification_create.assert_called_once_with(**args)
@@ -102,9 +117,46 @@ class MonascaNotificationTest(common.HeatTestCase):
         # validate physical resource id
         self.assertEqual(mock_resource['id'], self.test_resource.resource_id)
 
+    def test_resource_handle_create_default_period(self):
+        self.test_resource.properties.data.pop('period')
+        mock_notification_create = self.test_client.notifications.create
+        self.test_resource.handle_create()
+
+        args = dict(
+            name='test-notification',
+            type='webhook',
+            address='http://localhost:80/',
+            period=60
+        )
+        mock_notification_create.assert_called_once_with(**args)
+
     def test_resource_handle_update(self):
         mock_notification_update = self.test_client.notifications.update
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+        prop_diff = {notification.MonascaNotification.ADDRESS:
+                     'http://localhost:1234/',
+                     notification.MonascaNotification.NAME: 'name-updated',
+                     notification.MonascaNotification.TYPE: 'webhook',
+                     notification.MonascaNotification.PERIOD: 0}
+
+        self.test_resource.handle_update(json_snippet=None,
+                                         tmpl_diff=None,
+                                         prop_diff=prop_diff)
+
+        args = dict(
+            notification_id=self.test_resource.resource_id,
+            name='name-updated',
+            type='webhook',
+            address='http://localhost:1234/',
+            period=0
+        )
+        mock_notification_update.assert_called_once_with(**args)
+
+    def test_resource_handle_update_default_period(self):
+        mock_notification_update = self.test_client.notifications.update
+        self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        self.test_resource.properties.data.pop('period')
 
         prop_diff = {notification.MonascaNotification.ADDRESS:
                      'http://localhost:1234/',
@@ -119,7 +171,8 @@ class MonascaNotificationTest(common.HeatTestCase):
             notification_id=self.test_resource.resource_id,
             name='name-updated',
             type='webhook',
-            address='http://localhost:1234/'
+            address='http://localhost:1234/',
+            period=60
         )
         mock_notification_update.assert_called_once_with(**args)
 

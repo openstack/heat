@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -45,9 +46,9 @@ class MonascaNotification(resource.Resource):
     )
 
     PROPERTIES = (
-        NAME, TYPE, ADDRESS
+        NAME, TYPE, ADDRESS, PERIOD
     ) = (
-        'name', 'type', 'address'
+        'name', 'type', 'address', 'period'
     )
 
     properties_schema = {
@@ -72,16 +73,39 @@ class MonascaNotification(resource.Resource):
               'address, url or service key based on notification type.'),
             update_allowed=True,
             required=True,
+        ),
+        PERIOD: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Interval in seconds to invoke webhooks if the alarm state '
+              'does not transition away from the defined trigger state. The '
+              'default value is a period interval of 60 seconds. A '
+              'value of 0 will disable continuous notifications. This '
+              'property is only applicable for the webhook notification '
+              'type.'),
+            support_status=support.SupportStatus(version='7.0.0'),
+            update_allowed=True,
+            constraints=[constraints.AllowedValues([0, 60])],
+            default=60,
         )
     }
+
+    def validate(self):
+        super(MonascaNotification, self).validate()
+        if self.properties[self.PERIOD] is not None and (
+                self.properties[self.TYPE] != self.WEBHOOK):
+            msg = _('The period property can only be specified against a '
+                    'Webhook Notification type.')
+            raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         args = dict(
             name=(self.properties[self.NAME] or
                   self.physical_resource_name()),
             type=self.properties[self.TYPE],
-            address=self.properties[self.ADDRESS]
+            address=self.properties[self.ADDRESS],
         )
+        if args['type'] == self.WEBHOOK:
+            args['period'] = self.properties[self.PERIOD]
 
         notification = self.client().notifications.create(**args)
         self.resource_id_set(notification['id'])
@@ -97,6 +121,11 @@ class MonascaNotification(resource.Resource):
 
         args['address'] = (prop_diff.get(self.ADDRESS) or
                            self.properties[self.ADDRESS])
+
+        if args['type'] == self.WEBHOOK:
+            updated_period = prop_diff.get(self.PERIOD)
+            args['period'] = (updated_period if updated_period is not None
+                              else self.properties[self.PERIOD])
 
         self.client().notifications.update(**args)
 
