@@ -264,13 +264,9 @@ def load_resource(cnxt, resource_id, resource_data, is_update):
         return None, None, None
 
 
-def construct_input_data(rsrc, curr_stack):
-    attributes = curr_stack.get_dep_attrs(
-        six.itervalues(curr_stack.resources),
-        curr_stack.outputs,
-        rsrc.name)
+def _resolve_attributes(dep_attrs, rsrc):
     resolved_attributes = {}
-    for attr in attributes:
+    for attr in dep_attrs:
         try:
             if isinstance(attr, six.string_types):
                 resolved_attributes[attr] = rsrc.get_attribute(attr)
@@ -278,11 +274,18 @@ def construct_input_data(rsrc, curr_stack):
                 resolved_attributes[attr] = rsrc.get_attribute(*attr)
         except exception.InvalidTemplateAttribute as ita:
             LOG.info(six.text_type(ita))
+    return resolved_attributes
 
+
+def construct_input_data(rsrc, curr_stack):
+    dep_attrs = curr_stack.get_dep_attrs(
+        six.itervalues(curr_stack.resources),
+        curr_stack.outputs,
+        rsrc.name)
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
                   'reference_id': rsrc.get_reference_id(),
-                  'attrs': resolved_attributes,
+                  'attrs': _resolve_attributes(dep_attrs, rsrc),
                   'status': rsrc.status,
                   'action': rsrc.action,
                   'uuid': rsrc.uuid}

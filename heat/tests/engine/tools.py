@@ -124,7 +124,7 @@ resources:
 '''
 
 attr_cache_template = '''
-heat_template_version: 2013-05-23
+heat_template_version: 2016-04-08
 resources:
     A:
         type: ResourceWithComplexAttributesType
