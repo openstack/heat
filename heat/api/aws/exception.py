@@ -306,7 +306,6 @@ def map_remote_error(ex):
         'InvalidTemplateSection',
         'UnknownUserParameter',
         'UserParameterMissing',
-        'InvalidTemplateParameter',
         'MissingCredentialError',
         'ResourcePropertyConflict',
         'PropertyUnspecifiedError',

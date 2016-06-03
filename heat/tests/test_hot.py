@@ -187,7 +187,6 @@ class HOTemplateTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
 
         self.assertIsNone(stack.parameters._validate_user_parameters())
-        self.assertIsNone(stack.parameters._validate_tmpl_parameters())
         self.assertIsNone(stack.validate())
 
     def test_translate_resources_good(self):

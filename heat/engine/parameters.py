@@ -511,7 +511,6 @@ class Parameters(collections.Mapping):
         This method validates if all user-provided parameters are actually
         defined in the template, and if all parameters are valid.
         """
-        self._validate_tmpl_parameters()
         self._validate_user_parameters()
 
         for param in six.itervalues(self.params):
@@ -555,18 +554,6 @@ class Parameters(collections.Mapping):
         for param in self.user_params:
             if param not in schemata:
                 raise exception.UnknownUserParameter(key=param)
-
-    def _validate_tmpl_parameters(self):
-        param = None
-        for key in six.iterkeys(self.tmpl.t):
-            if key == 'Parameters' or key == 'parameters':
-                param = key
-                break
-        if param is not None:
-            template_params = self.tmpl.t[key] or {}
-            for name, attrs in six.iteritems(template_params):
-                if not isinstance(attrs, dict):
-                    raise exception.InvalidTemplateParameter(key=name)
 
     def _pseudo_parameters(self, stack_identifier):
         stack_id = (stack_identifier.arn()
