@@ -30,13 +30,11 @@ class AodhClientPlugin(client_plugin.ClientPlugin):
     default_version = V2
 
     def _create(self, version=None):
-
         interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
 
-        self._keystone_session.auth = self.context.auth_plugin
         return ac.Client(
             version,
-            session=self._keystone_session,
+            session=self.context.keystone_session,
             interface=interface,
             service_type=self.ALARMING)
 

@@ -15,6 +15,7 @@ from keystoneauth1 import access
 from keystoneauth1.identity import access as access_plugin
 from keystoneauth1.identity import generic
 from keystoneauth1 import loading as ks_loading
+from keystoneauth1 import session
 from keystoneauth1 import token_endpoint
 from oslo_config import cfg
 from oslo_context import context
@@ -24,6 +25,7 @@ from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
 import six
 
+from heat.common import config
 from heat.common import endpoint_utils
 from heat.common import exception
 from heat.common.i18n import _LE, _LW
@@ -101,6 +103,8 @@ class RequestContext(context.RequestContext):
         self.auth_url = auth_url
         self._session = None
         self._clients = None
+        self._keystone_session = session.Session(
+            **config.get_ssl_options('keystone'))
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
         self.policy = policy.Enforcer()
@@ -130,10 +134,24 @@ class RequestContext(context.RequestContext):
         return self._session
 
     @property
+    def keystone_session(self):
+        if self.auth_needs_refresh():
+            self.reload_auth_plugin()
+            self.clients.invalidate_plugins()
+        self._keystone_session.auth = self.auth_plugin
+        return self._keystone_session
+
+    @property
     def clients(self):
         if self._clients is None:
             self._clients = clients.Clients(self)
         return self._clients
+
+    def auth_needs_refresh(self):
+        auth_ref = self.auth_plugin.get_auth_ref(self._keystone_session)
+        return (cfg.CONF.reauthentication_auth_method == 'trusts'
+                and auth_ref.will_expire_soon(
+                    cfg.CONF.stale_token_duration))
 
     def to_dict(self):
         user_idt = '{user} {tenant}'.format(user=self.user_id or '-',

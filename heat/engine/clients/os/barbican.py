@@ -29,9 +29,8 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.KEY_MANAGER,
                                 endpoint_type=endpoint_type)
-        self._keystone_session.auth = self.context.auth_plugin
         client = barbican_client.Client(
-            session=self._keystone_session, endpoint=endpoint)
+            session=self.context.keystone_session, endpoint=endpoint)
 
         return client
 

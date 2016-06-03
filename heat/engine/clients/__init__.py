@@ -83,14 +83,6 @@ class OpenStackClients(object):
             return client
         LOG.warning(_LW('Requested client "%s" not found'), name)
 
-    @property
-    def auth_token(self):
-        # Always use the auth_token from the keystone() client, as
-        # this may be refreshed if the context contains credentials
-        # which allow reissuing of a new token before the context
-        # auth_token expiry (e.g trust_id or username/password)
-        return self.client('keystone').auth_token
-
 
 class ClientBackend(object):
     """Class for delaying choosing the backend client module.
