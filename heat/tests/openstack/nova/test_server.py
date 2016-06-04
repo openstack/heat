@@ -123,6 +123,20 @@ resources:
         - network: 4321
 """
 
+tmpl_server_with_sub_secu_group = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      flavor: m1.small
+      image: F17-x86_64-gold
+      networks:
+        - subnet: 2a60cbaa-3d33-4af6-a9ce-83594ac546fc
+      security_groups:
+        - my_seg
+"""
+
 server_with_sw_config_personality = """
 heat_template_version: 2014-10-16
 resources:
@@ -356,6 +370,46 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
         self.assertEqual(kwargs['meta'], {'a': "1"})
+
+    def test_server_create_with_subnet_security_group(self):
+        stack_name = 'server_with_subnet_security_group'
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
+        return_server = self.fc.servers.list()[1]
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name, test_templ=tmpl_server_with_sub_secu_group)
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_with_sub_secu',
+                                resource_defns['server'], stack)
+        mock_find = self.patchobject(
+            neutron.NeutronClientPlugin,
+            'find_resourceid_by_name_or_id',
+            return_value='2a60cbaa-3d33-4af6-a9ce-83594ac546fc')
+
+        sec_uuids = ['86c0f8ae-23a8-464f-8603-c54113ef5467']
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'get_secgroup_uuids', return_value=sec_uuids)
+        self.patchobject(server, 'store_external_ports')
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'network_id_from_subnet_id',
+                         return_value='05d8e681-4b37-4570-bc8d-810089f706b2')
+        mock_create_port = self.patchobject(
+            neutronclient.Client, 'create_port')
+
+        self.patchobject(
+            self.fc.servers, 'create', return_value=return_server)
+
+        scheduler.TaskRunner(server.create)()
+
+        kwargs = {'network_id': '05d8e681-4b37-4570-bc8d-810089f706b2',
+                  'fixed_ips': [
+                      {'subnet_id': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}],
+                  'security_groups': sec_uuids,
+                  'name': 'server_with_sub_secu-port-0',
+                  }
+        mock_create_port.assert_called_with({'port': kwargs})
+        self.assertEqual(1, mock_find.call_count)
 
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
@@ -2976,6 +3030,58 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(1, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
 
+    def test_server_update_subnet_with_security_group(self):
+        return_server = self.fc.servers.list()[3]
+        return_server.id = '9102'
+
+        server = self._create_test_server(return_server, 'update_subnet')
+        # set old properties for 'networks' and 'security_groups'
+        server.t['Properties']['networks'] = [
+            {'subnet': 'aaa09d50-8c23-4498-a542-aa0deb24f73e'}]
+        server.t['Properties']['security_groups'] = ['the_sg']
+        # set new property 'networks'
+        new_networks = [{'subnet': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = new_networks
+
+        sec_uuids = ['86c0f8ae-23a8-464f-8603-c54113ef5467']
+
+        self.patchobject(self.fc.servers, 'get', return_value=return_server)
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'get_secgroup_uuids', return_value=sec_uuids)
+        # execute translation rules need to call find_resourceid_by_name_or_id
+        mock_find = self.patchobject(
+            neutron.NeutronClientPlugin,
+            'find_resourceid_by_name_or_id',
+            side_effect=['2a60cbaa-3d33-4af6-a9ce-83594ac546fc',
+                         'aaa09d50-8c23-4498-a542-aa0deb24f73e',
+                         '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'])
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'network_id_from_subnet_id',
+                         return_value='05d8e681-4b37-4570-bc8d-810089f706b2')
+        mock_create_port = self.patchobject(
+            neutronclient.Client, 'create_port')
+
+        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                       '05d8e681-4b37-4570-bc8d-810089f706b2',
+                                       '1.2.3.4')
+        self.patchobject(return_server, 'interface_list', return_value=[iface])
+        mock_detach = self.patchobject(return_server, 'interface_detach')
+        mock_attach = self.patchobject(return_server, 'interface_attach')
+
+        scheduler.TaskRunner(server.update, update_template, before=server.t)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.assertEqual(1, mock_detach.call_count)
+        self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(3, mock_find.call_count)
+        kwargs = {'network_id': '05d8e681-4b37-4570-bc8d-810089f706b2',
+                  'fixed_ips': [
+                      {'subnet_id': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}],
+                  'security_groups': sec_uuids,
+                  'name': 'update_subnet-port-0',
+                  }
+        mock_create_port.assert_called_with({'port': kwargs})
+
     def test_server_update_empty_networks_with_complex_parameters(self):
         return_server = self.fc.servers.list()[3]
         return_server.id = '9102'
@@ -3558,6 +3664,8 @@ class ServerInternalPortTest(common.HeatTestCase):
             properties:
               flavor: m1.small
               image: F17-x86_64-gold
+              security_groups:
+                - test_sec
               networks:
                 - network: 4321
                   subnet: 1234
@@ -3567,12 +3675,15 @@ class ServerInternalPortTest(common.HeatTestCase):
         t, stack, server = self._return_template_stack_and_rsrc_defn('test',
                                                                      tmpl)
         self.patchobject(server, '_validate_belonging_subnet_to_net')
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'get_secgroup_uuids', return_value=['5566'])
         self.port_create.return_value = {'port': {'id': '111222'}}
         data_set = self.patchobject(resource.Resource, 'data_set')
 
         network = [{'network': '4321', 'subnet': '1234',
                     'fixed_ip': '127.0.0.1'}]
-        server._build_nics(network)
+        security_groups = ['test_sec']
+        server._build_nics(network, security_groups)
 
         self.port_create.assert_called_once_with(
             {'port': {'name': 'server-port-0',
@@ -3580,7 +3691,8 @@ class ServerInternalPortTest(common.HeatTestCase):
                       'fixed_ips': [{
                           'ip_address': '127.0.0.1',
                           'subnet_id': '1234'
-                      }]}})
+                      }],
+                      'security_groups': ['5566']}})
         data_set.assert_called_once_with('internal_ports',
                                          '[{"id": "111222"}]')
 
@@ -3630,8 +3742,13 @@ class ServerInternalPortTest(common.HeatTestCase):
                            {'mac_address': '00:00:00:00:00:00'}
                        ]
                    }}
-        kwargs = server._prepare_internal_port_kwargs(network)
+        sec_uuids = ['8d94c72093284da88caaef5e985d96f7']
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'get_secgroup_uuids', return_value=sec_uuids)
+        kwargs = server._prepare_internal_port_kwargs(
+            network, security_groups=['test_sec'])
         self.assertEqual({'network_id': '4321',
+                          'security_groups': sec_uuids,
                           'fixed_ips': [
                               {'ip_address': '127.0.0.1', 'subnet_id': '1234'}
                           ],
