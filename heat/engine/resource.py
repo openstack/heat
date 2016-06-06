@@ -1964,8 +1964,9 @@ class Resource(object):
             # Don't log an event as it just spams the user.
             pass
         except Exception as ex:
-            LOG.exception(_LE('signal %(name)s : %(msg)s')
-                          % {'name': six.text_type(self), 'msg': ex})
+            LOG.info(_LI('signal %(name)s : %(msg)s'),
+                     {'name': six.text_type(self), 'msg': ex},
+                     exc_info=True)
             failure = exception.ResourceFailure(ex, self)
             raise failure
 
