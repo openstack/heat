@@ -77,9 +77,8 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
                 template_name='test_volumes_create_from_backup.yaml',
                 add_parameters={'backup_id': backup.id})
             stack2 = self.client.stacks.get(stack_identifier2)
-        except exceptions.StackBuildErrorException as e:
-            LOG.error("Halting test due to bug: #1382300")
-            LOG.exception(e)
+        except exceptions.StackBuildErrorException:
+            LOG.exception("Halting test due to bug: #1382300")
             return
 
         # Verify with cinder that the volume exists, with matching details

@@ -820,9 +820,8 @@ def read_global_environment(env, env_dir=None):
 
     try:
         env_files = glob.glob(os.path.join(env_dir, '*'))
-    except OSError as osex:
-        LOG.error(_LE('Failed to read %s'), env_dir)
-        LOG.exception(osex)
+    except OSError:
+        LOG.exception(_LE('Failed to read %s'), env_dir)
         return
 
     for file_path in env_files:
@@ -832,11 +831,7 @@ def read_global_environment(env, env_dir=None):
                 env_body = env_fmt.parse(env_fd.read())
                 env_fmt.default_for_missing(env_body)
                 env.load(env_body)
-        except ValueError as vex:
-            LOG.error(_LE('Failed to parse %(file_path)s'), {
-                      'file_path': file_path})
-            LOG.exception(vex)
-        except IOError as ioex:
-            LOG.error(_LE('Failed to read %(file_path)s'), {
-                      'file_path': file_path})
-            LOG.exception(ioex)
+        except ValueError:
+            LOG.exception(_LE('Failed to parse %s'), file_path)
+        except IOError:
+            LOG.exception(_LE('Failed to read %s'), file_path)

@@ -1246,15 +1246,16 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 self.context, sd['id'])
             self.rpc_client().delete_software_config(
                 self.context, sc['id'])
-        except Exception as e:
+        except Exception:
             # Updating the software config transport is on a best-effort
             # basis as any raised exception here would result in the resource
             # going into an ERROR state, which will be replaced on the next
             # stack update. This is not desirable for a server. The old
             # transport will continue to work, and the new transport may work
             # despite exceptions in the above block.
-            LOG.error(_LE('Error while updating software config transport'))
-            LOG.exception(e)
+            LOG.exception(
+                _LE('Error while updating software config transport')
+            )
 
     def check_update_complete(self, updaters):
         """Push all updaters to completion in list order."""

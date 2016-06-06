@@ -168,11 +168,12 @@ class Resource(object):
         try:
             svc_available = cls.is_service_available(context)
         except Exception as exc:
+            LOG.exception(_LE("Resource type %s unavailable"),
+                          resource_type)
             ex = exception.ResourceTypeUnavailable(
                 resource_type=resource_type,
                 service_name=cls.default_client_name,
                 reason=six.text_type(exc))
-            LOG.exception(exc)
             raise ex
         else:
             if not svc_available:
