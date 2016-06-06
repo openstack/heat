@@ -82,5 +82,11 @@
 
     "service:index": "rule:context_is_admin",
 
-    "resource_types:OS::Nova::Flavor": "rule:context_is_admin"
+    "resource_types:OS::Nova::Flavor": "rule:context_is_admin",
+    "resource_types:OS::Cinder::EncryptedVolumeType": "rule:context_is_admin",
+    "resource_types:OS::Cinder::VolumeType": "rule:context_is_admin",
+    "resource_types:OS::Manila::ShareType": "rule:context_is_admin",
+    "resource_types:OS::Neutron::QoSPolicy": "rule:context_is_admin",
+    "resource_types:OS::Neutron::QoSBandwidthLimitRule": "rule:context_is_admin",
+    "resource_types:OS::Nova::HostAggregate": "rule:context_is_admin"
 }

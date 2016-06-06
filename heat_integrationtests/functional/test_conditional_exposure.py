@@ -65,7 +65,7 @@ resources:
 
 
 class RoleBasedExposureTest(functional_base.FunctionalTestsBase):
-    forbidden_resource_type = "OS::Nova::Flavor"
+
     fl_tmpl = """
 heat_template_version: 2015-10-15
 
@@ -77,21 +77,75 @@ resources:
       vcpus: 10
 """
 
-    def test_non_admin_forbidden_create_flavors(self):
-        """Fail to create Flavor resource w/o admin role.
+    cvt_tmpl = """
+heat_template_version: 2015-10-15
+
+resources:
+  cvt:
+    type: OS::Cinder::VolumeType
+    properties:
+      name: cvt_test
+"""
+
+    host_aggr_tmpl = """
+heat_template_version: 2015-10-15
+parameters:
+  az:
+    type: string
+    default: nova
+resources:
+  cvt:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: aggregate_test
+      availability_zone: {get_param: az}
+"""
+
+    scenarios = [
+        ('r_nova_flavor', dict(
+            stack_name='s_nova_flavor',
+            template=fl_tmpl,
+            forbidden_r_type="OS::Nova::Flavor",
+            test_creation=True)),
+        ('r_nova_host_aggregate', dict(
+            stack_name='s_nova_ost_aggregate',
+            template=host_aggr_tmpl,
+            forbidden_r_type="OS::Nova::HostAggregate",
+            test_creation=True)),
+        ('r_cinder_vtype', dict(
+            stack_name='s_cinder_vtype',
+            template=cvt_tmpl,
+            forbidden_r_type="OS::Cinder::VolumeType",
+            test_creation=True)),
+        ('r_cinder_vtype_encrypt', dict(
+            forbidden_r_type="OS::Cinder::EncryptedVolumeType",
+            test_creation=False)),
+        ('r_neutron_qos', dict(
+            forbidden_r_type="OS::Neutron::QoSPolicy",
+            test_creation=False)),
+        ('r_neutron_qos_bandwidth_limit', dict(
+            forbidden_r_type="OS::Neutron::QoSBandwidthLimitRule",
+            test_creation=False)),
+        ('r_manila_share_type', dict(
+            forbidden_r_type="OS::Manila::ShareType",
+            test_creation=False))
+    ]
+
+    def test_non_admin_forbidden_create_resources(self):
+        """Fail to create resource w/o admin role.
 
         Integration tests job runs as normal OpenStack user,
-        and OS::Nova:Flavor is configured to require
+        and the resources above are configured to require
         admin role in default policy file of Heat.
         """
-        stack_name = self._stack_rand_name()
-        ex = self.assertRaises(exc.Forbidden,
-                               self.client.stacks.create,
-                               stack_name=stack_name,
-                               template=self.fl_tmpl)
-        self.assertIn(self.forbidden_resource_type, ex.message)
+        if self.test_creation:
+            ex = self.assertRaises(exc.Forbidden,
+                                   self.client.stacks.create,
+                                   stack_name=self.stack_name,
+                                   template=self.template)
+            self.assertIn(self.forbidden_r_type, ex.message)
 
     def test_forbidden_resource_not_listed(self):
         resources = self.client.resource_types.list()
-        self.assertNotIn(self.forbidden_resource_type,
+        self.assertNotIn(self.forbidden_r_type,
                          (r.resource_type for r in resources))
