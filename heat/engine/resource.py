@@ -1037,7 +1037,14 @@ class Resource(object):
             action_rollback = self.stack.action == self.stack.ROLLBACK
             status_in_progress = self.stack.status == self.stack.IN_PROGRESS
             if action_rollback and status_in_progress and self.replaced_by:
-                self.restore_prev_rsrc(convergence=True)
+                try:
+                    self.restore_prev_rsrc(convergence=True)
+                except Exception as e:
+                    failure = exception.ResourceFailure(e, self, self.action)
+                    self.state_set(self.UPDATE, self.FAILED,
+                                   six.text_type(failure))
+                    raise failure
+
             runner = scheduler.TaskRunner(self.update, new_res_def)
             try:
                 runner(timeout=timeout)
