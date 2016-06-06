@@ -129,10 +129,6 @@ class InvalidTemplateSection(HeatException):
     msg_fmt = _("The template section is invalid: %(section)s")
 
 
-class InvalidTemplateParameter(HeatException):
-    msg_fmt = _("The Parameter (%(key)s) has no attributes.")
-
-
 class ImmutableParameterModified(HeatException):
     msg_fmt = _("The following parameters are immutable and may not be "
                 "updated: %(keys)s")
