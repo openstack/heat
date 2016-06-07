@@ -21,12 +21,15 @@ class LoadBalancerv2Test(functional_base.FunctionalTestsBase):
 
     create_template = '''
 heat_template_version: 2016-04-08
+parameters:
+    subnet:
+        type: string
 resources:
   loadbalancer:
     type: OS::Neutron::LBaaS::LoadBalancer
     properties:
       description: aLoadBalancer
-      vip_subnet: private-subnet
+      vip_subnet: { get_param: subnet }
   listener:
     type: OS::Neutron::LBaaS::Listener
     properties:
@@ -48,7 +51,7 @@ resources:
       address: 1.1.1.1
       pool: { get_resource: pool }
       protocol_port: 1111
-      subnet: private-subnet
+      subnet: { get_param: subnet }
       weight: 255
   # pm2
   healthmonitor:
@@ -79,7 +82,7 @@ outputs:
       address: 2.2.2.2
       pool: { get_resource: pool }
       protocol_port: 2222
-      subnet: private-subnet
+      subnet: { get_param: subnet }
       weight: 222
 '''
 
@@ -89,7 +92,11 @@ outputs:
             self.skipTest('LBaasv2 extension not available, skipping')
 
     def test_create_update_loadbalancer(self):
-        stack_identifier = self.stack_create(template=self.create_template)
+        parameters = {
+            'subnet': self.conf.fixed_subnet_name,
+        }
+        stack_identifier = self.stack_create(template=self.create_template,
+                                             parameters=parameters)
         stack = self.client.stacks.get(stack_identifier)
         output = self._stack_output(stack, 'loadbalancer')
         self.assertEqual('ONLINE', output['operating_status'])
@@ -101,7 +108,8 @@ outputs:
         template = template.replace('aLoadBalancer', 'updatedLoadBalancer')
         template = template.replace('aPool', 'updatedPool')
         template = template.replace('aListener', 'updatedListener')
-        self.update_stack(stack_identifier, template=template)
+        self.update_stack(stack_identifier, template=template,
+                          parameters=parameters)
         stack = self.client.stacks.get(stack_identifier)
 
         output = self._stack_output(stack, 'loadbalancer')
@@ -121,7 +129,11 @@ outputs:
         self.assertEqual('updatedListener', output['description'])
 
     def test_add_delete_poolmember(self):
-        stack_identifier = self.stack_create(template=self.create_template)
+        parameters = {
+            'subnet': self.conf.fixed_subnet_name,
+        }
+        stack_identifier = self.stack_create(template=self.create_template,
+                                             parameters=parameters)
         stack = self.client.stacks.get(stack_identifier)
         output = self._stack_output(stack, 'loadbalancer')
         self.assertEqual('ONLINE', output['operating_status'])
@@ -129,14 +141,16 @@ outputs:
         self.assertEqual(1, len(output['members']))
         # add pool member
         template = self.create_template.replace('# pm2', self.add_member)
-        self.update_stack(stack_identifier, template=template)
+        self.update_stack(stack_identifier, template=template,
+                          parameters=parameters)
         stack = self.client.stacks.get(stack_identifier)
         output = self._stack_output(stack, 'loadbalancer')
         self.assertEqual('ONLINE', output['operating_status'])
         output = self._stack_output(stack, 'pool')
         self.assertEqual(2, len(output['members']))
         # delete pool member
-        self.update_stack(stack_identifier, template=self.create_template)
+        self.update_stack(stack_identifier, template=self.create_template,
+                          parameters=parameters)
         stack = self.client.stacks.get(stack_identifier)
         output = self._stack_output(stack, 'loadbalancer')
         self.assertEqual('ONLINE', output['operating_status'])
