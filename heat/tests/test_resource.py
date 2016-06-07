@@ -1976,6 +1976,54 @@ class ResourceTest(common.HeatTestCase):
         self.assertItemsEqual([2], res.requires)
         self._assert_resource_lock(res.id, None, 2)
 
+    def test_convergence_update_replace_rollback(self):
+        rsrc_def = rsrc_defn.ResourceDefinition('test_res',
+                                                'ResourceWithPropsType')
+        res = generic_rsrc.ResourceWithProps('test_res', rsrc_def, self.stack)
+        res.replaced_by = 'dummy'
+        res._store()
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
+        self.stack.state_set(self.stack.ROLLBACK, self.stack.IN_PROGRESS,
+                             'Simulate rollback')
+        res.restore_prev_rsrc = mock.Mock()
+        tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', {},
+                                  'engine-007', self.dummy_timeout,
+                                  new_stack)
+        self.assertRaises(exception.UpdateReplace, tr)
+        self.assertTrue(res.restore_prev_rsrc.called)
+
+    def test_convergence_update_replace_rollback_restore_prev_rsrc_error(self):
+        rsrc_def = rsrc_defn.ResourceDefinition('test_res',
+                                                'ResourceWithPropsType')
+        res = generic_rsrc.ResourceWithProps('test_res', rsrc_def, self.stack)
+        res.replaced_by = 'dummy'
+        res._store()
+
+        new_temp = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'test_res': {'Type': 'ResourceWithPropsType',
+                             'Properties': {'Foo': 'abc'}}
+            }}, env=self.env)
+        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                 new_temp, stack_id=self.stack.id)
+        self.stack.state_set(self.stack.ROLLBACK, self.stack.IN_PROGRESS,
+                             'Simulate rollback')
+        res.restore_prev_rsrc = mock.Mock(side_effect=Exception)
+        tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', {},
+                                  'engine-007', self.dummy_timeout, new_stack)
+        self.assertRaises(exception.ResourceFailure, tr)
+        self.assertTrue(res.restore_prev_rsrc.called)
+        self.assertEqual((res.UPDATE, res.FAILED), res.state)
+
     @mock.patch.object(resource.scheduler.TaskRunner, '__init__',
                        return_value=None)
     @mock.patch.object(resource.scheduler.TaskRunner, '__call__')
