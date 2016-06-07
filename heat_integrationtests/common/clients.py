@@ -64,7 +64,7 @@ class ClientManager(object):
 
     CINDERCLIENT_VERSION = '2'
     HEATCLIENT_VERSION = '1'
-    NOVACLIENT_VERSION = '2'
+    NOVA_API_VERSION = '2.1'
     CEILOMETER_VERSION = '2'
 
     def __init__(self, conf):
@@ -142,7 +142,7 @@ class ClientManager(object):
 
         # Create our default Nova client to use in testing
         return nova_client.Client(
-            self.NOVACLIENT_VERSION,
+            self.NOVA_API_VERSION,
             *client_args,
             service_type='compute',
             endpoint_type='publicURL',
