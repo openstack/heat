@@ -17,9 +17,9 @@ import collections
 import uuid
 import weakref
 
-from keystoneauth1.identity import v3 as kc_auth_v3
+from keystoneauth1 import exceptions as ks_exception
+from keystoneauth1.identity import generic as ks_auth
 from keystoneauth1 import session
-import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client as kc_v3
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -124,18 +124,18 @@ class KsClientWrapper(object):
         if not self._domain_admin_auth:
             # Note we must specify the domain when getting the token
             # as only a domain scoped token can create projects in the domain
-            auth = kc_auth_v3.Password(username=self.domain_admin_user,
-                                       password=self.domain_admin_password,
-                                       auth_url=self.v3_endpoint,
-                                       domain_id=self._stack_domain_id,
-                                       domain_name=self.stack_domain_name,
-                                       user_domain_id=self._stack_domain_id,
-                                       user_domain_name=self.stack_domain_name)
+            auth = ks_auth.Password(username=self.domain_admin_user,
+                                    password=self.domain_admin_password,
+                                    auth_url=self.v3_endpoint,
+                                    domain_id=self._stack_domain_id,
+                                    domain_name=self.stack_domain_name,
+                                    user_domain_id=self._stack_domain_id,
+                                    user_domain_name=self.stack_domain_name)
 
             # NOTE(jamielennox): just do something to ensure a valid token
             try:
                 auth.get_token(self.session)
-            except kc_exception.Unauthorized:
+            except ks_exception.Unauthorized:
                 LOG.error(_LE("Domain admin client authentication failed"))
                 raise exception.AuthorizationFailure()
 
@@ -161,7 +161,7 @@ class KsClientWrapper(object):
             # reauthenticating if it's present and valid.
             try:
                 auth_ref = self.context.auth_plugin.get_access(self.session)
-            except kc_exception.Unauthorized:
+            except ks_exception.Unauthorized:
                 LOG.error(_LE("Keystone client authentication failed"))
                 raise exception.AuthorizationFailure()
 
@@ -193,11 +193,10 @@ class KsClientWrapper(object):
         # We need the service admin user ID (not name), as the trustor user
         # can't lookup the ID in keystoneclient unless they're admin
         # workaround this by getting the user_id from admin_client
-
         try:
             trustee_user_id = self.context.trusts_auth_plugin.get_user_id(
                 self.session)
-        except kc_exception.Unauthorized:
+        except ks_exception.Unauthorized:
             LOG.error(_LE("Domain admin client authentication failed"))
             raise exception.AuthorizationFailure()
 
@@ -215,7 +214,7 @@ class KsClientWrapper(object):
                                               project=trustor_proj_id,
                                               impersonation=True,
                                               role_names=roles)
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             LOG.debug("Failed to find roles %s for user %s"
                       % (roles, trustor_user_id))
             raise exception.MissingCredentialError(
@@ -232,7 +231,7 @@ class KsClientWrapper(object):
         """Delete the specified trust."""
         try:
             self.client.trusts.delete(trust_id)
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             pass
 
     def _get_username(self, username):
@@ -287,15 +286,16 @@ class KsClientWrapper(object):
                     'configured, please fix your heat.conf')
             raise exception.Error(msg)
 
-        # Create a keystoneclient session, then request a token with no
+        # Create a keystone session, then request a token with no
         # catalog (the token is expected to be used inside an instance
         # where a specific endpoint will be specified, and user-data
         # space is limited..)
-        auth = kc_auth_v3.Password(auth_url=self.v3_endpoint,
-                                   user_id=user_id,
-                                   password=password,
-                                   project_id=project_id,
-                                   include_catalog=False)
+        # TODO(rabi): generic auth plugins don't support `include_catalog'
+        # flag yet. We'll add it once it's supported..
+        auth = ks_auth.Password(auth_url=self.v3_endpoint,
+                                user_id=user_id,
+                                password=password,
+                                project_id=project_id)
 
         return auth.get_token(self.session)
 
@@ -345,7 +345,7 @@ class KsClientWrapper(object):
         if not self._stack_domain_id:
             try:
                 access = self.domain_admin_auth.get_access(self.session)
-            except kc_exception.Unauthorized:
+            except ks_exception.Unauthorized:
                 LOG.error(_LE("Keystone client authentication failed"))
                 raise exception.AuthorizationFailure()
 
@@ -371,13 +371,13 @@ class KsClientWrapper(object):
         try:
             self._check_stack_domain_user(user_id, project_id, 'delete')
             self.domain_admin_client.users.delete(user_id)
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             pass
 
     def delete_stack_user(self, user_id):
         try:
             self.client.users.delete(user=user_id)
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             pass
 
     def create_stack_domain_project(self, stack_id):
@@ -409,9 +409,9 @@ class KsClientWrapper(object):
         # to get the project, so again we should do nothing
         try:
             project = self.domain_admin_client.projects.get(project=project_id)
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             return
-        except kc_exception.Forbidden:
+        except ks_exception.Forbidden:
             LOG.warning(_LW('Unable to get details for project %s, '
                             'not deleting'), project_id)
             return
@@ -422,7 +422,7 @@ class KsClientWrapper(object):
 
         try:
             project.delete()
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             pass
 
     def _find_ec2_keypair(self, access, user_id=None):
@@ -443,7 +443,7 @@ class KsClientWrapper(object):
         if credential_id:
             try:
                 self.client.credentials.delete(credential_id)
-            except kc_exception.NotFound:
+            except ks_exception.NotFound:
                 pass
         elif access:
             cred = self._find_ec2_keypair(access=access, user_id=user_id)
@@ -510,7 +510,7 @@ class KsClientWrapper(object):
         self._check_stack_domain_user(user_id, project_id, 'delete_keypair')
         try:
             self.domain_admin_client.credentials.delete(credential_id)
-        except kc_exception.NotFound:
+        except ks_exception.NotFound:
             pass
 
     def disable_stack_user(self, user_id):

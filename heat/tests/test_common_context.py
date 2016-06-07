@@ -198,7 +198,7 @@ class TestRequestContext(common.HeatTestCase):
             ctx = context.RequestContext(auth_url=None,
                                          user_domain_id='non-default',
                                          username='test')
-            with mock.patch('keystoneauth1.identity.v3.Password') as ps:
+            with mock.patch('keystoneauth1.identity.generic.Password') as ps:
                 ctx.trusts_auth_plugin
                 ps.assert_called_once_with(username='heat',
                                            password='password',

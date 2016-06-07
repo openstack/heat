@@ -13,7 +13,7 @@
 
 from keystoneauth1 import access
 from keystoneauth1.identity import access as access_plugin
-from keystoneauth1.identity import v3
+from keystoneauth1.identity import generic
 from keystoneauth1 import loading as ks_loading
 from keystoneauth1 import token_endpoint
 from oslo_config import cfg
@@ -40,12 +40,12 @@ LOG = logging.getLogger(__name__)
 # cfg.CONF.register*, it's done via ks_loading.register_auth_conf_options
 # Note, only auth_type = v3password is expected to work, example config:
 # [trustee]
-# auth_type = v3password
+# auth_type = password
 # auth_url = http://192.168.1.2:35357
 # username = heat
 # password = password
 # user_domain_id = default
-V3_PASSWORD_PLUGIN = 'v3password'
+PASSWORD_PLUGIN = 'password'
 TRUSTEE_CONF_GROUP = 'trustee'
 ks_loading.register_auth_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
 
@@ -53,7 +53,7 @@ ks_loading.register_auth_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
 def list_opts():
     trustee_opts = ks_loading.get_auth_common_conf_options()
     trustee_opts.extend(ks_loading.get_auth_plugin_conf_options(
-        V3_PASSWORD_PLUGIN))
+        PASSWORD_PLUGIN))
     yield TRUSTEE_CONF_GROUP, trustee_opts
 
 
@@ -201,7 +201,7 @@ class RequestContext(context.RequestContext):
         if 'user_domain_id' in cfg.CONF.keystone_authtoken:
             trustee_user_domain = cfg.CONF.keystone_authtoken.user_domain_id
 
-        self._trusts_auth_plugin = v3.Password(
+        self._trusts_auth_plugin = generic.Password(
             username=cfg.CONF.keystone_authtoken.admin_user,
             password=cfg.CONF.keystone_authtoken.admin_password,
             user_domain_id=trustee_user_domain,
@@ -211,11 +211,10 @@ class RequestContext(context.RequestContext):
 
     def _create_auth_plugin(self):
         if self.auth_token_info:
-            auth_ref = access.AccessInfoV3(self.auth_token_info,
-                                           auth_token=self.auth_token)
+            access_info = access.create(body=self.auth_token_info,
+                                        auth_token=self.auth_token)
             return access_plugin.AccessInfoPlugin(
-                auth_url=self.keystone_v3_endpoint,
-                auth_ref=auth_ref)
+                auth_ref=access_info, auth_url=self.keystone_v3_endpoint)
 
         if self.auth_token:
             # FIXME(jamielennox): This is broken but consistent. If you
@@ -226,13 +225,13 @@ class RequestContext(context.RequestContext):
                                         token=self.auth_token)
 
         if self.password:
-            return v3.Password(username=self.username,
-                               password=self.password,
-                               project_id=self.tenant_id,
-                               user_domain_id=self.user_domain,
-                               auth_url=self.keystone_v3_endpoint)
+            return generic.Password(username=self.username,
+                                    password=self.password,
+                                    project_id=self.tenant_id,
+                                    user_domain_id=self.user_domain,
+                                    auth_url=self.keystone_v3_endpoint)
 
-        LOG.error(_LE("Keystone v3 API connection failed, no password "
+        LOG.error(_LE("Keystone API connection failed, no password "
                       "trust or auth_token!"))
         raise exception.AuthorizationFailure()
 
