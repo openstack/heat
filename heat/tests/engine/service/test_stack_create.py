@@ -64,12 +64,10 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
-        mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
-                                           owner_id=None, nested_depth=0,
-                                           user_creds_id=None,
-                                           stack_user_project_id=None,
-                                           convergence=False,
-                                           parent_resource=None)
+        mock_stack.assert_called_once_with(
+            self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
+            user_creds_id=None, stack_user_project_id=None,
+            convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
         if environment_files:
             mock_merge.assert_called_once_with(environment_files, None, params)
@@ -122,12 +120,10 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
-        mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
-                                           owner_id=None, nested_depth=0,
-                                           user_creds_id=None,
-                                           stack_user_project_id=None,
-                                           convergence=False,
-                                           parent_resource=None)
+        mock_stack.assert_called_once_with(
+            self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
+            user_creds_id=None, stack_user_project_id=None,
+            convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
     def test_stack_create_invalid_stack_name(self):
         stack_name = 'service_create_test_stack_invalid_name'
@@ -188,12 +184,10 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
-        mock_stack.assert_called_once_with(ctx_no_pwd, stack_name, stk.t,
-                                           owner_id=None, nested_depth=0,
-                                           user_creds_id=None,
-                                           stack_user_project_id=None,
-                                           convergence=False,
-                                           parent_resource=None)
+        mock_stack.assert_called_once_with(
+            ctx_no_pwd, stack_name, stk.t, owner_id=None, nested_depth=0,
+            user_creds_id=None, stack_user_project_id=None,
+            convergence=cfg.CONF.convergence_engine, parent_resource=None)
         mock_tmpl.reset_mock()
         mock_env.reset_mock()
         mock_stack.reset_mock()
@@ -211,12 +205,10 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
-        mock_stack.assert_called_once_with(ctx_no_user, stack_name, stk.t,
-                                           owner_id=None, nested_depth=0,
-                                           user_creds_id=None,
-                                           stack_user_project_id=None,
-                                           convergence=False,
-                                           parent_resource=None)
+        mock_stack.assert_called_once_with(
+            ctx_no_user, stack_name, stk.t, owner_id=None, nested_depth=0,
+            user_creds_id=None, stack_user_project_id=None,
+            convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
     @mock.patch.object(stack_object.Stack, 'count_total_resources')
     def test_stack_create_total_resources_equals_max(self, ctr):
@@ -247,12 +239,10 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
-        mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
-                                           owner_id=None, nested_depth=0,
-                                           user_creds_id=None,
-                                           stack_user_project_id=None,
-                                           convergence=False,
-                                           parent_resource=None)
+        mock_stack.assert_called_once_with(
+            self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
+            user_creds_id=None, stack_user_project_id=None,
+            convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
         self.assertEqual(stk.identifier(), result)
         root_stack_id = stk.root_stack_id()
@@ -283,6 +273,7 @@ class StackCreateTest(common.HeatTestCase):
     @mock.patch.object(threadgroup, 'ThreadGroup')
     @mock.patch.object(stack.Stack, 'validate')
     def test_stack_create_nested(self, mock_validate, mock_tg):
+        convergence_engine = cfg.CONF.convergence_engine
         stack_name = 'service_create_nested_test_stack'
         mock_tg.return_value = tools.DummyThreadGroup()
 
@@ -304,7 +295,7 @@ class StackCreateTest(common.HeatTestCase):
                                            owner_id=None, nested_depth=1,
                                            user_creds_id=None,
                                            stack_user_project_id=None,
-                                           convergence=False,
+                                           convergence=convergence_engine,
                                            parent_resource=None)
 
         mock_validate.assert_called_once_with()
