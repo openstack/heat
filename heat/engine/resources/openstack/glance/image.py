@@ -134,7 +134,7 @@ class GlanceImage(resource.Resource):
         image = self.client().images.get(image_id)
         return image.status == 'active'
 
-    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff and self.TAGS in prop_diff:
             existing_tags = self.properties.get(self.TAGS, [])
 
