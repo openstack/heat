@@ -220,6 +220,19 @@ class GlanceImageTest(common.HeatTestCase):
         self.my_image.handle_create()
 
         self.assertEqual(image_id, self.my_image.resource_id)
+        # assert that no tags pass when image create
+        self.images.create.assert_called_once_with(
+            container_format=u'bare',
+            disk_format=u'qcow2',
+            id=u'41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+            is_public=True,
+            location=u'https://launchpad.net/cirros/'
+                     u'cirros-0.3.0-x86_64-disk.img',
+            min_disk=10,
+            min_ram=512,
+            name=u'cirros_image',
+            protected=False
+        )
         self.image_tags.update.assert_called_once_with(
             self.my_image.resource_id,
             'tag1')
