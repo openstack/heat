@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-import six
 import uuid
 
 from oslo_config import cfg
@@ -636,7 +635,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         return len(self.properties.get(self.SERVERS, {}))
 
     def _resource_names(self):
-        return six.iterkeys(self.properties.get(self.SERVERS, {}))
+        return iter(self.properties.get(self.SERVERS, {}))
 
     def get_resource_def(self, include_all=False):
         return dict(self.properties)

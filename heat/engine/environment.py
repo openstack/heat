@@ -306,8 +306,8 @@ class ResourceRegistry(object):
         if info is None:
             if name.endswith('*'):
                 # delete all matching entries.
-                for res_name in list(six.iterkeys(registry)):
-                    if (isinstance(registry[res_name], ResourceInfo) and
+                for res_name, reg_info in list(registry.items()):
+                    if (isinstance(reg_info, ResourceInfo) and
                             res_name.startswith(name[:-1])):
                         LOG.warning(_LW('Removing %(item)s from %(path)s'), {
                             'item': res_name,
@@ -469,7 +469,7 @@ class ResourceRegistry(object):
         # handle: "OS::*" -> "Dreamhost::*"
         def is_a_glob(resource_type):
             return resource_type.endswith('*')
-        globs = six.moves.filter(is_a_glob, six.iterkeys(self._registry))
+        globs = six.moves.filter(is_a_glob, iter(self._registry))
         for pattern in globs:
             if self._registry[pattern].matches(resource_type):
                 yield self._registry[pattern]

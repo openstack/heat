@@ -233,13 +233,13 @@ class Cluster(resource.Resource):
 
         if not updaters:
             return True
-        for k in six.iterkeys(updaters):
-            if not updaters[k]['start']:
-                action_id = start_action(k, updaters[k]['params'])
-                updaters[k]['action'] = action_id
-                updaters[k]['start'] = True
+        for k, updater in list(updaters.items()):
+            if not updater['start']:
+                action_id = start_action(k, updater['params'])
+                updater['action'] = action_id
+                updater['start'] = True
             else:
-                action = self.client().get_action(updaters[k]['action'])
+                action = self.client().get_action(updater['action'])
                 if action.status == self.ACTION_SUCCEEDED:
                     del updaters[k]
                 elif action.status == self.ACTION_FAILED:

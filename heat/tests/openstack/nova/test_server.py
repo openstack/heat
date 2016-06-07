@@ -2863,7 +2863,7 @@ class ServersTest(common.HeatTestCase):
         supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5',
                               'serial')
         self.assertEqual(set(supported_consoles),
-                         set(six.iterkeys(console_urls)))
+                         set(console_urls))
 
     def test_resolve_attribute_networks(self):
         return_server = self.fc.servers.list()[1]

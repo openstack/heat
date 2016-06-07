@@ -88,10 +88,10 @@ class FormatTest(common.HeatTestCase):
         )))
 
         formatted = api.format_stack_resource(res, True)
-        self.assertEqual(resource_details_keys, set(six.iterkeys(formatted)))
+        self.assertEqual(resource_details_keys, set(formatted.keys()))
 
         formatted = api.format_stack_resource(res, False)
-        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
+        self.assertEqual(resource_keys, set(formatted.keys()))
         self.assertEqual(self.stack.created_time.isoformat(),
                          formatted[rpc_api.RES_CREATION_TIME])
         self.assertEqual(self.stack.updated_time.isoformat(),
@@ -232,7 +232,7 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
-        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
+        self.assertEqual(resource_keys, set(formatted.keys()))
 
     def test_format_stack_resource_with_nested_stack_not_found(self):
         res = self.stack['generic4']
@@ -255,7 +255,7 @@ class FormatTest(common.HeatTestCase):
 
         formatted = api.format_stack_resource(res, False)
         # 'nested_stack_id' is not in formatted
-        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
+        self.assertEqual(resource_keys, set(formatted.keys()))
 
     def test_format_stack_resource_with_nested_stack_empty(self):
         res = self.stack['generic4']
@@ -300,7 +300,7 @@ class FormatTest(common.HeatTestCase):
             rpc_api.EVENT_RES_PROPERTIES))
 
         formatted = api.format_event(event)
-        self.assertEqual(event_keys, set(six.iterkeys(formatted)))
+        self.assertEqual(event_keys, set(formatted.keys()))
 
         event_id_formatted = formatted[rpc_api.EVENT_ID]
         event_identifier = identifier.EventIdentifier(

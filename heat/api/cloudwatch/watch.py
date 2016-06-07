@@ -66,8 +66,8 @@ class WatchController(object):
         """
         newdims = []
         for count, d in enumerate(dims, 1):
-            for key in six.iterkeys(d):
-                newdims.append({'Name': key, 'Value': d[key]})
+            for key, value in d.items():
+                newdims.append({'Name': key, 'Value': value})
         return newdims
 
     def delete_alarms(self, req):
@@ -302,7 +302,7 @@ class WatchController(object):
             msg = _('Invalid state %(state)s, '
                     'expecting one of %(expect)s') % {
                         'state': state,
-                        'expect': list(six.iterkeys(state_map))}
+                        'expect': list(state_map.keys())}
             LOG.error(msg)
             return exception.HeatInvalidParameterValueError(msg)
 

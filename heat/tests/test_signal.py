@@ -121,7 +121,7 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual('verysecret', rs_data.get('secret_key'))
         self.assertEqual('1234', rs_data.get('user_id'))
         self.assertEqual(rsrc.resource_id, rs_data.get('user_id'))
-        self.assertEqual(4, len(list(six.iterkeys(rs_data))))
+        self.assertEqual(4, len(rs_data))
 
     def test_get_user_id(self):
         # Setup

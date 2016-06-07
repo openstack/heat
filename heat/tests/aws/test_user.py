@@ -13,7 +13,6 @@
 
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import short_id
@@ -346,7 +345,7 @@ class AccessKeyTest(common.HeatTestCase):
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
         self.assertEqual(self.fc.secret, rs_data.get('secret_key'))
         self.assertEqual(self.fc.credential_id, rs_data.get('credential_id'))
-        self.assertEqual(2, len(list(six.iterkeys(rs_data))))
+        self.assertEqual(2, len(rs_data.keys()))
 
         self.assertEqual(utils.PhysName(stack.name, 'CfnUser'),
                          rsrc.FnGetAtt('UserName'))
