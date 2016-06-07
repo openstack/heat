@@ -20,6 +20,7 @@ import six
 
 from heat.common import exception
 from heat.common import messaging
+from heat.common import service_utils
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
@@ -438,7 +439,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(stack.Stack, 'load', return_value=stk)
         self.patchobject(stack_lock.StackLock, 'try_acquire',
                          return_value=str(uuid.uuid4()))
-        self.patchobject(stack_lock.StackLock, 'engine_alive',
+        self.patchobject(service_utils, 'engine_alive',
                          return_value=True)
         self.man.listener = mock.Mock()
         self.man.listener.SEND = 'send'

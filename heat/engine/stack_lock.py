@@ -12,7 +12,6 @@
 #    under the License.
 
 import contextlib
-import uuid
 
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -20,9 +19,10 @@ from oslo_utils import excutils
 from heat.common import exception
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
+from heat.common import service_utils
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock as stack_lock_object
-from heat.rpc import listener_client
+
 
 LOG = logging.getLogger(__name__)
 
@@ -33,15 +33,6 @@ class StackLock(object):
         self.stack_id = stack_id
         self.engine_id = engine_id
         self.listener = None
-
-    @staticmethod
-    def engine_alive(context, engine_id):
-        return listener_client.EngineListenerClient(
-            engine_id).is_alive(context)
-
-    @staticmethod
-    def generate_engine_id():
-        return str(uuid.uuid4())
 
     def get_engine_id(self):
         return stack_lock_object.StackLock.get_engine_id(self.stack_id)
@@ -72,7 +63,7 @@ class StackLock(object):
                                              tenant_safe=False,
                                              show_deleted=True)
         if (lock_engine_id == self.engine_id or
-                self.engine_alive(self.context, lock_engine_id)):
+                service_utils.engine_alive(self.context, lock_engine_id)):
             LOG.debug("Lock on stack %(stack)s is owned by engine "
                       "%(engine)s" % {'stack': self.stack_id,
                                       'engine': lock_engine_id})

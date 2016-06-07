@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import uuid
+
 from oslo_utils import timeutils
+
+from heat.rpc import listener_client
 
 SERVICE_KEYS = (
     SERVICE_ID,
@@ -70,3 +74,12 @@ def format_service(service):
         SERVICE_STATUS: status
     }
     return result
+
+
+def engine_alive(context, engine_id):
+    return listener_client.EngineListenerClient(
+        engine_id).is_alive(context)
+
+
+def generate_engine_id():
+    return str(uuid.uuid4())

@@ -14,6 +14,7 @@
 import mock
 
 from heat.common import exception
+from heat.common import service_utils
 from heat.engine import stack_lock
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock as stack_lock_object
@@ -26,7 +27,7 @@ class StackLockTest(common.HeatTestCase):
         super(StackLockTest, self).setUp()
         self.context = utils.dummy_context()
         self.stack_id = "aae01f2d-52ae-47ac-8a0d-3fde3d220fea"
-        self.engine_id = stack_lock.StackLock.generate_engine_id()
+        self.engine_id = service_utils.generate_engine_id()
         stack = mock.MagicMock()
         stack.id = self.stack_id
         stack.name = "test_stack"
@@ -74,7 +75,7 @@ class StackLockTest(common.HeatTestCase):
 
         slock = stack_lock.StackLock(self.context, self.stack_id,
                                      self.engine_id)
-        self.patchobject(slock, 'engine_alive', return_value=False)
+        self.patchobject(service_utils, 'engine_alive', return_value=False)
         slock.acquire()
 
         mock_create.assert_called_once_with(self.stack_id, self.engine_id)
@@ -88,7 +89,7 @@ class StackLockTest(common.HeatTestCase):
 
         slock = stack_lock.StackLock(self.context, self.stack_id,
                                      self.engine_id)
-        self.patchobject(slock, 'engine_alive', return_value=True)
+        self.patchobject(service_utils, 'engine_alive', return_value=True)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.mock_get_by_id.assert_called_once_with(
             self.context,
@@ -108,7 +109,7 @@ class StackLockTest(common.HeatTestCase):
 
         slock = stack_lock.StackLock(self.context, self.stack_id,
                                      self.engine_id)
-        self.patchobject(slock, 'engine_alive', return_value=False)
+        self.patchobject(service_utils, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.mock_get_by_id.assert_called_once_with(
             self.context,
@@ -130,7 +131,7 @@ class StackLockTest(common.HeatTestCase):
 
         slock = stack_lock.StackLock(self.context, self.stack_id,
                                      self.engine_id)
-        self.patchobject(slock, 'engine_alive', return_value=False)
+        self.patchobject(service_utils, 'engine_alive', return_value=False)
         slock.acquire()
 
         mock_create.assert_has_calls(
@@ -148,7 +149,7 @@ class StackLockTest(common.HeatTestCase):
 
         slock = stack_lock.StackLock(self.context, self.stack_id,
                                      self.engine_id)
-        self.patchobject(slock, 'engine_alive', return_value=False)
+        self.patchobject(service_utils, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.mock_get_by_id.assert_called_with(
             self.context,
