@@ -1311,10 +1311,11 @@ For example
 
     outputs:
       max_elem:
-        yaql:
-          expression: $.data.list_param.select(int($)).max()
-          data:
-            list_param: {get_param: list_param}
+        value:
+          yaql:
+            expression: $.data.list_param.select(int($)).max()
+            data:
+              list_param: {get_param: list_param}
 
 max_elem output will be evaluated to 3
 
