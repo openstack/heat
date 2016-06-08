@@ -183,7 +183,7 @@ engine_opts = [
                 default=False,
                 help=_('Enable the preview Stack Adopt feature.')),
     cfg.BoolOpt('convergence_engine',
-                default=False,
+                default=True,
                 help=_('Enables engine with convergence architecture. All '
                        'stacks with this option will be created using '
                        'convergence engine.')),
