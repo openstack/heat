@@ -47,6 +47,8 @@ class EnvironmentTest(common.HeatTestCase):
                     u'event_sinks': [],
                     u'resource_registry': {u'resources': {}}}
         env = environment.Environment(old)
+        self.assertEqual(expected, env.env_as_dict())
+        del(expected['encrypted_param_names'])
         self.assertEqual(expected, env.user_env_as_dict())
 
     def test_load_new_env(self):
@@ -57,6 +59,8 @@ class EnvironmentTest(common.HeatTestCase):
                    u'resource_registry': {u'OS::Food': u'fruity.yaml',
                                           u'resources': {}}}
         env = environment.Environment(new_env)
+        self.assertEqual(new_env, env.env_as_dict())
+        del(new_env['encrypted_param_names'])
         self.assertEqual(new_env, env.user_env_as_dict())
 
     def test_global_registry(self):
@@ -155,7 +159,7 @@ class EnvironmentTest(common.HeatTestCase):
                             'b.yaml',
                             path=['resources', 'res_x', 'test::two'])
 
-        self.assertEqual(env.user_env_as_dict(), env2.user_env_as_dict())
+        self.assertEqual(env.env_as_dict(), env2.env_as_dict())
 
     def test_constraints(self):
         env = environment.Environment({})
@@ -520,7 +524,7 @@ class ChildEnvTest(common.HeatTestCase):
                     'event_sinks': [],
                     'resource_registry': {'resources': {}}}
         cenv = environment.get_child_environment(penv, new_params)
-        self.assertEqual(expected, cenv.user_env_as_dict())
+        self.assertEqual(expected, cenv.env_as_dict())
 
     def test_params_normal(self):
         new_params = {'parameters': {'foo': 'bar', 'tester': 'Yes'}}
@@ -531,7 +535,7 @@ class ChildEnvTest(common.HeatTestCase):
                     'resource_registry': {'resources': {}}}
         expected.update(new_params)
         cenv = environment.get_child_environment(penv, new_params)
-        self.assertEqual(expected, cenv.user_env_as_dict())
+        self.assertEqual(expected, cenv.env_as_dict())
 
     def test_params_parent_overwritten(self):
         new_params = {'parameters': {'foo': 'bar', 'tester': 'Yes'}}
@@ -543,7 +547,7 @@ class ChildEnvTest(common.HeatTestCase):
                     'resource_registry': {'resources': {}}}
         expected.update(new_params)
         cenv = environment.get_child_environment(penv, new_params)
-        self.assertEqual(expected, cenv.user_env_as_dict())
+        self.assertEqual(expected, cenv.env_as_dict())
 
     def test_registry_merge_simple(self):
         env1 = {u'resource_registry': {u'OS::Food': u'fruity.yaml'}}

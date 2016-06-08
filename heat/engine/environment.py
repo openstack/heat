@@ -704,12 +704,21 @@ class Environment(object):
             env_snippet.get(env_fmt.PARAMETER_DEFAULTS, {}))
         self._update_event_sinks(env_snippet.get(env_fmt.EVENT_SINKS, []))
 
+    def env_as_dict(self):
+        """Get the entire environment as a dict."""
+        user_env = self.user_env_as_dict()
+        user_env.update(
+            # Any data here is to be stored in the DB but not reflected
+            # as part of the user environment (e.g to pass to nested stacks
+            # or made visible to the user via API calls etc
+            {env_fmt.ENCRYPTED_PARAM_NAMES: self.encrypted_param_names})
+        return user_env
+
     def user_env_as_dict(self):
-        """Get the environment as a dict, ready for storing in the db."""
+        """Get the environment as a dict, only user-allowed keys."""
         return {env_fmt.RESOURCE_REGISTRY: self.registry.as_dict(),
                 env_fmt.PARAMETERS: self.params,
                 env_fmt.PARAMETER_DEFAULTS: self.param_defaults,
-                env_fmt.ENCRYPTED_PARAM_NAMES: self.encrypted_param_names,
                 env_fmt.EVENT_SINKS: self._event_sinks}
 
     def register_class(self, resource_type, resource_class, path=None):
