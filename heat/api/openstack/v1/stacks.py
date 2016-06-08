@@ -464,6 +464,11 @@ class StackController(object):
         return env
 
     @util.identified_stack
+    def files(self, req, identity):
+        """Get the files for an existing stack."""
+        return self.rpc_client.get_files(req.context, identity)
+
+    @util.identified_stack
     def update(self, req, identity, body):
         """Update an existing stack with a new template and/or parameters."""
         data = InstantiationData(body)

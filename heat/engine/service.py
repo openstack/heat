@@ -297,7 +297,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.31'
+    RPC_API_VERSION = '1.32'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -1284,6 +1284,19 @@ class EngineService(service.Service):
         if s:
             return s.raw_template.environment
         return None
+
+    @context.request_context
+    def get_files(self, cnxt, stack_identity):
+        """Returns the files for an existing stack.
+
+        :param cnxt: RPC context
+        :param stack_identity: identifies the stack
+        :rtype: dict
+        """
+        s = self._get_stack(cnxt, stack_identity, show_deleted=True)
+        stack = parser.Stack.load(
+            cnxt, stack=s, resolve_data=False, show_deleted=True)
+        return dict(stack.t.files)
 
     @context.request_context
     def list_outputs(self, cntx, stack_identity):

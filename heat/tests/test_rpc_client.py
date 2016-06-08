@@ -420,3 +420,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api(
             'get_environment', 'call', stack_identity=self.identity,
             version='1.28')
+
+    def test_get_files(self):
+        self._test_engine_api(
+            'get_files', 'call', stack_identity=self.identity,
+            version='1.32')
