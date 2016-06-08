@@ -602,7 +602,8 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
             _('A map of names and server IDs to apply configuration to. The '
               'name is arbitrary and is used as the Heat resource name '
               'for the corresponding deployment.'),
-            update_allowed=True
+            update_allowed=True,
+            required=True
         ),
         CONFIG: _sd_ps[CONFIG],
         INPUT_VALUES: _sd_ps[INPUT_VALUES],
