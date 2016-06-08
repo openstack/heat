@@ -118,15 +118,16 @@ class GlanceImage(resource.Resource):
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
+
+        tags = args.pop(self.TAGS, [])
         image_id = self.client().images.create(**args).id
         self.resource_id_set(image_id)
 
-        if self.TAGS in args:
-            for tag in args[self.TAGS]:
-                self.client(
-                    version=self.client_plugin().V2).image_tags.update(
-                    image_id,
-                    tag)
+        for tag in tags:
+            self.client(
+                version=self.client_plugin().V2).image_tags.update(
+                image_id,
+                tag)
 
         return image_id
 
