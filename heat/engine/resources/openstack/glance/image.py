@@ -148,10 +148,11 @@ class GlanceImage(resource.Resource):
 
             removed_tags = set(existing_tags) - set(prop_diff[self.TAGS])
             for tag in removed_tags:
-                self.client(
-                    version=self.client_plugin().V2).image_tags.delete(
-                    self.resource_id,
-                    tag)
+                with self.client_plugin().ignore_not_found:
+                    self.client(
+                        version=self.client_plugin().V2).image_tags.delete(
+                        self.resource_id,
+                        tag)
 
     def _show_resource(self):
         if self.glance().version == 1.0:

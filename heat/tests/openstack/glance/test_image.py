@@ -14,6 +14,7 @@
 import mock
 import six
 
+from glanceclient import exc
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import stack as parser
@@ -237,12 +238,7 @@ class GlanceImageTest(common.HeatTestCase):
             self.my_image.resource_id,
             'tag1')
 
-    def test_image_handle_update(self):
-        self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-
-        self.my_image.t['Properties']['tags'] = ['tag1']
-        prop_diff = {'tags': ['tag2']}
-
+    def _handle_update_tags(self, prop_diff):
         self.my_image.handle_update(json_snippet=None,
                                     tmpl_diff=None,
                                     prop_diff=prop_diff)
@@ -255,6 +251,24 @@ class GlanceImageTest(common.HeatTestCase):
             self.my_image.resource_id,
             'tag1'
         )
+
+    def test_image_handle_update(self):
+        self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+        self.my_image.t['Properties']['tags'] = ['tag1']
+        prop_diff = {'tags': ['tag2']}
+
+        self._handle_update_tags(prop_diff)
+
+    def test_image_handle_update_tags_delete_not_found(self):
+        self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+        self.my_image.t['Properties']['tags'] = ['tag1']
+        prop_diff = {'tags': ['tag2']}
+
+        self.image_tags.delete.side_effect = exc.HTTPNotFound()
+
+        self._handle_update_tags(prop_diff)
 
     def test_image_show_resource_v1(self):
         self.glanceclient.version = 1.0
