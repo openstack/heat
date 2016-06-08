@@ -16,11 +16,11 @@ netaddr!=0.7.16,>=0.7.12 # BSD
 oslo.cache>=1.5.0 # Apache-2.0
 oslo.config>=3.10.0 # Apache-2.0
 oslo.concurrency>=3.8.0 # Apache-2.0
-oslo.context>=2.2.0 # Apache-2.0
+oslo.context>=2.4.0 # Apache-2.0
 oslo.db>=4.1.0 # Apache-2.0
 oslo.i18n>=2.1.0 # Apache-2.0
 oslo.log>=1.14.0 # Apache-2.0
-oslo.messaging>=4.5.0 # Apache-2.0
+oslo.messaging>=5.2.0 # Apache-2.0
 oslo.middleware>=3.0.0 # Apache-2.0
 oslo.policy>=0.5.0 # Apache-2.0
 oslo.reports>=0.6.0 # Apache-2.0
@@ -40,7 +40,7 @@ python-heatclient>=1.1.0 # Apache-2.0
 python-keystoneclient!=1.8.0,!=2.1.0,>=1.7.0 # Apache-2.0
 python-magnumclient>=2.0.0 # Apache-2.0
 python-manilaclient>=1.3.0 # Apache-2.0
-python-mistralclient>=1.0.0 # Apache-2.0
+python-mistralclient>=2.0.0 # Apache-2.0
 python-monascaclient>=1.0.30 # Apache-2.0
 python-neutronclient>=4.2.0 # Apache-2.0
 python-novaclient!=2.33.0,>=2.29.0 # Apache-2.0
