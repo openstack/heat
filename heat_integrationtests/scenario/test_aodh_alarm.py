@@ -18,12 +18,12 @@ from heat_integrationtests.scenario import scenario_base
 LOG = logging.getLogger(__name__)
 
 
-class CeilometerAlarmTest(scenario_base.ScenarioTestsBase):
-    """Class is responsible for testing of ceilometer usage."""
+class AodhAlarmTest(scenario_base.ScenarioTestsBase):
+    """Class is responsible for testing of aodh usage."""
     def setUp(self):
-        super(CeilometerAlarmTest, self).setUp()
+        super(AodhAlarmTest, self).setUp()
         self.template = self._load_template(__file__,
-                                            'test_ceilometer_alarm.yaml',
+                                            'test_aodh_alarm.yaml',
                                             'templates')
 
     def check_instance_count(self, stack_identifier, expected):

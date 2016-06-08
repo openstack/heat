@@ -17,172 +17,13 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
+from heat.engine.resources import alarm_base
 from heat.engine import support
 from heat.engine import watchrule
 
 
-COMMON_PROPERTIES = (
-    ALARM_ACTIONS, OK_ACTIONS, REPEAT_ACTIONS,
-    INSUFFICIENT_DATA_ACTIONS, DESCRIPTION, ENABLED, TIME_CONSTRAINTS,
-    SEVERITY,
-) = (
-    'alarm_actions', 'ok_actions', 'repeat_actions',
-    'insufficient_data_actions', 'description', 'enabled', 'time_constraints',
-    'severity',
-)
-
-_TIME_CONSTRAINT_KEYS = (
-    NAME, START, DURATION, TIMEZONE, TIME_CONSTRAINT_DESCRIPTION,
-) = (
-    'name', 'start', 'duration', 'timezone', 'description',
-)
-
-common_properties_schema = {
-    DESCRIPTION: properties.Schema(
-        properties.Schema.STRING,
-        _('Description for the alarm.'),
-        update_allowed=True
-    ),
-    ENABLED: properties.Schema(
-        properties.Schema.BOOLEAN,
-        _('True if alarm evaluation/actioning is enabled.'),
-        default='true',
-        update_allowed=True
-    ),
-    ALARM_ACTIONS: properties.Schema(
-        properties.Schema.LIST,
-        _('A list of URLs (webhooks) to invoke when state transitions to '
-          'alarm.'),
-        update_allowed=True
-    ),
-    OK_ACTIONS: properties.Schema(
-        properties.Schema.LIST,
-        _('A list of URLs (webhooks) to invoke when state transitions to '
-          'ok.'),
-        update_allowed=True
-    ),
-    INSUFFICIENT_DATA_ACTIONS: properties.Schema(
-        properties.Schema.LIST,
-        _('A list of URLs (webhooks) to invoke when state transitions to '
-          'insufficient-data.'),
-        update_allowed=True
-    ),
-    REPEAT_ACTIONS: properties.Schema(
-        properties.Schema.BOOLEAN,
-        _("False to trigger actions when the threshold is reached AND "
-          "the alarm's state has changed. By default, actions are called "
-          "each time the threshold is reached."),
-        default='true',
-        update_allowed=True
-    ),
-    SEVERITY: properties.Schema(
-        properties.Schema.STRING,
-        _('Severity of the alarm.'),
-        default='low',
-        constraints=[
-            constraints.AllowedValues(['low', 'moderate', 'critical'])
-        ],
-        update_allowed=True,
-        support_status=support.SupportStatus(version='5.0.0'),
-    ),
-    TIME_CONSTRAINTS: properties.Schema(
-        properties.Schema.LIST,
-        _('Describe time constraints for the alarm. '
-          'Only evaluate the alarm if the time at evaluation '
-          'is within this time constraint. Start point(s) of '
-          'the constraint are specified with a cron expression, '
-          'whereas its duration is given in seconds.'
-          ),
-        schema=properties.Schema(
-            properties.Schema.MAP,
-            schema={
-                NAME: properties.Schema(
-                    properties.Schema.STRING,
-                    _("Name for the time constraint."),
-                    required=True
-                ),
-                START: properties.Schema(
-                    properties.Schema.STRING,
-                    _("Start time for the time constraint. "
-                      "A CRON expression property."),
-                    constraints=[
-                        constraints.CustomConstraint(
-                            'cron_expression')
-                    ],
-                    required=True
-                ),
-                TIME_CONSTRAINT_DESCRIPTION: properties.Schema(
-                    properties.Schema.STRING,
-                    _("Description for the time constraint."),
-                ),
-                DURATION: properties.Schema(
-                    properties.Schema.INTEGER,
-                    _("Duration for the time constraint."),
-                    constraints=[
-                        constraints.Range(min=0)
-                    ],
-                    required=True
-                ),
-                TIMEZONE: properties.Schema(
-                    properties.Schema.STRING,
-                    _("Timezone for the time constraint "
-                      "(eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."),
-                    constraints=[
-                        constraints.CustomConstraint('timezone')
-                    ],
-                )
-            }
-
-        ),
-        support_status=support.SupportStatus(version='5.0.0'),
-        default=[],
-    )
-}
-
-
-NOVA_METERS = ['instance', 'memory', 'memory.usage',
-               'cpu', 'cpu_util', 'vcpus',
-               'disk.read.requests', 'disk.read.requests.rate',
-               'disk.write.requests', 'disk.write.requests.rate',
-               'disk.read.bytes', 'disk.read.bytes.rate',
-               'disk.write.bytes', 'disk.write.bytes.rate',
-               'disk.device.read.requests', 'disk.device.read.requests.rate',
-               'disk.device.write.requests', 'disk.device.write.requests.rate',
-               'disk.device.read.bytes', 'disk.device.read.bytes.rate',
-               'disk.device.write.bytes', 'disk.device.write.bytes.rate',
-               'disk.root.size', 'disk.ephemeral.size',
-               'network.incoming.bytes', 'network.incoming.bytes.rate',
-               'network.outgoing.bytes', 'network.outgoing.bytes.rate',
-               'network.incoming.packets', 'network.incoming.packets.rate',
-               'network.outgoing.packets', 'network.outgoing.packets.rate']
-
-
-def actions_to_urls(stack, properties):
-    kwargs = {}
-    for k, v in iter(properties.items()):
-        if k in [ALARM_ACTIONS, OK_ACTIONS,
-                 INSUFFICIENT_DATA_ACTIONS] and v is not None:
-            kwargs[k] = []
-            for act in v:
-                # if the action is a resource name
-                # we ask the destination resource for an alarm url.
-                # the template writer should really do this in the
-                # template if possible with:
-                # {Fn::GetAtt: ['MyAction', 'AlarmUrl']}
-                if act in stack:
-                    url = stack[act].FnGetAtt('AlarmUrl')
-                    kwargs[k].append(url)
-                else:
-                    if act:
-                        kwargs[k].append(act)
-        else:
-            kwargs[k] = v
-    return kwargs
-
-
-class CeilometerAlarm(resource.Resource):
-    """A resource that implements alarming service of Ceilometer.
+class AodhAlarm(alarm_base.BaseAlarm):
+    """A resource that implements alarming service of Aodh.
 
     A resource that allows for the setting alarms based on threshold evaluation
     for a collection of samples. Also, you can define actions to take if state
@@ -290,18 +131,15 @@ class CeilometerAlarm(resource.Resource):
             )
         )
     }
-    properties_schema.update(common_properties_schema)
 
-    default_client_name = 'ceilometer'
+    properties_schema.update(alarm_base.common_properties_schema)
 
-    entity = 'alarms'
-
-    def cfn_to_ceilometer(self, stack, properties):
+    def get_alarm_props(self, props):
         """Apply all relevant compatibility xforms."""
 
-        kwargs = actions_to_urls(stack, properties)
-        kwargs['type'] = 'threshold'
-        if kwargs.get(self.METER_NAME) in NOVA_METERS:
+        kwargs = self.actions_to_urls(props)
+        kwargs['type'] = self.alarm_type
+        if kwargs.get(self.METER_NAME) in alarm_base.NOVA_METERS:
             prefix = 'user_metadata.'
         else:
             prefix = 'metering.'
@@ -312,8 +150,8 @@ class CeilometerAlarm(resource.Resource):
             if field in kwargs:
                 rule[field] = kwargs[field]
                 del kwargs[field]
-        mmd = properties.get(self.MATCHING_METADATA) or {}
-        query = properties.get(self.QUERY) or []
+        mmd = props.get(self.MATCHING_METADATA) or {}
+        query = props.get(self.QUERY) or []
 
         # make sure the matching_metadata appears in the query like this:
         # {field: metadata.$prefix.x, ...}
@@ -339,11 +177,10 @@ class CeilometerAlarm(resource.Resource):
         return kwargs
 
     def handle_create(self):
-        props = self.cfn_to_ceilometer(self.stack,
-                                       self.properties)
+        props = self.get_alarm_props(self.properties)
         props['name'] = self.physical_resource_name()
-        alarm = self.client().alarms.create(**props)
-        self.resource_id_set(alarm.alarm_id)
+        alarm = self.client().alarm.create(props)
+        self.resource_id_set(alarm['alarm_id'])
 
         # the watchrule below is for backwards compatibility.
         # 1) so we don't create watch tasks unnecessarily
@@ -358,21 +195,11 @@ class CeilometerAlarm(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            kwargs = {'alarm_id': self.resource_id}
+            kwargs = {}
             kwargs.update(self.properties)
             kwargs.update(prop_diff)
-            alarms_client = self.client().alarms
-            alarms_client.update(**self.cfn_to_ceilometer(self.stack, kwargs))
-
-    def handle_suspend(self):
-        if self.resource_id is not None:
-            self.client().alarms.update(alarm_id=self.resource_id,
-                                        enabled=False)
-
-    def handle_resume(self):
-        if self.resource_id is not None:
-            self.client().alarms.update(alarm_id=self.resource_id,
-                                        enabled=True)
+            self.client().alarm.update(self.resource_id,
+                                       self.get_alarm_props(kwargs))
 
     def handle_delete(self):
         try:
@@ -382,37 +209,29 @@ class CeilometerAlarm(resource.Resource):
         except exception.EntityNotFound:
             pass
 
-        return super(CeilometerAlarm, self).handle_delete()
+        return super(AodhAlarm, self).handle_delete()
 
     def handle_check(self):
         watch_name = self.physical_resource_name()
         watchrule.WatchRule.load(self.context, watch_name=watch_name)
-        self.client().alarms.get(self.resource_id)
+        self.client().alarm.get(self.resource_id)
+
+    def _show_resource(self):
+        return self.client().alarm.get(self.resource_id)
 
 
-class BaseCeilometerAlarm(resource.Resource):
+class BaseCeilometerAlarm(alarm_base.BaseAlarm):
     default_client_name = 'ceilometer'
 
     entity = 'alarms'
 
     def handle_create(self):
-        properties = actions_to_urls(self.stack,
-                                     self.properties)
-        properties['name'] = self.physical_resource_name()
-        properties['type'] = self.ceilometer_alarm_type
+        props = self.actions_to_urls(self.properties)
+        props['name'] = self.physical_resource_name()
+        props['type'] = self.alarm_type
         alarm = self.client().alarms.create(
-            **self._reformat_properties(properties))
+            **self._reformat_properties(props))
         self.resource_id_set(alarm.alarm_id)
-
-    def _reformat_properties(self, properties):
-        rule = {}
-        for name in self.PROPERTIES:
-            value = properties.pop(name, None)
-            if value:
-                rule[name] = value
-        if rule:
-            properties['%s_rule' % self.ceilometer_alarm_type] = rule
-        return properties
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
@@ -420,7 +239,7 @@ class BaseCeilometerAlarm(resource.Resource):
             kwargs.update(prop_diff)
             alarms_client = self.client().alarms
             alarms_client.update(**self._reformat_properties(
-                actions_to_urls(self.stack, kwargs)))
+                self.actions_to_urls(kwargs)))
 
     def handle_suspend(self):
         self.client().alarms.update(
@@ -463,13 +282,13 @@ class CombinationAlarm(BaseCeilometerAlarm):
             constraints=[constraints.AllowedValues(['and', 'or'])],
             update_allowed=True)
     }
-    properties_schema.update(common_properties_schema)
+    properties_schema.update(alarm_base.common_properties_schema)
 
-    ceilometer_alarm_type = 'combination'
+    alarm_type = 'combination'
 
 
 def resource_mapping():
     return {
-        'OS::Ceilometer::Alarm': CeilometerAlarm,
+        'OS::Aodh::Alarm': AodhAlarm,
         'OS::Ceilometer::CombinationAlarm': CombinationAlarm,
     }

@@ -60,7 +60,7 @@ Mappings:
 
 Resources:
   __alarm__:
-    Type: OS::Ceilometer::Alarm
+    Type: OS::Aodh::Alarm
     Properties:
       description:
         Ref: AlarmDescription

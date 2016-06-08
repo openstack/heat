@@ -15,7 +15,7 @@ resources:
       cooldown: 0
       scaling_adjustment: 1
   alarm:
-    type: OS::Ceilometer::Alarm
+    type: OS::Aodh::Alarm
     properties:
       description: Scale-up if the average CPU > 50% for 1 minute
       meter_name: test_meter
