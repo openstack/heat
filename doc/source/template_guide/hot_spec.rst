@@ -645,8 +645,11 @@ update_policy
 
 deletion_policy
     Deletion policy for the resource. The allowed deletion policies are
-    ``Delete``, ``Retain``, and ``Snapshot``.
-    This attribute is optional; the default policy is ``Delete``.
+    ``Delete``, ``Retain``, and ``Snapshot``. Beginning with
+    ``heat_template_version`` ``2016-10-14``, the lowercase equivalents
+    ``delete``, ``retain``, and ``snapshot`` are also allowed.
+    This attribute is optional; the default policy is to delete the physical
+    resource when deleting a resource from the stack.
 
 Depending on the type of resource, the resource block might include more
 resource specific data.

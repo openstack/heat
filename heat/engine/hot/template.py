@@ -404,6 +404,17 @@ class HOTemplate20160408(HOTemplate20151015):
 
 
 class HOTemplate20161014(HOTemplate20160408):
+    deletion_policies = {
+        'Delete': rsrc_defn.ResourceDefinition.DELETE,
+        'Retain': rsrc_defn.ResourceDefinition.RETAIN,
+        'Snapshot': rsrc_defn.ResourceDefinition.SNAPSHOT,
+
+        # aliases added in 2016-10-14
+        'delete': rsrc_defn.ResourceDefinition.DELETE,
+        'retain': rsrc_defn.ResourceDefinition.RETAIN,
+        'snapshot': rsrc_defn.ResourceDefinition.SNAPSHOT,
+    }
+
     functions = {
         'get_attr': hot_funcs.GetAttAllAttributes,
         'get_file': hot_funcs.GetFile,
