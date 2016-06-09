@@ -775,7 +775,7 @@ class Stack(collections.Mapping):
             except AssertionError:
                 raise
             except Exception as ex:
-                LOG.exception(_LE("Exception: %s"), ex)
+                LOG.info(_LI("Exception in stack validation"), exc_info=True)
                 raise exception.StackValidationFailed(
                     message=encodeutils.safe_decode(six.text_type(ex)))
             if result:
@@ -1852,8 +1852,8 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
-                LOG.error(_LE('Resource %(name)s delete failed: %(ex)s'),
-                          {'name': res.name, 'ex': ex})
+                LOG.info(_LI('Resource %(name)s delete failed: %(ex)s'),
+                         {'name': res.name, 'ex': ex})
 
         for res in deps:
             if not failed:
@@ -1861,9 +1861,9 @@ class Stack(collections.Mapping):
                     res.state_reset()
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
-                    LOG.exception(_LE('Resource %(name)s create failed: '
-                                      '%(ex)s'), {'name': res.name, 'ex': ex})
                     failed = True
+                    LOG.info(_LI('Resource %(name)s create failed: '
+                                 '%(ex)s'), {'name': res.name, 'ex': ex})
             else:
                 res.state_set(res.CREATE, res.FAILED,
                               'Resource restart aborted')
