@@ -15,11 +15,13 @@ Developing Guides
 =================
 
 .. toctree::
-   :maxdepth: 1
+       :maxdepth: 1
 
-   on_devstack
-   on_fedora
-   on_ubuntu
-   on_other
-   jeos_building
-   standalone
+    contributing/index
+    getting_started/on_devstack
+    developing_guides/architecture
+    developing_guides/pluginguide
+    developing_guides/schedulerhints
+    developing_guides/gmr
+    developing_guides/supportstatus
+    developing_guides/rally_on_gates
