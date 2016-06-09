@@ -329,13 +329,15 @@ class Stack(collections.Mapping):
         for res in resources:
             yield res
 
+        for res in six.itervalues(self.resources):
             if not res.has_nested() or nested_depth == 0:
                 continue
 
             nested_stack = res.nested()
             if not nested_stack:
                 continue
-            for nested_res in nested_stack.iter_resources(nested_depth - 1):
+            for nested_res in nested_stack.iter_resources(nested_depth - 1,
+                                                          filters):
                 yield nested_res
 
     def db_active_resources_get(self):
