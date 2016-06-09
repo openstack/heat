@@ -48,7 +48,7 @@ class EngineClient(object):
         1.25 - list_stack_resource filter update
         1.26 - Add mark_unhealthy
         1.27 - Add check_software_deployment
-        1.28 - Add environment_show call
+        1.28 - Add get_environment call
         1.29 - Add template_id to create_stack/update_stack
         1.30 - Add possibility to resource_type_* return descriptions
     """
