@@ -26,9 +26,6 @@ from heat.tests import utils
 
 class HealthMonitorTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(HealthMonitorTest, self).setUp()
-
     @mock.patch('heat.engine.clients.os.neutron.'
                 'NeutronClientPlugin.has_extension', return_value=True)
     def _create_stack(self, ext_func, tmpl=inline_templates.MONITOR_TEMPLATE):

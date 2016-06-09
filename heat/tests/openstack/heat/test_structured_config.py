@@ -166,8 +166,6 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
             self.ctx, 'software_deploly_test_stack',
             template.Template(self.template))
         self.deployment = self.stack['deploy_mysql']
-        heat = mock.MagicMock()
-        self.deployments = heat.return_value.software_deployments
 
     def test_build_derived_config(self):
         source = {
@@ -218,8 +216,6 @@ class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
             self.ctx, 'software_deploly_test_stack',
             template.Template(template_def))
         self.deployment = self.stack['deploy_mysql']
-        heat = mock.MagicMock()
-        self.deployments = heat.return_value.software_deployments
 
     def test_build_derived_config_failure(self):
         props = {'input_values_validate': 'STRICT'}
@@ -266,11 +262,6 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
             }
         }
     }
-
-    def setUp(self):
-        common.HeatTestCase.setUp(self)
-        heat = mock.MagicMock()
-        self.deployments = heat.return_value.software_deployments
 
     def test_build_resource_definition(self):
         stack = utils.parse_stack(self.template)

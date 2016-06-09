@@ -966,8 +966,6 @@ def get_fake_nested_stack(names):
 
 
 class RollingUpdatePolicyTest(common.HeatTestCase):
-    def setUp(self):
-        super(RollingUpdatePolicyTest, self).setUp()
 
     def test_parse_without_update_policy(self):
         stack = utils.parse_stack(template)
@@ -1015,8 +1013,6 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
 
 
 class RollingUpdatePolicyDiffTest(common.HeatTestCase):
-    def setUp(self):
-        super(RollingUpdatePolicyDiffTest, self).setUp()
 
     def validate_update_policy_diff(self, current, updated):
         # load current stack
@@ -1061,8 +1057,6 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
 
 
 class RollingUpdateTest(common.HeatTestCase):
-    def setUp(self):
-        super(RollingUpdateTest, self).setUp()
 
     def check_with_update(self, with_policy=False, with_diff=False):
         current = copy.deepcopy(template)
@@ -1129,9 +1123,6 @@ class TestUtils(common.HeatTestCase):
         ('4', dict(existing=['0', '1'], black_listed=['1', '2'], count=1))
 
     ]
-
-    def setUp(self):
-        super(TestUtils, self).setUp()
 
     def test_count_black_listed(self):
         stack = utils.parse_stack(template2)

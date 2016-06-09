@@ -113,9 +113,6 @@ def cont_index(obj_name, num_version_hist):
 
 
 class SwiftSignalHandleTest(common.HeatTestCase):
-    def setUp(self):
-        super(SwiftSignalHandleTest, self).setUp()
-        utils.setup_dummy_db()
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -296,9 +293,6 @@ class SwiftSignalHandleTest(common.HeatTestCase):
 
 
 class SwiftSignalTest(common.HeatTestCase):
-    def setUp(self):
-        super(SwiftSignalTest, self).setUp()
-        utils.setup_dummy_db()
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')

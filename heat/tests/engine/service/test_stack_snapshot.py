@@ -35,7 +35,6 @@ class SnapshotServiceTest(common.HeatTestCase):
 
         self.engine = service.EngineService('a-host', 'a-topic')
         self.engine.create_periodic_tasks()
-        utils.setup_dummy_db()
 
     def _create_stack(self, stack_name, files=None):
         t = template_format.parse(tools.wp_template)

@@ -28,9 +28,6 @@ from heat.tests import utils
 
 class LoadBalancerTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(LoadBalancerTest, self).setUp()
-
     def test_resource_mapping(self):
         mapping = loadbalancer.resource_mapping()
         self.assertEqual(loadbalancer.LoadBalancer,

@@ -78,10 +78,6 @@ Resources:
           min: 5
 '''
 
-    def setUp(self):
-        super(TestRandomString, self).setUp()
-        self.ctx = utils.dummy_context()
-
     def create_stack(self, templ):
         self.stack = self.parse_stack(template_format.parse(templ))
         self.assertIsNone(self.stack.create())

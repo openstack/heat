@@ -86,8 +86,6 @@ class TestContainer(common.HeatTestCase):
 
     def setUp(self):
         super(TestContainer, self).setUp()
-        utils.setup_dummy_db()
-        self.ctx = utils.dummy_context()
 
         self.patcher_client = mock.patch.object(
             container.GenericContainer, 'client')

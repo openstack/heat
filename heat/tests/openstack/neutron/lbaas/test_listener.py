@@ -29,9 +29,6 @@ from heat.tests import utils
 
 class ListenerTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(ListenerTest, self).setUp()
-
     def test_resource_mapping(self):
         mapping = listener.resource_mapping()
         self.assertEqual(listener.Listener,

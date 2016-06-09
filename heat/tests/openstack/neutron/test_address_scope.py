@@ -37,9 +37,7 @@ class NeutronAddressScopeTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronAddressScopeTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-
         tpl = template_format.parse(address_scope_template)
         self.stack = stack.Stack(
             self.ctx,

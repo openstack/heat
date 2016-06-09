@@ -48,7 +48,6 @@ RESOURCE_TYPE = 'OS::Magnum::Bay'
 class TestMagnumBay(common.HeatTestCase):
     def setUp(self):
         super(TestMagnumBay, self).setUp()
-        self.ctx = utils.dummy_context()
         resource._register_class(RESOURCE_TYPE, bay.Bay)
         t = template_format.parse(magnum_template)
         self.stack = utils.parse_stack(t)

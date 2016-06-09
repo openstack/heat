@@ -30,9 +30,6 @@ from heat.tests import utils
 
 class PoolTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(PoolTest, self).setUp()
-
     def test_resource_mapping(self):
         mapping = pool.resource_mapping()
         self.assertEqual(pool.Pool,
