@@ -314,6 +314,9 @@ class FakeWorkflow(object):
         self.name = name
         self._data = {'workflow': 'info'}
 
+    def to_dict(self):
+        return self._data
+
 
 class TestMistralWorkflow(common.HeatTestCase):
     def setUp(self):

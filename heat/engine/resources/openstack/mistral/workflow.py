@@ -599,13 +599,6 @@ class Workflow(signal_responder.SignalResponder,
         elif name == self.ALARM_URL and self.resource_id is not None:
             return six.text_type(self._get_ec2_signed_url())
 
-    # TODO(tlashchova): remove this method when mistralclient>1.0.0 is used.
-    def _show_resource(self):
-        workflow = self.client().workflows.get(self.resource_id)
-        if hasattr(workflow, 'to_dict'):
-            super(Workflow, self)._show_resource()
-        return workflow._data
-
 
 def resource_mapping():
     return {
