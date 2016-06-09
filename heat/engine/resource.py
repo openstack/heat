@@ -906,9 +906,7 @@ class Resource(object):
                 delay = timeutils.retry_backoff_delay(count[action],
                                                       jitter_max=2.0)
                 waiter = scheduler.TaskRunner(pause)
-                waiter.start(timeout=delay)
-                while not waiter.step():
-                    yield
+                yield waiter.as_task(timeout=delay)
             try:
                 yield self._do_action(action, self.properties.validate)
                 if action == self.CREATE:
