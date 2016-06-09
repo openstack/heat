@@ -44,6 +44,9 @@ class FakeCronTrigger(object):
         self.remaining_executions = 3
         self._data = {'trigger': 'info'}
 
+    def to_dict(self):
+        return self._data
+
 
 class MistralCronTriggerTest(common.HeatTestCase):
 

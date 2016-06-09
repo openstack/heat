@@ -141,13 +141,6 @@ class CronTrigger(resource.Resource):
         elif name == self.REMAINING_EXECUTIONS:
             return trigger.remaining_executions
 
-    # TODO(tlashchova): remove this method when mistralclient>1.0.0 is used.
-    def _show_resource(self):
-        cron_trigger = self.client().cron_triggers.get(self.resource_id)
-        if hasattr(cron_trigger, 'to_dict'):
-            super(CronTrigger, self)._show_resource()
-        return cron_trigger._data
-
     def get_live_state(self, resource_properties):
         # Currently mistral just deletes cron trigger that was executed
         # (i.e. remaining execution is reached zero). In this case we can't
