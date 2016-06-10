@@ -2724,38 +2724,43 @@ class StackTest(common.HeatTestCase):
                                  disable_rollback=disable_rollback)
         self.stack.store()
         self.m.ReplayAll()
-        res = self.stack._update_exception_handler(
+
+        rb = self.stack._update_exception_handler(
             exc=exc, action=action, update_task=update_task)
-        if isinstance(exc, exception.ResourceFailure):
-            if disable_rollback:
-                self.assertFalse(res)
-            else:
-                self.assertTrue(res)
-        elif isinstance(exc, stack.ForcedCancel):
+        if isinstance(exc, stack.ForcedCancel):
             update_task.updater.cancel_all.assert_called_once_with()
-            if exc.with_rollback or not disable_rollback:
-                self.assertTrue(res)
-            else:
-                self.assertFalse(res)
+
         self.m.VerifyAll()
+
+        return rb
 
     def test_update_exception_handler_resource_failure_no_rollback(self):
         reason = 'something strange happened'
         exc = exception.ResourceFailure(reason, None, action='UPDATE')
-        self.update_exception_handler(exc, disable_rollback=True)
+        rb = self.update_exception_handler(exc, disable_rollback=True)
+        self.assertFalse(rb)
 
     def test_update_exception_handler_resource_failure_rollback(self):
         reason = 'something strange happened'
         exc = exception.ResourceFailure(reason, None, action='UPDATE')
-        self.update_exception_handler(exc, disable_rollback=False)
+        rb = self.update_exception_handler(exc, disable_rollback=False)
+        self.assertTrue(rb)
 
     def test_update_exception_handler_force_cancel_with_rollback(self):
         exc = stack.ForcedCancel(with_rollback=True)
-        self.update_exception_handler(exc, disable_rollback=False)
+        rb = self.update_exception_handler(exc, disable_rollback=False)
+        self.assertTrue(rb)
 
-    def test_update_exception_handler_force_cancel_no_rollback(self):
+    def test_update_exception_handler_force_cancel_with_rollback_off(self):
+        # stack-cancel-update from user *always* rolls back
+        exc = stack.ForcedCancel(with_rollback=True)
+        rb = self.update_exception_handler(exc, disable_rollback=True)
+        self.assertTrue(rb)
+
+    def test_update_exception_handler_force_cancel_nested(self):
         exc = stack.ForcedCancel(with_rollback=False)
-        self.update_exception_handler(exc, disable_rollback=True)
+        rb = self.update_exception_handler(exc, disable_rollback=True)
+        self.assertFalse(rb)
 
     def test_store_generates_new_traversal_id_for_new_stack(self):
         tmpl = template.Template({

@@ -1066,7 +1066,7 @@ class StackUpdateTest(common.HeatTestCase):
                                     disable_rollback=False)
         evt_mock = mock.MagicMock()
         evt_mock.ready.return_value = True
-        evt_mock.wait.return_value = 'cancel'
+        evt_mock.wait.return_value = 'cancel_with_rollback'
 
         self.stack.update(updated_stack, event=evt_mock)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
