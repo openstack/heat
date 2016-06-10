@@ -26,6 +26,7 @@ resources:
   subnet:
     type: OS::Neutron::Subnet
     properties:
+      enable_dhcp: false
       network: { get_resource: net }
       cidr: 11.11.11.0/24
   port:
@@ -50,9 +51,6 @@ outputs:
 
 class UpdatePortTest(functional_base.FunctionalTestsBase):
 
-    def setUp(self):
-        super(UpdatePortTest, self).setUp()
-
     def get_port_id_and_ip(self, stack_identifier):
         resources = self.client.resources.list(stack_identifier)
         port_id = [res.physical_resource_id for res in resources
@@ -72,9 +70,8 @@ class UpdatePortTest(functional_base.FunctionalTestsBase):
         self.update_stack(stack_identifier, templ_no_ip,
                           parameters=parameters)
 
-        new_id, new_ip = self.get_port_id_and_ip(stack_identifier)
-        # port id and ip should be different
-        self.assertNotEqual(_ip, new_ip)
+        new_id, _ = self.get_port_id_and_ip(stack_identifier)
+        # port id should be different
         self.assertNotEqual(_id, new_id)
 
     def test_stack_update_replace_with_ip(self):
@@ -161,6 +158,5 @@ class UpdatePortTest(functional_base.FunctionalTestsBase):
         self.update_stack(stack_identifier, templ_no_ip)
 
         new_id, new_ip = self.get_port_id_and_ip(stack_identifier)
-        # port should be updated with the same id, but different ip
-        self.assertNotEqual(_ip, new_ip)
+        # port should be updated with the same id
         self.assertEqual(_id, new_id)
