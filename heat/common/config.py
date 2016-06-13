@@ -382,8 +382,8 @@ def list_opts():
 
     for client in ('barbican', 'ceilometer', 'cinder', 'designate', 'glance',
                    'heat', 'keystone', 'magnum', 'manila', 'mistral',
-                   'neutron', 'nova', 'sahara', 'senlin', 'swift', 'trove',
-                   'zaqar'
+                   'monasca', 'neutron', 'nova', 'sahara', 'senlin', 'swift',
+                   'trove', 'zaqar'
                    ):
         client_specific_group = 'clients_' + client
         yield client_specific_group, clients_opts
