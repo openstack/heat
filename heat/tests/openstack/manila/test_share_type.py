@@ -16,7 +16,6 @@ import copy
 import mock
 
 from heat.common import template_format
-from heat.engine import resources
 from heat.engine.resources.openstack.manila import share_type as mshare_type
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -43,12 +42,6 @@ class DummyShare(object):
 
 
 class ManilaShareTypeTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(ManilaShareTypeTest, self).setUp()
-        resources.initialise()
-        utils.setup_dummy_db()
-        self.ctx = utils.dummy_context()
 
     def _init_share(self, stack_name, share_type_name="test_share_type"):
         # parse stack

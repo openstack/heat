@@ -60,7 +60,6 @@ class TestMagnumBayModel(common.HeatTestCase):
 
     def setUp(self):
         super(TestMagnumBayModel, self).setUp()
-        self.ctx = utils.dummy_context()
         resource._register_class(RESOURCE_TYPE, baymodel.BayModel)
         t = template_format.parse(self.magnum_template)
         self.stack = utils.parse_stack(t)

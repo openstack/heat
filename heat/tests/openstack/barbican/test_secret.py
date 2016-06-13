@@ -45,8 +45,6 @@ class TestSecret(common.HeatTestCase):
 
     def setUp(self):
         super(TestSecret, self).setUp()
-        utils.setup_dummy_db()
-        self.ctx = utils.dummy_context()
 
         self.patcher_client = mock.patch.object(secret.Secret, 'client')
         mock_client = self.patcher_client.start()

@@ -58,9 +58,7 @@ class GlanceImageTest(common.HeatTestCase):
     def setUp(self):
         super(GlanceImageTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-
         tpl = template_format.parse(image_template)
         self.stack = parser.Stack(
             self.ctx, 'glance_image_test_stack',

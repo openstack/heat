@@ -74,8 +74,6 @@ class TroveClusterTest(common.HeatTestCase):
 
     def setUp(self):
         super(TroveClusterTest, self).setUp()
-        utils.setup_dummy_db()
-        self.ctx = utils.dummy_context()
 
         self.tmpl = template_format.parse(stack_template)
         self.stack = utils.parse_stack(self.tmpl)

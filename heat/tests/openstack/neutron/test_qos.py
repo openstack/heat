@@ -63,9 +63,7 @@ class NeutronQoSPolicyTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronQoSPolicyTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-
         tpl = template_format.parse(qos_policy_template)
         self.stack = stack.Stack(
             self.ctx,
@@ -183,9 +181,7 @@ class NeutronQoSBandwidthLimitRuleTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronQoSBandwidthLimitRuleTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-
         tpl = template_format.parse(bandwidth_limit_rule_template)
         self.stack = stack.Stack(
             self.ctx,
@@ -294,9 +290,7 @@ class NeutronQoSDscpMarkingRuleTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronQoSDscpMarkingRuleTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-
         tpl = template_format.parse(dscp_marking_rule_template)
         self.stack = stack.Stack(
             self.ctx,

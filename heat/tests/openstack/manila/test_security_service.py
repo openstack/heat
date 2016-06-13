@@ -16,7 +16,6 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import resources
 from heat.engine.resources.openstack.manila import security_service
 from heat.engine import scheduler
 from heat.engine import template
@@ -74,9 +73,6 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
 
     def setUp(self):
         super(ManilaSecurityServiceTest, self).setUp()
-        resources.initialise()
-        utils.setup_dummy_db()
-        self.ctx = utils.dummy_context()
 
         t = template_format.parse(stack_template)
         self.stack = utils.parse_stack(t)

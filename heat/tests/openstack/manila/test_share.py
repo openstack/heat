@@ -59,8 +59,6 @@ class ManilaShareTest(common.HeatTestCase):
 
     def setUp(self):
         super(ManilaShareTest, self).setUp()
-        utils.setup_dummy_db()
-        self.ctx = utils.dummy_context()
 
         self.fake_share = mock.MagicMock(id="test_share_id")
         self.available_share = mock.MagicMock(

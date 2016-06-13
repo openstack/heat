@@ -51,8 +51,6 @@ alarm_template = '''
 
 
 class CloudWatchAlarmTest(common.HeatTestCase):
-    def setUp(self):
-        super(CloudWatchAlarmTest, self).setUp()
 
     def create_alarm(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
