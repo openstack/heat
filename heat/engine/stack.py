@@ -424,7 +424,7 @@ class Stack(collections.Mapping):
             LOG.warning(_LW("Unable to set parameters StackId identifier"))
 
     @staticmethod
-    def get_dep_attrs(resources, outputs, resource_name):
+    def get_dep_attrs(resources, outputs, resource_name, value_sec):
         """Return the attributes of the specified resource that are referenced.
 
         Return an iterator over any attributes of the specified resource that
@@ -432,8 +432,8 @@ class Stack(collections.Mapping):
         """
         attr_lists = itertools.chain((res.dep_attrs(resource_name)
                                       for res in resources),
-                                     (function.dep_attrs(out.get('Value', ''),
-                                                         resource_name)
+                                     (function.dep_attrs(
+                                         out.get(value_sec, ''), resource_name)
                                       for out in six.itervalues(outputs)))
         return set(itertools.chain.from_iterable(attr_lists))
 
@@ -796,14 +796,14 @@ class Stack(collections.Mapping):
                     path=[self.t.OUTPUTS],
                     message=message)
             try:
-                if not val or 'Value' not in val:
+                if not val or self.t.OUTPUT_VALUE not in val:
                     message = _('Each Output must contain '
                                 'a Value key.')
                     raise exception.StackValidationFailed(
                         error='Output validation error',
                         path=[self.t.OUTPUTS, key],
                         message=message)
-                function.validate(val.get('Value'))
+                function.validate(val.get(self.t.OUTPUT_VALUE))
             except exception.StackValidationFailed as ex:
                 raise
             except AssertionError:
@@ -812,7 +812,7 @@ class Stack(collections.Mapping):
                 raise exception.StackValidationFailed(
                     error='Output validation error',
                     path=[self.t.OUTPUTS, key,
-                          self.t.get_section_name('Value')],
+                          self.t.OUTPUT_VALUE],
                     message=six.text_type(ex))
 
     def requires_deferred_auth(self):
@@ -1832,7 +1832,7 @@ class Stack(collections.Mapping):
     @profiler.trace('Stack.output', hide_args=False)
     def output(self, key):
         """Get the value of the specified stack output."""
-        value = self.outputs[key].get('Value', '')
+        value = self.outputs[key].get(self.t.OUTPUT_VALUE, '')
         try:
             return function.resolve(value)
         except Exception as ex:

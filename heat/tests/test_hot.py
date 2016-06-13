@@ -402,8 +402,8 @@ class HOTemplateTest(common.HeatTestCase):
                          'inside a resource definition',
                          six.text_type(err))
 
-    def test_translate_outputs_good(self):
-        """Test translation of outputs into internal engine format."""
+    def test_get_outputs_good(self):
+        """Test get outputs."""
 
         hot_tpl = template_format.parse('''
         heat_template_version: 2013-05-23
@@ -413,13 +413,13 @@ class HOTemplateTest(common.HeatTestCase):
             value: value1
         ''')
 
-        expected = {'output1': {'Description': 'output1', 'Value': 'value1'}}
+        expected = {'output1': {'description': 'output1', 'value': 'value1'}}
 
         tmpl = template.Template(hot_tpl)
         self.assertEqual(expected, tmpl[tmpl.OUTPUTS])
 
-    def test_translate_outputs_bad_no_data(self):
-        """Test translation of outputs without any mapping."""
+    def test_get_outputs_bad_no_data(self):
+        """Test get outputs without any mapping."""
 
         hot_tpl = template_format.parse("""
         heat_template_version: 2013-05-23
@@ -433,8 +433,8 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual('Each output must contain a value key.',
                          six.text_type(error))
 
-    def test_translate_outputs_bad_without_name(self):
-        """Test translation of outputs without name."""
+    def test_get_outputs_bad_without_name(self):
+        """Test get outputs without name."""
 
         hot_tpl = template_format.parse("""
         heat_template_version: 2013-05-23
@@ -450,8 +450,8 @@ class HOTemplateTest(common.HeatTestCase):
                          'Found a [%s] instead' % six.text_type,
                          six.text_type(error))
 
-    def test_translate_outputs_bad_description(self):
-        """Test translation of outputs into internal engine format."""
+    def test_get_outputs_bad_description(self):
+        """Test get outputs with bad description name."""
 
         hot_tpl = template_format.parse('''
         heat_template_version: 2013-05-23
@@ -466,8 +466,8 @@ class HOTemplateTest(common.HeatTestCase):
                                 tmpl.__getitem__, tmpl.OUTPUTS)
         self.assertIn('Description', six.text_type(err))
 
-    def test_translate_outputs_bad_value(self):
-        """Test translation of outputs into internal engine format."""
+    def test_get_outputs_bad_value(self):
+        """Test get outputs with bad value name."""
 
         hot_tpl = template_format.parse('''
         heat_template_version: 2013-05-23

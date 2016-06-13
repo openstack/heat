@@ -237,5 +237,8 @@ class DepAttrsTest(common.HeatTestCase):
             outputs = self.stack.outputs
             resources = six.itervalues(self.stack.resources)
             self.assertEqual(self.expected[res.name],
-                             self.stack.get_dep_attrs(resources, outputs,
-                                                      res.name))
+                             self.stack.get_dep_attrs(
+                                 resources,
+                                 outputs,
+                                 res.name,
+                                 self.stack.t.OUTPUT_VALUE))

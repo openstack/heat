@@ -184,7 +184,7 @@ def format_stack_outputs(stack, outputs, resolve_value=False):
 def format_stack_output(stack, outputs, k, resolve_value=True):
     result = {
         rpc_api.OUTPUT_KEY: k,
-        rpc_api.OUTPUT_DESCRIPTION: outputs[k].get('Description',
+        rpc_api.OUTPUT_DESCRIPTION: outputs[k].get(stack.t.OUTPUT_DESCRIPTION,
                                                    'No description given'),
     }
 

@@ -27,10 +27,10 @@ from heat.engine import template
 
 _RESOURCE_KEYS = (
     RES_TYPE, RES_PROPERTIES, RES_METADATA, RES_DEPENDS_ON,
-    RES_DELETION_POLICY, RES_UPDATE_POLICY,
+    RES_DELETION_POLICY, RES_UPDATE_POLICY, RES_DESCRIPTION,
 ) = (
     'type', 'properties', 'metadata', 'depends_on',
-    'deletion_policy', 'update_policy',
+    'deletion_policy', 'update_policy', 'description',
 )
 
 
@@ -45,6 +45,12 @@ class HOTemplate20130523(template.Template):
         'parameters', 'resources', 'outputs', '__undefined__'
     )
 
+    OUTPUT_KEYS = (
+        OUTPUT_DESCRIPTION, OUTPUT_VALUE,
+    ) = (
+        'description', 'value',
+    )
+
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
 
     _CFN_TO_HOT_SECTIONS = {cfn_template.CfnTemplate.VERSION: VERSION,
@@ -54,14 +60,19 @@ class HOTemplate20130523(template.Template):
                             cfn_template.CfnTemplate.RESOURCES: RESOURCES,
                             cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
 
-    _RESOURCE_HOT_TO_CFN_ATTRS = {'type': 'Type',
-                                  'properties': 'Properties',
-                                  'metadata': 'Metadata',
-                                  'depends_on': 'DependsOn',
-                                  'deletion_policy': 'DeletionPolicy',
-                                  'update_policy': 'UpdatePolicy',
-                                  'description': 'Description',
-                                  'value': 'Value'}
+    _RESOURCE_HOT_TO_CFN_ATTRS = {
+        RES_TYPE: cfn_template.RES_TYPE,
+        RES_PROPERTIES: cfn_template.RES_PROPERTIES,
+        RES_METADATA: cfn_template.RES_METADATA,
+        RES_DEPENDS_ON: cfn_template.RES_DEPENDS_ON,
+        RES_DELETION_POLICY: cfn_template.RES_DELETION_POLICY,
+        RES_UPDATE_POLICY: cfn_template.RES_UPDATE_POLICY,
+        RES_DESCRIPTION: cfn_template.RES_DESCRIPTION}
+
+    _HOT_TO_CFN_ATTRS = _RESOURCE_HOT_TO_CFN_ATTRS
+    _HOT_TO_CFN_ATTRS.update(
+        {OUTPUT_VALUE: cfn_template.CfnTemplate.OUTPUT_VALUE})
+
     functions = {
         'Fn::GetAZs': cfn_funcs.GetAZs,
         'get_param': hot_funcs.GetParam,
@@ -121,7 +132,8 @@ class HOTemplate20130523(template.Template):
             return self._translate_resources(the_section)
 
         if section == self.OUTPUTS:
-            return self._translate_outputs(the_section)
+            self.validate_section(self.OUTPUTS, self.OUTPUT_VALUE,
+                                  the_section, self.OUTPUT_KEYS)
 
         return the_section
 
@@ -136,56 +148,32 @@ class HOTemplate20130523(template.Template):
                 raise ke
 
     def _translate_section(self, section, sub_section, data, mapping):
+
+        self.validate_section(section, sub_section, data, mapping)
+
         cfn_objects = {}
-        obj_name = section[:-1]
-        err_msg = _('"%%s" is not a valid keyword inside a %s '
-                    'definition') % obj_name
         for name, attrs in sorted(data.items()):
             cfn_object = {}
 
-            if not attrs:
-                args = {'object_name': obj_name, 'sub_section': sub_section}
-                message = _('Each %(object_name)s must contain a '
-                            '%(sub_section)s key.') % args
-                raise exception.StackValidationFailed(message=message)
-            try:
-                for attr, attr_value in six.iteritems(attrs):
-                    cfn_attr = self._translate(attr, mapping, err_msg)
-                    cfn_object[cfn_attr] = attr_value
+            for attr, attr_value in six.iteritems(attrs):
+                cfn_attr = mapping[attr]
+                cfn_object[cfn_attr] = attr_value
 
-                cfn_objects[name] = cfn_object
-            except AttributeError:
-                message = _('"%(section)s" must contain a map of '
-                            '%(obj_name)s maps. Found a [%(_type)s] '
-                            'instead') % {'section': section,
-                                          '_type': type(attrs),
-                                          'obj_name': obj_name}
-                raise exception.StackValidationFailed(message=message)
-            except KeyError as e:
-                # an invalid keyword was found
-                raise exception.StackValidationFailed(message=e.args[0])
+            cfn_objects[name] = cfn_object
 
         return cfn_objects
 
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
 
-        return self._translate_section('resources', 'type', resources,
+        return self._translate_section(self.RESOURCES, RES_TYPE, resources,
                                        self._RESOURCE_HOT_TO_CFN_ATTRS)
 
     def get_section_name(self, section):
         cfn_to_hot_attrs = dict(
-            zip(six.itervalues(self._RESOURCE_HOT_TO_CFN_ATTRS),
-                six.iterkeys(self._RESOURCE_HOT_TO_CFN_ATTRS)))
+            zip(six.itervalues(self._HOT_TO_CFN_ATTRS),
+                six.iterkeys(self._HOT_TO_CFN_ATTRS)))
         return cfn_to_hot_attrs.get(section, section)
-
-    def _translate_outputs(self, outputs):
-        """Get the outputs of the template translated into CFN format."""
-        HOT_TO_CFN_ATTRS = {'description': 'Description',
-                            'value': 'Value'}
-
-        return self._translate_section('outputs', 'value', outputs,
-                                       HOT_TO_CFN_ATTRS)
 
     def param_schemata(self, param_defaults=None):
         parameter_section = self.t.get(self.PARAMETERS) or {}
