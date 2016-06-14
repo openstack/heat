@@ -17,6 +17,7 @@
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
+from heat.common import identifier
 from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
@@ -80,3 +81,11 @@ class Event(
     def create(cls, context, values):
         return cls._from_db_object(context, cls(),
                                    db_api.event_create(context, values))
+
+    def identifier(self, stack_identifier):
+        """Return a unique identifier for the event."""
+
+        res_id = identifier.ResourceIdentifier(
+            resource_name=self.resource_name, **stack_identifier)
+
+        return identifier.EventIdentifier(event_id=str(self.uuid), **res_id)
