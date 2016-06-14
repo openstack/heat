@@ -95,7 +95,7 @@ class UpdateRestrictedStackTest(functional_base.FunctionalTestsBase):
 
         # check replace fails - with 'both' restricted
         self.update_stack(stack_identifier, update_template,
-                          env_replace_restrict,
+                          env_both_restrict,
                           expected_status='UPDATE_FAILED')
 
         self.assertTrue(self.verify_resource_status(stack_identifier, 'bar',
