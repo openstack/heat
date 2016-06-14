@@ -363,15 +363,18 @@ class ClientPluginTest(common.HeatTestCase):
     def test_create_client_on_token_expiration(self):
         cfg.CONF.set_override('reauthentication_auth_method', 'trusts',
                               enforce_type=True)
-        con = mock.Mock()
-        con.auth_plugin.auth_ref.will_expire_soon.return_value = False
+        con = utils.dummy_context()
+        auth_ref = mock.Mock()
+        self.patchobject(con.auth_plugin, 'get_auth_ref',
+                         return_value=auth_ref)
+        auth_ref.will_expire_soon.return_value = False
         plugin = FooClientsPlugin(con)
         plugin._create = mock.Mock()
         plugin.client()
         self.assertEqual(1, plugin._create.call_count)
         plugin.client()
         self.assertEqual(1, plugin._create.call_count)
-        con.auth_plugin.auth_ref.will_expire_soon.return_value = True
+        auth_ref.will_expire_soon.return_value = True
         plugin.client()
         self.assertEqual(2, plugin._create.call_count)
 
