@@ -185,12 +185,14 @@ class ResourceChain(stack_resource.StackResource):
         """
 
         resource_def = {
-            template.RES_TYPE: resource_type,
-            template.RES_PROPERTIES: self.properties[self.RESOURCE_PROPERTIES],
+            template.HOTemplate20130523.RES_TYPE: resource_type,
+            template.HOTemplate20130523.RES_PROPERTIES: self.properties[
+                self.RESOURCE_PROPERTIES],
         }
 
         if depends_on is not None:
-            resource_def[template.RES_DEPENDS_ON] = depends_on
+            resource_def[
+                template.HOTemplate20130523.RES_DEPENDS_ON] = depends_on
 
         return template.HOTemplate20130523.rsrc_defn_from_snippet(
             resource_name, resource_def)

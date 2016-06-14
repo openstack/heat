@@ -24,15 +24,6 @@ from heat.engine import rsrc_defn
 from heat.engine import template
 
 
-_RESOURCE_KEYS = (
-    RES_TYPE, RES_PROPERTIES, RES_METADATA, RES_DEPENDS_ON,
-    RES_DELETION_POLICY, RES_UPDATE_POLICY, RES_DESCRIPTION,
-) = (
-    'Type', 'Properties', 'Metadata', 'DependsOn',
-    'DeletionPolicy', 'UpdatePolicy', 'Description',
-)
-
-
 class CfnTemplate(template.Template):
     """A stack template."""
 
@@ -51,6 +42,14 @@ class CfnTemplate(template.Template):
     )
 
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION, ALTERNATE_VERSION])
+
+    _RESOURCE_KEYS = (
+        RES_TYPE, RES_PROPERTIES, RES_METADATA, RES_DEPENDS_ON,
+        RES_DELETION_POLICY, RES_UPDATE_POLICY, RES_DESCRIPTION,
+    ) = (
+        'Type', 'Properties', 'Metadata', 'DependsOn',
+        'DeletionPolicy', 'UpdatePolicy', 'Description',
+    )
 
     functions = {
         'Fn::FindInMap': cfn_funcs.FindInMap,
@@ -105,45 +104,45 @@ class CfnTemplate(template.Template):
 
     def validate_resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
-        allowed_keys = set(_RESOURCE_KEYS)
+        allowed_keys = set(self._RESOURCE_KEYS)
 
         try:
 
             for name, snippet in resources.items():
                 data = self.parse(stack, snippet)
 
-                if not self.validate_resource_key_type(RES_TYPE,
+                if not self.validate_resource_key_type(self.RES_TYPE,
                                                        six.string_types,
                                                        'string',
                                                        allowed_keys,
                                                        name, data):
-                    args = {'name': name, 'type_key': RES_TYPE}
+                    args = {'name': name, 'type_key': self.RES_TYPE}
                     msg = _('Resource %(name)s is missing '
                             '"%(type_key)s"') % args
                     raise KeyError(msg)
 
                 self.validate_resource_key_type(
-                    RES_PROPERTIES,
+                    self.RES_PROPERTIES,
                     (collections.Mapping, function.Function),
                     'object', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_METADATA,
+                    self.RES_METADATA,
                     (collections.Mapping, function.Function),
                     'object', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_DEPENDS_ON,
+                    self.RES_DEPENDS_ON,
                     collections.Sequence,
                     'list or string', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_DELETION_POLICY,
+                    self.RES_DELETION_POLICY,
                     (six.string_types, function.Function),
                     'string', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_UPDATE_POLICY,
+                    self.RES_UPDATE_POLICY,
                     (collections.Mapping, function.Function),
                     'object', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_DESCRIPTION,
+                    self.RES_DESCRIPTION,
                     six.string_types,
                     'string', allowed_keys, name, data)
         except TypeError as ex:
@@ -155,11 +154,12 @@ class CfnTemplate(template.Template):
         def rsrc_defn_item(name, snippet):
             data = self.parse(stack, snippet)
 
-            depends = data.get(RES_DEPENDS_ON)
+            depends = data.get(self.RES_DEPENDS_ON)
             if isinstance(depends, six.string_types):
                 depends = [depends]
 
-            deletion_policy = function.resolve(data.get(RES_DELETION_POLICY))
+            deletion_policy = function.resolve(
+                data.get(self.RES_DELETION_POLICY))
             if deletion_policy is not None:
                 if deletion_policy not in self.deletion_policies:
                     msg = _('Invalid deletion policy "%s"') % deletion_policy
@@ -168,13 +168,13 @@ class CfnTemplate(template.Template):
                     deletion_policy = self.deletion_policies[deletion_policy]
 
             kwargs = {
-                'resource_type': data.get(RES_TYPE),
-                'properties': data.get(RES_PROPERTIES),
-                'metadata': data.get(RES_METADATA),
+                'resource_type': data.get(self.RES_TYPE),
+                'properties': data.get(self.RES_PROPERTIES),
+                'metadata': data.get(self.RES_METADATA),
                 'depends': depends,
                 'deletion_policy': deletion_policy,
-                'update_policy': data.get(RES_UPDATE_POLICY),
-                'description': data.get(RES_DESCRIPTION) or ''
+                'update_policy': data.get(self.RES_UPDATE_POLICY),
+                'description': data.get(self.RES_DESCRIPTION) or ''
             }
 
             defn = rsrc_defn.ResourceDefinition(name, **kwargs)
@@ -188,17 +188,17 @@ class CfnTemplate(template.Template):
             name = definition.name
         hot_tmpl = definition.render_hot()
 
-        HOT_TO_CFN_ATTRS = {'type': RES_TYPE,
-                            'properties': RES_PROPERTIES,
-                            'metadata': RES_METADATA,
-                            'depends_on': RES_DEPENDS_ON,
-                            'deletion_policy': RES_DELETION_POLICY,
-                            'update_policy': RES_UPDATE_POLICY}
+        HOT_TO_CFN_ATTRS = {'type': self.RES_TYPE,
+                            'properties': self.RES_PROPERTIES,
+                            'metadata': self.RES_METADATA,
+                            'depends_on': self.RES_DEPENDS_ON,
+                            'deletion_policy': self.RES_DELETION_POLICY,
+                            'update_policy': self.RES_UPDATE_POLICY}
 
         cfn_tmpl = dict((HOT_TO_CFN_ATTRS[k], v) for k, v in hot_tmpl.items())
 
-        if len(cfn_tmpl.get(RES_DEPENDS_ON, [])) == 1:
-            cfn_tmpl[RES_DEPENDS_ON] = cfn_tmpl[RES_DEPENDS_ON][0]
+        if len(cfn_tmpl.get(self.RES_DEPENDS_ON, [])) == 1:
+            cfn_tmpl[self.RES_DEPENDS_ON] = cfn_tmpl[self.RES_DEPENDS_ON][0]
 
         if self.t.get(self.RESOURCES) is None:
             self.t[self.RESOURCES] = {}

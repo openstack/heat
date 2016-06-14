@@ -2040,8 +2040,8 @@ class Resource(object):
                 hot_tmpl.HOTemplate20150430.OUTPUTS: outputs,
                 hot_tmpl.HOTemplate20150430.RESOURCES: {
                     res_name: {
-                        hot_tmpl.RES_TYPE: res_type,
-                        hot_tmpl.RES_PROPERTIES: props}}}
+                        hot_tmpl.HOTemplate20150430.RES_TYPE: res_type,
+                        hot_tmpl.HOTemplate20150430.RES_PROPERTIES: props}}}
         else:
             tmpl_dict = {
                 cfn_tmpl.CfnTemplate.ALTERNATE_VERSION: '2012-12-12',
@@ -2049,8 +2049,8 @@ class Resource(object):
                 cfn_tmpl.CfnTemplate.PARAMETERS: params,
                 cfn_tmpl.CfnTemplate.RESOURCES: {
                     res_name: {
-                        cfn_tmpl.RES_TYPE: res_type,
-                        cfn_tmpl.RES_PROPERTIES: props}
+                        cfn_tmpl.CfnTemplate.RES_TYPE: res_type,
+                        cfn_tmpl.CfnTemplate.RES_PROPERTIES: props}
                 },
                 cfn_tmpl.CfnTemplate.OUTPUTS: outputs}
 
