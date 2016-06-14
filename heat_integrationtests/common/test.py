@@ -489,6 +489,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         resources = self.client.resources.list(stack_identifier)
         return dict((r.resource_name, r.resource_type) for r in resources)
 
+    def get_resource_stack_id(self, r):
+        stack_link = [l for l in r.links if l.get('rel') == 'stack'][0]
+        return stack_link['href'].split("/")[-1]
+
     def stack_create(self, stack_name=None, template=None, files=None,
                      parameters=None, environment=None, tags=None,
                      expected_status='CREATE_COMPLETE',
