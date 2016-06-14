@@ -24,8 +24,8 @@ echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path
 
 echo -e '[[post-config|$HEAT_CONF]]\n[DEFAULT]\n' >> $localconf
 
-if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
-    echo -e 'convergence_engine=true\n' >> $localconf
+if [ "$DISABLE_CONVERGENCE" == "true" ] ; then
+    echo -e 'convergence_engine=false\n' >> $localconf
 fi
 
 echo -e 'notification_driver=messagingv2\n' >> $localconf
