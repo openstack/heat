@@ -528,7 +528,8 @@ class Stack(collections.Mapping):
                    username=stack.username, convergence=stack.convergence,
                    current_traversal=stack.current_traversal,
                    prev_raw_template_id=stack.prev_raw_template_id,
-                   current_deps=stack.current_deps, cache_data=cache_data)
+                   current_deps=stack.current_deps, cache_data=cache_data,
+                   nested_depth=stack.nested_depth)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.
