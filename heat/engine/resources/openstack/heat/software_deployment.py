@@ -217,6 +217,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         props = {
             'config_id': config_id,
             'action': action,
+            'input_values': self.properties.get(self.INPUT_VALUES)
         }
 
         if self._signal_transport_none():
