@@ -361,6 +361,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
              'config_id': derived_sc['id'],
              'deployment_id': self.deployment.resource_id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+             'input_values': {'bink': 'bonk', 'foo': 'bar'},
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
              'status_reason': 'Not waiting for outputs signal'},
@@ -423,6 +424,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
              'deployment_id': self.deployment.resource_id,
+             'input_values': {'bink': 'bonk', 'foo': 'bar'},
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -520,6 +522,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
              'deployment_id': self.deployment.resource_id,
+             'input_values': {'bink': 'bonk', 'foo': 'bar'},
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -538,6 +541,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
              'deployment_id': self.deployment.resource_id,
+             'input_values': {'foo': 'bar'},
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'IN_PROGRESS',
@@ -650,6 +654,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'DELETE',
             'config_id': derived_sc['id'],
+            'input_values': {'foo': 'bar'},
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -762,6 +767,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'UPDATE',
             'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
+            'input_values': {'foo': 'bar'},
             'status': 'IN_PROGRESS',
             'status_reason': u'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -783,6 +789,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'SUSPEND',
             'config_id': derived_sc['id'],
+            'input_values': {'foo': 'bar'},
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -800,6 +807,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'RESUME',
             'config_id': derived_sc['id'],
+            'input_values': {'foo': 'bar'},
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
