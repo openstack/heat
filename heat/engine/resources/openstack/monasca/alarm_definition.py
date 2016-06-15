@@ -79,7 +79,8 @@ class MonascaAlarmDefinition(resource.Resource):
         MATCH_BY: properties.Schema(
             properties.Schema.LIST,
             _('The metric dimensions to match to the alarm dimensions. '
-              'One or more dimension key names separated by a comma.')
+              'One or more dimension key names separated by a comma.'),
+            default=[],
         ),
         SEVERITY: properties.Schema(
             properties.Schema.STRING,
@@ -100,7 +101,8 @@ class MonascaAlarmDefinition(resource.Resource):
                 constraints=[constraints.CustomConstraint(
                     'monasca.notification')
                 ]
-            )
+            ),
+            default=[],
         ),
         ALARM_ACTIONS: properties.Schema(
             properties.Schema.LIST,
@@ -112,7 +114,8 @@ class MonascaAlarmDefinition(resource.Resource):
                 constraints=[constraints.CustomConstraint(
                     'monasca.notification')
                 ]
-            )
+            ),
+            default=[],
         ),
         UNDETERMINED_ACTIONS: properties.Schema(
             properties.Schema.LIST,
@@ -125,7 +128,8 @@ class MonascaAlarmDefinition(resource.Resource):
                 constraints=[constraints.CustomConstraint(
                     'monasca.notification')
                 ]
-            )
+            ),
+            default=[],
         ),
         ACTIONS_ENABLED: properties.Schema(
             properties.Schema.BOOLEAN,
