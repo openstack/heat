@@ -3738,6 +3738,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         self.assertEqual('ResourceActionRestricted: resources.bar: '
                          'update is restricted for resource.',
                          six.text_type(error))
+        self.assertEqual('UPDATE', error.action)
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         ev.assert_called_with(res.UPDATE, res.FAILED,
                               'update is restricted for resource.')
@@ -3763,6 +3764,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         self.assertEqual('ResourceActionRestricted: resources.bar: '
                          'replace is restricted for resource.',
                          six.text_type(error))
+        self.assertEqual('UPDATE', error.action)
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         ev.assert_called_with(res.UPDATE, res.FAILED,
                               'replace is restricted for resource.')
@@ -3837,6 +3839,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         self.assertEqual('ResourceActionRestricted: resources.bar: '
                          'replace is restricted for resource.',
                          six.text_type(error))
+        self.assertEqual('UPDATE', error.action)
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         ev.assert_called_with(res.UPDATE, res.FAILED,
                               'replace is restricted for resource.')
