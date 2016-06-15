@@ -1372,7 +1372,7 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(user_creds_id)
 
         # should've stored the username/password in the context
-        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(self.ctx, user_creds_id)
         self.assertEqual(self.ctx.username, user_creds.get('username'))
         self.assertEqual(self.ctx.password, user_creds.get('password'))
         self.assertIsNone(user_creds.get('trust_id'))
@@ -1411,7 +1411,7 @@ class StackTest(common.HeatTestCase):
         # should've stored the trust_id and trustor_user_id returned from
         # FakeKeystoneClient.create_trust_context, username/password should
         # not have been stored
-        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(self.ctx, user_creds_id)
         self.assertIsNone(user_creds.get('username'))
         self.assertIsNone(user_creds.get('password'))
         self.assertEqual('atrust', user_creds.get('trust_id'))

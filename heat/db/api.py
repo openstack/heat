@@ -70,21 +70,22 @@ def resource_data_get_all(context, resource_id, data=None):
     return IMPL.resource_data_get_all(context, resource_id, data)
 
 
-def resource_data_get(resource, key):
-    return IMPL.resource_data_get(resource, key)
+def resource_data_get(context, resource_id, key):
+    return IMPL.resource_data_get(context, resource_id, key)
 
 
-def resource_data_set(resource, key, value, redact=False):
-    return IMPL.resource_data_set(resource, key, value, redact=redact)
+def resource_data_set(context, resource_id, key, value, redact=False):
+    return IMPL.resource_data_set(context, resource_id, key, value,
+                                  redact=redact)
 
 
 def resource_data_get_by_key(context, resource_id, key):
     return IMPL.resource_data_get_by_key(context, resource_id, key)
 
 
-def resource_data_delete(resource, key):
+def resource_data_delete(context, resource_id, key):
     """Remove a resource_data element associated to a resource."""
-    return IMPL.resource_data_delete(resource, key)
+    return IMPL.resource_data_delete(context, resource_id, key)
 
 
 def stack_tags_set(context, stack_id, tags):
@@ -242,8 +243,8 @@ def user_creds_delete(context, user_creds_id):
     return IMPL.user_creds_delete(context, user_creds_id)
 
 
-def user_creds_get(context_id):
-    return IMPL.user_creds_get(context_id)
+def user_creds_get(context, user_creds_id):
+    return IMPL.user_creds_get(context, user_creds_id)
 
 
 def event_get(context, event_id):

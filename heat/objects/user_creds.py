@@ -67,7 +67,7 @@ class UserCreds(
         db_api.user_creds_delete(context, user_creds_id)
 
     @classmethod
-    def get_by_id(cls, context_id):
-        user_creds_db = db_api.user_creds_get(context_id)
+    def get_by_id(cls, context, user_creds_id):
+        user_creds_db = db_api.user_creds_get(context, user_creds_id)
         user_creds = cls._from_db_object(cls(), user_creds_db)
         return user_creds
