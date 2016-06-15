@@ -142,3 +142,16 @@ resources:
       type: HTTP
       url_path: /health
 '''
+
+SECURITY_GROUP_RULE_TEMPLATE = '''
+heat_template_version: 2016-10-14
+resources:
+  security_group_rule:
+    type: OS::Neutron::SecurityGroupRule
+    properties:
+      security_group: 123
+      description: test description
+      remote_group: 123
+      protocol: tcp
+      port_range_min: 100
+'''
