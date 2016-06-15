@@ -94,7 +94,7 @@ def parse_stack(t, params=None, files=None, stack_name=None,
     ctx = dummy_context()
     templ = template.Template(t, files=files,
                               env=environment.Environment(params))
-    templ.store()
+    templ.store(ctx)
     if stack_name is None:
         stack_name = random_name()
     stk = stack.Stack(ctx, stack_name, templ, stack_id=stack_id,

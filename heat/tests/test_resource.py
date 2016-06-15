@@ -1809,7 +1809,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType',
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
-        new_temp.store()
+        new_temp.store(stack.context)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
@@ -1843,7 +1843,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType',
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
-        new_temp.store()
+        new_temp.store(stack.context)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
@@ -1864,8 +1864,9 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType',
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
-        new_temp.store()
-        new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+        ctx = utils.dummy_context()
+        new_temp.store(ctx)
+        new_stack = parser.Stack(ctx, 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
         res_data = {}
@@ -1917,7 +1918,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType',
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
-        new_temp.store()
+        new_temp.store(stack.context)
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
@@ -1959,7 +1960,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType',
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
-        new_temp.store()
+        new_temp.store(stack.context)
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}

@@ -137,7 +137,7 @@ class Template(collections.Mapping):
         """Store the Template in the database and return its ID."""
         rt = {
             'template': self.t,
-            'files_id': self.files.store(),
+            'files_id': self.files.store(context),
             'environment': self.env.user_env_as_dict()
         }
         if self.id is None:

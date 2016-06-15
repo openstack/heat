@@ -1385,7 +1385,7 @@ def create_raw_template(context, **kwargs):
     if 'files' not in kwargs and 'files_id' not in kwargs:
         # modern raw_templates have associated raw_template_files db obj
         tf = template_files.TemplateFiles({'foo': 'bar'})
-        tf.store()
+        tf.store(context)
         kwargs['files_id'] = tf.files_id
     template.update(kwargs)
     return db_api.raw_template_create(context, template)
@@ -2462,7 +2462,7 @@ class DBAPIResourceDataTest(common.HeatTestCase):
         self.assertEqual('test_value', vals.get('encryped_resource_key'))
 
         # get all by using associated resource data
-        vals = db_api.resource_data_get_all(None, None, self.resource.data)
+        vals = db_api.resource_data_get_all(self.ctx, None, self.resource.data)
         self.assertEqual(2, len(vals))
         self.assertEqual('foo', vals.get('test_resource_key'))
         self.assertEqual('test_value', vals.get('encryped_resource_key'))
@@ -3145,7 +3145,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         return db_api.raw_template_create(self.ctx, template)
 
     def _test_db_encrypt_decrypt(self, batch_size=50):
-        session = db_api.get_session()
+        session = self.ctx.session
         hidden_params_dict = {
             'param2': 'bar',
             'param_number': '456',
@@ -3171,7 +3171,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                 enc_key = cfg.CONF.auth_encryption_key
             self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
                 self.ctx, enc_key, batch_size=batch_size))
-            session = db_api.get_session()
+            session = self.ctx.session
             enc_raw_templates = session.query(models.RawTemplate).all()
             self.assertNotEqual([], enc_raw_templates)
             for enc_tmpl in enc_raw_templates:
@@ -3205,7 +3205,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                 enc_key = cfg.CONF.auth_encryption_key
             self.assertEqual([], db_api.db_decrypt_parameters_and_properties(
                 self.ctx, enc_key, batch_size=batch_size))
-            session = db_api.get_session()
+            session = self.ctx.session
             dec_templates = session.query(models.RawTemplate).all()
             self.assertNotEqual([], dec_templates)
             for dec_tmpl in dec_templates:
@@ -3305,7 +3305,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         tmpl2 = self._create_template()
         self.addCleanup(self._delete_templates, [tmpl1, tmpl2])
 
-        session = db_api.get_session()
+        session = self.ctx.session
         r_tmpls = session.query(models.RawTemplate).all()
         self.assertEqual('', r_tmpls[1].environment)
 
@@ -3314,7 +3314,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
         self.assertEqual(1, len(enc_result))
         self.assertIs(AttributeError, type(enc_result[0]))
-        session = db_api.get_session()
+        session = self.ctx.session
         enc_tmpls = session.query(models.RawTemplate).all()
         self.assertEqual('', enc_tmpls[1].environment)
         self.assertEqual('cryptography_decrypt_v1',
@@ -3325,7 +3325,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
         self.assertEqual(len(dec_result), 1)
         self.assertIs(TypeError, type(dec_result[0]))
-        session = db_api.get_session()
+        session = self.ctx.session
         dec_tmpls = session.query(models.RawTemplate).all()
         self.assertEqual('', dec_tmpls[1].environment)
         self.assertEqual('bar',
@@ -3467,14 +3467,14 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         db_api.raw_template_create(self.ctx, template)
         self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key))
-        session = db_api.get_session()
+        session = self.ctx.session
         enc_raw_templates = session.query(models.RawTemplate).all()
         self.assertNotEqual([], enc_raw_templates)
         enc_params = enc_raw_templates[1].environment['parameters']
 
         self.assertEqual([], db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50))
-        session = db_api.get_session()
+        session = self.ctx.session
         dec_tmpls = session.query(models.RawTemplate).all()
         dec_params = dec_tmpls[1].environment['parameters']
 

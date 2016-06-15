@@ -81,7 +81,7 @@ def get_backend():
 
 
 def model_query(context, *args):
-    session = _session(context)
+    session = context.session
     query = session.query(*args)
     return query
 
@@ -100,10 +100,6 @@ def soft_delete_aware_query(context, *args, **kwargs):
     return query
 
 
-def _session(context):
-    return (context and context.session) or get_session()
-
-
 def raw_template_get(context, template_id):
     result = model_query(context, models.RawTemplate).get(template_id)
 
@@ -116,7 +112,7 @@ def raw_template_get(context, template_id):
 def raw_template_create(context, values):
     raw_template_ref = models.RawTemplate()
     raw_template_ref.update(values)
-    raw_template_ref.save(_session(context))
+    raw_template_ref.save(context.session)
     return raw_template_ref
 
 
@@ -140,13 +136,13 @@ def raw_template_delete(context, template_id):
         return
     # If no other raw_template is referencing the same raw_template_files,
     # delete that too
-    if _session(context).query(models.RawTemplate).filter_by(
+    if context.session.query(models.RawTemplate).filter_by(
             files_id=raw_tmpl_files_id).first() is None:
         raw_template_files_get(context, raw_tmpl_files_id).delete()
 
 
 def raw_template_files_create(context, values):
-    session = _session(context)
+    session = context.session
     raw_templ_files_ref = models.RawTemplateFiles()
     raw_templ_files_ref.update(values)
     with session.begin():
@@ -155,7 +151,8 @@ def raw_template_files_create(context, values):
 
 
 def raw_template_files_get(context, files_id):
-    result = model_query(context, models.RawTemplateFiles).get(files_id)
+    session = context.session if context else get_session()
+    result = session.query(models.RawTemplateFiles).get(files_id)
     if not result:
         raise exception.NotFound(
             _("raw_template_files with files_id %d not found") %
@@ -205,7 +202,7 @@ def resource_get_all(context):
 
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
-    session = _session(context)
+    session = context.session
     with session.begin():
         if atomic_key is None:
             values['atomic_key'] = 1
@@ -254,7 +251,7 @@ def resource_data_get(context, resource_id, key):
 
 
 def stack_tags_set(context, stack_id, tags):
-    session = _session(context)
+    session = context.session
     with session.begin():
         stack_tags_delete(context, stack_id)
         result = []
@@ -268,7 +265,7 @@ def stack_tags_set(context, stack_id, tags):
 
 
 def stack_tags_delete(context, stack_id):
-    session = _session(context)
+    session = context.session
     with session.begin(subtransactions=True):
         result = stack_tags_get(context, stack_id)
         if result:
@@ -312,7 +309,7 @@ def resource_data_set(context, resource_id, key, value, redact=False):
     current.redact = redact
     current.value = value
     current.decrypt_method = method
-    current.save(session=_session(context))
+    current.save(session=context.session)
     return current
 
 
@@ -337,7 +334,7 @@ def resource_data_delete(context, resource_id, key):
 def resource_create(context, values):
     resource_ref = models.Resource()
     resource_ref.update(values)
-    resource_ref.save(_session(context))
+    resource_ref.save(context.session)
     return resource_ref
 
 
@@ -580,7 +577,7 @@ def stack_count_all(context, filters=None, tenant_safe=True,
 def stack_create(context, values):
     stack_ref = models.Stack()
     stack_ref.update(values)
-    stack_ref.save(_session(context))
+    stack_ref.save(context.session)
     return stack_ref
 
 
@@ -600,7 +597,7 @@ def stack_update(context, stack_id, values, exp_trvsl=None):
         # stack updated by another update
         return False
 
-    session = _session(context)
+    session = context.session
 
     with session.begin():
         rows_updated = (session.query(models.Stack)
@@ -646,7 +643,7 @@ def stack_lock_get_engine_id(stack_id):
 
 
 def persist_state_and_release_lock(context, stack_id, engine_id, values):
-    session = _session(context)
+    session = context.session
     with session.begin():
         rows_updated = (session.query(models.Stack)
                         .filter(models.Stack.id == stack_id)
@@ -722,7 +719,7 @@ def user_creds_create(context):
                                     " exceeds Heat limit (255 chars)"))
         user_creds_ref.password = password
         user_creds_ref.decrypt_method = method
-    user_creds_ref.save(_session(context))
+    user_creds_ref.save(context.session)
     result = dict(user_creds_ref)
 
     if values.get('trust_id'):
@@ -855,7 +852,7 @@ def _delete_event_rows(context, stack_id, limit):
     # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
     # confirmed via integration tests.
     query = _query_all_by_stack(context, stack_id)
-    session = _session(context)
+    session = context.session
     ids = [r.id for r in query.order_by(
         models.Event.id).limit(limit).all()]
     q = session.query(models.Event).filter(
@@ -872,7 +869,7 @@ def event_create(context, values):
                 context, values['stack_id'], cfg.CONF.event_purge_batch_size)
     event_ref = models.Event()
     event_ref.update(values)
-    event_ref.save(_session(context))
+    event_ref.save(context.session)
     return event_ref
 
 
@@ -901,7 +898,7 @@ def watch_rule_get_all_by_stack(context, stack_id):
 def watch_rule_create(context, values):
     obj_ref = models.WatchRule()
     obj_ref.update(values)
-    obj_ref.save(_session(context))
+    obj_ref.save(context.session)
     return obj_ref
 
 
@@ -914,7 +911,7 @@ def watch_rule_update(context, watch_id, values):
                                      'id': watch_id,
                                      'msg': 'that does not exist'})
     wr.update(values)
-    wr.save(_session(context))
+    wr.save(context.session)
 
 
 def watch_rule_delete(context, watch_id):
@@ -934,7 +931,7 @@ def watch_rule_delete(context, watch_id):
 def watch_data_create(context, values):
     obj_ref = models.WatchData()
     obj_ref.update(values)
-    obj_ref.save(_session(context))
+    obj_ref.save(context.session)
     return obj_ref
 
 
@@ -952,7 +949,7 @@ def watch_data_get_all_by_watch_rule_id(context, watch_rule_id):
 def software_config_create(context, values):
     obj_ref = models.SoftwareConfig()
     obj_ref.update(values)
-    obj_ref.save(_session(context))
+    obj_ref.save(context.session)
     return obj_ref
 
 
@@ -994,7 +991,7 @@ def software_config_delete(context, config_id):
 def software_deployment_create(context, values):
     obj_ref = models.SoftwareDeployment()
     obj_ref.update(values)
-    session = _session(context)
+    session = context.session
     session.begin()
     obj_ref.save(session)
     session.commit()
@@ -1041,7 +1038,7 @@ def software_deployment_delete(context, deployment_id):
 def snapshot_create(context, values):
     obj_ref = models.Snapshot()
     obj_ref.update(values)
-    obj_ref.save(_session(context))
+    obj_ref.save(context.session)
     return obj_ref
 
 
@@ -1069,7 +1066,7 @@ def snapshot_get_by_stack(context, snapshot_id, stack):
 def snapshot_update(context, snapshot_id, values):
     snapshot = snapshot_get(context, snapshot_id)
     snapshot.update(values)
-    snapshot.save(_session(context))
+    snapshot.save(context.session)
     return snapshot
 
 
@@ -1088,7 +1085,7 @@ def snapshot_get_all(context, stack_id):
 def service_create(context, values):
     service = models.Service()
     service.update(values)
-    service.save(_session(context))
+    service.save(context.session)
     return service
 
 
@@ -1096,7 +1093,7 @@ def service_update(context, service_id, values):
     service = service_get(context, service_id)
     values.update({'updated_at': timeutils.utcnow()})
     service.update(values)
-    service.save(_session(context))
+    service.save(context.session)
     return service
 
 
@@ -1264,7 +1261,7 @@ def sync_point_create(context, values):
     values['entity_id'] = str(values['entity_id'])
     sync_point_ref = models.SyncPoint()
     sync_point_ref.update(values)
-    sync_point_ref.save(_session(context))
+    sync_point_ref.save(context.session)
     return sync_point_ref
 
 
@@ -1507,7 +1504,7 @@ def reset_stack_status(context, stack_id, stack=None):
     if stack is None:
         raise exception.NotFound(_('Stack with id %s not found') % stack_id)
 
-    session = _session(context)
+    session = context.session
     with session.begin():
         query = model_query(context, models.Resource).filter_by(
             status='IN_PROGRESS', stack_id=stack_id)

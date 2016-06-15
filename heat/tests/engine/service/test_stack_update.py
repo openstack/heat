@@ -138,7 +138,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         stk = tools.get_stack(stack_name, self.ctx)
-        tmpl_id = stk.t.store()
+        tmpl_id = stk.t.store(self.ctx)
 
         # prepare mocks
         mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
