@@ -308,7 +308,9 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
     def _wait_for_stack_status(self, stack_identifier, status,
                                failure_pattern=None,
-                               success_on_not_found=False):
+                               success_on_not_found=False,
+                               signal_required=False,
+                               resources_to_signal=None):
         """Waits for a Stack to reach a given status.
 
         Note this compares the full $action_$status, e.g
@@ -340,7 +342,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 if self._verify_status(stack, stack_identifier, status,
                                        fail_regexp):
                     return
-
+            if signal_required:
+                self.signal_resources(resources_to_signal)
             time.sleep(build_interval)
 
         message = ('Stack %s failed to reach %s status within '
@@ -492,6 +495,24 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def get_resource_stack_id(self, r):
         stack_link = [l for l in r.links if l.get('rel') == 'stack'][0]
         return stack_link['href'].split("/")[-1]
+
+    def check_input_values(self, group_resources, key, value):
+        # Check inputs for deployment and derived config
+        for r in group_resources:
+            d = self.client.software_deployments.get(
+                r.physical_resource_id)
+            self.assertEqual({key: value}, d.input_values)
+            c = self.client.software_configs.get(
+                d.config_id)
+            foo_input_c = [i for i in c.inputs if i.get('name') == key][0]
+            self.assertEqual(value, foo_input_c.get('value'))
+
+    def signal_resources(self, resources):
+        # Signal all IN_PROGRESS resources
+        for r in resources:
+            if 'IN_PROGRESS' in r.resource_status:
+                stack_id = self.get_resource_stack_id(r)
+                self.client.resources.signal(stack_id, r.resource_name)
 
     def stack_create(self, stack_name=None, template=None, files=None,
                      parameters=None, environment=None, tags=None,
