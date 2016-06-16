@@ -109,7 +109,7 @@ class Pool(neutron.NeutronResource):
         ),
         LISTENER: properties.Schema(
             properties.Schema.STRING,
-            _('Listner name or ID to be associated with this pool.'),
+            _('Listener name or ID to be associated with this pool.'),
             required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.lbaas.listener')
