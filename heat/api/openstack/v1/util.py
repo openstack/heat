@@ -28,7 +28,7 @@ def policy_enforce(handler):
     """
     @six.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
-        if req.context.tenant_id != tenant_id:
+        if req.context.tenant_id != tenant_id and not req.context.is_admin:
             raise exc.HTTPForbidden()
         allowed = req.context.policy.enforce(context=req.context,
                                              action=handler.__name__,

@@ -111,6 +111,18 @@ class TestPolicyEnforce(common.HeatTestCase):
                           self.req, tenant_id='bar')
 
     @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_policy_enforce_tenant_mismatch_is_admin(self, mock_enforce):
+        self.req.context = context.RequestContext(tenant_id='foo',
+                                                  is_admin=True)
+        mock_enforce.return_value = True
+
+        self.assertEqual('woot',
+                         self.controller.an_action(self.req, 'foo'))
+
+        self.assertEqual('woot',
+                         self.controller.an_action(self.req, 'bar'))
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
     def test_policy_enforce_policy_deny(self, mock_enforce):
         mock_enforce.return_value = False
 

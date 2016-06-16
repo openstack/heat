@@ -419,9 +419,10 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
 
     # One exception to normal project scoping is users created by the
     # stacks in the stack_user_project_id (in the heat stack user domain)
-    if (tenant_safe and result is not None and context is not None and
-        context.tenant_id not in (result.tenant,
-                                  result.stack_user_project_id)):
+    if (tenant_safe and result is not None
+        and context is not None and not context.is_admin
+        and context.tenant_id not in (result.tenant,
+                                      result.stack_user_project_id)):
         return None
     return result
 
@@ -492,7 +493,7 @@ def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
             context, models.Stack, show_deleted=show_deleted
         ).filter_by(owner_id=None)
 
-    if tenant_safe:
+    if tenant_safe and not context.is_admin:
         query = query.filter_by(tenant=context.tenant_id)
 
     query = query.options(orm.subqueryload("tags"))
@@ -970,7 +971,7 @@ def software_config_get(context, config_id):
 def software_config_get_all(context, limit=None, marker=None,
                             tenant_safe=True):
     query = model_query(context, models.SoftwareConfig)
-    if tenant_safe:
+    if tenant_safe and not context.is_admin:
         query = query.filter_by(tenant=context.tenant_id)
     return _paginate_query(context, query, models.SoftwareConfig,
                            limit=limit, marker=marker).all()

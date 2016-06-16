@@ -486,7 +486,8 @@ class EngineService(service.Service):
             raise exception.EntityNotFound(entity='Stack',
                                            name=identity.stack_name)
 
-        if cnxt.tenant_id not in (identity.tenant, s.stack_user_project_id):
+        if not cnxt.is_admin and cnxt.tenant_id not in (
+                identity.tenant, s.stack_user_project_id):
             # The DB API should not allow this, but sanity-check anyway..
             raise exception.InvalidTenant(target=identity.tenant,
                                           actual=cnxt.tenant_id)
