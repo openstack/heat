@@ -94,25 +94,30 @@ class TranslationRule(object):
         elif len(self.translation_path) == 0:
             raise ValueError(_('translation_path must be non-empty list with '
                                'path.'))
-        elif self.value_name and self.rule != self.REPLACE:
-            raise ValueError(_('Use value_name only for replacing list '
-                               'elements.'))
-        elif self.rule == self.ADD and not isinstance(self.value, list):
+        elif (self.rule == self.ADD and
+              ((self.value is not None) == (self.value_name is not None))):
+            raise ValueError(_('Either value or value_name should be '
+                               'specified for rule Add.'))
+        elif (self.rule == self.ADD and self.value is not None and
+              not isinstance(self.value, list)):
             raise ValueError(_('value must be list type when rule is Add.'))
 
-        elif (self.rule == self.RESOLVE and not (self.client_plugin or
-                                                 self.finder)):
+        elif (self.rule == self.RESOLVE and not (self.client_plugin
+                                                 or self.finder)):
             raise ValueError(_('client_plugin and finder should be specified '
                                'for Resolve rule'))
 
     def execute_rule(self, client_resolve=True):
         try:
-            (translation_key,
-             translation_data) = self._get_data_from_source_path(
-                self.translation_path)
+            self._prepare_data(self.properties.data, self.translation_path,
+                               self.properties.props)
             if self.value_path:
-                (value_key, value_data) = self._get_data_from_source_path(
-                    self.value_path)
+                self._prepare_data(self.properties.data, self.value_path,
+                                   self.properties.props)
+                (value_key,
+                 value_data) = self.translate_property(self.value_path,
+                                                       self.properties.data,
+                                                       return_value=True)
                 value = (value_data[value_key]
                          if value_data and value_data.get(value_key)
                          else self.value)
@@ -122,23 +127,12 @@ class TranslationRule(object):
         except AttributeError:
             return
 
-        if (translation_data is None or
-                (self.rule not in (self.DELETE, self.RESOLVE) and
-                 (value is None and self.value_name is None and
-                  (value_data is None or value_data.get(value_key) is None)))):
-            return
+        self.translate_property(self.translation_path, self.properties.data,
+                                value=value, value_data=value_data,
+                                value_key=value_key,
+                                client_resolve=client_resolve)
 
-        if self.rule == TranslationRule.ADD:
-            self._exec_add(translation_key, translation_data, value)
-        elif self.rule == TranslationRule.REPLACE:
-            self._exec_replace(translation_key, translation_data,
-                               value_key, value_data, value)
-        elif self.rule == TranslationRule.RESOLVE and client_resolve:
-            self._exec_resolve(translation_key, translation_data)
-        elif self.rule == TranslationRule.DELETE:
-            self._exec_delete(translation_key, translation_data)
-
-    def _get_data_from_source_path(self, path):
+    def _prepare_data(self, data, path, props):
         def get_props(props, key):
             props = props.get(key)
             if props.schema.schema is not None:
@@ -147,115 +141,174 @@ class TranslationRule(object):
                                 for k in keys)
                 props = dict((k, properties.Property(s, k))
                              for k, s in schemata.items())
+                if set(props.keys()) == set('*'):
+                    return get_props(props, '*')
             return props
 
-        def resolve_param(param):
-            """Check whether if given item is param and resolve, if it is."""
-            # NOTE(prazumovsky): If property uses removed in HOT function,
-            # we should not translate it for correct validating and raising
-            # validation error.
-            if isinstance(param, hot_funcs.Removed):
-                raise AttributeError(_('Property uses removed function.'))
-            if isinstance(param, (hot_funcs.GetParam, cfn_funcs.ParamRef)):
-                try:
-                    return function.resolve(param)
-                except exception.UserParameterMissing as ex:
-                    # We can't resolve parameter now. Abort translation.
-                    err_msg = encodeutils.exception_to_unicode(ex)
-                    raise AttributeError(
-                        _('Can not resolve parameter '
-                          'due to: %s') % err_msg)
-            elif isinstance(param, list):
-                return [resolve_param(param_item) for param_item in param]
-            else:
-                return param
+        if not path:
+            return
+        current_key = path[0]
+        if data.get(current_key) is None:
+            if (self.rule in (TranslationRule.DELETE,
+                              TranslationRule.RESOLVE) or
+                    (self.rule == TranslationRule.REPLACE and
+                     self.value_name is not None)):
+                return
+            data_type = props.get(current_key).type()
+            if data_type == properties.Schema.LIST:
+                data[current_key] = []
+            if data_type == properties.Schema.MAP:
+                data[current_key] = {}
+            return
+        data[current_key] = self._resolve_param(data.get(current_key))
+        if isinstance(data[current_key], list):
+            for item in data[current_key]:
+                self._prepare_data(item, path[1:],
+                                   get_props(props, current_key))
+        elif isinstance(data[current_key], dict):
+            self._prepare_data(data[current_key], path[1:],
+                               get_props(props, current_key))
 
-        source_key = path[0]
-        data = self.properties.data
-        props = self.properties.props
-        for key in path:
-            if isinstance(data, list):
-                source_key = key
-            elif data.get(key) is not None:
-                # NOTE(prazumovsky): There's no need to resolve other functions
-                # because we can translate all function to another path. But if
-                # list or map type property equals to get_param function, need
-                # to resolve it for correct translating.
-                data[key] = resolve_param(data[key])
-                if isinstance(data[key], (dict, list)):
-                    data = data[key]
-                    props = get_props(props, key)
+    def _exec_action(self, key, data, value=None, value_key=None,
+                     value_data=None, client_resolve=True):
+        if self.rule == TranslationRule.ADD:
+            self._exec_add(key, data, value)
+        elif self.rule == TranslationRule.REPLACE:
+            self._exec_replace(key, data, value_key, value_data, value)
+        elif self.rule == TranslationRule.RESOLVE and client_resolve:
+            self._exec_resolve(key, data)
+        elif self.rule == TranslationRule.DELETE:
+            self._exec_delete(key, data)
+
+    def _resolve_param(self, param):
+        """Check whether given item is param and resolve, if it is."""
+        # NOTE(prazumovsky): If property uses removed in HOT function,
+        # we should not translate it for correct validating and raising
+        # validation error.
+        if isinstance(param, hot_funcs.Removed):
+            raise AttributeError(_('Property uses removed function.'))
+        if isinstance(param, (hot_funcs.GetParam, cfn_funcs.ParamRef)):
+            try:
+                return function.resolve(param)
+            except exception.UserParameterMissing as ex:
+                # We can't resolve parameter now. Abort translation.
+                err_msg = encodeutils.exception_to_unicode(ex)
+                raise AttributeError(
+                    _('Can not resolve parameter '
+                      'due to: %s') % err_msg)
+        elif isinstance(param, list):
+            return [self._resolve_param(param_item) for param_item in param]
+        else:
+            return param
+
+    def translate_property(self, path, data, return_value=False, value=None,
+                           value_data=None, value_key=None,
+                           client_resolve=True):
+        current_key = path[0]
+        if len(path) <= 1:
+            if return_value:
+                return current_key, data
+            else:
+                self._exec_action(current_key, data,
+                                  value=value, value_data=value_data,
+                                  value_key=value_key,
+                                  client_resolve=client_resolve)
+            return
+        if data.get(current_key) is None:
+            return
+        elif isinstance(data[current_key], list):
+            for item in data[current_key]:
+                if return_value:
+                    # Until there's no reasonable solution for cases of using
+                    # one list for value and another list for destination,
+                    # error would be raised.
+                    msg = _('Cannot use value_path for properties inside '
+                            'list-type properties')
+                    raise ValueError(msg)
                 else:
-                    source_key = key
-            elif data.get(key) is None:
-                if (self.rule in (TranslationRule.DELETE,
-                                  TranslationRule.RESOLVE) or
-                        (self.rule == TranslationRule.REPLACE and
-                         self.value_name)):
-                    return None, None
-                elif props.get(key).type() == properties.Schema.LIST:
-                    data[key] = []
-                elif props.get(key).type() == properties.Schema.MAP:
-                    data[key] = {}
-                else:
-                    source_key = key
-                    continue
-                data = data.get(key)
-                props = get_props(props, key)
-        return source_key, data
+                    self.translate_property(path[1:], item,
+                                            return_value=return_value,
+                                            value=value, value_data=value_data,
+                                            value_key=value_key,
+                                            client_resolve=client_resolve)
+        else:
+            return self.translate_property(path[1:], data[current_key],
+                                           return_value=return_value,
+                                           value=value, value_data=value_data,
+                                           value_key=value_key,
+                                           client_resolve=client_resolve)
 
     def _exec_add(self, translation_key, translation_data, value):
-        if isinstance(translation_data, list):
-            translation_data.extend(value)
-        else:
+        if not isinstance(translation_data[translation_key], list):
             raise ValueError(_('Add rule must be used only for '
                                'lists.'))
+        if (self.value_name is not None and
+                translation_data.get(self.value_name) is not None):
+            if isinstance(translation_data[self.value_name], list):
+                translation_data[translation_key].extend(
+                    translation_data[self.value_name])
+            else:
+                translation_data[translation_key].append(
+                    translation_data[self.value_name])
+        else:
+            translation_data[translation_key].extend(value)
 
     def _exec_replace(self, translation_key, translation_data,
                       value_key, value_data, value):
-        if isinstance(translation_data, list):
-            for item in translation_data:
-                if item.get(self.value_name) and item.get(translation_key):
-                    raise exception.ResourcePropertyConflict(
-                        props=[translation_key, self.value_name])
-                elif item.get(self.value_name) is not None:
-                    item[translation_key] = item[self.value_name]
-                    del item[self.value_name]
-                elif value is not None:
-                    item[translation_key] = value
-        else:
-            if (translation_data and translation_data.get(translation_key) and
-                    value_data and value_data.get(value_key)):
-                raise exception.ResourcePropertyConflict(
-                    props=[translation_key, value_key])
-            translation_data[translation_key] = value
-            # If value defined with value_path, need to delete value_path
-            # property data after it's replacing.
+        value_ind = None
+        if translation_data and translation_data.get(translation_key):
             if value_data and value_data.get(value_key):
-                del value_data[value_key]
+                value_ind = value_key
+            elif translation_data.get(self.value_name) is not None:
+                value_ind = self.value_name
+
+        if value_ind is not None:
+            raise exception.ResourcePropertyConflict(props=[translation_key,
+                                                            value_ind])
+        if value is not None:
+            translation_data[translation_key] = value
+        elif (self.value_name is not None and
+                translation_data.get(self.value_name) is not None):
+            translation_data[
+                translation_key] = translation_data[self.value_name]
+            del translation_data[self.value_name]
+
+        # If value defined with value_path, need to delete value_path
+        # property data after it's replacing.
+        if value_data and value_data.get(value_key):
+            del value_data[value_key]
 
     def _exec_resolve(self, translation_key, translation_data):
 
-        def resolve_and_find(translation_data, translation_value):
+        def resolve_and_find(translation_value):
             if isinstance(translation_value, cfn_funcs.ResourceRef):
                 return
             if isinstance(translation_value, function.Function):
                 translation_value = function.resolve(translation_value)
             if translation_value:
+                if isinstance(translation_value, list):
+                    resolved_value = []
+                    for item in translation_value:
+                        resolved_value.append(resolve_and_find(item))
+                    return resolved_value
                 finder = getattr(self.client_plugin, self.finder)
                 if self.entity:
                     value = finder(self.entity, translation_value)
                 else:
                     value = finder(translation_value)
-                translation_data[translation_key] = value
+                return value
 
         if isinstance(translation_data, list):
             for item in translation_data:
                 translation_value = item.get(translation_key)
-                resolve_and_find(item, translation_value)
+                resolved_value = resolve_and_find(translation_value)
+                if resolved_value is not None:
+                    item[translation_key] = resolved_value
         else:
             translation_value = translation_data.get(translation_key)
-            resolve_and_find(translation_data, translation_value)
+            resolved_value = resolve_and_find(translation_value)
+            if resolved_value is not None:
+                translation_data[translation_key] = resolved_value
 
     def _exec_delete(self, translation_key, translation_data):
         if isinstance(translation_data, list):
