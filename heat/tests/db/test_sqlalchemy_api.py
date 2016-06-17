@@ -259,18 +259,17 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIn(['name', 'id'], args)
 
     @mock.patch.object(db_api.utils, 'paginate_query')
-    @mock.patch.object(db_api, 'model_query')
-    def test_paginate_query_gets_model_marker(self, mock_query,
-                                              mock_paginate_query):
+    def test_paginate_query_gets_model_marker(self, mock_paginate_query):
         query = mock.Mock()
         model = mock.Mock()
         marker = mock.Mock()
 
         mock_query_object = mock.Mock()
         mock_query_object.get.return_value = 'real_marker'
-        mock_query.return_value = mock_query_object
+        ctx = mock.MagicMock()
+        ctx.session.query.return_value = mock_query_object
 
-        db_api._paginate_query(self.ctx, query, model, marker=marker)
+        db_api._paginate_query(ctx, query, model, marker=marker)
         mock_query_object.get.assert_called_once_with(marker)
         args, _ = mock_paginate_query.call_args
         self.assertIn('real_marker', args)
