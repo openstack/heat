@@ -568,6 +568,9 @@ Response Parameters
    - creation_time: creation_time
    - updated_time: updated_time
    - stack_status: stack_status
+   - stack_owner: owner_id
+   - stack_user_project_id: stack_user_project_id
+   - parent: parent
    - id: id
 
 

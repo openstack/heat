@@ -14,7 +14,10 @@
             "stack_status": "CREATE_COMPLETE",
             "stack_status_reason": "Stack CREATE completed successfully",
             "updated_time": "",
-            "tags": ""
+            "tags": null,
+            "parent": null,
+            "stack_owner": null,
+            "stack_user_project_id": "71510cbd459a49ac989ca1055de7038b"
         }
     ]
 }
