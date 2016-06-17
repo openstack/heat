@@ -3,10 +3,12 @@ Orchestration service
 =====================
 
 .. toctree::
+   :maxdepth: 2
 
    get_started.rst
    install.rst
    verify.rst
+   launch-instance.rst
    next-steps.rst
 
 The Orchestration service (heat) uses a
