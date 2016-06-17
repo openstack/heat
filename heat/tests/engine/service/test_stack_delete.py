@@ -105,7 +105,8 @@ class StackDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, self.man.engine_id)
+        stack_lock_object.StackLock.create(
+            self.ctx, stack.id, self.man.engine_id)
 
         # Create a fake ThreadGroup too
         self.man.thread_group_mgr.groups[stack.id] = tools.DummyThreadGroup()
@@ -135,7 +136,7 @@ class StackDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, OTHER_ENGINE)
+        stack_lock_object.StackLock.create(self.ctx, stack.id, OTHER_ENGINE)
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         mock_load.return_value = stack
@@ -170,7 +171,7 @@ class StackDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, OTHER_ENGINE)
+        stack_lock_object.StackLock.create(self.ctx, stack.id, OTHER_ENGINE)
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         mock_load.return_value = stack
@@ -202,7 +203,8 @@ class StackDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
+        stack_lock_object.StackLock.create(
+            self.ctx, stack.id, "other-engine-fake-uuid")
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         mock_load.return_value = stack

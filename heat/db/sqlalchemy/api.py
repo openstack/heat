@@ -619,7 +619,7 @@ def stack_delete(context, stack_id):
 
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
                            retry_interval=0.5, inc_retry_interval=True)
-def stack_lock_create(stack_id, engine_id):
+def stack_lock_create(context, stack_id, engine_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.StackLock).get(stack_id)
@@ -628,7 +628,7 @@ def stack_lock_create(stack_id, engine_id):
         session.add(models.StackLock(stack_id=stack_id, engine_id=engine_id))
 
 
-def stack_lock_get_engine_id(stack_id):
+def stack_lock_get_engine_id(context, stack_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.StackLock).get(stack_id)
@@ -652,7 +652,7 @@ def persist_state_and_release_lock(context, stack_id, engine_id, values):
         return True
 
 
-def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
+def stack_lock_steal(context, stack_id, old_engine_id, new_engine_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.StackLock).get(stack_id)
@@ -664,7 +664,7 @@ def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
         return lock.engine_id if lock is not None else True
 
 
-def stack_lock_release(stack_id, engine_id):
+def stack_lock_release(context, stack_id, engine_id):
     session = get_session()
     with session.begin():
         rows_affected = session.query(

@@ -35,14 +35,16 @@ class StackLock(object):
         self.listener = None
 
     def get_engine_id(self):
-        return stack_lock_object.StackLock.get_engine_id(self.stack_id)
+        return stack_lock_object.StackLock.get_engine_id(self.context,
+                                                         self.stack_id)
 
     def try_acquire(self):
         """Try to acquire a stack lock.
 
         Don't raise an ActionInProgress exception or try to steal lock.
         """
-        return stack_lock_object.StackLock.create(self.stack_id,
+        return stack_lock_object.StackLock.create(self.context,
+                                                  self.stack_id,
                                                   self.engine_id)
 
     def acquire(self, retry=True):
@@ -51,7 +53,8 @@ class StackLock(object):
         :param retry: When True, retry if lock was released while stealing.
         :type retry: boolean
         """
-        lock_engine_id = stack_lock_object.StackLock.create(self.stack_id,
+        lock_engine_id = stack_lock_object.StackLock.create(self.context,
+                                                            self.stack_id,
                                                             self.engine_id)
         if lock_engine_id is None:
             LOG.debug("Engine %(engine)s acquired lock on stack "
@@ -74,7 +77,8 @@ class StackLock(object):
                          "%(engine)s will attempt to steal the lock"),
                      {'stack': self.stack_id, 'engine': self.engine_id})
 
-            result = stack_lock_object.StackLock.steal(self.stack_id,
+            result = stack_lock_object.StackLock.steal(self.context,
+                                                       self.stack_id,
                                                        lock_engine_id,
                                                        self.engine_id)
 
@@ -105,7 +109,8 @@ class StackLock(object):
         """Release a stack lock."""
 
         # Only the engine that owns the lock will be releasing it.
-        result = stack_lock_object.StackLock.release(self.stack_id,
+        result = stack_lock_object.StackLock.release(self.context,
+                                                     self.stack_id,
                                                      self.engine_id)
         if result is True:
             LOG.warning(_LW("Lock was already released on stack %s!"),

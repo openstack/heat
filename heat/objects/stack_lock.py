@@ -34,19 +34,19 @@ class StackLock(
     }
 
     @classmethod
-    def create(cls, stack_id, engine_id):
-        return db_api.stack_lock_create(stack_id, engine_id)
+    def create(cls, context, stack_id, engine_id):
+        return db_api.stack_lock_create(context, stack_id, engine_id)
 
     @classmethod
-    def steal(cls, stack_id, old_engine_id, new_engine_id):
-        return db_api.stack_lock_steal(stack_id,
+    def steal(cls, context, stack_id, old_engine_id, new_engine_id):
+        return db_api.stack_lock_steal(context, stack_id,
                                        old_engine_id,
                                        new_engine_id)
 
     @classmethod
-    def release(cls, stack_id, engine_id):
-        return db_api.stack_lock_release(stack_id, engine_id)
+    def release(cls, context, stack_id, engine_id):
+        return db_api.stack_lock_release(context, stack_id, engine_id)
 
     @classmethod
-    def get_engine_id(cls, stack_id):
-        return db_api.stack_lock_get_engine_id(stack_id)
+    def get_engine_id(cls, context, stack_id):
+        return db_api.stack_lock_get_engine_id(context, stack_id)
