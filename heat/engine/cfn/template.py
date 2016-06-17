@@ -104,7 +104,8 @@ class CfnTemplate(template.Template):
         try:
 
             for name, snippet in resources.items():
-                data = self.parse(stack, snippet)
+                path = '.'.join([self.RESOURCES, name])
+                data = self.parse(stack, snippet, path)
 
                 if not self.validate_resource_key_type(RES_TYPE,
                                                        six.string_types,

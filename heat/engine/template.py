@@ -230,8 +230,8 @@ class Template(collections.Mapping):
         if self.RESOURCES in self.t:
             self.t.update({self.RESOURCES: {}})
 
-    def parse(self, stack, snippet):
-        return parse(self.functions, stack, snippet)
+    def parse(self, stack, snippet, path=''):
+        return parse(self.functions, stack, snippet, path)
 
     def validate(self):
         """Validate the template.
@@ -299,18 +299,33 @@ class Template(collections.Mapping):
             return cls(tmpl)
 
 
-def parse(functions, stack, snippet):
+def parse(functions, stack, snippet, path=''):
     recurse = functools.partial(parse, functions, stack)
 
     if isinstance(snippet, collections.Mapping):
+        def mkpath(key):
+            return '.'.join([path, six.text_type(key)])
+
         if len(snippet) == 1:
             fn_name, args = next(six.iteritems(snippet))
             Func = functions.get(fn_name)
             if Func is not None:
-                return Func(stack, fn_name, recurse(args))
-        return dict((k, recurse(v)) for k, v in six.iteritems(snippet))
+                try:
+                    path = '.'.join([path, fn_name])
+                    return Func(stack, fn_name, recurse(args, path))
+                except (ValueError, TypeError, KeyError) as e:
+                    raise exception.StackValidationFailed(
+                        path=path,
+                        message=six.text_type(e))
+
+        return dict((k, recurse(v, mkpath(k)))
+                    for k, v in six.iteritems(snippet))
     elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
-        return [recurse(v) for v in snippet]
+
+        def mkpath(idx):
+            return ''.join([path, '[%d]' % idx])
+
+        return [recurse(v, mkpath(i)) for i, v in enumerate(snippet)]
     else:
         return snippet
