@@ -22,6 +22,10 @@ from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
 from heat.engine import translation
 
+DEPR_MSG = _('Neutron LBaaS v1 is deprecated in the Liberty release '
+             'and is planned to be removed in a future release. '
+             'Going forward, the LBaaS V2 should be used.')
+
 
 class HealthMonitor(neutron.NeutronResource):
     """A resource for managing health monitors for loadbalancers in Neutron.
@@ -38,6 +42,10 @@ class HealthMonitor(neutron.NeutronResource):
     """
 
     required_service_extension = 'lbaas'
+
+    support_status = support.SupportStatus(
+        support.DEPRECATED, DEPR_MSG, version='7.0.0'
+    )
 
     PROPERTIES = (
         DELAY, TYPE, MAX_RETRIES, TIMEOUT, ADMIN_STATE_UP,
@@ -193,6 +201,10 @@ class Pool(neutron.NeutronResource):
     """
 
     required_service_extension = 'lbaas'
+
+    support_status = support.SupportStatus(
+        support.DEPRECATED, DEPR_MSG, version='7.0.0'
+    )
 
     PROPERTIES = (
         PROTOCOL, SUBNET_ID, SUBNET, LB_METHOD, NAME, DESCRIPTION,
@@ -592,7 +604,10 @@ class PoolMember(neutron.NeutronResource):
 
     required_service_extension = 'lbaas'
 
-    support_status = support.SupportStatus(version='2014.1')
+    support_status = support.SupportStatus(
+        support.DEPRECATED, DEPR_MSG, version='7.0.0',
+        previous_status=support.SupportStatus(version='2014.1')
+    )
 
     PROPERTIES = (
         POOL_ID, ADDRESS, PROTOCOL_PORT, WEIGHT, ADMIN_STATE_UP,
@@ -720,6 +735,11 @@ class LoadBalancer(resource.Resource):
     """
 
     required_service_extension = 'lbaas'
+
+    support_status = support.SupportStatus(
+        support.DEPRECATED, DEPR_MSG, version='7.0.0',
+        previous_status=support.SupportStatus(version='2014.1')
+    )
 
     PROPERTIES = (
         POOL_ID, PROTOCOL_PORT, MEMBERS,
