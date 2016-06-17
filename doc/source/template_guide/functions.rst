@@ -425,3 +425,26 @@ Usage
 
 Returns false if the param 'env_type' equals to 'prod',
 otherwise returns true.
+
+-------
+Fn::And
+-------
+Acts as an AND operator to evaluate all the specified conditions.
+Returns true if all the specified conditions evaluate to true, or returns
+false if any one of the conditions evaluates to false.
+
+Parameters
+~~~~~~~~~~
+condition:
+    A condition such as Fn::Equals that evaluates to true or false.
+
+Usage
+~~~~~
+
+.. code-block:: yaml
+
+  {'Fn::And': [{'Fn::Equals': [{'Ref': env_type}, 'prod']},
+               {'Fn::Not': [{'Fn::Equals': [{'Ref': zone}, 'beijing']}]}]
+
+Returns true if the param 'env_type' equals to 'prod' and the param 'zone' is
+not equal to 'beijing', otherwise returns false.

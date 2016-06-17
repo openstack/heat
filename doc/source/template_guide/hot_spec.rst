@@ -243,12 +243,14 @@ for the ``heat_template_version`` key:
 
     This version adds ``equals`` condition function which can be used
     to compare whether two values are equal, the ``not`` condition function
-    which acts as a NOT operator. The complete list of supported
-    condition functions is::
+    which acts as a NOT operator, the ``and`` condition function which acts
+    as an AND operator to evaluate all the specified conditions. The complete
+    list of supported condition functions is::
 
       equals
       get_param
       not
+      and
 
 .. _hot_spec_parameter_groups:
 
@@ -833,6 +835,7 @@ expression
       equals
       get_param
       not
+      and
 
     Note: In condition functions, you can reference a value from an input
     parameter, but you cannot reference resource or its attribute.
@@ -854,6 +857,15 @@ An example of conditions section definition
          equals:
          - get_param: param3
          - yes
+     cd5:
+       and:
+       - equals:
+         - get_param: env_type
+         - prod
+       - not:
+           equals:
+           - get_param: zone
+           - beijing
 
 The example below shows how to associate condition with resources
 
@@ -1594,3 +1606,37 @@ Another example
     not: True
 
 This function returns false.
+
+and
+---
+The ``and`` function acts as an AND operator to evaluate all the
+specified conditions.
+
+The syntax of the ``and`` function is
+
+.. code-block:: yaml
+
+    and: [{condition_1}, {condition_2}, ... {condition_n}}]
+
+Note: A condition such as ``equals`` or ``not`` that evaluates to true or
+false can be defined in ``and`` function, also we can set a boolean
+value as condition.
+
+Returns true if all the specified conditions evaluate to true, or returns
+false if any one of the conditions evaluates to false.
+
+For example
+
+.. code-block:: yaml
+
+    and:
+    - equals:
+      - get_param: env_type
+      - prod
+    - not:
+        equals:
+        - get_param: zone
+        - beijing
+
+If param 'env_type' equals to 'prod', and param 'zone' is not equal to
+'beijing', this function returns true, otherwise returns false.
