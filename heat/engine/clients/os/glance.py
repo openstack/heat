@@ -15,6 +15,7 @@ from glanceclient import client as gc
 from glanceclient import exc
 from glanceclient.openstack.common.apiclient import exceptions
 
+from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
 from heat.engine import constraints
@@ -56,13 +57,17 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         matches = list(self._findall_with_attr(entity, **kwargs))
         num_matches = len(matches)
         if num_matches == 0:
-            msg = ("No %(name)s matching %(args)s.") % {
+            msg = _("No %(name)s matching %(args)s.") % {
                 'name': entity,
                 'args': kwargs
             }
             raise exceptions.NotFound(msg)
         elif num_matches > 1:
-            raise exceptions.NoUniqueMatch()
+            msg = _("No %(name)s unique match found for %(args)s.") % {
+                'name': entity,
+                'args': kwargs
+            }
+            raise exceptions.NoUniqueMatch(msg)
         else:
             return matches[0]
 

@@ -438,8 +438,9 @@ class InstancesTest(common.HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       resource_defns['WebServer'], stack)
 
+        msg = 'No image unique match found for CentOS 5.2.'
         self._mock_get_image_id_fail('CentOS 5.2',
-                                     glance.exceptions.NoUniqueMatch())
+                                     glance.exceptions.NoUniqueMatch(msg))
 
         self.stub_KeypairConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -452,7 +453,8 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual(
             "StackValidationFailed: resources.instance_create_image_err: "
             "Property error: WebServer.Properties.ImageId: "
-            "Error validating value 'CentOS 5.2': ",
+            "Error validating value 'CentOS 5.2': No image unique match "
+            "found for CentOS 5.2.",
             six.text_type(error))
 
         self.m.VerifyAll()
