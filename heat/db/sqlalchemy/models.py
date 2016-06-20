@@ -46,14 +46,6 @@ class HeatBase(models.ModelBase, models.TimestampMixin):
                 session = get_session()
         session.expire(self, attrs)
 
-    def refresh(self, session=None, attrs=None):
-        """Refresh this object."""
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.refresh(self, attrs)
-
     def delete(self, session=None):
         """Delete this object."""
         if not session:
