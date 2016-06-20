@@ -123,7 +123,8 @@ class CheckResource(object):
                                                 rpc_data, is_update,
                                                 adopt_stack_data)
         except exception.ResourceFailure as ex:
-            reason = 'Resource %s failed: %s' % (rsrc.action,
+            action = ex.action or rsrc.action
+            reason = 'Resource %s failed: %s' % (action,
                                                  six.text_type(ex))
             self._handle_resource_failure(cnxt, is_update, rsrc.id,
                                           stack, reason)
