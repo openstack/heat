@@ -71,6 +71,17 @@ class Schema(constr.Schema):
         # validate structural correctness of schema itself
         self.validate()
 
+    def validate(self, context=None):
+        super(Schema, self).validate()
+        # check that update_allowed and immutable
+        # do not contradict each other
+        if self.update_allowed and self.immutable:
+            msg = _("Options %(ua)s and %(im)s "
+                    "cannot both be True") % {
+                        'ua': UPDATE_ALLOWED,
+                        'im': IMMUTABLE}
+            raise exception.InvalidSchemaError(message=msg)
+
     @classmethod
     def from_legacy(cls, schema_dict):
         """Return a Property Schema object from a legacy schema dictionary."""
@@ -365,16 +376,6 @@ class Properties(collections.Mapping):
                     raise exception.StackValidationFailed(message=msg)
 
             for (key, prop) in self.props.items():
-                # check that update_allowed and immutable
-                # do not contradict each other
-                if prop.update_allowed() and prop.immutable():
-                    msg = _("Property %(prop)s: %(ua)s and %(im)s "
-                            "cannot both be True") % {
-                                'prop': key,
-                                'ua': prop.schema.UPDATE_ALLOWED,
-                                'im': prop.schema.IMMUTABLE}
-                    raise exception.InvalidSchemaError(message=msg)
-
                 if with_value:
                     try:
                         self._get_property_value(key, validate=True)
