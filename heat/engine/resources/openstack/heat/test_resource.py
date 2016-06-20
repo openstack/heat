@@ -16,7 +16,7 @@ import eventlet
 from oslo_utils import timeutils
 import six
 
-from heat.common.i18n import _
+from heat.common.i18n import _, _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -161,8 +161,10 @@ class TestResource(resource.Resource):
             secs = self.properties[self.ACTION_WAIT_SECS][self.action.lower()]
         if secs is None:
             secs = self.properties[self.WAIT_SECS]
-        LOG.info('%s wait_secs:%s, action:%s' % (self.name, secs,
-                                                 self.action.lower()))
+        LOG.info(_LI('%(name)s wait_secs:%(wait)s, action:%(action)s'),
+                 {'name': self.name,
+                  'wait': secs,
+                  'action': self.action.lower()})
         return secs
 
     def handle_create(self):
@@ -226,8 +228,10 @@ class TestResource(resource.Resource):
 
         started_at = timeutils.normalize_time(started_at)
         waited = timeutils.utcnow() - started_at
-        LOG.info("Resource %s waited %s/%s seconds",
-                 self.name, waited, wait_secs)
+        LOG.info(_LI("Resource %(name)s waited %(waited)s/%(sec)s seconds"),
+                 {'name': self.name,
+                  'waited': waited,
+                  'sec': wait_secs})
 
         # wait_secs < 0 is an infinite wait time.
         if wait_secs >= 0 and waited > datetime.timedelta(seconds=wait_secs):
