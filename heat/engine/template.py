@@ -133,7 +133,7 @@ class Template(collections.Mapping):
         return cls(t.template, template_id=template_id, env=env,
                    files=t_files)
 
-    def store(self, context=None):
+    def store(self, context):
         """Store the Template in the database and return its ID."""
         rt = {
             'template': self.t,
