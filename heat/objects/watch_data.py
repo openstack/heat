@@ -31,22 +31,14 @@ class WatchData(
         'id': fields.IntegerField(),
         'data': heat_fields.JsonField(nullable=True),
         'watch_rule_id': fields.StringField(),
-        'watch_rule': fields.ObjectField('WatchRule'),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
     }
 
     @staticmethod
     def _from_db_object(context, rule, db_data):
-        from heat.objects import watch_rule
         for field in rule.fields:
-            if field == 'watch_rule':
-                rule[field] = watch_rule.WatchRule._from_db_object(
-                    context,
-                    watch_rule.WatchRule(),
-                    db_data['watch_rule'])
-            else:
-                rule[field] = db_data[field]
+            rule[field] = db_data[field]
         rule._context = context
         rule.obj_reset_changes()
         return rule

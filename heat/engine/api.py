@@ -463,7 +463,7 @@ def format_watch(watch):
     return result
 
 
-def format_watch_data(wd):
+def format_watch_data(wd, rule_names):
 
     # Demangle DB format data into something more easily used in the API
     # We are expecting a dict with exactly two items, Namespace and
@@ -477,7 +477,7 @@ def format_watch_data(wd):
         return
 
     result = {
-        rpc_api.WATCH_DATA_ALARM: wd.watch_rule.name,
+        rpc_api.WATCH_DATA_ALARM: rule_names.get(wd.watch_rule_id),
         rpc_api.WATCH_DATA_METRIC: metric_name,
         rpc_api.WATCH_DATA_TIME: wd.created_at.isoformat(),
         rpc_api.WATCH_DATA_NAMESPACE: namespace,

@@ -20,7 +20,6 @@ from oslo_versionedobjects import fields
 from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
-from heat.objects import stack
 from heat.objects import watch_data
 
 
@@ -36,7 +35,6 @@ class WatchRule(
         'state': fields.StringField(nullable=True),
         'last_evaluated': fields.DateTimeField(nullable=True),
         'stack_id': fields.StringField(),
-        'stack': fields.ObjectField(stack.Stack),
         'watch_data': fields.ListOfObjectsField(watch_data.WatchData),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
@@ -45,10 +43,7 @@ class WatchRule(
     @staticmethod
     def _from_db_object(context, rule, db_rule):
         for field in rule.fields:
-            if field == 'stack':
-                rule[field] = stack.Stack._from_db_object(
-                    context, stack.Stack(), db_rule[field])
-            elif field == 'watch_data':
+            if field == 'watch_data':
                 rule[field] = watch_data.WatchData.get_all_by_watch_rule_id(
                     context, db_rule['id'])
             else:
