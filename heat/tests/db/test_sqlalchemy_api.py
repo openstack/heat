@@ -33,13 +33,11 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
-from heat.db.sqlalchemy import models
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import resource as rsrc
 from heat.engine.resources.aws.ec2 import instance as instances
-from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
 from heat.engine import template_files
@@ -74,24 +72,6 @@ wp_template = '''
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
-
-
-class MyResource(rsrc.Resource):
-    properties_schema = {
-        'ServerName': {'Type': 'String', 'Required': True},
-        'Flavor': {'Type': 'String', 'Required': True},
-        'ImageName': {'Type': 'String', 'Required': True},
-        'UserData': {'Type': 'String'},
-        'PublicKey': {'Type': 'String'}
-    }
-
-    @property
-    def my_secret(self):
-        return db_api.resource_data_get(self.context, self.id, 'my_secret')
-
-    @my_secret.setter
-    def my_secret(self, my_secret):
-        self.data_set('my_secret', my_secret, True)
 
 
 class SqlAlchemyTest(common.HeatTestCase):
@@ -315,34 +295,34 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def test_encryption(self):
         stack_name = 'test_encryption'
-        (template, stack) = self._setup_test_stack(stack_name)
-        resource_defns = template.resource_definitions(stack)
-        cs = MyResource('cs_encryption',
-                        resource_defns['WebServer'],
-                        stack)
+        stack = self._setup_test_stack(stack_name)[1]
+        self._mock_create(self.m)
+        self.m.ReplayAll()
+        stack.create()
+        stack = parser.Stack.load(self.ctx, stack.id)
+        cs = stack['WebServer']
 
-        # This gives the fake cloud server an id and created_time attribute
-        cs._store_or_update(cs.CREATE, cs.IN_PROGRESS, 'test_store')
-
-        cs.my_secret = 'fake secret'
+        cs.data_set('my_secret', 'fake secret', True)
         rs = db_api.resource_get_by_name_and_stack(self.ctx,
-                                                   'cs_encryption',
+                                                   'WebServer',
                                                    stack.id)
         encrypted_key = rs.data[0]['value']
         self.assertNotEqual(encrypted_key, "fake secret")
         # Test private_key property returns decrypted value
-        self.assertEqual("fake secret", cs.my_secret)
+        self.assertEqual("fake secret", db_api.resource_data_get(
+            self.ctx, cs.id, 'my_secret'))
 
         # do this twice to verify that the orm does not commit the unencrypted
         # value.
-        self.assertEqual("fake secret", cs.my_secret)
-        scheduler.TaskRunner(cs.destroy)()
+        self.assertEqual("fake secret", db_api.resource_data_get(
+            self.ctx, cs.id, 'my_secret'))
 
     def test_resource_data_delete(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
         self._mock_create(self.m)
         self.m.ReplayAll()
         stack.create()
+        stack = parser.Stack.load(self.ctx, stack.id)
         resource = stack['WebServer']
         resource.data_set('test', 'test_data')
         self.assertEqual('test_data', db_api.resource_data_get(
@@ -1095,7 +1075,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIsNotNone(software_config)
         software_configs = db_api.software_config_get_all(self.ctx)
         self.assertEqual(1, len(software_configs))
-        self.assertEqual(software_config, software_configs[0])
+        self.assertEqual(software_config.id, software_configs[0].id)
 
     def test_software_config_delete(self):
         tenant_id = self.ctx.tenant_id
@@ -1198,11 +1178,11 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIsNotNone(deployment)
         deployments = db_api.software_deployment_get_all(self.ctx)
         self.assertEqual(1, len(deployments))
-        self.assertEqual(deployment, deployments[0])
+        self.assertEqual(deployment.id, deployments[0].id)
         deployments = db_api.software_deployment_get_all(
             self.ctx, server_id=values['server_id'])
         self.assertEqual(1, len(deployments))
-        self.assertEqual(deployment, deployments[0])
+        self.assertEqual(deployment.id, deployments[0].id)
         deployments = db_api.software_deployment_get_all(
             self.ctx, server_id=str(uuid.uuid4()))
         self.assertEqual([], deployments)
@@ -2081,10 +2061,6 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertRaises(exception.NotFound,
                               db_api.raw_template_files_get,
                               ctx, tmpl_files[tmpl_idx].files_id)
-            for r in stacks[s].resources:
-                self.assertRaises(exception.NotFound,
-                                  db_api.resource_data_get_all(r.context,
-                                                               r.id))
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
@@ -2473,6 +2449,7 @@ class DBAPIResourceDataTest(common.HeatTestCase):
         self.assertEqual('test_value', vals.get('encryped_resource_key'))
 
         # get all by using associated resource data
+        self.resource = db_api.resource_get(self.ctx, self.resource.id)
         vals = db_api.resource_data_get_all(self.ctx, None, self.resource.data)
         self.assertEqual(2, len(vals))
         self.assertEqual('foo', vals.get('test_resource_key'))
@@ -2504,10 +2481,11 @@ class DBAPIEventTest(common.HeatTestCase):
         self.user_creds = create_user_creds(self.ctx)
 
     def test_event_create_get(self):
-        event = create_event(self.ctx)
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        event = create_event(self.ctx, stack_id=stack.id)
         ret_event = db_api.event_get(self.ctx, event.id)
         self.assertIsNotNone(ret_event)
-        self.assertEqual('test_stack_id', ret_event.stack_id)
+        self.assertEqual(stack.id, ret_event.stack_id)
         self.assertEqual('create', ret_event.resource_action)
         self.assertEqual('complete', ret_event.resource_status)
         self.assertEqual('res', ret_event.resource_name)
@@ -3001,8 +2979,8 @@ class DBAPISyncPointTest(common.HeatTestCase):
 
         # second update
         rows_updated = db_api.sync_point_update_input_data(
-            self.ctx, sync_point.entity_id, sync_point.traversal_id,
-            sync_point.is_update, sync_point.atomic_key,
+            self.ctx, ret_sync_point.entity_id, ret_sync_point.traversal_id,
+            ret_sync_point.is_update, ret_sync_point.atomic_key,
             {'input_data': '{key1: value1}'}
         )
         self.assertEqual(1, rows_updated)
@@ -3309,31 +3287,30 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         tmpl2 = self._create_template()
         self.addCleanup(self._delete_templates, [tmpl1, tmpl2])
 
-        session = self.ctx.session
-        r_tmpls = session.query(models.RawTemplate).all()
-        self.assertEqual('', r_tmpls[1].environment)
+        tmpl1 = db_api.raw_template_get(self.ctx, tmpl1.id)
+        self.assertEqual('', tmpl1.environment)
 
         # Test encryption
         enc_result = db_api.db_encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
         self.assertEqual(1, len(enc_result))
         self.assertIs(AttributeError, type(enc_result[0]))
-        session = self.ctx.session
-        enc_tmpls = session.query(models.RawTemplate).all()
-        self.assertEqual('', enc_tmpls[1].environment)
+        tmpl1 = db_api.raw_template_get(self.ctx, tmpl1.id)
+        tmpl2 = db_api.raw_template_get(self.ctx, tmpl2.id)
+        self.assertEqual('', tmpl1.environment)
         self.assertEqual('cryptography_decrypt_v1',
-                         enc_tmpls[2].environment['parameters']['param2'][0])
+                         tmpl2.environment['parameters']['param2'][0])
 
         # Test decryption
         dec_result = db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
         self.assertEqual(len(dec_result), 1)
         self.assertIs(TypeError, type(dec_result[0]))
-        session = self.ctx.session
-        dec_tmpls = session.query(models.RawTemplate).all()
-        self.assertEqual('', dec_tmpls[1].environment)
+        tmpl1 = db_api.raw_template_get(self.ctx, tmpl1.id)
+        tmpl2 = db_api.raw_template_get(self.ctx, tmpl2.id)
+        self.assertEqual('', tmpl1.environment)
         self.assertEqual('bar',
-                         dec_tmpls[2].environment['parameters']['param2'])
+                         tmpl2.environment['parameters']['param2'])
 
     def test_db_encrypt_no_env(self):
         template = {
@@ -3468,19 +3445,16 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
                 'param1': 'foo',
                 'param2': 'bar',
                 'param3': 12345}}}
-        db_api.raw_template_create(self.ctx, template)
+        tmpl = db_api.raw_template_create(self.ctx, template)
         self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key))
-        session = self.ctx.session
-        enc_raw_templates = session.query(models.RawTemplate).all()
-        self.assertNotEqual([], enc_raw_templates)
-        enc_params = enc_raw_templates[1].environment['parameters']
+        tmpl = db_api.raw_template_get(self.ctx, tmpl.id)
+        enc_params = tmpl.environment['parameters']
 
         self.assertEqual([], db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50))
-        session = self.ctx.session
-        dec_tmpls = session.query(models.RawTemplate).all()
-        dec_params = dec_tmpls[1].environment['parameters']
+        tmpl = db_api.raw_template_get(self.ctx, tmpl.id)
+        dec_params = tmpl.environment['parameters']
 
         self.assertNotEqual(enc_params['param3'], dec_params['param3'])
         self.assertEqual('bar', dec_params['param2'])
@@ -3500,9 +3474,11 @@ class ResetStackStatusTests(common.HeatTestCase):
         db_api.stack_update(self.ctx, self.stack.id, {'status': 'IN_PROGRESS'})
         db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
         db_api.reset_stack_status(self.ctx, self.stack.id)
-        self.assertEqual('FAILED', self.stack.status)
+
+        stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertEqual('FAILED', stack.status)
         self.assertEqual('Stack status manually reset',
-                         self.stack.status_reason)
+                         stack.status_reason)
         self.assertEqual(True, db_api.stack_lock_release(self.ctx,
                                                          self.stack.id,
                                                          UUID1))
@@ -3512,6 +3488,9 @@ class ResetStackStatusTests(common.HeatTestCase):
                                             status='IN_PROGRESS')
         resource_complete = create_resource(self.ctx, self.stack)
         db_api.reset_stack_status(self.ctx, self.stack.id)
+
+        resource_complete = db_api.resource_get(self.ctx, resource_complete.id)
+        resource_progress = db_api.resource_get(self.ctx, resource_progress.id)
         self.assertEqual('complete', resource_complete.status)
         self.assertEqual('FAILED', resource_progress.status)
 
@@ -3533,6 +3512,10 @@ class ResetStackStatusTests(common.HeatTestCase):
                                   owner_id=child.id, status='IN_PROGRESS')
         resource = create_resource(self.ctx, grandchild, status='IN_PROGRESS')
         db_api.reset_stack_status(self.ctx, self.stack.id)
+
+        grandchild = db_api.stack_get(self.ctx, grandchild.id)
+        self.stack = db_api.stack_get(self.ctx, self.stack.id)
+        resource = db_api.resource_get(self.ctx, resource.id)
         self.assertEqual('FAILED', grandchild.status)
         self.assertEqual('FAILED', resource.status)
         self.assertEqual('FAILED', self.stack.status)
