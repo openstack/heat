@@ -23,7 +23,7 @@ CLIENT_NAME = 'magnum'
 
 class MagnumClientPlugin(client_plugin.ClientPlugin):
 
-    service_types = [CONTAINER] = ['container']
+    service_types = [CONTAINER] = ['container-infra']
 
     def _create(self):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
