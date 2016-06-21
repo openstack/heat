@@ -340,7 +340,8 @@ def parse(functions, stack, snippet, path=''):
                 try:
                     path = '.'.join([path, fn_name])
                     return Func(stack, fn_name, recurse(args, path))
-                except (ValueError, TypeError, KeyError) as e:
+                except (ValueError, TypeError, KeyError,
+                        exception.InvalidTemplateVersion) as e:
                     raise exception.StackValidationFailed(
                         path=path,
                         message=six.text_type(e))
