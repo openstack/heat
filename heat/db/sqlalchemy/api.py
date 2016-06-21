@@ -125,14 +125,17 @@ def raw_template_update(context, template_id, values):
 def raw_template_delete(context, template_id):
     raw_template = raw_template_get(context, template_id)
     raw_tmpl_files_id = raw_template.files_id
-    raw_template.delete()
-    if raw_tmpl_files_id is None:
-        return
-    # If no other raw_template is referencing the same raw_template_files,
-    # delete that too
-    if context.session.query(models.RawTemplate).filter_by(
-            files_id=raw_tmpl_files_id).first() is None:
-        raw_template_files_get(context, raw_tmpl_files_id).delete()
+    session = context.session
+    with session.begin(subtransactions=True):
+        session.delete(raw_template)
+        if raw_tmpl_files_id is None:
+            return
+        # If no other raw_template is referencing the same raw_template_files,
+        # delete that too
+        if session.query(models.RawTemplate).filter_by(
+                files_id=raw_tmpl_files_id).first() is None:
+            raw_tmpl_files = raw_template_files_get(context, raw_tmpl_files_id)
+            session.delete(raw_tmpl_files)
 
 
 def raw_template_files_create(context, values):
@@ -221,6 +224,14 @@ def resource_update(context, resource_id, values, atomic_key,
         return bool(rows_updated)
 
 
+def resource_delete(context, resource_id):
+    session = context.session
+    with session.begin(subtransactions=True):
+        resource = session.query(models.Resource).get(resource_id)
+        if resource:
+            session.delete(resource)
+
+
 def resource_data_get_all(context, resource_id, data=None):
     """Looks up resource_data by resource.id.
 
@@ -276,7 +287,7 @@ def stack_tags_delete(context, stack_id):
         result = stack_tags_get(context, stack_id)
         if result:
             for tag in result:
-                tag.delete()
+                session.delete(tag)
 
 
 def stack_tags_get(context, stack_id):
@@ -334,7 +345,9 @@ def resource_exchange_stacks(context, resource_id1, resource_id2):
 
 def resource_data_delete(context, resource_id, key):
     result = resource_data_get_by_key(context, resource_id, key)
-    result.delete()
+    session = context.session
+    with session.begin(subtransactions=True):
+        session.delete(result)
 
 
 def resource_create(context, values):
@@ -1039,7 +1052,9 @@ def software_deployment_update(context, deployment_id, values):
 
 def software_deployment_delete(context, deployment_id):
     deployment = software_deployment_get(context, deployment_id)
-    deployment.delete()
+    session = context.session
+    with session.begin(subtransactions=True):
+        session.delete(deployment)
 
 
 def snapshot_create(context, values):

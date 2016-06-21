@@ -125,8 +125,7 @@ class Resource(
 
     @classmethod
     def delete(cls, context, resource_id):
-        resource_db = db_api.resource_get(context, resource_id)
-        resource_db.delete()
+        db_api.resource_delete(context, resource_id)
 
     @classmethod
     def exchange_stacks(cls, context, resource_id1, resource_id2):

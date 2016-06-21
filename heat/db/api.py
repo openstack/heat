@@ -118,6 +118,10 @@ def resource_create(context, values):
     return IMPL.resource_create(context, values)
 
 
+def resource_delete(context, resource_id):
+    return IMPL.resource_delete(context, resource_id)
+
+
 def resource_exchange_stacks(context, resource_id1, resource_id2):
     return IMPL.resource_exchange_stacks(context, resource_id1, resource_id2)
 
