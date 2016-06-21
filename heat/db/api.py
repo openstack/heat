@@ -114,6 +114,10 @@ def resource_update(context, resource_id, values, atomic_key,
                                 expected_engine_id)
 
 
+def resource_update_and_save(context, resource_id, values):
+    return IMPL.resource_update_and_save(context, resource_id, values)
+
+
 def resource_create(context, values):
     return IMPL.resource_create(context, values)
 

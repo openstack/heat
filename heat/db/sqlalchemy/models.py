@@ -17,53 +17,23 @@ import uuid
 
 from oslo_db.sqlalchemy import models
 from oslo_utils import timeutils
-import six
 import sqlalchemy
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm import session as orm_session
 
 from heat.db.sqlalchemy import types
 
 BASE = declarative.declarative_base()
 
 
-def get_session():
-    from heat.db.sqlalchemy import api as db_api
-    return db_api.get_session()
-
-
 class HeatBase(models.ModelBase, models.TimestampMixin):
     """Base class for Heat Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
-    def expire(self, session=None, attrs=None):
-        """Expire this object ()."""
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.expire(self, attrs)
-
-    def update_and_save(self, values, session=None):
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.begin(subtransactions=True)
-        for k, v in six.iteritems(values):
-            setattr(self, k, v)
-        session.commit()
-
 
 class SoftDelete(object):
     deleted_at = sqlalchemy.Column(sqlalchemy.DateTime)
-
-    def soft_delete(self, session=None):
-        """Mark this object as deleted."""
-        self.update_and_save({'deleted_at': timeutils.utcnow()},
-                             session=session)
 
 
 class StateAware(object):
