@@ -854,7 +854,7 @@ class StackUpdateTest(common.HeatTestCase):
         tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
                  'Resources': {
                      'AResource': {'Type': 'GenericResourceType'},
-                     'BResource': {'Type': 'GenericResourceType'}}}
+                     'BResource': {'Type': 'MultiStepResourceType'}}}
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2),
                                     disable_rollback=disable_rollback)
