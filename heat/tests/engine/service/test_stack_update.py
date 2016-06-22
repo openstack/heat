@@ -12,7 +12,7 @@
 
 import uuid
 
-from eventlet import event as grevent
+import eventlet.queue
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
@@ -66,8 +66,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                                     return_value=stk.env)
 
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
-        event_mock = mock.Mock()
-        self.patchobject(grevent, 'Event', return_value=event_mock)
+        msgq_mock = mock.Mock()
+        self.patchobject(eventlet.queue, 'LightQueue', return_value=msgq_mock)
 
         # do update
         api_args = {'timeout_mins': 60}
@@ -78,7 +78,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
-        self.assertEqual([event_mock], self.man.thread_group_mgr.events)
+        self.assertEqual([msgq_mock], self.man.thread_group_mgr.msg_queues)
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
@@ -118,7 +118,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(templatem, 'Template', return_value=stk.t)
         self.patchobject(environment, 'Environment', return_value=stk.env)
         self.patchobject(stk, 'validate', return_value=None)
-        self.patchobject(grevent, 'Event', return_value=mock.Mock())
+        self.patchobject(eventlet.queue, 'LightQueue',
+                         return_value=mock.Mock())
 
         mock_merge = self.patchobject(self.man, '_merge_environments')
 
@@ -149,8 +150,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                                      return_value=stk.t)
 
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
-        event_mock = mock.Mock()
-        self.patchobject(grevent, 'Event', return_value=event_mock)
+        msgq_mock = mock.Mock()
+        self.patchobject(eventlet.queue, 'LightQueue', return_value=msgq_mock)
 
         # do update
         api_args = {'timeout_mins': 60}
@@ -162,7 +163,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
-        self.assertEqual([event_mock], self.man.thread_group_mgr.events)
+        self.assertEqual([msgq_mock], self.man.thread_group_mgr.msg_queues)
         mock_tmpl.assert_called_once_with(self.ctx, tmpl_id)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,

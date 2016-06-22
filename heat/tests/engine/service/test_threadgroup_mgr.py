@@ -78,31 +78,31 @@ class ThreadGroupManagerTest(common.HeatTestCase):
             self.cfg_mock.CONF.periodic_interval,
             self.f, *self.fargs, **self.fkwargs)
 
-    def test_tgm_add_event(self):
-        stack_id = 'add_events_test'
+    def test_tgm_add_msg_queue(self):
+        stack_id = 'add_msg_queues_test'
         e1, e2 = mock.Mock(), mock.Mock()
         thm = service.ThreadGroupManager()
-        thm.add_event(stack_id, e1)
-        thm.add_event(stack_id, e2)
-        self.assertEqual([e1, e2], thm.events[stack_id])
+        thm.add_msg_queue(stack_id, e1)
+        thm.add_msg_queue(stack_id, e2)
+        self.assertEqual([e1, e2], thm.msg_queues[stack_id])
 
-    def test_tgm_remove_event(self):
-        stack_id = 'add_events_test'
+    def test_tgm_remove_msg_queue(self):
+        stack_id = 'add_msg_queues_test'
         e1, e2 = mock.Mock(), mock.Mock()
         thm = service.ThreadGroupManager()
-        thm.add_event(stack_id, e1)
-        thm.add_event(stack_id, e2)
-        thm.remove_event(None, stack_id, e2)
-        self.assertEqual([e1], thm.events[stack_id])
-        thm.remove_event(None, stack_id, e1)
-        self.assertNotIn(stack_id, thm.events)
+        thm.add_msg_queue(stack_id, e1)
+        thm.add_msg_queue(stack_id, e2)
+        thm.remove_msg_queue(None, stack_id, e2)
+        self.assertEqual([e1], thm.msg_queues[stack_id])
+        thm.remove_msg_queue(None, stack_id, e1)
+        self.assertNotIn(stack_id, thm.msg_queues)
 
     def test_tgm_send(self):
         stack_id = 'send_test'
         e1, e2 = mock.MagicMock(), mock.Mock()
         thm = service.ThreadGroupManager()
-        thm.add_event(stack_id, e1)
-        thm.add_event(stack_id, e2)
+        thm.add_msg_queue(stack_id, e1)
+        thm.add_msg_queue(stack_id, e2)
         thm.send(stack_id, 'test_message')
 
 
@@ -122,7 +122,7 @@ class ThreadGroupManagerStopTest(common.HeatTestCase):
             done.append(thread)
 
         thm = service.ThreadGroupManager()
-        thm.add_event(stack_id, mock.Mock())
+        thm.add_msg_queue(stack_id, mock.Mock())
         thread = thm.start(stack_id, function)
         thread.link(linked, thread)
 
@@ -130,4 +130,4 @@ class ThreadGroupManagerStopTest(common.HeatTestCase):
 
         self.assertIn(thread, done)
         self.assertNotIn(stack_id, thm.groups)
-        self.assertNotIn(stack_id, thm.events)
+        self.assertNotIn(stack_id, thm.msg_queues)

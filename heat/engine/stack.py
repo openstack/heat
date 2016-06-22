@@ -14,6 +14,7 @@
 import collections
 import copy
 import datetime
+import eventlet
 import functools
 import itertools
 import re
@@ -1127,7 +1128,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.update', hide_args=False)
     @reset_state_on_error
-    def update(self, newstack, event=None):
+    def update(self, newstack, msg_queue=None):
         """Update the stack.
 
         Compare the current stack with newstack,
@@ -1142,7 +1143,7 @@ class Stack(collections.Mapping):
         """
         self.updated_time = oslo_timeutils.utcnow()
         updater = scheduler.TaskRunner(self.update_task, newstack,
-                                       event=event)
+                                       msg_queue=msg_queue)
         updater()
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
@@ -1344,7 +1345,7 @@ class Stack(collections.Mapping):
         return self._convg_deps
 
     @scheduler.wrappertask
-    def update_task(self, newstack, action=UPDATE, event=None):
+    def update_task(self, newstack, action=UPDATE, msg_queue=None):
         if action not in (self.UPDATE, self.ROLLBACK, self.RESTORE):
             LOG.error(_LE("Unexpected action %s passed to update!"), action)
             self.state_set(self.UPDATE, self.FAILED,
@@ -1417,11 +1418,8 @@ class Stack(collections.Mapping):
                 updater.start(timeout=self.timeout_secs())
                 yield
                 while not updater.step():
-                    if event is None or not event.ready():
-                        yield
-                    else:
-                        message = event.wait()
-                        self._message_parser(message)
+                    self._check_for_message(msg_queue)
+                    yield
             finally:
                 self.reset_dependencies()
 
@@ -1510,11 +1508,21 @@ class Stack(collections.Mapping):
         if not cfg.CONF.encrypt_parameters_and_properties:
             self.t.env.encrypted_param_names = []
 
-    def _message_parser(self, message):
+    @staticmethod
+    def _check_for_message(msg_queue):
+        if msg_queue is None:
+            return
+        try:
+            message = msg_queue.get_nowait()
+        except eventlet.queue.Empty:
+            return
+
         if message == rpc_api.THREAD_CANCEL:
             raise ForcedCancel(with_rollback=False)
         elif message == rpc_api.THREAD_CANCEL_WITH_ROLLBACK:
             raise ForcedCancel(with_rollback=True)
+
+        LOG.error(_LE('Unknown message "%s" received'), message)
 
     def _delete_backup_stack(self, stack):
         # Delete resources in the backup stack referred to by 'stack'

@@ -87,7 +87,7 @@ class ThreadGroupManager(object):
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
         self.groups = {}
-        self.events = collections.defaultdict(list)
+        self.msg_queues = collections.defaultdict(list)
 
         # Create dummy service task, because when there is nothing queued
         # on self.tg the process exits
@@ -205,13 +205,13 @@ class ThreadGroupManager(object):
         self.groups[stack_id].add_timer(cfg.CONF.periodic_interval,
                                         func, *args, **kwargs)
 
-    def add_event(self, stack_id, event):
-        self.events[stack_id].append(event)
+    def add_msg_queue(self, stack_id, msg_queue):
+        self.msg_queues[stack_id].append(msg_queue)
 
-    def remove_event(self, gt, stack_id, event):
-        for e in self.events.pop(stack_id, []):
-            if e is not event:
-                self.add_event(stack_id, e)
+    def remove_msg_queue(self, gt, stack_id, msg_queue):
+        for q in self.msg_queues.pop(stack_id, []):
+            if q is not msg_queue:
+                self.add_msg_queue(stack_id, q)
 
     def stop_timers(self, stack_id):
         if stack_id in self.groups:
@@ -220,7 +220,7 @@ class ThreadGroupManager(object):
     def stop(self, stack_id, graceful=False):
         """Stop any active threads on a stack."""
         if stack_id in self.groups:
-            self.events.pop(stack_id, None)
+            self.msg_queues.pop(stack_id, None)
             threadgroup = self.groups.pop(stack_id)
             threads = threadgroup.threads[:]
 
@@ -239,8 +239,8 @@ class ThreadGroupManager(object):
                 eventlet.sleep()
 
     def send(self, stack_id, message):
-        for event in self.events.pop(stack_id, []):
-            event.send(message)
+        for msg_queue in self.msg_queues.get(stack_id, []):
+            msg_queue.put_nowait(message)
 
 
 @profiler.trace_cls("rpc")
@@ -985,15 +985,15 @@ class EngineService(service.Service):
             current_stack.converge_stack(template=tmpl,
                                          new_stack=updated_stack)
         else:
-            event = eventlet.event.Event()
+            msg_queue = eventlet.queue.LightQueue()
             th = self.thread_group_mgr.start_with_lock(cnxt, current_stack,
                                                        self.engine_id,
                                                        current_stack.update,
                                                        updated_stack,
-                                                       event=event)
-            th.link(self.thread_group_mgr.remove_event,
-                    current_stack.id, event)
-            self.thread_group_mgr.add_event(current_stack.id, event)
+                                                       msg_queue=msg_queue)
+            th.link(self.thread_group_mgr.remove_msg_queue,
+                    current_stack.id, msg_queue)
+            self.thread_group_mgr.add_msg_queue(current_stack.id, msg_queue)
         return dict(current_stack.identifier())
 
     @context.request_context
