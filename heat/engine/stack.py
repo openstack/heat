@@ -282,7 +282,8 @@ class Stack(collections.Mapping):
 
     def stored_context(self):
         if self.user_creds_id:
-            creds_obj = ucreds_object.UserCreds.get_by_id(self.user_creds_id)
+            creds_obj = ucreds_object.UserCreds.get_by_id(
+                self.context, self.user_creds_id)
             # Maintain request_id from self.context so we retain traceability
             # in situations where servicing a request requires switching from
             # the request context to the stored context
@@ -1565,7 +1566,8 @@ class Stack(collections.Mapping):
         # Ignore this error instead of blocking stack deletion.
         user_creds = None
         try:
-            user_creds = ucreds_object.UserCreds.get_by_id(self.user_creds_id)
+            user_creds = ucreds_object.UserCreds.get_by_id(
+                self.context, self.user_creds_id)
         except exception.Error as err:
             LOG.exception(err)
             pass

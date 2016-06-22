@@ -87,7 +87,7 @@ class MyResource(rsrc.Resource):
 
     @property
     def my_secret(self):
-        return db_api.resource_data_get(self, 'my_secret')
+        return db_api.resource_data_get(self.context, self.id, 'my_secret')
 
     @my_secret.setter
     def my_secret(self, my_secret):
@@ -346,11 +346,12 @@ class SqlAlchemyTest(common.HeatTestCase):
         stack.create()
         resource = stack['WebServer']
         resource.data_set('test', 'test_data')
-        self.assertEqual('test_data', db_api.resource_data_get(resource,
-                                                               'test'))
-        db_api.resource_data_delete(resource, 'test')
+        self.assertEqual('test_data', db_api.resource_data_get(
+            self.ctx, resource.id, 'test'))
+        db_api.resource_data_delete(self.ctx, resource.id, 'test')
         self.assertRaises(exception.NotFound,
-                          db_api.resource_data_get, resource, 'test')
+                          db_api.resource_data_get, self.ctx,
+                          resource.id, 'test')
 
     def test_stack_get_by_name(self):
         stack = self._setup_test_stack('stack', UUID1,
@@ -983,7 +984,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.trust_id = None
         self.ctx.region_name = 'RegionOne'
         db_creds = db_api.user_creds_create(self.ctx)
-        load_creds = db_api.user_creds_get(db_creds['id'])
+        load_creds = db_api.user_creds_get(self.ctx, db_creds['id'])
 
         self.assertEqual('test_username', load_creds.get('username'))
         self.assertEqual('password', load_creds.get('password'))
@@ -1016,7 +1017,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.auth_url = 'anauthurl'
         self.ctx.region_name = 'aregion'
         db_creds = db_api.user_creds_create(self.ctx)
-        load_creds = db_api.user_creds_get(db_creds['id'])
+        load_creds = db_api.user_creds_get(self.ctx, db_creds['id'])
 
         self.assertIsNone(load_creds.get('username'))
         self.assertIsNone(load_creds.get('password'))
@@ -1035,7 +1036,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.trust_id = None
         self.ctx.region_name = None
         db_creds = db_api.user_creds_create(self.ctx)
-        load_creds = db_api.user_creds_get(db_creds['id'])
+        load_creds = db_api.user_creds_get(self.ctx, db_creds['id'])
 
         self.assertIsNone(load_creds.get('username'))
         self.assertIsNone(load_creds.get('password'))
@@ -1440,7 +1441,7 @@ def create_resource_data(ctx, resource, **kwargs):
         'redact': 0,
     }
     values.update(kwargs)
-    return db_api.resource_data_set(resource, **values)
+    return db_api.resource_data_set(ctx, resource.id, **values)
 
 
 def create_event(ctx, **kwargs):
@@ -1594,18 +1595,18 @@ class DBAPIUserCredsTest(common.HeatTestCase):
 
     def test_user_creds_get(self):
         user_creds = create_user_creds(self.ctx)
-        ret_user_creds = db_api.user_creds_get(user_creds['id'])
+        ret_user_creds = db_api.user_creds_get(self.ctx, user_creds['id'])
         self.assertEqual(user_creds['password'],
                          ret_user_creds['password'])
 
     def test_user_creds_get_noexist(self):
-        self.assertIsNone(db_api.user_creds_get(123456))
+        self.assertIsNone(db_api.user_creds_get(self.ctx, 123456))
 
     def test_user_creds_delete(self):
         user_creds = create_user_creds(self.ctx)
         self.assertIsNotNone(user_creds['id'])
         db_api.user_creds_delete(self.ctx, user_creds['id'])
-        creds = db_api.user_creds_get(user_creds['id'])
+        creds = db_api.user_creds_get(self.ctx, user_creds['id'])
         self.assertIsNone(creds)
         mock_delete = self.patchobject(session.Session, 'delete')
         err = self.assertRaises(
@@ -2089,7 +2090,8 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
-            self.assertIsNone(db_api.user_creds_get(stacks[s].user_creds_id))
+            self.assertIsNone(db_api.user_creds_get(
+                self.ctx, stacks[s].user_creds_id))
             tmpl_idx = tmpl_idx + 1
 
     def test_stack_get_root_id(self):
@@ -2435,18 +2437,21 @@ class DBAPIResourceDataTest(common.HeatTestCase):
 
     def test_resource_data_set_get(self):
         create_resource_data(self.ctx, self.resource)
-        val = db_api.resource_data_get(self.resource, 'test_resource_key')
+        val = db_api.resource_data_get(
+            self.ctx, self.resource.id, 'test_resource_key')
         self.assertEqual('test_value', val)
 
         # Updating existing resource data
         create_resource_data(self.ctx, self.resource, value='foo')
-        val = db_api.resource_data_get(self.resource, 'test_resource_key')
+        val = db_api.resource_data_get(
+            self.ctx, self.resource.id, 'test_resource_key')
         self.assertEqual('foo', val)
 
         # Testing with encrypted value
         create_resource_data(self.ctx, self.resource,
                              key='encryped_resource_key', redact=True)
-        val = db_api.resource_data_get(self.resource, 'encryped_resource_key')
+        val = db_api.resource_data_get(
+            self.ctx, self.resource.id, 'encryped_resource_key')
         self.assertEqual('test_value', val)
 
         # get all by querying for data
@@ -2469,7 +2474,8 @@ class DBAPIResourceDataTest(common.HeatTestCase):
         self.assertIsNotNone(res_data)
         self.assertEqual('test_value', res_data.value)
 
-        db_api.resource_data_delete(self.resource, 'test_resource_key')
+        db_api.resource_data_delete(self.ctx, self.resource.id,
+                                    'test_resource_key')
         self.assertRaises(exception.NotFound, db_api.resource_data_get_by_key,
                           self.ctx, self.resource.id, 'test_resource_key')
         self.assertIsNotNone(res_data)

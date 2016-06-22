@@ -92,14 +92,16 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
         self.assertIsNotNone(db_s.user_creds_id)
         user_creds_id = db_s.user_creds_id
-        db_creds = ucreds_object.UserCreds.get_by_id(db_s.user_creds_id)
+        db_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, db_s.user_creds_id)
         self.assertIsNotNone(db_creds)
 
         self.stack.delete()
 
         db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
-        db_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        db_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
         self.assertIsNone(db_creds)
         del_db_s = stack_object.Stack.get_by_id(self.ctx,
                                                 stack_id,
@@ -122,7 +124,8 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
         self.assertIsNotNone(db_s.user_creds_id)
         user_creds_id = db_s.user_creds_id
-        db_creds = ucreds_object.UserCreds.get_by_id(db_s.user_creds_id)
+        db_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, db_s.user_creds_id)
         self.assertIsNotNone(db_creds)
 
         ucreds_object.UserCreds.delete(self.ctx, user_creds_id)
@@ -131,7 +134,8 @@ class StackTest(common.HeatTestCase):
 
         db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
-        db_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        db_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
         self.assertIsNone(db_creds)
         del_db_s = stack_object.Stack.get_by_id(self.ctx,
                                                 stack_id,
@@ -192,7 +196,8 @@ class StackTest(common.HeatTestCase):
 
         user_creds_id = db_s.user_creds_id
         self.assertIsNotNone(user_creds_id)
-        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
         self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
 
         self.stack.delete()
@@ -223,7 +228,8 @@ class StackTest(common.HeatTestCase):
 
         user_creds_id = db_s.user_creds_id
         self.assertIsNotNone(user_creds_id)
-        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
         self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
 
         mock_kc.return_value = fakes.FakeKeystoneClient(user_id='nottrustor')
@@ -274,14 +280,16 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
         user_creds_id = db_s.user_creds_id
         self.assertIsNotNone(user_creds_id)
-        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
         self.assertIsNotNone(user_creds)
 
         self.stack.delete()
 
         db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
-        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
         self.assertIsNotNone(user_creds)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)

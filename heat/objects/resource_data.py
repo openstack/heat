@@ -62,12 +62,13 @@ class ResourceData(
 
     @classmethod
     def get_val(cls, resource, key):
-        return db_api.resource_data_get(resource, key)
+        return db_api.resource_data_get(resource.context, resource.id, key)
 
     @classmethod
     def set(cls, resource, key, value, *args, **kwargs):
         db_data = db_api.resource_data_set(
-            resource,
+            resource.context,
+            resource.id,
             key,
             value,
             *args,
@@ -82,4 +83,4 @@ class ResourceData(
 
     @classmethod
     def delete(cls, resource, key):
-        db_api.resource_data_delete(resource, key)
+        db_api.resource_data_delete(resource.context, resource.id, key)

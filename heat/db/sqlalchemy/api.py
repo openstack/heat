@@ -240,13 +240,13 @@ def resource_data_get_all(context, resource_id, data=None):
     return ret
 
 
-def resource_data_get(resource, key):
+def resource_data_get(context, resource_id, key):
     """Lookup value of resource's data by key.
 
     Decrypts resource data if necessary.
     """
-    result = resource_data_get_by_key(resource.context,
-                                      resource.id,
+    result = resource_data_get_by_key(context,
+                                      resource_id,
                                       key)
     if result.redact:
         return crypt.decrypt(result.decrypt_method, result.value)
@@ -297,22 +297,22 @@ def resource_data_get_by_key(context, resource_id, key):
     return result
 
 
-def resource_data_set(resource, key, value, redact=False):
+def resource_data_set(context, resource_id, key, value, redact=False):
     """Save resource's key/value pair to database."""
     if redact:
         method, value = crypt.encrypt(value)
     else:
         method = ''
     try:
-        current = resource_data_get_by_key(resource.context, resource.id, key)
+        current = resource_data_get_by_key(context, resource_id, key)
     except exception.NotFound:
         current = models.ResourceData()
         current.key = key
-        current.resource_id = resource.id
+        current.resource_id = resource_id
     current.redact = redact
     current.value = value
     current.decrypt_method = method
-    current.save(session=resource.context.session)
+    current.save(session=_session(context))
     return current
 
 
@@ -329,8 +329,8 @@ def resource_exchange_stacks(context, resource_id1, resource_id2):
     session.commit()
 
 
-def resource_data_delete(resource, key):
-    result = resource_data_get_by_key(resource.context, resource.id, key)
+def resource_data_delete(context, resource_id, key):
+    result = resource_data_get_by_key(context, resource_id, key)
     result.delete()
 
 
@@ -733,8 +733,8 @@ def user_creds_create(context):
     return result
 
 
-def user_creds_get(user_creds_id):
-    db_result = model_query(None, models.UserCreds).get(user_creds_id)
+def user_creds_get(context, user_creds_id):
+    db_result = model_query(context, models.UserCreds).get(user_creds_id)
     if db_result is None:
         return None
     # Return a dict copy of db results, do not decrypt details into db_result
