@@ -168,7 +168,11 @@ class NeutronConstraintsValidate(common.HeatTestCase):
         ('validate_qos_policy',
             dict(constraint_class=nc.QoSPolicyConstraint,
                  resource_type='policy',
-                 cmd_resource='qos_policy'))
+                 cmd_resource='qos_policy')),
+        ('validate_security_group',
+            dict(constraint_class=nc.SecurityGroupConstraint,
+                 resource_type='security_group',
+                 cmd_resource=None))
     ]
 
     def test_validate(self):

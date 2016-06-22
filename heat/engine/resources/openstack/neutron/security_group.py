@@ -110,7 +110,10 @@ class SecurityGroup(neutron.NeutronResource):
             _('The remote group ID to be associated with this security group '
               'rule. If no value is specified then this rule will use this '
               'security group for the remote_group_id. The remote mode '
-              'parameter must be set to "remote_group_id".')
+              'parameter must be set to "remote_group_id".'),
+            constraints=[
+                constraints.CustomConstraint('neutron.security_group')
+            ]
         ),
         RULE_REMOTE_IP_PREFIX: properties.Schema(
             properties.Schema.STRING,
