@@ -387,7 +387,8 @@ class StackTest(common.HeatTestCase):
                              current_traversal=self.stack.current_traversal,
                              prev_raw_template_id=None,
                              current_deps=None, cache_data=None,
-                             nested_depth=0)
+                             nested_depth=0,
+                             deleted_time=None)
 
         self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id)
