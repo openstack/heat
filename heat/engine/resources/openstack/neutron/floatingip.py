@@ -243,6 +243,7 @@ class FloatingIP(neutron.NeutronResource):
     def handle_delete(self):
         with self.client_plugin().ignore_not_found:
             self.client().delete_floatingip(self.resource_id)
+            return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

@@ -194,13 +194,28 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
         neutronclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).MultipleTimes().AndReturn({'floatingip': {
+        ).AndReturn({'floatingip': {
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_network_id': u'abcd1234'
+        }})
+        neutronclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'floatingip': {
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             'floating_network_id': u'abcd1234'
         }})
 
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndReturn(None)
+        neutronclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'floatingip': {
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_network_id': u'abcd1234'
+        }})
+        neutronclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
+                qe.NeutronClientException(status_code=404))
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
                 qe.NeutronClientException(status_code=404))
@@ -388,6 +403,9 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
+        neutronclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
+                qe.NeutronClientException(status_code=404))
 
         neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -527,7 +545,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         }})
         neutronclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).MultipleTimes().AndReturn({'floatingip': {
+        ).AndReturn({'floatingip': {
             'status': 'ACTIVE',
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             'floating_ip_address': '172.24.4.98'
@@ -626,6 +644,9 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
+        neutronclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
+                qe.NeutronClientException(status_code=404))
 
         neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
