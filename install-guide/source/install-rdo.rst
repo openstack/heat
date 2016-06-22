@@ -374,7 +374,7 @@ Install and configure components
 
         [trustee]
         ...
-        auth_plugin = password
+        auth_type = password
         auth_url = http://controller:35357
         username = heat
         password = HEAT_PASS
