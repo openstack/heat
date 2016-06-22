@@ -1592,39 +1592,34 @@ class EngineService(service.Service):
         :param sort_dir: the direction of the sort ('asc' or 'desc').
         """
 
-        stacks = {}
+        stack_identifiers = None
         if stack_identity is not None:
             st = self._get_stack(cnxt, stack_identity, show_deleted=True)
-            stacks[st.id] = st
 
-            events = event_object.Event.get_all_by_stack(
+            events = list(event_object.Event.get_all_by_stack(
                 cnxt,
                 st.id,
                 limit=limit,
                 marker=marker,
                 sort_keys=sort_keys,
                 sort_dir=sort_dir,
-                filters=filters)
+                filters=filters))
+            stack_identifiers = {st.id: st.identifier()}
         else:
-            events = event_object.Event.get_all_by_tenant(
+            events = list(event_object.Event.get_all_by_tenant(
                 cnxt, limit=limit,
                 marker=marker,
                 sort_keys=sort_keys,
                 sort_dir=sort_dir,
-                filters=filters)
+                filters=filters))
 
-        def get_stack_identifier(stack_id):
-            if stack_id not in stacks:
-                s = stack_object.Stack.get_by_id(
-                    cnxt,
-                    stack_id,
-                    show_deleted=True)
-                if not s:
-                    return
-                stacks[stack_id] = s
-            return stacks[stack_id].identifier()
+            stack_ids = {e.stack_id for e in events}
+            stacks = stack_object.Stack.get_all(cnxt,
+                                                filters={'id': stack_ids},
+                                                show_nested=True)
+            stack_identifiers = {s.id: s.identifier() for s in stacks}
 
-        return [api.format_event(e, get_stack_identifier(e.stack_id))
+        return [api.format_event(e, stack_identifiers.get(e.stack_id))
                 for e in events]
 
     def _authorize_stack_user(self, cnxt, stack, resource_name):
