@@ -47,9 +47,9 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     )
 
     ATTRIBUTES = (
-        OUTPUTS, OUTPUTS_LIST, CURRENT_SIZE,
+        OUTPUTS, OUTPUTS_LIST, CURRENT_SIZE, REFS,
     ) = (
-        'outputs', 'outputs_list', 'current_size',
+        'outputs', 'outputs_list', 'current_size', 'refs',
     )
 
     properties_schema = {
@@ -137,6 +137,11 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             support_status=support.SupportStatus(version='2015.1'),
             type=attributes.Schema.INTEGER
         ),
+        REFS: attributes.Schema(
+            _("A list of resource IDs for the resources in the group."),
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='7.0.0'),
+        ),
     }
     update_policy_schema = {}
 
@@ -165,6 +170,9 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     def get_attribute(self, key, *path):
         if key == self.CURRENT_SIZE:
             return grouputils.get_size(self)
+        if key == self.REFS:
+            refs = grouputils.get_member_refids(self)
+            return refs
         if path:
             members = grouputils.get_members(self)
             attrs = ((rsrc.name, rsrc.FnGetAtt(*path)) for rsrc in members)
