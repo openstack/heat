@@ -58,7 +58,7 @@ class StackUpdate(object):
         def get_error_wait_time(resource):
             return resource.cancel_grace_period()
 
-        self.updater = scheduler.DependencyTaskGroup(
+        updater = scheduler.DependencyTaskGroup(
             self.dependencies(),
             self._resource_update,
             error_wait_time=get_error_wait_time)
@@ -67,7 +67,7 @@ class StackUpdate(object):
             yield cleanup_prev()
 
         try:
-            yield self.updater()
+            yield updater()
         finally:
             self.previous_stack.reset_dependencies()
 

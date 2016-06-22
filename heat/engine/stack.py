@@ -63,7 +63,7 @@ from heat.rpc import worker_client as rpc_worker_client
 LOG = logging.getLogger(__name__)
 
 
-class ForcedCancel(BaseException):
+class ForcedCancel(Exception):
     """Exception raised to cancel task execution."""
 
     def __init__(self, with_rollback=True):
@@ -1414,12 +1414,11 @@ class Stack(collections.Mapping):
             else:
                 stack_tag_object.StackTagList.delete(self.context, self.id)
 
+            check_message = functools.partial(self._check_for_message,
+                                              msg_queue)
             try:
-                updater.start(timeout=self.timeout_secs())
-                yield
-                while not updater.step():
-                    self._check_for_message(msg_queue)
-                    yield
+                yield updater.as_task(timeout=self.timeout_secs(),
+                                      progress_callback=check_message)
             finally:
                 self.reset_dependencies()
 
@@ -1430,17 +1429,16 @@ class Stack(collections.Mapping):
         except scheduler.Timeout:
             self.status = self.FAILED
             self.status_reason = 'Timed out'
-        except (ForcedCancel, Exception) as e:
+        except Exception as e:
             # If rollback is enabled when resource failure occurred,
             # we do another update, with the existing template,
             # so we roll back to the original state
-            should_rollback = self._update_exception_handler(e, action,
-                                                             update_task)
+            should_rollback = self._update_exception_handler(e, action)
             if should_rollback:
                 yield self.update_task(oldstack, action=self.ROLLBACK)
         except BaseException as e:
             with excutils.save_and_reraise_exception():
-                self._update_exception_handler(e, action, update_task)
+                self._update_exception_handler(e, action)
         else:
             LOG.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
@@ -1479,7 +1477,7 @@ class Stack(collections.Mapping):
                                                newstack, action,
                                                (self.status == self.FAILED))
 
-    def _update_exception_handler(self, exc, action, update_task):
+    def _update_exception_handler(self, exc, action):
         """Handle exceptions in update_task.
 
         Decide if we should cancel tasks or not. Also decide if we should
@@ -1493,7 +1491,6 @@ class Stack(collections.Mapping):
         if action != self.UPDATE:
             return False
         if isinstance(exc, ForcedCancel):
-            update_task.updater.cancel_all()
             return exc.with_rollback or not self.disable_rollback
         elif isinstance(exc, exception.ResourceFailure):
             return not self.disable_rollback

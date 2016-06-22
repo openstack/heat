@@ -2719,8 +2719,6 @@ class StackTest(common.HeatTestCase):
                 'foo': {'Type': 'GenericResourceType'}
             }
         })
-        update_task = mock.MagicMock()
-
         self.stack = stack.Stack(utils.dummy_context(),
                                  'test_stack',
                                  tmpl,
@@ -2728,10 +2726,7 @@ class StackTest(common.HeatTestCase):
         self.stack.store()
         self.m.ReplayAll()
 
-        rb = self.stack._update_exception_handler(
-            exc=exc, action=action, update_task=update_task)
-        if isinstance(exc, stack.ForcedCancel):
-            update_task.updater.cancel_all.assert_called_once_with()
+        rb = self.stack._update_exception_handler(exc=exc, action=action)
 
         self.m.VerifyAll()
 
