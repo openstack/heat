@@ -349,6 +349,28 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
         self.assertEqual(e1, exc)
 
+    def test_exception_grace_period_per_task(self):
+        e1 = Exception('e1')
+
+        def get_wait_time(key):
+            if key == 'B':
+                return 5
+            else:
+                return None
+
+        def run_tasks_with_exceptions():
+            self.error_wait_time = get_wait_time
+            tasks = (('A', None), ('B', None), ('C', 'A'))
+            with self._dep_test(*tasks) as dummy:
+                dummy.do_step(1, 'A').InAnyOrder('1')
+                dummy.do_step(1, 'B').InAnyOrder('1')
+                dummy.do_step(2, 'A').InAnyOrder('2').AndRaise(e1)
+                dummy.do_step(2, 'B').InAnyOrder('2')
+                dummy.do_step(3, 'B')
+
+        exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
+        self.assertEqual(e1, exc)
+
 
 class TaskTest(common.HeatTestCase):
 
