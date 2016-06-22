@@ -280,6 +280,37 @@ class DependencyTaskGroupTest(common.HeatTestCase):
                                 run_tasks_with_exceptions, e1)
         self.assertEqual([e1], exc.exceptions)
 
+    def test_exceptions_on_cancel(self):
+        class TestException(Exception):
+            pass
+
+        class ExceptionOnExit(Exception):
+            pass
+
+        cancelled = []
+
+        def task_func(arg):
+            for i in range(4):
+                if i > 1:
+                    raise TestException
+
+                try:
+                    yield
+                except GeneratorExit:
+                    cancelled.append(arg)
+                    raise ExceptionOnExit
+
+        tasks = (('A', None), ('B', None), ('C', None))
+        deps = dependencies.Dependencies(tasks)
+
+        tg = scheduler.DependencyTaskGroup(deps, task_func)
+        task = tg()
+
+        next(task)
+        next(task)
+        self.assertRaises(TestException, next, task)
+        self.assertEqual(len(tasks) - 1, len(cancelled))
+
     def test_exception_grace_period(self):
         e1 = Exception('e1')
 

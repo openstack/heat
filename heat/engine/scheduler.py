@@ -427,7 +427,10 @@ class DependencyTaskGroup(object):
 
     def cancel_all(self, grace_period=None):
         for r in six.itervalues(self._runners):
-            r.cancel(grace_period=grace_period)
+            try:
+                r.cancel(grace_period=grace_period)
+            except Exception as ex:
+                LOG.debug('Exception cancelling task: %s' % six.text_type(ex))
 
     def _cancel_recursively(self, key, runner):
         runner.cancel()
