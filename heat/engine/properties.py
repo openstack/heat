@@ -307,7 +307,7 @@ class Property(object):
 
         return normalised == 'true'
 
-    def get_value(self, value, validate=False):
+    def get_value(self, value, validate=False, template=None):
         """Get value from raw value and sanitize according to data type."""
 
         t = self.type()
@@ -325,7 +325,8 @@ class Property(object):
             _value = self._get_bool(value)
 
         if validate:
-            self.schema.validate_constraints(_value, self.context)
+            self.schema.validate_constraints(_value, self.context,
+                                             template=template)
 
         return _value
 
@@ -357,7 +358,7 @@ class Properties(collections.Mapping):
                         in params_snippet.items())
         return {}
 
-    def validate(self, with_value=True):
+    def validate(self, with_value=True, template=None):
         try:
             for key in self.data:
                 if key not in self.props:
@@ -377,7 +378,9 @@ class Properties(collections.Mapping):
 
                 if with_value:
                     try:
-                        self._get_property_value(key, validate=True)
+                        self._get_property_value(key,
+                                                 validate=True,
+                                                 template=template)
                     except exception.StackValidationFailed as ex:
                         path = [key]
                         path.extend(ex.path)
@@ -412,7 +415,7 @@ class Properties(collections.Mapping):
         if any(res.action == res.INIT for res in deps):
             return True
 
-    def get_user_value(self, key, validate=False):
+    def get_user_value(self, key, validate=False, template=None):
         if key not in self:
             raise KeyError(_('Invalid Property %s') % key)
 
@@ -425,7 +428,7 @@ class Properties(collections.Mapping):
                         validate = False
 
                 value = self.resolve(unresolved_value)
-                return prop.get_value(value, validate)
+                return prop.get_value(value, validate, template=template)
             # Children can raise StackValidationFailed with unique path which
             # is necessary for further use in StackValidationFailed exception.
             # So we need to handle this exception in this method.
@@ -437,15 +440,15 @@ class Properties(collections.Mapping):
             except Exception as e:
                 raise ValueError(six.text_type(e))
 
-    def _get_property_value(self, key, validate=False):
+    def _get_property_value(self, key, validate=False, template=None):
         if key not in self:
             raise KeyError(_('Invalid Property %s') % key)
 
         prop = self.props[key]
         if key in self.data:
-            return self.get_user_value(key, validate)
+            return self.get_user_value(key, validate, template=template)
         elif prop.has_default():
-            return prop.get_value(None, validate)
+            return prop.get_value(None, validate, template=template)
         elif prop.required():
             raise ValueError(_('Property %s not assigned') % key)
 
