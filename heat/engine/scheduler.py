@@ -430,6 +430,8 @@ class DependencyTaskGroup(object):
     def __call__(self):
         """Return a co-routine which runs the task group."""
         raised_exceptions = []
+        thrown_exceptions = []
+
         while any(six.itervalues(self._runners)):
             try:
                 for k, r in self._ready():
@@ -438,7 +440,11 @@ class DependencyTaskGroup(object):
                         del self._graph[k]
 
                 if self._graph:
-                    yield
+                    try:
+                        yield
+                    except Exception:
+                        thrown_exceptions.append(sys.exc_info())
+                        raise
 
                 for k, r in self._running():
                     if r.step():
@@ -450,6 +456,7 @@ class DependencyTaskGroup(object):
                 else:
                     self.cancel_all(grace_period=self.error_wait_time)
                 raised_exceptions.append(exc_info)
+                del exc_info
             except:  # noqa
                 with excutils.save_and_reraise_exception():
                     self.cancel_all()
@@ -459,10 +466,13 @@ class DependencyTaskGroup(object):
                 if self.aggregate_exceptions:
                     raise ExceptionGroup(v for t, v, tb in raised_exceptions)
                 else:
-                    exc_type, exc_val, traceback = raised_exceptions[0]
-                    raise_(exc_type, exc_val, traceback)
+                    if thrown_exceptions:
+                        raise_(*thrown_exceptions[-1])
+                    else:
+                        raise_(*raised_exceptions[0])
             finally:
                 del raised_exceptions
+                del thrown_exceptions
 
     def cancel_all(self, grace_period=None):
         if callable(grace_period):
