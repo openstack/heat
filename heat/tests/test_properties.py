@@ -1899,9 +1899,8 @@ class PropertiesValidationTest(common.HeatTestCase):
         self.assertEqual({}, props)
 
     def test_update_allowed_and_immutable_contradict(self):
-        schema = {'foo': properties.Schema(
-            properties.Schema.STRING,
-            update_allowed=True,
-            immutable=True)}
-        props = properties.Properties(schema, {})
-        self.assertRaises(exception.InvalidSchemaError, props.validate)
+        self.assertRaises(exception.InvalidSchemaError,
+                          properties.Schema,
+                          properties.Schema.STRING,
+                          update_allowed=True,
+                          immutable=True)
