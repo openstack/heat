@@ -168,18 +168,19 @@ class TaskRunner(object):
             LOG.debug('%s sleeping' % six.text_type(self))
             eventlet.sleep(wait_time)
 
-    def __call__(self, wait_time=1, timeout=None):
+    def __call__(self, wait_time=1, timeout=None, progress_callback=None):
         """Start and run the task to completion.
 
         The task will first sleep for zero seconds, then sleep for `wait_time`
         seconds between steps. To avoid sleeping, pass `None` for `wait_time`.
         """
-        self.start(timeout=timeout)
-        # ensure that zero second sleep is applied only if task
-        # has not completed.
-        if not self.done():
-            self._sleep(0 if wait_time is not None else None)
-        self.run_to_completion(wait_time=wait_time)
+        assert self._runner is None, "Task already started"
+
+        started = False
+        for step in self.as_task(timeout=timeout,
+                                 progress_callback=progress_callback):
+            self._sleep(wait_time if (started or wait_time is None) else 0)
+            started = True
 
     def start(self, timeout=None):
         """Initialise the task and run its first step.
@@ -238,16 +239,18 @@ class TaskRunner(object):
 
         return self._done
 
-    def run_to_completion(self, wait_time=1):
+    def run_to_completion(self, wait_time=1, progress_callback=None):
         """Run the task to completion.
 
         The task will sleep for `wait_time` seconds between steps. To avoid
         sleeping, pass `None` for `wait_time`.
         """
-        while not self.step():
+        assert self._runner is not None, "Task not started"
+
+        for step in self.as_task(progress_callback=progress_callback):
             self._sleep(wait_time)
 
-    def as_task(self, timeout=None):
+    def as_task(self, timeout=None, progress_callback=None):
         """Return a task that drives the TaskRunner."""
         resuming = self.started()
         if not resuming:
@@ -262,6 +265,9 @@ class TaskRunner(object):
         while not done:
             try:
                 yield
+
+                if progress_callback is not None:
+                    progress_callback()
             except GeneratorExit:
                 self.cancel()
                 raise
