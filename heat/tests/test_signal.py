@@ -120,8 +120,9 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual('anaccesskey', rs_data.get('access_key'))
         self.assertEqual('verysecret', rs_data.get('secret_key'))
         self.assertEqual('1234', rs_data.get('user_id'))
+        self.assertEqual('password', rs_data.get('password'))
         self.assertEqual(rsrc.resource_id, rs_data.get('user_id'))
-        self.assertEqual(4, len(rs_data))
+        self.assertEqual(5, len(rs_data))
 
     def test_get_user_id(self):
         # Setup
@@ -259,7 +260,8 @@ class SignalTest(common.HeatTestCase):
         mock_has.assert_called_once_with('signal_handler')
         self.assertEqual(second_url, 'cached')
 
-    def test_FnGetAtt_zaqar_signal(self):
+    @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
+    def test_FnGetAtt_zaqar_signal(self, mock_signed_url):
         # Setup
         stack = self._create_stack(TEMPLATE_ZAQAR_SIGNAL)
         rsrc = stack['signal_handler']
@@ -276,10 +278,14 @@ class SignalTest(common.HeatTestCase):
         self.assertIn('username', signal)
         self.assertIn('password', signal)
         self.assertIn('queue_id', signal)
+        mock_signed_url.assert_called_once_with(
+            ['messages'], methods=['GET', 'DELETE'])
 
     @mock.patch.object(stk.Stack, 'cache_data_resource_attribute')
     @mock.patch.object(stk.Stack, 'has_cache_data')
-    def test_FnGetAtt_zaqar_signal_is_cached(self, mock_has, mock_get):
+    @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
+    def test_FnGetAtt_zaqar_signal_is_cached(self, mock_signed_url, mock_has,
+                                             mock_get):
         # Setup
         mock_has.return_value = False
         stack = self._create_stack(TEMPLATE_ZAQAR_SIGNAL)
@@ -454,7 +460,8 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual(1, mock_delete_container.call_count)
         self.assertEqual(1, mock_head.call_count)
 
-    def test_FnGetAtt_zaqar_signal_delete(self):
+    @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
+    def test_FnGetAtt_zaqar_signal_delete(self, mock_signed_url):
         # Setup
         stack = self._create_stack(TEMPLATE_ZAQAR_SIGNAL)
 

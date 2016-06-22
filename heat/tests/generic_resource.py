@@ -199,6 +199,7 @@ class SignalResource(signal_responder.SignalResponder):
                          'signal': attributes.Schema('Get a signal')}
 
     def handle_create(self):
+        self.password = 'password'
         super(SignalResource, self).handle_create()
         self.resource_id_set(self._get_user_id())
 

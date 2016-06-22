@@ -26,7 +26,7 @@ class ZaqarClientPluginTest(common.HeatTestCase):
         plugin = context.clients.client_plugin('zaqar')
         client = plugin.client()
         self.assertEqual('http://server.test:5000/v3', client.api_url)
-        self.assertEqual(1.1, client.api_version)
+        self.assertEqual(2.0, client.api_version)
         self.assertEqual('test_tenant_id',
                          client.conf['auth_opts']['options']['os_project_id'])
 

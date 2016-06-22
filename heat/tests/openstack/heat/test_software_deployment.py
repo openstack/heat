@@ -18,6 +18,8 @@ import uuid
 import mock
 import six
 
+from oslo_serialization import jsonutils
+
 from heat.common import exception as exc
 from heat.common.i18n import _
 from heat.engine.clients.os import nova
@@ -1169,6 +1171,17 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_get_zaqar_queue(self):
         dep_data = {}
 
+        zc = mock.MagicMock()
+        zcc = self.patch(
+            'heat.engine.clients.os.zaqar.ZaqarClientPlugin.create_for_tenant')
+        zcc.return_value = zc
+
+        mock_queue = mock.MagicMock()
+        zc.queue.return_value = mock_queue
+
+        signed_data = {"signature": "hi", "expires": "later"}
+        mock_queue.signed_url.return_value = signed_data
+
         self._create_stack(self.template_zaqar_signal)
 
         def data_set(key, value, redact=False):
@@ -1183,6 +1196,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         queue_id = self.deployment._get_zaqar_signal_queue_id()
         self.assertEqual(queue_id, dep_data['zaqar_signal_queue_id'])
+        self.assertEqual(jsonutils.dumps(signed_data),
+                         dep_data['zaqar_queue_signed_url_data'])
 
         self.assertEqual(queue_id,
                          self.deployment._get_zaqar_signal_queue_id())
