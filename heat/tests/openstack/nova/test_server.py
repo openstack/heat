@@ -125,6 +125,36 @@ resources:
     type: OS::Neutron::Subnet
     properties:
       network: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+  subnet_unreferenced:
+    type: OS::Neutron::Subnet
+    properties:
+      network: 'bbccbbcc-bbcc-bbcc-bbcc-bbccbbccbbcc'
+'''
+
+mult_subnet_template = '''
+heat_template_version: 2013-05-23
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      networks:
+      - network: {get_resource: network}
+  network:
+    type: OS::Neutron::Net
+    properties:
+      name: NewNetwork
+  subnet1:
+    type: OS::Neutron::Subnet
+    properties:
+      network: {get_resource: network}
+      name: NewSubnet1
+  subnet2:
+    type: OS::Neutron::Subnet
+    properties:
+      network: {get_resource: network}
+      name: NewSubnet2
 '''
 
 no_subnet_template = '''
@@ -315,7 +345,7 @@ class ServersTest(common.HeatTestCase):
 
         return fake_interface(port, mac, ip)
 
-    def test_subnet_dependency(self):
+    def test_subnet_dependency_by_network_id(self):
         template, stack = self._setup_test_stack('subnet-test',
                                                  subnet_template)
         server_rsrc = stack['server']
@@ -325,6 +355,22 @@ class ServersTest(common.HeatTestCase):
         server_rsrc.add_dependencies(deps)
         self.assertEqual(4, len(deps))
         self.assertEqual(subnet_rsrc, deps[3])
+        self.assertNotIn(stack['subnet_unreferenced'], deps)
+
+    def test_subnet_dependency_unknown_network_id(self):
+        # The use case here is creating a network + subnets + server
+        # from within one stack
+        template, stack = self._setup_test_stack('subnet-test',
+                                                 mult_subnet_template)
+        server_rsrc = stack['server']
+        subnet1_rsrc = stack['subnet1']
+        subnet2_rsrc = stack['subnet2']
+        deps = []
+        server_rsrc.add_explicit_dependencies(deps)
+        server_rsrc.add_dependencies(deps)
+        self.assertEqual(8, len(deps))
+        self.assertIn(subnet1_rsrc, deps)
+        self.assertIn(subnet2_rsrc, deps)
 
     def test_subnet_nodeps(self):
         template, stack = self._setup_test_stack('subnet-test',

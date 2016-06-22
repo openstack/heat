@@ -1085,8 +1085,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             return
         for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
-                subnet_net = (res.properties.get(subnet.Subnet.NETWORK_ID)
-                              or res.properties.get(subnet.Subnet.NETWORK))
+                subnet_net = res.properties.get(subnet.Subnet.NETWORK)
+                # Be wary of the case where we do not know a subnet's
+                # network. If that's the case, be safe and add it as a
+                # dependency.
+                if not subnet_net:
+                    deps += (self, res)
+                    continue
                 for net in nets:
                     # worry about network_id because that could be the match
                     # assigned to the subnet as well and could have been
@@ -1094,6 +1099,11 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     # still wait on the subnet.
                     net_id = net.get(self.NETWORK_ID)
                     if net_id and net_id == subnet_net:
+                        deps += (self, res)
+                        break
+                    # If we don't know a given net_id right now, it's
+                    # plausible this subnet depends on it.
+                    if not net_id:
                         deps += (self, res)
                         break
 
