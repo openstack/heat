@@ -75,6 +75,10 @@ class SubnetPoolConstraint(NeutronConstraint):
     resource_name = 'subnetpool'
 
 
+class SecurityGroupConstraint(NeutronConstraint):
+    resource_name = 'security_group'
+
+
 class AddressScopeConstraint(NeutronConstraint):
     resource_name = 'address_scope'
     extension = 'address-scope'

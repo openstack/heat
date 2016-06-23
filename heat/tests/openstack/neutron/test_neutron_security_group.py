@@ -11,7 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mox
+
 from neutronclient.common import exceptions as neutron_exc
+from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 from novaclient.v2 import security_group_rules as nova_sgr
 from novaclient.v2 import security_groups as nova_sg
@@ -103,6 +106,7 @@ resources:
         self.m.StubOutWithMock(neutronclient.Client, 'update_security_group')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
+        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
 
     def create_stack(self, templ):
         t = template_format.parse(templ)
@@ -202,6 +206,18 @@ resources:
 
         # create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'security_group',
+            'wwww',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('wwww')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'security_group',
+            'xxxx',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('xxxx')
         neutronclient.Client.create_security_group({
             'security_group': {
                 'name': sg_name,
@@ -544,6 +560,18 @@ resources:
     def test_security_group_exception(self):
         # create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'security_group',
+            'wwww',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('wwww')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'security_group',
+            'xxxx',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('xxxx')
         neutronclient.Client.create_security_group({
             'security_group': {
                 'name': sg_name,
