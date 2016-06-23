@@ -909,7 +909,7 @@ class ValidateTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
         self.mock_isa = mock.patch(
             'heat.engine.resource.Resource.is_service_available',
-            return_value=True)
+            return_value=(True, None))
         self.mock_is_service_available = self.mock_isa.start()
         self.addCleanup(self.mock_isa.stop)
         self.engine = service.EngineService('a', 't')
@@ -1662,7 +1662,8 @@ class ValidateTest(common.HeatTestCase):
                 type: AWS::EC2::Instance
             """)
 
-        self.mock_is_service_available.return_value = False
+        self.mock_is_service_available.return_value = (
+            False, 'Service endpoint not in service catalog.')
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.engine.validate_template,
                                self.ctx,
@@ -1679,7 +1680,8 @@ class ValidateTest(common.HeatTestCase):
                 type: AWS::EC2::Instance
             """)
         engine = service.EngineService('a', 't')
-        self.mock_is_service_available.return_value = False
+        self.mock_is_service_available.return_value = (
+            False, 'Service endpoint not in service catalog.')
 
         res = dict(engine.validate_template(
             self.ctx,

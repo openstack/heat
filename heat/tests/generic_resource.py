@@ -36,7 +36,7 @@ class GenericResource(resource.Resource):
 
     @classmethod
     def is_service_available(cls, context):
-        return True
+        return (True, None)
 
     def handle_create(self):
         LOG.warning(_LW('Creating generic resource (Type "%s")'),

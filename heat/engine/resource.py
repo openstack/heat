@@ -166,7 +166,7 @@ class Resource(object):
     @classmethod
     def _validate_service_availability(cls, context, resource_type):
         try:
-            svc_available = cls.is_service_available(context)
+            (svc_available, reason) = cls.is_service_available(context)
         except Exception as exc:
             ex = exception.ResourceTypeUnavailable(
                 resource_type=resource_type,
@@ -179,7 +179,7 @@ class Resource(object):
                 ex = exception.ResourceTypeUnavailable(
                     resource_type=resource_type,
                     service_name=cls.default_client_name,
-                    reason='Service endpoint not in service catalog.')
+                    reason=reason)
                 LOG.info(six.text_type(ex))
                 raise ex
 
@@ -645,7 +645,7 @@ class Resource(object):
         # resource does not have endpoint, such as RandomString, OS::Heat
         # resources as they are implemented within the engine.
         if cls.default_client_name is None:
-            return True
+            return (True, None)
         client_plugin = clients.Clients(context).client_plugin(
             cls.default_client_name)
 
@@ -655,7 +655,7 @@ class Resource(object):
 
         service_types = client_plugin.service_types
         if not service_types:
-            return True
+            return (True, None)
 
         # NOTE(kanagaraj-manickam): if one of the service_type does
         # exist in the keystone, then considered it as available.
@@ -669,8 +669,16 @@ class Resource(object):
                     not req_extension or client_plugin.has_extension(
                         req_extension))
                 if is_ext_available:
-                    return True
-        return False
+                    return (True, None)
+                else:
+                    reason = _('Required extension {0} in {1} service '
+                               'is not available.')
+                    reason = reason.format(req_extension,
+                                           cls.default_client_name)
+            else:
+                reason = _('{0} {1} endpoint is not in service catalog.')
+                reason = reason.format(cls.default_client_name, service_type)
+        return (False, reason)
 
     def keystone(self):
         return self.client('keystone')
