@@ -1255,7 +1255,7 @@ class Stack(collections.Mapping):
             if stack_id is None:
                 # Failed concurrent update
                 LOG.warning(_LW("Failed to store stack %(name)s with traversal"
-                                " ID %(trvsl_id)s, not trigerring rollback."),
+                                " ID %(trvsl_id)s, not triggering rollback."),
                             {'name': self.name,
                              'trvsl_id': self.current_traversal})
                 return

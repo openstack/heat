@@ -179,7 +179,7 @@ class ThreadGroupManager(object):
             """Callback function that will be passed to GreenThread.link().
 
             Persist the stack state to COMPLETE and FAILED close to
-            releasing the lock to avoid race condtitions.
+            releasing the lock to avoid race conditions.
             """
             if stack is not None and stack.action not in (
                     stack.DELETE, stack.ROLLBACK, stack.UPDATE):

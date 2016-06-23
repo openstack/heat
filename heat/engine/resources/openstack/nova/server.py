@@ -469,7 +469,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         USER_DATA_UPDATE_POLICY: properties.Schema(
             properties.Schema.STRING,
             _('Policy on how to apply a user_data update; either by '
-              'ignorning it or by replacing the entire server.'),
+              'ignoring it or by replacing the entire server.'),
             default='REPLACE',
             constraints=[
                 constraints.AllowedValues(['REPLACE', 'IGNORE']),
@@ -1423,7 +1423,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if metadata is not None or personality:
             limits = self.client_plugin().absolute_limits()
 
-        # if 'security_groups' present for the server and explict 'port'
+        # if 'security_groups' present for the server and explicit 'port'
         # in one or more entries in 'networks', raise validation error
         if networks_with_port and self.properties[self.SECURITY_GROUPS]:
             raise exception.ResourcePropertyConflict(

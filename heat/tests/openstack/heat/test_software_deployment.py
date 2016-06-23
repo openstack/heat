@@ -886,7 +886,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual(details, ca[2])
         self.assertIsNotNone(ca[3])
 
-        # Test bug 1332355, where details contains a translateable message
+        # Test bug 1332355, where details contains a translatable message
         details = {'failed': _('need more memory.')}
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment failed', ret)
