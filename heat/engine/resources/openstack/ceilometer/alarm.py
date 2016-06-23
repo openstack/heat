@@ -346,7 +346,7 @@ class CeilometerAlarm(resource.Resource):
         self.resource_id_set(alarm.alarm_id)
 
         # the watchrule below is for backwards compatibility.
-        # 1) so we don't create watch tasks unneccessarly
+        # 1) so we don't create watch tasks unnecessarily
         # 2) to support CW stats post, we will redirect the request
         #    to ceilometer.
         wr = watchrule.WatchRule(context=self.context,

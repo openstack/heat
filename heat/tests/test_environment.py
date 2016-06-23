@@ -593,7 +593,7 @@ class ChildEnvTest(common.HeatTestCase):
         rr = cenv.user_env_as_dict()['resource_registry']
         self.assertIn('OS::Food', rr)
         self.assertNotIn('OS::Food', rr['resources']['abc'])
-        # make sure the parent env is uneffected
+        # make sure the parent env is unaffected
         innocent2 = penv.get_resource_info('OS::Food', resource_name='abc')
         self.assertEqual(['resources', 'abc', 'OS::Food'], innocent2.path)
 

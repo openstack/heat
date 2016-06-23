@@ -255,7 +255,7 @@ class ClientNotAvailable(HeatException):
 
 
 class WatchRuleNotFound(EntityNotFound):
-    """Keep this for AWS compatiblility."""
+    """Keep this for AWS compatibility."""
     msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
 
 

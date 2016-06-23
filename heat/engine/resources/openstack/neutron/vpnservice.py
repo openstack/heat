@@ -459,7 +459,7 @@ class IPsecSiteConnection(neutron.NeutronResource):
 class IKEPolicy(neutron.NeutronResource):
     """A resource for IKE policy in Neutron.
 
-    The Internet Key Exchange policy identifyies the authentication and
+    The Internet Key Exchange policy identifies the authentication and
     encryption algorithm used during phase one and phase two negotiation of a
     VPN connection.
     """

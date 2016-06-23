@@ -131,7 +131,7 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
         rows_updated = update_input_data(
             cnxt, entity_id, current_traversal, is_update,
             sync_point.atomic_key, serialize_input_data(input_data))
-        # don't aggresively spin; induce some sleep
+        # don't aggressively spin; induce some sleep
         if not rows_updated:
             eventlet.sleep(random.uniform(0, max_wt))
 

@@ -101,7 +101,7 @@ class CloudServer(server.Server):
                 _('How the server should receive the metadata required for '
                   'software configuration. POLL_TEMP_URL is the only '
                   'supported transport on Rackspace Cloud. This property is '
-                  'retained for compatability.'),
+                  'retained for compatibility.'),
                 default=server.Server.POLL_TEMP_URL,
                 update_allowed=True,
                 constraints=[

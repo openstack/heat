@@ -48,7 +48,7 @@ outputs:
     def test_resource_group_zero_novalidate(self):
         # Nested resources should be validated only when size > 0
         # This allows features to be disabled via size=0 without
-        # triggering validation of nested resource custom contraints
+        # triggering validation of nested resource custom constraints
         # e.g images etc in the nested schema.
         nested_template_fail = '''
 heat_template_version: 2013-05-23
