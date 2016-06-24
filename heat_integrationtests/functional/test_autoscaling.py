@@ -726,8 +726,9 @@ outputs:
 
         # suspend the top level stack.
         self.client.actions.suspend(stack_id=stack_identifier)
-        self._wait_for_resource_status(
-            stack_identifier, 'JobServerGroup', 'SUSPEND_COMPLETE')
+
+        # Wait for stack to reach SUSPEND_COMPLETE
+        self._wait_for_stack_status(stack_identifier, 'SUSPEND_COMPLETE')
 
         # Send a signal and an exception will raise
         ex = self.assertRaises(exc.BadRequest,
