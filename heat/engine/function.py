@@ -127,8 +127,8 @@ class Function(object):
 
 
 def resolve(snippet):
-    while isinstance(snippet, Function):
-        snippet = snippet.result()
+    if isinstance(snippet, Function):
+        return snippet.result()
 
     if isinstance(snippet, collections.Mapping):
         return dict((k, resolve(v)) for k, v in snippet.items())

@@ -462,9 +462,9 @@ class ResourceGroup(stack_resource.StackResource):
         # assigned. Pass in a custom resolver to the properties to not
         # error when a parameter does not have a user entered value.
         def ignore_param_resolve(snippet):
-            while isinstance(snippet, function.Function):
+            if isinstance(snippet, function.Function):
                 try:
-                    snippet = snippet.result()
+                    return snippet.result()
                 except exception.UserParameterMissing:
                     return None
 
