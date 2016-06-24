@@ -192,26 +192,6 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     # dedicated API for changing state on signals
     signal_needs_metadata_updates = False
 
-    def _signal_transport_cfn(self):
-        return self.properties[
-            self.SIGNAL_TRANSPORT] == self.CFN_SIGNAL
-
-    def _signal_transport_heat(self):
-        return self.properties[
-            self.SIGNAL_TRANSPORT] == self.HEAT_SIGNAL
-
-    def _signal_transport_none(self):
-        return self.properties[
-            self.SIGNAL_TRANSPORT] == self.NO_SIGNAL
-
-    def _signal_transport_temp_url(self):
-        return self.properties[
-            self.SIGNAL_TRANSPORT] == self.TEMP_URL_SIGNAL
-
-    def _signal_transport_zaqar(self):
-        return self.properties.get(
-            self.SIGNAL_TRANSPORT) == self.ZAQAR_SIGNAL
-
     def _build_properties(self, config_id, action):
         props = {
             'config_id': config_id,
