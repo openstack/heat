@@ -22,7 +22,7 @@ testrepository>=0.0.18 # Apache-2.0/BSD
 testscenarios>=0.4 # Apache-2.0/BSD
 testtools>=1.4.0 # MIT
 testresources>=0.2.4 # Apache-2.0/BSD
-reno>=1.6.2 # Apache2
+reno>=1.8.0 # Apache2
 # Next two are used in integration tests only
 os-collect-config # Apache-2.0
 paramiko>=2.0 # LGPLv2.1+
