@@ -40,6 +40,9 @@ iniset heat_integrationtests.conf DEFAULT minimal_image_ref cirros-0.3.4-x86_64-
 iniset heat_integrationtests.conf DEFAULT admin_username $OS_USERNAME
 iniset heat_integrationtests.conf DEFAULT admin_password $OS_PASSWORD
 
+# Add functional tests to skip
+iniset heat_integrationtests.conf DEFAULT skip_functional_test_list 'AutoScalingSignalTest.test_signal_during_suspend'
+
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
 iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
