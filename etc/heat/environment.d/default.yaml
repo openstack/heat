@@ -8,3 +8,6 @@ resource_registry:
     "OS::Metering::Alarm": "OS::Aodh::Alarm"
     "AWS::RDS::DBInstance": "file:///etc/heat/templates/AWS_RDS_DBInstance.yaml"
     "OS::Ceilometer::Alarm": "OS::Aodh::Alarm"
+    "OS::Ceilometer::GnocchiResourcesAlarm": "OS::Aodh::GnocchiResourcesAlarm"
+    "OS::Ceilometer::GnocchiAggregationByMetricsAlarm": "OS::Aodh::GnocchiAggregationByMetricsAlarm"
+    "OS::Ceilometer::GnocchiAggregationByResourcesAlarm": "OS::Aodh::GnocchiAggregationByResourcesAlarm"
