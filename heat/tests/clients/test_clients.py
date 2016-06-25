@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from aodhclient import exceptions as aodh_exc
 from ceilometerclient import exc as ceil_exc
 from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
@@ -482,6 +483,30 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=True,
             plugin='ceilometer',
             exception=lambda: ceil_exc.HTTPConflict(),
+        )),
+        ('aodh_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='aodh',
+            exception=lambda: aodh_exc.NotFound('not found'),
+        )),
+        ('aodh_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='aodh',
+            exception=lambda: aodh_exc.OverLimit('over'),
+        )),
+        ('aodh_conflict', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=True,
+            plugin='aodh',
+            exception=lambda: aodh_exc.Conflict('conflict'),
         )),
         ('cinder_not_found', dict(
             is_not_found=True,

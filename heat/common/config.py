@@ -380,8 +380,8 @@ def list_opts():
     yield profiler.list_opts()[0]
     yield 'clients', default_clients_opts
 
-    for client in ('barbican', 'ceilometer', 'cinder', 'designate', 'glance',
-                   'heat', 'keystone', 'magnum', 'manila', 'mistral',
+    for client in ('aodh', 'barbican', 'ceilometer', 'cinder', 'designate',
+                   'glance', 'heat', 'keystone', 'magnum', 'manila', 'mistral',
                    'monasca', 'neutron', 'nova', 'sahara', 'senlin', 'swift',
                    'trove', 'zaqar'
                    ):
