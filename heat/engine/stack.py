@@ -1570,14 +1570,12 @@ class Stack(collections.Mapping):
         # There are cases where the user_creds cannot be returned
         # due to credentials truncated when being saved to DB.
         # Ignore this error instead of blocking stack deletion.
-        user_creds = None
         try:
-            user_creds = ucreds_object.UserCreds.get_by_id(
-                self.context, self.user_creds_id)
-        except exception.Error as err:
-            LOG.exception(err)
-            pass
-        return user_creds
+            return ucreds_object.UserCreds.get_by_id(self.context,
+                                                     self.user_creds_id)
+        except exception.Error:
+            LOG.exception(_LE("Failed to retrieve user_creds"))
+            return None
 
     def _delete_credentials(self, stack_status, reason, abandon):
         # Cleanup stored user_creds so they aren't accessible via
@@ -1607,7 +1605,7 @@ class Stack(collections.Mapping):
                             self.clients.client('keystone').delete_trust(
                                 trust_id)
                     except Exception as ex:
-                        LOG.exception(ex)
+                        LOG.exception(_LE("Error deleting trust"))
                         stack_status = self.FAILED
                         reason = ("Error deleting trust: %s" %
                                   six.text_type(ex))
@@ -1635,7 +1633,7 @@ class Stack(collections.Mapping):
                 keystone.delete_stack_domain_project(
                     project_id=self.stack_user_project_id)
             except Exception as ex:
-                LOG.exception(ex)
+                LOG.exception(_LE("Error deleting project"))
                 stack_status = self.FAILED
                 reason = "Error deleting project: %s" % six.text_type(ex)
 
