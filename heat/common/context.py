@@ -173,9 +173,9 @@ class RequestContext(context.RequestContext):
             if auth_uri:
                 return auth_uri
             else:
-                LOG.error('Keystone API endpoint not provided. Set '
-                          'auth_uri in section [clients_keystone] '
-                          'of the configuration file.')
+                LOG.error(_LE('Keystone API endpoint not provided. Set '
+                              'auth_uri in section [clients_keystone] '
+                              'of the configuration file.'))
                 raise exception.AuthorizationFailure()
 
     @property

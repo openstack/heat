@@ -94,7 +94,8 @@ class CheckResource(object):
                                           stack)
                 except exception.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
-                    LOG.info("Replacing resource with new id %s", new_res_id)
+                    LOG.info(_LI("Replacing resource with new id %s"),
+                             new_res_id)
                     rpc_data = sync_point.serialize_input_data(resource_data)
                     self._rpc_client.check_resource(cnxt,
                                                     new_res_id,
@@ -147,7 +148,8 @@ class CheckResource(object):
             # if No, then latest traversal is waiting for delete.
             if (resource_id, is_update) not in graph:
                 key = (resource_id, not is_update)
-        LOG.info('Re-trigger resource: (%s, %s)' % (key[0], key[1]))
+        LOG.info(_LI('Re-trigger resource: (%(key1)s, %(key2)s)'),
+                 {'key1': key[0], 'key2': key[1]})
         predecessors = set(graph[key])
 
         try:
