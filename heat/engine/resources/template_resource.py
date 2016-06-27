@@ -37,7 +37,7 @@ def generate_class_from_template(name, data, param_defaults):
     cls = type(name, (TemplateResource,),
                {'properties_schema': props,
                 'attributes_schema': attrs,
-                '__doc__': tmpl.t.get(tmpl.get_section_name('Description'))})
+                '__doc__': tmpl.t.get(tmpl.DESCRIPTION)})
     return cls
 
 

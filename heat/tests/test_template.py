@@ -363,6 +363,72 @@ class TestTemplateValidate(common.HeatTestCase):
         err = tmpl.validate()
         self.assertIsNone(err)
 
+    def test_get_resources_good(self):
+        """Test get resources successful."""
+
+        t = template_format.parse('''
+            AWSTemplateFormatVersion: 2010-09-09
+            Resources:
+              resource1:
+                Type: AWS::EC2::Instance
+                Properties:
+                  property1: value1
+                Metadata:
+                  foo: bar
+                DependsOn: dummy
+                DeletionPolicy: dummy
+                UpdatePolicy:
+                  foo: bar
+        ''')
+
+        expected = {'resource1': {'Type': 'AWS::EC2::Instance',
+                                  'Properties': {'property1': 'value1'},
+                                  'Metadata': {'foo': 'bar'},
+                                  'DependsOn': 'dummy',
+                                  'DeletionPolicy': 'dummy',
+                                  'UpdatePolicy': {'foo': 'bar'}}}
+
+        tmpl = template.Template(t)
+        self.assertEqual(expected, tmpl[tmpl.RESOURCES])
+
+    def test_get_resources_bad_no_data(self):
+        """Test get resources without any mapping."""
+
+        t = template_format.parse('''
+            AWSTemplateFormatVersion: 2010-09-09
+            Resources:
+              resource1:
+        ''')
+
+        tmpl = template.Template(t)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  tmpl.validate)
+        self.assertEqual('Each Resource must contain a Type key.',
+                         six.text_type(error))
+
+    def test_get_resources_no_type(self):
+        """Test get resources with invalid key."""
+
+        t = template_format.parse('''
+            AWSTemplateFormatVersion: 2010-09-09
+            Resources:
+              resource1:
+                Properties:
+                  property1: value1
+                Metadata:
+                  foo: bar
+                DependsOn: dummy
+                DeletionPolicy: dummy
+                UpdatePolicy:
+                  foo: bar
+        ''')
+
+        tmpl = template.Template(t)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  tmpl.validate)
+        self.assertEqual('Each Resource must contain a Type key.',
+                         six.text_type(error))
+
     def test_template_validate_hot_check_t_digest(self):
         t = {
             'heat_template_version': '2015-04-30',

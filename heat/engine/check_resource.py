@@ -282,7 +282,8 @@ def construct_input_data(rsrc, curr_stack):
     dep_attrs = curr_stack.get_dep_attrs(
         six.itervalues(curr_stack.resources),
         curr_stack.outputs,
-        rsrc.name)
+        rsrc.name,
+        curr_stack.t.OUTPUT_VALUE)
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
                   'reference_id': rsrc.get_reference_id(),

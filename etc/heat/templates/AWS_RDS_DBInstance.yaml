@@ -123,5 +123,7 @@ Resources:
       Timeout: "600"
 
 Outputs:
-  Endpoint.Address: {'Fn::GetAtt': [DatabaseInstance, PublicIp]}
-  Endpoint.Port: {Ref: Port}
+  Endpoint.Address:
+    Value: {'Fn::GetAtt': [DatabaseInstance, PublicIp]}
+  Endpoint.Port:
+    Value: {Ref: Port}

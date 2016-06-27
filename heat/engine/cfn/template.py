@@ -44,6 +44,12 @@ class CfnTemplate(template.Template):
         'Description', 'Mappings', 'Parameters', 'Resources', 'Outputs'
     )
 
+    OUTPUT_KEYS = (
+        OUTPUT_DESCRIPTION, OUTPUT_VALUE,
+    ) = (
+        'Description', 'Value',
+    )
+
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION, ALTERNATE_VERSION])
 
     functions = {
