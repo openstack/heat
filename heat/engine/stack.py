@@ -460,7 +460,8 @@ class Stack(collections.Mapping):
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
              use_stored_context=False, force_reload=False, cache_data=None,
-             resolve_data=True):
+             resolve_data=True, service_check_defer=False,
+             resource_validate=True):
         """Retrieve a Stack from the database."""
         if stack is None:
             stack = stack_object.Stack.get_by_id(
@@ -477,7 +478,9 @@ class Stack(collections.Mapping):
 
         return cls._from_db(context, stack,
                             use_stored_context=use_stored_context,
-                            cache_data=cache_data, resolve_data=resolve_data)
+                            cache_data=cache_data, resolve_data=resolve_data,
+                            service_check_defer=service_check_defer,
+                            resource_validate=resource_validate)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -510,7 +513,8 @@ class Stack(collections.Mapping):
 
     @classmethod
     def _from_db(cls, context, stack, resolve_data=True,
-                 use_stored_context=False, cache_data=None):
+                 use_stored_context=False, cache_data=None,
+                 service_check_defer=False, resource_validate=True):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
         return cls(context, stack.name, template,
@@ -532,7 +536,9 @@ class Stack(collections.Mapping):
                    prev_raw_template_id=stack.prev_raw_template_id,
                    current_deps=stack.current_deps, cache_data=cache_data,
                    nested_depth=stack.nested_depth,
-                   deleted_time=stack.deleted_at)
+                   deleted_time=stack.deleted_at,
+                   service_check_defer=service_check_defer,
+                   resource_validate=resource_validate)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.
