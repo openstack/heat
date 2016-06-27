@@ -614,10 +614,10 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     update_policy_schema = {}
 
     def get_size(self):
-        return len(self.properties.get(self.SERVERS, {}))
+        return len(self.properties[self.SERVERS])
 
     def _resource_names(self):
-        return iter(self.properties.get(self.SERVERS, {}))
+        return iter(self.properties[self.SERVERS])
 
     def get_resource_def(self, include_all=False):
         return dict(self.properties)

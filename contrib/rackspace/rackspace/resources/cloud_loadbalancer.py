@@ -1150,7 +1150,7 @@ class CloudLoadBalancer(resource.Resource):
         self._validate_https_redirect()
         # if a vip specifies and id, it can't specify version or type;
         # otherwise version and type are required
-        for vip in self.properties.get(self.VIRTUAL_IPS, []):
+        for vip in self.properties[self.VIRTUAL_IPS]:
             has_id = vip.get(self.VIRTUAL_IP_ID) is not None
             has_version = vip.get(self.VIRTUAL_IP_IP_VERSION) is not None
             has_type = vip.get(self.VIRTUAL_IP_TYPE) is not None

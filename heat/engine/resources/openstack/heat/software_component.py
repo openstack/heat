@@ -142,7 +142,7 @@ class SoftwareComponent(sc.SoftwareConfig):
 
         # One lifecycle action (e.g. CREATE) can only be associated with one
         # config; otherwise a way to define ordering would be required.
-        configs = self.properties.get(self.CONFIGS, [])
+        configs = self.properties[self.CONFIGS]
         config_actions = set()
         for config in configs:
             actions = config.get(self.CONFIG_ACTIONS)

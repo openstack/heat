@@ -362,7 +362,7 @@ class InstanceGroup(stack_resource.StackResource):
             self._lb_reload()
 
     def _lb_reload(self, exclude=None):
-        lb_names = self.properties.get(self.LOAD_BALANCER_NAMES, None)
+        lb_names = self.properties.get(self.LOAD_BALANCER_NAMES) or []
         if lb_names:
             lb_dict = dict((name, self.stack[name]) for name in lb_names)
             lbutils.reload_loadbalancers(self, lb_dict, exclude)
