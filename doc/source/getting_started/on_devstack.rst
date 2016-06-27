@@ -50,7 +50,7 @@ heat processes will be launched in `screen` with the labels prefixed with `h-`.
 
 Configure DevStack to enable ceilometer and aodh (if using alarms)
 ------------------------------------------------------------------
-To use ceilometer alarms you need to enable ceilometer and aodh in devstack.
+To use aodh alarms you need to enable ceilometer and aodh in devstack.
 Adding the following lines to `[[local|localrc]]` section of `local.conf`
 will enable the services::
 

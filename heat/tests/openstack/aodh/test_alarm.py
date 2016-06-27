@@ -22,7 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import aodh
 from heat.engine.clients.os import ceilometer
-from heat.engine.resources.openstack.ceilometer import alarm
+from heat.engine.resources.openstack.aodh import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
