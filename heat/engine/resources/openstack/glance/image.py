@@ -137,16 +137,17 @@ class GlanceImage(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff and self.TAGS in prop_diff:
-            existing_tags = self.properties.get(self.TAGS, [])
+            existing_tags = self.properties.get(self.TAGS) or []
+            diff_tags = prop_diff[self.TAGS] or []
 
-            new_tags = set(prop_diff[self.TAGS]) - set(existing_tags)
+            new_tags = set(diff_tags) - set(existing_tags)
             for tag in new_tags:
                 self.client(
                     version=self.client_plugin().V2).image_tags.update(
                     self.resource_id,
                     tag)
 
-            removed_tags = set(existing_tags) - set(prop_diff[self.TAGS])
+            removed_tags = set(existing_tags) - set(diff_tags)
             for tag in removed_tags:
                 with self.client_plugin().ignore_not_found:
                     self.client(

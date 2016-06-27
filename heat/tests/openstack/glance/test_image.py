@@ -258,6 +258,21 @@ class GlanceImageTest(common.HeatTestCase):
 
         self._handle_update_tags(prop_diff)
 
+    def test_image_handle_update_remove_tags(self):
+        self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+        self.my_image.t['Properties']['tags'] = ['tag1']
+        prop_diff = {'tags': None}
+
+        self.my_image.handle_update(json_snippet=None,
+                                    tmpl_diff=None,
+                                    prop_diff=prop_diff)
+
+        self.image_tags.delete.assert_called_once_with(
+            self.my_image.resource_id,
+            'tag1'
+        )
+
     def test_image_handle_update_tags_delete_not_found(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
