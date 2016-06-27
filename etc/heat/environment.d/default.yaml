@@ -11,3 +11,4 @@ resource_registry:
     "OS::Ceilometer::GnocchiResourcesAlarm": "OS::Aodh::GnocchiResourcesAlarm"
     "OS::Ceilometer::GnocchiAggregationByMetricsAlarm": "OS::Aodh::GnocchiAggregationByMetricsAlarm"
     "OS::Ceilometer::GnocchiAggregationByResourcesAlarm": "OS::Aodh::GnocchiAggregationByResourcesAlarm"
+    "OS::Ceilometer::CombinationAlarm": "OS::Aodh::CombinationAlarm"

@@ -220,10 +220,50 @@ class AodhAlarm(alarm_base.BaseAlarm):
         return self.client().alarm.get(self.resource_id)
 
 
-class BaseCeilometerAlarm(alarm_base.BaseAlarm):
+class CombinationAlarm(alarm_base.BaseAlarm):
+    """A resource that implements combination of Aodh alarms.
+
+    Allows to use alarm as a combination of other alarms with some operator:
+    activate this alarm if any alarm in combination has been activated or
+    if all alarms in combination have been activated.
+    """
+
+    alarm_type = 'combination'
+
+    # aodhclient doesn't support to manage combination-alarm,
+    # so we use ceilometerclient to manage this resource as before,
+    # after two release cycles, to hidden this resource.
     default_client_name = 'ceilometer'
 
     entity = 'alarms'
+
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        version='7.0.0',
+        message=_('The combination alarm is deprecated and '
+                  'disabled by default in Aodh.'),
+        previous_status=support.SupportStatus(version='2014.1'))
+
+    PROPERTIES = (
+        ALARM_IDS, OPERATOR,
+    ) = (
+        'alarm_ids', 'operator',
+    )
+
+    properties_schema = {
+        ALARM_IDS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of alarm identifiers to combine.'),
+            required=True,
+            constraints=[constraints.Length(min=1)],
+            update_allowed=True),
+        OPERATOR: properties.Schema(
+            properties.Schema.STRING,
+            _('Operator used to combine the alarms.'),
+            constraints=[constraints.AllowedValues(['and', 'or'])],
+            update_allowed=True)
+    }
+    properties_schema.update(alarm_base.common_properties_schema)
 
     def handle_create(self):
         props = self.actions_to_urls(self.properties)
@@ -253,42 +293,8 @@ class BaseCeilometerAlarm(alarm_base.BaseAlarm):
         self.client().alarms.get(self.resource_id)
 
 
-class CombinationAlarm(BaseCeilometerAlarm):
-    """A resource that implements combination of Ceilometer alarms.
-
-    Allows to use alarm as a combination of other alarms with some operator:
-    activate this alarm if any alarm in combination has been activated or
-    if all alarms in combination have been activated.
-    """
-
-    support_status = support.SupportStatus(version='2014.1')
-
-    PROPERTIES = (
-        ALARM_IDS, OPERATOR,
-    ) = (
-        'alarm_ids', 'operator',
-    )
-
-    properties_schema = {
-        ALARM_IDS: properties.Schema(
-            properties.Schema.LIST,
-            _('List of alarm identifiers to combine.'),
-            required=True,
-            constraints=[constraints.Length(min=1)],
-            update_allowed=True),
-        OPERATOR: properties.Schema(
-            properties.Schema.STRING,
-            _('Operator used to combine the alarms.'),
-            constraints=[constraints.AllowedValues(['and', 'or'])],
-            update_allowed=True)
-    }
-    properties_schema.update(alarm_base.common_properties_schema)
-
-    alarm_type = 'combination'
-
-
 def resource_mapping():
     return {
         'OS::Aodh::Alarm': AodhAlarm,
-        'OS::Ceilometer::CombinationAlarm': CombinationAlarm,
+        'OS::Aodh::CombinationAlarm': CombinationAlarm,
     }

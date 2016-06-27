@@ -126,7 +126,7 @@ combination_alarm_template = '''
   "Description" : "Combination Alarm Test",
   "Resources" : {
     "CombinAlarm": {
-     "Type": "OS::Ceilometer::CombinationAlarm",
+     "Type": "OS::Aodh::CombinationAlarm",
      "Properties": {
         "description": "Do stuff in combination",
         "alarm_ids": ["alarm1", "alarm2"],
@@ -139,7 +139,7 @@ combination_alarm_template = '''
 '''
 
 
-class FakeCeilometerAlarm(object):
+class FakeCombinationAlarm(object):
     alarm_id = 'foo'
 
     def __init__(self):
@@ -620,7 +620,7 @@ class CombinationAlarmTest(common.HeatTestCase):
                               'operator': u'and'},
             time_constraints=[],
             severity='low'
-        ).AndReturn(FakeCeilometerAlarm())
+        ).AndReturn(FakeCombinationAlarm())
         self.tmpl = template_format.parse(combination_alarm_template)
         self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
@@ -722,6 +722,6 @@ class CombinationAlarmTest(common.HeatTestCase):
         res = self._prepare_check_resource()
         res.client().alarms.create.return_value = mock.MagicMock(
             alarm_id='2')
-        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        res.client().alarms.get.return_value = FakeCombinationAlarm()
         scheduler.TaskRunner(res.create)()
         self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
