@@ -119,7 +119,7 @@ class CloudServer(server.Server):
         self._rack_connect_started_event_sent = False
 
     def _config_drive(self):
-        user_data_format = self.properties.get(self.USER_DATA_FORMAT, "")
+        user_data_format = self.properties[self.USER_DATA_FORMAT]
         is_sw_config = user_data_format == self.SOFTWARE_CONFIG
         user_data = self.properties.get(self.USER_DATA)
         config_drive = self.properties.get(self.CONFIG_DRIVE)
