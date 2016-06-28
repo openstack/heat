@@ -297,7 +297,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.30'
+    RPC_API_VERSION = '1.31'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -1576,7 +1576,8 @@ class EngineService(service.Service):
 
     @context.request_context
     def list_events(self, cnxt, stack_identity, filters=None, limit=None,
-                    marker=None, sort_keys=None, sort_dir=None):
+                    marker=None, sort_keys=None, sort_dir=None,
+                    nested_depth=None):
         """Lists all events associated with a given stack.
 
         It supports pagination (``limit`` and ``marker``),
@@ -1590,21 +1591,52 @@ class EngineService(service.Service):
         :param marker: the ID of the last event in the previous page
         :param sort_keys: an array of fields used to sort the list
         :param sort_dir: the direction of the sort ('asc' or 'desc').
+        :param nested_depth: Levels of nested stacks to list events for.
         """
 
         stack_identifiers = None
-        if stack_identity is not None:
+        root_stack_identifier = None
+        if stack_identity:
             st = self._get_stack(cnxt, stack_identity, show_deleted=True)
 
-            events = list(event_object.Event.get_all_by_stack(
-                cnxt,
-                st.id,
-                limit=limit,
-                marker=marker,
-                sort_keys=sort_keys,
-                sort_dir=sort_dir,
-                filters=filters))
-            stack_identifiers = {st.id: st.identifier()}
+            if nested_depth:
+                root_stack_identifier = st.identifier()
+                # find all resources associated with a root stack
+                all_r = resource_objects.Resource.get_all_by_root_stack(
+                    cnxt, st.id, None)
+
+                # find stacks to the requested nested_depth
+                stack_ids = {r.stack_id for r in six.itervalues(all_r)}
+                stack_filters = {
+                    'id': stack_ids,
+                    'nested_depth': list(range(nested_depth + 1))
+                }
+
+                stacks = stack_object.Stack.get_all(cnxt,
+                                                    filters=stack_filters,
+                                                    show_nested=True)
+                stack_identifiers = {s.id: s.identifier() for s in stacks}
+
+                if filters is None:
+                    filters = {}
+                filters['stack_id'] = list(stack_identifiers.keys())
+                events = list(event_object.Event.get_all_by_tenant(
+                    cnxt, limit=limit,
+                    marker=marker,
+                    sort_keys=sort_keys,
+                    sort_dir=sort_dir,
+                    filters=filters))
+
+            else:
+                events = list(event_object.Event.get_all_by_stack(
+                    cnxt,
+                    st.id,
+                    limit=limit,
+                    marker=marker,
+                    sort_keys=sort_keys,
+                    sort_dir=sort_dir,
+                    filters=filters))
+                stack_identifiers = {st.id: st.identifier()}
         else:
             events = list(event_object.Event.get_all_by_tenant(
                 cnxt, limit=limit,
@@ -1619,8 +1651,8 @@ class EngineService(service.Service):
                                                 show_nested=True)
             stack_identifiers = {s.id: s.identifier() for s in stacks}
 
-        return [api.format_event(e, stack_identifiers.get(e.stack_id))
-                for e in events]
+        return [api.format_event(e, stack_identifiers.get(e.stack_id),
+                root_stack_identifier) for e in events]
 
     def _authorize_stack_user(self, cnxt, stack, resource_name):
         """Filter access to describe_stack_resource for in-instance users.

@@ -89,14 +89,14 @@ EVENT_KEYS = (
     EVENT_TIMESTAMP,
     EVENT_RES_NAME, EVENT_RES_PHYSICAL_ID, EVENT_RES_ACTION,
     EVENT_RES_STATUS, EVENT_RES_STATUS_DATA, EVENT_RES_TYPE,
-    EVENT_RES_PROPERTIES,
+    EVENT_RES_PROPERTIES, EVENT_ROOT_STACK_ID
 ) = (
     'event_identity',
     STACK_ID, STACK_NAME,
     'event_time',
     RES_NAME, RES_PHYSICAL_ID, RES_ACTION,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
-    'resource_properties',
+    'resource_properties', 'root_stack_id'
 )
 
 NOTIFY_KEYS = (

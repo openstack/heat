@@ -1216,7 +1216,7 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'resource_properties': {u'UserData': u'blah'},
                         u'resource_type': u'AWS::EC2::Instance'}]
 
-        kwargs = {'stack_identity': identity,
+        kwargs = {'stack_identity': identity, 'nested_depth': None,
                   'limit': None, 'sort_keys': None, 'marker': None,
                   'sort_dir': None, 'filters': None}
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
@@ -1224,7 +1224,9 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
         ).AndReturn(identity)
         rpc_client.EngineClient.call(
-            dummy_req.context, ('list_events', kwargs)
+            dummy_req.context,
+            ('list_events', kwargs),
+            version='1.31'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -1262,7 +1264,9 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
         ).AndReturn(identity)
         rpc_client.EngineClient.call(
-            dummy_req.context, ('list_events', {'stack_identity': identity})
+            dummy_req.context,
+            ('list_events', {'stack_identity': identity}),
+            version='1.31'
         ).AndRaise(Exception())
 
         self.m.ReplayAll()
