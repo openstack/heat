@@ -41,14 +41,11 @@ opts = [
                        'multi_cloud is enabled. At least one endpoint needs '
                        'to be specified.')),
     cfg.StrOpt('cert_file',
-               default=None,
                help=_('Optional PEM-formatted certificate chain file.')),
     cfg.StrOpt('key_file',
-               default=None,
                help=_('Optional PEM-formatted file that contains the '
                       'private key.')),
     cfg.StrOpt('ca_file',
-               default=None,
                help=_('Optional CA cert file to use in SSL connections.')),
     cfg.BoolOpt('insecure',
                 default=False,
