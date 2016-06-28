@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
+
 from oslo_concurrency import processutils
 
 from heat_integrationtests.functional import functional_base
@@ -30,6 +32,7 @@ resources:
         stacks = dict((stack.id, stack) for stack in
                       self.client.stacks.list(show_deleted=True))
         self.assertIn(stack_identifier.split('/')[1], stacks)
+        time.sleep(1)
         cmd = "heat-manage purge_deleted 0"
         processutils.execute(cmd, shell=True)
         stacks = dict((stack.id, stack) for stack in
@@ -40,6 +43,7 @@ resources:
         stack_identifier = self.stack_create(template=self.template,
                                              tags="foo,bar")
         self._stack_delete(stack_identifier)
+        time.sleep(1)
         cmd = "heat-manage purge_deleted 0"
         processutils.execute(cmd, shell=True)
         stacks = dict((stack.id, stack) for stack in
