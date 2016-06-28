@@ -68,7 +68,6 @@ IntegrationTestGroup = [
                 default=False,
                 help="Set to True if using self-signed SSL certificates."),
     cfg.StrOpt('ca_file',
-               default=None,
                help="CA certificate to pass for servers that have "
                     "https endpoint."),
     cfg.IntOpt('build_interval',
