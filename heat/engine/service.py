@@ -1514,7 +1514,7 @@ class EngineService(service.Service):
             raise exception.NotSupported(type_name)
 
         try:
-            svc_available = resource_class.is_service_available(cnxt)
+            svc_available = resource_class.is_service_available(cnxt)[0]
         except Exception as exc:
             raise exception.ResourceTypeUnavailable(
                 service_name=resource_class.default_client_name,

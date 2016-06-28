@@ -32,7 +32,7 @@ class ResourceTypeTest(common.HeatTestCase):
 
     @mock.patch.object(res.Resource, 'is_service_available')
     def test_list_resource_types(self, mock_is_service_available):
-        mock_is_service_available.return_value = True
+        mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx)
         self.assertIsInstance(resources, list)
         self.assertIn('AWS::EC2::Instance', resources)
@@ -41,7 +41,7 @@ class ResourceTypeTest(common.HeatTestCase):
     @mock.patch.object(res.Resource, 'is_service_available')
     def test_list_resource_types_deprecated(self,
                                             mock_is_service_available):
-        mock_is_service_available.return_value = True
+        mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
         self.assertEqual(set(['OS::Heat::HARestarter',
                               'OS::Heat::SoftwareDeployments',
@@ -55,7 +55,7 @@ class ResourceTypeTest(common.HeatTestCase):
     @mock.patch.object(res.Resource, 'is_service_available')
     def test_list_resource_types_supported(self,
                                            mock_is_service_available):
-        mock_is_service_available.return_value = True
+        mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx, "SUPPORTED")
         self.assertNotIn(['OS::Neutron::RouterGateway'], resources)
         self.assertIn('AWS::EC2::Instance', resources)
@@ -64,14 +64,15 @@ class ResourceTypeTest(common.HeatTestCase):
     def test_list_resource_types_unavailable(
             self,
             mock_is_service_available):
-        mock_is_service_available.return_value = False
+        mock_is_service_available.return_value = (
+            False, 'Service endpoint not in service catalog.')
         resources = self.eng.list_resource_types(self.ctx)
         # Check for a known resource, not listed
         self.assertNotIn('OS::Nova::Server', resources)
 
     @mock.patch.object(res.Resource, 'is_service_available')
     def test_list_resource_types_with_descr(self, mock_is_service_available):
-        mock_is_service_available.return_value = True
+        mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx,
                                                  with_description=True)
         self.assertIsInstance(resources, list)
@@ -186,7 +187,8 @@ class ResourceTypeTest(common.HeatTestCase):
         with mock.patch.object(
                 generic_rsrc.ResourceWithDefaultClientName,
                 'is_service_available') as mock_is_service_available:
-            mock_is_service_available.return_value = False
+            mock_is_service_available.return_value = (
+                False, 'Service endpoint not in service catalog.')
             ex = self.assertRaises(exception.ResourceTypeUnavailable,
                                    self.eng.resource_schema,
                                    self.ctx,

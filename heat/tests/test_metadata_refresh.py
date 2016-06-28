@@ -221,6 +221,7 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
                            mock_check, mock_handle, *args):
         """Tests a wait condition metadata update after a signal call."""
 
+        mock_available.return_value = (True, None)
         # Setup Stack
         temp = template_format.parse(TEST_TEMPLATE_WAIT_CONDITION)
         template = tmpl.Template(temp)

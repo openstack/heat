@@ -599,7 +599,7 @@ class ResourceRegistry(object):
                 return True
 
             try:
-                return cls.get_class().is_service_available(cnxt)
+                return cls.get_class().is_service_available(cnxt)[0]
             except Exception:
                 return False
 

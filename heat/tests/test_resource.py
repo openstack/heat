@@ -3158,7 +3158,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                         new_callable=mock.PropertyMock) as mock_client_name:
             mock_client_name.return_value = None
             self.assertTrue((generic_rsrc.ResourceWithDefaultClientName.
-                            is_service_available(context=mock.Mock())))
+                            is_service_available(context=mock.Mock())[0]))
 
     @mock.patch.object(clients.OpenStackClients, 'client_plugin')
     def test_default_true_empty_service_types(
@@ -3174,7 +3174,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertTrue(
             generic_rsrc.ResourceWithDefaultClientName.is_service_available(
-                context=mock.Mock()))
+                context=mock.Mock())[0])
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3195,7 +3195,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertTrue(
             generic_rsrc.ResourceWithDefaultClientName.is_service_available(
-                context=mock.Mock()))
+                context=mock.Mock())[0])
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3223,7 +3223,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertFalse(
             generic_rsrc.ResourceWithDefaultClientName.is_service_available(
-                context=mock.Mock()))
+                context=mock.Mock())[0])
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3248,7 +3248,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertTrue(
             generic_rsrc.ResourceWithDefaultClientNameExt.is_service_available(
-                context=mock.Mock()))
+                context=mock.Mock())[0])
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3273,7 +3273,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertFalse(
             generic_rsrc.ResourceWithDefaultClientNameExt.is_service_available(
-                context=mock.Mock()))
+                context=mock.Mock())[0])
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3327,7 +3327,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertFalse(
             generic_rsrc.ResourceWithDefaultClientNameExt.is_service_available(
-                context=mock.Mock()))
+                context=mock.Mock())[0])
         mock_client_plugin_method.assert_called_once_with(
             generic_rsrc.ResourceWithDefaultClientName.default_client_name)
         mock_service_types.assert_called_once_with()
@@ -3363,7 +3363,8 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         with mock.patch.object(
                 generic_rsrc.ResourceWithDefaultClientName,
                 'is_service_available') as mock_method:
-            mock_method.return_value = False
+            mock_method.return_value = (
+                False, 'Service endpoint not in service catalog.')
 
             definition = rsrc_defn.ResourceDefinition(
                 name='Test Resource',

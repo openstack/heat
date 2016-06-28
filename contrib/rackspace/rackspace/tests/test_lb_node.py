@@ -30,7 +30,7 @@ from .test_cloud_loadbalancer import FakeNode  # noqa
 class LBNode(lb_node.LBNode):
     @classmethod
     def is_service_available(cls, context):
-        return True
+        return (True, None)
 
 
 class LBNodeTest(common.HeatTestCase):
