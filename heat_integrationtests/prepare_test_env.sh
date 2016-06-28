@@ -16,7 +16,7 @@
 # in heat_integrationtests.conf.
 # Credentials are required for creating nova flavors and glance images.
 
-set -x
+set -ex
 
 DEST=${DEST:-/opt/stack/new}
 
@@ -27,11 +27,11 @@ cd $DEST/heat/heat_integrationtests
 # Register the flavors for booting test servers
 iniset heat_integrationtests.conf DEFAULT instance_type m1.heat_int
 iniset heat_integrationtests.conf DEFAULT minimal_instance_type m1.heat_micro
-nova flavor-create m1.heat_int 452 512 0 1
-nova flavor-create m1.heat_micro 453 128 0 1
+openstack flavor create m1.heat_int --ram 512
+openstack flavor create m1.heat_micro --ram 128
 
 # Register the glance image for testing
-curl http://tarballs.openstack.org/heat-test-image/fedora-heat-test-image.qcow2 | glance image-create --name fedora-heat-test-image --disk-format qcow2 --container-format bare --visibility public
+curl http://tarballs.openstack.org/heat-test-image/fedora-heat-test-image.qcow2 | openstack image create fedora-heat-test-image --disk-format qcow2 --container-format bare --public
 iniset heat_integrationtests.conf DEFAULT image_ref fedora-heat-test-image
 iniset heat_integrationtests.conf DEFAULT boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 iniset heat_integrationtests.conf DEFAULT heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
