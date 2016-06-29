@@ -95,7 +95,7 @@ class SignalTest(common.HeatTestCase):
 
         tpl = template.Template(template_format.parse(template_string))
         ctx = utils.dummy_context()
-        ctx.tenant_id = 'test_tenant'
+        ctx.tenant = 'test_tenant'
         stack = stk.Stack(ctx, stack_name, tpl, disable_rollback=True)
         with utils.UUIDStub(stack_id):
             stack.store()

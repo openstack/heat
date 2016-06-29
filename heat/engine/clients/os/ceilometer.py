@@ -37,7 +37,7 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
         args = {
             'auth_url': con.auth_url,
             'service_type': self.METERING,
-            'project_name': con.tenant,
+            'project_name': con.project_name,
             'token': lambda: self.auth_token,
             'user_domain_id': con.user_domain,
             'project_domain_id': con.project_domain,

@@ -47,8 +47,10 @@ class KeystonePasswordAuthProtocol(object):
         if not tenant:
             return self._reject_request(env, start_response, auth_url)
         try:
-            ctx = context.RequestContext(username=username, password=password,
-                                         tenant_id=tenant, auth_url=auth_url,
+            ctx = context.RequestContext(username=username,
+                                         password=password,
+                                         tenant=tenant,
+                                         auth_url=auth_url,
                                          user_domain_id=user_domain_id,
                                          is_admin=False)
             auth_ref = ctx.auth_plugin.get_access(self.session)

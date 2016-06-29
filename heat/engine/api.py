@@ -415,11 +415,11 @@ def format_notification_body(stack):
         state = 'Unknown'
     result = {
         rpc_api.NOTIFY_TENANT_ID: stack.context.tenant_id,
-        rpc_api.NOTIFY_USER_ID: stack.context.user,
+        rpc_api.NOTIFY_USER_ID: stack.context.username,
         # deprecated: please use rpc_api.NOTIFY_USERID for user id or
         # rpc_api.NOTIFY_USERNAME for user name.
         rpc_api.NOTIFY_USERID: stack.context.user_id,
-        rpc_api.NOTIFY_USERNAME: stack.context.user,
+        rpc_api.NOTIFY_USERNAME: stack.context.username,
         rpc_api.NOTIFY_STACK_ID: stack.id,
         rpc_api.NOTIFY_STACK_NAME: stack.name,
         rpc_api.NOTIFY_STATE: state,

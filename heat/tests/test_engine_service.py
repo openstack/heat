@@ -396,7 +396,7 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
             self.ctx, self.stack, 'NoSuchResource'))
 
         # not matching credential_id
-        self.ctx.user_id = str(uuid.uuid4())
+        self.ctx.user = str(uuid.uuid4())
         self.assertFalse(self.eng._authorize_stack_user(
             self.ctx, self.stack, 'WebServer'))
 

@@ -360,11 +360,11 @@ class SqlAlchemyTest(common.HeatTestCase):
         st = db_api.stack_get_by_name(self.ctx, 'stack')
         self.assertEqual(UUID1, st.id)
 
-        self.ctx.tenant_id = UUID3
+        self.ctx.tenant = UUID3
         st = db_api.stack_get_by_name(self.ctx, 'stack')
         self.assertIsNone(st)
 
-        self.ctx.tenant_id = UUID2
+        self.ctx.tenant = UUID2
         st = db_api.stack_get_by_name(self.ctx, 'stack')
         self.assertEqual(UUID1, st.id)
 
@@ -402,12 +402,12 @@ class SqlAlchemyTest(common.HeatTestCase):
 
         self.assertEqual(UUID2, result.id)
 
-        self.ctx.tenant_id = str(uuid.uuid4())
+        self.ctx.tenant = str(uuid.uuid4())
         result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
                                                        None)
         self.assertIsNone(result)
 
-        self.ctx.tenant_id = UUID3
+        self.ctx.tenant = UUID3
         result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
                                                        stack1.id)
 
@@ -1012,8 +1012,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx.password = None
         self.ctx.trust_id = 'atrust123'
         self.ctx.trustor_user_id = 'atrustor123'
-        self.ctx.tenant_id = 'atenant123'
-        self.ctx.tenant = 'atenant'
+        self.ctx.tenant = 'atenant123'
+        self.ctx.project_name = 'atenant'
         self.ctx.auth_url = 'anauthurl'
         self.ctx.region_name = 'aregion'
         db_creds = db_api.user_creds_create(self.ctx)
@@ -1080,7 +1080,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(tenant_id, config.tenant)
         self.assertEqual('Heat::Shell', config.group)
         self.assertEqual(conf, config.config['config'])
-        self.ctx.tenant_id = None
+        self.ctx.tenant = None
         self.assertRaises(
             exception.NotFound,
             db_api.software_config_get,
@@ -1179,7 +1179,7 @@ class SqlAlchemyTest(common.HeatTestCase):
             values['stack_user_project_id'], deployment.stack_user_project_id)
 
         # assert not found with invalid context tenant
-        self.ctx.tenant_id = str(uuid.uuid4())
+        self.ctx.tenant = str(uuid.uuid4())
         self.assertRaises(
             exception.NotFound,
             db_api.software_deployment_get,
@@ -1187,7 +1187,7 @@ class SqlAlchemyTest(common.HeatTestCase):
             deployment_id)
 
         # assert found with stack_user_project_id context tenant
-        self.ctx.tenant_id = deployment.stack_user_project_id
+        self.ctx.tenant = deployment.stack_user_project_id
         deployment = db_api.software_deployment_get(self.ctx, deployment_id)
         self.assertIsNotNone(deployment)
         self.assertEqual(values['tenant'], deployment.tenant)
@@ -1308,7 +1308,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
-        self.ctx.tenant_id = str(uuid.uuid4())
+        self.ctx.tenant = str(uuid.uuid4())
         self.assertRaises(
             exception.NotFound,
             db_api.snapshot_get,
@@ -1585,7 +1585,7 @@ class DBAPIUserCredsTest(common.HeatTestCase):
         self.assertEqual('trustor_id', user_creds['trustor_user_id'])
         self.assertIsNone(user_creds['username'])
         self.assertIsNone(user_creds['password'])
-        self.assertEqual(self.ctx.tenant, user_creds['tenant'])
+        self.assertEqual(self.ctx.project_name, user_creds['tenant'])
         self.assertEqual(self.ctx.tenant_id, user_creds['tenant_id'])
 
     def test_user_creds_create_password(self):
@@ -1832,14 +1832,14 @@ class DBAPIStackTest(common.HeatTestCase):
 
     def test_stack_get_returns_none_if_tenant_id_does_not_match(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
-        self.ctx.tenant_id = 'abc'
+        self.ctx.tenant = 'abc'
         stack = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
         self.assertIsNone(stack)
 
     def test_stack_get_tenant_is_stack_user_project_id(self):
         stack = create_stack(self.ctx, self.template, self.user_creds,
                              stack_user_project_id='astackuserproject')
-        self.ctx.tenant_id = 'astackuserproject'
+        self.ctx.tenant = 'astackuserproject'
         ret_stack = db_api.stack_get(self.ctx, stack.id, show_deleted=False)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack.id, ret_stack.id)
@@ -1848,7 +1848,6 @@ class DBAPIStackTest(common.HeatTestCase):
     def test_stack_get_can_return_a_stack_from_different_tenant(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         self.ctx.tenant_id = 'abc'
-        # with tenant_safe = False
         ret_stack = db_api.stack_get(self.ctx, stack.id,
                                      show_deleted=False, tenant_safe=False)
         self.assertEqual(stack.id, ret_stack.id)
@@ -1870,7 +1869,7 @@ class DBAPIStackTest(common.HeatTestCase):
 
         self.assertIsNone(db_api.stack_get_by_name(self.ctx, 'abc'))
 
-        self.ctx.tenant_id = 'abc'
+        self.ctx.tenant = 'abc'
         self.assertIsNone(db_api.stack_get_by_name(self.ctx, 'abc'))
 
     def test_stack_get_all(self):
@@ -1918,15 +1917,15 @@ class DBAPIStackTest(common.HeatTestCase):
         [create_stack(self.ctx, self.template, self.user_creds,
                       **val) for val in values]
 
-        self.ctx.tenant_id = UUID1
+        self.ctx.tenant = UUID1
         stacks = db_api.stack_get_all(self.ctx)
         self.assertEqual(2, len(stacks))
 
-        self.ctx.tenant_id = UUID2
+        self.ctx.tenant = UUID2
         stacks = db_api.stack_get_all(self.ctx)
         self.assertEqual(3, len(stacks))
 
-        self.ctx.tenant_id = UUID3
+        self.ctx.tenant = UUID3
         self.assertEqual([], db_api.stack_get_all(self.ctx))
 
     def test_stack_get_all_with_tenant_safe_false(self):
@@ -1969,10 +1968,10 @@ class DBAPIStackTest(common.HeatTestCase):
         [create_stack(self.ctx, self.template, self.user_creds,
                       **val) for val in values]
 
-        self.ctx.tenant_id = UUID1
+        self.ctx.tenant = UUID1
         self.assertEqual(2, db_api.stack_count_all(self.ctx))
 
-        self.ctx.tenant_id = UUID2
+        self.ctx.tenant = UUID2
         self.assertEqual(3, db_api.stack_count_all(self.ctx))
 
     def test_stack_count_all_with_tenant_safe_false(self):
@@ -2536,7 +2535,7 @@ class DBAPIEventTest(common.HeatTestCase):
         ]
         [create_event(self.ctx, **val) for val in values]
 
-        self.ctx.tenant_id = 'tenant1'
+        self.ctx.tenant = 'tenant1'
         events = db_api.event_get_all_by_tenant(self.ctx)
         self.assertEqual(2, len(events))
         marker = events[0].uuid
@@ -2560,7 +2559,7 @@ class DBAPIEventTest(common.HeatTestCase):
                                                 sort_keys=sort_keys)
         self.assertEqual(2, len(events))
 
-        self.ctx.tenant_id = 'tenant2'
+        self.ctx.tenant = 'tenant2'
         events = db_api.event_get_all_by_tenant(self.ctx)
         self.assertEqual(1, len(events))
 
@@ -2574,11 +2573,11 @@ class DBAPIEventTest(common.HeatTestCase):
         ]
         [create_event(self.ctx, **val) for val in values]
 
-        self.ctx.tenant_id = 'tenant1'
+        self.ctx.tenant = 'tenant1'
         events = db_api.event_get_all_by_stack(self.ctx, self.stack1.id)
         self.assertEqual(2, len(events))
 
-        self.ctx.tenant_id = 'tenant2'
+        self.ctx.tenant = 'tenant2'
         events = db_api.event_get_all_by_stack(self.ctx, self.stack2.id)
         self.assertEqual(1, len(events))
 

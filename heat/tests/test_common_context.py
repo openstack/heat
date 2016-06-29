@@ -59,9 +59,9 @@ class TestRequestContext(common.HeatTestCase):
             username=self.ctx.get('username'),
             password=self.ctx.get('password'),
             aws_creds=self.ctx.get('aws_creds'),
-            tenant=self.ctx.get('tenant'),
-            tenant_id=self.ctx.get('tenant_id'),
-            user_id=self.ctx.get('user_id'),
+            project_name=self.ctx.get('tenant'),
+            tenant=self.ctx.get('tenant_id'),
+            user=self.ctx.get('user_id'),
             auth_url=self.ctx.get('auth_url'),
             roles=self.ctx.get('roles'),
             show_deleted=self.ctx.get('show_deleted'),
@@ -69,7 +69,6 @@ class TestRequestContext(common.HeatTestCase):
             auth_token_info=self.ctx.get('auth_token_info'),
             trustor_user_id=self.ctx.get('trustor_user_id'),
             trust_id=self.ctx.get('trust_id'),
-            user=self.ctx.get('user'),
             region_name=self.ctx.get('region_name'),
             user_domain_id=self.ctx.get('user_domain'),
             project_domain_id=self.ctx.get('project_domain'))
@@ -91,6 +90,11 @@ class TestRequestContext(common.HeatTestCase):
                     k == 'user_domain_id' or
                     k == 'project_domain_id'):
                 continue
+
+            # these values are different between attribute and context
+            if k == 'tenant' or k == 'user':
+                continue
+
             self.assertEqual(self.ctx.get(k), ctx.to_dict().get(k))
             override = '%s_override' % k
             setattr(ctx, k, override)

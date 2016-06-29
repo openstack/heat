@@ -157,7 +157,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         temp = template_format.parse(template)
         template = tmpl.Template(temp)
         ctx = utils.dummy_context()
-        ctx.tenant_id = 'test_tenant'
+        ctx.tenant = 'test_tenant'
         stack = parser.Stack(ctx, utils.random_name(), template,
                              disable_rollback=True)
         stack.store()

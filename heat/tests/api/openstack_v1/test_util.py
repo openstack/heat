@@ -87,7 +87,7 @@ class TestPolicyEnforce(common.HeatTestCase):
     def setUp(self):
         super(TestPolicyEnforce, self).setUp()
         self.req = wsgi.Request({})
-        self.req.context = context.RequestContext(tenant_id='foo',
+        self.req.context = context.RequestContext(tenant='foo',
                                                   is_admin=False)
 
         class DummyController(object):
@@ -112,7 +112,7 @@ class TestPolicyEnforce(common.HeatTestCase):
 
     @mock.patch.object(policy.Enforcer, 'enforce')
     def test_policy_enforce_tenant_mismatch_is_admin(self, mock_enforce):
-        self.req.context = context.RequestContext(tenant_id='foo',
+        self.req.context = context.RequestContext(tenant='foo',
                                                   is_admin=True)
         mock_enforce.return_value = True
 

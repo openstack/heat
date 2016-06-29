@@ -44,7 +44,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'auth_version': '2.0',
-            'tenant_name': con.tenant,
+            'tenant_name': con.project_name,
             'user': con.username,
             'key': None,
             'authurl': None,
