@@ -88,7 +88,7 @@ class CinderVolumeType(resource.Resource):
     def _add_projects_access(self, projects):
         for project in projects:
             project_id = self.client_plugin('keystone').get_project_id(project)
-            self.cinder().volume_type_access.add_project_access(
+            self.client().volume_type_access.add_project_access(
                 self.resource_id, project_id)
 
     def handle_create(self):
@@ -130,13 +130,13 @@ class CinderVolumeType(resource.Resource):
                 volume_type.set_keys(new_keys)
         # Update the projects access for volume type
         if self.PROJECTS in prop_diff and not is_public:
-            old_access_list = self.cinder().volume_type_access.list(
+            old_access_list = self.client().volume_type_access.list(
                 self.resource_id)
             old_projects = [ac._info['project_id'] for ac in old_access_list]
             new_projects = prop_diff.get(self.PROJECTS)
             # first remove the old projects access
             for project_id in (set(old_projects) - set(new_projects)):
-                self.cinder().volume_type_access.remove_project_access(
+                self.client().volume_type_access.remove_project_access(
                     self.resource_id, project_id)
             # add the new projects access
             self._add_projects_access(set(new_projects) - set(old_projects))
@@ -145,7 +145,7 @@ class CinderVolumeType(resource.Resource):
         super(CinderVolumeType, self).validate()
 
         if self.properties[self.PROJECTS]:
-            if self.cinder().volume_api_version == 1:
+            if self.client().volume_api_version == 1:
                 raise exception.NotSupported(
                     feature=_('Using Cinder API V1, volume type access'))
             if self.properties[self.IS_PUBLIC]:
