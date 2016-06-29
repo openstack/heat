@@ -241,7 +241,6 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
         dict(
             environ=None,
             headers={},
-            expected_exception=None,
             context_dict={
                 'auth_token': None,
                 'auth_token_info': None,
@@ -274,7 +273,6 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'X-Auth-Url': 'http://192.0.2.1:5000/v1',
                 'X-Roles': 'role1,role2,role3'
             },
-            expected_exception=None,
             context_dict={
                 'auth_token': 'atoken',
                 'auth_url': 'http://192.0.2.1:5000/v1',
@@ -304,7 +302,6 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'X-Auth-Url': 'http://192.0.2.1:5000/v1',
                 'X-Roles': 'role1,role2,role3',
             },
-            expected_exception=None,
             context_dict={
                 'auth_token': 'atoken',
                 'auth_url': 'http://192.0.2.1:5000/v1',
@@ -333,7 +330,6 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'X-Auth-Url': 'http://192.0.2.1:5000/v1',
                 'X-Roles': 'role1,role2,role3',
             },
-            expected_exception=None,
             context_dict={
                 'auth_token': 'atoken2',
                 'auth_token_info': {'info': 123},
@@ -351,14 +347,6 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
                 'username': None
             })
-    ), (
-        'malformed_roles',
-        dict(
-            environ=None,
-            headers={
-                'X-Roles': [],
-            },
-            expected_exception=exception.NotAuthenticated)
     )]
 
     def setUp(self):
@@ -372,15 +360,12 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
         middleware = context.ContextMiddleware(None, None)
         request = webob.Request.blank('/stacks', headers=self.headers,
                                       environ=self.environ)
-        if self.expected_exception:
-            self.assertRaises(
-                self.expected_exception, middleware.process_request, request)
-        else:
-            self.assertIsNone(middleware.process_request(request))
-            ctx = request.context.to_dict()
-            for k, v in self.context_dict.items():
-                self.assertEqual(v, ctx[k], 'Key %s values do not match' % k)
-            self.assertIsNotNone(ctx.get('request_id'))
+
+        self.assertIsNone(middleware.process_request(request))
+        ctx = request.context.to_dict()
+        for k, v in self.context_dict.items():
+            self.assertEqual(v, ctx[k], 'Key %s values do not match' % k)
+        self.assertIsNotNone(ctx.get('request_id'))
 
     def test_context_middleware_with_requestid(self):
 
@@ -389,14 +374,11 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                                       environ=self.environ)
         req_id = 'req-5a63f0d7-1b69-447b-b621-4ea87cc7186d'
         request.environ[request_id.ENV_REQUEST_ID] = req_id
-        if self.expected_exception:
-            self.assertRaises(
-                self.expected_exception, middleware.process_request, request)
-        else:
-            self.assertIsNone(middleware.process_request(request))
-            ctx = request.context.to_dict()
-            for k, v in self.context_dict.items():
-                self.assertEqual(v, ctx[k], 'Key %s values do not match' % k)
-            self.assertEqual(
-                ctx.get('request_id'), req_id,
-                'Key request_id values do not match')
+
+        self.assertIsNone(middleware.process_request(request))
+        ctx = request.context.to_dict()
+        for k, v in self.context_dict.items():
+            self.assertEqual(v, ctx[k], 'Key %s values do not match' % k)
+        self.assertEqual(
+            ctx.get('request_id'), req_id,
+            'Key request_id values do not match')
