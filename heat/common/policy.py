@@ -62,7 +62,7 @@ class Enforcer(object):
            :returns: A non-False value if access is allowed.
         """
         do_raise = False if not exc else True
-        credentials = context.to_dict()
+        credentials = context.to_policy_values()
         return self.enforcer.enforce(rule, target, credentials,
                                      do_raise, exc=exc, *args, **kwargs)
 
