@@ -6,10 +6,10 @@ The Heat team uses the `heat-specs
 specification reviews. Detailed information can be found `here
 <https://wiki.openstack.org/wiki/Blueprints#Heat>`_.
 
-Please note that we use a `template
-<http://git.openstack.org/cgit/openstack/heat-specs/tree/specs/template.rst>`_
-for spec submissions. It is not required to fill out all sections in the
-template.
+Please note that we use a template for spec submissions. Please use the
+`template for the latest release
+<http://git.openstack.org/cgit/openstack/heat-specs/tree/specs/templates>`_.
+It is not required to fill out all sections in the template.
 
 Spec Notes
 ----------
