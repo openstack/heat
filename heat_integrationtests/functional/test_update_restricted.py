@@ -73,6 +73,9 @@ class UpdateRestrictedStackTest(functional_base.FunctionalTestsBase):
             self._check_for_restriction_reason(resource_events,
                                                reason_update_restrict))
 
+        # Ensure the timestamp changes, since this will be very quick
+        time.sleep(1)
+
         # check update succeeds - with only 'replace' restricted
         self.update_stack(stack_identifier, update_template,
                           env_replace_restrict,
