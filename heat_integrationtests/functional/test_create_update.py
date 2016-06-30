@@ -26,7 +26,7 @@ test_template_one_resource = {
                 'value': 'Test1',
                 'fail': False,
                 'update_replace': False,
-                'wait_secs': 0,
+                'wait_secs': 1,
                 'action_wait_secs': {'create': 1},
                 'client_name': 'nova',
                 'entity_name': 'servers',
