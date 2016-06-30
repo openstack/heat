@@ -196,7 +196,7 @@ class StackTest(common.HeatTestCase):
 
     def test_load_nonexistant_id(self):
         self.assertRaises(exception.NotFound, stack.Stack.load,
-                          None, -1)
+                          self.ctx, -1)
 
     def test_total_resources_empty(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,

@@ -128,7 +128,7 @@ class WaitConditionTest(common.HeatTestCase):
                          rsrc.state)
 
         r = resource_objects.Resource.get_by_name_and_stack(
-            None, 'WaitHandle', self.stack.id)
+            self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
@@ -148,7 +148,7 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = resource_objects.Resource.get_by_name_and_stack(
-            None, 'WaitHandle', self.stack.id)
+            self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
@@ -171,7 +171,7 @@ class WaitConditionTest(common.HeatTestCase):
                          rsrc.state)
 
         r = resource_objects.Resource.get_by_name_and_stack(
-            None, 'WaitHandle', self.stack.id)
+            self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
@@ -192,7 +192,7 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = resource_objects.Resource.get_by_name_and_stack(
-            None, 'WaitHandle', self.stack.id)
+            self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 

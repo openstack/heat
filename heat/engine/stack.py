@@ -1378,7 +1378,7 @@ class Stack(collections.Mapping):
         prev_tmpl_id = self.prev_raw_template_id
         # newstack.t may have been pre-stored, so save with that one
         bu_tmpl, newstack.t = newstack.t, copy.deepcopy(newstack.t)
-        self.prev_raw_template_id = bu_tmpl.store()
+        self.prev_raw_template_id = bu_tmpl.store(self.context)
         self.action = action
         self.status = self.IN_PROGRESS
         self.status_reason = 'Stack %s started' % action

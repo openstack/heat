@@ -278,7 +278,7 @@ class StackCreateTest(common.HeatTestCase):
         mock_tg.return_value = tools.DummyThreadGroup()
 
         stk = tools.get_stack(stack_name, self.ctx, with_params=True)
-        tmpl_id = stk.t.store()
+        tmpl_id = stk.t.store(self.ctx)
 
         mock_load = self.patchobject(templatem.Template, 'load',
                                      return_value=stk.t)
