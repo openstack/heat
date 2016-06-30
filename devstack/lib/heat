@@ -32,6 +32,22 @@ set +o xtrace
 # set up default directories
 GITDIR["python-heatclient"]=$DEST/python-heatclient
 
+# heat service
+HEAT_REPO=${HEAT_REPO:-${GIT_BASE}/openstack/heat.git}
+HEAT_BRANCH=${HEAT_BRANCH:-master}
+
+# python heat client library
+GITREPO["python-heatclient"]=${HEATCLIENT_REPO:-${GIT_BASE}/openstack/python-heatclient.git}
+GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
+
+# heat-cfntools server agent
+HEAT_CFNTOOLS_REPO=${HEAT_CFNTOOLS_REPO:-${GIT_BASE}/openstack/heat-cfntools.git}
+HEAT_CFNTOOLS_BRANCH=${HEAT_CFNTOOLS_BRANCH:-master}
+
+# heat example templates and elements
+HEAT_TEMPLATES_REPO=${HEAT_TEMPLATES_REPO:-${GIT_BASE}/openstack/heat-templates.git}
+HEAT_TEMPLATES_BRANCH=${HEAT_TEMPLATES_BRANCH:-master}
+
 # Toggle for deploying Heat-API under HTTPD + mod_wsgi
 HEAT_USE_MOD_WSGI=${HEAT_USE_MOD_WSGI:-False}
 
