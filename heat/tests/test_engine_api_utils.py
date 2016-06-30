@@ -208,6 +208,8 @@ class FormatTest(common.HeatTestCase):
     def test_format_stack_resource_with_nested_stack(self):
         res = self.stack['generic4']
         nested_id = {'foo': 'bar'}
+        res.has_nested = mock.Mock()
+        res.has_nested.return_value = True
         res.nested_identifier = mock.Mock()
         res.nested_identifier.return_value = nested_id
 
@@ -216,8 +218,6 @@ class FormatTest(common.HeatTestCase):
 
     def test_format_stack_resource_with_nested_stack_none(self):
         res = self.stack['generic4']
-        res.nested = mock.Mock()
-        res.nested.return_value = None
 
         resource_keys = set((
             rpc_api.RES_CREATION_TIME,
@@ -263,6 +263,8 @@ class FormatTest(common.HeatTestCase):
         res = self.stack['generic4']
         nested_id = {'foo': 'bar'}
 
+        res.has_nested = mock.Mock()
+        res.has_nested.return_value = True
         res.nested_identifier = mock.Mock()
         res.nested_identifier.return_value = nested_id
 

@@ -453,7 +453,14 @@ class Resource(object):
                         raise
 
     def has_nested(self):
-        # common resources have not nested, StackResource overrides it
+        """Return True if the resource has an existing nested stack.
+
+        For most resource types, this will always return False. StackResource
+        subclasses return True when appropriate. Resource subclasses that may
+        return True must also provide a nested_identifier() method to return
+        the identifier of the nested stack, and a nested() method to return a
+        Stack object for the nested stack.
+        """
         return False
 
     def has_hook(self, hook):

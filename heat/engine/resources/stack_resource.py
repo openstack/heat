@@ -126,16 +126,16 @@ class StackResource(resource.Resource):
                     cancel_with_rollback=False)
 
     def nested_identifier(self):
-        if not self.resource_id:
-            raise AttributeError()
+        if self.resource_id is None:
+            return None
         return identifier.HeatIdentifier(
             self.context.tenant_id,
             self.physical_resource_name(),
             self.resource_id)
 
     def has_nested(self):
-        # This class and its subclasses manage nested stacks
-        return True
+        """Return True if the resource has an existing nested stack."""
+        return self.resource_id is not None or self._nested is not None
 
     def nested(self):
         """Return a Stack object representing the nested (child) stack.
