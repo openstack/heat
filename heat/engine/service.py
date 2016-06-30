@@ -855,7 +855,7 @@ class EngineService(service.Service):
         # any environment provided into the existing one and attempt
         # to use the existing stack template, if one is not provided.
         if args.get(rpc_api.PARAM_EXISTING):
-            existing_env = current_stack.env.user_env_as_dict()
+            existing_env = current_stack.env.env_as_dict()
             existing_params = existing_env[env_fmt.PARAMETERS]
             clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
             retained = dict((k, v) for k, v in existing_params.items()

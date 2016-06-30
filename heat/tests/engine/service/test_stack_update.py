@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import messaging
 from heat.common import service_utils
 from heat.common import template_format
+from heat.db import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
@@ -216,6 +217,65 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                              tmpl.env.params)
             self.assertEqual(stk.identifier(), result)
 
+    def test_stack_update_existing_encrypted_parameters(self):
+        # Create the stack with encryption enabled
+        # On update encrypted_param_names should be used from existing stack
+        hidden_param_template = u'''
+heat_template_version: 2013-05-23
+parameters:
+   param2:
+     type: string
+     description: value2.
+     hidden: true
+resources:
+   a_resource:
+       type: GenericResourceType
+'''
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
+                              enforce_type=True)
+
+        stack_name = 'service_update_test_stack_encrypted_parameters'
+        t = template_format.parse(hidden_param_template)
+        env1 = environment.Environment({'param2': 'bar'})
+        stk = stack.Stack(self.ctx, stack_name,
+                          templatem.Template(t, env=env1))
+        stk.store()
+        stk.set_stack_user_project_id('1234')
+
+        # Verify that hidden parameters are stored encrypted
+        db_tpl = db_api.raw_template_get(self.ctx, stk.t.id)
+        db_params = db_tpl.environment['parameters']
+        self.assertEqual('cryptography_decrypt_v1', db_params['param2'][0])
+        self.assertNotEqual("foo", db_params['param2'][1])
+
+        # Verify that loaded stack has decrypted paramters
+        loaded_stack = stack.Stack.load(self.ctx, stack_id=stk.id)
+        params = loaded_stack.t.env.params
+        self.assertEqual('bar', params.get('param2'))
+
+        update_params = {'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'event_sinks': [],
+                         'parameters': {},
+                         'resource_registry': {'resources': {}}}
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
+
+        with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            stk.update = mock.Mock()
+            mock_stack.load.return_value = loaded_stack
+            mock_stack.validate.return_value = None
+            result = self.man.update_stack(self.ctx, stk.identifier(),
+                                           t,
+                                           update_params,
+                                           None, api_args)
+            tmpl = mock_stack.call_args[0][2]
+            self.assertEqual({u'param2': u'bar'}, tmpl.env.params)
+            # encrypted_param_names must be passed from existing to new
+            # stack otherwise the updated stack won't decrypt the params
+            self.assertEqual([u'param2'], tmpl.env.encrypted_param_names)
+            self.assertEqual(stk.identifier(), result)
+
     def test_stack_update_existing_parameters_remove(self):
         """Test case for updating stack with changed parameters.
 
@@ -288,7 +348,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         stk = utils.parse_stack(t, stack_name=stack_name, params=intial_params,
                                 files=initial_files)
         stk.set_stack_user_project_id('1234')
-        self.assertEqual(intial_params, stk.t.env.user_env_as_dict())
+        self.assertEqual(intial_params, stk.t.env.env_as_dict())
 
         expected_reg = {'OS::Foo': 'foo.yaml',
                         'OS::Foo2': 'newfoo2.yaml',
@@ -317,7 +377,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                                            api_args)
             tmpl = mock_stack.call_args[0][2]
             self.assertEqual(expected_env,
-                             tmpl.env.user_env_as_dict())
+                             tmpl.env.env_as_dict())
             self.assertEqual(expected_files,
                              tmpl.files.files)
             self.assertEqual(stk.identifier(), result)
@@ -361,7 +421,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                                            None, api_args)
             tmpl = mock_stack.call_args[0][2]
             self.assertEqual(expected_env,
-                             tmpl.env.user_env_as_dict())
+                             tmpl.env.env_as_dict())
             self.assertEqual(stk.identifier(), result)
 
     def test_stack_update_reuses_api_params(self):

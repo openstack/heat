@@ -138,7 +138,7 @@ class Template(collections.Mapping):
         rt = {
             'template': self.t,
             'files_id': self.files.store(context),
-            'environment': self.env.user_env_as_dict()
+            'environment': self.env.env_as_dict()
         }
         if self.id is None:
             new_rt = template_object.RawTemplate.create(context, rt)
