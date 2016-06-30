@@ -747,6 +747,19 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertIndexMembers(engine, 'stack', 'ix_stack_owner_id',
                                 ['owner_id'])
 
+    def _check_073(self, engine, data):
+        # check if column still exists and is not nullable.
+        self.assertColumnIsNotNullable(engine, 'resource_data', 'resource_id')
+        # Ensure that only one foreign key exists and is created as expected.
+        inspector = sqlalchemy.engine.reflection.Inspector.from_engine(engine)
+        resource_data_fkeys = inspector.get_foreign_keys('resource_data')
+        self.assertEqual(1, len(resource_data_fkeys))
+        fk = resource_data_fkeys[0]
+        self.assertEqual('fk_resource_id', fk['name'])
+        self.assertEqual(['resource_id'], fk['constrained_columns'])
+        self.assertEqual('resource', fk['referred_table'])
+        self.assertEqual(['id'], fk['referred_columns'])
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

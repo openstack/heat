@@ -276,10 +276,11 @@ class ResourceData(BASE, HeatBase):
     value = sqlalchemy.Column('value', sqlalchemy.Text)
     redact = sqlalchemy.Column('redact', sqlalchemy.Boolean)
     decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
-    resource_id = sqlalchemy.Column('resource_id',
-                                    sqlalchemy.Integer,
-                                    sqlalchemy.ForeignKey('resource.id'),
-                                    nullable=False)
+    resource_id = sqlalchemy.Column(
+        'resource_id', sqlalchemy.Integer,
+        sqlalchemy.ForeignKey(column='resource.id', name='fk_resource_id',
+                              ondelete='CASCADE'),
+        nullable=False)
 
 
 class Resource(BASE, HeatBase, StateAware):
@@ -303,7 +304,8 @@ class Resource(BASE, HeatBase, StateAware):
     stack = relationship(Stack, backref=backref('resources'))
     root_stack_id = sqlalchemy.Column(sqlalchemy.String(36), index=True)
     data = relationship(ResourceData,
-                        cascade="all,delete",
+                        cascade="all",
+                        passive_deletes=True,
                         backref=backref('resource'))
 
     # Override timestamp column to store the correct value: it should be the
