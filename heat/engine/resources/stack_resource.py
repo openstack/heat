@@ -407,7 +407,8 @@ class StackResource(resource.Resource):
         if status == self.IN_PROGRESS:
             return False
         elif status == self.COMPLETE:
-            ret = stack_lock.StackLock.get_engine_id(self.resource_id) is None
+            ret = stack_lock.StackLock.get_engine_id(
+                self.context, self.resource_id) is None
             if ret:
                 # Reset nested, to indicate we changed status
                 self._nested = None

@@ -1776,7 +1776,7 @@ class DBAPIStackTest(common.HeatTestCase):
             'timeout': '90',
             'current_traversal': 'another-dummy-uuid',
         }
-        db_api.stack_lock_create(stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, stack.id, UUID1)
         observed = db_api.persist_state_and_release_lock(self.ctx, stack.id,
                                                          UUID1, values)
         self.assertIsNone(observed)
@@ -1798,7 +1798,7 @@ class DBAPIStackTest(common.HeatTestCase):
             'timeout': '90',
             'current_traversal': 'another-dummy-uuid',
         }
-        db_api.stack_lock_create(stack.id, UUID2)
+        db_api.stack_lock_create(self.ctx, stack.id, UUID2)
         observed = db_api.persist_state_and_release_lock(self.ctx, stack.id,
                                                          UUID1, values)
         self.assertTrue(observed)
@@ -1813,7 +1813,7 @@ class DBAPIStackTest(common.HeatTestCase):
             'timeout': '90',
             'current_traversal': 'another-dummy-uuid',
         }
-        db_api.stack_lock_create(stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, stack.id, UUID1)
         observed = db_api.persist_state_and_release_lock(self.ctx, UUID2,
                                                          UUID1, values)
         self.assertTrue(observed)
@@ -2355,63 +2355,66 @@ class DBAPIStackLockTest(common.HeatTestCase):
         self.stack = create_stack(self.ctx, self.template, self.user_creds)
 
     def test_stack_lock_create_success(self):
-        observed = db_api.stack_lock_create(self.stack.id, UUID1)
+        observed = db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
         self.assertIsNone(observed)
 
     def test_stack_lock_create_fail_double_same(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        observed = db_api.stack_lock_create(self.stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
         self.assertEqual(UUID1, observed)
 
     def test_stack_lock_create_fail_double_different(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        observed = db_api.stack_lock_create(self.stack.id, UUID2)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_create(self.ctx, self.stack.id, UUID2)
         self.assertEqual(UUID1, observed)
 
     def test_stack_lock_get_id_success(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        observed = db_api.stack_lock_get_engine_id(self.stack.id)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_get_engine_id(self.ctx, self.stack.id)
         self.assertEqual(UUID1, observed)
 
     def test_stack_lock_get_id_return_none(self):
-        observed = db_api.stack_lock_get_engine_id(self.stack.id)
+        observed = db_api.stack_lock_get_engine_id(self.ctx, self.stack.id)
         self.assertIsNone(observed)
 
     def test_stack_lock_steal_success(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        observed = db_api.stack_lock_steal(self.stack.id, UUID1, UUID2)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_steal(self.ctx, self.stack.id,
+                                           UUID1, UUID2)
         self.assertIsNone(observed)
 
     def test_stack_lock_steal_fail_gone(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        db_api.stack_lock_release(self.stack.id, UUID1)
-        observed = db_api.stack_lock_steal(self.stack.id, UUID1, UUID2)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        db_api.stack_lock_release(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_steal(self.ctx, self.stack.id,
+                                           UUID1, UUID2)
         self.assertTrue(observed)
 
     def test_stack_lock_steal_fail_stolen(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
 
         # Simulate stolen lock
-        db_api.stack_lock_release(self.stack.id, UUID1)
-        db_api.stack_lock_create(self.stack.id, UUID2)
+        db_api.stack_lock_release(self.ctx, self.stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID2)
 
-        observed = db_api.stack_lock_steal(self.stack.id, UUID3, UUID2)
+        observed = db_api.stack_lock_steal(self.ctx, self.stack.id,
+                                           UUID3, UUID2)
         self.assertEqual(UUID2, observed)
 
     def test_stack_lock_release_success(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        observed = db_api.stack_lock_release(self.stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_release(self.ctx, self.stack.id, UUID1)
         self.assertIsNone(observed)
 
     def test_stack_lock_release_fail_double(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        db_api.stack_lock_release(self.stack.id, UUID1)
-        observed = db_api.stack_lock_release(self.stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        db_api.stack_lock_release(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_release(self.ctx, self.stack.id, UUID1)
         self.assertTrue(observed)
 
     def test_stack_lock_release_fail_wrong_engine_id(self):
-        db_api.stack_lock_create(self.stack.id, UUID1)
-        observed = db_api.stack_lock_release(self.stack.id, UUID2)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
+        observed = db_api.stack_lock_release(self.ctx, self.stack.id, UUID2)
         self.assertTrue(observed)
 
     @mock.patch.object(time, 'sleep')
@@ -2419,7 +2422,8 @@ class DBAPIStackLockTest(common.HeatTestCase):
         with mock.patch('sqlalchemy.orm.Session.add',
                         side_effect=db_exception.DBDeadlock) as mock_add:
             self.assertRaises(db_exception.DBDeadlock,
-                              db_api.stack_lock_create, self.stack.id, UUID1)
+                              db_api.stack_lock_create, self.ctx,
+                              self.stack.id, UUID1)
             self.assertEqual(4, mock_add.call_count)
 
 
@@ -3492,12 +3496,14 @@ class ResetStackStatusTests(common.HeatTestCase):
 
     def test_status_reset(self):
         db_api.stack_update(self.ctx, self.stack.id, {'status': 'IN_PROGRESS'})
-        db_api.stack_lock_create(self.stack.id, UUID1)
+        db_api.stack_lock_create(self.ctx, self.stack.id, UUID1)
         db_api.reset_stack_status(self.ctx, self.stack.id)
         self.assertEqual('FAILED', self.stack.status)
         self.assertEqual('Stack status manually reset',
                          self.stack.status_reason)
-        self.assertEqual(True, db_api.stack_lock_release(self.stack.id, UUID1))
+        self.assertEqual(True, db_api.stack_lock_release(self.ctx,
+                                                         self.stack.id,
+                                                         UUID1))
 
     def test_resource_reset(self):
         resource_progress = create_resource(self.ctx, self.stack,

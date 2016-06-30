@@ -747,6 +747,7 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         self.mock_status.assert_called_once_with(
             self.parent_resource.context, self.parent_resource.resource_id)
         self.mock_lock.assert_called_once_with(
+            self.parent_resource.context,
             self.parent_resource.resource_id)
 
     def test_state_err(self):
