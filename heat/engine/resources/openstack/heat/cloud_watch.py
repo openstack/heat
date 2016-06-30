@@ -143,7 +143,7 @@ class CloudWatchAlarm(resource.Resource):
     support_status = support.SupportStatus(
         status=support.HIDDEN,
         message=_('OS::Heat::CWLiteAlarm is deprecated, '
-                  'use OS::Ceilometer::Alarm instead.'),
+                  'use OS::Aodh::Alarm instead.'),
         version='5.0.0',
         previous_status=support.SupportStatus(
             status=support.DEPRECATED,

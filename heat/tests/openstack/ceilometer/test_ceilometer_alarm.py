@@ -20,8 +20,8 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import aodh
 from heat.engine.clients.os import ceilometer
-from heat.engine import properties as props
 from heat.engine.resources.openstack.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -39,7 +39,7 @@ alarm_template = '''
   "Parameters" : {},
   "Resources" : {
     "MEMAlarmHigh": {
-     "Type": "OS::Ceilometer::Alarm",
+     "Type": "OS::Aodh::Alarm",
      "Properties": {
         "description": "Scale-up if MEM > 50% for 1 minute",
         "meter_name": "MemoryUtilization",
@@ -66,7 +66,7 @@ alarm_template_with_time_constraints = '''
   "Parameters" : {},
   "Resources" : {
     "MEMAlarmHigh": {
-     "Type": "OS::Ceilometer::Alarm",
+     "Type": "OS::Aodh::Alarm",
      "Properties": {
         "description": "Scale-up if MEM > 50% for 1 minute",
         "meter_name": "MemoryUtilization",
@@ -100,7 +100,7 @@ not_string_alarm_template = '''
   "Parameters" : {},
   "Resources" : {
     "MEMAlarmHigh": {
-     "Type": "OS::Ceilometer::Alarm",
+     "Type": "OS::Aodh::Alarm",
      "Properties": {
         "description": "Scale-up if MEM > 50% for 1 minute",
         "meter_name": "MemoryUtilization",
@@ -146,9 +146,13 @@ class FakeCeilometerAlarm(object):
         self.to_dict = lambda: {'attr': 'val'}
 
 
-class CeilometerAlarmTest(common.HeatTestCase):
+FakeAodhAlarm = {'other_attrs': 'val',
+                 'alarm_id': 'foo'}
+
+
+class AodhAlarmTest(common.HeatTestCase):
     def setUp(self):
-        super(CeilometerAlarmTest, self).setUp()
+        super(AodhAlarmTest, self).setUp()
         self.fa = mock.Mock()
 
     def create_stack(self, template=None, time_constraints=None):
@@ -162,46 +166,14 @@ class CeilometerAlarmTest(common.HeatTestCase):
                              disable_rollback=True)
         stack.store()
 
-        self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
-        ceilometer.CeilometerClientPlugin._create().AndReturn(self.fa)
+        self.patchobject(aodh.AodhClientPlugin,
+                         '_create').return_value = self.fa
 
         al = copy.deepcopy(temp['Resources']['MEMAlarmHigh']['Properties'])
-        al['description'] = mox.IgnoreArg()
-        al['name'] = mox.IgnoreArg()
-        al['alarm_actions'] = mox.IgnoreArg()
-        al['insufficient_data_actions'] = None
-        al['ok_actions'] = None
-        al['repeat_actions'] = True
-        al['enabled'] = True
         al['time_constraints'] = time_constraints if time_constraints else []
-        al['severity'] = 'low'
-        rule = dict(
-            period=60,
-            evaluation_periods=1,
-            threshold=50)
-        for field in ['period', 'evaluation_periods', 'threshold']:
-            del al[field]
-        for field in ['statistic', 'comparison_operator', 'meter_name']:
-            rule[field] = al[field]
-            del al[field]
-        if 'query' in al and al['query']:
-            query = al['query']
-        else:
-            query = []
-        if 'query' in al:
-            del al['query']
-        if 'matching_metadata' in al and al['matching_metadata']:
-            for k, v in al['matching_metadata'].items():
-                key = 'metadata.metering.' + k
-                query.append(dict(field=key, op='eq', value=six.text_type(v)))
-        if 'matching_metadata' in al:
-            del al['matching_metadata']
-        if query:
-            rule['query'] = mox.SameElementsAs(query)
-        al['threshold_rule'] = rule
-        al['type'] = 'threshold'
-        self.m.StubOutWithMock(self.fa.alarms, 'create')
-        self.fa.alarms.create(**al).AndReturn(FakeCeilometerAlarm())
+
+        self.patchobject(self.fa.alarm, 'create').return_value = FakeAodhAlarm
+
         return stack
 
     def test_mem_alarm_high_update_no_replace(self):
@@ -214,37 +186,15 @@ class CeilometerAlarmTest(common.HeatTestCase):
         properties['matching_metadata'] = {'a': 'v'}
         properties['query'] = [dict(field='b', op='eq', value='w')]
 
-        self.stack = self.create_stack(template=json.dumps(t))
-        self.m.StubOutWithMock(self.fa.alarms, 'update')
-        schema = props.schemata(alarm.CeilometerAlarm.properties_schema)
-        exns = ['period', 'evaluation_periods', 'threshold',
-                'statistic', 'comparison_operator', 'meter_name',
-                'matching_metadata', 'query']
-        al2 = dict((k, mox.IgnoreArg())
-                   for k, s in schema.items()
-                   if s.update_allowed and k not in exns)
-        al2['time_constraints'] = mox.IgnoreArg()
-        al2['alarm_id'] = mox.IgnoreArg()
-        al2['type'] = 'threshold'
-        al2['threshold_rule'] = dict(
-            meter_name=properties['meter_name'],
-            period=90,
-            evaluation_periods=2,
-            threshold=39,
-            statistic='max',
-            comparison_operator='lt',
-            query=[
-                dict(field='c', op='ne', value='z'),
-                dict(field='metadata.metering.x', op='eq', value='y')
-            ])
-        self.fa.alarms.update(**al2).AndReturn(None)
+        test_stack = self.create_stack(template=json.dumps(t))
 
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        update_mock = self.patchobject(self.fa.alarm, 'update')
 
-        properties = copy.copy(rsrc.properties.data)
-        properties.update({
+        test_stack.create()
+        rsrc = test_stack['MEMAlarmHigh']
+
+        update_props = copy.deepcopy(rsrc.properties.data)
+        update_props.update({
             'comparison_operator': 'lt',
             'description': 'fruity',
             'evaluation_periods': '2',
@@ -259,13 +209,15 @@ class CeilometerAlarmTest(common.HeatTestCase):
             'matching_metadata': {'x': 'y'},
             'query': [dict(field='c', op='ne', value='z')]
         })
+
         snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                rsrc.type(),
-                                               properties)
+                                               update_props)
 
         scheduler.TaskRunner(rsrc.update, snippet)()
 
-        self.m.VerifyAll()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(1, update_mock.call_count)
 
     def test_mem_alarm_high_update_replace(self):
         """Tests resource replacing when changing non-updatable properties."""
@@ -275,11 +227,10 @@ class CeilometerAlarmTest(common.HeatTestCase):
         properties['alarm_actions'] = ['signal_handler']
         properties['matching_metadata'] = {'a': 'v'}
 
-        self.stack = self.create_stack(template=json.dumps(t))
+        test_stack = self.create_stack(template=json.dumps(t))
 
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        rsrc = test_stack['MEMAlarmHigh']
 
         properties = copy.copy(rsrc.properties.data)
         properties['meter_name'] = 'temp'
@@ -290,40 +241,34 @@ class CeilometerAlarmTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(rsrc.update, snippet)
         self.assertRaises(exception.UpdateReplace, updater)
 
-        self.m.VerifyAll()
-
     def test_mem_alarm_suspend_resume(self):
         """Tests suspending and resuming of the alarm.
 
         Make sure that the Alarm resource gets disabled on suspend
         and re-enabled on resume.
         """
-        self.stack = self.create_stack()
+        test_stack = self.create_stack()
 
-        self.m.StubOutWithMock(self.fa.alarms, 'update')
-        al_suspend = {'alarm_id': mox.IgnoreArg(),
-                      'enabled': False}
-        self.fa.alarms.update(**al_suspend).AndReturn(None)
-        al_resume = {'alarm_id': mox.IgnoreArg(),
-                     'enabled': True}
-        self.fa.alarms.update(**al_resume).AndReturn(None)
-        self.m.ReplayAll()
+        update_mock = self.patchobject(self.fa.alarm, 'update')
+        al_suspend = {'enabled': False}
+        al_resume = {'enabled': True}
 
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        rsrc = test_stack['MEMAlarmHigh']
         scheduler.TaskRunner(rsrc.suspend)()
         self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
 
-        self.m.VerifyAll()
+        update_mock.assert_has_calls((
+            mock.call('foo', al_suspend),
+            mock.call('foo', al_resume)))
 
     def test_mem_alarm_high_correct_int_parameters(self):
-        self.stack = self.create_stack(not_string_alarm_template)
+        test_stack = self.create_stack(not_string_alarm_template)
 
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        rsrc = test_stack['MEMAlarmHigh']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertIsNone(rsrc.validate())
 
@@ -331,20 +276,18 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.assertIsInstance(rsrc.properties['period'], int)
         self.assertIsInstance(rsrc.properties['threshold'], int)
 
-        self.m.VerifyAll()
-
     def test_alarm_metadata_prefix(self):
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         # Test for bug/1383521, where meter_name is in NOVA_METERS
-        properties[alarm.CeilometerAlarm.METER_NAME] = 'memory.usage'
+        properties[alarm.AodhAlarm.METER_NAME] = 'memory.usage'
         properties['matching_metadata'] = {'metadata.user_metadata.groupname':
                                            'foo'}
 
-        self.stack = self.create_stack(template=json.dumps(t))
+        test_stack = self.create_stack(template=json.dumps(t))
 
-        rsrc = self.stack['MEMAlarmHigh']
-        rsrc.properties.data = rsrc.cfn_to_ceilometer(self.stack, properties)
+        rsrc = test_stack['MEMAlarmHigh']
+        rsrc.properties.data = rsrc.get_alarm_props(properties)
         self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
         query = rsrc.properties.data['threshold_rule']['query']
         expected_query = [{'field': u'metadata.user_metadata.groupname',
@@ -355,13 +298,13 @@ class CeilometerAlarmTest(common.HeatTestCase):
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         # Test that meter_name is not in NOVA_METERS
-        properties[alarm.CeilometerAlarm.METER_NAME] = 'memory_util'
+        properties[alarm.AodhAlarm.METER_NAME] = 'memory_util'
         properties['matching_metadata'] = {'metadata.user_metadata.groupname':
                                            'foo'}
         self.stack = self.create_stack(template=json.dumps(t))
 
         rsrc = self.stack['MEMAlarmHigh']
-        rsrc.properties.data = rsrc.cfn_to_ceilometer(self.stack, properties)
+        rsrc.properties.data = rsrc.get_alarm_props(properties)
         self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
         query = rsrc.properties.data['threshold_rule']['query']
         expected_query = [{'field': u'metadata.metering.groupname',
@@ -377,18 +320,15 @@ class CeilometerAlarmTest(common.HeatTestCase):
                                            'pro': '{"Mem": {"Ala": {"Hig"}}}',
                                            'tro': [1, 2, 3, 4]}
 
-        self.stack = self.create_stack(template=json.dumps(t))
+        test_stack = self.create_stack(template=json.dumps(t))
 
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        rsrc = test_stack['MEMAlarmHigh']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        rsrc.properties.data = rsrc.cfn_to_ceilometer(self.stack, properties)
+        rsrc.properties.data = rsrc.get_alarm_props(properties)
         self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
         for key in rsrc.properties.data['threshold_rule']['query']:
             self.assertIsInstance(key['value'], six.text_type)
-
-        self.m.VerifyAll()
 
     def test_no_matching_metadata(self):
         """Make sure that we can pass in an empty matching_metadata."""
@@ -398,15 +338,12 @@ class CeilometerAlarmTest(common.HeatTestCase):
         properties['alarm_actions'] = ['signal_handler']
         del properties['matching_metadata']
 
-        self.stack = self.create_stack(template=json.dumps(t))
+        test_stack = self.create_stack(template=json.dumps(t))
 
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        rsrc = test_stack['MEMAlarmHigh']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertIsNone(rsrc.validate())
-
-        self.m.VerifyAll()
 
     def test_mem_alarm_high_not_correct_string_parameters(self):
         orig_snippet = template_format.parse(not_string_alarm_template)
@@ -416,7 +353,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
             stack = utils.parse_stack(snippet)
 
             resource_defns = stack.t.resource_definitions(stack)
-            rsrc = alarm.CeilometerAlarm(
+            rsrc = alarm.AodhAlarm(
                 'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             error = self.assertRaises(exception.StackValidationFailed,
                                       rsrc.validate)
@@ -432,7 +369,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
             stack = utils.parse_stack(snippet)
 
             resource_defns = stack.t.resource_definitions(stack)
-            rsrc = alarm.CeilometerAlarm(
+            rsrc = alarm.AodhAlarm(
                 'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             # python 3.4.3 returns another error message
             # so try to handle this by regexp
@@ -448,7 +385,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         stack = utils.parse_stack(snippet)
 
         resource_defns = stack.t.resource_definitions(stack)
-        rsrc = alarm.CeilometerAlarm(
+        rsrc = alarm.AodhAlarm(
             'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
         error = self.assertRaises(exception.StackValidationFailed,
                                   rsrc.validate)
@@ -464,35 +401,35 @@ class CeilometerAlarmTest(common.HeatTestCase):
             stack = utils.parse_stack(snippet)
 
             resource_defns = stack.t.resource_definitions(stack)
-            rsrc = alarm.CeilometerAlarm(
+            rsrc = alarm.AodhAlarm(
                 'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             self.assertIsNone(rsrc.validate())
 
     def test_delete_watchrule_destroy(self):
         t = template_format.parse(alarm_template)
 
-        self.stack = self.create_stack(template=json.dumps(t))
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack = self.create_stack(template=json.dumps(t))
+        rsrc = test_stack['MEMAlarmHigh']
 
         wr = mock.MagicMock()
         self.patchobject(watchrule.WatchRule, 'load', return_value=wr)
         wr.destroy.return_value = None
 
-        self.patchobject(ceilometer.CeilometerClientPlugin, 'client',
+        self.patchobject(aodh.AodhClientPlugin, 'client',
                          return_value=self.fa)
-        self.patchobject(self.fa.alarms, 'delete')
+        self.patchobject(self.fa.alarm, 'delete')
         rsrc.resource_id = '12345'
 
         self.assertEqual('12345', rsrc.handle_delete())
         self.assertEqual(1, wr.destroy.call_count)
         # check that super method has been called and execute deleting
-        self.assertEqual(1, self.fa.alarms.delete.call_count)
+        self.assertEqual(1, self.fa.alarm.delete.call_count)
 
     def test_delete_no_watchrule(self):
         t = template_format.parse(alarm_template)
 
-        self.stack = self.create_stack(template=json.dumps(t))
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack = self.create_stack(template=json.dumps(t))
+        rsrc = test_stack['MEMAlarmHigh']
 
         wr = mock.MagicMock()
         self.patchobject(watchrule.WatchRule, 'load',
@@ -500,15 +437,15 @@ class CeilometerAlarmTest(common.HeatTestCase):
                              entity='Watch Rule', name='test')])
         wr.destroy.return_value = None
 
-        self.patchobject(ceilometer.CeilometerClientPlugin, 'client',
+        self.patchobject(aodh.AodhClientPlugin, 'client',
                          return_value=self.fa)
-        self.patchobject(self.fa.alarms, 'delete')
+        self.patchobject(self.fa.alarm, 'delete')
         rsrc.resource_id = '12345'
 
         self.assertEqual('12345', rsrc.handle_delete())
         self.assertEqual(0, wr.destroy.call_count)
         # check that super method has been called and execute deleting
-        self.assertEqual(1, self.fa.alarms.delete.call_count)
+        self.assertEqual(1, self.fa.alarm.delete.call_count)
 
     def _prepare_check_resource(self):
         snippet = template_format.parse(not_string_alarm_template)
@@ -516,7 +453,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         res = self.stack['MEMAlarmHigh']
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.client().alarms.get.return_value = mock_alarm
+        res.client().alarm.get.return_value = mock_alarm
         return res
 
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
@@ -539,7 +476,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
     def test_check_alarm_failure(self, mock_load):
         res = self._prepare_check_resource()
-        res.client().alarms.get.side_effect = Exception('Boom')
+        res.client().alarm.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(res.check))
@@ -548,11 +485,10 @@ class CeilometerAlarmTest(common.HeatTestCase):
 
     def test_show_resource(self):
         res = self._prepare_check_resource()
-        res.client().alarms.create.return_value = mock.MagicMock(
-            alarm_id='2')
-        res.client().alarms.get.return_value = FakeCeilometerAlarm()
+        res.client().alarm.create.return_value = FakeAodhAlarm
+        res.client().alarm.get.return_value = FakeAodhAlarm
         scheduler.TaskRunner(res.create)()
-        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
+        self.assertEqual(FakeAodhAlarm, res.FnGetAtt('show'))
 
     def test_alarm_with_wrong_start_time(self):
         t = template_format.parse(alarm_template_with_time_constraints)
@@ -562,11 +498,13 @@ class CeilometerAlarmTest(common.HeatTestCase):
                              "duration": 10800,
                              "description": "a description"
                              }]
-        self.stack = self.create_stack(template=json.dumps(t),
+        test_stack = self.create_stack(template=json.dumps(t),
                                        time_constraints=time_constraints)
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        self.assertEqual((test_stack.CREATE, test_stack.COMPLETE),
+                         test_stack.state)
+
+        rsrc = test_stack['MEMAlarmHigh']
 
         properties = copy.copy(rsrc.properties.data)
         start_time = '* * * * * 100'
@@ -605,8 +543,6 @@ class CeilometerAlarmTest(common.HeatTestCase):
             "[%s] is not acceptable, out of range" % (start_time, start_time),
             error.message)
 
-        self.m.VerifyAll()
-
     def test_alarm_with_wrong_timezone(self):
         t = template_format.parse(alarm_template_with_time_constraints)
         time_constraints = [{"name": "tc1",
@@ -615,11 +551,13 @@ class CeilometerAlarmTest(common.HeatTestCase):
                              "duration": 10800,
                              "description": "a description"
                              }]
-        self.stack = self.create_stack(template=json.dumps(t),
+        test_stack = self.create_stack(template=json.dumps(t),
                                        time_constraints=time_constraints)
-        self.m.ReplayAll()
-        self.stack.create()
-        rsrc = self.stack['MEMAlarmHigh']
+        test_stack.create()
+        self.assertEqual((test_stack.CREATE, test_stack.COMPLETE),
+                         test_stack.state)
+
+        rsrc = test_stack['MEMAlarmHigh']
 
         properties = copy.copy(rsrc.properties.data)
         timezone = 'wrongtimezone'
@@ -657,8 +595,6 @@ class CeilometerAlarmTest(common.HeatTestCase):
             "validating value '%s': Invalid timezone: '%s'"
             % (timezone, timezone),
             error.message)
-
-        self.m.VerifyAll()
 
 
 class CombinationAlarmTest(common.HeatTestCase):

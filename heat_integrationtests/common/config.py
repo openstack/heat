@@ -121,7 +121,7 @@ IntegrationTestGroup = [
     cfg.ListOpt('skip_scenario_test_list',
                 help="List of scenario test class or class.method "
                      "names to skip ex. NeutronLoadBalancerTest, "
-                     "CeilometerAlarmTest.test_alarm"),
+                     "AodhAlarmTest.test_alarm"),
     cfg.ListOpt('skip_test_stack_action_list',
                 help="List of stack actions in tests to skip "
                      "ex. ABANDON, ADOPT, SUSPEND, RESUME"),

@@ -15,6 +15,7 @@
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine.resources import alarm_base
 from heat.engine.resources.openstack.ceilometer import alarm
 from heat.engine import support
 
@@ -103,9 +104,9 @@ class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
         ),
     }
     properties_schema.update(common_gnocchi_properties_schema)
-    properties_schema.update(alarm.common_properties_schema)
+    properties_schema.update(alarm_base.common_properties_schema)
 
-    ceilometer_alarm_type = 'gnocchi_resources_threshold'
+    alarm_type = 'gnocchi_resources_threshold'
 
 
 class CeilometerGnocchiAggregationByMetricsAlarm(
@@ -130,9 +131,9 @@ class CeilometerGnocchiAggregationByMetricsAlarm(
         ),
     }
     properties_schema.update(common_gnocchi_properties_schema)
-    properties_schema.update(alarm.common_properties_schema)
+    properties_schema.update(alarm_base.common_properties_schema)
 
-    ceilometer_alarm_type = 'gnocchi_aggregation_by_metrics_threshold'
+    alarm_type = 'gnocchi_aggregation_by_metrics_threshold'
 
 
 class CeilometerGnocchiAggregationByResourcesAlarm(
@@ -175,9 +176,9 @@ class CeilometerGnocchiAggregationByResourcesAlarm(
     }
 
     properties_schema.update(common_gnocchi_properties_schema)
-    properties_schema.update(alarm.common_properties_schema)
+    properties_schema.update(alarm_base.common_properties_schema)
 
-    ceilometer_alarm_type = 'gnocchi_aggregation_by_resources_threshold'
+    alarm_type = 'gnocchi_aggregation_by_resources_threshold'
 
 
 def resource_mapping():
