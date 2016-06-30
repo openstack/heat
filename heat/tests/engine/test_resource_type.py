@@ -101,6 +101,16 @@ class ResourceTypeTest(common.HeatTestCase):
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)
 
+    def test_resource_schema_for_hidden_type(self):
+        type_name = 'ResourceTypeHidden'
+        self.assertRaises(exception.NotSupported, self.eng.resource_schema,
+                          self.ctx, type_name)
+
+    def test_generate_template_for_hidden_type(self):
+        type_name = 'ResourceTypeHidden'
+        self.assertRaises(exception.NotSupported, self.eng.generate_template,
+                          self.ctx, type_name)
+
     def test_resource_schema_with_attr_type(self):
 
         type_name = 'ResourceWithAttributeType'
