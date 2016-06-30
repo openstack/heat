@@ -1511,7 +1511,7 @@ class EngineService(service.Service):
             raise exception.InvalidGlobalResource(type_name=type_name)
 
         if resource_class.support_status.status == support.HIDDEN:
-            raise exception.NotSupported(type_name)
+            raise exception.NotSupported(feature=type_name)
 
         try:
             svc_available = resource_class.is_service_available(cnxt)[0]
@@ -1570,7 +1570,7 @@ class EngineService(service.Service):
             raise exception.InvalidGlobalResource(type_name=type_name)
         else:
             if resource_class.support_status.status == support.HIDDEN:
-                raise exception.NotSupported(type_name)
+                raise exception.NotSupported(feature=type_name)
             return resource_class.resource_to_template(type_name,
                                                        template_type)
 
