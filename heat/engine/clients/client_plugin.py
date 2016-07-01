@@ -19,7 +19,6 @@ import weakref
 from keystoneauth1 import exceptions
 from keystoneauth1.identity import generic
 from keystoneauth1 import plugin
-from keystoneauth1 import session
 from oslo_config import cfg
 import requests
 import six
@@ -107,7 +106,6 @@ class ClientPlugin(object):
         self._context = weakref.ref(context)
         self._clients = weakref.ref(context.clients)
         self.invalidate()
-        self._keystone_session_obj = None
 
     @property
     def context(self):
@@ -121,18 +119,6 @@ class ClientPlugin(object):
 
     _get_client_option = staticmethod(config.get_client_option)
 
-    @property
-    def _keystone_session(self):
-        # FIXME(jamielennox): This session object is essentially static as the
-        # options won't change. Further it is allowed to be shared by multiple
-        # authentication requests so there is no reason to construct it fresh
-        # for every client plugin. It should be global and shared amongst them.
-        if not self._keystone_session_obj:
-            self._keystone_session_obj = session.Session(
-                **config.get_ssl_options('keystone'))
-
-        return self._keystone_session_obj
-
     def invalidate(self):
         """Invalidate/clear any cached client."""
         self._client_instances = {}
@@ -141,18 +127,9 @@ class ClientPlugin(object):
         if not version:
             version = self.default_version
 
-        if version in self._client_instances:
-            auth_ref = self.context.auth_plugin.get_auth_ref(
-                self._keystone_session)
-            if (cfg.CONF.reauthentication_auth_method == 'trusts'
-                and auth_ref.will_expire_soon(
-                    cfg.CONF.stale_token_duration)):
-                # If the token is near expiry, force creating a new client,
-                # which will get a new token via another call to auth_token
-                # We also have to invalidate all other cached clients
-                self.clients.invalidate_plugins()
-            else:
-                return self._client_instances[version]
+        if (version in self._client_instances
+                and not self.context.auth_needs_refresh()):
+            return self._client_instances[version]
 
         # Back-ward compatibility
         if version is None:
@@ -174,15 +151,17 @@ class ClientPlugin(object):
 
     @property
     def auth_token(self):
-        # NOTE(jamielennox): use the session defined by the keystoneclient
-        # options as traditionally the token was always retrieved from
-        # keystoneclient.
-        return self.context.auth_plugin.get_token(self._keystone_session)
+        # Always use the auth_token from the keystone_session, as
+        # this may be refreshed if the context contains credentials
+        # which allow reissuing of a new token before the context
+        # auth_token expiry (e.g trust_id or username/password)
+        return self.context.keystone_session.get_token()
 
     def url_for(self, **kwargs):
+        keystone_session = self.context.keystone_session
+
         def get_endpoint():
-            auth_plugin = self.context.auth_plugin
-            return auth_plugin.get_endpoint(self._keystone_session, **kwargs)
+            return keystone_session.get_endpoint(**kwargs)
 
         # NOTE(jamielennox): use the session defined by the keystoneclient
         # options as traditionally the token was always retrieved from
@@ -198,12 +177,11 @@ class ClientPlugin(object):
         try:
             url = get_endpoint()
         except exceptions.EmptyCatalog:
-            auth_plugin = self.context.auth_plugin
-            endpoint = auth_plugin.get_endpoint(
+            endpoint = keystone_session.get_endpoint(
                 None, interface=plugin.AUTH_INTERFACE)
-            token = auth_plugin.get_token(None)
+            token = keystone_session.get_token(None)
             token_obj = generic.Token(endpoint, token)
-            auth_ref = token_obj.get_access(self._keystone_session)
+            auth_ref = token_obj.get_access(keystone_session)
             if auth_ref.has_service_catalog():
                 self.context.reload_auth_plugin()
                 url = get_endpoint()

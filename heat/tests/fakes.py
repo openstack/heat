@@ -20,6 +20,7 @@ places where actual behavior differs from the spec.
 
 from keystoneauth1 import plugin
 from keystoneauth1 import session
+import mock
 
 from heat.common import context
 
@@ -88,6 +89,10 @@ class FakeAuth(plugin.BaseAuthPlugin):
             return None
 
         return 'http://example.com:1234/v1'
+
+    def get_auth_ref(self, session):
+        auth_ref = mock.Mock()
+        return auth_ref
 
 
 class FakeKeystoneClient(object):
