@@ -1,5 +1,6 @@
 {
-    "context_is_admin":  "role:admin and auth_token_info.token.is_admin_project:True",
+    "context_is_admin": "role:admin and is_admin_project:True",
+    "project_admin": "role:admin",
     "deny_stack_user": "not role:heat_stack_user",
     "deny_everybody": "!",
 
@@ -83,11 +84,11 @@
 
     "service:index": "rule:context_is_admin",
 
-    "resource_types:OS::Nova::Flavor": "rule:context_is_admin",
-    "resource_types:OS::Cinder::EncryptedVolumeType": "rule:context_is_admin",
-    "resource_types:OS::Cinder::VolumeType": "rule:context_is_admin",
-    "resource_types:OS::Manila::ShareType": "rule:context_is_admin",
-    "resource_types:OS::Neutron::QoSPolicy": "rule:context_is_admin",
-    "resource_types:OS::Neutron::QoSBandwidthLimitRule": "rule:context_is_admin",
-    "resource_types:OS::Nova::HostAggregate": "rule:context_is_admin"
+    "resource_types:OS::Nova::Flavor": "rule:project_admin",
+    "resource_types:OS::Cinder::EncryptedVolumeType": "rule:project_admin",
+    "resource_types:OS::Cinder::VolumeType": "rule:project_admin",
+    "resource_types:OS::Manila::ShareType": "rule:project_admin",
+    "resource_types:OS::Neutron::QoSPolicy": "rule:project_admin",
+    "resource_types:OS::Neutron::QoSBandwidthLimitRule": "rule:project_admin",
+    "resource_types:OS::Nova::HostAggregate": "rule:project_admin"
 }
