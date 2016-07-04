@@ -1222,6 +1222,7 @@ class Stack(collections.Mapping):
         existing_params = environment.Environment({env_fmt.PARAMETERS:
                                                   self.t.env.params})
         should_rollback = False
+        previous_template_id = None
         try:
             update_task = update.StackUpdate(
                 self, newstack, backup_stack,
@@ -1278,6 +1279,7 @@ class Stack(collections.Mapping):
             backup_stack.delete(backup=True)
 
             # flip the template to the newstack values
+            previous_template_id = self.t.id
             self.t = newstack.t
             template_outputs = self.t[self.t.OUTPUTS]
             self.outputs = self.resolve_static_data(template_outputs)
@@ -1301,6 +1303,9 @@ class Stack(collections.Mapping):
                 backup_stack.t.store(self.context)
             self.store()
 
+            if previous_template_id is not None:
+                raw_template_object.RawTemplate.delete(self.context,
+                                                       previous_template_id)
             lifecycle_plugin_utils.do_post_ops(self.context, self,
                                                newstack, action,
                                                (self.status == self.FAILED))
