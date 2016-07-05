@@ -840,6 +840,9 @@ class WithTemplateTest(StackResourceBaseTest):
             self.match = other
             return True
 
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
     def test_create_with_template(self):
         child_env = {'parameter_defaults': {},
                      'event_sinks': [],

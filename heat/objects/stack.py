@@ -205,6 +205,9 @@ class Stack(
         self.refresh()  # to make test object comparison work well
         return super(Stack, self).__eq__(another)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def refresh(self):
         db_stack = db_api.stack_get(
             self._context, self.id, show_deleted=True)
