@@ -390,6 +390,9 @@ class ResourceGroup(stack_resource.StackResource):
                 return False
         return True
 
+    def res_def_changed(self, prop_diff):
+        return self.RESOURCE_DEF in prop_diff
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if tmpl_diff:
             # parse update policy
@@ -401,7 +404,7 @@ class ResourceGroup(stack_resource.StackResource):
         checkers = []
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
-        if prop_diff and self.RESOURCE_DEF in prop_diff:
+        if prop_diff and self.res_def_changed(prop_diff):
             updaters = self._try_rolling_update()
             if updaters:
                 checkers.extend(updaters)

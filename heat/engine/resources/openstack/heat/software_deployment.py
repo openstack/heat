@@ -17,6 +17,7 @@ import uuid
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
+from six import itertools
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -574,6 +575,14 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         'deploy_stdouts', 'deploy_stderrs', 'deploy_status_codes'
     )
 
+    _ROLLING_UPDATES_SCHEMA_KEYS = (
+        MAX_BATCH_SIZE,
+        PAUSE_TIME,
+    ) = (
+        resource_group.ResourceGroup.MAX_BATCH_SIZE,
+        resource_group.ResourceGroup.PAUSE_TIME,
+    )
+
     _sd_ps = SoftwareDeployment.properties_schema
     _rg_ps = resource_group.ResourceGroup.properties_schema
 
@@ -611,13 +620,34 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         ),
     }
 
-    update_policy_schema = {}
+    rolling_update_schema = {
+        MAX_BATCH_SIZE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('The maximum number of deployments to replace at once.'),
+            constraints=[constraints.Range(min=1)],
+            default=1),
+        PAUSE_TIME: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of seconds to wait between batches of '
+              'updates.'),
+            constraints=[constraints.Range(min=0)],
+            default=0),
+    }
 
     def get_size(self):
         return len(self.properties[self.SERVERS])
 
-    def _resource_names(self):
-        return iter(self.properties[self.SERVERS])
+    def _resource_names(self, size=None):
+        candidates = self.properties[self.SERVERS]
+        if size is None:
+            return iter(candidates)
+        return itertools.islice(candidates, size)
+
+    def res_def_changed(self, prop_diff):
+        return True
+
+    def _name_blacklist(self):
+        return set()
 
     def get_resource_def(self, include_all=False):
         return dict(self.properties)
@@ -645,6 +675,13 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
 
         rg_attr = rg.get_attribute(rg.ATTR_ATTRIBUTES, n_attr)
         return attributes.select_from_attribute(rg_attr, path)
+
+    def _try_rolling_update(self):
+        if self.update_policy[self.ROLLING_UPDATE]:
+            policy = self.update_policy[self.ROLLING_UPDATE]
+            return self._replace(0,
+                                 policy[self.MAX_BATCH_SIZE],
+                                 policy[self.PAUSE_TIME])
 
 
 class SoftwareDeployments(SoftwareDeploymentGroup):
