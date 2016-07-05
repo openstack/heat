@@ -447,9 +447,6 @@ class StackController(object):
         templ = self.rpc_client.get_template(req.context,
                                              identity)
 
-        if templ is None:
-            raise exc.HTTPNotFound()
-
         # TODO(zaneb): always set Content-type to application/json
         return templ
 
@@ -457,9 +454,6 @@ class StackController(object):
     def environment(self, req, identity):
         """Get the environment for an existing stack."""
         env = self.rpc_client.get_environment(req.context, identity)
-
-        if env is None:
-            raise exc.HTTPNotFound()
 
         return env
 
@@ -558,13 +552,9 @@ class StackController(object):
     def delete(self, req, identity):
         """Delete the specified stack."""
 
-        res = self.rpc_client.delete_stack(req.context,
-                                           identity,
-                                           cast=False)
-
-        if res is not None:
-            raise exc.HTTPBadRequest(res['Error'])
-
+        self.rpc_client.delete_stack(req.context,
+                                     identity,
+                                     cast=False)
         raise exc.HTTPNoContent()
 
     @util.identified_stack

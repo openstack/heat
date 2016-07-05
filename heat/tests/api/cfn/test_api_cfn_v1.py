@@ -1031,31 +1031,6 @@ class CfnStackControllerTest(common.HeatTestCase):
         result = self.controller.get_template(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
-    def test_get_template_err_none(self):
-        stack_name = "wordpress"
-        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
-        params = {'Action': 'GetTemplate', 'StackName': stack_name}
-        dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'GetTemplate')
-
-        # Stub out the RPC call to the engine to return None
-        # this test the "no such stack" error path
-        engine_resp = None
-
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('get_template', {'stack_identity': identity})
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
-
-        result = self.controller.get_template(dummy_req)
-
-        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
-
     def test_validate_err_no_template(self):
         # Format a dummy request with a missing template field
         params = {'Action': 'ValidateTemplate'}
