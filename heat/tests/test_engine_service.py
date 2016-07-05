@@ -934,11 +934,12 @@ class StackServiceTest(common.HeatTestCase):
 
         class DummyMgr(object):
             def names(self):
-                return ['a.b', 'c.d']
+                return ['a.2012-12-12', 'c.newton', 'c.2016-10-14',
+                        'c.something']
 
             def __getitem__(self, item):
                 m = mock.MagicMock()
-                if item == 'a.b':
+                if item == 'a.2012-12-12':
                     m.plugin = cfntemplate.CfnTemplate
                     return m
                 else:
@@ -947,9 +948,29 @@ class StackServiceTest(common.HeatTestCase):
 
         templ_mock.return_value = DummyMgr()
         templates = self.eng.list_template_versions(self.ctx)
-        expected = [{'version': 'a.b', 'type': 'cfn'},
-                    {'version': 'c.d', 'type': 'hot'}]
+        expected = [{'version': 'a.2012-12-12', 'type': 'cfn', 'aliases': []},
+                    {'version': 'c.2016-10-14',
+                     'aliases': ['c.newton', 'c.something'], 'type': 'hot'}]
         self.assertEqual(expected, templates)
+
+    @mock.patch('heat.engine.template._get_template_extension_manager')
+    def test_list_template_versions_invalid_version(self, templ_mock):
+
+        class DummyMgr(object):
+            def names(self):
+                return ['c.something']
+
+            def __getitem__(self, item):
+                m = mock.MagicMock()
+                if item == 'c.something':
+                    m.plugin = cfntemplate.CfnTemplate
+                    return m
+
+        templ_mock.return_value = DummyMgr()
+        ret = self.assertRaises(exception.InvalidTemplateVersions,
+                                self.eng.list_template_versions, self.ctx)
+        self.assertIn('A template version alias c.something was added',
+                      six.text_type(ret))
 
     @mock.patch('heat.engine.template._get_template_extension_manager')
     def test_list_template_functions(self, templ_mock):
