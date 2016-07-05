@@ -2049,14 +2049,14 @@ class Resource(object):
                             params, props, outputs, description):
         if tmpl_type == 'hot':
             tmpl_dict = {
-                hot_tmpl.HOTemplate20150430.VERSION: '2015-04-30',
-                hot_tmpl.HOTemplate20150430.DESCRIPTION: description,
-                hot_tmpl.HOTemplate20150430.PARAMETERS: params,
-                hot_tmpl.HOTemplate20150430.OUTPUTS: outputs,
-                hot_tmpl.HOTemplate20150430.RESOURCES: {
+                hot_tmpl.HOTemplate20161014.VERSION: '2016-10-14',
+                hot_tmpl.HOTemplate20161014.DESCRIPTION: description,
+                hot_tmpl.HOTemplate20161014.PARAMETERS: params,
+                hot_tmpl.HOTemplate20161014.OUTPUTS: outputs,
+                hot_tmpl.HOTemplate20161014.RESOURCES: {
                     res_name: {
-                        hot_tmpl.HOTemplate20150430.RES_TYPE: res_type,
-                        hot_tmpl.HOTemplate20150430.RES_PROPERTIES: props}}}
+                        hot_tmpl.HOTemplate20161014.RES_TYPE: res_type,
+                        hot_tmpl.HOTemplate20161014.RES_PROPERTIES: props}}}
         else:
             tmpl_dict = {
                 cfn_tmpl.CfnTemplate.ALTERNATE_VERSION: '2012-12-12',

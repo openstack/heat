@@ -1322,7 +1322,7 @@ class ResourceTest(common.HeatTestCase):
             }
 
         expected_template = {
-            'heat_template_version': '2015-04-30',
+            'heat_template_version': '2016-10-14',
             'description': 'Initial template of TestResource',
             'parameters': {
                 'name': {'type': 'string'},
