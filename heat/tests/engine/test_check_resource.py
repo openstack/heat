@@ -353,7 +353,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         actual_predecessors = call_args[4]
         self.assertItemsEqual(expected_predecessors, actual_predecessors)
 
-    def test_retrigger_check_resource_new_traversal_deletes_rsrc(
+    def test_update_retrigger_check_resource_new_traversal_deletes_rsrc(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
         # mock dependencies to indicate a rsrc with id 2 is not present
         # in latest traversal
@@ -367,6 +367,21 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                          self.stack.current_traversal,
                                          mock.ANY, (2, False), None,
                                          False, None)
+
+    def test_delete_retrigger_check_resource_new_traversal_updates_rsrc(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        # mock dependencies to indicate a rsrc with id 2 has an update
+        # in latest traversal
+        self.stack._convg_deps = dependencies.Dependencies([
+            [(1, False), (1, True)], [(2, False), (2, True)]])
+        # simulate rsrc 2 completing its delete for old traversal
+        # and calling rcr
+        self.cr._retrigger_check_resource(self.ctx, False, 2, self.stack)
+        # Ensure that pcr was called with proper delete traversal
+        mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
+                                         self.stack.current_traversal,
+                                         mock.ANY, (2, True), None,
+                                         True, None)
 
     @mock.patch.object(stack.Stack, 'purge_db')
     def test_handle_failure(self, mock_purgedb, mock_cru, mock_crc, mock_pcr,

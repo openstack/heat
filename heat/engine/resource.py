@@ -995,7 +995,8 @@ class Resource(object):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
-        if self.status == self.FAILED:
+        if self.status == self.FAILED or (self.stack.convergence and (
+                self.action, self.status) == (self.DELETE, self.COMPLETE)):
             raise exception.UpdateReplace(self)
 
         if check_init_complete and (self.action == self.INIT
@@ -1455,22 +1456,23 @@ class Resource(object):
         replaced by more recent resource, then delete this and update
         the replacement resource's needed_by and replaces fields.
         """
-        self._acquire(engine_id)
-        try:
+        with self.lock(engine_id):
             self.needed_by = list(set(v for v in input_data.values()
                                       if v is not None))
 
             if self.current_template_id != template_id:
-                runner = scheduler.TaskRunner(self.destroy)
-                runner(timeout=timeout)
+                # just delete the resources in INIT state
+                if self.action == self.INIT:
+                    try:
+                        resource_objects.Resource.delete(self.context, self.id)
+                    except exception.NotFound:
+                        pass
+                else:
+                    runner = scheduler.TaskRunner(self.delete)
+                    runner(timeout=timeout)
 
-                # update needed_by and replaces of replacement resource
-                self._update_replacement_data(template_id)
-            else:
-                self._release(engine_id)
-        except:  # noqa
-            with excutils.save_and_reraise_exception():
-                self._release(engine_id)
+                    # update needed_by and replaces of replacement resource
+                    self._update_replacement_data(template_id)
 
     def handle_delete(self):
         """Default implementation; should be overridden by resources."""

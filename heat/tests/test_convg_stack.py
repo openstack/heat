@@ -451,6 +451,16 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.purge_db()
         self.assertTrue(mock_stack_delete.called)
 
+    @mock.patch.object(resource_objects.Resource, 'purge_deleted')
+    def test_purge_db_calls_rsrc_purge_deleted(self, mock_rsrc_purge_delete,
+                                               mock_cr):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.store()
+        stack.purge_db()
+        self.assertTrue(mock_rsrc_purge_delete.called)
+
     def test_get_best_existing_db_resource(self, mock_cr):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,

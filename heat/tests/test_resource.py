@@ -1006,6 +1006,31 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(exception.UpdateReplace,
                           res._needs_update, tmpl, tmpl, prop, prop, res)
 
+    def test_need_update_in_create_failed_state_for_resource(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl,
+                                             self.stack)
+        res.update_allowed_properties = ('Foo',)
+        res.state_set(res.CREATE, res.FAILED)
+        prop = {'Foo': 'abc'}
+        self.assertRaises(exception.UpdateReplace,
+                          res._needs_update, tmpl, tmpl, prop, prop, res)
+
+    def test_convg_need_update_in_delete_complete_state_for_resource(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl,
+                                             self.stack)
+        res.update_allowed_properties = ('Foo',)
+        res.stack.convergence = True
+        res.state_set(res.DELETE, res.COMPLETE)
+        prop = {'Foo': 'abc'}
+        self.assertRaises(exception.UpdateReplace,
+                          res._needs_update, tmpl, tmpl, prop, prop, res)
+
     def test_update_fail_missing_req_prop(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType',
@@ -2042,7 +2067,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res.delete_convergence(2, {}, 'engine-007', 20)
 
-        mock_init.assert_called_once_with(res.destroy)
+        mock_init.assert_called_once_with(res.delete)
         mock_call.assert_called_once_with(timeout=20)
         self.assertTrue(res._update_replacement_data.called)
 
@@ -2051,10 +2076,10 @@ class ResourceTest(common.HeatTestCase):
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 'same-template'
         res._store()
-        res.destroy = mock.Mock()
+        res.delete = mock.Mock()
         res.delete_convergence('same-template', {}, 'engine-007',
                                self.dummy_timeout)
-        self.assertFalse(res.destroy.called)
+        self.assertFalse(res.delete.called)
 
     def test_delete_convergence_fail(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -2223,9 +2248,20 @@ class ResourceTest(common.HeatTestCase):
         test_obj.get.side_effect = AttributeError
         self.assertIsNone(res._show_resource())
 
+    def test_delete_convergence_deletes_resource_in_init_state(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        # action is INIT by default
+        res._store()
+        with mock.patch.object(resource_objects.Resource,
+                               'delete') as resource_del:
+            res.delete_convergence(1, {}, 'engine-007', 1)
+            resource_del.assert_called_once_with(res.context, res.id)
+
     def test_delete_convergence_throws_timeout(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.action = res.CREATE
         res._store()
         timeout = -1  # to emulate timeout
         self.assertRaises(scheduler.Timeout, res.delete_convergence,

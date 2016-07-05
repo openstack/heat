@@ -173,6 +173,10 @@ class Resource(
         return cls._resources_to_dict(context, resources_db)
 
     @classmethod
+    def purge_deleted(cls, context, stack_id):
+        return db_api.resource_purge_deleted(context, stack_id)
+
+    @classmethod
     def get_by_name_and_stack(cls, context, resource_name, stack_id):
         resource_db = db_api.resource_get_by_name_and_stack(
             context,

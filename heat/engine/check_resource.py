@@ -75,7 +75,8 @@ class CheckResource(object):
             # possibility for that update to be waiting for this rsrc to
             # complete, hence retrigger current rsrc for latest traversal.
             traversal = stack.current_traversal
-            latest_stack = parser.Stack.load(cnxt, stack_id=stack.id)
+            latest_stack = parser.Stack.load(cnxt, stack_id=stack.id,
+                                             force_reload=True)
             if traversal != latest_stack.current_traversal:
                 self._retrigger_check_resource(cnxt, is_update, rsrc_id,
                                                latest_stack)
@@ -143,10 +144,17 @@ class CheckResource(object):
         graph = stack.convergence_dependencies.graph()
         key = (resource_id, is_update)
         if is_update:
-            # When re-triggering for a rsrc, we need to first check if update
-            # traversal is present for the rsrc in latest stack traversal,
+            # When re-trigger received for update in latest traversal, first
+            # check if update key is available in graph.
             # if No, then latest traversal is waiting for delete.
             if (resource_id, is_update) not in graph:
+                key = (resource_id, not is_update)
+        else:
+            # When re-trigger received for delete in latest traversal, first
+            # check if update key is available in graph,
+            # if yes, then latest traversal is waiting for update.
+            if (resource_id, True) in graph:
+                # not is_update evaluates to True below, which means update
                 key = (resource_id, not is_update)
         LOG.info(_LI('Re-trigger resource: (%(key1)s, %(key2)s)'),
                  {'key1': key[0], 'key2': key[1]})
@@ -205,7 +213,8 @@ class CheckResource(object):
                 # check the SyncPoint for the current node to determine if
                 # it is ready. If it is, then retrigger the current node
                 # with the appropriate data for the latest traversal.
-                stack = parser.Stack.load(cnxt, stack_id=rsrc.stack.id)
+                stack = parser.Stack.load(cnxt, stack_id=rsrc.stack.id,
+                                          force_reload=True)
                 if current_traversal == stack.current_traversal:
                     LOG.debug('[%s] Traversal sync point missing.',
                               current_traversal)

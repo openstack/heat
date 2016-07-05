@@ -1972,13 +1972,16 @@ class Stack(collections.Mapping):
     def purge_db(self):
         """Cleanup database after stack has completed/failed.
 
-        1. If the stack failed, update the current_traversal to empty string
+        1. Delete the resources from DB.
+        2. If the stack failed, update the current_traversal to empty string
         so that the resource workers bail out.
-        2. Delete previous raw template if stack completes successfully.
-        3. Deletes all sync points. They are no longer needed after stack
+        3. Delete previous raw template if stack completes successfully.
+        4. Deletes all sync points. They are no longer needed after stack
            has completed/failed.
-        4. Delete the stack if the action is DELETE.
+        5. Delete the stack if the action is DELETE.
        """
+        resource_objects.Resource.purge_deleted(self.context, self.id)
+
         exp_trvsl = self.current_traversal
         if self.status == self.FAILED:
             self.current_traversal = ''
