@@ -25,15 +25,6 @@ from heat.engine import rsrc_defn
 from heat.engine import template
 
 
-_RESOURCE_KEYS = (
-    RES_TYPE, RES_PROPERTIES, RES_METADATA, RES_DEPENDS_ON,
-    RES_DELETION_POLICY, RES_UPDATE_POLICY, RES_DESCRIPTION,
-) = (
-    'type', 'properties', 'metadata', 'depends_on',
-    'deletion_policy', 'update_policy', 'description',
-)
-
-
 class HOTemplate20130523(template.Template):
     """A Heat Orchestration Template format stack template."""
 
@@ -60,14 +51,22 @@ class HOTemplate20130523(template.Template):
                             cfn_template.CfnTemplate.RESOURCES: RESOURCES,
                             cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
 
+    _RESOURCE_KEYS = (
+        RES_TYPE, RES_PROPERTIES, RES_METADATA, RES_DEPENDS_ON,
+        RES_DELETION_POLICY, RES_UPDATE_POLICY, RES_DESCRIPTION,
+    ) = (
+        'type', 'properties', 'metadata', 'depends_on',
+        'deletion_policy', 'update_policy', 'description',
+    )
+
     _RESOURCE_HOT_TO_CFN_ATTRS = {
-        RES_TYPE: cfn_template.RES_TYPE,
-        RES_PROPERTIES: cfn_template.RES_PROPERTIES,
-        RES_METADATA: cfn_template.RES_METADATA,
-        RES_DEPENDS_ON: cfn_template.RES_DEPENDS_ON,
-        RES_DELETION_POLICY: cfn_template.RES_DELETION_POLICY,
-        RES_UPDATE_POLICY: cfn_template.RES_UPDATE_POLICY,
-        RES_DESCRIPTION: cfn_template.RES_DESCRIPTION}
+        RES_TYPE: cfn_template.CfnTemplate.RES_TYPE,
+        RES_PROPERTIES: cfn_template.CfnTemplate.RES_PROPERTIES,
+        RES_METADATA: cfn_template.CfnTemplate.RES_METADATA,
+        RES_DEPENDS_ON: cfn_template.CfnTemplate.RES_DEPENDS_ON,
+        RES_DELETION_POLICY: cfn_template.CfnTemplate.RES_DELETION_POLICY,
+        RES_UPDATE_POLICY: cfn_template.CfnTemplate.RES_UPDATE_POLICY,
+        RES_DESCRIPTION: cfn_template.CfnTemplate.RES_DESCRIPTION}
 
     _HOT_TO_CFN_ATTRS = _RESOURCE_HOT_TO_CFN_ATTRS
     _HOT_TO_CFN_ATTRS.update(
@@ -166,7 +165,8 @@ class HOTemplate20130523(template.Template):
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
 
-        return self._translate_section(self.RESOURCES, RES_TYPE, resources,
+        return self._translate_section(self.RESOURCES, self.RES_TYPE,
+                                       resources,
                                        self._RESOURCE_HOT_TO_CFN_ATTRS)
 
     def get_section_name(self, section):
@@ -193,40 +193,40 @@ class HOTemplate20130523(template.Template):
 
     def validate_resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
-        allowed_keys = set(_RESOURCE_KEYS)
+        allowed_keys = set(self._RESOURCE_KEYS)
 
         try:
             for name, snippet in resources.items():
                 data = self.parse(stack, snippet)
 
-                if not self.validate_resource_key_type(RES_TYPE,
+                if not self.validate_resource_key_type(self.RES_TYPE,
                                                        six.string_types,
                                                        'string',
                                                        allowed_keys,
                                                        name, data):
-                    args = {'name': name, 'type_key': RES_TYPE}
+                    args = {'name': name, 'type_key': self.RES_TYPE}
                     msg = _('Resource %(name)s is missing '
                             '"%(type_key)s"') % args
                     raise KeyError(msg)
 
                 self.validate_resource_key_type(
-                    RES_PROPERTIES,
+                    self.RES_PROPERTIES,
                     (collections.Mapping, function.Function),
                     'object', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_METADATA,
+                    self.RES_METADATA,
                     (collections.Mapping, function.Function),
                     'object', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_DEPENDS_ON,
+                    self.RES_DEPENDS_ON,
                     collections.Sequence,
                     'list or string', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_DELETION_POLICY,
+                    self.RES_DELETION_POLICY,
                     (six.string_types, function.Function),
                     'string', allowed_keys, name, data)
                 self.validate_resource_key_type(
-                    RES_UPDATE_POLICY,
+                    self.RES_UPDATE_POLICY,
                     (collections.Mapping, function.Function),
                     'object', allowed_keys, name, data)
         except (TypeError, ValueError) as ex:
@@ -240,11 +240,12 @@ class HOTemplate20130523(template.Template):
 
     @classmethod
     def rsrc_defn_from_snippet(cls, name, data):
-        depends = data.get(RES_DEPENDS_ON)
+        depends = data.get(cls.RES_DEPENDS_ON)
         if isinstance(depends, six.string_types):
             depends = [depends]
 
-        deletion_policy = function.resolve(data.get(RES_DELETION_POLICY))
+        deletion_policy = function.resolve(
+            data.get(cls.RES_DELETION_POLICY))
         if deletion_policy is not None:
             if deletion_policy not in cls.deletion_policies:
                 msg = _('Invalid deletion policy "%s"') % deletion_policy
@@ -252,12 +253,12 @@ class HOTemplate20130523(template.Template):
             else:
                 deletion_policy = cls.deletion_policies[deletion_policy]
         kwargs = {
-            'resource_type': data.get(RES_TYPE),
-            'properties': data.get(RES_PROPERTIES),
-            'metadata': data.get(RES_METADATA),
+            'resource_type': data.get(cls.RES_TYPE),
+            'properties': data.get(cls.RES_PROPERTIES),
+            'metadata': data.get(cls.RES_METADATA),
             'depends': depends,
             'deletion_policy': deletion_policy,
-            'update_policy': data.get(RES_UPDATE_POLICY),
+            'update_policy': data.get(cls.RES_UPDATE_POLICY),
             'description': None
         }
 
