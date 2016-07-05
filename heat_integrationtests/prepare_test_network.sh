@@ -14,16 +14,12 @@
 
 # This script creates default tenant networks for the tests
 
-set -x
+set -ex
 
-source $DEST/devstack/openrc admin admin
-PUB_SUBNET_ID=`neutron subnet-list | grep ' public-subnet ' | awk '{split($0,a,"|"); print a[2]}'`
-ROUTER_GW_IP=`neutron port-list -c fixed_ips -c device_owner | grep router_gateway | awk -F '"' -v subnet_id="${PUB_SUBNET_ID//[[:space:]]/}" '$4 == subnet_id { print $8; }'`
+HEAT_PRIVATE_SUBNET_CIDR=10.0.5.0/24
 
 # create a heat specific private network (default 'private' network has ipv6 subnet)
 source $DEST/devstack/openrc demo demo
-HEAT_PRIVATE_SUBNET_CIDR=10.0.5.0/24
-neutron net-create heat-net
+openstack network create heat-net
 neutron subnet-create --name heat-subnet heat-net $HEAT_PRIVATE_SUBNET_CIDR
-neutron router-interface-add router1 heat-subnet
-sudo route add -net $HEAT_PRIVATE_SUBNET_CIDR gw $ROUTER_GW_IP
+openstack router add subnet router1 heat-subnet
