@@ -2186,6 +2186,7 @@ class ResourceTest(common.HeatTestCase):
 
             # set resource_id and recheck with re-written _show_resource
             res.resource_id = mock.Mock()
+            res.default_client_name = 'foo'
 
             show_attr.return_value = 'my attr'
             self.assertEqual('my attr', res.FnGetAtt('show'))
@@ -2204,6 +2205,7 @@ class ResourceTest(common.HeatTestCase):
         # check path with resolve_attribute
         stack = self.create_resource_for_attributes_tests()
         res = stack['res']
+        res.default_client_name = 'foo'
 
         with mock.patch.object(res, '_resolve_attribute') as res_attr:
             res_attr.side_effect = ['Works', Exception]
@@ -2215,6 +2217,19 @@ class ResourceTest(common.HeatTestCase):
             with mock.patch.object(res, 'client_plugin') as client_plugin:
                 self.assertIsNone(res.FnGetAtt('Foo'))
                 self.assertEqual(1, client_plugin.call_count)
+
+    def test_resolve_attributes_no_default_client_name(self):
+        class MyException(Exception):
+            pass
+
+        stack = self.create_resource_for_attributes_tests()
+        res = stack['res']
+        res.default_client_name = None
+
+        with mock.patch.object(res, '_resolve_attribute') as res_attr:
+            res_attr.side_effect = [MyException]
+            # Make sure this isn't AssertionError
+            self.assertRaises(MyException, res.FnGetAtt, 'Foo')
 
     def test_show_resource(self):
         # check default function _show_resource
@@ -3508,6 +3523,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         res.client().entity.delete = delete
         res.entity = 'entity'
         res.resource_id = '12345'
+        res.default_client_name = 'foo'
 
         self.assertIsNone(res.handle_delete())
         delete.assert_called_once_with('12345')
@@ -3579,6 +3595,30 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertIsNone(res.handle_delete())
         self.assertEqual(0, delete.call_count)
+
+    def test_handle_delete_no_default_client_name(self):
+        class MyException(Exception):
+            pass
+
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template))
+        self.stack.store()
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'OS::Heat::None')
+        res = resource.Resource('aresource', snippet, self.stack)
+
+        FakeClient = collections.namedtuple('Client',
+                                            ['entity'])
+        client = FakeClient(collections.namedtuple('entity', ['delete']))
+        self.patchobject(resource.Resource, 'client', return_value=client)
+        delete = mock.Mock()
+        delete.side_effect = [MyException]
+        res.client().entity.delete = delete
+        res.entity = 'entity'
+        res.resource_id = '1234'
+        res.default_client_name = None
+
+        self.assertRaises(MyException, res.handle_delete)
 
 
 class TestLiveStateUpdate(common.HeatTestCase):
@@ -3692,6 +3732,7 @@ class TestLiveStateUpdate(common.HeatTestCase):
 
     def test_get_live_resource_data_not_found(self):
         res = self._prepare_resource_live_state()
+        res.default_client_name = 'foo'
         res.resource_id = self.resource_id
         res._show_resource = mock.MagicMock(
             side_effect=[exception.NotFound()])
@@ -3701,6 +3742,20 @@ class TestLiveStateUpdate(common.HeatTestCase):
                                res.get_live_resource_data)
         self.assertEqual('The Resource (test_resource) could not be found.',
                          six.text_type(ex))
+        self._clean_tests_after_resource_live_state(res)
+
+    def test_get_live_resource_data_not_found_no_default_client_name(self):
+        class MyException(Exception):
+            pass
+
+        res = self._prepare_resource_live_state()
+        res.default_client_name = None
+        res.resource_id = self.resource_id
+        res._show_resource = mock.MagicMock(
+            side_effect=[MyException])
+        res.client_plugin = mock.MagicMock()
+        res.client_plugin().is_not_found = mock.MagicMock(return_value=True)
+        self.assertRaises(MyException, res.get_live_resource_data)
         self._clean_tests_after_resource_live_state(res)
 
     def test_get_live_resource_data_other_error(self):
