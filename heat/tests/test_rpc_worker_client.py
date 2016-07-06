@@ -24,6 +24,7 @@ class WorkerClientTest(common.HeatTestCase):
 
     def setUp(self):
         super(WorkerClientTest, self).setUp()
+        self.fake_engine_id = 'fake-engine-id'
 
     def test_make_msg(self):
         method = 'sample_method'
@@ -44,8 +45,8 @@ class WorkerClientTest(common.HeatTestCase):
         worker_client = rpc_client.WorkerClient()
         rpc_client_method.assert_called_once_with(
             version=rpc_client.WorkerClient.BASE_RPC_API_VERSION,
-            topic=rpc_api.TOPIC
-        )
+            topic=rpc_api.TOPIC)
+
         self.assertEqual(mock_rpc_client,
                          worker_client._client,
                          "Failed to create RPC client")
@@ -60,15 +61,39 @@ class WorkerClientTest(common.HeatTestCase):
         # go with default version
         return_value = worker_client.cast(mock_cnxt, msg)
         self.assertIsNone(return_value)
-        mock_rpc_client.cast.assert_called_once_with(mock_cnxt,
-                                                     method,
-                                                     **kwargs)
+        mock_rpc_client.cast.assert_called_with(mock_cnxt,
+                                                method,
+                                                **kwargs)
 
         # Check cast in given version
-        version = '1.2'
+        version = '1.3'
         return_value = worker_client.cast(mock_cnxt, msg, version)
         self.assertIsNone(return_value)
         mock_rpc_client.prepare.assert_called_once_with(version=version)
         mock_rpc_client.cast.assert_called_once_with(mock_cnxt,
                                                      method,
                                                      **kwargs)
+
+    def test_cancel_check_resource(self):
+        mock_stack_id = 'dummy-stack-id'
+        mock_cnxt = mock.Mock()
+        method = 'cancel_check_resource'
+        kwargs = {'stack_id': mock_stack_id}
+        mock_rpc_client = mock.MagicMock()
+        mock_cast = mock.MagicMock()
+        with mock.patch('heat.common.messaging.get_rpc_client') as mock_grc:
+            mock_grc.return_value = mock_rpc_client
+            mock_rpc_client.prepare.return_value = mock_cast
+            wc = rpc_client.WorkerClient()
+            ret_val = wc.cancel_check_resource(mock_cnxt, mock_stack_id,
+                                               self.fake_engine_id)
+            # ensure called with fanout=True
+            mock_grc.assert_called_with(
+                version=wc.BASE_RPC_API_VERSION,
+                topic=rpc_api.TOPIC,
+                server=self.fake_engine_id)
+            self.assertIsNone(ret_val)
+            mock_rpc_client.prepare.assert_called_with(
+                version='1.3')
+            # ensure correct rpc method is called
+            mock_cast.cast.assert_called_with(mock_cnxt, method, **kwargs)

@@ -40,7 +40,7 @@ class WorkerService(service.Service):
     or expect replies from these messages.
     """
 
-    RPC_API_VERSION = '1.2'
+    RPC_API_VERSION = '1.3'
 
     def __init__(self,
                  host,
@@ -60,7 +60,7 @@ class WorkerService(service.Service):
     def start(self):
         target = oslo_messaging.Target(
             version=self.RPC_API_VERSION,
-            server=self.host,
+            server=self.engine_id,
             topic=self.topic)
         self.target = target
         LOG.info(_LI("Starting %(topic)s (%(version)s) in engine %(engine)s."),
@@ -112,3 +112,13 @@ class WorkerService(service.Service):
 
         cr.check(cnxt, resource_id, current_traversal, resource_data,
                  is_update, adopt_stack_data, rsrc, stack)
+
+    @context.request_context
+    def cancel_check_resource(self, cnxt, stack_id):
+        """Cancel check_resource for given stack.
+
+        All the workers running for the given stack will be
+        cancelled.
+        """
+        # TODO(ananta): Implement cancel check-resource
+        LOG.debug('Cancelling workers for stack [%s]', stack_id)
