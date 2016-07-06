@@ -49,7 +49,8 @@ class ResourceTypeTest(common.HeatTestCase):
                               'OS::Neutron::HealthMonitor',
                               'OS::Neutron::LoadBalancer',
                               'OS::Neutron::Pool',
-                              'OS::Neutron::PoolMember']),
+                              'OS::Neutron::PoolMember',
+                              'OS::Aodh::CombinationAlarm']),
                          set(resources))
 
     @mock.patch.object(res.Resource, 'is_service_available')
