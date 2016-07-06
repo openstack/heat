@@ -1480,7 +1480,8 @@ class EngineService(service.Service):
         def properties_schema():
             for name, schema_dict in resource_class.properties_schema.items():
                 schema = properties.Schema.from_legacy(schema_dict)
-                if schema.implemented:
+                if (schema.implemented
+                        and schema.support_status.status != support.HIDDEN):
                     yield name, dict(schema)
 
         def attributes_schema():
@@ -1488,7 +1489,8 @@ class EngineService(service.Service):
                     resource_class.attributes_schema.items(),
                     resource_class.base_attributes_schema.items()):
                 schema = attributes.Schema.from_attribute(schema_data)
-                yield name, dict(schema)
+                if schema.support_status.status != support.HIDDEN:
+                    yield name, dict(schema)
 
         return {
             rpc_api.RES_SCHEMA_RES_TYPE: type_name,

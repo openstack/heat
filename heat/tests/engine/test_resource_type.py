@@ -136,6 +136,37 @@ class ResourceTypeTest(common.HeatTestCase):
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)
 
+    def test_resource_schema_with_hidden(self):
+
+        type_name = 'ResourceWithHiddenPropertyAndAttribute'
+        expected = {
+            'resource_type': type_name,
+            'properties': {
+                'supported': {
+                    'description': "Supported property.",
+                    'type': 'list',
+                    'immutable': False,
+                    'required': False,
+                    'update_allowed': False
+                }
+            },
+            'attributes': {
+                'supported': {'description': 'Supported attribute.',
+                              'type': 'string'},
+                'show': {
+                    'description': 'Detailed information about resource.',
+                    'type': 'map'},
+            },
+            'support_status': {
+                'status': 'SUPPORTED',
+                'version': None,
+                'message': None,
+                'previous_status': None
+            }
+        }
+        schema = self.eng.resource_schema(self.ctx, type_name=type_name)
+        self.assertEqual(expected, schema)
+
     def _no_template_file(self, function):
         env = environment.Environment()
         info = environment.ResourceInfo(env.registry,
