@@ -485,8 +485,9 @@ required in later examples:
     # elements collection. Other values which may work include:
     # centos7, debian, opensuse, rhel, rhel7, or ubuntu
     export BASE_ELEMENTS="fedora selinux-permissive"
-    # Install and configure the os-collect-config agent to poll the heat service
-    # for configuration changes to execute
+    # Install and configure the os-collect-config agent to poll the metadata
+    # server (heat service or zaqar message queue and so on) for configuration
+    # changes to execute
     export AGENT_ELEMENTS="os-collect-config os-refresh-config os-apply-config"
 
 
