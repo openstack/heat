@@ -481,8 +481,8 @@ Delete
 
      For this to work for a particular resource, the `entity` and
      `default_client_name` attributes must be overridden in the resource
-     implementation. For example, `entity` of Ceilometer Alarm should equals
-     to "alarms" and `default_client_name` to "ceilometer".
+     implementation. For example, `entity` of Aodh Alarm should equals
+     to "alarm" and `default_client_name` to "aodh".
 
 .. py:function:: handle_delete_snapshot(self, snapshot)
 

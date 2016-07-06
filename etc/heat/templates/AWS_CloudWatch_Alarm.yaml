@@ -1,5 +1,5 @@
 HeatTemplateFormatVersion: '2012-12-12'
-Description: AWS::CloudWatch::Alarm using Ceilometer.
+Description: AWS::CloudWatch::Alarm using Aodh.
 Parameters:
   AlarmDescription:
     Type: String
@@ -47,16 +47,16 @@ Parameters:
 
 Mappings:
   ComparisonOperatorMap:
-    LessThanOrEqualToThreshold: {Ceilometer: le}
-    LessThanThreshold: {Ceilometer: lt}
-    GreaterThanThreshold: {Ceilometer: gt}
-    GreaterThanOrEqualToThreshold: {Ceilometer: ge}
+    LessThanOrEqualToThreshold: {Aodh: le}
+    LessThanThreshold: {Aodh: lt}
+    GreaterThanThreshold: {Aodh: gt}
+    GreaterThanOrEqualToThreshold: {Aodh: ge}
   StatisticMap:
-    SampleCount: {Ceilometer: count}
-    Average: {Ceilometer: avg}
-    Sum: {Ceilometer: sum}
-    Minimum: {Ceilometer: min}
-    Maximum: {Ceilometer: max}
+    SampleCount: {Aodh: count}
+    Average: {Aodh: avg}
+    Sum: {Aodh: sum}
+    Minimum: {Aodh: min}
+    Maximum: {Aodh: max}
 
 Resources:
   __alarm__:
@@ -80,8 +80,8 @@ Resources:
       insufficient_data_actions:
         Ref: InsufficientDataActions
       statistic:
-        "Fn::FindInMap": [StatisticMap, {Ref: Statistic}, Ceilometer]
+        "Fn::FindInMap": [StatisticMap, {Ref: Statistic}, Aodh]
       comparison_operator:
-        "Fn::FindInMap": [ComparisonOperatorMap, {Ref: ComparisonOperator}, Ceilometer]
+        "Fn::FindInMap": [ComparisonOperatorMap, {Ref: ComparisonOperator}, Aodh]
       matching_metadata:
         "Fn::MemberListToMap": [Name, Value, {Ref: Dimensions}]

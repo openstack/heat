@@ -17,7 +17,7 @@ import mox
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import aodh
-from heat.engine.resources.openstack.ceilometer.gnocchi import (
+from heat.engine.resources.openstack.aodh.gnocchi import (
     alarm as gnocchi)
 from heat.engine import scheduler
 from heat.tests import common
