@@ -1344,7 +1344,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                         'swap_size must be specified.')
                 raise exception.StackValidationFailed(message=msg)
 
-            if any((volume_id, snapshot_id, image_id)):
+            if any((volume_id is not None, snapshot_id is not None,
+                    image_id is not None)):
                 bootable_vol = True
 
         return bootable_vol
@@ -1399,7 +1400,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         # make sure the image exists if specified.
         image = self.properties[self.IMAGE]
-        if not image and not bootable_vol:
+        if image is None and not bootable_vol:
             msg = _('Neither image nor bootable volume is specified for'
                     ' instance %s') % self.name
             raise exception.StackValidationFailed(message=msg)
@@ -1415,7 +1416,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         networks_with_port = False
         for network in networks:
             networks_with_port = (networks_with_port or
-                                  network.get(self.NETWORK_PORT))
+                                  network.get(self.NETWORK_PORT) is not None)
             self._validate_network(network)
 
         # retrieve provider's absolute limits if it will be needed

@@ -1062,6 +1062,10 @@ class ServersTest(common.HeatTestCase):
                          'instance server_with_bootable_volume',
                          six.text_type(ex))
 
+        web_server['Properties']['image'] = ''
+        server = create_server('vdb')
+        self.assertIsNone(server.validate())
+
     def test_server_validate_with_nova_keypair_resource(self):
         stack_name = 'srv_val_test'
         nova_keypair_template = '''
@@ -1357,7 +1361,7 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
         tmpl['Resources']['WebServer']['Properties']['networks'] = [
-            {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
+            {'port': ''}]
         tmpl['Resources']['WebServer']['Properties'][
             'security_groups'] = ['my_security_group']
         self.patchobject(nova.NovaClientPlugin, '_create',
@@ -2674,6 +2678,27 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
         bdm_v2 = [{'volume_id': '1'}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping_v2'] = bdm_v2
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.stub_VolumeConstraint_validate()
+        self.assertIsNone(server.validate())
+
+    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    def test_validate_bdm_v2_with_unresolved_volume(self, mock_create):
+        stack_name = 'v2_properties'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        del tmpl['Resources']['WebServer']['Properties']['image']
+
+        # empty string indicates that volume is unresolved
+        bdm_v2 = [{'volume_id': ''}]
         wsp = tmpl.t['Resources']['WebServer']['Properties']
         wsp['block_device_mapping_v2'] = bdm_v2
 
