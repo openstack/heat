@@ -13,7 +13,6 @@
 from heatclient.common import template_utils
 import six
 
-from heat_integrationtests.common import exceptions
 from heat_integrationtests.scenario import scenario_base
 
 CFG1_SH = '''#!/bin/sh
@@ -69,9 +68,6 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
             for res in ('dep2a', 'dep2b', 'dep1', 'dep3'):
                 self._wait_for_resource_status(
                     sid, res, 'CREATE_COMPLETE')
-        except (exceptions.StackResourceBuildErrorException,
-                exceptions.TimeoutException) as e:
-            raise e
         finally:
             # attempt to log the server console regardless of deployments
             # going to complete. This allows successful and failed boot
