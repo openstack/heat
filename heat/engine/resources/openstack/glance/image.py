@@ -49,7 +49,9 @@ class GlanceImage(resource.Resource):
         IS_PUBLIC: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Scope of image accessibility. Public or private. '
-              'Default value is False means private.'),
+              'Default value is False means private. Note: The policy '
+              'setting of glance allows only users with admin roles to create '
+              'public image by default.'),
             default=False,
         ),
         MIN_DISK: properties.Schema(
