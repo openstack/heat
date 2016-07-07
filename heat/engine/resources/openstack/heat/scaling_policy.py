@@ -143,14 +143,19 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                                                       self.context)
 
     def handle_signal(self, details=None):
-        # ceilometer sends details like this:
-        # {u'alarm_id': ID, u'previous': u'ok', u'current': u'alarm',
-        #  u'reason': u'...'})
-        # in this policy we currently assume that this gets called
-        # only when there is an alarm. But the template writer can
-        # put the policy in all the alarm notifiers (nodata, and ok).
+        # Template author can use scaling policy with any of the actions
+        # of an alarm (i.e alarm_actions, insufficient_data_actions) and
+        # it would be actioned irrespective of the alarm state. It's
+        # fair to assume that the alarm state would be the appropriate one.
+        # The responsibility of using a scaling policy with desired actions
+        # lies with the template author, though this is normally expected to
+        # be used with 'alarm_actions'.
         #
-        # our watchrule has upper case states so lower() them all.
+        # We also assume that the alarm state is 'alarm' when 'details' is None
+        # or no 'current'/'state' key in 'details'. Watchrule has upper case
+        # states, so we lower() them. This is only used for logging the alarm
+        # state.
+
         if details is None:
             alarm_state = 'alarm'
         else:
@@ -159,9 +164,6 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
         LOG.info(_LI('Alarm %(name)s, new state %(state)s'),
                  {'name': self.name, 'state': alarm_state})
-
-        if alarm_state != 'alarm':
-            raise exception.NoActionRequired()
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)
