@@ -218,16 +218,18 @@ translation mechanism for that. Mechanism used for such cases:
 2. If there are two properties: one in LIST or MAP property sub-schema and
    another on the top schema.
 3. If there are two properties in LIST property.
-4. If there was non-LIST property and LIST property, which was designed to
+4. If there are non-LIST property and LIST property, which is designed to
    replace non-LIST property.
+5. If there is STRING property, which contains name or ID of some entity, e.g.
+   `subnet`, and should be resolved to entity's ID.
 
 Mechanism has rules and executes them. To define rule, ``TranslationRule``
-class called and specifies *translation_path* - list with path in properties_schema
-for property which will be affected; *value* - value, which will be added to
-property, specified by previous parameter; *value_name* - name of old property,
-used for case 4; *value_path* - list with path in properties_schema for
-property which will be used for getting value. ``TranslationRule`` supports
-next rules:
+class called and specifies *translation_path* - list with path in
+properties_schema for property which will be affected; *value* - value, which
+will be added to property, specified by previous parameter; *value_name* - name
+of old property, used for case 4; *value_path* - list with path in
+properties_schema for property which will be used for getting value.
+``TranslationRule`` supports next rules:
 
 - *ADD*. This rule allows to add some value to LIST-type properties. Only
   LIST-type values can be added to such properties. Using for other
@@ -239,6 +241,8 @@ next rules:
   this property, *value_name* must be defined.
 - *DELETE*. This rule allows to delete some property. If property has list
   type, then deleting affects value in all list elements.
+- *RESOLVE* - This rule allows to resolve some property using client and the
+  *finder* function. Finders may require an additional *entity* key.
 
 Each resource, which has some hidden properties, which can be replaced by new,
 must overload `translation_rules` method, which should return a list of
