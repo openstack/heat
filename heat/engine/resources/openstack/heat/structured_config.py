@@ -235,11 +235,14 @@ class StructuredDeploymentGroup(sd.SoftwareDeploymentGroup):
 
 class StructuredDeployments(StructuredDeploymentGroup):
 
-    deprecation_msg = _('Use of this resource is discouraged. Please use '
-                        'OS::Heat::StructuredDeploymentGroup instead.')
-    support_status = support.SupportStatus(status=support.DEPRECATED,
-                                           message=deprecation_msg,
-                                           version='2014.2')
+    hidden_msg = _('Please use OS::Heat::StructuredDeploymentGroup instead.')
+    support_status = support.SupportStatus(
+        status=support.HIDDEN,
+        message=hidden_msg,
+        version='7.0.0',
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            version='2014.2'))
 
 
 def resource_mapping():
