@@ -229,7 +229,8 @@ class Stack(collections.Mapping):
         self._set_param_stackid()
 
         if resolve_data:
-            self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
+            self.outputs = self.resolve_static_data(
+                self.t[self.t.OUTPUTS], path=self.t.OUTPUTS)
         else:
             self.outputs = {}
 
@@ -1459,7 +1460,8 @@ class Stack(collections.Mapping):
             previous_template_id = self.t.id
             self.t = newstack.t
             template_outputs = self.t[self.t.OUTPUTS]
-            self.outputs = self.resolve_static_data(template_outputs)
+            self.outputs = self.resolve_static_data(
+                template_outputs, path=self.t.OUTPUTS)
         finally:
             if should_rollback:
                 # Already handled in rollback task
@@ -1916,14 +1918,8 @@ class Stack(collections.Mapping):
             'tags': self.tags,
         }
 
-    def resolve_static_data(self, snippet):
-        try:
-            return self.t.parse(self, snippet)
-        except AssertionError:
-            raise
-        except Exception as ex:
-            raise exception.StackValidationFailed(
-                message=encodeutils.safe_decode(six.text_type(ex)))
+    def resolve_static_data(self, snippet, path=''):
+        return self.t.parse(self, snippet, path=path)
 
     def reset_resource_attributes(self):
         # nothing is cached if no resources exist

@@ -1624,7 +1624,8 @@ class ValidateTest(common.HeatTestCase):
         template = tmpl.Template(t)
         err = self.assertRaises(exception.StackValidationFailed,
                                 parser.Stack, self.ctx, 'test_stack', template)
-        error_message = ('Arguments to "get_attr" must be of the form '
+        error_message = ('outputs.string.value.get_attr: Arguments to '
+                         '"get_attr" must be of the form '
                          '[resource_name, attribute, (path), ...]')
         self.assertEqual(error_message, six.text_type(err))
 
