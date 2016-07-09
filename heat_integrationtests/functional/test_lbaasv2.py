@@ -10,11 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 
 from heat_integrationtests.functional import functional_base
-
-LOG = logging.getLogger(__name__)
 
 
 class LoadBalancerv2Test(functional_base.FunctionalTestsBase):
