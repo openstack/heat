@@ -169,6 +169,9 @@ class AttributesTest(common.HeatTestCase):
             "test1": attributes.Schema("Test attrib 1"),
             "test2": attributes.Schema("Test attrib 2"),
             "test3": attributes.Schema("Test attrib 3"),
+            "test4": attributes.Schema(
+                "Test attrib 4",
+                support_status=support.SupportStatus(status=support.HIDDEN))
         }
         self.assertEqual(
             expected,

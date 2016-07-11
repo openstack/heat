@@ -42,6 +42,7 @@ from heat.engine.resources.openstack.heat import test_resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
+from heat.engine import support
 from heat.engine import template
 from heat.engine import translation
 from heat.objects import resource as resource_objects
@@ -1256,6 +1257,10 @@ class ResourceTest(common.HeatTestCase):
                 'list': {'Type': 'List', 'Schema': {'Type': 'Map',
                          'Schema': list_schema}},
                 'map': {'Type': 'Map', 'Schema': map_schema},
+                'hidden': properties.Schema(
+                    properties.Schema.STRING,
+                    support_status=support.SupportStatus(
+                        status=support.HIDDEN))
             }
 
             attributes_schema = {
@@ -1339,6 +1344,10 @@ class ResourceTest(common.HeatTestCase):
                 'list': {'Type': 'List', 'Schema': {'Type': 'Map',
                          'Schema': list_schema}},
                 'map': {'Type': 'Map', 'Schema': map_schema},
+                'hidden': properties.Schema(
+                    properties.Schema.STRING,
+                    support_status=support.SupportStatus(
+                        status=support.HIDDEN))
             }
 
             attributes_schema = {
