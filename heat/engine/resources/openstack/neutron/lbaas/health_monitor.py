@@ -63,8 +63,8 @@ class HealthMonitor(neutron.NeutronResource):
         ),
         DELAY: properties.Schema(
             properties.Schema.INTEGER,
-            _('The minimum time in seconds between regular connections of '
-              'the member.'),
+            _('The minimum time in milliseconds between regular connections '
+              'of the member.'),
             required=True,
             update_allowed=True,
             constraints=[constraints.Range(min=0)]
@@ -104,7 +104,7 @@ class HealthMonitor(neutron.NeutronResource):
         ),
         TIMEOUT: properties.Schema(
             properties.Schema.INTEGER,
-            _('Maximum number of seconds for a monitor to wait for a '
+            _('Maximum number of milliseconds for a monitor to wait for a '
               'connection to be established before it times out.'),
             required=True,
             update_allowed=True,
