@@ -14,16 +14,12 @@ import hashlib
 import json
 import random
 
-from oslo_log import log as logging
-
 from six.moves.urllib import parse
 from swiftclient import utils as swiftclient_utils
 import yaml
 
 from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
-
-LOG = logging.getLogger(__name__)
 
 
 class AwsStackTest(functional_base.FunctionalTestsBase):
