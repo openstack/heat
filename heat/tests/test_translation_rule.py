@@ -807,50 +807,6 @@ class TestTranslationRule(common.HeatTestCase):
         self.assertEqual(['white', 'roses', 'chrysanthemums'],
                          props.get('far'))
 
-    def test_property_no_translation_removed_function(self):
-        """Test case when list property with sub-schema takes json param."""
-        schema = {
-            'far': properties.Schema(properties.Schema.LIST,
-                                     schema=properties.Schema(
-                                         properties.Schema.MAP,
-                                         schema={
-                                             'bar': properties.Schema(
-                                                 properties.Schema.STRING,
-                                             ),
-                                             'dar': properties.Schema(
-                                                 properties.Schema.STRING
-                                             )
-                                         }
-                                     ))
-        }
-
-        class DummyStack(dict):
-            @property
-            def parameters(self):
-                return mock.Mock()
-
-        param = hot_funcs.Removed(DummyStack(json_far='json_far'),
-                                  'Ref',
-                                  'json_far')
-        param.parameters = {
-            'json_far': parameters.JsonParam(
-                'json_far',
-                {'Type': 'Json'},
-                '{"dar": "rad"}').value()}
-        data = {'far': [param]}
-
-        props = properties.Properties(schema, data)
-
-        rule = translation.TranslationRule(
-            props,
-            translation.TranslationRule.REPLACE,
-            ['far', 'bar'],
-            value_name='dar')
-
-        rule.execute_rule()
-
-        self.assertEqual([param], props.data.get('far'))
-
     def test_property_no_translation_if_user_parameter_missing(self):
         """Test translation in the case of missing parameter"""
         schema = {

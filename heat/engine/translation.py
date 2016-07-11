@@ -185,8 +185,6 @@ class TranslationRule(object):
         # NOTE(prazumovsky): If property uses removed in HOT function,
         # we should not translate it for correct validating and raising
         # validation error.
-        if isinstance(param, hot_funcs.Removed):
-            raise AttributeError(_('Property uses removed function.'))
         if isinstance(param, (hot_funcs.GetParam, cfn_funcs.ParamRef)):
             try:
                 return function.resolve(param)
