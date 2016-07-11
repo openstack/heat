@@ -269,6 +269,25 @@ class ResourceWithListProp(ResourceWithFnGetRefIdType):
     properties_schema = {"listprop": properties.Schema(properties.Schema.LIST)}
 
 
+class ResourceWithHiddenPropertyAndAttribute(GenericResource):
+    properties_schema = {
+        "supported": properties.Schema(properties.Schema.LIST,
+                                       "Supported property."),
+        "hidden": properties.Schema(
+            properties.Schema.LIST,
+            "Hidden property.",
+            support_status=support.SupportStatus(status=support.HIDDEN))
+    }
+    attributes_schema = {
+        'supported': attributes.Schema(type=attributes.Schema.STRING,
+                                       description='Supported attribute.'),
+        'hidden': attributes.Schema(
+            type=attributes.Schema.STRING,
+            description='Hidden attribute',
+            support_status=support.SupportStatus(status=support.HIDDEN))
+    }
+
+
 class StackResourceType(stack_resource.StackResource, GenericResource):
     def physical_resource_name(self):
         return "cb2f2b28-a663-4683-802c-4b40c916e1ff"

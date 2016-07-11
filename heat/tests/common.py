@@ -196,6 +196,9 @@ class HeatTestCase(testscenarios.WithScenarios,
                                  generic_rsrc.ResourceTypeSupportedKilo)
         resource._register_class('ResourceTypeHidden',
                                  generic_rsrc.ResourceTypeHidden)
+        resource._register_class(
+            'ResourceWithHiddenPropertyAndAttribute',
+            generic_rsrc.ResourceWithHiddenPropertyAndAttribute)
 
     def patchobject(self, obj, attr, **kwargs):
         mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,
