@@ -2063,11 +2063,14 @@ class EngineService(service.Service):
 
         try:
             wds = watch_data.WatchData.get_all(cnxt)
+            rule_names = {
+                r.id: r.name for r in watch_rule.WatchRule.get_all(cnxt)
+            }
         except Exception as ex:
             LOG.warning(_LW('show_metric (all) db error %s'), ex)
             return
 
-        result = [api.format_watch_data(w) for w in wds]
+        result = [api.format_watch_data(w, rule_names) for w in wds]
         return result
 
     @context.request_context
