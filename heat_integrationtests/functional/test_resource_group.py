@@ -299,6 +299,7 @@ outputs:
                                              files=files1)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
+        self.assertEqual(files1, self.client.stacks.files(stack_identifier))
 
         initial_nested_ident = self.group_nested_identifier(stack_identifier,
                                                             'random_group')
@@ -315,6 +316,7 @@ outputs:
         updated_nested_ident = self.group_nested_identifier(stack_identifier,
                                                             'random_group')
         self.assertEqual(initial_nested_ident, updated_nested_ident)
+        self.assertEqual(files2, self.client.stacks.files(stack_identifier))
 
         # compare the output, we expect a change.
         stack1 = self.client.stacks.get(stack_identifier)
