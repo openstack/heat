@@ -15,6 +15,7 @@ import collections
 import six
 import weakref
 
+from heat.common import context
 from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.objects import raw_template_files
@@ -89,12 +90,13 @@ class TemplateFiles(collections.Mapping):
         self._refresh()
 
     def _refresh(self):
-        rtf_obj = db_api.raw_template_files_get(None, self.files_id)
+        ctxt = context.get_admin_context()
+        rtf_obj = db_api.raw_template_files_get(ctxt, self.files_id)
         _files_dict = ReadOnlyDict(rtf_obj.files)
         self.files = _files_dict
         _d[self.files_id] = _files_dict
 
-    def store(self, ctxt=None):
+    def store(self, ctxt):
         if not self.files or self.files_id is not None:
             # Do not to persist an empty raw_template_files obj. If we
             # already have a not null self.files_id, the (immutable)
