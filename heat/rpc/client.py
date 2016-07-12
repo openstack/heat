@@ -53,6 +53,7 @@ class EngineClient(object):
         1.30 - Add possibility to resource_type_* return descriptions
         1.31 - Add nested_depth to list_events, when nested_depth is specified
                add root_stack_id to response
+        1.32 - Add get_files call
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -407,6 +408,19 @@ class EngineClient(object):
                          self.make_msg('get_environment',
                                        stack_identity=stack_identity),
                          version='1.28')
+
+    def get_files(self, context, stack_identity):
+        """Returns the files for an existing stack.
+
+        :param context: RPC context
+        :param stack_identity: identifies the stack
+        :rtype: dict
+        """
+
+        return self.call(context,
+                         self.make_msg('get_files',
+                                       stack_identity=stack_identity),
+                         version='1.32')
 
     def delete_stack(self, ctxt, stack_identity, cast=True):
         """Deletes a given stack.

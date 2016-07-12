@@ -1083,6 +1083,24 @@ class StackServiceTest(common.HeatTestCase):
                           self.ctx,
                           'irrelevant')
 
+    def test_get_files(self):
+        # Setup
+        t = template_format.parse(tools.wp_template)
+        files = {'foo.yaml': 'i am a file'}
+        tmpl = templatem.Template(t, files=files)
+        stack = parser.Stack(self.ctx, 'get_env_stack', tmpl)
+        stack.store()
+
+        mock_get_stack = self.patchobject(self.eng, '_get_stack')
+        mock_get_stack.return_value = mock.MagicMock()
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+
+        # Test
+        found = self.eng.get_files(self.ctx, stack.identifier())
+
+        # Verify
+        self.assertEqual(files, found)
+
     def test_stack_show_output(self):
         t = template_format.parse(tools.wp_template)
         t['outputs'] = {'test': {'value': 'first', 'description': 'sec'},
