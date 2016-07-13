@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/bash
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -11,6 +11,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+"true" '''\'
+if hash python3 2>/dev/null; then
+    interpreter="python3"
+else
+    interpreter="python"
+fi
+exec $interpreter "$0"
+'''
 
 import datetime
 from distutils import version

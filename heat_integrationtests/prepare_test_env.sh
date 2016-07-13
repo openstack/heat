@@ -31,7 +31,7 @@ openstack flavor create m1.heat_int --ram 512
 openstack flavor create m1.heat_micro --ram 128
 
 # Register the glance image for testing
-curl http://tarballs.openstack.org/heat-test-image/fedora-heat-test-image.qcow2 | openstack image create fedora-heat-test-image --disk-format qcow2 --container-format bare --public
+curl -L https://download.fedoraproject.org/pub/fedora/linux/releases/24/CloudImages/x86_64/images/Fedora-Cloud-Base-24-1.2.x86_64.qcow2 | openstack image create fedora-heat-test-image --disk-format qcow2 --container-format bare --public
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
    # The curl command failed, so the upload is mostly likely incorrect. Let's
    # bail out early.
