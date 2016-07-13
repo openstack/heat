@@ -68,6 +68,7 @@ class CloudServer(server.Server):
         'general1', 'memory1', 'performance2', 'performance1',
         'standard1', 'io1', 'onmetal', 'compute1',
     )
+    BASE_IMAGE_REF = 'base_image_ref'
 
     # flavor classes that can be booted ONLY from volume
     BFV_VOLUME_REQUIRED = {MEMORY1, COMPUTE1}
@@ -239,8 +240,22 @@ class CloudServer(server.Server):
 
         return self._extend_networks(nets)
 
-    def _image_flavor_class_match(self, flavor_type, image_obj):
-        flavor_class_string = image_obj.get(self.FLAVOR_CLASSES_KEY, '')
+    def _base_image_obj(self, image):
+        image_obj = self.client_plugin('glance').get_image(image)
+        if self.BASE_IMAGE_REF in image_obj:
+            base_image = image_obj[self.BASE_IMAGE_REF]
+            return self.client_plugin('glance').get_image(base_image)
+        return image_obj
+
+    def _image_flavor_class_match(self, flavor_type, image):
+        base_image_obj = self._base_image_obj(image)
+        flavor_class_string = base_image_obj.get(self.FLAVOR_CLASSES_KEY)
+
+        # If the flavor_class_string metadata does not exist or is
+        # empty, do not validate image/flavor combo
+        if not flavor_class_string:
+            return True
+
         flavor_class_excluded = "!{0}".format(flavor_type)
         flavor_classes_accepted = flavor_class_string.split(',')
 
@@ -273,9 +288,7 @@ class CloudServer(server.Server):
                 # is all the validation possible
                 return
 
-        image_obj = self.client_plugin('glance').get_image(image)
-
-        if not self._image_flavor_class_match(flavor_type, image_obj):
+        if not self._image_flavor_class_match(flavor_type, image):
             msg = _('Flavor %(flavor)s cannot be used with image '
                     '%(image)s.') % {'image': image, 'flavor': flavor}
             raise exception.StackValidationFailed(message=msg)
