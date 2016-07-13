@@ -25,11 +25,11 @@ from heat.engine import template
 class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     """An autoscaling group that can scale arbitrary resources.
 
-    A resource allows to create desired count of similar resources, which
-    defined with resource property in HOT format. If there's necessity of
-    creating many of the same resources (e.g. one hundred sets of Server,
-    WaitCondition and WaitConditionHandle or even Neutron Nets),
-    AutoScalingGroup is the most convenient and easy way to do that.
+    An autoscaling group allows the creation of a desired count of similar
+    resources, which are defined with the resource property in HOT format.
+    If there is a need to create many of the same resources (e.g. one
+    hundred sets of Server, WaitCondition and WaitConditionHandle or even
+    Neutron Nets), AutoScalingGroup is a convenient and easy way to do that.
     """
 
     PROPERTIES = (
@@ -121,14 +121,17 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     attributes_schema = {
         OUTPUTS: attributes.Schema(
             _("A map of resource names to the specified attribute of each "
-              "individual resource. "
-              "Requires heat_template_version: 2014-10-16 or higher."),
+              "individual resource that is part of the AutoScalingGroup. "
+              "This map specifies output parameters that are available "
+              "once the AutoScalingGroup has been instantiated."),
             support_status=support.SupportStatus(version='2014.2'),
             type=attributes.Schema.MAP
         ),
         OUTPUTS_LIST: attributes.Schema(
-            _("A list of the specified attribute of each individual resource. "
-              "Requires heat_template_version: 2014-10-16 or higher."),
+            _("A list of the specified attribute of each individual resource "
+              "that is part of the AutoScalingGroup. This list of attributes "
+              "is available as an output once the AutoScalingGroup has been "
+              "instantiated."),
             support_status=support.SupportStatus(version='2014.2'),
             type=attributes.Schema.LIST
         ),
