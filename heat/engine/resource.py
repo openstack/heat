@@ -775,16 +775,34 @@ class Resource(object):
             handler_data = handler(*args)
             yield
             if callable(check):
-                while True:
-                    try:
-                        done = check(handler_data)
-                    except PollDelay as delay:
-                        yield delay.period
-                    else:
-                        if done:
-                            break
+                try:
+                    while True:
+                        try:
+                            done = check(handler_data)
+                        except PollDelay as delay:
+                            yield delay.period
                         else:
-                            yield
+                            if done:
+                                break
+                            else:
+                                yield
+                except Exception:
+                    raise
+                except:  # noqa
+                    with excutils.save_and_reraise_exception():
+                        canceller = getattr(
+                            self,
+                            'handle_%s_cancel' % handler_action,
+                            None
+                        )
+                        if callable(canceller):
+                            try:
+                                canceller(handler_data)
+                            except Exception:
+                                LOG.exception(
+                                    _LE('Error cancelling resource %s'),
+                                    action
+                                )
 
     @scheduler.wrappertask
     def _do_action(self, action, pre_func=None, resource_data=None):

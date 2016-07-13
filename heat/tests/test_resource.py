@@ -914,6 +914,52 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         self.m.VerifyAll()
 
+    def test_create_cancel(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res = generic_rsrc.CancellableResource('test_resource', tmpl,
+                                               self.stack)
+
+        self.m.StubOutWithMock(res, 'handle_create')
+        self.m.StubOutWithMock(res, 'check_create_complete')
+        self.m.StubOutWithMock(res, 'handle_create_cancel')
+
+        cookie = object()
+        res.handle_create().AndReturn(cookie)
+        res.check_create_complete(cookie).AndReturn(False)
+        res.handle_create_cancel(cookie).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(res.create)
+        runner.start()
+        runner.step()
+        runner.cancel()
+
+        self.m.VerifyAll()
+
+    def test_create_cancel_exception(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res = generic_rsrc.CancellableResource('test_resource', tmpl,
+                                               self.stack)
+
+        self.m.StubOutWithMock(res, 'handle_create')
+        self.m.StubOutWithMock(res, 'check_create_complete')
+        self.m.StubOutWithMock(res, 'handle_create_cancel')
+
+        cookie = object()
+        res.handle_create().AndReturn(cookie)
+        res.check_create_complete(cookie).AndReturn(False)
+        res.handle_create_cancel(cookie).AndRaise(Exception)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(res.create)
+        runner.start()
+        runner.step()
+        runner.cancel()
+
+        self.m.VerifyAll()
+
     def test_preview(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType')
@@ -1087,6 +1133,35 @@ class ResourceTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(res.update, utmpl)
         self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
+        self.m.VerifyAll()
+
+    def test_update_cancel(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res = generic_rsrc.CancellableResource('test_resource', tmpl,
+                                               self.stack)
+
+        self.m.StubOutWithMock(res, '_needs_update')
+        self.m.StubOutWithMock(res, 'handle_update')
+        self.m.StubOutWithMock(res, 'check_update_complete')
+        self.m.StubOutWithMock(res, 'handle_update_cancel')
+
+        res._needs_update(mock.ANY, mock.ANY,
+                          mock.ANY, mock.ANY,
+                          None).AndReturn(True)
+        cookie = object()
+        res.handle_update(mock.ANY, mock.ANY, mock.ANY).AndReturn(cookie)
+        res.check_update_complete(cookie).AndReturn(False)
+        res.handle_update_cancel(cookie).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(res.create)()
+
+        runner = scheduler.TaskRunner(res.update, tmpl)
+        runner.start()
+        runner.step()
+        runner.cancel()
+
         self.m.VerifyAll()
 
     def test_check_supported(self):
