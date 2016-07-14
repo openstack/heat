@@ -1,0 +1,5 @@
+---
+features:
+  - Add ``yaql`` function, that takes 2 arguments
+    ``expression`` of type string and ``data`` of type map
+    and evaluates ``expression`` on a given ``data``.
