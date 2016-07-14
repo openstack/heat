@@ -344,22 +344,19 @@ class Stack(collections.Mapping):
                 yield nested_res
 
     def db_active_resources_get(self):
-        try:
-            return resource_objects.Resource.get_all_active_by_stack(
-                self.context, self.id)
-        except exception.NotFound:
-            return None
+        resources = resource_objects.Resource.get_all_active_by_stack(
+            self.context, self.id)
+        return resources or None
 
     def db_resource_get(self, name):
         if not self.id:
             return None
         if self._db_resources is None:
-            try:
-                _db_resources = resource_objects.Resource.get_all_by_stack(
-                    self.context, self.id)
-                self._db_resources = _db_resources
-            except exception.NotFound:
+            _db_resources = resource_objects.Resource.get_all_by_stack(
+                self.context, self.id)
+            if not _db_resources:
                 return None
+            self._db_resources = _db_resources
         return self._db_resources.get(name)
 
     @property

@@ -2055,9 +2055,8 @@ class DBAPIStackTest(common.HeatTestCase):
             rt_id = stacks[s].raw_template_id
             self.assertRaises(exception.NotFound,
                               db_api.raw_template_get, ctx, rt_id)
-            self.assertRaises(exception.NotFound,
-                              db_api.resource_get_all_by_stack,
-                              ctx, stacks[s].id)
+            self.assertEqual({}, db_api.resource_get_all_by_stack(
+                ctx, stacks[s].id))
             self.assertRaises(exception.NotFound,
                               db_api.raw_template_files_get,
                               ctx, tmpl_files[tmpl_idx].files_id)
@@ -2252,8 +2251,8 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertEqual('res1', resources.get('res1').name)
         self.assertEqual('res2', resources.get('res2').name)
 
-        self.assertRaises(exception.NotFound, db_api.resource_get_all_by_stack,
-                          self.ctx, self.stack2.id)
+        self.assertEqual({}, db_api.resource_get_all_by_stack(
+            self.ctx, self.stack2.id))
 
     def test_resource_get_all_active_by_stack(self):
         values = [
