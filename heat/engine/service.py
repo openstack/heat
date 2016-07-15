@@ -1732,12 +1732,12 @@ class EngineService(service.Service):
                 LOG.warning(_LW("Access denied to resource %s"), resource_name)
                 raise exception.Forbidden()
 
-        if resource_name not in stack:
+        resource = stack.resource_get(resource_name)
+        if not resource:
             raise exception.ResourceNotFound(resource_name=resource_name,
                                              stack_name=stack.name)
 
-        return api.format_stack_resource(stack[resource_name],
-                                         with_attr=with_attr)
+        return api.format_stack_resource(resource, with_attr=with_attr)
 
     @context.request_context
     def resource_signal(self, cnxt, stack_identity, resource_name, details,

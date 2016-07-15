@@ -358,6 +358,29 @@ class Stack(collections.Mapping):
             self._db_resources = _db_resources
         return self._db_resources.get(name)
 
+    def _resource_from_db_resource(self, db_res):
+        tid = db_res.current_template_id
+        if tid == self.t.id:
+            t = self.t
+        else:
+            t = tmpl.Template.load(self.context, tid)
+
+        res_defn = t.resource_definitions(self)[db_res.name]
+        return resource.Resource(db_res.name, res_defn, self)
+
+    def resource_get(self, name):
+        """Return a stack resource, even if not in the current template."""
+        res = self.resources.get(name)
+        if res:
+            return res
+
+        # fall back to getting the resource from the database
+        db_res = self.db_resource_get(name)
+        if db_res:
+            return self._resource_from_db_resource(db_res)
+
+        return None
+
     @property
     def dependencies(self):
         if self._dependencies is None:
