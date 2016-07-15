@@ -89,12 +89,15 @@ class RequestContext(context.RequestContext):
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
         """
+        if user_domain_id:
+            kwargs['user_domain'] = user_domain_id
+        if project_domain_id:
+            kwargs['project_domain'] = project_domain_id
+
         super(RequestContext, self).__init__(is_admin=is_admin,
                                              read_only=read_only,
                                              show_deleted=show_deleted,
                                              request_id=request_id,
-                                             user_domain=user_domain_id,
-                                             project_domain=project_domain_id,
                                              roles=roles,
                                              overwrite=overwrite,
                                              **kwargs)
@@ -348,10 +351,6 @@ class ContextMiddleware(wsgi.Middleware):
 
         super(ContextMiddleware, self).__init__(app)
 
-    def make_context(self, *args, **kwargs):
-        """Create a context with the given arguments."""
-        return self.ctxcls(*args, **kwargs)
-
     def process_request(self, req):
         """Constructs an appropriate context from extracted auth information.
 
@@ -361,52 +360,36 @@ class ContextMiddleware(wsgi.Middleware):
         headers = req.headers
         environ = req.environ
 
-        try:
-            username = None
-            password = None
-            aws_creds = None
+        username = None
+        password = None
+        aws_creds = None
 
-            if headers.get('X-Auth-User') is not None:
-                username = headers.get('X-Auth-User')
-                password = headers.get('X-Auth-Key')
-            elif headers.get('X-Auth-EC2-Creds') is not None:
-                aws_creds = headers.get('X-Auth-EC2-Creds')
+        if headers.get('X-Auth-User') is not None:
+            username = headers.get('X-Auth-User')
+            password = headers.get('X-Auth-Key')
+        elif headers.get('X-Auth-EC2-Creds') is not None:
+            aws_creds = headers.get('X-Auth-EC2-Creds')
 
-            user_id = headers.get('X-User-Id')
-            user_domain_id = headers.get('X_User_Domain_Id')
-            token = headers.get('X-Auth-Token')
-            project_name = headers.get('X-Project-Name')
-            tenant_id = headers.get('X-Project-Id')
-            project_domain_id = headers.get('X_Project_Domain_Id')
-            region_name = headers.get('X-Region-Name')
-            auth_url = headers.get('X-Auth-Url')
+        project_name = headers.get('X-Project-Name')
+        region_name = headers.get('X-Region-Name')
+        auth_url = headers.get('X-Auth-Url')
 
-            roles = headers.get('X-Roles')
-            if roles is not None:
-                roles = roles.split(',')
-            token_info = environ.get('keystone.token_info')
-            auth_plugin = environ.get('keystone.token_auth')
-            req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
+        token_info = environ.get('keystone.token_info')
+        auth_plugin = environ.get('keystone.token_auth')
+        req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
 
-        except Exception:
-            raise exception.NotAuthenticated()
-
-        req.context = self.make_context(
-            auth_token=token,
-            tenant=tenant_id,
+        req.context = self.ctxcls.from_environ(
+            environ,
             project_name=project_name,
             aws_creds=aws_creds,
             username=username,
-            user=user_id,
             password=password,
             auth_url=auth_url,
-            roles=roles,
             request_id=req_id,
             auth_token_info=token_info,
             region_name=region_name,
             auth_plugin=auth_plugin,
-            user_domain_id=user_domain_id,
-            project_domain_id=project_domain_id)
+        )
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
