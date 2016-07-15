@@ -349,10 +349,6 @@ def resource_get_all_by_stack(context, stack_id, filters=None):
     query = db_filters.exact_filter(query, models.Resource, filters)
     results = query.all()
 
-    if not results:
-        raise exception.NotFound(_("no resources for stack_id %s were found")
-                                 % stack_id)
-
     return dict((res.name, res) for res in results)
 
 
@@ -365,9 +361,6 @@ def resource_get_all_active_by_stack(context, stack_id):
         models.Resource.id.notin_(subquery.as_scalar())
     ).options(orm.joinedload("data")).all()
 
-    if not results:
-        raise exception.NotFound(_("no active resources for stack_id %s were"
-                                   " found") % stack_id)
     return dict((res.id, res) for res in results)
 
 
