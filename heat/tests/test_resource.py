@@ -2397,6 +2397,88 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(mock_load_data.called)
 
 
+class ResourceDeleteRetryTest(common.HeatTestCase):
+    def setUp(self):
+        super(ResourceDeleteRetryTest, self).setUp()
+
+        self.env = environment.Environment()
+        self.env.load({u'resource_registry':
+                      {u'OS::Test::GenericResource': u'GenericResourceType'}})
+
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template.Template(empty_template,
+                                                    env=self.env),
+                                  stack_id=str(uuid.uuid4()))
+        self.num_retries = 2
+        cfg.CONF.set_override('action_retry_limit', self.num_retries,
+                              enforce_type=True)
+
+    def test_delete_retry_conflict(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'xyz123'})
+        res = generic_rsrc.ResourceWithProps(
+            'test_resource', tmpl, self.stack)
+        res.state_set(res.CREATE, res.COMPLETE, 'wobble')
+        res.default_client_name = 'neutron'
+
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
+        # could be any exception that is_conflict(), using the neutron
+        # client one
+        generic_rsrc.GenericResource.handle_delete().AndRaise(
+            neutron_exp.Conflict(message='foo', request_ids=[1]))
+
+        for i in range(self.num_retries):
+            timeutils.retry_backoff_delay(i+1, jitter_max=2.0).AndReturn(
+                0.01)
+            generic_rsrc.GenericResource.handle_delete().AndRaise(
+                neutron_exp.Conflict(message='foo', request_ids=[1]))
+
+        self.m.ReplayAll()
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.delete))
+        exc_text = six.text_type(exc)
+        self.assertIn('Conflict', exc_text)
+        self.m.VerifyAll()
+
+    def test_delete_retry_phys_resource_exists(self):
+        tmpl = rsrc_defn.ResourceDefinition(
+            'test_resource', 'Foo', {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithPropsRefPropOnDelete(
+            'test_resource', tmpl, self.stack)
+        res.state_set(res.CREATE, res.COMPLETE, 'wobble')
+
+        cfg.CONF.set_override('action_retry_limit', self.num_retries,
+                              enforce_type=True)
+
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithPropsRefPropOnDelete,
+                               'check_delete_complete')
+
+        generic_rsrc.GenericResource.handle_delete().AndReturn(None)
+        generic_rsrc.ResourceWithPropsRefPropOnDelete.check_delete_complete(
+            None).AndRaise(
+                exception.PhysicalResourceExists(name="foo"))
+
+        for i in range(self.num_retries):
+            timeutils.retry_backoff_delay(i+1, jitter_max=2.0).AndReturn(
+                0.01)
+            generic_rsrc.GenericResource.handle_delete().AndReturn(None)
+            if i < self.num_retries-1:
+                generic_rsrc.ResourceWithPropsRefPropOnDelete.\
+                    check_delete_complete(None).AndRaise(
+                        exception.PhysicalResourceExists(name="foo"))
+            else:
+                generic_rsrc.ResourceWithPropsRefPropOnDelete.\
+                    check_delete_complete(None).AndReturn(True)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(res.delete)()
+        self.m.VerifyAll()
+
+
 class ResourceAdoptTest(common.HeatTestCase):
 
     def test_adopt_resource_success(self):

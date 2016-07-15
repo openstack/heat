@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 import six
 import swiftclient.client as sc
 
@@ -273,6 +274,7 @@ class s3Test(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_conflict_empty(self):
+        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
 
