@@ -222,7 +222,7 @@ class RackspaceSwiftClient(swift.SwiftClientPlugin):
 
 class RackspaceGlanceClient(glance.GlanceClientPlugin):
 
-    def _create(self):
+    def _create(self, version=None):
         con = self.context
         endpoint_type = self._get_client_option('glance', 'endpoint_type')
         endpoint = self.url_for(
