@@ -59,6 +59,17 @@ class NeutronConstraint(constraints.BaseCustomConstraint):
             self.resource_name, value, cmd_resource=self.cmd_resource)
 
 
+class NeutronExtConstraint(NeutronConstraint):
+
+    def validate_with_client(self, client, value):
+        neutron_plugin = client.client_plugin(CLIENT_NAME)
+        if (self.extension and
+                not neutron_plugin.has_extension(self.extension)):
+            raise exception.EntityNotFound(entity='neutron extension',
+                                           name=self.extension)
+        neutron_plugin.resolve_ext_resource(self.resource_name, value)
+
+
 class PortConstraint(NeutronConstraint):
     resource_name = 'port'
 
@@ -88,6 +99,11 @@ class QoSPolicyConstraint(NeutronConstraint):
     resource_name = 'policy'
     cmd_resource = 'qos_policy'
     extension = 'qos'
+
+
+class PortPairConstraint(NeutronExtConstraint):
+    resource_name = 'port_pair'
+    extension = 'sfc'
 
 
 class ProviderConstraint(constraints.BaseCustomConstraint):
