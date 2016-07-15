@@ -175,7 +175,8 @@ class TestPolicyEnforcer(common.HeatTestCase):
         enforcer = policy.Enforcer()
         ctx = utils.dummy_context(roles=['admin'])
         self.m.StubOutWithMock(base_policy.Enforcer, 'enforce')
-        base_policy.Enforcer.enforce('context_is_admin', {}, ctx.to_dict(),
+        base_policy.Enforcer.enforce('context_is_admin', {},
+                                     ctx.to_policy_values(),
                                      False, exc=None).AndReturn(True)
         self.m.ReplayAll()
         self.assertTrue(enforcer.check_is_admin(ctx))

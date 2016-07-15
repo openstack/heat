@@ -212,6 +212,20 @@ class RequestContext(context.RequestContext):
             project_domain_id=values.get('project_domain')
         )
 
+    def to_policy_values(self):
+        policy = super(RequestContext, self).to_policy_values()
+
+        # NOTE(jamielennox): These are deprecated values passed to oslo.policy
+        # for enforcement. They shouldn't be needed as the base class defines
+        # what should be used when writing policy but are maintained for
+        # compatibility.
+        policy['user'] = self.user_id
+        policy['tenant'] = self.tenant_id
+        policy['is_admin'] = self.is_admin
+        policy['auth_token_info'] = self.auth_token_info
+
+        return policy
+
     @property
     def keystone_v3_endpoint(self):
         if self.auth_url:
