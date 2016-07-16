@@ -363,9 +363,12 @@ class DependencyTaskGroup(object):
         dependency tree is passed as an argument.
 
         If an error_wait_time is specified, tasks that are already running at
-        the time of an error will continue to run for up to the specified
-        time before being cancelled. Once all remaining tasks are complete or
-        have been cancelled, the original exception is raised.
+        the time of an error will continue to run for up to the specified time
+        before being cancelled. Once all remaining tasks are complete or have
+        been cancelled, the original exception is raised. If error_wait_time is
+        a callable function it will be called for each task, passing the
+        dependency key as an argument, to determine the error_wait_time for
+        that particular task.
 
         If aggregate_exceptions is True, then execution of parallel operations
         will not be cancelled in the event of an error (operations downstream
@@ -426,9 +429,16 @@ class DependencyTaskGroup(object):
                 del raised_exceptions
 
     def cancel_all(self, grace_period=None):
-        for r in six.itervalues(self._runners):
+        if callable(grace_period):
+            get_grace_period = grace_period
+        else:
+            def get_grace_period(key):
+                return grace_period
+
+        for k, r in six.iteritems(self._runners):
+            gp = get_grace_period(k)
             try:
-                r.cancel(grace_period=grace_period)
+                r.cancel(grace_period=gp)
             except Exception as ex:
                 LOG.debug('Exception cancelling task: %s' % six.text_type(ex))
 
