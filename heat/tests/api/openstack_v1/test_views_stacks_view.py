@@ -65,19 +65,19 @@ class TestFormatStack(common.HeatTestCase):
         self.assertNotIn('project', result)
 
     @mock.patch.object(stacks_view, 'util', new=mock.Mock())
-    def test_doesnt_add_project_if_tenant_safe(self):
+    def test_doesnt_add_project_if_not_include_project(self):
         stack = {'stack_identity': {'stack_id': 'foo', 'tenant': 'bar'}}
 
         result = stacks_view.format_stack(self.request, stack,
-                                          None, tenant_safe=True)
+                                          None, include_project=False)
         self.assertNotIn('project', result)
 
     @mock.patch.object(stacks_view, 'util', new=mock.Mock())
-    def test_adds_project_if_not_tenant_safe(self):
+    def test_adds_project_if_include_project(self):
         stack = {'stack_identity': {'stack_id': 'foo', 'tenant': 'bar'}}
 
         result = stacks_view.format_stack(self.request, stack,
-                                          None, tenant_safe=False)
+                                          None, include_project=True)
         self.assertIn('project', result)
         self.assertEqual('bar', result['project'])
 

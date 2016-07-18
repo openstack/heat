@@ -1827,10 +1827,6 @@ class DBAPIStackTest(common.HeatTestCase):
     def test_stack_get_can_return_a_stack_from_different_tenant(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         self.ctx.tenant_id = 'abc'
-        ret_stack = db_api.stack_get(self.ctx, stack.id,
-                                     show_deleted=False, tenant_safe=False)
-        self.assertEqual(stack.id, ret_stack.id)
-        self.assertEqual('db_test_stack_name', ret_stack.name)
 
         # with ctx.is_admin = True
         self.ctx.is_admin = True
@@ -1907,20 +1903,6 @@ class DBAPIStackTest(common.HeatTestCase):
         self.ctx.tenant = UUID3
         self.assertEqual([], db_api.stack_get_all(self.ctx))
 
-    def test_stack_get_all_with_tenant_safe_false(self):
-        values = [
-            {'tenant': UUID1},
-            {'tenant': UUID1},
-            {'tenant': UUID2},
-            {'tenant': UUID2},
-            {'tenant': UUID2},
-        ]
-        [create_stack(self.ctx, self.template, self.user_creds,
-                      **val) for val in values]
-
-        stacks = db_api.stack_get_all(self.ctx, tenant_safe=False)
-        self.assertEqual(5, len(stacks))
-
     def test_stack_get_all_with_admin_context(self):
         values = [
             {'tenant': UUID1},
@@ -1953,7 +1935,7 @@ class DBAPIStackTest(common.HeatTestCase):
         self.ctx.tenant = UUID2
         self.assertEqual(3, db_api.stack_count_all(self.ctx))
 
-    def test_stack_count_all_with_tenant_safe_false(self):
+    def test_stack_count_all_with_admin_context(self):
         values = [
             {'tenant': UUID1},
             {'tenant': UUID1},
@@ -1963,9 +1945,9 @@ class DBAPIStackTest(common.HeatTestCase):
         ]
         [create_stack(self.ctx, self.template, self.user_creds,
                       **val) for val in values]
-
+        self.ctx.is_admin = True
         self.assertEqual(5,
-                         db_api.stack_count_all(self.ctx, tenant_safe=False))
+                         db_api.stack_count_all(self.ctx))
 
     def test_purge_deleted(self):
         now = timeutils.utcnow()
@@ -2053,6 +2035,7 @@ class DBAPIStackTest(common.HeatTestCase):
 
         db_api.purge_deleted(age=3600, granularity='seconds')
         ctx = utils.dummy_context()
+        ctx.is_admin = True
         self.assertIsNotNone(db_api.stack_get(ctx, stacks[0].id,
                                               show_deleted=True))
         self.assertIsNotNone(db_api.raw_template_get(ctx, templates[1].id))
@@ -2065,14 +2048,12 @@ class DBAPIStackTest(common.HeatTestCase):
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID1)
         self.assertIsNotNone(db_api.stack_get(ctx, stacks[0].id,
-                                              show_deleted=True,
-                                              tenant_safe=False))
+                                              show_deleted=True))
         self.assertIsNotNone(db_api.raw_template_get(ctx, templates[1].id))
 
         db_api.purge_deleted(age=0, granularity='seconds', project_id=UUID2)
         self.assertIsNotNone(db_api.stack_get(ctx, stacks[0].id,
-                                              show_deleted=True,
-                                              tenant_safe=False))
+                                              show_deleted=True))
         self.assertIsNotNone(db_api.raw_template_get(ctx, templates[1].id))
 
     def test_dont_purge_shared_raw_template_files(self):
@@ -2140,16 +2121,15 @@ class DBAPIStackTest(common.HeatTestCase):
 
     def _deleted_stack_existance(self, ctx, stacks,
                                  tmpl_files, existing, deleted):
+        ctx.is_admin = True
         for s in existing:
             self.assertIsNotNone(db_api.stack_get(ctx, stacks[s].id,
-                                                  show_deleted=True,
-                                                  tenant_safe=False))
+                                                  show_deleted=True))
             self.assertIsNotNone(db_api.raw_template_files_get(
                 ctx, tmpl_files[s].files_id))
         for s in deleted:
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
-                                               show_deleted=True,
-                                               tenant_safe=False))
+                                               show_deleted=True))
             rt_id = stacks[s].raw_template_id
             self.assertRaises(exception.NotFound,
                               db_api.raw_template_get, ctx, rt_id)

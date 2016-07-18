@@ -42,13 +42,11 @@ class SoftwareConfigService(service.Service):
         sc = software_config_object.SoftwareConfig.get_by_id(cnxt, config_id)
         return api.format_software_config(sc)
 
-    def list_software_configs(self, cnxt, limit=None, marker=None,
-                              tenant_safe=True):
+    def list_software_configs(self, cnxt, limit=None, marker=None):
         scs = software_config_object.SoftwareConfig.get_all(
             cnxt,
             limit=limit,
-            marker=marker,
-            tenant_safe=tenant_safe)
+            marker=marker)
         result = [api.format_software_config(sc, detail=False) for sc in scs]
         return result
 

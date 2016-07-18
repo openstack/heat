@@ -54,6 +54,8 @@ class EngineClient(object):
         1.31 - Add nested_depth to list_events, when nested_depth is specified
                add root_stack_id to response
         1.32 - Add get_files call
+        1.33 - Remove tenant_safe from list_stacks, count_stacks
+               and list_software_configs
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -116,7 +118,7 @@ class EngineClient(object):
                                              stack_name=stack_name))
 
     def list_stacks(self, ctxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, tenant_safe=True,
+                    sort_dir=None, filters=None,
                     show_deleted=False, show_nested=False, show_hidden=False,
                     tags=None, tags_any=None, not_tags=None,
                     not_tags_any=None):
@@ -132,7 +134,6 @@ class EngineClient(object):
         :param sort_keys: an array of fields used to sort the list
         :param sort_dir: the direction of the sort ('asc' or 'desc')
         :param filters: a dict with attribute:value to filter the list
-        :param tenant_safe: if true, scope the request by the current tenant
         :param show_deleted: if true, show soft-deleted stacks
         :param show_nested: if true, show nested stacks
         :param show_hidden: if true, show hidden stacks
@@ -150,16 +151,15 @@ class EngineClient(object):
                          self.make_msg('list_stacks', limit=limit,
                                        sort_keys=sort_keys, marker=marker,
                                        sort_dir=sort_dir, filters=filters,
-                                       tenant_safe=tenant_safe,
                                        show_deleted=show_deleted,
                                        show_nested=show_nested,
                                        show_hidden=show_hidden,
                                        tags=tags, tags_any=tags_any,
                                        not_tags=not_tags,
                                        not_tags_any=not_tags_any),
-                         version='1.8')
+                         version='1.33')
 
-    def count_stacks(self, ctxt, filters=None, tenant_safe=True,
+    def count_stacks(self, ctxt, filters=None,
                      show_deleted=False, show_nested=False, show_hidden=False,
                      tags=None, tags_any=None, not_tags=None,
                      not_tags_any=None):
@@ -167,7 +167,6 @@ class EngineClient(object):
 
         :param ctxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
-        :param tenant_safe: if true, scope the request by the current tenant
         :param show_deleted: if true, count will include the deleted stacks
         :param show_nested: if true, count will include nested stacks
         :param show_hidden: if true, count will include hidden stacks
@@ -183,7 +182,6 @@ class EngineClient(object):
         """
         return self.call(ctxt, self.make_msg('count_stacks',
                                              filters=filters,
-                                             tenant_safe=tenant_safe,
                                              show_deleted=show_deleted,
                                              show_nested=show_nested,
                                              show_hidden=show_hidden,
@@ -191,7 +189,7 @@ class EngineClient(object):
                                              tags_any=tags_any,
                                              not_tags=not_tags,
                                              not_tags_any=not_tags_any),
-                         version='1.8')
+                         version='1.33')
 
     def show_stack(self, ctxt, stack_identity, resolve_outputs=True):
         """Returns detailed information about one or all stacks.
@@ -711,14 +709,12 @@ class EngineClient(object):
         return self.call(cnxt, self.make_msg('show_software_config',
                                              config_id=config_id))
 
-    def list_software_configs(self, cnxt, limit=None, marker=None,
-                              tenant_safe=True):
+    def list_software_configs(self, cnxt, limit=None, marker=None):
         return self.call(cnxt,
                          self.make_msg('list_software_configs',
                                        limit=limit,
-                                       marker=marker,
-                                       tenant_safe=tenant_safe),
-                         version='1.10')
+                                       marker=marker),
+                         version='1.33')
 
     def create_software_config(self, cnxt, group, name, config,
                                inputs=None, outputs=None, options=None):

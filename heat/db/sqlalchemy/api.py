@@ -432,7 +432,7 @@ def stack_get_by_name(context, stack_name):
     return query.first()
 
 
-def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
+def stack_get(context, stack_id, show_deleted=False):
     query = context.session.query(models.Stack).options(
         orm.joinedload("raw_template"))
     result = query.get(stack_id)
@@ -443,7 +443,7 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
 
     # One exception to normal project scoping is users created by the
     # stacks in the stack_user_project_id (in the heat stack user domain)
-    if (tenant_safe and result is not None
+    if (result is not None
         and context is not None and not context.is_admin
         and context.tenant_id not in (result.tenant,
                                       result.stack_user_project_id)):
@@ -505,7 +505,7 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
+def _query_stack_get_all(context,  show_deleted=False,
                          show_nested=False, show_hidden=False, tags=None,
                          tags_any=None, not_tags=None, not_tags_any=None):
     if show_nested:
@@ -517,7 +517,7 @@ def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
             context, models.Stack, show_deleted=show_deleted
         ).filter_by(owner_id=None)
 
-    if tenant_safe and not context.is_admin:
+    if not context.is_admin:
         query = query.filter_by(tenant=context.tenant_id)
 
     query = query.options(orm.subqueryload("tags"))
@@ -557,11 +557,11 @@ def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
 
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
-                  sort_dir=None, filters=None, tenant_safe=True,
+                  sort_dir=None, filters=None,
                   show_deleted=False, show_nested=False, show_hidden=False,
                   tags=None, tags_any=None, not_tags=None,
                   not_tags_any=None):
-    query = _query_stack_get_all(context, tenant_safe,
+    query = _query_stack_get_all(context,
                                  show_deleted=show_deleted,
                                  show_nested=show_nested,
                                  show_hidden=show_hidden, tags=tags,
@@ -588,11 +588,11 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
                            whitelisted_sort_keys, marker, sort_dir)
 
 
-def stack_count_all(context, filters=None, tenant_safe=True,
+def stack_count_all(context, filters=None,
                     show_deleted=False, show_nested=False, show_hidden=False,
                     tags=None, tags_any=None, not_tags=None,
                     not_tags_any=None):
-    query = _query_stack_get_all(context, tenant_safe=tenant_safe,
+    query = _query_stack_get_all(context,
                                  show_deleted=show_deleted,
                                  show_nested=show_nested,
                                  show_hidden=show_hidden, tags=tags,
@@ -993,10 +993,9 @@ def software_config_get(context, config_id):
     return result
 
 
-def software_config_get_all(context, limit=None, marker=None,
-                            tenant_safe=True):
+def software_config_get_all(context, limit=None, marker=None):
     query = context.session.query(models.SoftwareConfig)
-    if tenant_safe and not context.is_admin:
+    if not context.is_admin:
         query = query.filter_by(tenant=context.tenant_id)
     return _paginate_query(context, query, models.SoftwareConfig,
                            limit=limit, marker=marker).all()

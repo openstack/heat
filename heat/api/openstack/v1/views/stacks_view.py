@@ -35,7 +35,7 @@ basic_keys = (
 )
 
 
-def format_stack(req, stack, keys=None, tenant_safe=True):
+def format_stack(req, stack, keys=None, include_project=False):
     def transform(key, value):
         if keys and key not in keys:
             return
@@ -43,7 +43,7 @@ def format_stack(req, stack, keys=None, tenant_safe=True):
         if key == rpc_api.STACK_ID:
             yield ('id', value['stack_id'])
             yield ('links', [util.make_link(req, value)])
-            if not tenant_safe:
+            if include_project:
                 yield ('project', value['tenant'])
         elif key == rpc_api.STACK_ACTION:
             return
@@ -63,9 +63,9 @@ def format_stack(req, stack, keys=None, tenant_safe=True):
         transform(k, v) for k, v in stack.items()))
 
 
-def collection(req, stacks, count=None, tenant_safe=True):
+def collection(req, stacks, count=None, include_project=False):
     keys = basic_keys
-    formatted_stacks = [format_stack(req, s, keys, tenant_safe)
+    formatted_stacks = [format_stack(req, s, keys, include_project)
                         for s in stacks]
 
     result = {'stacks': formatted_stacks}

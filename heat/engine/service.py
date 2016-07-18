@@ -299,7 +299,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.32'
+    RPC_API_VERSION = '1.33'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -346,7 +346,6 @@ class EngineService(service.Service):
                     admin_context = context.get_admin_context()
                     stacks = stack_object.Stack.get_all(
                         admin_context,
-                        tenant_safe=False,
                         show_hidden=True)
                     for s in stacks:
                         self.stack_watch.start_watch_task(s.id, admin_context)
@@ -540,7 +539,8 @@ class EngineService(service.Service):
         :param sort_keys: an array of fields used to sort the list
         :param sort_dir: the direction of the sort ('asc' or 'desc')
         :param filters: a dict with attribute:value to filter the list
-        :param tenant_safe: if true, scope the request by the current tenant
+        :param tenant_safe: DEPRECATED, if true, scope the request by
+            the current tenant
         :param show_deleted: if true, show soft-deleted stacks
         :param show_nested: if true, show nested stacks
         :param show_hidden: if true, show hidden stacks
@@ -557,6 +557,9 @@ class EngineService(service.Service):
         if filters is not None:
             filters = api.translate_filters(filters)
 
+        if not tenant_safe:
+            cnxt = context.get_admin_context()
+
         stacks = stack_object.Stack.get_all(
             cnxt,
             limit=limit,
@@ -564,7 +567,6 @@ class EngineService(service.Service):
             marker=marker,
             sort_dir=sort_dir,
             filters=filters,
-            tenant_safe=tenant_safe,
             show_deleted=show_deleted,
             show_nested=show_nested,
             show_hidden=show_hidden,
@@ -583,7 +585,8 @@ class EngineService(service.Service):
 
         :param cnxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
-        :param tenant_safe: if true, scope the request by the current tenant
+        :param tenant_safe: DEPRECATED, if true, scope the request by
+            the current tenant
         :param show_deleted: if true, count will include the deleted stacks
         :param show_nested: if true, count will include nested stacks
         :param show_hidden: if true, count will include hidden stacks
@@ -597,10 +600,12 @@ class EngineService(service.Service):
             multiple tags using the boolean OR expression
         :returns: an integer representing the number of matched stacks
         """
+        if not tenant_safe:
+            cnxt = context.get_admin_context()
+
         return stack_object.Stack.count_all(
             cnxt,
             filters=filters,
-            tenant_safe=tenant_safe,
             show_deleted=show_deleted,
             show_nested=show_nested,
             show_hidden=show_hidden,
@@ -2122,11 +2127,13 @@ class EngineService(service.Service):
     @context.request_context
     def list_software_configs(self, cnxt, limit=None, marker=None,
                               tenant_safe=True):
+        if not tenant_safe:
+            cnxt = context.get_admin_context()
+
         return self.software_config.list_software_configs(
             cnxt,
             limit=limit,
-            marker=marker,
-            tenant_safe=tenant_safe)
+            marker=marker)
 
     @context.request_context
     def create_software_config(self, cnxt, group, name, config,
@@ -2278,7 +2285,6 @@ class EngineService(service.Service):
         }
         stacks = stack_object.Stack.get_all(cnxt,
                                             filters=filters,
-                                            tenant_safe=False,
                                             show_nested=True)
         for s in stacks:
             stack_id = s.id
@@ -2290,8 +2296,7 @@ class EngineService(service.Service):
                     # refetch stack and confirm it is still IN_PROGRESS
                     s = stack_object.Stack.get_by_id(
                         cnxt,
-                        stack_id,
-                        tenant_safe=False)
+                        stack_id)
                     if s.status != parser.Stack.IN_PROGRESS:
                         lock.release()
                         continue

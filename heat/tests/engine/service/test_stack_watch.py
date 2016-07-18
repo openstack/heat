@@ -54,7 +54,7 @@ class StackWatchTest(common.HeatTestCase):
         self.eng.thread_group_mgr = None
         self._create_periodic_tasks()
 
-        mock_get_all.assert_called_once_with(mock.ANY, tenant_safe=False,
+        mock_get_all.assert_called_once_with(mock.ANY,
                                              show_hidden=True)
         calls = start_watch_task.call_args_list
         self.assertEqual(2, start_watch_task.call_count)

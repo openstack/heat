@@ -15,6 +15,7 @@ import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
+from heat.common import context
 from heat.common import param_utils
 from heat.common import serializers
 from heat.common import wsgi
@@ -43,20 +44,24 @@ class SoftwareConfigController(object):
         except ValueError as e:
             raise exc.HTTPBadRequest(six.text_type(e))
 
-    def _index(self, req, tenant_safe=True):
+    def _index(self, req, use_admin_cnxt=False):
         whitelist = {
             'limit': util.PARAM_TYPE_SINGLE,
             'marker': util.PARAM_TYPE_SINGLE
         }
         params = util.get_allowed_params(req.params, whitelist)
-        scs = self.rpc_client.list_software_configs(req.context,
-                                                    tenant_safe=tenant_safe,
+
+        if use_admin_cnxt:
+            cnxt = context.get_admin_context()
+        else:
+            cnxt = req.context
+        scs = self.rpc_client.list_software_configs(cnxt,
                                                     **params)
         return {'software_configs': scs}
 
     @util.policy_enforce
     def global_index(self, req):
-        return self._index(req, tenant_safe=False)
+        return self._index(req, use_admin_cnxt=True)
 
     @util.policy_enforce
     def index(self, req):

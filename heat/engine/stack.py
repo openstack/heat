@@ -503,7 +503,7 @@ class Stack(collections.Mapping):
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, tenant_safe=True,
+                 sort_dir=None, filters=None,
                  show_deleted=False, resolve_data=True,
                  show_nested=False, show_hidden=False, tags=None,
                  tags_any=None, not_tags=None, not_tags_any=None):
@@ -514,7 +514,6 @@ class Stack(collections.Mapping):
             marker=marker,
             sort_dir=sort_dir,
             filters=filters,
-            tenant_safe=tenant_safe,
             show_deleted=show_deleted,
             show_nested=show_nested,
             show_hidden=show_hidden,
