@@ -40,7 +40,7 @@ class FakeClient(fakes.FakeClient, Client):
 
     def __init__(self, *args, **kwargs):
         super(FakeClient, self).__init__('username', 'password', 'project_id',
-                                         'auth_url')
+                                         'auth_url', direct_use=False)
         self.client = FakeHTTPClient(**kwargs)
 
 
