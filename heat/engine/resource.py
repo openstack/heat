@@ -2052,9 +2052,15 @@ class Resource(object):
             as parameters, and the resource's attributes_schema is mapped as
             outputs
         """
-        schema = cls.properties_schema
+
+        props_schema = {}
+        for name, schema_dict in cls.properties_schema.items():
+            schema = properties.Schema.from_legacy(schema_dict)
+            if schema.support_status.status != support.HIDDEN:
+                props_schema[name] = schema
+
         params, props = (properties.Properties.
-                         schema_to_parameters_and_properties(schema,
+                         schema_to_parameters_and_properties(props_schema,
                                                              template_type))
         resource_name = cls.__name__
         outputs = attributes.Attributes.as_outputs(resource_name, cls,

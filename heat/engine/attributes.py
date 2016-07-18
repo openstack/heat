@@ -150,9 +150,13 @@ class Attributes(collections.Mapping):
         :returns: The attributes of the specified resource_class as a template
                   Output map
         """
-        schema = resource_class.attributes_schema.copy()
-        schema.update(resource_class.base_attributes_schema)
-        attribs = Attributes._make_attributes(schema).items()
+        attr_schema = {}
+        for name, schema_data in resource_class.attributes_schema.items():
+            schema = Schema.from_attribute(schema_data)
+            if schema.support_status.status != support.HIDDEN:
+                attr_schema[name] = schema
+        attr_schema.update(resource_class.base_attributes_schema)
+        attribs = Attributes._make_attributes(attr_schema).items()
 
         return dict((n, att.as_output(resource_name,
                                       template_type)) for n, att in attribs)
