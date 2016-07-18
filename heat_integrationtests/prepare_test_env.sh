@@ -48,6 +48,6 @@ iniset heat_integrationtests.conf DEFAULT admin_password $OS_PASSWORD
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest, AutoscalingLoadBalancerv2Test'
 
 cat heat_integrationtests.conf
