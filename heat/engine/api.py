@@ -410,6 +410,8 @@ def format_notification_body(stack):
         state = '_'.join(stack.state)
     else:
         state = 'Unknown'
+
+    updated_at = stack.updated_time and stack.updated_time.isoformat()
     result = {
         rpc_api.NOTIFY_TENANT_ID: stack.context.tenant_id,
         rpc_api.NOTIFY_USER_ID: stack.context.username,
@@ -422,6 +424,9 @@ def format_notification_body(stack):
         rpc_api.NOTIFY_STATE: state,
         rpc_api.NOTIFY_STATE_REASON: stack.status_reason,
         rpc_api.NOTIFY_CREATE_AT: stack.created_time.isoformat(),
+        rpc_api.NOTIFY_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
+        rpc_api.NOTIFY_TAGS: stack.tags,
+        rpc_api.NOTIFY_UPDATE_AT: updated_at
     }
     return result
 
