@@ -901,6 +901,83 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual('role1', resolved['role1'])
         self.assertEqual('role2', resolved['role2'])
 
+    def test_map_replace(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'keys': {'f1': 'F1'},
+                                    'values': {'b2': 'B2'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual({'F1': 'b1', 'f2': 'B2'},
+                         resolved)
+
+    def test_map_replace_nokeys(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'values': {'b2': 'B2'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual({'f1': 'b1', 'f2': 'B2'},
+                         resolved)
+
+    def test_map_replace_novalues(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'keys': {'f2': 'F2'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual({'f1': 'b1', 'F2': 'b2'},
+                         resolved)
+
+    def test_map_replace_keys_collide(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'keys': {'f2': 'f1'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "key replacement f1 collides with a key in the input map"
+        self.assertRaisesRegexp(ValueError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_replaced_keys_collide(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'keys': {'f1': 'f3', 'f2': 'f3'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "key replacement f3 collides with a key in the output map"
+        self.assertRaisesRegexp(ValueError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_invalid_str_arg1(self):
+        snippet = {'map_replace': 'ab'}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "Incorrect arguments to \"map_replace\" should be:"
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_invalid_str_arg2(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'}, "ab"]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = ("Incorrect arguments: to \"map_replace\", "
+               "arguments must be a list of maps")
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_invalid_empty(self):
+        snippet = {'map_replace': []}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "Incorrect arguments to \"map_replace\" should be:"
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_invalid_missing1(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "Incorrect arguments to \"map_replace\" should be:"
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_invalid_missing2(self):
+        snippet = {'map_replace': [{'keys': {'f1': 'f3', 'f2': 'f3'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "Incorrect arguments to \"map_replace\" should be:"
+        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+
+    def test_map_replace_invalid_wrongkey(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'notkeys': {'f2': 'F2'}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        msg = "Incorrect arguments to \"map_replace\" should be:"
+        self.assertRaisesRegexp(ValueError, msg, self.resolve, snippet, tmpl)
+
     def test_yaql(self):
         snippet = {'yaql': {'expression': '$.data.var1.sum()',
                    'data': {'var1': [1, 2, 3, 4]}}}
