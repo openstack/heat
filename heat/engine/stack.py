@@ -695,6 +695,9 @@ class Stack(collections.Mapping):
         """
         return self is other
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __str__(self):
         """Return a human-readable string representation of the stack."""
         text = 'Stack "%s" [%s]' % (self.name, self.id)
