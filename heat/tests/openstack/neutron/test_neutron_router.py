@@ -312,18 +312,6 @@ class NeutronRouterTest(common.HeatTestCase):
                     "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
                 }
             })
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": None,
-                    "name": utils.PhysName(stack.name, 'router'),
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
 
         # Update script
         neutronclient.Client.list_l3_agent_hosting_routers(

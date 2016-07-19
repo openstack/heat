@@ -21,6 +21,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.common import timeutils
 from heat.engine.resources.openstack.neutron import network_gateway
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -90,6 +91,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disconnect_network_gateway')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
         self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
                          return_value='6af055d3-26f6-48dd-a597-7611d7e58d35')
 
@@ -209,9 +211,22 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
         ).AndReturn(sng)
 
+        timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
+        neutronclient.Client.delete_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
+        ).AndReturn(None)
+
         neutronclient.Client.show_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
         ).AndRaise(qe.NeutronClientException(status_code=404))
+
+        neutronclient.Client.disconnect_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
+                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'segmentation_id': 10,
+                'segmentation_type': u'vlan'
+            }
+        ).AndReturn(qe.NeutronClientException(status_code=404))
 
         neutronclient.Client.delete_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
