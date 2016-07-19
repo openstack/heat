@@ -193,12 +193,10 @@ class Resource(
 
     @classmethod
     def update_by_id(cls, context, resource_id, values):
-        resource_db = db_api.resource_get(context, resource_id)
-        resource_db.update_and_save(values)
+        db_api.resource_update_and_save(context, resource_id, values)
 
     def update_and_save(self, values):
-        resource_db = db_api.resource_get(self._context, self.id)
-        resource_db.update_and_save(values)
+        db_api.resource_update_and_save(self._context, self.id, values)
 
     def select_and_update(self, values, expected_engine_id=None,
                           atomic_key=0):

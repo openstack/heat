@@ -80,6 +80,17 @@ def get_backend():
     return sys.modules[__name__]
 
 
+def update_and_save(context, obj, values):
+    with context.session.begin(subtransactions=True):
+        for k, v in six.iteritems(values):
+            setattr(obj, k, v)
+
+
+def delete_softly(context, obj):
+    """Mark this object as deleted."""
+    update_and_save(context, obj, {'deleted_at': timeutils.utcnow()})
+
+
 def soft_delete_aware_query(context, *args, **kwargs):
     """Stack query helper that accounts for context's `show_deleted` field.
 
@@ -117,7 +128,7 @@ def raw_template_update(context, template_id, values):
                   if getattr(raw_template_ref, k) != v)
 
     if values:
-        raw_template_ref.update_and_save(values)
+        update_and_save(context, raw_template_ref, values)
 
     return raw_template_ref
 
@@ -222,6 +233,11 @@ def resource_update(context, resource_id, values, atomic_key,
             atomic_key=atomic_key).update(values)
 
         return bool(rows_updated)
+
+
+def resource_update_and_save(context, resource_id, values):
+    resource = context.session.query(models.Resource).get(resource_id)
+    update_and_save(context, resource, values)
 
 
 def resource_delete(context, resource_id):
@@ -628,11 +644,11 @@ def stack_delete(context, stack_id):
                                  '%(id)s %(msg)s') % {
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
-    session = orm_session.Session.object_session(s)
+    session = context.session
     with session.begin():
         for r in s.resources:
             session.delete(r)
-        s.soft_delete(session=session)
+        delete_softly(context, s)
 
 
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
@@ -1039,7 +1055,7 @@ def software_deployment_get_all(context, server_id=None):
 
 def software_deployment_update(context, deployment_id, values):
     deployment = software_deployment_get(context, deployment_id)
-    deployment.update_and_save(values)
+    update_and_save(context, deployment, values)
     return deployment
 
 
@@ -1114,10 +1130,10 @@ def service_update(context, service_id, values):
 
 def service_delete(context, service_id, soft_delete=True):
     service = service_get(context, service_id)
-    session = orm_session.Session.object_session(service)
+    session = context.session
     with session.begin():
         if soft_delete:
-            service.soft_delete(session=session)
+            delete_softly(context, service)
         else:
             session.delete(service)
 
