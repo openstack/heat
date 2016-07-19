@@ -59,8 +59,6 @@ from heat.objects import user_creds as ucreds_object
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_client as rpc_worker_client
 
-cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
-
 LOG = logging.getLogger(__name__)
 
 
@@ -966,8 +964,7 @@ class Stack(collections.Mapping):
 
         creator = scheduler.TaskRunner(
             self.stack_task, action=self.CREATE,
-            reverse=False, post_func=rollback,
-            error_wait_time=cfg.CONF.error_wait_time)
+            reverse=False, post_func=rollback)
         creator(timeout=self.timeout_secs())
 
     def _adopt_kwargs(self, resource):
@@ -979,7 +976,6 @@ class Stack(collections.Mapping):
 
     @scheduler.wrappertask
     def stack_task(self, action, reverse=False, post_func=None,
-                   error_wait_time=None,
                    aggregate_exceptions=False, pre_completion_func=None):
         """A task to perform an action on the stack.
 
@@ -991,8 +987,6 @@ class Stack(collections.Mapping):
          in reverse order (resources - first and then res dependencies )
         :param post_func: function that need to be executed after
         action complete on the stack
-        :param error_wait_time: time to wait before cancelling all execution
-        threads when an error occurred
         :param aggregate_exceptions: define if exceptions should be aggregated
         :param pre_completion_func: function that need to be executed right
         before action completion. Uses stack ,action, status and reason as
@@ -1027,11 +1021,14 @@ class Stack(collections.Mapping):
 
             return handle(**handle_kwargs(r))
 
+        def get_error_wait_time(resource):
+            return resource.cancel_grace_period()
+
         action_task = scheduler.DependencyTaskGroup(
             self.dependencies,
             resource_action,
             reverse,
-            error_wait_time=error_wait_time,
+            error_wait_time=get_error_wait_time,
             aggregate_exceptions=aggregate_exceptions)
 
         try:
@@ -1065,7 +1062,6 @@ class Stack(collections.Mapping):
         checker = scheduler.TaskRunner(
             self.stack_task, self.CHECK,
             post_func=self.supports_check_action,
-            error_wait_time=cfg.CONF.error_wait_time,
             aggregate_exceptions=True)
         checker()
 
@@ -1129,7 +1125,6 @@ class Stack(collections.Mapping):
             self.stack_task,
             action=self.ADOPT,
             reverse=False,
-            error_wait_time=cfg.CONF.error_wait_time,
             post_func=rollback)
         creator(timeout=self.timeout_secs())
 
@@ -1403,8 +1398,7 @@ class Stack(collections.Mapping):
         should_rollback = False
         update_task = update.StackUpdate(
             self, newstack, backup_stack,
-            rollback=action == self.ROLLBACK,
-            error_wait_time=cfg.CONF.error_wait_time)
+            rollback=action == self.ROLLBACK)
         try:
             updater = scheduler.TaskRunner(update_task)
 
@@ -1752,8 +1746,7 @@ class Stack(collections.Mapping):
         sus_task = scheduler.TaskRunner(
             self.stack_task,
             action=self.SUSPEND,
-            reverse=True,
-            error_wait_time=cfg.CONF.error_wait_time)
+            reverse=True)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.resume', hide_args=False)
@@ -1778,8 +1771,7 @@ class Stack(collections.Mapping):
         sus_task = scheduler.TaskRunner(
             self.stack_task,
             action=self.RESUME,
-            reverse=False,
-            error_wait_time=cfg.CONF.error_wait_time)
+            reverse=False)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.snapshot', hide_args=False)
@@ -1791,7 +1783,6 @@ class Stack(collections.Mapping):
             self.stack_task,
             action=self.SNAPSHOT,
             reverse=False,
-            error_wait_time=cfg.CONF.error_wait_time,
             pre_completion_func=save_snapshot_func)
         sus_task(timeout=self.timeout_secs())
 

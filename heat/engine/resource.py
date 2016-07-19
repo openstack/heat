@@ -50,6 +50,7 @@ from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
 cfg.CONF.import_opt('observe_on_update', 'heat.common.config')
+cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -990,6 +991,18 @@ class Resource(object):
         rules = self.translation_rules(properties) or []
         for rule in rules:
             rule.execute_rule(client_resolve)
+
+    def cancel_grace_period(self):
+        if self.status != self.IN_PROGRESS:
+            return None
+
+        canceller = getattr(self,
+                            'handle_%s_cancel' % self.action.lower(),
+                            None)
+        if callable(canceller):
+            return None
+
+        return cfg.CONF.error_wait_time
 
     def _get_resource_info(self, resource_data):
         if not resource_data:

@@ -29,14 +29,13 @@ class StackUpdate(object):
     """A Task to perform the update of an existing stack to a new template."""
 
     def __init__(self, existing_stack, new_stack, previous_stack,
-                 rollback=False, error_wait_time=None):
+                 rollback=False):
         """Initialise with the existing stack and the new stack."""
         self.existing_stack = existing_stack
         self.new_stack = new_stack
         self.previous_stack = previous_stack
 
         self.rollback = rollback
-        self.error_wait_time = error_wait_time
 
         self.existing_snippets = dict((n, r.frozen_definition())
                                       for n, r in self.existing_stack.items())
@@ -56,10 +55,13 @@ class StackUpdate(object):
             self._remove_backup_resource,
             reverse=True)
 
+        def get_error_wait_time(resource):
+            return resource.cancel_grace_period()
+
         self.updater = scheduler.DependencyTaskGroup(
             self.dependencies(),
             self._resource_update,
-            error_wait_time=self.error_wait_time)
+            error_wait_time=get_error_wait_time)
 
         if not self.rollback:
             yield cleanup_prev()
