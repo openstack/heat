@@ -154,12 +154,17 @@ def raw_template_files_get(context, files_id):
     return result
 
 
-def resource_get(context, resource_id):
+def resource_get(context, resource_id, refresh=False):
     result = context.session.query(models.Resource).get(resource_id)
 
     if not result:
         raise exception.NotFound(_("resource with id %s not found") %
                                  resource_id)
+    if refresh:
+        context.session.refresh(result)
+        # ensure data is loaded (lazy or otherwise)
+        result.data
+
     return result
 
 

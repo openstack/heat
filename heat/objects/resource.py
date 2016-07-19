@@ -101,8 +101,9 @@ class Resource(
         return resource
 
     @classmethod
-    def get_obj(cls, context, resource_id):
-        resource_db = db_api.resource_get(context, resource_id)
+    def get_obj(cls, context, resource_id, refresh=False):
+        resource_db = db_api.resource_get(context, resource_id,
+                                          refresh=refresh)
         return cls._from_db_object(cls(context), context, resource_db)
 
     @classmethod
@@ -206,9 +207,8 @@ class Resource(
                                       atomic_key=atomic_key,
                                       expected_engine_id=expected_engine_id)
 
-    def refresh(self, attrs=None):
-        resource_db = db_api.resource_get(self._context, self.id)
-        resource_db.refresh(attrs=attrs)
+    def refresh(self):
+        resource_db = db_api.resource_get(self._context, self.id, refresh=True)
         return self.__class__._from_db_object(
             self,
             self._context,

@@ -386,8 +386,8 @@ class Resource(object):
             return self.t.metadata()
         if self._rsrc_metadata is not None:
             return self._rsrc_metadata
-        rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
-        rs.refresh(attrs=['rsrc_metadata'])
+        rs = resource_objects.Resource.get_obj(self.stack.context, self.id,
+                                               refresh=True)
         self._rsrc_metadata = rs.rsrc_metadata
         return rs.rsrc_metadata
 
@@ -408,9 +408,10 @@ class Resource(object):
         if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
         LOG.debug('Setting metadata for %s', six.text_type(self))
-        db_res = resource_objects.Resource.get_obj(self.stack.context, self.id)
-        if merge_metadata is not None:
-            db_res = db_res.refresh(attrs=['rsrc_metadata'])
+        refresh = merge_metadata is not None
+        db_res = resource_objects.Resource.get_obj(self.stack.context, self.id,
+                                                   refresh=refresh)
+        if refresh:
             metadata = merge_metadata(metadata, db_res.rsrc_metadata)
         db_res.update_metadata(metadata)
         self._rsrc_metadata = metadata
@@ -943,7 +944,7 @@ class Resource(object):
             'type': self.type(),
             'action': self.action,
             'status': self.status,
-            'metadata': self.metadata_get(refresh=True),
+            'metadata': self.metadata_get(),
             'resource_data': self.data()
         }
 

@@ -100,8 +100,8 @@ def stack_tags_get(context, stack_id):
     return IMPL.stack_tags_get(context, stack_id)
 
 
-def resource_get(context, resource_id):
-    return IMPL.resource_get(context, resource_id)
+def resource_get(context, resource_id, refresh=False):
+    return IMPL.resource_get(context, resource_id, refresh=refresh)
 
 
 def resource_get_all(context):
