@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import sys
 import types
 
@@ -48,6 +49,7 @@ def task_description(task):
     return encodeutils.safe_decode(repr(task))
 
 
+@functools.total_ordering
 class Timeout(BaseException):
     """Raised when task has exceeded its allotted (wallclock) running time.
 
@@ -79,27 +81,14 @@ class Timeout(BaseException):
             return False
 
     def __eq__(self, other):
-        return not self < other and not other < self
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __gt__(self, other):
-        return other < self
-
-    def __ge__(self, other):
-        return not self < other
-
-    def __le__(self, other):
-        return not other < self
+        if not isinstance(other, Timeout):
+            return NotImplemented
+        return not (self < other or other < self)
 
     def __lt__(self, other):
         if not isinstance(other, Timeout):
             return NotImplemented
         return self._duration.endtime() < other._duration.endtime()
-
-    def __cmp__(self, other):
-        return self < other
 
 
 class TimedCancel(Timeout):
