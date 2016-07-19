@@ -46,16 +46,6 @@ class HeatBase(models.ModelBase, models.TimestampMixin):
                 session = get_session()
         session.expire(self, attrs)
 
-    def delete(self, session=None):
-        """Delete this object."""
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.begin(subtransactions=True)
-        session.delete(self)
-        session.commit()
-
     def update_and_save(self, values, session=None):
         if not session:
             session = orm_session.Session.object_session(self)
