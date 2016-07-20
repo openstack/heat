@@ -236,6 +236,35 @@ class TaskRunner(object):
         while not self.step():
             self._sleep(wait_time)
 
+    def as_task(self, timeout=None):
+        """Return a task that drives the TaskRunner."""
+        resuming = self.started()
+        if not resuming:
+            self.start(timeout=timeout)
+        else:
+            if timeout is not None:
+                new_timeout = Timeout(self, timeout)
+                if self._timeout is None or new_timeout < self._timeout:
+                    self._timeout = new_timeout
+
+        done = self.step() if resuming else self.done()
+        while not done:
+            try:
+                yield
+            except GeneratorExit:
+                self.cancel()
+                raise
+            except:  # noqa
+                self._done = True
+                try:
+                    self._runner.throw(*sys.exc_info())
+                except StopIteration:
+                    return
+                else:
+                    self._done = False
+            else:
+                done = self.step()
+
     def cancel(self, grace_period=None):
         """Cancel the task and mark it as done."""
         if self.done():
