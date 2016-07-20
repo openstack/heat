@@ -141,6 +141,8 @@ class HeatTestCase(testscenarios.WithScenarios,
     def register_test_resources(self):
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
+        resource._register_class('MultiStepResourceType',
+                                 generic_rsrc.MultiStepResource)
         resource._register_class('ResWithShowAttrType',
                                  generic_rsrc.ResWithShowAttr)
         resource._register_class('SignalResourceType',
