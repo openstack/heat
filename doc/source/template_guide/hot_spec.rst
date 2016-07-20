@@ -210,8 +210,9 @@ for the ``heat_template_version`` key:
     document is a HOT template and it may contain features added and/or removed
     up until the Newton release.  This version adds the ``yaql`` function which
     can be used for evaluation of complex expressions, and also adds ``equals``
-    function which can be used to compare whether two values are equal.  The
-    complete list of supported functions is::
+    function which can be used to compare whether two values are equal, and
+    the ``map_replace`` function that can do key/value replacements on a mapping.
+    The complete list of supported functions is::
 
       digest
       get_attr
@@ -220,6 +221,7 @@ for the ``heat_template_version`` key:
       get_resource
       list_join
       map_merge
+      map_replace
       repeat
       resource_facade
       str_replace
@@ -1291,6 +1293,41 @@ For example
 This resolves to a map containing ``{'k1': 'v2', 'k2': 'v2'}``.
 
 Maps containing no items resolve to {}.
+
+map_replace
+-----------
+The ``map_replace`` function does key/value replacements on an existing mapping.
+An input mapping is processed by iterating over all keys/values and performing
+a replacement if an exact match is found in either of the optional keys/values
+mappings.
+
+The syntax of the ``map_replace`` function is
+
+.. code-block:: yaml
+
+    map_replace:
+    - <input map>
+    - keys: <map of key replacements>
+      values: <map of value replacements>
+
+For example
+
+.. code-block:: yaml
+
+    map_replace:
+    - k1: v1
+      k2: v2
+    - keys:
+        k1: K1
+      values:
+        v2: V2
+
+This resolves to a map containing ``{'K1': 'v1', 'k2': 'V2'}``.
+
+The keys/values mappings are optional, either or both may be specified.
+
+Note that an error is raised if a replacement defined in "keys" results
+in a collision with an existing keys in the input map.
 
 yaql
 ----

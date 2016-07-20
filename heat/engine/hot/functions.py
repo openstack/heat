@@ -492,6 +492,78 @@ class MapMerge(function.Function):
         return ret_map
 
 
+class MapReplace(function.Function):
+    """A function for performing substitutions on maps.
+
+    Takes the form::
+
+        {"map_replace" : [{'k1': 'v1', 'k2': 'v2'},
+                           {'keys': {'k1': 'K1'},
+                            'values': {'v2': 'V2'}}]}
+
+    And resolves to::
+
+        {'K1': 'v1', 'k2': 'V2'}
+
+    """
+
+    def __init__(self, stack, fn_name, args):
+        super(MapReplace, self).__init__(stack, fn_name, args)
+        example = (_('"%s" : [ { "key1": "val1" }, '
+                     '{"keys": {"key1": "key2"}, "values": {"val1": "val2"}}]')
+                   % fn_name)
+        self.fmt_data = {'fn_name': fn_name, 'example': example}
+
+    def result(self):
+        args = function.resolve(self.args)
+
+        def ensure_map(m):
+            if m is None:
+                return {}
+            elif isinstance(m, collections.Mapping):
+                return m
+            else:
+                msg = (_('Incorrect arguments: to "%(fn_name)s", arguments '
+                         'must be a list of maps. Example:  %(example)s')
+                       % self.fmt_data)
+                raise TypeError(msg)
+
+        try:
+            in_map = ensure_map(args.pop(0))
+            repl_map = ensure_map(args.pop(0))
+            if args != []:
+                raise IndexError
+        except (IndexError, AttributeError):
+            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                              'should be: %(example)s') % self.fmt_data)
+
+        for k in repl_map:
+            if k not in ('keys', 'values'):
+                raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
+                                   'should be: %(example)s') % self.fmt_data)
+
+        repl_keys = repl_map.get('keys', {})
+        repl_values = repl_map.get('values', {})
+        ret_map = {}
+        for k, v in six.iteritems(in_map):
+            key = repl_keys.get(k)
+            if key is None:
+                key = k
+            elif key in in_map:
+                # Keys collide
+                msg = _('key replacement %s collides with '
+                        'a key in the input map')
+                raise ValueError(msg % key)
+            elif key in ret_map:
+                # Keys collide
+                msg = _('key replacement %s collides with '
+                        'a key in the output map')
+                raise ValueError(msg % key)
+            value = repl_values.get(v, v)
+            ret_map[key] = value
+        return ret_map
+
+
 class ResourceFacade(cfn_funcs.ResourceFacade):
     """A function for retrieving data in a parent provider template.
 
