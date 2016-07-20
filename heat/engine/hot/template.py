@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import six
 
 from heat.common import exception
@@ -70,6 +71,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
     _HOT_TO_CFN_ATTRS.update(
         {OUTPUT_VALUE: cfn_template.CfnTemplate.OUTPUT_VALUE})
 
+    extra_rsrc_defn = ()
     functions = {
         'Fn::GetAZs': cfn_funcs.GetAZs,
         'get_param': hot_funcs.GetParam,
@@ -181,7 +183,8 @@ class HOTemplate20130523(template_common.CommonTemplate):
 
             for attr, attr_value in six.iteritems(attrs):
                 cfn_attr = mapping[attr]
-                cfn_object[cfn_attr] = attr_value
+                if cfn_attr is not None:
+                    cfn_object[cfn_attr] = attr_value
 
             cfn_objects[name] = cfn_object
 
@@ -216,6 +219,50 @@ class HOTemplate20130523(template_common.CommonTemplate):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
+    def validate_resource_definitions(self, stack):
+        resources = self.t.get(self.RESOURCES) or {}
+        allowed_keys = set(self._RESOURCE_KEYS)
+
+        try:
+            for name, snippet in resources.items():
+                path = '.'.join([self.RESOURCES, name])
+                data = self.parse(stack, snippet, path)
+
+                if not self.validate_resource_key_type(self.RES_TYPE,
+                                                       six.string_types,
+                                                       'string',
+                                                       allowed_keys,
+                                                       name, data):
+                    args = {'name': name, 'type_key': self.RES_TYPE}
+                    msg = _('Resource %(name)s is missing '
+                            '"%(type_key)s"') % args
+                    raise KeyError(msg)
+                self._validate_resource_key_types(allowed_keys, name, data)
+        except (TypeError, ValueError) as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
+
+    def _validate_resource_key_types(self, allowed_keys, name, data):
+                self.validate_resource_key_type(
+                    self.RES_PROPERTIES,
+                    (collections.Mapping, function.Function),
+                    'object', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    self.RES_METADATA,
+                    (collections.Mapping, function.Function),
+                    'object', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    self.RES_DEPENDS_ON,
+                    collections.Sequence,
+                    'list or string', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    self.RES_DELETION_POLICY,
+                    (six.string_types, function.Function),
+                    'string', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    self.RES_UPDATE_POLICY,
+                    (collections.Mapping, function.Function),
+                    'object', allowed_keys, name, data)
+
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
         parsed_resources = self.parse(stack, resources)
@@ -245,7 +292,8 @@ class HOTemplate20130523(template_common.CommonTemplate):
             'update_policy': data.get(cls.RES_UPDATE_POLICY),
             'description': None
         }
-
+        for key in cls.extra_rsrc_defn:
+            kwargs[key] = data.get(key)
         return rsrc_defn.ResourceDefinition(name, **kwargs)
 
     def add_resource(self, definition, name=None):
@@ -377,7 +425,6 @@ class HOTemplate20160408(HOTemplate20151015):
 
 
 class HOTemplate20161014(HOTemplate20160408):
-
     CONDITIONS = 'conditions'
 
     SECTIONS = HOTemplate20160408.SECTIONS + (CONDITIONS,)
@@ -385,6 +432,20 @@ class HOTemplate20161014(HOTemplate20160408):
     _CFN_TO_HOT_SECTIONS = HOTemplate20160408._CFN_TO_HOT_SECTIONS
     _CFN_TO_HOT_SECTIONS.update({
         cfn_template.CfnTemplate.CONDITIONS: CONDITIONS})
+    _RESOURCE_KEYS = HOTemplate20160408._RESOURCE_KEYS
+    _EXT_KEY = (RES_EXTERNAL_ID,) = ('external_id',)
+    _RESOURCE_KEYS += _EXT_KEY
+    _RESOURCE_HOT_TO_CFN_ATTRS = HOTemplate20160408._RESOURCE_HOT_TO_CFN_ATTRS
+    _RESOURCE_HOT_TO_CFN_ATTRS.update({RES_EXTERNAL_ID: None})
+    extra_rsrc_defn = HOTemplate20160408.extra_rsrc_defn + (RES_EXTERNAL_ID,)
+
+    def _validate_resource_key_types(self, allowed_keys, name, data):
+        super(HOTemplate20161014, self)._validate_resource_key_types(
+            allowed_keys, name, data)
+        self.validate_resource_key_type(
+            self.RES_EXTERNAL_ID,
+            (six.string_types, function.Function),
+            'string', allowed_keys, name, data)
 
     deletion_policies = {
         'Delete': rsrc_defn.ResourceDefinition.DELETE,

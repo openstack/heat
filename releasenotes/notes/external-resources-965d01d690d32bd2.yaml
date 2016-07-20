@@ -1,0 +1,10 @@
+---
+prelude: >
+    Support external resource reference in template.
+features:
+  - Add `external_id` attribute for resource to reference
+    on an exists external resource. The resource (with
+    `external_id` attribute) will not able to be updated.
+    This will keep management rights stay externally.
+  - This feature only supports templates with version over
+    `2016-10-14`.
