@@ -166,8 +166,8 @@ class TaskRunner(object):
         self.start(timeout=timeout)
         # ensure that zero second sleep is applied only if task
         # has not completed.
-        if not self.done() and wait_time:
-            self._sleep(0)
+        if not self.done():
+            self._sleep(0 if wait_time is not None else None)
         self.run_to_completion(wait_time=wait_time)
 
     def start(self, timeout=None):
@@ -420,7 +420,8 @@ class DependencyTaskGroup(object):
                     if not r:
                         del self._graph[k]
 
-                yield
+                if self._graph:
+                    yield
 
                 for k, r in self._running():
                     if r.step():
