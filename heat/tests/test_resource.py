@@ -344,6 +344,26 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
         self.assertEqual('f00d', res.resource_id)
 
+    def test_create_from_external_not_found(self):
+        external_id = 'f00d'
+        tmpl = rsrc_defn.ResourceDefinition(
+            'test_resource', 'GenericResourceType',
+            external_id=external_id)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.entity = 'test'
+        res.client = mock.Mock()
+        res.client_plugin = mock.Mock()
+        test_obj = mock.Mock()
+        res.client().test = test_obj
+        test_obj.get.side_effect = exception.EntityNotFound
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              scheduler.TaskRunner(res.create))
+        message = ("Invalid external resource: Resource %(external_id)s not "
+                   "found in %(entity)s.") % {'external_id': external_id,
+                                              'entity': res.entity}
+        self.assertEqual(message, six.text_type(e))
+
     def test_updated_from_external(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType')

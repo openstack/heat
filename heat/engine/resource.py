@@ -858,6 +858,23 @@ class Resource(object):
                 runner = scheduler.TaskRunner(self.adopt, **adopt_data)
             runner(timeout=timeout)
 
+    def _validate_external_resource(self, external_id):
+        if self.entity:
+            try:
+                self.resource_id = external_id
+                self._show_resource()
+            except Exception as ex:
+                LOG.debug("%s", ex)
+                if self.client_plugin().is_not_found(ex):
+                    error_message = _("Invalid external resource: Resource "
+                                      "%(external_id)s not found in "
+                                      "%(entity)s.") % {
+                                          'external_id': external_id,
+                                          'entity': self.entity}
+                    raise exception.StackValidationFailed(
+                        message="%s" % error_message)
+                raise
+
     @scheduler.wrappertask
     def create(self):
         """Create the resource.
@@ -867,6 +884,8 @@ class Resource(object):
         """
         external = self.t.external_id()
         if external is not None:
+            self._validate_external_resource(external_id=external)
+
             yield self._do_action(self.ADOPT,
                                   resource_data={'resource_id': external})
             self.check()
