@@ -859,15 +859,13 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2),
                                     disable_rollback=disable_rollback)
 
-        evt_mock = mock.MagicMock()
-        evt_mock.ready.return_value = True
-        evt_mock.wait.return_value = cancel_message
+        msgq_mock = mock.MagicMock()
+        msgq_mock.get_nowait.return_value = cancel_message
 
-        self.stack.update(updated_stack, event=evt_mock)
+        self.stack.update(updated_stack, msg_queue=msgq_mock)
 
         self.assertEqual(state, self.stack.state)
-        evt_mock.ready.assert_called_once_with()
-        evt_mock.wait.assert_called_once_with()
+        msgq_mock.get_nowait.assert_called_once_with()
 
     def test_update_force_cancel_no_rollback(self):
         self._update_force_cancel(
@@ -1064,16 +1062,14 @@ class StackUpdateTest(common.HeatTestCase):
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2),
                                     disable_rollback=False)
-        evt_mock = mock.MagicMock()
-        evt_mock.ready.return_value = True
-        evt_mock.wait.return_value = 'cancel_with_rollback'
+        msgq_mock = mock.MagicMock()
+        msgq_mock.get_nowait.return_value = 'cancel_with_rollback'
 
-        self.stack.update(updated_stack, event=evt_mock)
+        self.stack.update(updated_stack, msg_queue=msgq_mock)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        evt_mock.ready.assert_called_once_with()
-        evt_mock.wait.assert_called_once_with()
+        msgq_mock.get_nowait.assert_called_once_with()
 
     def test_update_rollback_fail(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',

@@ -319,7 +319,7 @@ class DummyThreadGroup(object):
 
 class DummyThreadGroupManager(object):
     def __init__(self):
-        self.events = []
+        self.msg_queues = []
         self.messages = []
 
     def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
@@ -335,13 +335,13 @@ class DummyThreadGroupManager(object):
     def send(self, stack_id, message):
         self.messages.append(message)
 
-    def add_event(self, stack_id, event):
-        self.events.append(event)
+    def add_msg_queue(self, stack_id, msg_queue):
+        self.msg_queues.append(msg_queue)
 
-    def remove_event(self, gt, stack_id, event):
-        for e in self.events.pop(stack_id, []):
-            if e is not event:
-                self.add_event(stack_id, e)
+    def remove_msg_queue(self, gt, stack_id, msg_queue):
+        for q in self.msg_queues.pop(stack_id, []):
+            if q is not msg_queue:
+                self.add_event(stack_id, q)
 
 
 class DummyThreadGroupMgrLogStart(DummyThreadGroupManager):
