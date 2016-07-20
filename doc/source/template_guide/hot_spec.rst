@@ -1327,7 +1327,7 @@ This resolves to a map containing ``{'K1': 'v1', 'k2': 'V2'}``.
 The keys/values mappings are optional, either or both may be specified.
 
 Note that an error is raised if a replacement defined in "keys" results
-in a collision with an existing keys in the input map.
+in a collision with an existing keys in the input or output map.
 
 yaql
 ----

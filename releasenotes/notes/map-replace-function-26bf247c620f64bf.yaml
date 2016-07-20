@@ -1,0 +1,7 @@
+---
+  features:
+  - Add ``map_replace`` function, that takes 2 arguments
+    an input map and a map containing a ``keys`` and/or
+    ``values`` map.  key/value substitutions on the input
+    map are performed based on the mappings passed in
+    ``keys`` and ``values``.
