@@ -36,8 +36,6 @@ from heat.objects import stack as stack_object
 from heat.objects import stack_lock
 from heat.rpc import api as rpc_api
 
-from heat.engine.clients.client_plugin import ExceptionFilter
-
 LOG = logging.getLogger(__name__)
 
 
@@ -343,7 +341,7 @@ class StackResource(resource.Resource):
                       DeprecationWarning)
         return self.translate_remote_exceptions(ex)
 
-    @ExceptionFilter
+    @excutils.exception_filter
     def translate_remote_exceptions(self, ex):
         if (isinstance(ex, exception.ActionInProgress) and
                 self.stack.action == self.stack.ROLLBACK):
