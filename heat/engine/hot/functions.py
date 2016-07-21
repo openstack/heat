@@ -542,8 +542,8 @@ class MapReplace(function.Function):
                 raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
                                    'should be: %(example)s') % self.fmt_data)
 
-        repl_keys = repl_map.get('keys', {})
-        repl_values = repl_map.get('values', {})
+        repl_keys = ensure_map(repl_map.get('keys', {}))
+        repl_values = ensure_map(repl_map.get('values', {}))
         ret_map = {}
         for k, v in six.iteritems(in_map):
             key = repl_keys.get(k)
@@ -559,7 +559,11 @@ class MapReplace(function.Function):
                 msg = _('key replacement %s collides with '
                         'a key in the output map')
                 raise ValueError(msg % key)
-            value = repl_values.get(v, v)
+            try:
+                value = repl_values.get(v, v)
+            except TypeError:
+                # If the value is unhashable, we get here
+                value = v
             ret_map[key] = value
         return ret_map
 
