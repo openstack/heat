@@ -795,12 +795,12 @@ class EngineService(service.Service):
                     stack.state_set(stack.action, stack.FAILED,
                                     six.text_type(ex))
 
-        def _stack_create(stack):
+        def _stack_create(stack, msg_queue=None):
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
                 stack.adopt()
             elif stack.status != stack.FAILED:
-                stack.create()
+                stack.create(msg_queue=msg_queue)
 
             if (stack.action in (stack.CREATE, stack.ADOPT)
                     and stack.status == stack.COMPLETE):
@@ -831,8 +831,14 @@ class EngineService(service.Service):
             stack.thread_group_mgr = self.thread_group_mgr
             stack.converge_stack(template=stack.t, action=action)
         else:
-            self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                                  _stack_create, stack)
+            msg_queue = eventlet.queue.LightQueue()
+            th = self.thread_group_mgr.start_with_lock(cnxt, stack,
+                                                       self.engine_id,
+                                                       _stack_create, stack,
+                                                       msg_queue=msg_queue)
+            th.link(self.thread_group_mgr.remove_msg_queue,
+                    stack.id, msg_queue)
+            self.thread_group_mgr.add_msg_queue(stack.id, msg_queue)
 
         return dict(stack.identifier())
 
@@ -1120,11 +1126,14 @@ class EngineService(service.Service):
         db_stack = self._get_stack(cnxt, stack_identity)
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
-        if current_stack.state != (current_stack.UPDATE,
-                                   current_stack.IN_PROGRESS):
+        if cancel_with_rollback:  # Commanded by user
+            allowed_actions = (current_stack.UPDATE,)
+        else:  # Cancelled by parent stack
+            allowed_actions = (current_stack.UPDATE, current_stack.CREATE)
+        if not (current_stack.status == current_stack.IN_PROGRESS and
+                current_stack.action in allowed_actions):
             state = '_'.join(current_stack.state)
-            msg = _("Cancelling update when stack is %s"
-                    ) % str(state)
+            msg = _("Cancelling update when stack is %s") % str(state)
             raise exception.NotSupported(feature=msg)
         LOG.info(_LI('Starting cancel of updating stack %s'), db_stack.name)
         # stop the running update and take the lock
