@@ -138,6 +138,9 @@ class TestTemplatePluginManager(common.HeatTestCase):
             def validate_resource_definitions(self, stack):
                 pass
 
+            def validate_condition_definitions(self, stack):
+                pass
+
             def resource_definitions(self, stack):
                 pass
 
@@ -272,6 +275,71 @@ class ParserTest(common.HeatTestCase):
         self.assertEqual('foo bar baz', parsed['quux'])
         self.assertEqual(raw['blarg'], parsed['blarg'])
         self.assertIsNot(raw, parsed)
+
+
+class TestTemplateConditionParser(common.HeatTestCase):
+
+    def setUp(self):
+        super(TestTemplateConditionParser, self).setUp()
+        self.ctx = utils.dummy_context()
+
+    def test_conditions_with_non_supported_functions(self):
+        t = {
+            'heat_template_version': '2016-10-14',
+            'parameters': {
+                'env_type': {
+                    'type': 'string',
+                    'default': 'test'
+                }
+            },
+            'conditions': {
+                'prod_env': {
+                    'equals': [{'get_param': 'env_type'},
+                               {'get_attr': [None, 'att']}]}}}
+        # test with get_attr in equals
+        tmpl = template.Template(t)
+        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
+        ex = self.assertRaises(exception.InvalidConditionFunction,
+                               tmpl.resolve_conditions, stk)
+        self.assertIn('The function is not supported in condition: get_attr',
+                      six.text_type(ex))
+
+        # test with get_resource in top level of a condition
+        tmpl.t['conditions']['prod_env'] = {'get_resource': 'R1'}
+        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
+        ex = self.assertRaises(exception.InvalidConditionFunction,
+                               tmpl.resolve_conditions, stk)
+        self.assertIn('The function is not supported in condition: '
+                      'get_resource', six.text_type(ex))
+
+        # test with get_attr in top level of a condition
+        tmpl.t['conditions']['prod_env'] = {'get_attr': [None, 'att']}
+        stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
+        ex = self.assertRaises(exception.InvalidConditionFunction,
+                               tmpl.resolve_conditions, stk)
+        self.assertIn('The function is not supported in condition: get_attr',
+                      six.text_type(ex))
+
+    def test_condition_resolved_not_boolean(self):
+        t = {
+            'heat_template_version': '2016-10-14',
+            'parameters': {
+                'env_type': {
+                    'type': 'string',
+                    'default': 'test'
+                }
+            },
+            'conditions': {
+                'prod_env': {'get_param': 'env_type'}}}
+
+        # test with get_attr in equals
+        tmpl = template.Template(t)
+        stk = stack.Stack(self.ctx, 'test_condition_not_boolean', tmpl)
+
+        ex = self.assertRaises(exception.InvalidConditionDefinition,
+                               tmpl.validate_condition_definitions, stk)
+        self.assertIn('The definition of condition (prod_env) is invalid',
+                      six.text_type(ex))
 
 
 class TestTemplateValidate(common.HeatTestCase):

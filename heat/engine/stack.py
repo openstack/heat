@@ -779,6 +779,9 @@ class Stack(collections.Mapping):
         parameter_groups = param_groups.ParameterGroups(self.t)
         parameter_groups.validate()
 
+        # Validate condition definition of conditions section
+        self.t.validate_condition_definitions(self)
+
         # Validate types of sections in ResourceDefinitions
         self.t.validate_resource_definitions(self)
 

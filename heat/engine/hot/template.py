@@ -511,3 +511,6 @@ class HOTemplate20161014(HOTemplate20160408):
             else:
                 self._parser_condition_functions[n] = f
         self._parser_condition_functions.update(self.condition_functions)
+
+    def get_condition_definitions(self):
+        return self[self.CONDITIONS]

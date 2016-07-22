@@ -74,3 +74,33 @@ class CommonTemplate(template.Template):
                 self.validate_resource_definition(name, data)
         except (TypeError, ValueError, KeyError) as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
+
+    def validate_condition_definitions(self, stack):
+        """Check conditions section."""
+
+        resolved_cds = self.resolve_conditions(stack)
+        if resolved_cds:
+            for cd_key, cd_value in six.iteritems(resolved_cds):
+                if not isinstance(cd_value, bool):
+                    raise exception.InvalidConditionDefinition(
+                        cd=cd_key,
+                        definition=cd_value)
+
+    def resolve_conditions(self, stack):
+        cd_snippet = self.get_condition_definitions()
+        result = {}
+        if cd_snippet:
+            for cd_key, cd_value in six.iteritems(cd_snippet):
+                # hasn't been resolved yet
+                if not isinstance(cd_value, bool):
+                    condition_func = self.parse_condition(
+                        stack, cd_value)
+                    resolved_cd_value = function.resolve(condition_func)
+                    result[cd_key] = resolved_cd_value
+                else:
+                    result[cd_key] = cd_value
+
+        return result
+
+    def get_condition_definitions(self):
+        return {}

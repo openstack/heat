@@ -176,6 +176,9 @@ class CfnTemplate(CfnTemplateBase):
             (n, function.Invalid) for n in self.functions)
         self._parser_condition_functions.update(self.condition_functions)
 
+    def get_condition_definitions(self):
+        return self[self.CONDITIONS]
+
 
 class HeatTemplate(CfnTemplateBase):
     functions = {

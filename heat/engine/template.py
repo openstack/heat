@@ -212,6 +212,11 @@ class Template(collections.Mapping):
         pass
 
     @abc.abstractmethod
+    def validate_condition_definitions(self, stack):
+        """Check conditions section."""
+        pass
+
+    @abc.abstractmethod
     def resource_definitions(self, stack):
         """Return a dictionary of ResourceDefinition objects."""
         pass
