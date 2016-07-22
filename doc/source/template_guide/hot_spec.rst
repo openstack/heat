@@ -43,7 +43,7 @@ HOT templates are defined in YAML and follow the structure outlined below.
 
 .. code-block:: yaml
 
-  heat_template_version: 2015-04-30
+  heat_template_version: 2016-10-14
 
   description:
     # a description of the template
@@ -59,6 +59,9 @@ HOT templates are defined in YAML and follow the structure outlined below.
 
   outputs:
     # declaration of output parameters
+
+  conditions:
+    # declaration of conditions
 
 heat_template_version
     This key with value ``2013-05-23`` (or a later date) indicates that the
@@ -88,6 +91,15 @@ outputs
     This section allows for specifying output parameters available to users
     once the template has been instantiated. This section is optional and can
     be omitted when no output values are required.
+
+conditions
+    This optional section includes statements which can be used to restrict
+    when a resource is created or when a property is defined. They can be
+    associated with resources and resource properties in the
+    ``resources`` section, also can be associated with outputs in the
+    ``outputs`` sections of a template.
+
+    Note: Support for this section is added in the Newton version.
 
 
 .. _hot_spec_template_version:
@@ -209,10 +221,9 @@ for the ``heat_template_version`` key:
     The key with value ``2016-10-14`` or ``newton`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
     up until the Newton release.  This version adds the ``yaql`` function which
-    can be used for evaluation of complex expressions, and also adds ``equals``
-    function which can be used to compare whether two values are equal, and
-    the ``map_replace`` function that can do key/value replacements on a mapping.
-    The complete list of supported functions is::
+    can be used for evaluation of complex expressions, and the ``map_replace``
+    function that can do key/value replacements on a mapping. The complete list
+    of supported functions is::
 
       digest
       get_attr
@@ -227,7 +238,13 @@ for the ``heat_template_version`` key:
       str_replace
       str_split
       yaql
+
+    This version also adds ``equals`` condition function which can be used
+    to compare whether two values are equal. The complete list of supported
+    condition functions is::
+
       equals
+      get_param
 
 .. _hot_spec_parameter_groups:
 
@@ -754,6 +771,48 @@ be defined as an output parameter
      instance_ip:
        description: IP address of the deployed compute instance
        value: { get_attr: [my_instance, first_address] }
+
+
+Conditions section
+~~~~~~~~~~~~~~~~~~
+The ``conditions`` section defines one or more conditions which are evaluated
+based on input parameter values provided when a user creates or updates a
+stack. The condition can be associated with resources, resource properties and
+outputs. For example, based on the result of a condition, user can
+conditionally create resources, user can conditionally set different values
+of properties, and user can conditionally give outputs of a stack.
+
+The ``conditions`` section is defined with the following syntax
+
+.. code-block:: yaml
+
+   conditions:
+     <condition name1>: {expression1}
+     <condition name2>: {expression2}
+     ...
+
+condition name
+    The condition name, which must be unique within the ``conditions``
+    section of a template.
+
+expression
+    The expression which is expected to return True or False. Usually,
+    the condition functions can be used as expression to define conditions::
+
+      equals
+      get_param
+
+    Note: In condition functions, you can reference a value from an input
+    parameter, but you cannot reference resource or its attribute.
+
+An example of conditions section definition
+
+.. code-block:: yaml
+
+   conditions:
+     cd1: True
+     cd2: {get_param: param1}
+     cd3: {equals: [{get_param: param2}, "yes"]}
 
 
 .. _hot_spec_intrinsic_functions:

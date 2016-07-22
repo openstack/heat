@@ -55,8 +55,8 @@ empty_template = template_format.parse('''{
   "HeatTemplateFormatVersion" : "2012-12-12",
 }''')
 
-empty_template20161014 = template_format.parse('''{
-  "HeatTemplateFormatVersion" : "2016-10-14",
+aws_empty_template = template_format.parse('''{
+  "AWSTemplateFormatVersion" : "2010-09-09",
 }''')
 
 parameter_template = template_format.parse('''{
@@ -119,17 +119,20 @@ class TemplatePluginFixture(fixtures.Fixture):
 class TestTemplatePluginManager(common.HeatTestCase):
     def test_template_NEW_good(self):
         class NewTemplate(template.Template):
-            SECTIONS = (VERSION, MAPPINGS) = ('NEWTemplateFormatVersion',
-                                              '__undefined__')
+            SECTIONS = (VERSION, MAPPINGS, CONDITIONS) = (
+                'NEWTemplateFormatVersion',
+                '__undefined__',
+                'conditions')
             RESOURCES = 'thingies'
 
-            def param_schemata(self):
+            def param_schemata(self, param_defaults=None):
                 pass
 
             def get_section_name(self, section):
                 pass
 
-            def parameters(self, stack_identifier, user_params):
+            def parameters(self, stack_identifier, user_params,
+                           param_defaults=None):
                 pass
 
             def validate_resource_definitions(self, stack):
@@ -142,9 +145,6 @@ class TestTemplatePluginManager(common.HeatTestCase):
                 pass
 
             def __getitem__(self, section):
-                return {}
-
-            def functions(self):
                 return {}
 
         class NewTemplatePrint(function.Function):
@@ -495,6 +495,10 @@ class TemplateTest(common.HeatTestCase):
     def resolve(snippet, template, stack=None):
         return function.resolve(template.parse(stack, snippet))
 
+    @staticmethod
+    def resolve_condition(snippet, template, stack=None):
+        return function.resolve(template.parse_condition(stack, snippet))
+
     def test_defaults(self):
         empty = template.Template(empty_template)
         self.assertNotIn('AWSTemplateFormatVersion', empty)
@@ -593,8 +597,7 @@ class TemplateTest(common.HeatTestCase):
                                     invalid_heat_version_tmp)
         ex_error_msg = ('The template version is invalid: '
                         '"HeatTemplateFormatVersion: 2010-09-09". '
-                        '"HeatTemplateFormatVersion" should be one of: '
-                        '2012-12-12, 2016-10-14')
+                        '"HeatTemplateFormatVersion" should be: 2012-12-12')
         self.assertEqual(ex_error_msg, six.text_type(init_ex))
 
     def test_invalid_version_not_in_heat_versions(self):
@@ -771,7 +774,7 @@ class TemplateTest(common.HeatTestCase):
 
     def test_equals(self):
         tpl = template_format.parse('''
-        HeatTemplateFormatVersion: 2016-10-14
+        AWSTemplateFormatVersion: 2010-09-09
         Parameters:
           env_type:
             Type: String
@@ -782,7 +785,7 @@ class TemplateTest(common.HeatTestCase):
         tmpl = template.Template(tpl)
         stk = stack.Stack(utils.dummy_context(),
                           'test_equals_false', tmpl)
-        resolved = self.resolve(snippet, tmpl, stk)
+        resolved = self.resolve_condition(snippet, tmpl, stk)
         self.assertFalse(resolved)
         # when param 'env_type' is 'prod', equals function resolve to true
         tmpl = template.Template(tpl,
@@ -790,23 +793,24 @@ class TemplateTest(common.HeatTestCase):
                                      {'env_type': 'prod'}))
         stk = stack.Stack(utils.dummy_context(),
                           'test_equals_true', tmpl)
-        resolved = self.resolve(snippet, tmpl, stk)
+        resolved = self.resolve_condition(snippet, tmpl, stk)
         self.assertTrue(resolved)
 
     def test_equals_invalid_args(self):
-        tmpl = template.Template(empty_template20161014)
+        tmpl = template.Template(aws_empty_template)
 
         snippet = {'Fn::Equals': ['test', 'prod', 'invalid']}
         exc = self.assertRaises(exception.StackValidationFailed,
-                                self.resolve, snippet, tmpl)
-        self.assertIn('.Fn::Equals: Arguments to "Fn::Equals" must be of '
-                      'the form: [value_1, value_2]', six.text_type(exc))
+                                self.resolve_condition, snippet, tmpl)
+
+        error_msg = ('.Fn::Equals: Arguments to "Fn::Equals" must be '
+                     'of the form: [value_1, value_2]')
+        self.assertIn(error_msg, six.text_type(exc))
         # test invalid type
         snippet = {'Fn::Equals': {"equal": False}}
         exc = self.assertRaises(exception.StackValidationFailed,
-                                self.resolve, snippet, tmpl)
-        self.assertIn('.Fn::Equals: Arguments to "Fn::Equals" must be of '
-                      'the form: [value_1, value_2]', six.text_type(exc))
+                                self.resolve_condition, snippet, tmpl)
+        self.assertIn(error_msg, six.text_type(exc))
 
     def test_join(self):
         tmpl = template.Template(empty_template)

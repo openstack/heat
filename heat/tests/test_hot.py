@@ -156,6 +156,10 @@ class HOTemplateTest(common.HeatTestCase):
     def resolve(snippet, template, stack=None):
         return function.resolve(template.parse(stack, snippet))
 
+    @staticmethod
+    def resolve_condition(snippet, template, stack=None):
+        return function.resolve(template.parse_condition(stack, snippet))
+
     def test_defaults(self):
         """Test default content behavior of HOT template."""
 
@@ -1073,7 +1077,7 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_tpl)
         stack = parser.Stack(utils.dummy_context(),
                              'test_equals_false', tmpl)
-        resolved = self.resolve(snippet, tmpl, stack)
+        resolved = self.resolve_condition(snippet, tmpl, stack)
         self.assertFalse(resolved)
         # when param 'env_type' is 'prod', equals function resolve to true
         tmpl = template.Template(hot_tpl,
@@ -1081,7 +1085,7 @@ class HOTemplateTest(common.HeatTestCase):
                                      {'env_type': 'prod'}))
         stack = parser.Stack(utils.dummy_context(),
                              'test_equals_true', tmpl)
-        resolved = self.resolve(snippet, tmpl, stack)
+        resolved = self.resolve_condition(snippet, tmpl, stack)
         self.assertTrue(resolved)
 
     def test_equals_invalid_args(self):
@@ -1089,15 +1093,27 @@ class HOTemplateTest(common.HeatTestCase):
 
         snippet = {'equals': ['test', 'prod', 'invalid']}
         exc = self.assertRaises(exception.StackValidationFailed,
-                                self.resolve, snippet, tmpl)
-        self.assertIn('.equals: Arguments to "equals" must be of the form: '
-                      '[value_1, value_2]', six.text_type(exc))
+                                self.resolve_condition, snippet, tmpl)
+
+        error_msg = ('.equals: Arguments to "equals" must be '
+                     'of the form: [value_1, value_2]')
+        self.assertIn(error_msg, six.text_type(exc))
 
         snippet = {'equals': "invalid condition"}
         exc = self.assertRaises(exception.StackValidationFailed,
-                                self.resolve, snippet, tmpl)
-        self.assertIn('.equals: Arguments to "equals" must be of the form: '
-                      '[value_1, value_2]', six.text_type(exc))
+                                self.resolve_condition, snippet, tmpl)
+        self.assertIn(error_msg, six.text_type(exc))
+
+    def test_equals_with_non_supported_function(self):
+
+        tmpl = template.Template(hot_newton_tpl_empty)
+
+        snippet = {'equals': [{'get_attr': [None, 'att1']},
+                              {'get_attr': [None, 'att2']}]}
+        exc = self.assertRaises(exception.InvalidConditionFunction,
+                                self.resolve_condition, snippet, tmpl)
+        error_msg = 'The function is not supported in condition: get_attr'
+        self.assertIn(error_msg, six.text_type(exc))
 
     def test_repeat(self):
         """Test repeat function."""

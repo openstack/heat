@@ -110,7 +110,7 @@ class TestContainer(common.HeatTestCase):
             self.stack = utils.parse_stack(tmpl)
         else:
             self.stack = stack
-        resource_defns = self.stack.t.resource_definitions(stack)
+        resource_defns = self.stack.t.resource_definitions(self.stack)
         if snippet is None:
             snippet = resource_defns['container']
         res_class = container.resource_mapping()[tmpl_name]

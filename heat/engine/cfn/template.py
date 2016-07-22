@@ -19,20 +19,21 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
+from heat.engine.hot import functions as hot_funcs
 from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import template
 
 
-class CfnTemplate(template.Template):
-    """A stack template."""
+class CfnTemplateBase(template.Template):
+    """The base implementation of cfn template."""
 
     SECTIONS = (
         VERSION, ALTERNATE_VERSION,
-        DESCRIPTION, MAPPINGS, PARAMETERS, RESOURCES, OUTPUTS
+        DESCRIPTION, MAPPINGS, PARAMETERS, RESOURCES, OUTPUTS,
     ) = (
         'AWSTemplateFormatVersion', 'HeatTemplateFormatVersion',
-        'Description', 'Mappings', 'Parameters', 'Resources', 'Outputs'
+        'Description', 'Mappings', 'Parameters', 'Resources', 'Outputs',
     )
 
     OUTPUT_KEYS = (
@@ -206,23 +207,26 @@ class CfnTemplate(template.Template):
         self.t[self.RESOURCES][name] = cfn_tmpl
 
 
-class HeatTemplate(CfnTemplate):
-    functions = {
+class CfnTemplate(CfnTemplateBase):
+
+    CONDITIONS = 'Conditions'
+    SECTIONS = CfnTemplateBase.SECTIONS + (CONDITIONS,)
+
+    condition_functions = {
+        'Fn::Equals': hot_funcs.Equals,
+        'Ref': cfn_funcs.ParamRef,
         'Fn::FindInMap': cfn_funcs.FindInMap,
-        'Fn::GetAZs': cfn_funcs.GetAZs,
-        'Ref': cfn_funcs.Ref,
-        'Fn::GetAtt': cfn_funcs.GetAtt,
-        'Fn::Select': cfn_funcs.Select,
-        'Fn::Join': cfn_funcs.Join,
-        'Fn::Split': cfn_funcs.Split,
-        'Fn::Replace': cfn_funcs.Replace,
-        'Fn::Base64': cfn_funcs.Base64,
-        'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
-        'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
     }
 
+    def __init__(self, tmpl, template_id=None, files=None, env=None):
+        super(CfnTemplate, self).__init__(tmpl, template_id, files, env)
 
-class HeatTemplate20161014(HeatTemplate):
+        self._parser_condition_functions = dict(
+            (n, function.Invalid) for n in self.functions)
+        self._parser_condition_functions.update(self.condition_functions)
+
+
+class HeatTemplate(CfnTemplateBase):
     functions = {
         'Fn::FindInMap': cfn_funcs.FindInMap,
         'Fn::GetAZs': cfn_funcs.GetAZs,
@@ -235,6 +239,4 @@ class HeatTemplate20161014(HeatTemplate):
         'Fn::Base64': cfn_funcs.Base64,
         'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
         'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
-        # supports Fn::Equals in Newton
-        'Fn::Equals': cfn_funcs.Equals,
     }
