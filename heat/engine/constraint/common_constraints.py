@@ -32,14 +32,14 @@ class TestConstraintDelay(constraints.BaseCustomConstraint):
 
 class IPConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
         self._error_message = 'Invalid IP address'
         return netutils.is_valid_ip(value)
 
 
 class MACConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
         self._error_message = 'Invalid MAC address.'
         return netaddr.valid_mac(value)
 
@@ -53,7 +53,7 @@ class CIDRConstraint(constraints.BaseCustomConstraint):
             return False
         return True
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
         try:
             netaddr.IPNetwork(value)
             return self._validate_whitespace(value)
@@ -62,9 +62,9 @@ class CIDRConstraint(constraints.BaseCustomConstraint):
             return False
 
 
-class ISO8601Constraint(object):
+class ISO8601Constraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
         try:
             timeutils.parse_isotime(value)
         except Exception:
@@ -75,7 +75,7 @@ class ISO8601Constraint(object):
 
 class CRONExpressionConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
         if not value:
             return True
         try:
@@ -89,7 +89,7 @@ class CRONExpressionConstraint(constraints.BaseCustomConstraint):
 
 class TimezoneConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
+    def validate(self, value, context, template=None):
         if not value:
             return True
         try:

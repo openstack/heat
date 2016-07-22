@@ -21,7 +21,7 @@ from heat.engine import constraints
 
 class ResourceTypeConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context, template):
+    def validate(self, value, context, template=None):
 
         if not isinstance(value, collections.Sequence):
             return False
