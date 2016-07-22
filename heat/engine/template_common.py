@@ -1,0 +1,76 @@
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import collections
+
+import six
+
+from heat.common import exception
+from heat.common.i18n import _
+from heat.engine import function
+from heat.engine import template
+
+
+class CommonTemplate(template.Template):
+    """A class of the common implementation for HOT and CFN templates."""
+
+    def validate_resource_definition(self, name, data):
+        allowed_keys = set(self._RESOURCE_KEYS)
+
+        if not self.validate_resource_key_type(self.RES_TYPE,
+                                               six.string_types,
+                                               'string',
+                                               allowed_keys,
+                                               name,
+                                               data):
+            args = {'name': name, 'type_key': self.RES_TYPE}
+            msg = _('Resource %(name)s is missing "%(type_key)s"') % args
+            raise KeyError(msg)
+
+        self.validate_resource_key_type(
+            self.RES_PROPERTIES,
+            (collections.Mapping, function.Function),
+            'object', allowed_keys, name, data)
+        self.validate_resource_key_type(
+            self.RES_METADATA,
+            (collections.Mapping, function.Function),
+            'object', allowed_keys, name, data)
+        self.validate_resource_key_type(
+            self.RES_DEPENDS_ON,
+            collections.Sequence,
+            'list or string', allowed_keys, name, data)
+        self.validate_resource_key_type(
+            self.RES_DELETION_POLICY,
+            (six.string_types, function.Function),
+            'string', allowed_keys, name, data)
+        self.validate_resource_key_type(
+            self.RES_UPDATE_POLICY,
+            (collections.Mapping, function.Function),
+            'object', allowed_keys, name, data)
+        self.validate_resource_key_type(
+            self.RES_DESCRIPTION,
+            six.string_types,
+            'string', allowed_keys, name, data)
+
+    def validate_resource_definitions(self, stack):
+        """Check section's type of ResourceDefinitions."""
+
+        resources = self.t.get(self.RESOURCES) or {}
+
+        try:
+            for name, snippet in resources.items():
+                path = '.'.join([self.RESOURCES, name])
+                data = self.parse(stack, snippet, path)
+                self.validate_resource_definition(name, data)
+        except (TypeError, ValueError, KeyError) as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))

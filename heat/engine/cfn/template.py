@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 import six
 
 from heat.common import exception
@@ -22,10 +20,10 @@ from heat.engine import function
 from heat.engine.hot import functions as hot_funcs
 from heat.engine import parameters
 from heat.engine import rsrc_defn
-from heat.engine import template
+from heat.engine import template_common
 
 
-class CfnTemplateBase(template.Template):
+class CfnTemplateBase(template_common.CommonTemplate):
     """The base implementation of cfn template."""
 
     SECTIONS = (
@@ -102,53 +100,6 @@ class CfnTemplateBase(template.Template):
         return parameters.Parameters(stack_identifier, self,
                                      user_params=user_params,
                                      param_defaults=param_defaults)
-
-    def validate_resource_definitions(self, stack):
-        resources = self.t.get(self.RESOURCES) or {}
-        allowed_keys = set(self._RESOURCE_KEYS)
-
-        try:
-
-            for name, snippet in resources.items():
-                path = '.'.join([self.RESOURCES, name])
-                data = self.parse(stack, snippet, path)
-
-                if not self.validate_resource_key_type(self.RES_TYPE,
-                                                       six.string_types,
-                                                       'string',
-                                                       allowed_keys,
-                                                       name, data):
-                    args = {'name': name, 'type_key': self.RES_TYPE}
-                    msg = _('Resource %(name)s is missing '
-                            '"%(type_key)s"') % args
-                    raise KeyError(msg)
-
-                self.validate_resource_key_type(
-                    self.RES_PROPERTIES,
-                    (collections.Mapping, function.Function),
-                    'object', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_METADATA,
-                    (collections.Mapping, function.Function),
-                    'object', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_DEPENDS_ON,
-                    collections.Sequence,
-                    'list or string', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_DELETION_POLICY,
-                    (six.string_types, function.Function),
-                    'string', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_UPDATE_POLICY,
-                    (collections.Mapping, function.Function),
-                    'object', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_DESCRIPTION,
-                    six.string_types,
-                    'string', allowed_keys, name, data)
-        except TypeError as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
 
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
