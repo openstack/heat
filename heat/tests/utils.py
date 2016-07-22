@@ -51,6 +51,8 @@ def random_name():
 
 def setup_dummy_db():
     options.cfg.set_defaults(options.database_opts, sqlite_synchronous=False)
+    # Uncomment to log SQL
+    # options.cfg.set_defaults(options.database_opts, connection_debug=100)
     options.set_defaults(cfg.CONF, connection="sqlite://", sqlite_db='heat.db')
     engine = get_engine()
     models.BASE.metadata.create_all(engine)
