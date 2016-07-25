@@ -1329,6 +1329,10 @@ The keys/values mappings are optional, either or both may be specified.
 Note that an error is raised if a replacement defined in "keys" results
 in a collision with an existing keys in the input or output map.
 
+Also note that while unhashable values (e.g lists) in the input map are valid,
+they will be ignored by the values replacement, because no key can be defined
+in the values mapping to define their replacement.
+
 yaql
 ----
 The ``yaql`` evaluates yaql expression on a given data.

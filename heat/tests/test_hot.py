@@ -926,6 +926,30 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual({'f1': 'b1', 'F2': 'b2'},
                          resolved)
 
+    def test_map_replace_none_values(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'values': None}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual({'f1': 'b1', 'f2': 'b2'},
+                         resolved)
+
+    def test_map_replace_none_keys(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
+                                   {'keys': None}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual({'f1': 'b1', 'f2': 'b2'},
+                         resolved)
+
+    def test_map_replace_unhashable_value(self):
+        snippet = {'map_replace': [{'f1': 'b1', 'f2': []},
+                                   {'values': {}}]}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual({'f1': 'b1', 'f2': []},
+                         resolved)
+
     def test_map_replace_keys_collide(self):
         snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
                                    {'keys': {'f2': 'f1'}}]}
