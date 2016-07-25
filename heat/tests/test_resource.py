@@ -1891,12 +1891,13 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        pcb = mock.Mock()
 
         res.create_convergence(self.stack.t.id, res_data, 'engine-007',
-                               60)
+                               60, pcb)
 
         mock_init.assert_called_once_with(res.create)
-        mock_call.assert_called_once_with(timeout=60)
+        mock_call.assert_called_once_with(timeout=60, progress_callback=pcb)
         self.assertEqual(self.stack.t.id, res.current_template_id)
         self.assertItemsEqual([1, 3], res.requires)
         self._assert_resource_lock(res.id, None, 2)
@@ -1995,12 +1996,13 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        pcb = mock.Mock()
         res.update_convergence(new_temp.id, res_data, 'engine-007', 120,
-                               new_stack)
+                               new_stack, pcb)
 
         expected_rsrc_def = new_temp.resource_definitions(self.stack)[res.name]
         mock_init.assert_called_once_with(res.update, expected_rsrc_def)
-        mock_call.assert_called_once_with(timeout=120)
+        mock_call.assert_called_once_with(timeout=120, progress_callback=pcb)
         self.assertEqual(new_temp.id, res.current_template_id)
         self.assertItemsEqual([3, 4], res.requires)
         self._assert_resource_lock(res.id, None, 2)
@@ -2220,10 +2222,11 @@ class ResourceTest(common.HeatTestCase):
         res.handle_delete = mock.Mock(return_value=None)
         res._update_replacement_data = mock.Mock()
         self._assert_resource_lock(res.id, None, None)
-        res.delete_convergence(2, {}, 'engine-007', 20)
+        pcb = mock.Mock()
+        res.delete_convergence(2, {}, 'engine-007', 20, pcb)
 
         mock_init.assert_called_once_with(res.delete)
-        mock_call.assert_called_once_with(timeout=20)
+        mock_call.assert_called_once_with(timeout=20, progress_callback=pcb)
         self.assertTrue(res._update_replacement_data.called)
 
     def test_delete_convergence_does_not_delete_same_template_resource(self):

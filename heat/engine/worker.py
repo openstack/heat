@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import eventlet.queue
+
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
@@ -124,11 +126,17 @@ class WorkerService(service.Service):
             LOG.debug('[%s] Traversal cancelled; stopping.', current_traversal)
             return
 
-        cr = check_resource.CheckResource(self.engine_id, self._rpc_client,
-                                          self.thread_group_mgr)
+        msg_queue = eventlet.queue.LightQueue()
+        try:
+            self.thread_group_mgr.add_msg_queue(stack.id, msg_queue)
+            cr = check_resource.CheckResource(self.engine_id, self._rpc_client,
+                                              self.thread_group_mgr, msg_queue)
 
-        cr.check(cnxt, resource_id, current_traversal, resource_data,
-                 is_update, adopt_stack_data, rsrc, stack)
+            cr.check(cnxt, resource_id, current_traversal, resource_data,
+                     is_update, adopt_stack_data, rsrc, stack)
+        finally:
+            self.thread_group_mgr.remove_msg_queue(None,
+                                                   stack.id, msg_queue)
 
     @context.request_context
     def cancel_check_resource(self, cnxt, stack_id):

@@ -748,10 +748,14 @@ class Resource(object):
             failure = exception.ResourceFailure(ex, self, action)
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
-        except:  # noqa
+        except BaseException as exc:
             with excutils.save_and_reraise_exception():
                 try:
-                    self.state_set(action, self.FAILED, '%s aborted' % action)
+                    reason = six.text_type(exc)
+                    msg = '%s aborted' % action
+                    if reason:
+                        msg += ' (%s)' % reason
+                    self.state_set(action, self.FAILED, msg)
                 except Exception:
                     LOG.exception(_LE('Error marking resource as failed'))
         else:
@@ -847,7 +851,7 @@ class Resource(object):
         return self
 
     def create_convergence(self, template_id, resource_data, engine_id,
-                           timeout):
+                           timeout, progress_callback=None):
         """Creates the resource by invoking the scheduler TaskRunner."""
         with self.lock(engine_id):
             self.requires = list(
@@ -860,7 +864,8 @@ class Resource(object):
             else:
                 adopt_data = self.stack._adopt_kwargs(self)
                 runner = scheduler.TaskRunner(self.adopt, **adopt_data)
-            runner(timeout=timeout)
+
+            runner(timeout=timeout, progress_callback=progress_callback)
 
     def _validate_external_resource(self, external_id):
         if self.entity:
@@ -1085,7 +1090,7 @@ class Resource(object):
             raise UpdateReplace(self.name)
 
     def update_convergence(self, template_id, resource_data, engine_id,
-                           timeout, new_stack):
+                           timeout, new_stack, progress_callback=None):
         """Update the resource synchronously.
 
         Persist the resource's current_template_id to template_id and
@@ -1125,11 +1130,15 @@ class Resource(object):
 
             runner = scheduler.TaskRunner(self.update, new_res_def)
             try:
-                runner(timeout=timeout)
+                runner(timeout=timeout, progress_callback=progress_callback)
                 update_tmpl_id_and_requires()
-            except exception.ResourceFailure:
-                update_tmpl_id_and_requires()
+            except exception.UpdateReplace:
                 raise
+            except BaseException:
+                with excutils.save_and_reraise_exception():
+                    update_tmpl_id_and_requires()
+            else:
+                update_tmpl_id_and_requires()
 
     def preview_update(self, after, before, after_props, before_props,
                        prev_resource, check_init_complete=False):
@@ -1517,7 +1526,8 @@ class Resource(object):
                     expected_engine_id=None
                 )
 
-    def delete_convergence(self, template_id, input_data, engine_id, timeout):
+    def delete_convergence(self, template_id, input_data, engine_id, timeout,
+                           progress_callback=None):
         """Destroys the resource if it doesn't belong to given template.
 
         The given template is suppose to be the current template being
@@ -1541,9 +1551,8 @@ class Resource(object):
                         pass
                 else:
                     runner = scheduler.TaskRunner(self.delete)
-                    runner(timeout=timeout)
-
-                    # update needed_by and replaces of replacement resource
+                    runner(timeout=timeout,
+                           progress_callback=progress_callback)
                     self._update_replacement_data(template_id)
 
     def handle_delete(self):

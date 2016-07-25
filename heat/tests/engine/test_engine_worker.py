@@ -15,8 +15,10 @@
 
 import mock
 
+from heat.engine import check_resource
 from heat.engine import worker
 from heat.tests import common
+from heat.tests import utils
 
 
 class WorkerServiceTest(common.HeatTestCase):
@@ -84,3 +86,50 @@ class WorkerServiceTest(common.HeatTestCase):
             self.worker.stop()
             mock_rpc_server.stop.assert_called_once_with()
             mock_rpc_server.wait.assert_called_once_with()
+
+    @mock.patch.object(check_resource, 'load_resource')
+    @mock.patch.object(check_resource.CheckResource, 'check')
+    def test_check_resource_adds_and_removes_msg_queue(self,
+                                                       mock_check,
+                                                       mock_load_resource):
+        mock_tgm = mock.MagicMock()
+        mock_tgm.add_msg_queue = mock.Mock(return_value=None)
+        mock_tgm.remove_msg_queue = mock.Mock(return_value=None)
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'something'
+        fake_res = mock.MagicMock()
+        fake_res.current_traversal = current_traversal
+        mock_load_resource.return_value = (fake_res, fake_res, fake_res)
+        self.worker.check_resource(ctx, mock.Mock(), current_traversal,
+                                   {}, mock.Mock(), mock.Mock())
+        self.assertTrue(mock_tgm.add_msg_queue.called)
+        self.assertTrue(mock_tgm.remove_msg_queue.called)
+
+    @mock.patch.object(check_resource, 'load_resource')
+    @mock.patch.object(check_resource.CheckResource, 'check')
+    def test_check_resource_adds_and_removes_msg_queue_on_exception(
+            self, mock_check, mock_load_resource):
+        # even if the check fails; the message should be removed
+        mock_tgm = mock.MagicMock()
+        mock_tgm.add_msg_queue = mock.Mock(return_value=None)
+        mock_tgm.remove_msg_queue = mock.Mock(return_value=None)
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'something'
+        fake_res = mock.MagicMock()
+        fake_res.current_traversal = current_traversal
+        mock_load_resource.return_value = (fake_res, fake_res, fake_res)
+        mock_check.side_effect = BaseException
+        self.assertRaises(BaseException, self.worker.check_resource,
+                          ctx, mock.Mock(), current_traversal, {},
+                          mock.Mock(), mock.Mock())
+        self.assertTrue(mock_tgm.add_msg_queue.called)
+        # ensure remove is also called
+        self.assertTrue(mock_tgm.remove_msg_queue.called)

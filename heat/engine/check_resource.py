@@ -15,18 +15,32 @@
 
 import six
 
+import eventlet.queue
+import functools
+
 from oslo_log import log as logging
 
 from heat.common import exception
+from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.objects import resource as resource_objects
+from heat.rpc import api as rpc_api
 from heat.rpc import listener_client
 
 LOG = logging.getLogger(__name__)
+
+
+class CancelOperation(BaseException):
+    """Exception to cancel an in-progress operation on a resource.
+
+    This exception is raised when operations on a resource are cancelled.
+    """
+    def __init__(self):
+        return super(CancelOperation, self).__init__('user triggered cancel')
 
 
 class CheckResource(object):
@@ -34,10 +48,12 @@ class CheckResource(object):
     def __init__(self,
                  engine_id,
                  rpc_client,
-                 thread_group_mgr):
+                 thread_group_mgr,
+                 msg_queue):
         self.engine_id = engine_id
         self._rpc_client = rpc_client
         self.thread_group_mgr = thread_group_mgr
+        self.msg_queue = msg_queue
 
     def _try_steal_engine_lock(self, cnxt, resource_id):
         rs_obj = resource_objects.Resource.get_obj(cnxt,
@@ -92,7 +108,7 @@ class CheckResource(object):
                 try:
                     check_resource_update(rsrc, tmpl.id, resource_data,
                                           self.engine_id,
-                                          stack)
+                                          stack, self.msg_queue)
                 except resource.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
                     LOG.info(_LI("Replacing resource with new id %s"),
@@ -107,7 +123,8 @@ class CheckResource(object):
 
             else:
                 check_resource_cleanup(rsrc, tmpl.id, resource_data,
-                                       self.engine_id, stack.time_remaining())
+                                       self.engine_id,
+                                       stack.time_remaining(), self.msg_queue)
 
             return True
         except exception.UpdateInProgress:
@@ -136,6 +153,8 @@ class CheckResource(object):
             if stack.current_traversal != current_traversal:
                 return
             self._handle_stack_timeout(cnxt, stack)
+        except CancelOperation:
+            pass
 
         return False
 
@@ -338,18 +357,36 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
                     {sender_key: sender_data})
 
 
+def _check_for_message(msg_queue):
+    if msg_queue is None:
+        return
+    try:
+        message = msg_queue.get_nowait()
+    except eventlet.queue.Empty:
+        return
+
+    if message == rpc_api.THREAD_CANCEL:
+        raise CancelOperation
+
+    LOG.error(_LE('Unknown message "%s" received'), message)
+
+
 def check_resource_update(rsrc, template_id, resource_data, engine_id,
-                          stack):
+                          stack, msg_queue):
     """Create or update the Resource if appropriate."""
+    check_message = functools.partial(_check_for_message, msg_queue)
     if rsrc.action == resource.Resource.INIT:
         rsrc.create_convergence(template_id, resource_data, engine_id,
-                                stack.time_remaining())
+                                stack.time_remaining(), check_message)
     else:
         rsrc.update_convergence(template_id, resource_data, engine_id,
-                                stack.time_remaining(), stack)
+                                stack.time_remaining(), stack,
+                                check_message)
 
 
 def check_resource_cleanup(rsrc, template_id, resource_data, engine_id,
-                           timeout):
+                           timeout, msg_queue):
     """Delete the Resource if appropriate."""
-    rsrc.delete_convergence(template_id, resource_data, engine_id, timeout)
+    check_message = functools.partial(_check_for_message, msg_queue)
+    rsrc.delete_convergence(template_id, resource_data, engine_id, timeout,
+                            check_message)

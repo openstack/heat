@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import eventlet
 import mock
 
 from oslo_config import cfg
@@ -25,6 +26,7 @@ from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import sync_point
 from heat.engine import worker
+from heat.rpc import api as rpc_api
 from heat.rpc import worker_client
 from heat.tests import common
 from heat.tests.engine import tools
@@ -49,7 +51,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                            thread_group_mgr)
         self.cr = check_resource.CheckResource(self.worker.engine_id,
                                                self.worker._rpc_client,
-                                               self.worker.thread_group_mgr)
+                                               self.worker.thread_group_mgr,
+                                               mock.Mock())
         self.worker._rpc_client = worker_client.WorkerClient()
         self.ctx = utils.dummy_context()
         self.stack = tools.get_stack(
@@ -89,7 +92,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         mock.ANY)
+                                         mock.ANY, mock.ANY)
         self.assertFalse(mock_crc.called)
 
         expected_calls = []
@@ -118,7 +121,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         mock.ANY)
+                                         mock.ANY, mock.ANY)
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -140,7 +143,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         mock.ANY)
+                                         mock.ANY, mock.ANY)
         mock_ss.assert_called_once_with(self.resource.action,
                                         resource.Resource.FAILED,
                                         mock.ANY)
@@ -507,6 +510,18 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    {}, self.is_update, {})
         self.assertTrue(mock_hst.called)
 
+    def test_check_resource_does_not_propagate_on_cancel(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        # ensure when check_resource is cancelled, the next set of
+        # resources are not propagated.
+        mock_cru.side_effect = check_resource.CancelOperation
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal,
+                                   {}, self.is_update, {})
+        self.assertFalse(mock_pcr.called)
+        self.assertFalse(mock_csc.called)
+        self.assertFalse(mock_cid.called)
+
 
 @mock.patch.object(check_resource, 'construct_input_data')
 @mock.patch.object(check_resource, 'check_stack_complete')
@@ -546,7 +561,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
             {}, self.worker.engine_id,
-            tr())
+            tr(), mock.ANY)
 
     @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_cleanup_traversal_raise_update_inprogress(
@@ -559,10 +574,22 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
-                                         tr())
+                                         tr(), mock.ANY)
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
+
+    def test_check_resource_does_not_propagate_on_cancelling_cleanup(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        # ensure when check_resource is cancelled, the next set of
+        # resources are not propagated.
+        mock_crc.side_effect = check_resource.CancelOperation
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal,
+                                   {}, self.is_update, {})
+        self.assertFalse(mock_pcr.called)
+        self.assertFalse(mock_csc.called)
+        self.assertFalse(mock_cid.called)
 
 
 class MiscMethodsTest(common.HeatTestCase):
@@ -649,7 +676,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.action = 'INIT'
         check_resource.check_resource_update(
             self.resource, self.resource.stack.t.id, {}, 'engine-id',
-            self.stack)
+            self.stack, None)
         self.assertTrue(mock_create.called)
         self.assertFalse(mock_update.called)
 
@@ -660,7 +687,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.action = 'CREATE'
         check_resource.check_resource_update(
             self.resource, self.resource.stack.t.id, {}, 'engine-id',
-            self.stack)
+            self.stack, None)
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
@@ -671,7 +698,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.action = 'UPDATE'
         check_resource.check_resource_update(
             self.resource, self.resource.stack.t.id, {}, 'engine-id',
-            self.stack)
+            self.stack, None)
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
 
@@ -680,5 +707,13 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.current_template_id = 'new-template-id'
         check_resource.check_resource_cleanup(
             self.resource, self.resource.stack.t.id, {}, 'engine-id',
-            self.stack.timeout_secs())
+            self.stack.timeout_secs(), None)
         self.assertTrue(mock_delete.called)
+
+    def test_check_message_raises_cancel_exception(self):
+        # ensure CancelOperation is raised on receiving
+        # rpc_api.THREAD_CANCEL message
+        msg_queue = eventlet.queue.LightQueue()
+        msg_queue.put_nowait(rpc_api.THREAD_CANCEL)
+        self.assertRaises(check_resource.CancelOperation,
+                          check_resource._check_for_message, msg_queue)
