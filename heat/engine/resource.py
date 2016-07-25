@@ -1511,8 +1511,10 @@ class Resource(object):
                 obj = getattr(self.client(), self.entity)
                 obj.delete(self.resource_id)
             except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                return None
+                if self.default_client_name is not None:
+                    self.client_plugin().ignore_not_found(ex)
+                    return None
+                raise
             return self.resource_id
 
     @scheduler.wrappertask
@@ -1755,14 +1757,18 @@ class Resource(object):
             try:
                 return getattr(self, '_{0}_resource'.format(attr))()
             except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                return None
+                if self.default_client_name is not None:
+                    self.client_plugin().ignore_not_found(ex)
+                    return None
+                raise
         else:
             try:
                 return self._resolve_attribute(attr)
             except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                return None
+                if self.default_client_name is not None:
+                    self.client_plugin().ignore_not_found(ex)
+                    return None
+                raise
 
     def _show_resource(self):
         """Default implementation; should be overridden by resources.
@@ -1787,7 +1793,8 @@ class Resource(object):
         try:
             resource_data = self._show_resource()
         except Exception as ex:
-            if self.client_plugin().is_not_found(ex):
+            if (self.default_client_name is not None and
+                    self.client_plugin().is_not_found(ex)):
                 raise exception.EntityNotFound(
                     entity='Resource', name=self.name)
             raise
