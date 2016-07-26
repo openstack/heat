@@ -106,19 +106,6 @@ class TestAutoScalingPolicy(common.HeatTestCase):
             mock_fin_scaling.assert_called_once_with('change_in_capacity : 1',
                                                      size_changed=True)
 
-    def test_scaling_policy_not_alarm_state(self):
-        """If the details don't have 'alarm' then don't progress."""
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
-
-        test = {'current': 'not_an_alarm'}
-        with mock.patch.object(pol, '_is_scaling_allowed',
-                               side_effect=AssertionError()) as dont_call:
-            self.assertRaises(exception.NoActionRequired,
-                              pol.handle_signal, details=test)
-            self.assertEqual([], dont_call.call_args_list)
-
     def test_scaling_policy_cooldown_toosoon(self):
         """If _is_scaling_allowed() returns False don't progress."""
         t = template_format.parse(as_template)
