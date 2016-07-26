@@ -36,9 +36,6 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
         try:
             self._wait_for_resource_status(
                 sid, 'WaitCondition', 'CREATE_COMPLETE')
-        except (exceptions.StackResourceBuildErrorException,
-                exceptions.TimeoutException) as e:
-            raise e
         finally:
             # attempt to log the server console regardless of WaitCondition
             # going to complete. This allows successful and failed cloud-init
@@ -87,9 +84,9 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
                     server_ip, username='ec2-user')
                 linux_client.validate_authentication()
             except (exceptions.ServerUnreachable,
-                    exceptions.SSHTimeout) as e:
+                    exceptions.SSHTimeout):
                 self._log_console_output(servers=[server])
-                raise e
+                raise
 
     def test_server_cfn_init(self):
         """Check cfn-init and cfn-signal availability on the created server.
