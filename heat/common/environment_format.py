@@ -1,4 +1,3 @@
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -48,9 +47,15 @@ def parse(env_str):
     if not isinstance(env, dict):
         raise ValueError(_('The environment is not a valid '
                            'YAML mapping data type.'))
+    return validate(env)
+
+
+def validate(env):
     for param in env:
         if param not in SECTIONS:
             raise ValueError(_('environment has wrong section "%s"') % param)
+        if env[param] is None:
+            raise ValueError(_('environment has empty section "%s"') % param)
 
     return env
 

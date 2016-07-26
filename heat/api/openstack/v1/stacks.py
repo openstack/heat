@@ -138,10 +138,10 @@ class InstantiationData(object):
         env = {}
         if self.PARAM_ENVIRONMENT in self.data:
             env_data = self.data[self.PARAM_ENVIRONMENT]
-            if isinstance(env_data, dict):
-                env = env_data
-            else:
-                with self.parse_error_check('Environment'):
+            with self.parse_error_check('Environment'):
+                if isinstance(env_data, dict):
+                    env = environment_format.validate(env_data)
+                else:
                     env = environment_format.parse(env_data)
 
         environment_format.default_for_missing(env)

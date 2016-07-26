@@ -195,6 +195,12 @@ blarg: wibble
         data = stacks.InstantiationData(body)
         self.assertEqual(expect, data.environment())
 
+    def test_environment_empty_params(self):
+        env = {'parameters': None}
+        body = {'environment': env}
+        data = stacks.InstantiationData(body)
+        self.assertRaises(webob.exc.HTTPBadRequest, data.environment)
+
     def test_environment_bad_format(self):
         env = {'somethingnotsupported': {'blarg': 'wibble'}}
         body = {'environment': json.dumps(env)}
