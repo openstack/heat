@@ -41,25 +41,32 @@ i18n.enable_lazy()
 LOG = logging.getLogger('heat.api')
 
 
+def launch_api(setup_logging=True):
+    if setup_logging:
+        logging.register_options(cfg.CONF)
+    cfg.CONF(project='heat', prog='heat-api',
+             version=version.version_info.version_string())
+    if setup_logging:
+        logging.setup(cfg.CONF, 'heat-api')
+    config.set_config_defaults()
+    messaging.setup()
+
+    app = config.load_paste_app()
+
+    port = cfg.CONF.heat_api.bind_port
+    host = cfg.CONF.heat_api.bind_host
+    LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
+             {'host': host, 'port': port})
+    profiler.setup('heat-api', host)
+    gmr.TextGuruMeditation.setup_autorun(version)
+    server = wsgi.Server('heat-api', cfg.CONF.heat_api)
+    server.start(app, default_port=port)
+    return server
+
+
 def main():
     try:
-        logging.register_options(cfg.CONF)
-        cfg.CONF(project='heat', prog='heat-api',
-                 version=version.version_info.version_string())
-        logging.setup(cfg.CONF, 'heat-api')
-        config.set_config_defaults()
-        messaging.setup()
-
-        app = config.load_paste_app()
-
-        port = cfg.CONF.heat_api.bind_port
-        host = cfg.CONF.heat_api.bind_host
-        LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
-                 {'host': host, 'port': port})
-        profiler.setup('heat-api', host)
-        gmr.TextGuruMeditation.setup_autorun(version)
-        server = wsgi.Server('heat-api', cfg.CONF.heat_api)
-        server.start(app, default_port=port)
+        server = launch_api()
         systemd.notify_once()
         server.wait()
     except RuntimeError as e:
