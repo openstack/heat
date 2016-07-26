@@ -1979,3 +1979,59 @@ class StackUpdateTest(common.HeatTestCase):
         # Bres in backup stack should have empty data.
         self.assertEqual({}, backup['Bres'].data())
         self.assertEqual({'test': '42'}, self.stack['Bres'].data())
+
+    def test_update_failed_with_new_condition(self):
+        create_a_res = {'equals': [{'get_param': 'create_a_res'}, 'yes']}
+        create_b_res = {'equals': [{'get_param': 'create_b_res'}, 'yes']}
+        tmpl = {
+            'heat_template_version': '2016-10-14',
+            'parameters': {
+                'create_a_res': {
+                    'type': 'string',
+                    'default': 'yes'
+                }
+            },
+            'conditions': {
+                'create_a': create_a_res
+            },
+            'resources': {
+                'Ares': {'type': 'GenericResourceType',
+                         'condition': 'create_a'}
+            }
+        }
+
+        test_stack = stack.Stack(self.ctx,
+                                 'test_update_failed_with_new_condition',
+                                 template.Template(tmpl))
+        test_stack.store()
+        test_stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         test_stack.state)
+        self.assertIn('Ares', test_stack)
+
+        update_tmpl = copy.deepcopy(tmpl)
+        update_tmpl['conditions']['create_b'] = create_b_res
+        update_tmpl['parameters']['create_b_res'] = {
+            'type': 'string',
+            'default': 'yes'
+        }
+        update_tmpl['resources']['Bres'] = {
+            'type': 'OS::Heat::TestResource',
+            'properties': {
+                'value': 'res_b',
+                'fail': True
+            }
+        }
+
+        stack_with_new_resource = stack.Stack(
+            self.ctx,
+            'test_update_with_new_res_cd',
+            template.Template(update_tmpl))
+        test_stack.update(stack_with_new_resource)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
+                         test_stack.state)
+        self.assertIn('Bres', test_stack)
+        self.assertEqual((resource.Resource.CREATE, resource.Resource.FAILED),
+                         test_stack['Bres'].state)
+        self.assertIn('create_b', test_stack.t.t['conditions'])
+        self.assertIn('create_b_res', test_stack.t.t['parameters'])

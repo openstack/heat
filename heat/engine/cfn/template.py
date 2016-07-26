@@ -50,6 +50,7 @@ class CfnTemplateBase(template_common.CommonTemplate):
         'DeletionPolicy', 'UpdatePolicy', 'Description',
     )
 
+    extra_rsrc_defn = ()
     functions = {
         'Fn::FindInMap': cfn_funcs.FindInMap,
         'Fn::GetAZs': cfn_funcs.GetAZs,
@@ -65,6 +66,13 @@ class CfnTemplateBase(template_common.CommonTemplate):
         'Retain': rsrc_defn.ResourceDefinition.RETAIN,
         'Snapshot': rsrc_defn.ResourceDefinition.SNAPSHOT
     }
+
+    HOT_TO_CFN_RES_ATTRS = {'type': RES_TYPE,
+                            'properties': RES_PROPERTIES,
+                            'metadata': RES_METADATA,
+                            'depends_on': RES_DEPENDS_ON,
+                            'deletion_policy': RES_DELETION_POLICY,
+                            'update_policy': RES_UPDATE_POLICY}
 
     def __getitem__(self, section):
         """Get the relevant section in the template."""
@@ -130,25 +138,24 @@ class CfnTemplateBase(template_common.CommonTemplate):
                 'description': data.get(self.RES_DESCRIPTION) or ''
             }
 
+            for key in self.extra_rsrc_defn:
+                kwargs[key.lower()] = data.get(key)
+
             defn = rsrc_defn.ResourceDefinition(name, **kwargs)
             return name, defn
 
-        return dict(rsrc_defn_item(name, data)
-                    for name, data in resources.items())
+        return dict(
+            rsrc_defn_item(name, data)
+            for name, data in resources.items() if self.get_res_condition(
+                stack, data, name))
 
     def add_resource(self, definition, name=None):
         if name is None:
             name = definition.name
         hot_tmpl = definition.render_hot()
 
-        HOT_TO_CFN_ATTRS = {'type': self.RES_TYPE,
-                            'properties': self.RES_PROPERTIES,
-                            'metadata': self.RES_METADATA,
-                            'depends_on': self.RES_DEPENDS_ON,
-                            'deletion_policy': self.RES_DELETION_POLICY,
-                            'update_policy': self.RES_UPDATE_POLICY}
-
-        cfn_tmpl = dict((HOT_TO_CFN_ATTRS[k], v) for k, v in hot_tmpl.items())
+        cfn_tmpl = dict((self.HOT_TO_CFN_RES_ATTRS[k], v)
+                        for k, v in hot_tmpl.items())
 
         if len(cfn_tmpl.get(self.RES_DEPENDS_ON, [])) == 1:
             cfn_tmpl[self.RES_DEPENDS_ON] = cfn_tmpl[self.RES_DEPENDS_ON][0]
@@ -160,9 +167,16 @@ class CfnTemplateBase(template_common.CommonTemplate):
 
 class CfnTemplate(CfnTemplateBase):
 
+    CONDITION = 'Condition'
     CONDITIONS = 'Conditions'
     SECTIONS = CfnTemplateBase.SECTIONS + (CONDITIONS,)
 
+    RES_CONDITION = CONDITION
+    _RESOURCE_KEYS = CfnTemplateBase._RESOURCE_KEYS + (RES_CONDITION,)
+    HOT_TO_CFN_RES_ATTRS = CfnTemplateBase.HOT_TO_CFN_RES_ATTRS
+    HOT_TO_CFN_RES_ATTRS.update({'condition': RES_CONDITION})
+
+    extra_rsrc_defn = CfnTemplateBase.extra_rsrc_defn + (RES_CONDITION,)
     condition_functions = {
         'Fn::Equals': hot_funcs.Equals,
         'Ref': cfn_funcs.ParamRef,
@@ -175,9 +189,24 @@ class CfnTemplate(CfnTemplateBase):
         self._parser_condition_functions = dict(
             (n, function.Invalid) for n in self.functions)
         self._parser_condition_functions.update(self.condition_functions)
+        self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
     def get_condition_definitions(self):
         return self[self.CONDITIONS]
+
+    def has_condition_section(self, snippet):
+        if snippet and self.CONDITION in snippet:
+            return True
+
+        return False
+
+    def validate_resource_definition(self, name, data):
+        super(CfnTemplate, self).validate_resource_definition(name, data)
+
+        self.validate_resource_key_type(
+            self.RES_CONDITION,
+            (six.string_types, bool),
+            'string or boolean', self._RESOURCE_KEYS, name, data)
 
 
 class HeatTemplate(CfnTemplateBase):

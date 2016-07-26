@@ -220,9 +220,15 @@ class HOTemplate20130523(template_common.CommonTemplate):
 
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
-        parsed_resources = self.parse(stack, resources)
-        return dict((name, self.rsrc_defn_from_snippet(name, data))
-                    for name, data in parsed_resources.items())
+
+        def rsrc_defn_from_snippet(name, snippet):
+            data = self.parse(stack, snippet)
+            return self.rsrc_defn_from_snippet(name, data)
+
+        return dict(
+            (name, rsrc_defn_from_snippet(name, data))
+            for name, data in resources.items() if self.get_res_condition(
+                stack, data, name))
 
     @classmethod
     def rsrc_defn_from_snippet(cls, name, data):
@@ -380,6 +386,9 @@ class HOTemplate20160408(HOTemplate20151015):
 
 
 class HOTemplate20161014(HOTemplate20160408):
+
+    CONDITION = 'condition'
+    RES_CONDITION = CONDITION
     CONDITIONS = 'conditions'
 
     SECTIONS = HOTemplate20160408.SECTIONS + (CONDITIONS,)
@@ -387,12 +396,19 @@ class HOTemplate20161014(HOTemplate20160408):
     _CFN_TO_HOT_SECTIONS = HOTemplate20160408._CFN_TO_HOT_SECTIONS
     _CFN_TO_HOT_SECTIONS.update({
         cfn_template.CfnTemplate.CONDITIONS: CONDITIONS})
+
     _RESOURCE_KEYS = HOTemplate20160408._RESOURCE_KEYS
     _EXT_KEY = (RES_EXTERNAL_ID,) = ('external_id',)
     _RESOURCE_KEYS += _EXT_KEY
+    _RESOURCE_KEYS += (RES_CONDITION,)
+
     _RESOURCE_HOT_TO_CFN_ATTRS = HOTemplate20160408._RESOURCE_HOT_TO_CFN_ATTRS
     _RESOURCE_HOT_TO_CFN_ATTRS.update({RES_EXTERNAL_ID: None})
-    extra_rsrc_defn = HOTemplate20160408.extra_rsrc_defn + (RES_EXTERNAL_ID,)
+    _RESOURCE_HOT_TO_CFN_ATTRS.update(
+        {CONDITION: cfn_template.CfnTemplate.CONDITION})
+
+    extra_rsrc_defn = HOTemplate20160408.extra_rsrc_defn + (
+        RES_EXTERNAL_ID, RES_CONDITION,)
 
     deletion_policies = {
         'Delete': rsrc_defn.ResourceDefinition.DELETE,
@@ -458,6 +474,7 @@ class HOTemplate20161014(HOTemplate20160408):
             else:
                 self._parser_condition_functions[n] = f
         self._parser_condition_functions.update(self.condition_functions)
+        self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
     def get_condition_definitions(self):
         return self[self.CONDITIONS]
@@ -470,3 +487,13 @@ class HOTemplate20161014(HOTemplate20160408):
             self.RES_EXTERNAL_ID,
             (six.string_types, function.Function),
             'string', self._RESOURCE_KEYS, name, data)
+        self.validate_resource_key_type(
+            self.RES_CONDITION,
+            (six.string_types, bool),
+            'string or boolean', self._RESOURCE_KEYS, name, data)
+
+    def has_condition_section(self, snippet):
+        if snippet and self.CONDITION in snippet:
+            return True
+
+        return False

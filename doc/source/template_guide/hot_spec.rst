@@ -635,6 +635,7 @@ the following syntax
        update_policy: <update policy>
        deletion_policy: <deletion policy>
        external_id: <external resource ID>
+       condition: <condition name>
 
 resource ID
     A resource ID which must be unique within the ``resources`` section of the
@@ -681,6 +682,13 @@ external_id
    resource and the resource is not managed by Heat. This is not possible to
    update that attribute. Also resource won't be deleted by heat when stack
    is deleted.
+
+condition
+    Condition for the resource. Which decides whether to create the
+    resource or not.
+    This attribute is optional.
+
+    Note: Support ``condition`` for resource is added in the Newton version.
 
 Depending on the type of resource, the resource block might include more
 resource specific data.
@@ -824,6 +832,28 @@ An example of conditions section definition
      cd1: True
      cd2: {get_param: param1}
      cd3: {equals: [{get_param: param2}, "yes"]}
+
+The example below shows how to associate condition with resources
+
+.. code-block:: yaml
+
+   parameters:
+     env_type:
+       default: test
+       type: string
+   conditions:
+     create_prod_res: {equals : [{get_param: env_type}, "prod"]
+   resources:
+     volume:
+       type: OS::Cinder::Volume
+       condition: create_prod_res
+       properties:
+         size: 1
+
+The 'create_prod_res' condition evaluates to true if the 'env_type'
+parameter is equal to 'prod'. In the above sample template, the 'volume'
+resource is associated with the 'create_prod_res' condition. Therefore,
+the 'volume' resource is created only if the 'env_type' is equal to 'prod'.
 
 
 .. _hot_spec_intrinsic_functions:

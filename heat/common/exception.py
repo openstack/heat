@@ -138,6 +138,10 @@ class InvalidConditionDefinition(HeatException):
                 "invalid: %(definition)s")
 
 
+class InvalidConditionReference(HeatException):
+    msg_fmt = _('Invalid condition "%(cd)s" (in %(path)s)')
+
+
 class ImmutableParameterModified(HeatException):
     msg_fmt = _("The following parameters are immutable and may not be "
                 "updated: %(keys)s")

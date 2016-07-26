@@ -117,6 +117,8 @@ class Template(collections.Mapping):
         self.files = files or {}
         self.maps = self[self.MAPPINGS]
         self.env = env or environment.Environment({})
+        self._conditions = None
+        self.merge_sections = [self.PARAMETERS]
 
         self.version = get_version(self.t, _template_classes.keys())
         self.t_digest = None
@@ -124,6 +126,14 @@ class Template(collections.Mapping):
     def __deepcopy__(self, memo):
         return Template(copy.deepcopy(self.t, memo), files=self.files,
                         env=self.env)
+
+    def merge_snippets(self, other):
+        for s in self.merge_sections:
+            if s not in other.t:
+                continue
+            if s not in self.t:
+                self.t[s] = {}
+            self.t[s].update(other.t[s])
 
     @classmethod
     def load(cls, context, template_id, t=None):
@@ -215,6 +225,10 @@ class Template(collections.Mapping):
     def validate_condition_definitions(self, stack):
         """Check conditions section."""
         pass
+
+    def conditions(self, stack):
+        """Return a dictionary of resolved conditions."""
+        return {}
 
     @abc.abstractmethod
     def resource_definitions(self, stack):

@@ -119,10 +119,11 @@ class TemplatePluginFixture(fixtures.Fixture):
 class TestTemplatePluginManager(common.HeatTestCase):
     def test_template_NEW_good(self):
         class NewTemplate(template.Template):
-            SECTIONS = (VERSION, MAPPINGS, CONDITIONS) = (
+            SECTIONS = (VERSION, MAPPINGS, CONDITIONS, PARAMETERS) = (
                 'NEWTemplateFormatVersion',
                 '__undefined__',
-                'conditions')
+                'conditions',
+                'parameters')
             RESOURCES = 'thingies'
 
             def param_schemata(self, param_defaults=None):
@@ -282,6 +283,26 @@ class TestTemplateConditionParser(common.HeatTestCase):
     def setUp(self):
         super(TestTemplateConditionParser, self).setUp()
         self.ctx = utils.dummy_context()
+        t = {
+            'heat_template_version': '2016-10-14',
+            'parameters': {
+                'env_type': {
+                    'type': 'string',
+                    'default': 'test'
+                }
+            },
+            'conditions': {
+                'prod_env': {
+                    'equals': [{'get_param': 'env_type'}, 'prod']}},
+            'resources': {
+                'r1': {
+                    'type': 'GenericResourceType',
+                    'condition': 'prod_env'
+                }
+            }
+        }
+
+        self.tmpl = template.Template(t)
 
     def test_conditions_with_non_supported_functions(self):
         t = {
@@ -339,6 +360,25 @@ class TestTemplateConditionParser(common.HeatTestCase):
         ex = self.assertRaises(exception.InvalidConditionDefinition,
                                tmpl.validate_condition_definitions, stk)
         self.assertIn('The definition of condition (prod_env) is invalid',
+                      six.text_type(ex))
+
+    def test_get_res_condition_invalid(self):
+        tmpl = copy.deepcopy(self.tmpl)
+        # test condition name is invalid
+        tmpl.t['resources']['r1']['condition'] = 'invalid_cd'
+        stk = stack.Stack(self.ctx, 'test_res_invalid_condition', tmpl)
+        res_snippet = tmpl.t.get('resources')['r1']
+        ex = self.assertRaises(exception.InvalidConditionReference,
+                               tmpl.get_condition,
+                               res_snippet, stk, 'r1.condition')
+        self.assertIn('Invalid condition "invalid_cd" (in r1.condition)',
+                      six.text_type(ex))
+        # test condition name is not string
+        tmpl.t['resources']['r1']['condition'] = 111
+        ex = self.assertRaises(exception.InvalidConditionReference,
+                               tmpl.get_condition,
+                               res_snippet, stk, 'r1.condition')
+        self.assertIn('Invalid condition "111" (in r1.condition)',
                       six.text_type(ex))
 
 
