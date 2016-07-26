@@ -1604,7 +1604,7 @@ class ServersTest(common.HeatTestCase):
             },
             'deployments': []}
         md['os-collect-config']['request']['metadata_url'] = 'the_url'
-        self.assertDictEqual(expected_md, server.metadata_get())
+        self.assertEqual(expected_md, server.metadata_get())
 
     def test_server_update_nova_metadata(self):
         return_server = self.fc.servers.list()[1]
