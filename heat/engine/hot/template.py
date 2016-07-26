@@ -410,6 +410,9 @@ class HOTemplate20161014(HOTemplate20160408):
     extra_rsrc_defn = HOTemplate20160408.extra_rsrc_defn + (
         RES_EXTERNAL_ID, RES_CONDITION,)
 
+    OUTPUT_CONDITION = CONDITION
+    OUTPUT_KEYS = HOTemplate20160408.OUTPUT_KEYS + (OUTPUT_CONDITION,)
+
     deletion_policies = {
         'Delete': rsrc_defn.ResourceDefinition.DELETE,
         'Retain': rsrc_defn.ResourceDefinition.RETAIN,

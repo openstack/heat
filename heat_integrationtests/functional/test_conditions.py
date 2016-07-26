@@ -32,6 +32,10 @@ Resources:
     Properties:
       value: prod_res
     Condition: Prod
+Outputs:
+  res_value:
+    Value: {"Fn::GetAtt": [prod_res, output]}
+    Condition: Prod
 '''
 
 hot_template = '''
@@ -54,6 +58,10 @@ resources:
     properties:
       value: prod_res
     condition: prod
+outputs:
+  res_value:
+    value: {get_attr: [prod_res, output]}
+    condition: prod
 '''
 
 
@@ -74,10 +82,21 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         self.assertIn('test_res', res_names)
         self.assertNotIn('prod_res', res_names)
 
+    def output_assert_for_prod(self, stack_id):
+        output = self.client.stacks.output_show(stack_id,
+                                                'res_value')['output']
+        self.assertEqual('prod_res', output['output_value'])
+
+    def output_assert_for_test(self, stack_id):
+        output = self.client.stacks.output_show(stack_id,
+                                                'res_value')['output']
+        self.assertIsNone(output['output_value'])
+
     def test_stack_create_update_cfn_template_test_to_prod(self):
         stack_identifier = self.stack_create(template=cfn_template)
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_test(resources)
+        self.output_assert_for_test(stack_identifier)
 
         parms = {'env_type': 'prod'}
         self.update_stack(stack_identifier,
@@ -86,6 +105,7 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_prod(resources)
+        self.output_assert_for_prod(stack_identifier)
 
     def test_stack_create_update_cfn_template_prod_to_test(self):
         parms = {'env_type': 'prod'}
@@ -93,6 +113,7 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
                                              parameters=parms)
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_prod(resources)
+        self.output_assert_for_prod(stack_identifier)
 
         parms = {'env_type': 'test'}
         self.update_stack(stack_identifier,
@@ -101,11 +122,13 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_test(resources)
+        self.output_assert_for_test(stack_identifier)
 
     def test_stack_create_update_hot_template_test_to_prod(self):
         stack_identifier = self.stack_create(template=hot_template)
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_test(resources)
+        self.output_assert_for_test(stack_identifier)
 
         parms = {'env_type': 'prod'}
         self.update_stack(stack_identifier,
@@ -114,6 +137,7 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_prod(resources)
+        self.output_assert_for_prod(stack_identifier)
 
     def test_stack_create_update_hot_template_prod_to_test(self):
         parms = {'env_type': 'prod'}
@@ -121,6 +145,7 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
                                              parameters=parms)
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_prod(resources)
+        self.output_assert_for_prod(stack_identifier)
 
         parms = {'env_type': 'test'}
         self.update_stack(stack_identifier,
@@ -129,3 +154,4 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_test(resources)
+        self.output_assert_for_test(stack_identifier)

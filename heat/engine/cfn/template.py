@@ -177,6 +177,10 @@ class CfnTemplate(CfnTemplateBase):
     HOT_TO_CFN_RES_ATTRS.update({'condition': RES_CONDITION})
 
     extra_rsrc_defn = CfnTemplateBase.extra_rsrc_defn + (RES_CONDITION,)
+
+    OUTPUT_CONDITION = CONDITION
+    OUTPUT_KEYS = CfnTemplateBase.OUTPUT_KEYS + (OUTPUT_CONDITION,)
+
     condition_functions = {
         'Fn::Equals': hot_funcs.Equals,
         'Ref': cfn_funcs.ParamRef,

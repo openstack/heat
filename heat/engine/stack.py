@@ -228,7 +228,7 @@ class Stack(collections.Mapping):
         self._set_param_stackid()
 
         if resolve_data:
-            self.outputs = self.resolve_static_data(
+            self.outputs = self.resolve_outputs_data(
                 self.t[self.t.OUTPUTS], path=self.t.OUTPUTS)
         else:
             self.outputs = {}
@@ -1503,7 +1503,7 @@ class Stack(collections.Mapping):
             previous_template_id = self.t.id
             self.t = newstack.t
             template_outputs = self.t[self.t.OUTPUTS]
-            self.outputs = self.resolve_static_data(
+            self.outputs = self.resolve_outputs_data(
                 template_outputs, path=self.t.OUTPUTS)
         finally:
             if should_rollback:
@@ -1970,7 +1970,16 @@ class Stack(collections.Mapping):
         }
 
     def resolve_static_data(self, snippet, path=''):
+        warnings.warn('Stack.resolve_static_data() is deprecated and '
+                      'will be removed in the Ocata release. Use the '
+                      'Stack.resolve_outputs_data() instead.',
+                      DeprecationWarning)
+
         return self.t.parse(self, snippet, path=path)
+
+    def resolve_outputs_data(self, outputs, path=''):
+        resolve_outputs = self.t.parse_outputs_conditions(outputs, self)
+        return self.t.parse(self, resolve_outputs, path=path)
 
     def reset_resource_attributes(self):
         # nothing is cached if no resources exist

@@ -766,6 +766,7 @@ according to the following syntax
      <parameter name>:
        description: <description>
        value: <parameter value>
+       condition: <condition name>
 
 parameter name
     The output parameter name, which must be unique within the ``outputs``
@@ -780,6 +781,13 @@ parameter value
     of a function. See :ref:`hot_spec_intrinsic_functions` for details about
     the functions.
     This attribute is required.
+
+condition
+    To conditionally define an output value. None value will be shown if the
+    condition is False.
+    This attribute is optional.
+
+    Note: Support ``condition`` for output is added in the Newton version.
 
 The example below shows how the IP address of a compute resource can
 be defined as an output parameter
@@ -854,6 +862,20 @@ The 'create_prod_res' condition evaluates to true if the 'env_type'
 parameter is equal to 'prod'. In the above sample template, the 'volume'
 resource is associated with the 'create_prod_res' condition. Therefore,
 the 'volume' resource is created only if the 'env_type' is equal to 'prod'.
+
+The example below shows how to conditionally define an output
+
+.. code-block:: yaml
+
+   outputs:
+     vol_size:
+       value: {get_attr: [my_volume, size]}
+       condition: create_prod_res
+
+In the above sample template, the 'vol_size' output is associated with
+the 'create_prod_res' condition. Therefore, the 'vol_size' output is
+given corresponding value only if the 'env_type' is equal to 'prod',
+otherwise the value of the output is None.
 
 
 .. _hot_spec_intrinsic_functions:
