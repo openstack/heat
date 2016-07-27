@@ -1037,3 +1037,39 @@ class And(function.Function):
                 return False
 
         return True
+
+
+class Or(function.Function):
+    """A function acts as an OR operator to evaluate all the conditions.
+
+    Takes the form::
+
+        { "or" : [{condition_1}, {condition_2}, {...}, {condition_n}] }
+
+    Returns true if any one of the specified conditions evaluate to true,
+    or returns false if all of the conditions evaluates to false. The minimum
+    number of conditions that you can include is 2.
+    """
+
+    def __init__(self, stack, fn_name, args):
+        super(Or, self).__init__(stack, fn_name, args)
+        if (not self.args or
+                not (isinstance(self.args, collections.Sequence) and
+                     not isinstance(self.args, six.string_types)) or
+                len(self.args) < 2):
+            msg = _('Arguments to "%s" must be of the form: '
+                    '[{condition_1}, {condition_2}, {...}, {condition_n}], '
+                    'the minimum number of conditions is 2.')
+            raise ValueError(msg % self.fn_name)
+
+    def result(self):
+        for cd in self.args:
+            resolved_value = function.resolve(cd)
+            if not isinstance(resolved_value, bool):
+                msg = _('The condition value should be boolean, '
+                        'after resolved the value is: %s')
+                raise ValueError(msg % resolved_value)
+            if resolved_value:
+                return True
+
+        return False

@@ -201,7 +201,8 @@ class CfnTemplate(CfnTemplateBase):
         'Ref': cfn_funcs.ParamRef,
         'Fn::FindInMap': cfn_funcs.FindInMap,
         'Fn::Not': cfn_funcs.Not,
-        'Fn::And': hot_funcs.And
+        'Fn::And': hot_funcs.And,
+        'Fn::Or': hot_funcs.Or
     }
 
     def __init__(self, tmpl, template_id=None, files=None, env=None):

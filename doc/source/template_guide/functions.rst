@@ -448,3 +448,26 @@ Usage
 
 Returns true if the param 'env_type' equals to 'prod' and the param 'zone' is
 not equal to 'beijing', otherwise returns false.
+
+------
+Fn::Or
+------
+Acts as an OR operator to evaluate all the specified conditions.
+Returns true if any one of the specified conditions evaluate to true,
+or returns false if all of the conditions evaluates to false.
+
+Parameters
+~~~~~~~~~~
+condition:
+    A condition such as Fn::Equals that evaluates to true or false.
+
+Usage
+~~~~~
+
+.. code-block:: yaml
+
+  {'Fn::Or': [{'Fn::Equals': [{'Ref': zone}, 'shanghai']},
+              {'Fn::Equals': [{'Ref': zone}, 'beijing']}]}
+
+Returns true if the param 'zone' equals to 'shanghai' or 'beijing',
+otherwise returns false.

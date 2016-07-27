@@ -1066,6 +1066,69 @@ class TemplateTest(common.HeatTestCase):
                      'after resolved the value is: cd1')
         self.assertIn(error_msg, six.text_type(exc))
 
+    def test_or(self):
+        tpl = template_format.parse('''
+        AWSTemplateFormatVersion: 2010-09-09
+        Parameters:
+          zone:
+            Type: String
+            Default: 'guangzhou'
+        ''')
+        snippet = {
+            'Fn::Or': [
+                {'Fn::Equals': [{'Ref': 'zone'}, 'shanghai']},
+                {'Fn::Equals': [{'Ref': 'zone'}, 'beijing']}]}
+        # when param 'zone' is neither equal to 'shanghai' nor 'beijing',
+        # the 'or' function resolve to false
+        tmpl = template.Template(tpl)
+        stk = stack.Stack(utils.dummy_context(),
+                          'test_or_false', tmpl)
+        resolved = self.resolve_condition(snippet, tmpl, stk)
+        self.assertFalse(resolved)
+        # when param 'zone' equals to 'shanghai' or 'beijing',
+        # the 'or' function resolve to true
+        tmpl = template.Template(tpl,
+                                 env=environment.Environment(
+                                     {'zone': 'beijing'}))
+        stk = stack.Stack(utils.dummy_context(),
+                          'test_or_true', tmpl)
+        resolved = self.resolve_condition(snippet, tmpl, stk)
+        self.assertTrue(resolved)
+
+        tmpl = template.Template(tpl,
+                                 env=environment.Environment(
+                                     {'zone': 'shanghai'}))
+        stk = stack.Stack(utils.dummy_context(),
+                          'test_or_true', tmpl)
+        resolved = self.resolve_condition(snippet, tmpl, stk)
+        self.assertTrue(resolved)
+
+    def test_or_invalid_args(self):
+        tmpl = template.Template(aws_empty_template)
+
+        snippet = {'Fn::Or': ['invalid_arg']}
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve_condition, snippet, tmpl)
+
+        error_msg = ('.Fn::Or: Arguments to "Fn::Or" must be '
+                     'of the form: [{condition_1}, {condition_2}, {...}, '
+                     '{condition_n}]')
+
+        self.assertIn(error_msg, six.text_type(exc))
+        # test invalid type
+        snippet = {'Fn::Or': 'invalid'}
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve_condition, snippet, tmpl)
+
+        self.assertIn(error_msg, six.text_type(exc))
+
+        snippet = {'Fn::Or': ['cd1', True]}
+        exc = self.assertRaises(ValueError,
+                                self.resolve_condition, snippet, tmpl)
+        error_msg = ('The condition value should be boolean, '
+                     'after resolved the value is: cd1')
+        self.assertIn(error_msg, six.text_type(exc))
+
     def test_join(self):
         tmpl = template.Template(empty_template)
         join = {"Fn::Join": [" ", ["foo", "bar"]]}
