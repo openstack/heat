@@ -22,6 +22,11 @@ Parameters:
     AllowedValues: [prod, test]
 Conditions:
   Prod: {"Fn::Equals" : [{Ref: env_type}, "prod"]}
+  Test:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: env_type
+      - prod
 Resources:
   test_res:
     Type: OS::Heat::TestResource
@@ -32,6 +37,11 @@ Resources:
     Properties:
       value: prod_res
     Condition: Prod
+  test_res1:
+    Type: OS::Heat::TestResource
+    Properties:
+      value: just in test env
+    Condition: Test
 Outputs:
   res_value:
     Value: {"Fn::GetAtt": [prod_res, output]}
@@ -40,6 +50,9 @@ Outputs:
     Value: {"Fn::GetAtt": [test_res, output]}
   prod_resource:
     Value: {"Fn::If": [Prod, {Ref: prod_res}, 'no_prod_res']}
+  test_res1_value:
+    Value: {"Fn::If": [Test, {"Fn::GetAtt": [test_res1, output]},
+                       'no_test_res1']}
 '''
 
 hot_template = '''
@@ -52,6 +65,11 @@ parameters:
       - allowed_values: [prod, test]
 conditions:
   prod: {equals : [{get_param: env_type}, "prod"]}
+  test:
+    not:
+      equals:
+      - get_param: env_type
+      - prod
 resources:
   test_res:
     type: OS::Heat::TestResource
@@ -62,6 +80,11 @@ resources:
     properties:
       value: prod_res
     condition: prod
+  test_res1:
+    type: OS::Heat::TestResource
+    properties:
+      value: just in test env
+    condition: test
 outputs:
   res_value:
     value: {get_attr: [prod_res, output]}
@@ -70,6 +93,8 @@ outputs:
     value: {get_attr: [test_res, output]}
   prod_resource:
     value: {if: [prod, {get_resource: prod_res}, 'no_prod_res']}
+  test_res1_value:
+    value: {if: [test, {get_attr: [test_res1, output]}, 'no_test_res1']}
 '''
 
 
@@ -85,9 +110,10 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         self.assertIn('test_res', res_names)
 
     def res_assert_for_test(self, resources):
-        self.assertEqual(1, len(resources))
+        self.assertEqual(2, len(resources))
         res_names = [res.resource_name for res in resources]
         self.assertIn('test_res', res_names)
+        self.assertIn('test_res1', res_names)
         self.assertNotIn('prod_res', res_names)
 
     def output_assert_for_prod(self, stack_id):
@@ -103,6 +129,10 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
             stack_id, 'prod_resource')['output']
         self.assertNotEqual('no_prod_res', prod_resource['output_value'])
 
+        test_res_output = self.client.stacks.output_show(
+            stack_id, 'test_res1_value')['output']
+        self.assertEqual('no_test_res1', test_res_output['output_value'])
+
     def output_assert_for_test(self, stack_id):
         output = self.client.stacks.output_show(stack_id,
                                                 'res_value')['output']
@@ -115,6 +145,11 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         prod_resource = self.client.stacks.output_show(
             stack_id, 'prod_resource')['output']
         self.assertEqual('no_prod_res', prod_resource['output_value'])
+
+        test_res_output = self.client.stacks.output_show(
+            stack_id, 'test_res1_value')['output']
+        self.assertEqual('just in test env',
+                         test_res_output['output_value'])
 
     def test_stack_create_update_cfn_template_test_to_prod(self):
         stack_identifier = self.stack_create(template=cfn_template)
