@@ -145,9 +145,6 @@ class CinderVolumeType(resource.Resource):
         super(CinderVolumeType, self).validate()
 
         if self.properties[self.PROJECTS]:
-            if self.client().volume_api_version == 1:
-                raise exception.NotSupported(
-                    feature=_('Using Cinder API V1, volume type access'))
             if self.properties[self.IS_PUBLIC]:
                 msg = (_('Can not specify property "%s" '
                          'if the volume type is public.') % self.PROJECTS)

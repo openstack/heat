@@ -544,21 +544,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(1, self.cinder_fc.volumes.retype.call_count)
 
-        self.cinder_fc.volume_api_version = 1
-        new_vol_type_1 = 'new_type_1'
-        props = copy.deepcopy(rsrc.properties.data)
-        props['volume_type'] = new_vol_type_1
-        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
-        # if the volume api is v1, not support to retype
-        update_task = scheduler.TaskRunner(rsrc.update, after)
-        ex = self.assertRaises(exception.ResourceFailure, update_task)
-        self.assertEqual('NotSupported: resources.volume2: '
-                         'Using Cinder API V1, '
-                         'volume_type update is not supported.',
-                         six.text_type(ex))
-        self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
-        self.assertEqual(1, self.cinder_fc.volumes.retype.call_count)
-
     def test_cinder_volume_update_name_and_metadata(self):
         # update the name, description and metadata
         fv = vt_base.FakeVolume('creating',
@@ -981,20 +966,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.m.VerifyAll()
 
-    def test_cinder_create_with_scheduler_hints_and_cinder_api_v1(self):
-        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
-        self.cinder_fc.volume_api_version = 1
-
-        self.m.ReplayAll()
-
-        stack_name = 'test_cvolume_scheduler_hints_api_v1_stack'
-        stack = utils.parse_stack(self.t, stack_name=stack_name)
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               self.create_volume, self.t, stack, 'volume3')
-        self.assertIn('Scheduler hints are not supported by the current '
-                      'volume API.', six.text_type(ex))
-        self.m.VerifyAll()
-
     def test_cinder_create_with_stack_scheduler_hints(self):
         fv = vt_base.FakeVolume('creating')
         sh.cfg.CONF.set_override('stack_scheduler_hints', True,
@@ -1029,22 +1000,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         scheduler.TaskRunner(rsrc.create)()
         # this makes sure the auto increment worked on volume creation
         self.assertTrue(rsrc.id > 0)
-
-        self.m.VerifyAll()
-
-    def test_cinder_create_with_multiattach_and_cinder_api_v1(self):
-        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
-        self.cinder_fc.volume_api_version = 1
-
-        self.m.ReplayAll()
-
-        stack_name = 'test_cvolume_multiattach_api_v1_stack'
-        stack = utils.parse_stack(self.t, stack_name=stack_name)
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               self.create_volume, self.t, stack, 'volume4')
-        self.assertIn('Multiple attach is not supported by the current '
-                      'volume API. Use this property since '
-                      'Cinder API v2.', six.text_type(ex))
 
         self.m.VerifyAll()
 

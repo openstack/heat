@@ -22,20 +22,20 @@ class BaseVolume(resource.Resource):
 
     default_client_name = 'cinder'
 
+    def _create_arguments():
+        return {}
+
     def handle_create(self):
         backup_id = self.properties.get(self.BACKUP_ID)
         cinder = self.client()
         if backup_id is not None:
             vol_id = cinder.restores.restore(backup_id).volume_id
-
             vol = cinder.volumes.get(vol_id)
-            kwargs = self._fetch_name_and_description(
-                cinder.version)
+            kwargs = self._fetch_name_and_description()
             cinder.volumes.update(vol_id, **kwargs)
         else:
             kwargs = self._create_arguments()
-            kwargs.update(self._fetch_name_and_description(
-                cinder.version))
+            kwargs.update(self._fetch_name_and_description())
             vol = cinder.volumes.create(**kwargs)
         self.resource_id_set(vol.id)
 
@@ -62,14 +62,10 @@ class BaseVolume(resource.Resource):
     def _description(self):
         return self.physical_resource_name()
 
-    def _fetch_name_and_description(self, api_version, name=None,
+    def _fetch_name_and_description(self, name=None,
                                     description=None):
-        if api_version == 1:
-            return {'display_name': name or self._name(),
-                    'display_description': description or self._description()}
-        else:
-            return {'name': name or self._name(),
-                    'description': description or self._description()}
+        return {'name': name or self._name(),
+                'description': description or self._description()}
 
     def handle_check(self):
         vol = self.client().volumes.get(self.resource_id)

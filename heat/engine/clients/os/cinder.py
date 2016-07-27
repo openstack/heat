@@ -13,7 +13,7 @@
 
 from cinderclient import client as cc
 from cinderclient import exceptions
-from keystoneclient import exceptions as ks_exceptions
+from keystoneauth1 import exceptions as ks_exceptions
 from oslo_log import log as logging
 
 from heat.common import exception
@@ -33,53 +33,40 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
-    service_types = [VOLUME, VOLUME_V2] = ['volume', 'volumev2']
+    service_types = [VOLUME_V2, VOLUME_V3] = ['volumev2', 'volumev3']
 
     def get_volume_api_version(self):
         '''Returns the most recent API version.'''
-
-        endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
+        self.interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         try:
-            self.url_for(service_type=self.VOLUME_V2,
-                         endpoint_type=endpoint_type)
-            return 2
+            self.context.keystone_session.get_endpoint(
+                service_type=self.VOLUME_V3,
+                interface=self.interface)
+            self.service_type = self.VOLUME_V3
+            self.client_version = '3'
         except ks_exceptions.EndpointNotFound:
             try:
-                self.url_for(service_type=self.VOLUME,
-                             endpoint_type=endpoint_type)
-                return 1
+                self.context.keystone_session.get_endpoint(
+                    service_type=self.VOLUME_V2,
+                    interface=self.interface)
+                self.service_type = self.VOLUME_V2
+                self.client_version = '2'
             except ks_exceptions.EndpointNotFound:
-                return None
+                raise exception.Error(_('No volume service available.'))
 
     def _create(self):
-
-        con = self.context
-
-        volume_api_version = self.get_volume_api_version()
-        if volume_api_version == 1:
-            service_type = self.VOLUME
-            client_version = '1'
-        elif volume_api_version == 2:
-            service_type = self.VOLUME_V2
-            client_version = '2'
-        else:
-            raise exception.Error(_('No volume service available.'))
-        LOG.info(_LI('Creating Cinder client with volume API version %d.'),
-                 volume_api_version)
-
-        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        extensions = cc.discover_extensions(client_version)
+        self.get_volume_api_version()
+        extensions = cc.discover_extensions(self.client_version)
         args = {
-            'session': con.keystone_session,
+            'session': self.context.keystone_session,
             'extensions': extensions,
-            'interface': interface,
-            'service_type': service_type,
+            'interface': self.interface,
+            'service_type': self.service_type,
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug')
         }
 
-        client = cc.Client(client_version, **args)
-        client.volume_api_version = volume_api_version
+        client = cc.Client(self.client_version, **args)
         return client
 
     @os_client.MEMOIZE_EXTENSIONS

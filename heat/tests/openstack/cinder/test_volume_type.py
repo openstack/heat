@@ -172,20 +172,6 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self.volume_type_access.add_project_access.assert_called_once_with(
             self.my_volume_type.resource_id, 'id3')
 
-    def test_validate_projects_in_v1(self):
-        tmpl = self.stack.t.t
-        props = tmpl['resources']['my_volume_type']['properties'].copy()
-        props['is_public'] = False
-        props['projects'] = ['id1']
-        self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
-        self.my_volume_type.reparse()
-        self.cinderclient.volume_api_version = 1
-        self.stub_KeystoneProjectConstraint()
-        ex = self.assertRaises(exception.NotSupported,
-                               self.my_volume_type.validate)
-        expected = 'Using Cinder API V1, volume type access is not supported.'
-        self.assertEqual(expected, six.text_type(ex))
-
     def test_validate_projects_when_public(self):
         tmpl = self.stack.t.t
         props = tmpl['resources']['my_volume_type']['properties'].copy()
