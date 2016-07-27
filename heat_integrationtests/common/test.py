@@ -73,7 +73,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def setUp(self):
         super(HeatIntegrationTest, self).setUp()
 
-        self.conf = config.init_conf()
+        self.conf = config.init_conf().heat_plugin
 
         self.assertIsNotNone(self.conf.auth_url,
                              'No auth_url configured')
@@ -106,7 +106,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                              'No admin username configured')
         self.assertIsNotNone(self.conf.admin_password,
                              'No admin password configured')
-        conf = config.init_conf()
+        conf = config.init_conf().heat_plugin
         conf.username = self.conf.admin_username
         conf.password = self.conf.admin_password
         conf.tenant_name = self.conf.admin_tenant_name

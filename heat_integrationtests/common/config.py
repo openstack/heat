@@ -17,8 +17,13 @@ from oslo_config import cfg
 import heat_integrationtests
 
 
-IntegrationTestGroup = [
+heat_group = cfg.OptGroup(name="heat_plugin",
+                          title="Heat Service Options")
 
+HeatGroup = [
+    cfg.StrOpt("catalog_type",
+               default="orchestration",
+               help="Catalog type of the orchestration service."),
     cfg.StrOpt('username',
                default=os.environ.get('OS_USERNAME'),
                help="Username to use for non admin API requests."),
@@ -162,10 +167,10 @@ def init_conf(read_conf=True):
     conf(args=[], project='heat_integrationtests',
          default_config_files=default_config_files)
 
-    for opt in IntegrationTestGroup:
-        conf.register_opt(opt)
+    for group, opts in list_opts():
+        conf.register_opts(opts, group=group)
     return conf
 
 
 def list_opts():
-    yield None, IntegrationTestGroup
+    yield heat_group.name, HeatGroup
