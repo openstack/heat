@@ -135,6 +135,13 @@ class KeyPair(resource.Resource):
     def get_reference_id(self):
         return self.resource_id
 
+    def prepare_for_replace(self):
+        if self.resource_id is None:
+            return
+
+        with self.client_plugin().ignore_not_found:
+            self.client().keypairs.delete(self.resource_id)
+
 
 def resource_mapping():
     return {'OS::Nova::KeyPair': KeyPair}
