@@ -2154,8 +2154,8 @@ class Resource(object):
 
     def is_using_neutron(self):
         try:
-            self.client('neutron')
+            if not self.client('neutron').get_endpoint():
+                return False
         except Exception:
             return False
-        else:
-            return True
+        return True

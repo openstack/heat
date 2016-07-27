@@ -1497,6 +1497,14 @@ class ResourceTest(common.HeatTestCase):
         mock_create.side_effect = Exception()
         self.assertFalse(res.is_using_neutron())
 
+        client = mock.Mock()
+        self.patchobject(client, 'get_endpoint',
+                         return_value=None)
+        self.patch(
+            'heat.engine.clients.os.neutron.NeutronClientPlugin._create',
+            return_value=client)
+        self.assertFalse(res.is_using_neutron())
+
     def _test_skip_validation_if_custom_constraint(self, tmpl):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         stack.store()
