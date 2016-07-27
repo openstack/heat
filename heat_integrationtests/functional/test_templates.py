@@ -47,7 +47,7 @@ class TemplateAPITest(functional_base.FunctionalTestsBase):
             template=self.template
         )
         template_from_client = self.client.stacks.template(stack_identifier)
-        self.assertDictEqual(self.template, template_from_client)
+        self.assertEqual(self.template, template_from_client)
 
     def test_template_version(self):
         template_versions = self.client.template_versions.list()
