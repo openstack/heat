@@ -134,6 +134,27 @@ class VolumeBackupConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate("bar", self.ctx))
 
 
+class CinderClientAPIVersionTest(common.HeatTestCase):
+
+    def test_cinder_api_v1_and_v2(self):
+        self.stub_auth()
+        ctx = utils.dummy_context()
+        client = ctx.clients.client('cinder')
+        self.assertEqual(2, client.volume_api_version)
+
+    def test_cinder_api_v1_only(self):
+        self.stub_auth(only_services=['volume'])
+        ctx = utils.dummy_context()
+        client = ctx.clients.client('cinder')
+        self.assertEqual(1, client.volume_api_version)
+
+    def test_cinder_api_v2_only(self):
+        self.stub_auth(only_services=['volumev2'])
+        ctx = utils.dummy_context()
+        client = ctx.clients.client('cinder')
+        self.assertEqual(2, client.volume_api_version)
+
+
 class CinderClientPluginExtensionsTest(CinderClientPluginTest):
     """Tests for extensions in cinderclient."""
 

@@ -1031,24 +1031,3 @@ class TestIsNotFound(common.HeatTestCase):
                 iue = self.is_unprocessable_entity
                 if iue != client_plugin.is_unprocessable_entity(e):
                     raise
-
-
-class ClientAPIVersionTest(common.HeatTestCase):
-
-    def test_cinder_api_v1_and_v2(self):
-        self.stub_auth()
-        ctx = utils.dummy_context()
-        client = clients.Clients(ctx).client('cinder')
-        self.assertEqual(2, client.volume_api_version)
-
-    def test_cinder_api_v1_only(self):
-        self.stub_auth(only_services=['volume'])
-        ctx = utils.dummy_context()
-        client = clients.Clients(ctx).client('cinder')
-        self.assertEqual(1, client.volume_api_version)
-
-    def test_cinder_api_v2_only(self):
-        self.stub_auth(only_services=['volumev2'])
-        ctx = utils.dummy_context()
-        client = clients.Clients(ctx).client('cinder')
-        self.assertEqual(2, client.volume_api_version)
