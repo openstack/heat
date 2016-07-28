@@ -1480,15 +1480,7 @@ class ResourceTest(common.HeatTestCase):
                              'Test::Resource::resource',
                              template_type='hot'))
 
-    def test_is_using_neutron(self):
-        snippet = rsrc_defn.ResourceDefinition('aresource',
-                                               'GenericResourceType')
-        res = resource.Resource('aresource', snippet, self.stack)
-        self.patch(
-            'heat.engine.clients.os.neutron.NeutronClientPlugin._create')
-        self.assertTrue(res.is_using_neutron())
-
-    def test_is_not_using_neutron(self):
+    def test_is_not_using_neutron_exception(self):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'GenericResourceType')
         res = resource.Resource('aresource', snippet, self.stack)
@@ -1497,13 +1489,20 @@ class ResourceTest(common.HeatTestCase):
         mock_create.side_effect = Exception()
         self.assertFalse(res.is_using_neutron())
 
+    def test_is_using_neutron_endpoint_lookup(self):
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
+        res = resource.Resource('aresource', snippet, self.stack)
         client = mock.Mock()
-        self.patchobject(client, 'get_endpoint',
+        self.patchobject(client.httpclient, 'get_endpoint',
                          return_value=None)
         self.patch(
             'heat.engine.clients.os.neutron.NeutronClientPlugin._create',
             return_value=client)
         self.assertFalse(res.is_using_neutron())
+        self.patchobject(client.httpclient, 'get_endpoint',
+                         return_value=mock.Mock())
+        self.assertTrue(res.is_using_neutron())
 
     def _test_skip_validation_if_custom_constraint(self, tmpl):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
