@@ -3879,6 +3879,7 @@ class ServerInternalPortTest(common.HeatTestCase):
         network = {'network': '4321', 'subnet': '1234',
                    'fixed_ip': '127.0.0.1',
                    'port_extra_properties': {
+                       'value_specs': {},
                        'mac_address': '00:00:00:00:00:00',
                        'allowed_address_pairs': [
                            {'ip_address': '127.0.0.1',
