@@ -31,6 +31,7 @@ fi
 echo -e 'notification_driver=messagingv2\n' >> $localconf
 echo -e 'hidden_stack_tags=hidden\n' >> $localconf
 echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf
+echo -e 'logging_exception_prefix=%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s\n' >> $localconf
 
 echo -e '[heat_api]\nworkers=2\n' >> $localconf
 echo -e '[heat_api_cfn]\nworkers=2\n' >> $localconf
