@@ -1408,6 +1408,7 @@ class EngineService(service.Service):
         # reload the stack from the database.
         st = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=st)
+        self.resource_enforcer.enforce_stack(stack)
 
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               stack.delete)
