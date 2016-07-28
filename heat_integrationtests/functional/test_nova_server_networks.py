@@ -56,16 +56,46 @@ outputs:
     value: {get_attr: [server, networks]}
 '''
 
+server_with_port_template = '''
+heat_template_version: 2016-04-08
+description: Test template to test nova server with port.
+parameters:
+  flavor:
+    type: string
+  image:
+    type: string
+resources:
+  net:
+    type: OS::Neutron::Net
+    properties:
+      name: my_net
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network: {get_resource: net}
+      cidr: 11.11.11.0/24
+  port:
+    type: OS::Neutron::Port
+    properties:
+      network: {get_resource: net}
+      fixed_ips:
+        - subnet: {get_resource: subnet}
+          ip_address: 11.11.11.11
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: image}
+      flavor: {get_param: flavor}
+      networks:
+        - port: {get_resource: port}
+'''
+
 
 class CreateServerTest(functional_base.FunctionalTestsBase):
 
-    def setUp(self):
-        super(CreateServerTest, self).setUp()
-
     def get_outputs(self, stack_identifier, output_key):
         stack = self.client.stacks.get(stack_identifier)
-        output = self._stack_output(stack, output_key)
-        return output
+        return self._stack_output(stack, output_key)
 
     def test_create_server_with_subnet_fixed_ip_sec_group(self):
         parms = {'flavor': self.conf.minimal_instance_type,
@@ -104,3 +134,13 @@ class CreateServerTest(functional_base.FunctionalTestsBase):
                           parameters=parms)
         new_networks = self.get_outputs(stack_identifier, 'networks')
         self.assertNotEqual(['11.11.11.22'], new_networks['my_net'])
+
+    def test_create_server_with_port(self):
+        parms = {'flavor': self.conf.minimal_instance_type,
+                 'image': self.conf.minimal_image_ref}
+        # We just want to make sure we can create the server, no need to assert
+        # anything
+        self.stack_create(
+            template=server_with_port_template,
+            stack_name='server_with_port',
+            parameters=parms)
