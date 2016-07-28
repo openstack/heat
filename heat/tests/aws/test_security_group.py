@@ -15,7 +15,6 @@ import collections
 import copy
 import mock
 
-from keystoneclient import exceptions as keystone_exc
 from neutronclient.common import exceptions as neutron_exc
 from neutronclient.v2_0 import client as neutronclient
 from novaclient.v2 import security_group_rules as nova_sgr
@@ -25,6 +24,7 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine import resource
 from heat.engine.resources.aws.ec2 import security_group
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -149,11 +149,12 @@ Resources:
             neutronclient.Client, 'delete_security_group_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
         self.m.StubOutWithMock(neutronclient.Client, 'update_security_group')
+        self.patchobject(resource.Resource, 'is_using_neutron',
+                         return_value=True)
 
     def mock_no_neutron(self):
-        mock_create = self.patch(
-            'heat.engine.clients.os.neutron.NeutronClientPlugin._create')
-        mock_create.side_effect = keystone_exc.EndpointNotFound()
+        self.patchobject(resource.Resource, 'is_using_neutron',
+                         return_value=False)
 
     def create_stack(self, templ):
         self.stack = self.parse_stack(template_format.parse(templ))

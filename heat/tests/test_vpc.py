@@ -15,6 +15,7 @@ import uuid
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine.resources.aws.ec2 import subnet as sn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -581,6 +582,8 @@ Resources:
     def mock_create_network_interface(
             self, security_groups=['0389f747-7785-4757-b7bb-2ab07e4b09c3']):
 
+        self.patchobject(resource.Resource, 'is_using_neutron',
+                         return_value=True)
         self.nic_name = utils.PhysName('test_stack', 'the_nic')
         port = {'network_id': 'aaaa',
                 'fixed_ips': [{

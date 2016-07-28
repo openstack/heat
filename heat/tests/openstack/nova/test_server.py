@@ -193,6 +193,8 @@ class ServersTest(common.HeatTestCase):
         self.limits.absolute = self._limits_absolute()
         self.mock_flavor = mock.Mock(ram=4, disk=4)
         self.mock_image = mock.Mock(min_ram=1, min_disk=1, status='active')
+        self.patchobject(resource.Resource, 'is_using_neutron',
+                         return_value=True)
 
         def flavor_side_effect(*args):
             return 2 if args[0] == 'm1.small' else 1
@@ -3710,6 +3712,8 @@ class ServerInternalPortTest(common.HeatTestCase):
                                             'delete_port')
         self.port_show = self.patchobject(neutronclient.Client,
                                           'show_port')
+        self.patchobject(resource.Resource, 'is_using_neutron',
+                         return_value=True)
 
         def flavor_side_effect(*args):
             return 2 if args[0] == 'm1.small' else 1
