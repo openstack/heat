@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import template_format
@@ -109,19 +110,6 @@ class StackResource(resource.Resource):
             raise exception.UpdateReplace(self)
 
         return True
-
-    @scheduler.wrappertask
-    def update(self, after, before=None, prev_resource=None):
-        try:
-            yield super(StackResource, self).update(after, before,
-                                                    prev_resource)
-        except StopIteration:
-            with excutils.save_and_reraise_exception():
-                stack_identity = self.nested_identifier()
-                self.rpc_client().stack_cancel_update(
-                    self.context,
-                    dict(stack_identity),
-                    cancel_with_rollback=False)
 
     def nested_identifier(self):
         if self.resource_id is None:
@@ -423,11 +411,40 @@ class StackResource(resource.Resource):
     def check_adopt_complete(self, cookie=None):
         return self._check_status_complete(self.ADOPT)
 
+    def _try_rollback(self):
+        stack_identity = self.nested_identifier()
+        if stack_identity is None:
+            return False
+
+        self.rpc_client().stack_cancel_update(
+            self.context,
+            dict(stack_identity),
+            cancel_with_rollback=True)
+
+        try:
+            data = stack_object.Stack.get_status(self.context,
+                                                 self.resource_id)
+        except exception.NotFound:
+            return False
+
+        action, status, status_reason, updated_time = data
+
+        # If nested stack is still in progress, it should eventually roll
+        # itself back due to stack_cancel_update(), so we just need to wait
+        # for that to complete
+        return status == self.stack.IN_PROGRESS
+
     def update_with_template(self, child_template, user_params=None,
                              timeout_mins=None):
         """Update the nested stack with the new template."""
         if self.id is None:
             self._store()
+
+        if self.stack.action == self.stack.ROLLBACK:
+            if self._try_rollback():
+                LOG.info(_LI('Triggered nested stack %s rollback'),
+                         self.physical_resource_name())
+                return {'target_action': self.stack.ROLLBACK}
 
         nested_stack = self.nested()
         if nested_stack is None:
@@ -469,8 +486,21 @@ class StackResource(resource.Resource):
         return cookie
 
     def check_update_complete(self, cookie=None):
-        return self._check_status_complete(self.UPDATE,
+        if cookie is not None and 'target_action' in cookie:
+            target_action = cookie['target_action']
+            cookie = None
+        else:
+            target_action = self.stack.UPDATE
+        return self._check_status_complete(target_action,
                                            cookie=cookie)
+
+    def handle_update_cancel(self, cookie):
+        stack_identity = self.nested_identifier()
+        if stack_identity is not None:
+            self.rpc_client().stack_cancel_update(
+                self.context,
+                dict(stack_identity),
+                cancel_with_rollback=False)
 
     def delete_nested(self):
         """Delete the nested stack."""
