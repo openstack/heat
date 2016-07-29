@@ -84,9 +84,9 @@ class Schema(collections.Mapping):
     # Default type names for data types used in templates; can be overridden by
     # subclasses
     TYPES = (
-        INTEGER, STRING, NUMBER, BOOLEAN, MAP, LIST,
+        INTEGER, STRING, NUMBER, BOOLEAN, MAP, LIST, ANY,
     ) = (
-        'Integer', 'String', 'Number', 'Boolean', 'Map', 'List',
+        'Integer', 'String', 'Number', 'Boolean', 'Map', 'List', 'Any',
     )
 
     def __init__(self, data_type, description=None,
