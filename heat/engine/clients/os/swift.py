@@ -14,6 +14,7 @@
 import datetime
 import email.utils
 import hashlib
+import logging
 import random
 import time
 
@@ -30,6 +31,11 @@ IN_PROGRESS = 'in progress'
 MAX_EPOCH = 2147483647
 
 CLIENT_NAME = 'swift'
+
+
+# silence the swiftclient logging
+sc_logger = logging.getLogger("swiftclient")
+sc_logger.setLevel(logging.CRITICAL)
 
 
 class SwiftClientPlugin(client_plugin.ClientPlugin):
