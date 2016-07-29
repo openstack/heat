@@ -224,6 +224,46 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(1, self.stack.total_resources(self.stack.id))
         self.assertEqual(1, self.stack.total_resources())
 
+    def test_resource_get(self):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg')
+        self.stack.store()
+        self.assertEqual('A', self.stack.resource_get('A').name)
+        self.assertEqual(self.stack['A'], self.stack.resource_get('A'))
+        self.assertIsNone(self.stack.resource_get('B'))
+
+    @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
+    def test_resource_get_db_fallback(self, gabs):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg')
+        self.stack.store()
+        tpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources':
+                {'A': {'Type': 'GenericResourceType'},
+                 'B': {'Type': 'GenericResourceType'}}}
+        t2 = template.Template(tpl2)
+        t2.store(self.ctx)
+
+        db_resources = {
+            'A': mock.MagicMock(),
+            'B': mock.MagicMock(current_template_id=t2.id)
+        }
+        db_resources['A'].name = 'A'
+        db_resources['B'].name = 'B'
+        gabs.return_value = db_resources
+
+        self.assertEqual('A', self.stack.resource_get('A').name)
+        self.assertEqual('B', self.stack.resource_get('B').name)
+        self.assertIsNone(self.stack.resource_get('C'))
+
     def test_iter_resources_with_nested(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
