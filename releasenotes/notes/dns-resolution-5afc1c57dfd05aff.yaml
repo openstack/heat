@@ -1,0 +1,7 @@
+---
+features:
+  - Supports internal DNS resolution and integration
+    with external DNS services for neutron resources.
+    Template authors can use the ``dns_name`` and
+    ``dns_domain`` properties of neutron resource plugins
+    for this functionality.
