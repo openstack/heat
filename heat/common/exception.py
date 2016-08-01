@@ -159,6 +159,10 @@ class EntityNotFound(HeatException):
                                              **kwargs)
 
 
+class PhysicalResourceExists(HeatException):
+    msg_fmt = _("The physical resource for (%(name)s) exists.")
+
+
 class PhysicalResourceNameAmbiguity(HeatException):
     msg_fmt = _(
         "Multiple physical resources were found with name (%(name)s).")

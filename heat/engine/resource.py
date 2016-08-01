@@ -889,13 +889,6 @@ class Resource(object):
         self.reparse()
         self._update_stored_properties()
 
-        def pause():
-            try:
-                while True:
-                    yield
-            except scheduler.Timeout:
-                return
-
         count = {self.CREATE: 0, self.DELETE: 0}
 
         retry_limit = max(cfg.CONF.action_retry_limit, 0)
@@ -906,7 +899,7 @@ class Resource(object):
             if count[action]:
                 delay = timeutils.retry_backoff_delay(count[action],
                                                       jitter_max=2.0)
-                waiter = scheduler.TaskRunner(pause)
+                waiter = scheduler.TaskRunner(self.pause)
                 yield waiter.as_task(timeout=delay)
             try:
                 yield self._do_action(action, self.properties.validate)
@@ -934,6 +927,14 @@ class Resource(object):
         if self.stack.action == self.stack.CREATE:
             yield self._break_if_required(
                 self.CREATE, environment.HOOK_POST_CREATE)
+
+    @staticmethod
+    def pause():
+        try:
+            while True:
+                yield
+        except scheduler.Timeout:
+            return
 
     def prepare_abandon(self):
         self.abandon_in_progress = True
@@ -1524,6 +1525,15 @@ class Resource(object):
         Subclasses should provide a handle_delete() method to customise
         deletion.
         """
+        @excutils.exception_filter
+        def should_retry(exc):
+            if count >= retry_limit:
+                return False
+            if self.default_client_name:
+                return (self.client_plugin().is_conflict(exc) or
+                        isinstance(exc, exception.PhysicalResourceExists))
+            return isinstance(exc, exception.PhysicalResourceExists)
+
         action = self.DELETE
 
         if (self.action, self.status) == (self.DELETE, self.COMPLETE):
@@ -1560,7 +1570,23 @@ class Resource(object):
                     action_args = [[initial_state], 'snapshot']
                 else:
                     action_args = []
-                yield self.action_handler_task(action, *action_args)
+
+                count = -1
+                retry_limit = max(cfg.CONF.action_retry_limit, 0)
+
+                while True:
+                    count += 1
+                    LOG.info(_LI('delete %(name)s attempt %(attempt)d') %
+                             {'name': six.text_type(self), 'attempt': count+1})
+                    if count:
+                        delay = timeutils.retry_backoff_delay(count,
+                                                              jitter_max=2.0)
+                        waiter = scheduler.TaskRunner(self.pause)
+                        yield waiter.as_task(timeout=delay)
+                    with excutils.exception_filter(should_retry):
+                        yield self.action_handler_task(action,
+                                                       *action_args)
+                        break
 
         if self.stack.action == self.stack.DELETE:
             yield self._break_if_required(
