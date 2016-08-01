@@ -274,9 +274,6 @@ class NeutronSubnetTest(common.HeatTestCase):
             }
         }).AndReturn(subnet_dict)
 
-        neutronclient.Client.show_subnet(
-            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(subnet_dict)
-
         neutronclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
@@ -401,8 +398,6 @@ class NeutronSubnetTest(common.HeatTestCase):
                 "enable_dhcp": True,
             }
         }
-        neutronclient.Client.show_subnet(
-            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
         neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
         neutronclient.Client.show_subnet(

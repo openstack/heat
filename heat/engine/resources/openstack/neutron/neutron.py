@@ -116,4 +116,7 @@ class NeutronResource(resource.Resource):
         if not check:
             return True
 
-        return self._not_found_in_call(self._show_resource)
+        if not self._not_found_in_call(self._show_resource):
+            raise exception.PhysicalResourceExists(
+                name=self.physical_resource_name_or_FnGetRefId())
+        return True

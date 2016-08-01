@@ -21,6 +21,7 @@ from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
+from heat.common import timeutils
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.clients.os import neutron
 from heat.engine import rsrc_defn
@@ -131,6 +132,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(neutronV20,
                                'find_resourceid_by_name_or_id')
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
@@ -205,6 +207,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'floating_network_id': u'abcd1234'
         }})
 
+        timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndReturn(None)
         neutronclient.Client.show_floatingip(
@@ -213,6 +216,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             'floating_network_id': u'abcd1234'
         }})
+        neutronclient.Client.delete_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndReturn(None)
         neutronclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
                 qe.NeutronClientException(status_code=404))
