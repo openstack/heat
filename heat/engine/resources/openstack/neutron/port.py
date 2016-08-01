@@ -42,10 +42,10 @@ class Port(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, NETWORK_ID, NETWORK, FIXED_IPS, SECURITY_GROUPS,
-        REPLACEMENT_POLICY, DEVICE_ID, DEVICE_OWNER
+        REPLACEMENT_POLICY, DEVICE_ID, DEVICE_OWNER, DNS_NAME,
     ) = (
         'name', 'network_id', 'network', 'fixed_ips', 'security_groups',
-        'replacement_policy', 'device_id', 'device_owner'
+        'replacement_policy', 'device_id', 'device_owner', 'dns_name',
     )
 
     EXTRA_PROPERTIES = (
@@ -74,12 +74,12 @@ class Port(neutron.NeutronResource):
         ADMIN_STATE_UP_ATTR, DEVICE_ID_ATTR, DEVICE_OWNER_ATTR, FIXED_IPS_ATTR,
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
         STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SUBNETS_ATTR,
-        PORT_SECURITY_ENABLED_ATTR, QOS_POLICY_ATTR,
+        PORT_SECURITY_ENABLED_ATTR, QOS_POLICY_ATTR, DNS_ASSIGNMENT,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
         'status', 'tenant_id', 'allowed_address_pairs', 'subnets',
-        'port_security_enabled', 'qos_policy_id',
+        'port_security_enabled', 'qos_policy_id', 'dns_assignment',
     )
 
     properties_schema = {
@@ -193,6 +193,15 @@ class Port(neutron.NeutronResource):
                           'nova/neutron port interaction which has been '
                           'fixed since Liberty.'),
                 previous_status=support.SupportStatus(version='2014.2'))
+        ),
+        DNS_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('DNS name associated with the port.'),
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('dns_name')
+            ],
+            support_status=support.SupportStatus(version='7.0.0'),
         ),
     }
 
@@ -342,6 +351,11 @@ class Port(neutron.NeutronResource):
             _("The QoS policy ID attached to this port."),
             type=attributes.Schema.STRING,
             support_status=support.SupportStatus(version='6.0.0'),
+        ),
+        DNS_ASSIGNMENT: attributes.Schema(
+            _("The DNS assigned to this port."),
+            type=attributes.Schema.MAP,
+            support_status=support.SupportStatus(version='7.0.0'),
         ),
     }
 

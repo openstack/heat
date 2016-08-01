@@ -29,9 +29,11 @@ class Net(neutron.NeutronResource):
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
         DHCP_AGENT_IDS, PORT_SECURITY_ENABLED, QOS_POLICY,
+        DNS_DOMAIN,
     ) = (
         'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
         'dhcp_agent_ids', 'port_security_enabled', 'qos_policy',
+        'dns_domain',
     )
 
     ATTRIBUTES = (
@@ -100,6 +102,15 @@ class Net(neutron.NeutronResource):
             ],
             update_allowed=True,
             support_status=support.SupportStatus(version='6.0.0')
+        ),
+        DNS_DOMAIN: properties.Schema(
+            properties.Schema.STRING,
+            _('DNS domain associated with this network.'),
+            constraints=[
+                constraints.CustomConstraint('dns_domain')
+            ],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0')
         ),
     }
 

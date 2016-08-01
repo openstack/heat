@@ -37,9 +37,11 @@ class FloatingIP(neutron.NeutronResource):
     PROPERTIES = (
         FLOATING_NETWORK_ID, FLOATING_NETWORK, VALUE_SPECS,
         PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
+        DNS_NAME, DNS_DOMAIN,
     ) = (
         'floating_network_id', 'floating_network', 'value_specs',
         'port_id', 'fixed_ip_address', 'floating_ip_address',
+        'dns_name', 'dns_domain',
     )
 
     ATTRIBUTES = (
@@ -108,6 +110,24 @@ class FloatingIP(neutron.NeutronResource):
                 constraints.CustomConstraint('ip_addr')
             ],
             support_status=support.SupportStatus(version='5.0.0'),
+        ),
+        DNS_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('DNS name associated with floating ip.'),
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('rel_dns_name')
+            ],
+            support_status=support.SupportStatus(version='7.0.0'),
+        ),
+        DNS_DOMAIN: properties.Schema(
+            properties.Schema.STRING,
+            _('DNS domain associated with floating ip.'),
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('dns_domain')
+            ],
+            support_status=support.SupportStatus(version='7.0.0'),
         ),
     }
 

@@ -40,6 +40,7 @@ resources:
       dhcp_agent_ids:
         - 28c25a04-3f73-45a7-a2b4-59e183943ddc
       port_security_enabled: False
+      dns_domain: openstack.org.
 
   subnet:
     type: OS::Neutron::Subnet
@@ -120,6 +121,7 @@ class NeutronNetTest(common.HeatTestCase):
                 'admin_state_up': True,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'port_security_enabled': False,
+                'dns_domain': 'openstack.org.',
                 'shared': True}
         }).AndReturn({"network": {
             "status": "BUILD",

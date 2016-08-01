@@ -563,6 +563,36 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_floatingip_create_specify_dns(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234',
+            cmd_resource=None,
+        ).MultipleTimes().AndReturn('abcd1234')
+        self.stub_NetworkConstraint_validate()
+        neutronclient.Client.create_floatingip({
+            'floatingip': {'floating_network_id': u'abcd1234',
+                           'dns_name': 'myvm',
+                           'dns_domain': 'openstack.org.'}
+        }).AndReturn({'floatingip': {
+            'status': 'ACTIVE',
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_ip_address': '172.24.4.98'
+        }})
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_floating_template)
+        props = t['resources']['floating_ip']['properties']
+        props['dns_name'] = 'myvm'
+        props['dns_domain'] = 'openstack.org.'
+        stack = utils.parse_stack(t)
+        fip = stack['floating_ip']
+        scheduler.TaskRunner(fip.create)()
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+
+        self.m.VerifyAll()
+
     def test_floatip_port(self):
         t = template_format.parse(neutron_floating_no_assoc_template)
         t['resources']['port_floating']['properties']['network'] = "xyz1234"
