@@ -67,8 +67,10 @@ class ClientManager(object):
     NOVA_API_VERSION = '2.1'
     CEILOMETER_VERSION = '2'
 
-    def __init__(self, conf):
+    def __init__(self, conf, admin_credentials=False):
         self.conf = conf
+        self.admin_credentials = admin_credentials
+
         if self.conf.auth_url.find('/v'):
             self.auth_version = self.conf.auth_url.split('/v')[1]
         else:
@@ -84,6 +86,21 @@ class ClientManager(object):
         self.volume_client = self._get_volume_client()
         self.object_client = self._get_object_client()
         self.metering_client = self._get_metering_client()
+
+    def _username(self):
+        if self.admin_credentials:
+            return self.conf.admin_username
+        return self.conf.username
+
+    def _password(self):
+        if self.admin_credentials:
+            return self.conf.admin_password
+        return self.conf.password
+
+    def _tenant_name(self):
+        if self.admin_credentials:
+            return self.conf.admin_tenant_name
+        return self.conf.tenant_name
 
     def _get_orchestration_client(self):
         endpoint = os.environ.get('HEAT_URL')
@@ -102,16 +119,16 @@ class ClientManager(object):
                 self.HEATCLIENT_VERSION,
                 endpoint,
                 token=token,
-                username=self.conf.username,
-                password=self.conf.password)
+                username=self._username(),
+                password=self._password())
 
     def _get_identity_client(self):
         user_domain_name = self.conf.user_domain_name
         project_domain_name = self.conf.project_domain_name
         kwargs = {
-            'username': self.conf.username,
-            'password': self.conf.password,
-            'tenant_name': self.conf.tenant_name,
+            'username': self._username(),
+            'password': self._password(),
+            'tenant_name': self._tenant_name(),
             'auth_url': self.conf.auth_url
         }
         # keystone v2 can't ignore domain details
@@ -166,8 +183,8 @@ class ClientManager(object):
         # swiftclient does not support keystone sessions yet
         args = {
             'auth_version': self.auth_version,
-            'tenant_name': self.conf.tenant_name,
-            'user': self.conf.username,
+            'tenant_name': self._tenant_name(),
+            'user': self._username(),
             'key': self.conf.password,
             'authurl': self.conf.auth_url,
             'os_options': {'endpoint_type': 'publicURL'},
