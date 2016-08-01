@@ -22,11 +22,11 @@ DEST=${DEST:-/opt/stack/new}
 
 source $DEST/devstack/inc/ini-config
 
-cd $DEST/heat/heat_integrationtests
+conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
 
 # Register the flavors for booting test servers
-iniset heat_integrationtests.conf heat_plugin instance_type m1.heat_int
-iniset heat_integrationtests.conf heat_plugin minimal_instance_type m1.heat_micro
+iniset $conf_file heat_plugin instance_type m1.heat_int
+iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 openstack flavor create m1.heat_int --ram 512
 openstack flavor create m1.heat_micro --ram 128
 
@@ -38,16 +38,16 @@ if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
    exit 1
 fi
 
-iniset heat_integrationtests.conf heat_plugin image_ref fedora-heat-test-image
-iniset heat_integrationtests.conf heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
-iniset heat_integrationtests.conf heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
-iniset heat_integrationtests.conf heat_plugin minimal_image_ref cirros-0.3.4-x86_64-uec
+iniset $conf_file heat_plugin image_ref fedora-heat-test-image
+iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
+iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
+iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.4-x86_64-uec
 # admin creds already sourced, store in conf
-iniset heat_integrationtests.conf heat_plugin admin_username $OS_USERNAME
-iniset heat_integrationtests.conf heat_plugin admin_password $OS_PASSWORD
+iniset $conf_file heat_plugin admin_username $OS_USERNAME
+iniset $conf_file heat_plugin admin_password $OS_PASSWORD
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-iniset heat_integrationtests.conf heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
 
-cat heat_integrationtests.conf
+cat $conf_file
