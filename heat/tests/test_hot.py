@@ -1291,6 +1291,16 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertIn('Incorrect arguments to \"str_split\"',
                       six.text_type(exc))
 
+    def test_str_split_none_string_to_split(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': ['.', None]}
+        self.assertIsNone(self.resolve(snippet, tmpl))
+
+    def test_str_split_none_delim(self):
+        tmpl = template.Template(hot_liberty_tpl_empty)
+        snippet = {'str_split': [None, 'check']}
+        self.assertEqual(['check'], self.resolve(snippet, tmpl))
+
     def test_prevent_parameters_access(self):
         """Check parameters section inaccessible using the template as a dict.
 
