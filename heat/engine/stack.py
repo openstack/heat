@@ -977,7 +977,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.create', hide_args=False)
     @reset_state_on_error
-    def create(self):
+    def create(self, msg_queue=None):
         """Create the stack and all of the resources."""
         def rollback():
             if not self.disable_rollback and self.state == (self.CREATE,
@@ -986,10 +986,12 @@ class Stack(collections.Mapping):
 
         self._store_resources()
 
+        check_message = functools.partial(self._check_for_message, msg_queue)
+
         creator = scheduler.TaskRunner(
             self.stack_task, action=self.CREATE,
             reverse=False, post_func=rollback)
-        creator(timeout=self.timeout_secs())
+        creator(timeout=self.timeout_secs(), progress_callback=check_message)
 
     def _adopt_kwargs(self, resource):
         data = self.adopt_stack_data
