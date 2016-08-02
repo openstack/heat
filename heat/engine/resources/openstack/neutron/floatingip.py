@@ -309,9 +309,9 @@ class FloatingIPAssociation(neutron.NeutronResource):
                 def port_on_subnet(resource, subnet):
                     if not resource.has_interface('OS::Neutron::Port'):
                         return False
-                    for fixed_ip in resource.properties.get(
-                            port.Port.FIXED_IPS):
-
+                    fixed_ips = resource.properties.get(
+                        port.Port.FIXED_IPS) or []
+                    for fixed_ip in fixed_ips:
                         port_subnet = (
                             fixed_ip.get(port.Port.FIXED_IP_SUBNET)
                             or fixed_ip.get(port.Port.FIXED_IP_SUBNET_ID))

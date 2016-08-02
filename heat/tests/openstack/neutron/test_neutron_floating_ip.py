@@ -674,3 +674,35 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         scheduler.TaskRunner(p.delete)()
 
         self.m.VerifyAll()
+
+    def test_add_dependencies(self):
+        t = template_format.parse(neutron_floating_template)
+        stack = utils.parse_stack(t)
+        fipa = stack['floating_ip_assoc']
+        port = stack['port_floating']
+        r_int = stack['router_interface']
+        deps = mock.MagicMock()
+        dep_list = []
+
+        def iadd(obj):
+            dep_list.append(obj[1])
+        deps.__iadd__.side_effect = iadd
+        deps.graph.return_value = {fipa: [port]}
+        fipa.add_dependencies(deps)
+        self.assertEqual([r_int], dep_list)
+
+    def test_add_dependencies_without_fixed_ips_in_port(self):
+        t = template_format.parse(neutron_floating_template)
+        del t['resources']['port_floating']['properties']['fixed_ips']
+        stack = utils.parse_stack(t)
+        fipa = stack['floating_ip_assoc']
+        port = stack['port_floating']
+        deps = mock.MagicMock()
+        dep_list = []
+
+        def iadd(obj):
+            dep_list.append(obj[1])
+        deps.__iadd__.side_effect = iadd
+        deps.graph.return_value = {fipa: [port]}
+        fipa.add_dependencies(deps)
+        self.assertEqual([], dep_list)
