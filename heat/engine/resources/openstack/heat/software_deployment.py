@@ -232,7 +232,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
         if config.get(rpc_api.SOFTWARE_CONFIG_GROUP) == 'component':
             valid_actions = set()
-            for conf in config['config']['configs']:
+            for conf in config[rpc_api.SOFTWARE_CONFIG_CONFIG]['configs']:
                 valid_actions.update(conf['actions'])
             if action not in valid_actions:
                 return
@@ -293,31 +293,36 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return ''
 
     def _build_derived_config_params(self, action, source):
-        scl = sc.SoftwareConfig
         derived_inputs = self._build_derived_inputs(action, source)
         derived_options = self._build_derived_options(action, source)
         derived_config = self._build_derived_config(
             action, source, derived_inputs, derived_options)
-        derived_name = self.properties.get(self.NAME) or source.get(scl.NAME)
+        derived_name = (self.properties.get(self.NAME) or
+                        source.get(rpc_api.SOFTWARE_CONFIG_NAME))
         return {
-            scl.GROUP: source.get(scl.GROUP) or 'Heat::Ungrouped',
-            scl.CONFIG: derived_config or self.empty_config(),
-            scl.OPTIONS: derived_options,
-            scl.INPUTS: derived_inputs,
-            scl.OUTPUTS: source.get(scl.OUTPUTS),
-            scl.NAME: derived_name or self.physical_resource_name()
+            rpc_api.SOFTWARE_CONFIG_GROUP:
+                source.get(rpc_api.SOFTWARE_CONFIG_GROUP) or 'Heat::Ungrouped',
+            rpc_api.SOFTWARE_CONFIG_CONFIG:
+                derived_config or self.empty_config(),
+            rpc_api.SOFTWARE_CONFIG_OPTIONS: derived_options,
+            rpc_api.SOFTWARE_CONFIG_INPUTS: derived_inputs,
+            rpc_api.SOFTWARE_CONFIG_OUTPUTS:
+                source.get(rpc_api.SOFTWARE_CONFIG_OUTPUTS),
+            rpc_api.SOFTWARE_CONFIG_NAME:
+                derived_name or self.physical_resource_name()
         }
 
     def _build_derived_config(self, action, source,
                               derived_inputs, derived_options):
-        return source.get(sc.SoftwareConfig.CONFIG)
+        return source.get(rpc_api.SOFTWARE_CONFIG_CONFIG)
 
     def _build_derived_options(self, action, source):
-        return source.get(sc.SoftwareConfig.OPTIONS)
+        return source.get(rpc_api.SOFTWARE_CONFIG_OPTIONS)
 
     def _build_derived_inputs(self, action, source):
         scl = sc.SoftwareConfig
-        inputs = copy.deepcopy(source.get(scl.INPUTS)) or []
+        inputs = copy.deepcopy(source.get(rpc_api.SOFTWARE_CONFIG_INPUTS) or
+                               [])
         input_values = dict(self.properties.get(self.INPUT_VALUES) or {})
 
         for inp in inputs:

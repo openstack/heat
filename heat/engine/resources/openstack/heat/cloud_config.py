@@ -53,9 +53,9 @@ class CloudConfig(software_config.SoftwareConfig):
             self.properties[self.CLOUD_CONFIG],
             Dumper=template_format.yaml_dumper)
         props = {
-            self.NAME: self.physical_resource_name(),
-            self.CONFIG: '#cloud-config\n%s' % cloud_config,
-            self.GROUP: 'Heat::Ungrouped'
+            rpc_api.SOFTWARE_CONFIG_NAME: self.physical_resource_name(),
+            rpc_api.SOFTWARE_CONFIG_CONFIG: '#cloud-config\n%s' % cloud_config,
+            rpc_api.SOFTWARE_CONFIG_GROUP: 'Heat::Ungrouped'
         }
         sc = self.rpc_client().create_software_config(self.context, **props)
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])

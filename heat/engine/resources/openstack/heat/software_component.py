@@ -38,9 +38,13 @@ class SoftwareComponent(sc.SoftwareConfig):
     support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
-        CONFIGS, INPUTS, OUTPUTS, OPTIONS,
+        CONFIGS,
+        INPUTS, OUTPUTS,
+        OPTIONS,
     ) = (
-        'configs', 'inputs', 'outputs', 'options'
+        'configs',
+        sc.SoftwareConfig.INPUTS, sc.SoftwareConfig.OUTPUTS,
+        sc.SoftwareConfig.OPTIONS,
     )
 
     CONFIG_PROPERTIES = (
@@ -108,13 +112,12 @@ class SoftwareComponent(sc.SoftwareConfig):
 
     def handle_create(self):
         props = dict(self.properties)
-        props[self.NAME] = self.physical_resource_name()
+        props[rpc_api.SOFTWARE_CONFIG_NAME] = self.physical_resource_name()
         # use config property of SoftwareConfig to store configs list
-        configs = self.properties[self.CONFIGS]
-        props[self.CONFIG] = {self.CONFIGS: configs}
+        configs = props.pop(self.CONFIGS)
+        props[rpc_api.SOFTWARE_CONFIG_CONFIG] = {self.CONFIGS: configs}
         # set 'group' to enable component processing by in-instance hook
-        props[self.GROUP] = 'component'
-        del props['configs']
+        props[rpc_api.SOFTWARE_CONFIG_GROUP] = 'component'
 
         sc = self.rpc_client().create_software_config(self.context, **props)
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
