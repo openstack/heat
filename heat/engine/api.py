@@ -541,6 +541,13 @@ def format_validate_parameter(param):
             if c.max is not None:
                 res[rpc_api.PARAM_MAX_VALUE] = c.max
 
+        elif isinstance(c, constr.Modulo):
+            if c.step is not None:
+                res[rpc_api.PARAM_STEP] = c.step
+
+            if c.offset is not None:
+                res[rpc_api.PARAM_OFFSET] = c.offset
+
         elif isinstance(c, constr.AllowedValues):
             res[rpc_api.PARAM_ALLOWED_VALUES] = list(c.allowed)
 

@@ -50,6 +50,12 @@ class SchemaTest(common.HeatTestCase):
         r = constraints.Length(max=10, description='a length range')
         self.assertEqual(d, dict(r))
 
+    def test_modulo_schema(self):
+        d = {'modulo': {'step': 2, 'offset': 1},
+             'description': 'a modulo'}
+        r = constraints.Modulo(2, 1, description='a modulo')
+        self.assertEqual(d, dict(r))
+
     def test_allowed_values_schema(self):
         d = {'allowed_values': ['foo', 'bar'], 'description': 'allowed values'}
         r = constraints.AllowedValues(['foo', 'bar'],
@@ -85,6 +91,75 @@ class SchemaTest(common.HeatTestCase):
     def test_length_max_fail(self):
         l = constraints.Length(max=5, description='a range')
         self.assertRaises(ValueError, l.validate, 'abcdef')
+
+    def test_modulo_validate(self):
+        r = constraints.Modulo(step=2, offset=1, description='a modulo')
+        r.validate(1)
+        r.validate(3)
+        r.validate(5)
+        r.validate(777777)
+
+        r = constraints.Modulo(step=111, offset=0, description='a modulo')
+        r.validate(111)
+        r.validate(222)
+        r.validate(444)
+        r.validate(1110)
+
+        r = constraints.Modulo(step=111, offset=11, description='a modulo')
+        r.validate(122)
+        r.validate(233)
+        r.validate(1121)
+
+        r = constraints.Modulo(step=-2, offset=-1, description='a modulo')
+        r.validate(-1)
+        r.validate(-3)
+        r.validate(-5)
+        r.validate(-777777)
+
+        r = constraints.Modulo(step=-2, offset=0, description='a modulo')
+        r.validate(-2)
+        r.validate(-4)
+        r.validate(-8888888)
+
+    def test_modulo_validate_fail(self):
+        r = constraints.Modulo(step=2, offset=1)
+        err = self.assertRaises(ValueError, r.validate, 4)
+        self.assertIn('4 is not a multiple of 2 with an offset of 1',
+                      six.text_type(err))
+
+        self.assertRaises(ValueError, r.validate, 0)
+        self.assertRaises(ValueError, r.validate, 2)
+        self.assertRaises(ValueError, r.validate, 888888)
+
+        r = constraints.Modulo(step=2, offset=0)
+        self.assertRaises(ValueError, r.validate, 1)
+        self.assertRaises(ValueError, r.validate, 3)
+        self.assertRaises(ValueError, r.validate, 5)
+        self.assertRaises(ValueError, r.validate, 777777)
+
+        err = self.assertRaises(exception.InvalidSchemaError,
+                                constraints.Modulo, step=111, offset=111)
+        self.assertIn('offset must be smaller (by absolute value) than step',
+                      six.text_type(err))
+
+        err = self.assertRaises(exception.InvalidSchemaError,
+                                constraints.Modulo, step=111, offset=112)
+        self.assertIn('offset must be smaller (by absolute value) than step',
+                      six.text_type(err))
+
+        err = self.assertRaises(exception.InvalidSchemaError,
+                                constraints.Modulo, step=0, offset=1)
+        self.assertIn('step cannot be 0', six.text_type(err))
+
+        err = self.assertRaises(exception.InvalidSchemaError,
+                                constraints.Modulo, step=-2, offset=1)
+        self.assertIn('step and offset must be both positive or both negative',
+                      six.text_type(err))
+
+        err = self.assertRaises(exception.InvalidSchemaError,
+                                constraints.Modulo, step=2, offset=-1)
+        self.assertIn('step and offset must be both positive or both negative',
+                      six.text_type(err))
 
     def test_schema_all(self):
         d = {
@@ -206,6 +281,14 @@ class SchemaTest(common.HeatTestCase):
         self.assertIn('Length constraint invalid for Integer',
                       six.text_type(err))
 
+    def test_modulo_invalid_type(self):
+        schema = constraints.Schema('String',
+                                    constraints=[constraints.Modulo(2, 1)])
+        err = self.assertRaises(exception.InvalidSchemaError,
+                                schema.validate)
+        self.assertIn('Modulo constraint invalid for String',
+                      six.text_type(err))
+
     def test_allowed_pattern_invalid_type(self):
         schema = constraints.Schema(
             'Integer',
@@ -227,6 +310,12 @@ class SchemaTest(common.HeatTestCase):
                           constraints.Length, '1', 10)
         self.assertRaises(exception.InvalidSchemaError,
                           constraints.Length, 1, '10')
+
+    def test_modulo_vals_invalid_type(self):
+        self.assertRaises(exception.InvalidSchemaError,
+                          constraints.Modulo, '2', 1)
+        self.assertRaises(exception.InvalidSchemaError,
+                          constraints.Modulo, 2, '1')
 
     def test_schema_validate_good(self):
         s = constraints.Schema(constraints.Schema.STRING, 'A string',
