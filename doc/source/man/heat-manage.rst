@@ -37,9 +37,10 @@ Heat Db version
 
     Sync the database up to the most recent version.
 
-``heat-manage purge_deleted [-g {days,hours,minutes,seconds}] [age]``
+``heat-manage purge_deleted [-g {days,hours,minutes,seconds}] [-p project_id] [age]``
 
-    Purge db entries marked as deleted and older than [age].
+    Purge db entries marked as deleted and older than [age]. When project_id
+    argument is provided, only entries belonging to this project will be purged.
 
 ``heat-manage service list``
 

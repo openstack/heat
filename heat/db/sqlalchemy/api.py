@@ -26,6 +26,7 @@ from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import six
 import sqlalchemy
+from sqlalchemy import and_
 from sqlalchemy import func
 from sqlalchemy import orm
 from sqlalchemy.orm import aliased as orm_aliased
@@ -1157,7 +1158,7 @@ def service_get_all_by_args(context, host, binary, hostname):
             filter_by(hostname=hostname).all())
 
 
-def purge_deleted(age, granularity='days'):
+def purge_deleted(age, granularity='days', project_id=None):
     try:
         age = int(age)
     except ValueError:
@@ -1195,10 +1196,20 @@ def purge_deleted(age, granularity='days'):
     syncpoint = sqlalchemy.Table('sync_point', meta, autoload=True)
 
     # find the soft-deleted stacks that are past their expiry
-    stack_where = sqlalchemy.select([stack.c.id, stack.c.raw_template_id,
-                                     stack.c.prev_raw_template_id,
-                                     stack.c.user_creds_id]).where(
-                                         stack.c.deleted_at < time_line)
+    if project_id:
+        stack_where = sqlalchemy.select([
+            stack.c.id, stack.c.raw_template_id,
+            stack.c.prev_raw_template_id,
+            stack.c.user_creds_id]).where(and_(
+                stack.c.tenant == project_id,
+                stack.c.deleted_at < time_line))
+    else:
+        stack_where = sqlalchemy.select([
+            stack.c.id, stack.c.raw_template_id,
+            stack.c.prev_raw_template_id,
+            stack.c.user_creds_id]).where(
+                stack.c.deleted_at < time_line)
+
     stacks = list(engine.execute(stack_where))
     if stacks:
         stack_ids = [i[0] for i in stacks]

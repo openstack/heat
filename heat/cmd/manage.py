@@ -113,7 +113,9 @@ def do_reset_stack_status():
 
 def purge_deleted():
     """Remove database records that have been previously soft deleted."""
-    utils.purge_deleted(CONF.command.age, CONF.command.granularity)
+    utils.purge_deleted(CONF.command.age,
+                        CONF.command.granularity,
+                        CONF.command.project_id)
 
 
 def do_crypt_parameters_and_properties():
@@ -150,7 +152,10 @@ def add_command_parsers(subparsers):
         '-g', '--granularity', default='days',
         choices=['days', 'hours', 'minutes', 'seconds'],
         help=_('Granularity to use for age argument, defaults to days.'))
-
+    # optional parameter, can be skipped.
+    parser.add_argument(
+        '-p', '--project-id',
+        help=_('Project ID to purge deleted stacks.'))
     # update_params parser
     parser = subparsers.add_parser('update_params')
     parser.set_defaults(func=do_crypt_parameters_and_properties)
