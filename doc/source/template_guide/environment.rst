@@ -225,7 +225,7 @@ To restrict update or replace, add ``restricted_actions: update`` or
 ``restricted_actions: replace`` to the resource dictionary. You can also
 use ``[update, replace]`` to restrict both actions.
 
-You can combine restrcited actions with other ``resources`` properties such
+You can combine restricted actions with other ``resources`` properties such
 as provider templates or type mapping or hooks::
 
   resource_registry:

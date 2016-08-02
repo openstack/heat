@@ -131,7 +131,7 @@ Another example of using Rally job is writing custom Rally scenarios in Heat
 repository. There is an example of this is presented on review:
 https://review.openstack.org/#/c/270225/
 
-It's similar on the first examnple, but requires more Rally specific coding.
+It's similar on the first example, but requires more Rally specific coding.
 New tasks in ``heat-fakevirt.yaml`` use undefined in Rally repository
 scenarios:
 
