@@ -81,6 +81,13 @@ class ManilaShareNetworkTest(common.HeatTestCase):
 
         self.patchobject(share_network.ManilaShareNetwork, 'client_plugin',
                          return_value=self.client_plugin)
+
+        def return_network(name):
+            return '3'
+
+        self.client_plugin.network_id_from_subnet_id.side_effect = (
+            return_network
+        )
         self.stub_NetworkConstraint_validate()
         self.stub_NovaNetworkConstraint()
         self.stub_SubnetConstraint_validate()
@@ -137,12 +144,40 @@ class ManilaShareNetworkTest(common.HeatTestCase):
             calls, any_order=True)
         self.assertEqual('share_networks', net.entity)
 
+    def test_create_without_network(self):
+        t = template_format.parse(stack_template)
+        del t['resources']['share_network']['properties']['neutron_network']
+        stack = utils.parse_stack(t)
+        rsrc_defn = stack.t.resource_definitions(stack)['share_network']
+        net = self._create_network('share_network', rsrc_defn, stack)
+        self.assertEqual((net.CREATE, net.COMPLETE), net.state)
+        self.assertEqual('42', net.resource_id)
+        net.client().share_networks.create.assert_called_with(
+            name='1', description='2', neutron_net_id='3',
+            neutron_subnet_id='4', nova_net_id=None)
+        calls = [mock.call('42', '6'), mock.call('42', '7')]
+        net.client().share_networks.add_security_service.assert_has_calls(
+            calls, any_order=True)
+        self.assertEqual('share_networks', net.entity)
+
     def test_create_fail(self):
         self.client.share_networks.add_security_service.side_effect = (
             Exception())
         self.assertRaises(
             exception.ResourceFailure,
             self._create_network, 'share_network', self.rsrc_defn, self.stack)
+
+    def test_validate_conflicting_net_subnet(self):
+        t = template_format.parse(stack_template)
+        t['resources']['share_network']['properties']['neutron_network'] = '5'
+        stack = utils.parse_stack(t)
+        rsrc_defn = stack.t.resource_definitions(stack)['share_network']
+        net = self._create_network('share_network', rsrc_defn, stack)
+        net.is_using_neutron = mock.Mock(return_value=True)
+        msg = ('Provided neutron_subnet does not belong '
+               'to provided neutron_network.')
+        self.assertRaisesRegexp(exception.StackValidationFailed, msg,
+                                net.validate)
 
     def test_update(self):
         net = self._create_network('share_network', self.rsrc_defn, self.stack)
