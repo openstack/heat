@@ -155,3 +155,19 @@ resources:
       protocol: tcp
       port_range_min: 100
 '''
+
+L7POLICY_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Template to test L7Policy Neutron resource
+resources:
+  l7policy:
+    type: OS::Neutron::LBaaS::L7Policy
+    properties:
+      admin_state_up: True
+      name: test_l7policy
+      description: test l7policy resource
+      action: REDIRECT_TO_URL
+      redirect_url: http://www.mirantis.com
+      listener: 123
+      position: 1
+'''
