@@ -29,8 +29,8 @@ The hints
 ---------
 When heat processes a stack, and the feature is enabled, the stack id, root
 stack id, stack resource uuid, stack resource name, and the path in the stack
-(as a list of tuple, (stackresourcename, stackname)) will be passed  by heat
-to nova and cinder as scheduler hints.
+(as a list of comma delimited strings of stackresourcename and stackname) will
+be passed by heat to nova and cinder as scheduler hints.
 
 Purpose
 -------

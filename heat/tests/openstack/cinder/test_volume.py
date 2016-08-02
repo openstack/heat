@@ -988,7 +988,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
                              shm.HEAT_STACK_ID: stack.id,
                              shm.HEAT_STACK_NAME: stack.name,
-                             shm.HEAT_PATH_IN_STACK: [(None, stack.name)],
+                             shm.HEAT_PATH_IN_STACK: [stack.name],
                              shm.HEAT_RESOURCE_NAME: rsrc.name,
                              shm.HEAT_RESOURCE_UUID: rsrc.uuid}).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)

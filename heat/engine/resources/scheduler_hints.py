@@ -26,6 +26,19 @@ class SchedulerHintsMixin(object):
     HEAT_RESOURCE_NAME = 'heat_resource_name'
     HEAT_RESOURCE_UUID = 'heat_resource_uuid'
 
+    @staticmethod
+    def _path_in_stack(stack):
+        # Note: scheduler_hints can only be of DictOfListOfStrings.
+        # Convert the list of tuples to list of delimited strings.
+        path = []
+        for parent_res_name, stack_name in stack.path_in_stack():
+            if parent_res_name is not None:
+                path.append(','.join([parent_res_name, stack_name]))
+            else:
+                path.append(stack_name)
+
+        return path
+
     def _scheduler_hints(self, scheduler_hints):
         """Augment scheduler hints with supplemental content."""
         if cfg.CONF.stack_scheduler_hints:
@@ -35,7 +48,8 @@ class SchedulerHintsMixin(object):
             scheduler_hints[self.HEAT_ROOT_STACK_ID] = stack.root_stack_id()
             scheduler_hints[self.HEAT_STACK_ID] = stack.id
             scheduler_hints[self.HEAT_STACK_NAME] = stack.name
-            scheduler_hints[self.HEAT_PATH_IN_STACK] = stack.path_in_stack()
+            scheduler_hints[
+                self.HEAT_PATH_IN_STACK] = self._path_in_stack(stack)
             scheduler_hints[self.HEAT_RESOURCE_NAME] = self.name
             scheduler_hints[self.HEAT_RESOURCE_UUID] = self.uuid
         return scheduler_hints

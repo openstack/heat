@@ -28,6 +28,7 @@ if [ "$DISABLE_CONVERGENCE" == "true" ] ; then
     echo -e 'convergence_engine=false\n' >> $localconf
 fi
 
+echo -e 'stack_scheduler_hints=true\n' >> $localconf
 echo -e 'notification_driver=messagingv2\n' >> $localconf
 echo -e 'hidden_stack_tags=hidden\n' >> $localconf
 echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf

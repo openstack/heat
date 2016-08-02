@@ -983,7 +983,8 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'test_server_w_stack_sched_hints_s'
         server_name = 'server_w_stack_sched_hints'
         (t, stack) = self._get_test_template(stack_name, server_name)
-
+        self.patchobject(stack, 'path_in_stack',
+                         return_value=[('parent', stack.name)])
         resource_defns = t.resource_definitions(stack)
         server = servers.Server(server_name,
                                 resource_defns['WebServer'], stack)
@@ -999,7 +1000,8 @@ class ServersTest(common.HeatTestCase):
         scheduler_hints = {shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
                            shm.HEAT_STACK_ID: stack.id,
                            shm.HEAT_STACK_NAME: stack.name,
-                           shm.HEAT_PATH_IN_STACK: [(None, stack.name)],
+                           shm.HEAT_PATH_IN_STACK: [','.join(['parent',
+                                                             stack.name])],
                            shm.HEAT_RESOURCE_NAME: server.name,
                            shm.HEAT_RESOURCE_UUID: server.uuid}
 
