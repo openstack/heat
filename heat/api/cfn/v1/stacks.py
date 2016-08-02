@@ -387,10 +387,6 @@ class StackController(object):
         except Exception as ex:
             return exception.map_remote_error(ex)
 
-        if templ is None:
-            msg = _('stack not found')
-            return exception.HeatInvalidParameterValueError(detail=msg)
-
         return api_utils.format_response('GetTemplate',
                                          {'TemplateBody': templ})
 

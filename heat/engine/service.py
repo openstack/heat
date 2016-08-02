@@ -1279,9 +1279,7 @@ class EngineService(service.Service):
         :param stack_identity: Name of the stack you want to see.
         """
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
-        if s:
-            return s.raw_template.template
-        return None
+        return s.raw_template.template
 
     @context.request_context
     def get_environment(self, cnxt, stack_identity):
@@ -1292,9 +1290,7 @@ class EngineService(service.Service):
         :rtype: dict
         """
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
-        if s:
-            return s.raw_template.environment
-        return None
+        return s.raw_template.environment
 
     @context.request_context
     def get_files(self, cnxt, stack_identity):
@@ -1415,7 +1411,7 @@ class EngineService(service.Service):
 
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               stack.delete)
-        return None
+        return
 
     @context.request_context
     def export_stack(self, cnxt, stack_identity):
