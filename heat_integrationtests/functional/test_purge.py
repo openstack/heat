@@ -11,7 +11,6 @@
 #    under the License.
 
 import time
-import uuid
 
 from oslo_concurrency import processutils
 
@@ -44,47 +43,6 @@ resources:
         stack_identifier = self.stack_create(template=self.template,
                                              tags="foo,bar")
         self._stack_delete(stack_identifier)
-        time.sleep(1)
-        cmd = "heat-manage purge_deleted 0"
-        processutils.execute(cmd, shell=True)
-        stacks = dict((stack.id, stack) for stack in
-                      self.client.stacks.list(show_deleted=True))
-        self.assertNotIn(stack_identifier.split('/')[1], stacks)
-
-    def test_purge_project_id(self):
-        stack_identifier = self.stack_create(template=self.template)
-        self._stack_delete(stack_identifier)
-        stacks = dict((stack.id, stack) for stack in
-                      self.client.stacks.list(show_deleted=True))
-        self.assertIn(stack_identifier.split('/')[1], stacks)
-        fake_project_id = uuid.uuid4().hex
-        time.sleep(1)
-        cmd = "heat-manage purge_deleted -p %s 0" % fake_project_id
-        processutils.execute(cmd, shell=True)
-
-        stacks = dict((stack.id, stack) for stack in
-                      self.client.stacks.list(show_deleted=True))
-        self.assertIn(stack_identifier.split('/')[1], stacks)
-
-        time.sleep(1)
-        cmd = "heat-manage purge_deleted 0"
-        processutils.execute(cmd, shell=True)
-        stacks = dict((stack.id, stack) for stack in
-                      self.client.stacks.list(show_deleted=True))
-        self.assertNotIn(stack_identifier.split('/')[1], stacks)
-
-        # Test with tags
-        stack_identifier = self.stack_create(template=self.template,
-                                             tags="foo,bar")
-        self._stack_delete(stack_identifier)
-
-        time.sleep(1)
-        cmd = "heat-manage purge_deleted -p %s 0" % fake_project_id
-        processutils.execute(cmd, shell=True)
-        stacks = dict((stack.id, stack) for stack in
-                      self.client.stacks.list(show_deleted=True))
-        self.assertIn(stack_identifier.split('/')[1], stacks)
-
         time.sleep(1)
         cmd = "heat-manage purge_deleted 0"
         processutils.execute(cmd, shell=True)
