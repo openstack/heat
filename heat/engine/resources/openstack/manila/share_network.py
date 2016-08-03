@@ -128,6 +128,16 @@ class ManilaShareNetwork(resource.Resource):
             raise exception.ResourcePropertyConflict(self.NEUTRON_SUBNET,
                                                      self.NOVA_NETWORK)
 
+        if self.is_using_neutron() and self.properties[self.NOVA_NETWORK]:
+            msg = _('With Neutron enabled you need to pass Neutron network '
+                    'and Neutron subnet instead of Nova network')
+            raise exception.StackValidationFailed(message=msg)
+
+        if (self.properties[self.NEUTRON_NETWORK] and not
+                self.properties[self.NEUTRON_SUBNET]):
+            raise exception.ResourcePropertyDependency(
+                prop1=self.NEUTRON_NETWORK, prop2=self.NEUTRON_SUBNET)
+
         if (self.properties[self.NEUTRON_NETWORK] and
                 self.properties[self.NEUTRON_SUBNET]):
             plg = self.client_plugin('neutron')
