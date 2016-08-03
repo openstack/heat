@@ -129,6 +129,10 @@ class InvalidTemplateSection(HeatException):
     msg_fmt = _("The template section is invalid: %(section)s")
 
 
+class InvalidConditionFunction(HeatException):
+    msg_fmt = _("The function is not supported in condition: %(func)s")
+
+
 class ImmutableParameterModified(HeatException):
     msg_fmt = _("The following parameters are immutable and may not be "
                 "updated: %(keys)s")

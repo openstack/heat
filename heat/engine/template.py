@@ -90,6 +90,10 @@ def get_template_class(template_data):
 class Template(collections.Mapping):
     """A stack template."""
 
+    condition_functions = {}
+    _parser_condition_functions = {}
+    functions = {}
+
     def __new__(cls, template, *args, **kwargs):
         """Create a new Template of the appropriate class."""
         global _template_classes
@@ -259,6 +263,9 @@ class Template(collections.Mapping):
 
     def parse(self, stack, snippet, path=''):
         return parse(self.functions, stack, snippet, path)
+
+    def parse_condition(self, stack, snippet):
+        return parse(self._parser_condition_functions, stack, snippet)
 
     def validate(self):
         """Validate the template.

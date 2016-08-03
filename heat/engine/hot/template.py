@@ -30,10 +30,10 @@ class HOTemplate20130523(template.Template):
 
     SECTIONS = (
         VERSION, DESCRIPTION, PARAMETER_GROUPS,
-        PARAMETERS, RESOURCES, OUTPUTS, MAPPINGS
+        PARAMETERS, RESOURCES, OUTPUTS, MAPPINGS,
     ) = (
         'heat_template_version', 'description', 'parameter_groups',
-        'parameters', 'resources', 'outputs', '__undefined__'
+        'parameters', 'resources', 'outputs', '__undefined__',
     )
 
     OUTPUT_KEYS = (
@@ -394,6 +394,15 @@ class HOTemplate20160408(HOTemplate20151015):
 
 
 class HOTemplate20161014(HOTemplate20160408):
+
+    CONDITIONS = 'conditions'
+
+    SECTIONS = HOTemplate20160408.SECTIONS + (CONDITIONS,)
+
+    _CFN_TO_HOT_SECTIONS = HOTemplate20160408._CFN_TO_HOT_SECTIONS
+    _CFN_TO_HOT_SECTIONS.update({
+        cfn_template.CfnTemplate.CONDITIONS: CONDITIONS})
+
     deletion_policies = {
         'Delete': rsrc_defn.ResourceDefinition.DELETE,
         'Retain': rsrc_defn.ResourceDefinition.RETAIN,
@@ -426,7 +435,6 @@ class HOTemplate20161014(HOTemplate20160408):
 
         # functions added in 2016-10-14
         'yaql': hot_funcs.Yaql,
-        'equals': cfn_funcs.Equals,
         'map_replace': hot_funcs.MapReplace,
 
         # functions removed from 2015-10-15
@@ -442,3 +450,20 @@ class HOTemplate20161014(HOTemplate20160408):
         'Fn::ResourceFacade': hot_funcs.Removed,
         'Ref': hot_funcs.Removed,
     }
+
+    condition_functions = {
+        'get_param': hot_funcs.GetParam,
+        'equals': hot_funcs.Equals,
+    }
+
+    def __init__(self, tmpl, template_id=None, files=None, env=None):
+        super(HOTemplate20161014, self).__init__(
+            tmpl, template_id, files, env)
+
+        self._parser_condition_functions = {}
+        for n, f in six.iteritems(self.functions):
+            if not isinstance(f, hot_funcs.Removed):
+                self._parser_condition_functions[n] = function.Invalid
+            else:
+                self._parser_condition_functions[n] = f
+        self._parser_condition_functions.update(self.condition_functions)

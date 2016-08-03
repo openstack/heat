@@ -18,6 +18,8 @@ import weakref
 
 import six
 
+from heat.common import exception
+
 
 @six.add_metaclass(abc.ABCMeta)
 class Function(object):
@@ -203,3 +205,17 @@ def dep_attrs(snippet, resource_name):
         attrs = (dep_attrs(value, resource_name) for value in snippet)
         return itertools.chain.from_iterable(attrs)
     return []
+
+
+class Invalid(Function):
+    """A function for checking condition functions and to force failures.
+
+    This function is used to force failures for functions that are not
+    supported in condition definition.
+    """
+
+    def __init__(self, stack, fn_name, args):
+        raise exception.InvalidConditionFunction(func=fn_name)
+
+    def result(self):
+        return super(Invalid, self).result()
