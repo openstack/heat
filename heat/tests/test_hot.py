@@ -1182,6 +1182,21 @@ class HOTemplateTest(common.HeatTestCase):
         for item in result:
             self.assertIn(item, snippet_resolved)
 
+    def test_repeat_list_and_map(self):
+        """Test repeat function with a list and a map."""
+        snippet = {'repeat': {'template': 'this is %var1%-%var2%',
+                              'for_each': {'%var1%': ['a', 'b', 'c'],
+                                           '%var2%': {'x': 'v', 'y': 'v'}}}}
+        snippet_resolved = ['this is a-x', 'this is b-x', 'this is c-x',
+                            'this is a-y', 'this is b-y', 'this is c-y']
+
+        tmpl = template.Template(hot_newton_tpl_empty)
+
+        result = self.resolve(snippet, tmpl)
+        self.assertEqual(len(result), len(snippet_resolved))
+        for item in result:
+            self.assertIn(item, snippet_resolved)
+
     def test_repeat_bad_args(self):
         """Tests reporting error by repeat function.
 
@@ -1198,12 +1213,6 @@ class HOTemplateTest(common.HeatTestCase):
         # misspelled for_each
         snippet = {'repeat': {'template': 'this is %var%',
                               'foreach': {'%var%': ['a', 'b', 'c']}}}
-        self.assertRaises(exception.StackValidationFailed,
-                          self.resolve, snippet, tmpl)
-
-        # value given to for_each entry is not a list
-        snippet = {'repeat': {'template': 'this is %var%',
-                              'for_each': {'%var%': 'a'}}}
         self.assertRaises(exception.StackValidationFailed,
                           self.resolve, snippet, tmpl)
 

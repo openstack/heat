@@ -644,12 +644,8 @@ class Repeat(function.Function):
                 raise TypeError(_('The "for_each" argument to "%s" must '
                                   'contain a map') % self.fn_name)
 
-            if not all(self._valid_list(v) for v in self._for_each.values()):
-                raise TypeError(_('The values of the "for_each" argument '
-                                  'to "%s" must be lists') % self.fn_name)
-
     @staticmethod
-    def _valid_list(arg):
+    def _valid_arg(arg):
         return (isinstance(arg, (collections.Sequence,
                                  function.Function)) and
                 not isinstance(arg, six.string_types))
@@ -669,7 +665,7 @@ class Repeat(function.Function):
 
     def result(self):
         for_each = function.resolve(self._for_each)
-        if not all(self._valid_list(l) for l in for_each.values()):
+        if not all(self._valid_arg(l) for l in for_each.values()):
             raise TypeError(_('The values of the "for_each" argument to '
                               '"%s" must be lists') % self.fn_name)
 
@@ -678,6 +674,21 @@ class Repeat(function.Function):
         keys, lists = six.moves.zip(*for_each.items())
         return [self._do_replacement(keys, replacements, template)
                 for replacements in itertools.product(*lists)]
+
+
+class RepeatWithMap(Repeat):
+    """A function for iterating over a list of items.
+
+    Behaves the same as Replace, but if tolerates a map as
+    values to be repeated, in which case it iterates the map keys.
+    """
+
+    @staticmethod
+    def _valid_arg(arg):
+        return (isinstance(arg, (collections.Sequence,
+                                 collections.Mapping,
+                                 function.Function)) and
+                not isinstance(arg, six.string_types))
 
 
 class Digest(function.Function):

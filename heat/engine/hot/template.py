@@ -420,7 +420,7 @@ class HOTemplate20161014(HOTemplate20160408):
         'get_param': hot_funcs.GetParam,
         'get_resource': cfn_funcs.ResourceRef,
         'list_join': hot_funcs.JoinMultiple,
-        'repeat': hot_funcs.Repeat,
+        'repeat': hot_funcs.RepeatWithMap,
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.ReplaceJson,
 
