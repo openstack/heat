@@ -502,6 +502,9 @@ class StackResource(resource.Resource):
                 dict(stack_identity),
                 cancel_with_rollback=False)
 
+    def handle_create_cancel(self, cookie):
+        return self.handle_update_cancel(cookie)
+
     def delete_nested(self):
         """Delete the nested stack."""
         stack = self.nested()
