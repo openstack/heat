@@ -14,6 +14,7 @@
 
 import uuid
 
+from keystoneauth1 import exceptions as ks_exceptions
 import mock
 
 from heat.common import exception
@@ -136,23 +137,26 @@ class VolumeBackupConstraintTest(common.HeatTestCase):
 
 class CinderClientAPIVersionTest(common.HeatTestCase):
 
-    def test_cinder_api_v1_and_v2(self):
-        self.stub_auth()
+    def test_cinder_api_v3(self):
         ctx = utils.dummy_context()
+        self.patchobject(ctx.keystone_session, 'get_endpoint')
         client = ctx.clients.client('cinder')
-        self.assertEqual(2, client.volume_api_version)
+        self.assertEqual('3.0', client.version)
 
-    def test_cinder_api_v1_only(self):
-        self.stub_auth(only_services=['volume'])
+    def test_cinder_api_v2(self):
         ctx = utils.dummy_context()
+        self.patchobject(ctx.keystone_session, 'get_endpoint',
+                         side_effect=[ks_exceptions.EndpointNotFound,
+                                      None])
         client = ctx.clients.client('cinder')
-        self.assertEqual(1, client.volume_api_version)
+        self.assertEqual('2.0', client.version)
 
-    def test_cinder_api_v2_only(self):
-        self.stub_auth(only_services=['volumev2'])
+    def test_cinder_api_not_supported(self):
         ctx = utils.dummy_context()
-        client = ctx.clients.client('cinder')
-        self.assertEqual(2, client.volume_api_version)
+        self.patchobject(ctx.keystone_session, 'get_endpoint',
+                         side_effect=[ks_exceptions.EndpointNotFound,
+                                      ks_exceptions.EndpointNotFound])
+        self.assertRaises(exception.Error, ctx.clients.client, 'cinder')
 
 
 class CinderClientPluginExtensionsTest(CinderClientPluginTest):

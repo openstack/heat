@@ -160,8 +160,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         ),
         MULTI_ATTACH: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Whether allow the volume to be attached more than once. '
-              'This property is only supported from Cinder API v2.'),
+            _('Whether allow the volume to be attached more than once.'),
             support_status=support.SupportStatus(version='6.0.0'),
         ),
     }
@@ -287,11 +286,10 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             return six.text_type(jsonutils.dumps(vol.metadata))
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
-        if cinder.volume_api_version >= 2:
-            if name == self.DISPLAY_NAME_ATTR:
-                return vol.name
-            elif name == self.DISPLAY_DESCRIPTION_ATTR:
-                return vol.description
+        if name == self.DISPLAY_NAME_ATTR:
+            return vol.name
+        elif name == self.DISPLAY_DESCRIPTION_ATTR:
+            return vol.description
         return six.text_type(getattr(vol, name))
 
     def check_create_complete(self, vol_id):
@@ -386,8 +384,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
                            self.properties[self.NAME])
             update_description = (prop_diff.get(self.DESCRIPTION) or
                                   self.properties[self.DESCRIPTION])
-            kwargs = self._fetch_name_and_description(
-                cinder.volume_api_version, update_name, update_description)
+            kwargs = self._fetch_name_and_description(update_name,
+                                                      update_description)
             cinder.volumes.update(vol, **kwargs)
         # update the metadata for cinder volume
         if self.METADATA in prop_diff:
@@ -397,16 +395,10 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             cinder.volumes.update_all_metadata(vol, metadata)
         # retype
         if self.VOLUME_TYPE in prop_diff:
-            if cinder.volume_api_version == 1:
-                LOG.info(_LI('Volume type update not supported '
-                             'by Cinder API V1.'))
-                raise exception.NotSupported(
-                    feature=_('Using Cinder API V1, volume_type update'))
-            else:
-                if not vol:
-                    vol = cinder.volumes.get(self.resource_id)
-                new_vol_type = prop_diff.get(self.VOLUME_TYPE)
-                cinder.volumes.retype(vol, new_vol_type, 'never')
+            if not vol:
+                vol = cinder.volumes.get(self.resource_id)
+            new_vol_type = prop_diff.get(self.VOLUME_TYPE)
+            cinder.volumes.retype(vol, new_vol_type, 'never')
         # update read_only access mode
         if self.READ_ONLY in prop_diff:
             if not vol:
@@ -605,19 +597,6 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         if res is not None:
             return res
 
-        # Scheduler hints are only supported from Cinder API v2
-        if (self.properties[self.CINDER_SCHEDULER_HINTS]
-                and self.client().volume_api_version == 1):
-            raise exception.StackValidationFailed(
-                message=_('Scheduler hints are not supported by the current '
-                          'volume API.'))
-        # Multi attach is only supported from Cinder API v2
-        if (self.properties[self.MULTI_ATTACH]
-                and self.client().volume_api_version == 1):
-            raise exception.StackValidationFailed(
-                message=_('Multiple attach is not supported by the current '
-                          'volume API. Use this property since '
-                          'Cinder API v2.'))
         # can not specify both image and imageRef
         image = self.properties.get(self.IMAGE)
         imageRef = self.properties.get(self.IMAGE_REF)
