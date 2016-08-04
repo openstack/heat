@@ -34,6 +34,21 @@ resource_registry: {}
         tpl2 = environment_format.parse(yaml2)
         self.assertEqual(tpl1, tpl2)
 
+    def test_param_valid_strategy_section(self):
+        yaml1 = ''
+        yaml2 = '''
+parameters: {}
+encrypted_param_names: []
+parameter_defaults: {}
+parameter_merge_strategies: {}
+event_sinks: []
+resource_registry: {}
+'''
+        tpl1 = environment_format.parse(yaml1)
+        environment_format.default_for_missing(tpl1)
+        tpl2 = environment_format.parse(yaml2)
+        self.assertNotEqual(tpl1, tpl2)
+
     def test_wrong_sections(self):
         env = '''
 parameters: {}
