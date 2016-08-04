@@ -22,7 +22,7 @@ class BaseVolume(resource.Resource):
 
     default_client_name = 'cinder'
 
-    def _create_arguments():
+    def _create_arguments(self):
         return {}
 
     def handle_create(self):
