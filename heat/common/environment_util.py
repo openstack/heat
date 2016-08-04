@@ -68,7 +68,8 @@ def merge_map(old, new, deep_merge=False):
     return old
 
 
-def merge_environments(environment_files, files, params):
+def merge_environments(environment_files, files,
+                       params, param_schemata=None):
     """Merges environment files into the stack input parameters.
 
     If a list of environment files have been specified, this call will

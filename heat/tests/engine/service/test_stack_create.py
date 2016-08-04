@@ -63,7 +63,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
@@ -71,7 +71,8 @@ class StackCreateTest(common.HeatTestCase):
             convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
         if environment_files:
-            mock_merge.assert_called_once_with(environment_files, None, params)
+            mock_merge.assert_called_once_with(environment_files, None,
+                                               params, mock.ANY)
         mock_validate.assert_called_once_with()
 
     def test_stack_create(self):
@@ -119,7 +120,7 @@ class StackCreateTest(common.HeatTestCase):
                                None, {})
         self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
@@ -183,7 +184,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertEqual('Missing required credential: X-Auth-Key',
                          six.text_type(ex.exc_info[1]))
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             ctx_no_pwd, stack_name, stk.t, owner_id=None, nested_depth=0,
@@ -204,7 +205,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertEqual('Missing required credential: X-Auth-User',
                          six.text_type(ex.exc_info[1]))
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             ctx_no_user, stack_name, stk.t, owner_id=None, nested_depth=0,
@@ -238,7 +239,7 @@ class StackCreateTest(common.HeatTestCase):
         result = self.man.create_stack(self.ctx, stack_name, template, params,
                                        None, {})
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,

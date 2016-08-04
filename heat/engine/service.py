@@ -677,11 +677,11 @@ class EngineService(service.Service):
 
         if template_id is not None:
             tmpl = templatem.Template.load(cnxt, template_id)
-            env = tmpl.env
         else:
-            env_util.merge_environments(environment_files, files, params)
-            env = environment.Environment(params)
-            tmpl = templatem.Template(template, files=files, env=env)
+            tmpl = templatem.Template(template, files=files)
+            env_util.merge_environments(environment_files, files, params,
+                                        tmpl.param_schemata())
+            tmpl.env = environment.Environment(params)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
         stack = parser.Stack(cnxt, stack_name, tmpl,
@@ -697,7 +697,7 @@ class EngineService(service.Service):
         stack.validate()
         # For the root stack print a summary of the TemplateResources loaded
         if nested_depth == 0:
-            env.registry.log_resource_info(prefix=stack_name)
+            tmpl.env.registry.log_resource_info(prefix=stack_name)
         return stack
 
     @context.request_context
@@ -821,7 +821,8 @@ class EngineService(service.Service):
 
         return dict(stack.identifier())
 
-    def _prepare_stack_updates(self, cnxt, current_stack, template, params,
+    def _prepare_stack_updates(self, cnxt, current_stack,
+                               template, params, environment_files,
                                files, args, template_id=None):
         """Return the current and updated stack for a given transition.
 
@@ -842,18 +843,6 @@ class EngineService(service.Service):
         # any environment provided into the existing one and attempt
         # to use the existing stack template, if one is not provided.
         if args.get(rpc_api.PARAM_EXISTING):
-            existing_env = current_stack.env.env_as_dict()
-            existing_params = existing_env[env_fmt.PARAMETERS]
-            clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
-            retained = dict((k, v) for k, v in existing_params.items()
-                            if k not in clear_params)
-            existing_env[env_fmt.PARAMETERS] = retained
-            new_env = environment.Environment(existing_env)
-            new_env.load(params)
-
-            new_files = current_stack.t.files
-            new_files.update(files or {})
-
             assert template_id is None, \
                 "Cannot specify template_id with PARAM_EXISTING"
 
@@ -881,17 +870,34 @@ class EngineService(service.Service):
                                   'previous template stored'))
                     msg = _('PATCH update to non-COMPLETE stack')
                     raise exception.NotSupported(feature=msg)
-            tmpl = templatem.Template(new_template, files=new_files,
-                                      env=new_env)
+
+            new_files = current_stack.t.files
+            new_files.update(files or {})
+            tmpl = templatem.Template(new_template, files=new_files)
+            env_util.merge_environments(environment_files, files, params,
+                                        tmpl.param_schemata())
+            existing_env = current_stack.env.env_as_dict()
+            existing_params = existing_env[env_fmt.PARAMETERS]
+            clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
+            retained = dict((k, v) for k, v in existing_params.items()
+                            if k not in clear_params)
+            existing_env[env_fmt.PARAMETERS] = retained
+            new_env = environment.Environment(existing_env)
+            new_env.load(params)
+
             for key in list(new_env.params.keys()):
                 if key not in tmpl.param_schemata():
                     new_env.params.pop(key)
+            tmpl.env = new_env
+
         else:
             if template_id is not None:
                 tmpl = templatem.Template.load(cnxt, template_id)
             else:
-                tmpl = templatem.Template(template, files=files,
-                                          env=environment.Environment(params))
+                tmpl = templatem.Template(template, files=files)
+                env_util.merge_environments(environment_files, files, params,
+                                            tmpl.param_schemata())
+                tmpl.env = environment.Environment(params)
 
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources != -1 and len(tmpl[tmpl.RESOURCES]) > max_resources:
@@ -943,9 +949,6 @@ class EngineService(service.Service):
         :type  environment_files: list or None
         :param template_id: the ID of a pre-stored template in the DB
         """
-        # Handle server-side environment file resolution
-        env_util.merge_environments(environment_files, files, params)
-
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
         LOG.info(_LI('Updating stack %s'), db_stack.name)
@@ -965,7 +968,8 @@ class EngineService(service.Service):
             raise exception.NotSupported(feature=msg)
 
         tmpl, current_stack, updated_stack = self._prepare_stack_updates(
-            cnxt, current_stack, template, params, files, args, template_id)
+            cnxt, current_stack, template, params,
+            environment_files, files, args, template_id)
 
         if current_stack.convergence:
             current_stack.thread_group_mgr = self.thread_group_mgr
@@ -1000,9 +1004,6 @@ class EngineService(service.Service):
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
         """
-        # Handle server-side environment file resolution
-        env_util.merge_environments(environment_files, files, params)
-
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
         LOG.info(_LI('Previewing update of stack %s'), db_stack.name)
@@ -1010,7 +1011,8 @@ class EngineService(service.Service):
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
         tmpl, current_stack, updated_stack = self._prepare_stack_updates(
-            cnxt, current_stack, template, params, files, args)
+            cnxt, current_stack, template, params,
+            environment_files, files, args)
 
         update_task = update.StackUpdate(current_stack, updated_stack, None)
 
@@ -1181,9 +1183,10 @@ class EngineService(service.Service):
 
             service_check_defer = True
 
-        env_util.merge_environments(environment_files, files, params)
-        env = environment.Environment(params)
-        tmpl = templatem.Template(template, files=files, env=env)
+        tmpl = templatem.Template(template, files=files)
+        env_util.merge_environments(environment_files, files, params,
+                                    tmpl.param_schemata())
+        tmpl.env = environment.Environment(params)
         try:
             self._validate_template(cnxt, tmpl)
         except Exception as ex:
