@@ -12,7 +12,9 @@
 #    under the License.
 import collections
 
-from heat.common import environment_format
+import six
+
+from heat.common import environment_format as env_fmt
 
 ALLOWED_PARAM_MERGE_STRATEGIES = (OVERWRITE, MERGE, DEEP_MERGE) = (
     'overwrite', 'merge', 'deep_merge')
@@ -32,14 +34,37 @@ def get_param_merge_strategy(merge_strategies, param_key):
     return env_default
 
 
-def deep_update(old, new):
-    '''Merge nested dictionaries.'''
+def merge_list(old, new):
+    """merges lists and comma delimited lists."""
+    if not old:
+        return new
+
+    if isinstance(new, list):
+        old.extend(new)
+        return old
+    else:
+        return ','.join([old, new])
+
+
+def merge_map(old, new, deep_merge=False):
+    """Merge nested dictionaries."""
+    if not old:
+        return new
+
     for k, v in new.items():
-        if isinstance(v, collections.Mapping):
-            r = deep_update(old.get(k, {}), v)
-            old[k] = r
-        else:
-            old[k] = new[k]
+        if v:
+            if not deep_merge:
+                old[k] = v
+            elif isinstance(v, collections.Mapping):
+                old_v = old.get(k)
+                old[k] = merge_map(old_v, v, deep_merge) if old_v else v
+            elif (isinstance(v, collections.Sequence) and
+                    not isinstance(v, six.string_types)):
+                old_v = old.get(k)
+                old[k] = merge_list(old_v, v) if old_v else v
+            else:
+                old[k] = v
+
     return old
 
 
@@ -60,8 +85,14 @@ def merge_environments(environment_files, files, params):
     :param params: parameters describing the stack
     :type  dict:
     """
-    if environment_files:
-        for filename in environment_files:
-            raw_env = files[filename]
-            parsed_env = environment_format.parse(raw_env)
-            deep_update(params, parsed_env)
+    if not environment_files:
+        return
+
+    for filename in environment_files:
+        raw_env = files[filename]
+        parsed_env = env_fmt.parse(raw_env)
+        for section_key, section_value in parsed_env.items():
+            if section_value:
+                params[section_key] = merge_map(params[section_key],
+                                                section_value,
+                                                deep_merge=True)
