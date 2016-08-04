@@ -18,6 +18,7 @@ from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 import six
 
+from heat.common import environment_util as env_util
 from heat.common import exception
 from heat.common import messaging
 from heat.common import service_utils
@@ -121,7 +122,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(eventlet.queue, 'LightQueue',
                          return_value=mock.Mock())
 
-        mock_merge = self.patchobject(self.man, '_merge_environments')
+        mock_merge = self.patchobject(env_util, 'merge_environments')
 
         # Test
         environment_files = ['env_1']
@@ -991,7 +992,7 @@ resources:
         mock_env = self.patchobject(environment, 'Environment',
                                     return_value=stk.env)
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
-        mock_merge = self.patchobject(self.man, '_merge_environments')
+        mock_merge = self.patchobject(env_util, 'merge_environments')
 
         # Patch _resolve_all_attributes or it tries to call novaclient
         self.patchobject(resource.Resource, '_resolve_all_attributes',

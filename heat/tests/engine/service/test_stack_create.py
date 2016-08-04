@@ -16,6 +16,7 @@ from oslo_messaging.rpc import dispatcher
 from oslo_service import threadgroup
 import six
 
+from heat.common import environment_util as env_util
 from heat.common import exception
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
@@ -54,7 +55,7 @@ class StackCreateTest(common.HeatTestCase):
         mock_env = self.patchobject(environment, 'Environment',
                                     return_value=stk.env)
         mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
-        mock_merge = self.patchobject(self.man, '_merge_environments')
+        mock_merge = self.patchobject(env_util, 'merge_environments')
         result = self.man.create_stack(self.ctx, stack_name,
                                        template, params, None, {},
                                        environment_files=environment_files)

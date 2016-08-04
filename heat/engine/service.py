@@ -33,6 +33,7 @@ import webob
 
 from heat.common import context
 from heat.common import environment_format as env_fmt
+from heat.common import environment_util as env_util
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
@@ -69,8 +70,6 @@ from heat.objects import watch_data
 from heat.objects import watch_rule
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_api as rpc_worker_api
-from heatclient.common import environment_format
-from heatclient.common import template_utils
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
@@ -680,7 +679,7 @@ class EngineService(service.Service):
             tmpl = templatem.Template.load(cnxt, template_id)
             env = tmpl.env
         else:
-            self._merge_environments(environment_files, files, params)
+            env_util.merge_environments(environment_files, files, params)
             env = environment.Environment(params)
             tmpl = templatem.Template(template, files=files, env=env)
         self._validate_new_stack(cnxt, stack_name, tmpl)
@@ -700,30 +699,6 @@ class EngineService(service.Service):
         if nested_depth == 0:
             env.registry.log_resource_info(prefix=stack_name)
         return stack
-
-    @staticmethod
-    def _merge_environments(environment_files, files, params):
-        """Merges environment files into the stack input parameters.
-
-        If a list of environment files have been specified, this call will
-        pull the contents of each from the files dict, parse them as
-        environments, and merge them into the stack input params. This
-        behavior is the same as earlier versions of the Heat client that
-        performed this params population client-side.
-
-        :param environment_files: ordered names of the environment files
-               found in the files dict
-        :type  environment_files: list or None
-        :param files: mapping of stack filenames to contents
-        :type  files: dict
-        :param params: parameters describing the stack
-        :type  dict:
-        """
-        if environment_files:
-            for filename in environment_files:
-                raw_env = files[filename]
-                parsed_env = environment_format.parse(raw_env)
-                template_utils.deep_update(params, parsed_env)
 
     @context.request_context
     def preview_stack(self, cnxt, stack_name, template, params, files,
@@ -969,7 +944,7 @@ class EngineService(service.Service):
         :param template_id: the ID of a pre-stored template in the DB
         """
         # Handle server-side environment file resolution
-        self._merge_environments(environment_files, files, params)
+        env_util.merge_environments(environment_files, files, params)
 
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
@@ -1026,7 +1001,7 @@ class EngineService(service.Service):
         heat-api process if using a template-url.
         """
         # Handle server-side environment file resolution
-        self._merge_environments(environment_files, files, params)
+        env_util.merge_environments(environment_files, files, params)
 
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
@@ -1206,7 +1181,7 @@ class EngineService(service.Service):
 
             service_check_defer = True
 
-        self._merge_environments(environment_files, files, params)
+        env_util.merge_environments(environment_files, files, params)
         env = environment.Environment(params)
         tmpl = templatem.Template(template, files=files, env=env)
         try:
