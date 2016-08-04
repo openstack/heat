@@ -18,7 +18,7 @@ import swiftclient.client as sc
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.openstack.swift import swift
+from heat.engine.resources.openstack.swift import container as swift_c
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -73,9 +73,9 @@ class SwiftTest(common.HeatTestCase):
 
     def _create_container(self, stack, definition_name='SwiftContainer'):
         resource_defns = stack.t.resource_definitions(stack)
-        container = swift.SwiftContainer('test_resource',
-                                         resource_defns[definition_name],
-                                         stack)
+        container = swift_c.SwiftContainer('test_resource',
+                                           resource_defns[definition_name],
+                                           stack)
         runner = scheduler.TaskRunner(container.create)
         runner()
         self.assertEqual((container.CREATE, container.COMPLETE),
@@ -102,11 +102,12 @@ class SwiftTest(common.HeatTestCase):
         headers = {'Web-Index': 'index.html', 'Web-Error': 'error.html'}
 
         # Test
-        self.assertEqual({}, swift.SwiftContainer._build_meta_headers(
+        self.assertEqual({}, swift_c.SwiftContainer._build_meta_headers(
             'container', {}))
-        self.assertEqual({}, swift.SwiftContainer._build_meta_headers(
+        self.assertEqual({}, swift_c.SwiftContainer._build_meta_headers(
             'container', None))
-        built = swift.SwiftContainer._build_meta_headers('container', headers)
+        built = swift_c.SwiftContainer._build_meta_headers(
+            'container', headers)
 
         # Verify
         expected = {
