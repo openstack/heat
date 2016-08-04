@@ -1,0 +1,14 @@
+---
+prelude: >
+  Previously the event list REST API call only returned events for the
+  specified stack even when that stack contained nested stack resources. This
+  meant that fetching all nested events required an inefficient recursive
+  client-side implementation.
+features:
+- The event list GET REST API call now has a different behaviour when the
+  'nested_depth' parameter is set to an integer greater than zero. The response
+  will contain all events down to the requested nested depth.
+- When 'nested_depth' is set the response also includes an extra entry in the
+  'links' list with 'rel' set to 'root_stack'. This can be used by client side
+  implementations to detect whether it is necessary to fall back to client-side
+  recurisive event fetching.
