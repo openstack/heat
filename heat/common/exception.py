@@ -148,6 +148,11 @@ class ImmutableParameterModified(HeatException):
         super(ImmutableParameterModified, self).__init__(**kwargs)
 
 
+class InvalidMergeStrategyForParam(HeatException):
+    msg_fmt = _("Invalid merge strategy %(strategy)s for "
+                "parameter %(param)s.")
+
+
 class InvalidTemplateAttribute(HeatException):
     msg_fmt = _("The Referenced Attribute (%(resource)s %(key)s)"
                 " is incorrect.")
