@@ -617,91 +617,111 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual({'Metadata': None}, diff)
 
     def test_update_template_diff_properties_none(self):
-        before_props = {}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
-        after_props = {}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = tmpl.properties(res.properties_schema,
+                                      self.stack.context)
         diff = res.update_template_diff_properties(after_props, before_props)
         self.assertEqual({}, diff)
 
     def test_update_template_diff_properties_added(self):
-        before_props = {}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
-        after_props = {'Foo': '123'}
+        update_defn = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                                   properties={'Foo': 123})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = update_defn.properties(res.properties_schema,
+                                             self.stack.context)
         diff = res.update_template_diff_properties(after_props, before_props)
         self.assertEqual({'Foo': '123'}, diff)
 
     def test_update_template_diff_properties_removed_no_default_value(self):
-        before_props = {'Foo': '123'}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
-                                            before_props)
-        # Here should be used real property to get default value
+                                            {'Foo': '123'})
         new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
-        new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
-        after_props = new_res.properties
 
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = new_t.properties(res.properties_schema,
+                                       self.stack.context)
         diff = res.update_template_diff_properties(after_props, before_props)
         self.assertEqual({'Foo': None}, diff)
 
     def test_update_template_diff_properties_removed_with_default_value(self):
-        before_props = {'Foo': '123'}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
-                                            before_props)
+                                            {'Foo': '123'})
         schema = {'Foo': {'Type': 'String', 'Default': '567'}}
         self.patchobject(generic_rsrc.ResourceWithProps, 'properties_schema',
                          new=schema)
-        # Here should be used real property to get default value
         new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
-        new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
-        after_props = new_res.properties
 
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = new_t.properties(res.properties_schema,
+                                       self.stack.context)
         diff = res.update_template_diff_properties(after_props, before_props)
         self.assertEqual({'Foo': '567'}, diff)
 
     def test_update_template_diff_properties_changed(self):
-        before_props = {'Foo': '123'}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
-                                            before_props)
-        after_props = {'Foo': '456'}
+                                            {'Foo': '123'})
+        new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                             {'Foo': '456'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = new_t.properties(res.properties_schema,
+                                       self.stack.context)
         diff = res.update_template_diff_properties(after_props, before_props)
         self.assertEqual({'Foo': '456'}, diff)
 
     def test_update_template_diff_properties_notallowed(self):
-        before_props = {'Foo': '123'}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
-                                            before_props)
-        after_props = {'Bar': '456'}
+                                            {'Foo': '123'})
+        new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                             {'Bar': '456'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Cat',)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = new_t.properties(res.properties_schema,
+                                       self.stack.context)
         self.assertRaises(exception.UpdateReplace,
                           res.update_template_diff_properties,
                           after_props, before_props)
 
     def test_update_template_diff_properties_immutable_notsupported(self):
-        before_props = {'Foo': 'bar', 'Parrot': 'dead',
-                        'Spam': 'ham', 'Viking': 'axe'}
+        before = {'Foo': 'bar', 'Parrot': 'dead',
+                  'Spam': 'ham', 'Viking': 'axe'}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
-                                            before_props)
+                                            before)
         schema = {'Foo': {'Type': 'String'},
                   'Viking': {'Type': 'String', 'Immutable': True},
                   'Spam': {'Type': 'String', 'Immutable': True},
                   'Parrot': {'Type': 'String', 'Immutable': True},
                   }
-        after_props = {'Foo': 'baz', 'Parrot': 'dead',
-                       'Spam': 'eggs', 'Viking': 'sword'}
+        after = {'Foo': 'baz', 'Parrot': 'dead',
+                 'Spam': 'eggs', 'Viking': 'sword'}
+        new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                             after)
 
         self.patchobject(generic_rsrc.ResourceWithProps,
                          'properties_schema', new=schema)
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl,
                                              self.stack)
+        before_props = tmpl.properties(res.properties_schema,
+                                       self.stack.context)
+        after_props = new_t.properties(res.properties_schema,
+                                       self.stack.context)
         ex = self.assertRaises(exception.NotSupported,
                                res.update_template_diff_properties,
                                after_props, before_props)
