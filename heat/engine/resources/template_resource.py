@@ -63,7 +63,8 @@ class TemplateResource(stack_resource.StackResource):
         super(TemplateResource, self).__init__(name, json_snippet, stack)
         self.resource_info = tri
         if self.validation_exception is None:
-            self._generate_schema(self.t)
+            self._generate_schema()
+            self.reparse()
 
     def _get_resource_info(self, rsrc_defn):
         try:
@@ -103,7 +104,7 @@ class TemplateResource(stack_resource.StackResource):
                 (attributes.Attributes.schema_from_outputs(
                  tmpl[tmpl.OUTPUTS])))
 
-    def _generate_schema(self, definition):
+    def _generate_schema(self):
         self._parsed_nested = None
         try:
             tmpl = template.Template(self.child_template())
@@ -116,8 +117,6 @@ class TemplateResource(stack_resource.StackResource):
         self.properties_schema, self.attributes_schema = self.get_schemas(
             tmpl, self.stack.env.param_defaults)
 
-        self.properties = definition.properties(self.properties_schema,
-                                                self.context)
         self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
@@ -177,7 +176,7 @@ class TemplateResource(stack_resource.StackResource):
 
     def regenerate_info_schema(self, definition):
         self._get_resource_info(definition)
-        self._generate_schema(definition)
+        self._generate_schema()
 
     def template_data(self):
         # we want to have the latest possible template.
@@ -289,6 +288,8 @@ class TemplateResource(stack_resource.StackResource):
             self.metadata_set(self.t.metadata())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
         return self.update_with_template(self.child_template(),
                                          self.child_params())
 
