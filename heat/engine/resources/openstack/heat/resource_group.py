@@ -109,9 +109,9 @@ class ResourceGroup(stack_resource.StackResource):
     )
 
     ATTRIBUTES = (
-        REFS, REFS_MAP, ATTR_ATTRIBUTES,
+        REFS, REFS_MAP, ATTR_ATTRIBUTES, REMOVED_RSRC_LIST
     ) = (
-        'refs', 'refs_map', 'attributes',
+        'refs', 'refs_map', 'attributes', 'removed_rsrc_list'
     )
 
     properties_schema = {
@@ -213,6 +213,11 @@ class ResourceGroup(stack_resource.StackResource):
             support_status=support.SupportStatus(version='2014.2'),
             type=attributes.Schema.MAP
         ),
+        REMOVED_RSRC_LIST: attributes.Schema(
+            _("A list of removed resource names."),
+            support_status=support.SupportStatus(version='7.0.0'),
+            type=attributes.Schema.LIST
+        ),
     }
 
     rolling_update_schema = {
@@ -291,6 +296,13 @@ class ResourceGroup(stack_resource.StackResource):
             msg = _("Failed to validate: %s") % six.text_type(ex)
             raise exception.StackValidationFailed(message=msg)
 
+    def _current_blacklist(self):
+        db_rsrc_names = self.data().get(self.REMOVED_RSRC_LIST)
+        if db_rsrc_names:
+            return db_rsrc_names.split(',')
+        else:
+            return []
+
     def _name_blacklist(self):
         """Resolve the remove_policies to names for removal."""
 
@@ -298,11 +310,7 @@ class ResourceGroup(stack_resource.StackResource):
 
         # To avoid reusing names after removal, we store a comma-separated
         # blacklist in the resource data
-        db_rsrc_names = self.data().get('name_blacklist')
-        if db_rsrc_names:
-            current_blacklist = db_rsrc_names.split(',')
-        else:
-            current_blacklist = []
+        current_blacklist = self._current_blacklist()
 
         # Now we iterate over the removal policies, and update the blacklist
         # with any additional names
@@ -430,6 +438,8 @@ class ResourceGroup(stack_resource.StackResource):
             refs_map = {n: grouputils.get_rsrc_id(self, key, False, n)
                         for n in names}
             return refs_map
+        if key == self.REMOVED_RSRC_LIST:
+            return self._current_blacklist()
         if key == self.ATTR_ATTRIBUTES:
             if not path:
                 raise exception.InvalidTemplateAttribute(

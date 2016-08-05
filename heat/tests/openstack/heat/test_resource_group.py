@@ -831,6 +831,13 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         rsrc = stack['group1']
         self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))
 
+    def test_get_attribute_blacklist(self):
+        resg = self._create_dummy_stack()
+        resg.data = mock.Mock(return_value={resg.REMOVED_RSRC_LIST: '3,5'})
+
+        expected = ['3', '5']
+        self.assertEqual(expected, resg.FnGetAtt(resg.REMOVED_RSRC_LIST))
+
     def _create_dummy_stack(self, template_data=template, expect_count=2,
                             expect_attrs=None):
         stack = utils.parse_stack(template_data)
