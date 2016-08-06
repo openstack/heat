@@ -4,27 +4,114 @@
 Software configuration
 ======================
 
+Create configuration
+====================
 
+.. rest_method::  POST /v1/{tenant_id}/software_configs
 
-
-List deployments
-================
-
-.. rest_method::  GET /v1/{tenant_id}/software_deployments
-
-Lists all available software deployments.
-
+Creates a software configuration.
 
 Normal response codes: 200
-Error response codes:404,500,401,400,
+
+Error response codes:404,401,400,
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - inputs: inputs
+   - group: group
+   - name: name
+   - outputs: outputs
+   - config: config
+   - options: options
+   - tenant_id: tenant_id
+
+Request Example
+---------------
+
+.. literalinclude:: samples/config-create-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - id: config_id_2
+   - inputs: inputs
+   - group: group
+   - name: name
+   - outputs: outputs
+   - creation_time: creation_time
+   - config: config
+   - options: options
+   - software_config: software_config
+
+Response Example
+----------------
+
+.. literalinclude:: samples/config-create-response.json
+   :language: javascript
 
 
-Request
--------
+List configs
+============
+
+.. rest_method::  GET /v1/{tenant_id}/software_configs
+
+Lists all available software configurations.
+
+Normal response codes: 200
+
+Error response codes: 404,500,401,400
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
+   - limit: limit
+   - marker: marker
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - group: group
+   - name: name
+   - creation_time: creation_time
+   - id: config_id_2
+   - software_configs: software_configs
+
+Response Example
+----------------
+
+.. literalinclude:: samples/configs-list-response.json
+   :language: javascript
+
+
+Show configuration details
+==========================
+
+.. rest_method::  GET /v1/{tenant_id}/software_configs/{config_id}
+
+Shows details for a software configuration.
+
+Normal response codes: 200
+
+Error response codes: 404,401,400
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - config_id: config_id
 
 
 Response Parameters
@@ -32,30 +119,40 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
-   - server_id: server_id
-   - config_id: config_id
-   - output_values: output_values
+   - id: config_id_2
+   - inputs: inputs
+   - group: group
+   - name: name
+   - outputs: outputs
    - creation_time: creation_time
-   - updated_at: updated_at
-   - input_values: input_values
-   - action: action
-   - status_reason: status_reason
-   - id: id
-
+   - config: config
+   - options: options
+   - software_config: software_config
 
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/deployments-list-response.json
+.. literalinclude:: samples/config-show-response.json
    :language: javascript
 
 
+Delete config
+=============
 
+.. rest_method::  DELETE /v1/{tenant_id}/software_configs/{config_id}
 
+Deletes a software configuration.
 
+Normal response codes: 204
 
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - config_id: config_id
 
 
 Create deployment
@@ -67,11 +164,11 @@ Creates a software deployment.
 
 
 Normal response codes: 200
+
 Error response codes:
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -88,8 +185,6 @@ Request Example
 
 .. literalinclude:: samples/deployment-create-request.json
    :language: javascript
-
-
 
 Response Parameters
 -------------------
@@ -116,101 +211,45 @@ Response Example
    :language: javascript
 
 
+List deployments
+================
 
+.. rest_method::  GET /v1/{tenant_id}/software_deployments
 
-Show server configuration metadata
-==================================
-
-.. rest_method::  GET /v1/{tenant_id}/software_deployments/metadata/{server_id}
-
-Shows the deployment configuration metadata for a server.
-
-Use the ``group`` property to specify the configuration hook to
-which the pass the metadata item.
-
+Lists all available software deployments.
 
 Normal response codes: 200
-Error response codes:
 
+Error response codes: 404,500,401,400
 
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - server_id: server_id
    - tenant_id: tenant_id
-
-
-
-
-Response Example
-----------------
-
-.. literalinclude:: samples/deployment-metadata-response.json
-   :language: javascript
-
-
-
-
-Create configuration
-====================
-
-.. rest_method::  POST /v1/{tenant_id}/software_configs
-
-Creates a software configuration.
-
-
-Normal response codes: 200
-Error response codes:404,401,400,
-
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-   - inputs: inputs
-   - group: group
-   - name: name
-   - outputs: outputs
-   - config: config
-   - options: options
-   - tenant_id: tenant_id
-
-Request Example
----------------
-
-.. literalinclude:: samples/config-create-request.json
-   :language: javascript
-
-
 
 Response Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - inputs: inputs
-   - group: group
-   - name: name
-   - outputs: outputs
+   - status: status
+   - server_id: server_id
+   - config_id: config_id
+   - output_values: output_values
    - creation_time: creation_time
-   - config: config
-   - options: options
-   - software_config: software_config
-
+   - updated_at: updated_at
+   - input_values: input_values
+   - action: action
+   - status_reason: status_reason
+   - id: id_2
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/config-create-response.json
+.. literalinclude:: samples/deployments-list-response.json
    :language: javascript
-
-
-
-
-
 
 
 Show deployment details
@@ -222,11 +261,11 @@ Shows details for a software deployment.
 
 
 Normal response codes: 200
+
 Error response codes:
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -248,17 +287,14 @@ Response Parameters
    - input_values: input_values
    - action: action
    - status_reason: status_reason
-   - id: id
+   - id: id_2
    - software_deployment: software_deployment
-
 
 Response Example
 ----------------
 
 .. literalinclude:: samples/deployment-show-response.json
    :language: javascript
-
-
 
 
 Update deployment
@@ -270,11 +306,11 @@ Updates a software deployment.
 
 
 Normal response codes: 200
+
 Error response codes:
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -292,8 +328,6 @@ Request Example
 .. literalinclude:: samples/deployment-update-request.json
    :language: javascript
 
-
-
 Response Parameters
 -------------------
 
@@ -311,14 +345,11 @@ Response Parameters
    - id: id
    - software_deployment: software_deployment
 
-
 Response Example
 ----------------
 
 .. literalinclude:: samples/deployment-update-response.json
    :language: javascript
-
-
 
 
 Delete deployment
@@ -328,11 +359,10 @@ Delete deployment
 
 Deletes a software deployment.
 
-Error response codes:204,
+Normal response codes: 204
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -340,77 +370,32 @@ Request
    - deployment_id: deployment_id
 
 
+Show server configuration metadata
+==================================
 
+.. rest_method::  GET /v1/{tenant_id}/software_deployments/metadata/{server_id}
 
+Shows the deployment configuration metadata for a server.
 
-
-Show configuration details
-==========================
-
-.. rest_method::  GET /v1/{tenant_id}/software_configs/{config_id}
-
-Shows details for a software configuration.
+Use the ``group`` property to specify the configuration hook to
+which the pass the metadata item.
 
 
 Normal response codes: 200
-Error response codes:404,401,400,
 
+Error response codes:
 
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
+   - server_id: server_id
    - tenant_id: tenant_id
-   - config_id: config_id
-
-
-Response Parameters
--------------------
-
-.. rest_parameters:: parameters.yaml
-
-   - inputs: inputs
-   - group: group
-   - name: name
-   - outputs: outputs
-   - creation_time: creation_time
-   - config: config
-   - options: options
-   - software_config: software_config
 
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/config-show-response.json
+.. literalinclude:: samples/deployment-metadata-response.json
    :language: javascript
-
-
-
-
-
-
-
-Delete config
-=============
-
-.. rest_method::  DELETE /v1/{tenant_id}/software_configs/{config_id}
-
-Deletes a software configuration.
-
-Error response codes:204,
-
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-   - tenant_id: tenant_id
-   - config_id: config_id
-
-
-
-
-

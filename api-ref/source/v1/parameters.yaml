@@ -1247,12 +1247,24 @@ software_config:
   in: body
   required: true
   type: object
+software_configs:
+  description: |
+    A list of ``software_config`` objects.
+  in: body
+  required: true
+  type: array
 software_deployment:
   description: |
     The ``software_deployment`` object.
   in: body
   required: true
   type: object
+software_deployments:
+  description: |
+    A list of ``software_deployment`` objects.
+  in: body
+  required: true
+  type: array
 stack:
   description: |
     The ``stack`` object.
