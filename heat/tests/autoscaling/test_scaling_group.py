@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -303,7 +304,7 @@ class TestGroupAdjust(common.HeatTestCase):
         dont_call = self.patchobject(self.group, 'resize')
         self.patchobject(self.group, '_is_scaling_allowed',
                          return_value=False)
-        self.assertRaises(exception.NoActionRequired,
+        self.assertRaises(resource.NoActionRequired,
                           self.group.adjust, 1)
         self.assertEqual([], dont_call.call_args_list)
 
@@ -313,7 +314,7 @@ class TestGroupAdjust(common.HeatTestCase):
         resize = self.patchobject(self.group, 'resize')
         finished_scaling = self.patchobject(self.group, '_finished_scaling')
         notify = self.patch('heat.engine.notification.autoscaling.send')
-        self.assertRaises(exception.NoActionRequired,
+        self.assertRaises(resource.NoActionRequired,
                           self.group.adjust, 3,
                           adjustment_type='ExactCapacity')
         expected_notifies = []
@@ -327,7 +328,7 @@ class TestGroupAdjust(common.HeatTestCase):
         resize = self.patchobject(self.group, 'resize')
         finished_scaling = self.patchobject(self.group, '_finished_scaling')
         notify = self.patch('heat.engine.notification.autoscaling.send')
-        self.assertRaises(exception.NoActionRequired,
+        self.assertRaises(resource.NoActionRequired,
                           self.group.adjust, 3,
                           adjustment_type='ExactCapacity')
         expected_notifies = []

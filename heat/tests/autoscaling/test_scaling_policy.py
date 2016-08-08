@@ -19,6 +19,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine.resources.aws.autoscaling import scaling_policy as aws_sp
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -87,11 +88,11 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                                'WebServerScaleUpPolicy')
         group = stack['WebServerGroup']
         self.patchobject(group, 'adjust',
-                         side_effect=exception.NoActionRequired())
+                         side_effect=resource.NoActionRequired())
         mock_fin_scaling = self.patchobject(up_policy, '_finished_scaling')
         with mock.patch.object(up_policy, '_is_scaling_allowed',
                                return_value=True) as mock_isa:
-            self.assertRaises(exception.NoActionRequired,
+            self.assertRaises(resource.NoActionRequired,
                               up_policy.handle_signal)
             mock_isa.assert_called_once_with()
             mock_fin_scaling.assert_called_once_with('ChangeInCapacity : 1',
@@ -124,7 +125,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                side_effect=AssertionError) as dont_call:
             with mock.patch.object(pol, '_is_scaling_allowed',
                                    return_value=False) as mock_isa:
-                self.assertRaises(exception.NoActionRequired,
+                self.assertRaises(resource.NoActionRequired,
                                   pol.handle_signal, details=test)
                 mock_isa.assert_called_once_with()
             self.assertEqual([], dont_call.call_args_list)

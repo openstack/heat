@@ -284,7 +284,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         if self.status != self.COMPLETE:
             LOG.info(_LI("%s NOT performing scaling adjustment, "
                          "when status is not COMPLETE") % self.name)
-            raise exception.NoActionRequired()
+            raise resource.NoActionRequired
 
         capacity = grouputils.get_size(self)
         new_capacity = self._get_new_capacity(capacity, adjustment,
@@ -293,14 +293,14 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         if new_capacity == capacity:
             LOG.info(_LI("%s NOT performing scaling adjustment, "
                          "as there is no change in capacity.") % self.name)
-            raise exception.NoActionRequired()
+            raise resource.NoActionRequired
 
         if not self._is_scaling_allowed():
             LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
                          "cooldown %(cooldown)s") % {
                 'name': self.name,
                 'cooldown': self.properties[self.COOLDOWN]})
-            raise exception.NoActionRequired()
+            raise resource.NoActionRequired
 
         # send a notification before, on-error and on-success.
         notif = {

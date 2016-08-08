@@ -179,7 +179,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                          "cooldown %(cooldown)s") % {
                 'name': self.name,
                 'cooldown': self.properties[self.COOLDOWN]})
-            raise exception.NoActionRequired()
+            raise resource.NoActionRequired
 
         LOG.info(_LI('%(name)s alarm, adjusting group %(group)s with id '
                      '%(asgn_id)s by %(filter)s') % {
@@ -194,12 +194,13 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                 self.properties[self.ADJUSTMENT_TYPE],
                 self.properties[self.MIN_ADJUSTMENT_STEP])
             size_changed = True
-        except Exception as ex:
-            if not isinstance(ex, exception.NoActionRequired):
-                LOG.error(_LE("Error in performing scaling adjustment with "
-                              "%(name)s alarm for group %(group)s.") % {
-                    'name': self.name,
-                    'group': group.name})
+        except resource.NoActionRequired:
+            raise
+        except Exception:
+            LOG.error(_LE("Error in performing scaling adjustment with "
+                          "%(name)s alarm for group %(group)s.") % {
+                'name': self.name,
+                'group': group.name})
             raise
         finally:
             self._finished_scaling("%s : %s" % (
