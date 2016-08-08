@@ -57,6 +57,10 @@ def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
 
 
+# Attention developers about to move/delete this: STOP IT!!!
+UpdateReplace = exception.UpdateReplace
+
+
 @six.python_2_unicode_compatible
 class Resource(object):
     ACTIONS = (
@@ -527,7 +531,7 @@ class Resource(object):
             raise exception.NotSupported(feature=mesg)
 
         if not changed_properties_set.issubset(update_allowed_set):
-            raise exception.UpdateReplace(self.name)
+            raise UpdateReplace(self.name)
 
         return dict((k, after_props.get(k)) for k in changed_properties_set)
 
@@ -891,11 +895,11 @@ class Resource(object):
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
         if self.status == self.FAILED:
-            raise exception.UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if check_init_complete and \
                 (self.action == self.INIT and self.status == self.COMPLETE):
-            raise exception.UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if prev_resource is not None:
             cur_class_def, cur_ver = self.implementation_signature()
@@ -982,7 +986,7 @@ class Resource(object):
             LOG.info(_LI('updating %s'), six.text_type(self))
 
             self.updated_time = datetime.utcnow()
-            with self._action_recorder(action, exception.UpdateReplace):
+            with self._action_recorder(action, UpdateReplace):
                 after_props.validate()
                 tmpl_diff = self.update_template_diff(function.resolve(after),
                                                       before)
@@ -995,7 +999,7 @@ class Resource(object):
                 self.t = after
                 self.reparse()
                 self._update_stored_properties()
-        except exception.UpdateReplace as ex:
+        except UpdateReplace as ex:
             # catch all UpdateReplace expections
             try:
                 if (self.stack.action == 'ROLLBACK' and
@@ -1707,7 +1711,7 @@ class Resource(object):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            raise exception.UpdateReplace(self.name)
+            raise UpdateReplace(self.name)
 
     def metadata_update(self, new_metadata=None):
         """No-op for resources which don't explicitly override this method."""

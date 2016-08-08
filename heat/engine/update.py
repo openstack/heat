@@ -14,9 +14,9 @@
 from oslo_log import log as logging
 import six
 
-from heat.common import exception
 from heat.common.i18n import _LI
 from heat.engine import dependencies
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.objects import resource as resource_objects
 
@@ -143,7 +143,7 @@ class StackUpdate(object):
             try:
                 yield self._update_in_place(existing_res,
                                             new_res)
-            except exception.UpdateReplace:
+            except resource.UpdateReplace:
                 pass
             else:
                 # Save updated resource definition to backup stack
@@ -246,7 +246,7 @@ class StackUpdate(object):
                     current_res.update_template_diff_properties(updated_props,
                                                                 current_props)
                     updated_keys.append(key)
-            except exception.UpdateReplace:
+            except resource.UpdateReplace:
                 replaced_keys.append(key)
 
         return {
