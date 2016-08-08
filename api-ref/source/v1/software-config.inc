@@ -22,7 +22,7 @@ Request Parameters
 
    - inputs: inputs
    - group: group
-   - name: name
+   - name: config_name
    - outputs: outputs
    - config: config
    - options: options
@@ -39,12 +39,13 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - id: config_id_2
+   - id: config_id
    - inputs: inputs
    - group: group
-   - name: name
+   - name: config_name
    - outputs: outputs
    - creation_time: creation_time
+   - updated_time: updated_time
    - config: config
    - options: options
    - software_config: software_config
@@ -81,10 +82,10 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - group: group
-   - name: name
    - creation_time: creation_time
-   - id: config_id_2
+   - group: group
+   - id: config_id
+   - name: config_name
    - software_configs: software_configs
 
 Response Example
@@ -119,14 +120,14 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - id: config_id_2
-   - inputs: inputs
-   - group: group
-   - name: name
-   - outputs: outputs
-   - creation_time: creation_time
    - config: config
+   - creation_time: creation_time
+   - group: group
+   - id: config_id
+   - inputs: inputs
+   - name: config_name
    - options: options
+   - outputs: outputs
    - software_config: software_config
 
 
@@ -152,7 +153,7 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - config_id: config_id
+   - config_id: config_id_url
 
 
 Create deployment
@@ -161,7 +162,6 @@ Create deployment
 .. rest_method::  POST /v1/{tenant_id}/software_deployments
 
 Creates a software deployment.
-
 
 Normal response codes: 200
 
@@ -172,12 +172,13 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
+   - action: deployment_action
+   - config_id: deployment_config_id
+   - input_values: input_values
    - server_id: server_id
-   - config_id: config_id
    - stack_user_project_id: stack_user_project_id
-   - action: action
-   - status_reason: status_reason
+   - status: deployment_status
+   - status_reason: deployment_status_reason
    - tenant_id: tenant_id
 
 Request Example
@@ -191,18 +192,17 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
-   - server_id: server_id
-   - config_id: config_id
-   - output_values: output_values
+   - action: deployment_action
+   - config_id: deployment_config_id
    - creation_time: creation_time
-   - updated_at: updated_at
+   - id: deployment_id
    - input_values: input_values
-   - action: action
-   - status_reason: status_reason
-   - id: id
+   - output_values: deployment_output_values
+   - server_id: server_id
    - software_deployment: software_deployment
-
+   - status: deployment_status
+   - status_reason: status_reason
+   - updated_time: deployment_updated_time
 
 Response Example
 ----------------
@@ -227,6 +227,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - server_id: deployment_server_id_query
    - tenant_id: tenant_id
 
 Response Parameters
@@ -234,23 +235,23 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
-   - server_id: server_id
-   - config_id: config_id
-   - output_values: output_values
+   - action: deployment_action
+   - config_id: deployment_config_id
    - creation_time: creation_time
-   - updated_at: updated_at
+   - id: deployment_id
    - input_values: input_values
-   - action: action
+   - output_values: deployment_output_values
+   - server_id: server_id
+   - software_deployments: software_deployments
+   - status: deployment_status
    - status_reason: status_reason
-   - id: id_2
+   - updated_time: deployment_updated_time
 
 Response Example
 ----------------
 
 .. literalinclude:: samples/deployments-list-response.json
    :language: javascript
-
 
 Show deployment details
 =======================
@@ -259,7 +260,6 @@ Show deployment details
 
 Shows details for a software deployment.
 
-
 Normal response codes: 200
 
 Error response codes:
@@ -269,33 +269,31 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - deployment_id: deployment_id_url
    - tenant_id: tenant_id
-   - deployment_id: deployment_id
-
 
 Response Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
-   - server_id: server_id
-   - config_id: config_id
-   - output_values: output_values
+   - action: deployment_action
+   - config_id: deployment_config_id
    - creation_time: creation_time
-   - updated_at: updated_at
+   - id: deployment_id
    - input_values: input_values
-   - action: action
-   - status_reason: status_reason
-   - id: id_2
+   - output_values: deployment_output_values
+   - server_id: server_id
    - software_deployment: software_deployment
+   - status: deployment_status
+   - status_reason: status_reason
+   - updated_time: deployment_updated_time
 
 Response Example
 ----------------
 
 .. literalinclude:: samples/deployment-show-response.json
    :language: javascript
-
 
 Update deployment
 =================
@@ -304,7 +302,6 @@ Update deployment
 
 Updates a software deployment.
 
-
 Normal response codes: 200
 
 Error response codes:
@@ -314,13 +311,14 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - action: action
-   - output_values: output_values
-   - config_id: config_id
-   - status: status
+   - action: deployment_action
+   - config_id: deployment_config_id
+   - deployment_id: deployment_id_url
+   - input_values: input_values
+   - output_values: deployment_output_values
+   - status: deployment_status
    - status_reason: status_reason
    - tenant_id: tenant_id
-   - deployment_id: deployment_id
 
 Request Example
 ---------------
@@ -333,24 +331,23 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
-   - server_id: server_id
-   - config_id: config_id
-   - output_values: output_values
+   - action: deployment_action
+   - config_id: deployment_config_id
    - creation_time: creation_time
-   - updated_at: updated_at
+   - id: deployment_id
    - input_values: input_values
-   - action: action
+   - output_values: deployment_output_values
+   - server_id: server_id
+   - software_deployments: software_deployments
+   - status: deployment_status
    - status_reason: status_reason
-   - id: id
-   - software_deployment: software_deployment
+   - updated_time: deployment_updated_time
 
 Response Example
 ----------------
 
 .. literalinclude:: samples/deployment-update-response.json
    :language: javascript
-
 
 Delete deployment
 =================
@@ -366,9 +363,8 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - deployment_id: deployment_id_url
    - tenant_id: tenant_id
-   - deployment_id: deployment_id
-
 
 Show server configuration metadata
 ==================================
@@ -380,7 +376,6 @@ Shows the deployment configuration metadata for a server.
 Use the ``group`` property to specify the configuration hook to
 which the pass the metadata item.
 
-
 Normal response codes: 200
 
 Error response codes:
@@ -390,9 +385,24 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - server_id: server_id
+   - server_id: deployment_server_id_url
    - tenant_id: tenant_id
 
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - config: config
+   - creation_time: creation_time
+   - group: group
+   - id: config_id
+   - inputs: inputs
+   - metadata: deployment_metadata
+   - name: config_name
+   - options: options
+   - outputs: outputs
+   - updated_time: updated_time
 
 Response Example
 ----------------
