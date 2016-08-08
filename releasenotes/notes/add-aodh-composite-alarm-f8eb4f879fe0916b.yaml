@@ -1,0 +1,5 @@
+---
+features:
+  - OS::Aodh::CompositeAlarm resource plugin is added to manage
+    Aodh composite alarm, aim to replace OS::Aodh::CombinationAlarm
+    which has been deprecated in Newton release.
