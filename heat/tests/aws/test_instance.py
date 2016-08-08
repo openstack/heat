@@ -27,6 +27,7 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients import progress
 from heat.engine import environment
+from heat.engine import resource
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine.resources import scheduler_hints as sh
 from heat.engine import scheduler
@@ -1177,7 +1178,7 @@ class InstancesTest(common.HeatTestCase):
         update_props['ImageId'] = 'mustreplace'
         update_template = instance.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(instance.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         self.m.VerifyAll()
 

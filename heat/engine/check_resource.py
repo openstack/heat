@@ -93,7 +93,7 @@ class CheckResource(object):
                     check_resource_update(rsrc, tmpl.id, resource_data,
                                           self.engine_id,
                                           stack)
-                except exception.UpdateReplace:
+                except resource.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
                     LOG.info(_LI("Replacing resource with new id %s"),
                              new_res_id)

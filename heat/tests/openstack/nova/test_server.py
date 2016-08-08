@@ -1850,7 +1850,7 @@ class ServersTest(common.HeatTestCase):
         update_props['flavor'] = 'm1.small'
         update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
     def test_server_update_server_flavor_policy_update(self, mock_replace):
@@ -1868,7 +1868,7 @@ class ServersTest(common.HeatTestCase):
         update_props['flavor'] = 'm1.small'
         update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
     @mock.patch.object(nova.NovaClientPlugin, '_create')
@@ -1885,7 +1885,7 @@ class ServersTest(common.HeatTestCase):
         update_template = server.t.freeze(properties=update_props)
         server.action = server.CREATE
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
     @mock.patch.object(nova.NovaClientPlugin, '_create')
@@ -1923,7 +1923,7 @@ class ServersTest(common.HeatTestCase):
         update_props['image'] = image_id
         update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def _test_server_update_image_rebuild(self, status, policy='REBUILD',
                                           password=None):
@@ -2042,7 +2042,7 @@ class ServersTest(common.HeatTestCase):
         update_props['image_update_policy'] = 'REPLACE'
         update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_status_build(self):
         return_server = self.fc.servers.list()[0]
@@ -3412,7 +3412,7 @@ class ServersTest(common.HeatTestCase):
         update_props['image_update_policy'] = 'REPLACE'
         update_template = server.t.freeze(properties=update_props)
         updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_properties_validation_create_and_update_fail(self):
         return_server = self.fc.servers.list()[1]

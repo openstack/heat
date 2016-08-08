@@ -110,7 +110,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     def test_is_update_traversal_raise_update_replace(
             self, tr, mock_mr, mock_cru, mock_crc, mock_pcr, mock_csc,
             mock_cid):
-        mock_cru.side_effect = exception.UpdateReplace
+        mock_cru.side_effect = resource.UpdateReplace
         tr.return_value = 317
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},

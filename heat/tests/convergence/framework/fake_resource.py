@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
@@ -85,7 +84,7 @@ class TestResource(resource.Resource):
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         for prop in prop_diff:
             if '!' in prop:
-                raise exception.UpdateReplace(self.name)
+                raise resource.UpdateReplace(self.name)
             self.data_set(prop, prop_diff.get(prop), redact=False)
 
     def _resolve_attribute(self, name):

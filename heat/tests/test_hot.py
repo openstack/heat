@@ -1721,7 +1721,7 @@ class HotStackTest(common.HeatTestCase):
             rsrc_defn.ResourceDefinition('AResource',
                                          'ResourceWithPropsType',
                                          properties={'Foo': 'abc'})
-            ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
+            ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1767,7 +1767,7 @@ class HotStackTest(common.HeatTestCase):
             rsrc_defn.ResourceDefinition('AResource',
                                          'ResourceWithPropsType',
                                          properties={'Foo': 'abc'})
-            ).WithSideEffects(check_props).AndRaise(exception.UpdateReplace)
+            ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)

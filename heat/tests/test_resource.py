@@ -465,7 +465,7 @@ class ResourceTest(common.HeatTestCase):
         res.prepare_for_replace = mock.Mock()
 
         self.assertRaises(
-            exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
         self.assertTrue(res.prepare_for_replace.called)
 
     def test_update_replace_prepare_replace_error(self):
@@ -500,7 +500,7 @@ class ResourceTest(common.HeatTestCase):
         self.stack.state_set('ROLLBACK', 'IN_PROGRESS', 'Simulate rollback')
 
         self.assertRaises(
-            exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
         self.assertTrue(res.restore_prev_rsrc.called)
 
     def test_update_replace_rollback_restore_prev_rsrc_error(self):
@@ -536,7 +536,7 @@ class ResourceTest(common.HeatTestCase):
         # resource in failed status and hasn't nested will enter
         # UpdateReplace flow
         self.assertRaises(
-            exception.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
 
         self.m.VerifyAll()
 
@@ -748,7 +748,7 @@ class ResourceTest(common.HeatTestCase):
                                        self.stack.context)
         after_props = new_t.properties(res.properties_schema,
                                        self.stack.context)
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           res.update_template_diff_properties,
                           after_props, before_props)
 
@@ -1071,12 +1071,12 @@ class ResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         prop_diff = {'Foo': 'xyz'}
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, mock.ANY, prop_diff).AndRaise(exception.UpdateReplace(
+            utmpl, mock.ANY, prop_diff).AndRaise(resource.UpdateReplace(
                 res.name))
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         updater = scheduler.TaskRunner(res.update, utmpl)
-        ex = self.assertRaises(exception.UpdateReplace, updater)
+        ex = self.assertRaises(resource.UpdateReplace, updater)
         self.assertEqual('The Resource test_resource requires replacement.',
                          six.text_type(ex))
         self.m.VerifyAll()
@@ -1096,11 +1096,11 @@ class ResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         prop_diff = {'Foo': 'xyz'}
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, mock.ANY, prop_diff).AndRaise(exception.UpdateReplace())
+            utmpl, mock.ANY, prop_diff).AndRaise(resource.UpdateReplace())
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         updater = scheduler.TaskRunner(res.update, utmpl)
-        ex = self.assertRaises(exception.UpdateReplace, updater)
+        ex = self.assertRaises(resource.UpdateReplace, updater)
         self.assertEqual('The Resource Unknown requires replacement.',
                          six.text_type(ex))
         self.m.VerifyAll()
@@ -1114,7 +1114,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.INIT, res.COMPLETE), res.state)
 
         prop = {'Foo': 'abc'}
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           res._needs_update, tmpl, tmpl, prop, prop, res)
 
     def test_need_update_in_create_failed_state_for_resource(self):
@@ -1126,7 +1126,7 @@ class ResourceTest(common.HeatTestCase):
         res.update_allowed_properties = ('Foo',)
         res.state_set(res.CREATE, res.FAILED)
         prop = {'Foo': 'abc'}
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           res._needs_update, tmpl, tmpl, prop, prop, res)
 
     def test_convg_need_update_in_delete_complete_state_for_resource(self):
@@ -1139,7 +1139,7 @@ class ResourceTest(common.HeatTestCase):
         res.stack.convergence = True
         res.state_set(res.DELETE, res.COMPLETE)
         prop = {'Foo': 'abc'}
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           res._needs_update, tmpl, tmpl, prop, prop, res)
 
     def test_update_fail_missing_req_prop(self):
@@ -2050,7 +2050,7 @@ class ResourceTest(common.HeatTestCase):
                                  new_temp, stack_id=self.stack.id)
 
         res_data = {}
-        self.assertRaises(exception.UpdateReplace, res.update_convergence,
+        self.assertRaises(resource.UpdateReplace, res.update_convergence,
                           new_temp.id, res_data, 'engine-007',
                           -1, new_stack)
 
@@ -2144,10 +2144,10 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        mock_update.side_effect = exception.UpdateReplace
+        mock_update.side_effect = resource.UpdateReplace
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           res.update_convergence, new_temp.id, res_data,
                           'engine-007', 120, new_stack)
 
@@ -2180,7 +2180,7 @@ class ResourceTest(common.HeatTestCase):
         tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', {},
                                   'engine-007', self.dummy_timeout,
                                   new_stack)
-        self.assertRaises(exception.UpdateReplace, tr)
+        self.assertRaises(resource.UpdateReplace, tr)
         self.assertTrue(res.restore_prev_rsrc.called)
 
     def test_convergence_update_replace_rollback_restore_prev_rsrc_error(self):
@@ -3888,7 +3888,7 @@ class TestLiveStateUpdate(common.HeatTestCase):
             updated_props={'Foo': 'bca'},
             expected_error=True,
             resource_id='1234',
-            expected=exception.UpdateReplace
+            expected=resource.UpdateReplace
         )),
         ('live_state_not_found_id', dict(
             live_state=exception.EntityNotFound(entity='resource',
@@ -3896,7 +3896,7 @@ class TestLiveStateUpdate(common.HeatTestCase):
             updated_props={'Foo': 'bca'},
             expected_error=True,
             resource_id=None,
-            expected=exception.UpdateReplace
+            expected=resource.UpdateReplace
         ))
     ]
 
@@ -4137,7 +4137,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         snippet = rsrc_defn.ResourceDefinition('bar',
                                                'TestResourceType',
                                                props)
-        error = self.assertRaises(exception.UpdateReplace,
+        error = self.assertRaises(resource.UpdateReplace,
                                   scheduler.TaskRunner(res.update, snippet))
         self.assertIn('requires replacement', six.text_type(error))
         self.assertEqual(1, prep_replace.call_count)
@@ -4190,7 +4190,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         self.new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                       template.Template(self.tmpl,
                                                         env=self.env))
-        error = self.assertRaises(exception.UpdateReplace,
+        error = self.assertRaises(resource.UpdateReplace,
                                   scheduler.TaskRunner(res.update_convergence,
                                                        self.stack.t.id,
                                                        {},

@@ -23,6 +23,7 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine import resource
 from heat.engine.resources.aws.ec2 import eip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -889,7 +890,7 @@ class AllocTest(common.HeatTestCase):
         before = self.create_association(t, stack, 'IPAssoc')
         after = rsrc_defn.ResourceDefinition(before.name, before.type(),
                                              after_props)
-        self.assertTrue(exception.UpdateReplace,
+        self.assertTrue(resource.UpdateReplace,
                         before._needs_update(after, before, after_props,
                                              before_props, None))
 
@@ -914,7 +915,7 @@ class AllocTest(common.HeatTestCase):
         after = rsrc_defn.ResourceDefinition(before.name, before.type(),
                                              after_props)
         updater = scheduler.TaskRunner(before.update, after)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_update_association_with_NetworkInterfaceId_or_InstanceId(self):
         self.mock_create_floatingip()

@@ -26,6 +26,7 @@ from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine.clients.os import zaqar
+from heat.engine import resource
 from heat.engine.resources.openstack.heat import software_deployment as sd
 from heat.engine import rsrc_defn
 from heat.engine import stack as parser
@@ -860,7 +861,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         props.update(prop_diff)
         snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
-        self.assertRaises(exc.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           self.deployment.handle_update,
                           snippet, None, prop_diff)
 

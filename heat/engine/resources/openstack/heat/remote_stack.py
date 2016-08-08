@@ -216,7 +216,7 @@ class RemoteStack(resource.Resource):
         # If resource is in CHECK_FAILED state, raise UpdateReplace
         # to replace the failed stack.
         if self.state == (self.CHECK, self.FAILED):
-            raise exception.UpdateReplace(self)
+            raise resource.UpdateReplace(self)
 
         # Always issue an update to the remote stack and let the individual
         # resources in it decide if they need updating.

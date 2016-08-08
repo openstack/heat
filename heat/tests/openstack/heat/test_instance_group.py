@@ -21,6 +21,7 @@ from heat.common import grouputils
 from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import neutron
+from heat.engine import resource
 from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -209,7 +210,7 @@ class TestLaunchConfig(common.HeatTestCase):
                                                       metadata)
         # Changing metadata in the second update triggers UpdateReplace
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
 
 class LoadbalancerReloadTest(common.HeatTestCase):

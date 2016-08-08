@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -486,7 +487,7 @@ class NeutronPortTest(common.HeatTestCase):
         new_props['network'] = new_props.pop('network_id')
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
-        self.assertRaises(exception.UpdateReplace, port._needs_update,
+        self.assertRaises(resource.UpdateReplace, port._needs_update,
                           update_snippet, port.frozen_definition(),
                           new_props, port.properties, None)
 
@@ -605,7 +606,7 @@ class NeutronPortTest(common.HeatTestCase):
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
         updater = scheduler.TaskRunner(port.update, update_snippet)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         self.m.VerifyAll()
 

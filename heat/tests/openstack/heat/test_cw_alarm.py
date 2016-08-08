@@ -14,8 +14,8 @@
 
 import copy
 
-from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine.resources.openstack.heat import cloud_watch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -125,7 +125,7 @@ class CloudWatchAlarmTest(common.HeatTestCase):
                                                props)
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
