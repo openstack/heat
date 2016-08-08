@@ -297,7 +297,7 @@ class ResourceGroup(stack_resource.StackResource):
             raise exception.StackValidationFailed(message=msg)
 
     def _current_blacklist(self):
-        db_rsrc_names = self.data().get(self.REMOVED_RSRC_LIST)
+        db_rsrc_names = self.data().get('name_blacklist')
         if db_rsrc_names:
             return db_rsrc_names.split(',')
         else:
@@ -577,6 +577,10 @@ class ResourceGroup(stack_resource.StackResource):
             return self._replace(policy[self.MIN_IN_SERVICE],
                                  policy[self.MAX_BATCH_SIZE],
                                  policy[self.PAUSE_TIME])
+
+    def _resolve_attribute(self, name):
+        if name == self.REMOVED_RSRC_LIST:
+            return self._current_blacklist()
 
     def _update_timeout(self, batch_cnt, pause_sec):
         total_pause_time = pause_sec * max(batch_cnt - 1, 0)
