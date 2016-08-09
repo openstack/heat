@@ -676,6 +676,10 @@ class StrSplit(function.Function):
         except (AttributeError, IndexError):
             raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
                                'should be: %(example)s') % self.fmt_data)
+
+        if str_to_split is None:
+            return None
+
         split_list = str_to_split.split(delim)
 
         # Optionally allow an index to be specified
