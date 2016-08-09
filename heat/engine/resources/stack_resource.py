@@ -416,10 +416,13 @@ class StackResource(resource.Resource):
         if stack_identity is None:
             return False
 
-        self.rpc_client().stack_cancel_update(
-            self.context,
-            dict(stack_identity),
-            cancel_with_rollback=True)
+        try:
+            self.rpc_client().stack_cancel_update(
+                self.context,
+                dict(stack_identity),
+                cancel_with_rollback=True)
+        except exception.NotSupported:
+            return False
 
         try:
             data = stack_object.Stack.get_status(self.context,
@@ -497,10 +500,14 @@ class StackResource(resource.Resource):
     def handle_update_cancel(self, cookie):
         stack_identity = self.nested_identifier()
         if stack_identity is not None:
-            self.rpc_client().stack_cancel_update(
-                self.context,
-                dict(stack_identity),
-                cancel_with_rollback=False)
+            try:
+                self.rpc_client().stack_cancel_update(
+                    self.context,
+                    dict(stack_identity),
+                    cancel_with_rollback=False)
+            except exception.NotSupported:
+                LOG.debug('Nested stack %s not in cancellable state',
+                          stack_identity.stack_name)
 
     def handle_create_cancel(self, cookie):
         return self.handle_update_cancel(cookie)
