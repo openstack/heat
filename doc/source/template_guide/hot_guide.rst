@@ -17,8 +17,9 @@
 Heat Orchestration Template (HOT) Guide
 =======================================
 
-HOT is a new template format meant to replace the Heat CloudFormation-compatible
-format (CFN) as the native format supported by the Heat over time.
+HOT is a template format supported by the heat,
+along with the other template format,
+i.e. the Heat CloudFormation-compatible format (CFN).
 This guide is targeted towards template authors and explains how to write
 HOT templates based on examples. A detailed specification of HOT can be found
 at :ref:`hot_spec`.
@@ -27,8 +28,7 @@ at :ref:`hot_spec`.
 Status
 ------
 
-HOT support is still under development and needs more work to provide access to
-all functionality currently available via the CFN compatible template interface.
+HOT is in the process of surpassing the functionality of the CFN.
 This guide will be updated periodically whenever new features get implemented
 for HOT.
 
