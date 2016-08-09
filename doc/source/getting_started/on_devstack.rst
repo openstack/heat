@@ -23,15 +23,24 @@ which can launch basic instances.
 Configure DevStack to enable heat
 ---------------------------------
 Heat is configured by default on devstack for Icehouse and Juno releases.
-Newer versions of OpenStack require enabling heat services in devstack
-`local.conf`.
 
-Add the following to `[[local|localrc]]` section of `local.conf`::
+Newer versions of OpenStack require enabling heat services in devstack
+`local.conf`. Add the following to `[[local|localrc]]` section of
+`local.conf`::
 
   [[local|localrc]]
 
   #Enable heat services
   enable_service h-eng h-api h-api-cfn h-api-cw
+
+Since Newton release, users have the option to use the ``enable_service``
+directive as shown above or add the following to the `[[local|localrc]]`
+section of `local.conf`::
+
+  [[local|localrc]]
+
+  #Enable heat plugin
+  enable_plugin heat https://git.openstack.org/openstack/heat
 
 It would also be useful to automatically download and register
 a VM image that heat can launch. To do that add the following to
