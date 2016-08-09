@@ -543,7 +543,7 @@ class Resource(object):
         """
         update_allowed_set = set(self.update_allowed_properties)
         immutable_set = set()
-        for (psk, psv) in six.iteritems(self.properties.props):
+        for (psk, psv) in six.iteritems(after_props.props):
             if psv.update_allowed():
                 update_allowed_set.add(psk)
             if psv.immutable():
