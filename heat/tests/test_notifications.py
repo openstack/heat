@@ -36,7 +36,12 @@ class StackTest(common.HeatTestCase):
         st.created_time = created_time
         st.context = self.ctx
         st.id = 'hay-are-en'
-
+        updated_time = timeutils.utcnow()
+        st.updated_time = updated_time
+        st.tags = ['tag1', 'tag2']
+        st.t = mock.MagicMock()
+        st.t.__getitem__.return_value = 'for test'
+        st.t.DESCRIPTION = 'description'
         notify = self.patchobject(notification, 'notify')
 
         notification.stack.send(st)
@@ -50,7 +55,10 @@ class StackTest(common.HeatTestCase):
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
              'create_at': created_time.isoformat(),
-             'state': 'x_f'})
+             'state': 'x_f',
+             'description': 'for test',
+             'tags': ['tag1', 'tag2'],
+             'updated_at': updated_time.isoformat()})
 
 
 class AutoScaleTest(common.HeatTestCase):
@@ -58,7 +66,8 @@ class AutoScaleTest(common.HeatTestCase):
         super(AutoScaleTest, self).setUp()
         self.ctx = utils.dummy_context(user_id='test_user_id')
 
-    def test_send(self):
+    def _mock_stack(self):
+
         created_time = timeutils.utcnow()
         st = mock.Mock()
         st.state = ('x', 'f')
@@ -69,10 +78,20 @@ class AutoScaleTest(common.HeatTestCase):
         st.created_time = created_time
         st.context = self.ctx
         st.id = 'hay-are-en'
+        updated_time = timeutils.utcnow()
+        st.updated_time = updated_time
+        st.tags = ['tag1', 'tag2']
+        st.t = mock.MagicMock()
+        st.t.__getitem__.return_value = 'for test'
+        st.t.DESCRIPTION = 'description'
 
+        return st
+
+    def test_send(self):
+        stack = self._mock_stack()
         notify = self.patchobject(notification, 'notify')
 
-        notification.autoscaling.send(st, adjustment='x',
+        notification.autoscaling.send(stack, adjustment='x',
                                       adjustment_type='y',
                                       capacity='5',
                                       groupname='c',
@@ -87,26 +106,19 @@ class AutoScaleTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': created_time.isoformat(),
+             'create_at': stack.created_time.isoformat(),
+             'description': 'for test',
+             'tags': ['tag1', 'tag2'],
+             'updated_at': stack.updated_time.isoformat(),
              'state': 'x_f', 'adjustment_type': 'y',
              'groupname': 'c', 'capacity': '5',
              'message': 'fred', 'adjustment': 'x'})
 
     def test_send_error(self):
-        created_time = timeutils.utcnow()
-        st = mock.Mock()
-        st.state = ('x', 'f')
-        st.status = st.state[0]
-        st.action = st.state[1]
-        st.name = 'fred'
-        st.status_reason = 'this is why'
-        st.created_time = created_time
-        st.context = self.ctx
-        st.id = 'hay-are-en'
-
+        stack = self._mock_stack()
         notify = self.patchobject(notification, 'notify')
 
-        notification.autoscaling.send(st, adjustment='x',
+        notification.autoscaling.send(stack, adjustment='x',
                                       adjustment_type='y',
                                       capacity='5',
                                       groupname='c',
@@ -120,7 +132,10 @@ class AutoScaleTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': created_time.isoformat(),
+             'create_at': stack.created_time.isoformat(),
+             'description': 'for test',
+             'tags': ['tag1', 'tag2'],
+             'updated_at': stack.updated_time.isoformat(),
              'state': 'x_f', 'adjustment_type': 'y',
              'groupname': 'c', 'capacity': '5',
              'message': 'error', 'adjustment': 'x'})

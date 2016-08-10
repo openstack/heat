@@ -109,6 +109,9 @@ NOTIFY_KEYS = (
     NOTIFY_STATE,
     NOTIFY_STATE_REASON,
     NOTIFY_CREATE_AT,
+    NOTIFY_DESCRIPTION,
+    NOTIFY_UPDATE_AT,
+    NOTIFY_TAGS,
 ) = (
     'tenant_id',
     'user_id',
@@ -119,6 +122,9 @@ NOTIFY_KEYS = (
     'state',
     'state_reason',
     'create_at',
+    STACK_DESCRIPTION,
+    'updated_at',
+    STACK_TAGS,
 )
 
 # This is the representation of a watch we expose to the API via RPC
