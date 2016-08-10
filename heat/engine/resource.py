@@ -1241,6 +1241,7 @@ class Resource(object):
 
                 prop_diff = self.update_template_diff_properties(after_props,
                                                                  before_props)
+                self.properties = before_props
 
                 yield self.action_handler_task(action,
                                                args=[after, tmpl_diff,
