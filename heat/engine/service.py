@@ -1301,9 +1301,9 @@ class EngineService(service.Service):
         :rtype: dict
         """
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
-        stack = parser.Stack.load(
-            cnxt, stack=s, resolve_data=False, show_deleted=True)
-        return dict(stack.t.files)
+        template = templatem.Template.load(
+            cnxt, s.raw_template_id, s.raw_template)
+        return dict(template.files)
 
     @context.request_context
     def list_outputs(self, cntx, stack_identity):

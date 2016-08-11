@@ -1093,7 +1093,7 @@ class StackServiceTest(common.HeatTestCase):
 
         mock_get_stack = self.patchobject(self.eng, '_get_stack')
         mock_get_stack.return_value = mock.MagicMock()
-        self.patchobject(parser.Stack, 'load', return_value=stack)
+        self.patchobject(templatem.Template, 'load', return_value=tmpl)
 
         # Test
         found = self.eng.get_files(self.ctx, stack.identifier())
