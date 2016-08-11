@@ -1,8 +1,14 @@
 [DEFAULT]
 
+
+[heat_plugin]
+
 #
 # From heat_integrationtests.common.config
 #
+
+# Catalog type of the orchestration service. (string value)
+#catalog_type = orchestration
 
 # Username to use for non admin API requests. (string value)
 #username = <None>
