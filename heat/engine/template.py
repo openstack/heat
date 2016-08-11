@@ -225,33 +225,6 @@ class Template(collections.Mapping):
         """
         pass
 
-    def validate_section(self, section, sub_section, data, allowed_keys):
-        obj_name = section[:-1]
-        err_msg = _('"%%s" is not a valid keyword inside a %s '
-                    'definition') % obj_name
-        args = {'object_name': obj_name, 'sub_section': sub_section}
-        message = _('Each %(object_name)s must contain a '
-                    '%(sub_section)s key.') % args
-        for name, attrs in sorted(data.items()):
-            if not attrs:
-                raise exception.StackValidationFailed(message=message)
-            try:
-                for attr, attr_value in six.iteritems(attrs):
-                    if attr not in allowed_keys:
-                        raise KeyError(err_msg % attr)
-                if sub_section not in attrs:
-                    raise exception.StackValidationFailed(message=message)
-            except AttributeError:
-                message = _('"%(section)s" must contain a map of '
-                            '%(obj_name)s maps. Found a [%(_type)s] '
-                            'instead') % {'section': section,
-                                          '_type': type(attrs),
-                                          'obj_name': obj_name}
-                raise exception.StackValidationFailed(message=message)
-            except KeyError as e:
-                # an invalid keyword was found
-                raise exception.StackValidationFailed(message=e.args[0])
-
     def remove_resource(self, name):
         """Remove a resource from the template."""
         self.t.get(self.RESOURCES, {}).pop(name)
