@@ -16,13 +16,29 @@
 # in heat_integrationtests.conf.
 # Credentials are required for creating nova flavors and glance images.
 
-set -ex
+set -e
 
 DEST=${DEST:-/opt/stack/new}
 
 source $DEST/devstack/inc/ini-config
 
+set -x
+
 conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
+
+source $DEST/devstack/openrc demo demo
+# user creds
+iniset $conf_file heat_plugin username $OS_USERNAME
+iniset $conf_file heat_plugin password $OS_PASSWORD
+iniset $conf_file heat_plugin tenant_name $OS_PROJECT_NAME
+iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
+iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
+iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
+iniset $conf_file heat_plugin region $OS_REGION_NAME
+
+source $DEST/devstack/openrc admin admin
+iniset $conf_file heat_plugin admin_username $OS_USERNAME
+iniset $conf_file heat_plugin admin_password $OS_PASSWORD
 
 # Register the flavors for booting test servers
 iniset $conf_file heat_plugin instance_type m1.heat_int
@@ -42,9 +58,6 @@ iniset $conf_file heat_plugin image_ref fedora-heat-test-image
 iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
 iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.4-x86_64-uec
-# admin creds already sourced, store in conf
-iniset $conf_file heat_plugin admin_username $OS_USERNAME
-iniset $conf_file heat_plugin admin_password $OS_PASSWORD
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300

@@ -18,6 +18,7 @@ source $GRENADE_DIR/grenaderc
 source $GRENADE_DIR/functions
 
 source $TOP_DIR/openrc admin admin
+source $TOP_DIR/inc/ini-config
 
 set -o xtrace
 
@@ -35,6 +36,14 @@ function _heat_set_user {
 function create {
     # run heat_integrationtests instead of tempest smoke before create
     pushd $BASE_DEVSTACK_DIR/../heat
+    conf_file=heat_integrationtests/heat_integrationtests.conf
+    iniset $conf_file heat_plugin username $OS_USERNAME
+    iniset $conf_file heat_plugin password $OS_PASSWORD
+    iniset $conf_file heat_plugin tenant_name $OS_PROJECT_NAME
+    iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
+    iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
+    iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
+    iniset $conf_file heat_plugin region $OS_REGION_NAME
     tox -eintegration heat_integrationtests.functional.test_create_update
     popd
 

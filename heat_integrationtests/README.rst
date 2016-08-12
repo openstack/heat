@@ -7,11 +7,16 @@ defaults match running against a recent DevStack.
 
 To run the tests against DevStack, do the following:
 
-    # source DevStack credentials
+    # Define DEST
+    
+    export DEST=/opt/stack
 
-    source /opt/stack/devstack/openrc
+    # create test resources and write config
 
-    # run the heat integration tests with those credentials
+    $DEST/heat/heat_integrationtests/prepare_test_env.sh
+    $DEST/heat/heat_integrationtests/prepare_test_network.sh
+
+    # run the heat integration tests
 
     cd /opt/stack/heat
 
