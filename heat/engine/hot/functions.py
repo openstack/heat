@@ -247,8 +247,9 @@ class Replace(cfn_funcs.Replace):
 
         "<value_1> <value_2>"
 
-    This is implemented using Python's str.replace on each key. The order in
-    which replacements are performed is undefined.
+    This is implemented using python str.replace on each key. Longer keys are
+    substituted before shorter ones, but the order in which replacements are
+    performed is otherwise undefined.
     """
 
     def _parse_args(self):
@@ -275,9 +276,25 @@ class ReplaceJson(Replace):
     '''
     A function for performing string substitutions.
 
-    Behaves the same as Replace, but tolerates non-string parameter
-    values, e.g map/list - these are serialized as json before doing
-    the string substitution.
+    Takes the form::
+
+        str_replace:
+          template: <key_1> <key_2>
+          params:
+            <key_1>: <value_1>
+            <key_2>: <value_2>
+            ...
+
+    And resolves to::
+
+        "<value_1> <value_2>"
+
+    This is implemented using python str.replace on each key. Longer keys are
+    substituted before shorter ones, but the order in which replacements are
+    performed is otherwise undefined.
+
+    Non-string param values (e.g maps or lists) are serialized as JSON before
+    being substituted in.
     '''
 
     def result(self):
@@ -319,6 +336,9 @@ class ReplaceJson(Replace):
 
             return string.replace(placeholder, six.text_type(value))
 
+        mapping = collections.OrderedDict(sorted(mapping.items(),
+                                                 key=lambda t: len(t[0]),
+                                                 reverse=True))
         return six.moves.reduce(replace, six.iteritems(mapping), template)
 
 

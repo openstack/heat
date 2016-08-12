@@ -394,8 +394,9 @@ class Replace(function.Function):
 
         "<value_1> <value_2>"
 
-    This is implemented using python str.replace on each key. The order in
-    which replacements are performed is undefined.
+    This is implemented using python str.replace on each key. Longer keys are
+    substituted before shorter ones, but the order in which replacements are
+    performed is otherwise undefined.
     """
 
     def __init__(self, stack, fn_name, args):
@@ -455,6 +456,9 @@ class Replace(function.Function):
 
             return string.replace(placeholder, six.text_type(value))
 
+        mapping = collections.OrderedDict(sorted(mapping.items(),
+                                                 key=lambda t: len(t[0]),
+                                                 reverse=True))
         return six.moves.reduce(replace, six.iteritems(mapping), template)
 
 
