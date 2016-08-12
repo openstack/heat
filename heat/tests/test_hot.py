@@ -562,6 +562,26 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
+    def test_str_replace_order(self, tpl=hot_tpl_empty):
+        """Test str_replace function substitution order."""
+
+        snippet = {'str_replace': {'template': '1234567890',
+                                   'params': {'1': 'a',
+                                              '12': 'b',
+                                              '123': 'c',
+                                              '1234': 'd',
+                                              '12345': 'e',
+                                              '123456': 'f',
+                                              '1234567': 'g'}}}
+
+        tmpl = template.Template(tpl)
+
+        self.assertEqual('g890', self.resolve(snippet, tmpl))
+
+    def test_str_replace_liberty_order(self):
+        """Test str_replace function substitution order."""
+        self.test_str_replace_order(hot_liberty_tpl_empty)
+
     def test_str_replace_syntax(self):
         """Test str_replace function syntax.
 
