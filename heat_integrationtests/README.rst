@@ -2,8 +2,8 @@
 Heat integration tests
 ======================
 
-These tests can be run against any heat-enabled OpenStack cloud, however
-defaults match running against a recent DevStack.
+These tests can be run as a tempest plugin against any heat-enabled OpenStack
+cloud, however defaults match running against a recent DevStack.
 
 To run the tests against DevStack, do the following:
 
@@ -11,25 +11,16 @@ To run the tests against DevStack, do the following:
     
     export DEST=/opt/stack
 
-    # create test resources and write config
+    # create test resources and write tempest config
 
     $DEST/heat/heat_integrationtests/prepare_test_env.sh
     $DEST/heat/heat_integrationtests/prepare_test_network.sh
 
-    # run the heat integration tests
+    # run tempest selecting only these tests
 
-    cd /opt/stack/heat
+    cd $DEST/tempest
+    tempest run --regex heat_integrationtests
 
-    tox -eintegration
+If custom configuration is required, edit the [heat_plugin] section of
 
-If custom configuration is required, copy the following file:
-
-    heat_integrationtests/heat_integrationtests.conf.sample
-
-to:
-
-    heat_integrationtests/heat_integrationtests.conf
-
-and make any required configuration changes before running:
-
-    tox -eintegration
+    $DEST/tempest/etc/tempest.conf
