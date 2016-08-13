@@ -1879,6 +1879,11 @@ class EngineService(service.Service):
             # so sqlalchemy filters can't be used.
             res_type = filters.pop('type', None)
 
+        if depth > 0:
+            # populate context with resources from all nested depths
+            resource_objects.Resource.get_all_by_root_stack(
+                cnxt, stack.id, filters, cache=True)
+
         def filter_type(res_iter):
             for res in res_iter:
                 if res_type not in res.type():
