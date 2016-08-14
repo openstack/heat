@@ -1188,6 +1188,8 @@ security group to also include parameterized protocols
 Note how multiple entries in the ``for_each`` argument are equivalent to
 nested for-loops in most programming languages.
 
+From HOT version ``2016-10-14`` you may also pass a map as value for the
+``for_each`` key, in which case the list of map keys will be used as value.
 
 resource_facade
 ---------------
