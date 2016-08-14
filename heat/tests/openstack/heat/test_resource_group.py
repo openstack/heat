@@ -833,7 +833,7 @@ class ResourceGroupAttrTest(common.HeatTestCase):
 
     def test_get_attribute_blacklist(self):
         resg = self._create_dummy_stack()
-        resg.data = mock.Mock(return_value={resg.REMOVED_RSRC_LIST: '3,5'})
+        resg.data = mock.Mock(return_value={'name_blacklist': '3,5'})
 
         expected = ['3', '5']
         self.assertEqual(expected, resg.FnGetAtt(resg.REMOVED_RSRC_LIST))
