@@ -45,9 +45,13 @@ class SoftwareConfig(resource.Resource):
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
-        GROUP, CONFIG, OPTIONS, INPUTS, OUTPUTS
+        GROUP, CONFIG,
+        OPTIONS,
+        INPUTS, OUTPUTS
     ) = (
-        'group', 'config', 'options', 'inputs', 'outputs'
+        rpc_api.SOFTWARE_CONFIG_GROUP, rpc_api.SOFTWARE_CONFIG_CONFIG,
+        rpc_api.SOFTWARE_CONFIG_OPTIONS,
+        rpc_api.SOFTWARE_CONFIG_INPUTS, rpc_api.SOFTWARE_CONFIG_OUTPUTS,
     )
 
     IO_PROPERTIES = (
@@ -153,7 +157,7 @@ class SoftwareConfig(resource.Resource):
 
     def handle_create(self):
         props = dict(self.properties)
-        props[self.NAME] = self.physical_resource_name()
+        props[rpc_api.SOFTWARE_CONFIG_NAME] = self.physical_resource_name()
 
         sc = self.rpc_client().create_software_config(self.context, **props)
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])

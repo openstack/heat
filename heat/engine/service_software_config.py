@@ -59,10 +59,10 @@ class SoftwareConfigService(service.Service):
             'group': group,
             'name': name,
             'config': {
-                'inputs': inputs,
-                'outputs': outputs,
-                'options': options,
-                'config': config
+                rpc_api.SOFTWARE_CONFIG_INPUTS: inputs,
+                rpc_api.SOFTWARE_CONFIG_OUTPUTS: outputs,
+                rpc_api.SOFTWARE_CONFIG_OPTIONS: options,
+                rpc_api.SOFTWARE_CONFIG_CONFIG: config
             },
             'tenant': cnxt.tenant_id})
         return api.format_software_config(sc)
@@ -220,7 +220,8 @@ class SoftwareConfigService(service.Service):
             cnxt, deployment_id)
         if sd.status == rpc_api.SOFTWARE_DEPLOYMENT_IN_PROGRESS:
             c = sd.config.config
-            input_values = dict((i['name'], i['value']) for i in c['inputs'])
+            input_values = {i['name']: i['value']
+                            for i in c[rpc_api.SOFTWARE_CONFIG_INPUTS]}
             transport = input_values.get('deploy_signal_transport')
             if transport == 'TEMP_URL_SIGNAL':
                 sd = self._refresh_swift_software_deployment(
