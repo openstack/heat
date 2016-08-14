@@ -250,11 +250,11 @@ engine_opts = [
                        ' set to the id of the resource\'s parent stack,'
                        ' heat_stack_name will be set to the name of the'
                        ' resource\'s parent stack, heat_path_in_stack will'
-                       ' be set to a list of tuples, (stackresourcename,'
-                       ' stackname) with list[0] being (None, rootstackname),'
-                       ' heat_resource_name will be set to the resource\'s'
-                       ' name, and heat_resource_uuid will be set to the'
-                       ' resource\'s orchestration id.')),
+                       ' be set to a list of comma delimited strings of'
+                       ' stackresourcename and stackname with list[0] being'
+                       ' \'rootstackname\', heat_resource_name will be set to'
+                       ' the resource\'s name, and heat_resource_uuid will be'
+                       ' set to the resource\'s orchestration id.')),
     cfg.BoolOpt('encrypt_parameters_and_properties',
                 default=False,
                 help=_('Encrypt template parameters that were marked as'

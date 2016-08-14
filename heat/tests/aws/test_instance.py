@@ -615,7 +615,7 @@ class InstancesTest(common.HeatTestCase):
             scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
                              shm.HEAT_STACK_ID: stack.id,
                              shm.HEAT_STACK_NAME: stack.name,
-                             shm.HEAT_PATH_IN_STACK: [(None, stack.name)],
+                             shm.HEAT_PATH_IN_STACK: [stack.name],
                              shm.HEAT_RESOURCE_NAME: instance.name,
                              shm.HEAT_RESOURCE_UUID: instance.uuid,
                              'foo': ['spam', 'ham', 'baz'], 'bar': 'eggs'},
