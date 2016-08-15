@@ -267,9 +267,8 @@ class Replace(hot_funcs.Replace):
 
         "<value_1> <value_2>"
 
-    This is implemented using python str.replace on each key. Longer keys are
-    substituted before shorter ones, but the order in which replacements are
-    performed is otherwise undefined.
+    When keys overlap in the template, longer matches are preferred. For keys
+    of equal length, lexicographically smaller keys are preferred.
     """
 
     def _parse_args(self):

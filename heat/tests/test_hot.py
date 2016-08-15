@@ -620,7 +620,7 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
-    def test_str_replace_order(self, tpl=hot_tpl_empty):
+    def test_str_replace_order(self):
         """Test str_replace function substitution order."""
 
         snippet = {'str_replace': {'template': '1234567890',
@@ -632,13 +632,40 @@ class HOTemplateTest(common.HeatTestCase):
                                               '123456': 'f',
                                               '1234567': 'g'}}}
 
-        tmpl = template.Template(tpl)
+        tmpl = template.Template(hot_tpl_empty)
 
         self.assertEqual('g890', self.resolve(snippet, tmpl))
 
-    def test_str_replace_liberty_order(self):
-        """Test str_replace function substitution order."""
-        self.test_str_replace_order(hot_liberty_tpl_empty)
+    def test_str_replace_single_pass(self):
+        """Test that str_replace function does not do double substitution."""
+
+        snippet = {'str_replace': {'template': '1234567890',
+                                   'params': {'1': 'a',
+                                              '4': 'd',
+                                              '8': 'h',
+                                              '9': 'i',
+                                              '123': '1',
+                                              '456': '4',
+                                              '890': '8',
+                                              '90': '9'}}}
+
+        tmpl = template.Template(hot_tpl_empty)
+
+        self.assertEqual('1478', self.resolve(snippet, tmpl))
+
+    def test_str_replace_sort_order(self):
+        """Test str_replace function replacement order."""
+
+        snippet = {'str_replace': {'template': '9876543210',
+                                   'params': {'987654': 'a',
+                                              '876543': 'b',
+                                              '765432': 'c',
+                                              '654321': 'd',
+                                              '543210': 'e'}}}
+
+        tmpl = template.Template(hot_tpl_empty)
+
+        self.assertEqual('9876e', self.resolve(snippet, tmpl))
 
     def test_str_replace_syntax(self):
         """Test str_replace function syntax.
