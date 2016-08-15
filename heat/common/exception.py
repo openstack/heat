@@ -153,6 +153,11 @@ class InvalidTemplateReference(HeatException):
                 ' is incorrect.')
 
 
+class InvalidExternalResourceDependency(HeatException):
+    msg_fmt = _("Invalid dependency with external %(resource_type)s "
+                "resource: %(external_id)s")
+
+
 class EntityNotFound(HeatException):
     msg_fmt = _("The %(entity)s (%(name)s) could not be found.")
 

@@ -15,11 +15,25 @@ import six
 import warnings
 
 from heat.common import exception
+from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.hot import functions as hot_funcs
 from heat.engine import properties
 from heat.engine import rsrc_defn
 from heat.tests import common
+from heat.tests import utils
+
+TEMPLATE_WITH_EX_REF_IMPLICIT_DEPEND = '''
+heat_template_version: 2016-10-14
+resources:
+  test1:
+    type: OS::Heat::TestResource
+    external_id: foobar
+    properties:
+        value: {get_resource: test2}
+  test2:
+    type: OS::Heat::TestResource
+'''
 
 
 class ResourceDefinitionTest(common.HeatTestCase):
@@ -75,6 +89,20 @@ class ResourceDefinitionTest(common.HeatTestCase):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', depends=['foo'])
         stack = {'foo': 'FOO', 'bar': 'BAR'}
         self.assertEqual(['FOO'], list(rd.dependencies(stack)))
+
+    def test_dependencies_explicit_ext(self):
+        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', depends=['foo'],
+                                          external_id='abc')
+        stack = {'foo': 'FOO', 'bar': 'BAR'}
+        self.assertRaises(
+            exception.InvalidExternalResourceDependency,
+            rd.dependencies, stack)
+
+    def test_dependencies_implicit_ext(self):
+        t = template_format.parse(TEMPLATE_WITH_EX_REF_IMPLICIT_DEPEND)
+        stack = utils.parse_stack(t)
+        rsrc = stack['test1']
+        self.assertEqual([], list(rsrc.t.dependencies(stack)))
 
     def test_dependencies_explicit_invalid(self):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', depends=['baz'])

@@ -335,6 +335,30 @@ class ResourceTest(common.HeatTestCase):
         actual = res.prepare_abandon()
         self.assertEqual(expected, actual)
 
+    def test_create_from_external(self):
+        tmpl = rsrc_defn.ResourceDefinition(
+            'test_resource', 'GenericResourceType',
+            external_id='f00d')
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+        self.assertEqual('f00d', res.resource_id)
+
+    def test_updated_from_external(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType')
+        utmpl = rsrc_defn.ResourceDefinition(
+            'test_resource', 'GenericResourceType',
+            external_id='f00d')
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        expected_err_msg = ('NotSupported: resources.test_resource: Update '
+                            'to property external_id of test_resource '
+                            '(GenericResourceType) is not supported.')
+        err = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.update, utmpl)
+                                )
+        self.assertEqual(expected_err_msg, six.text_type(err))
+
     def test_state_set_invalid(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)

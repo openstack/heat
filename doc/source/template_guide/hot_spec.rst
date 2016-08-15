@@ -634,6 +634,7 @@ the following syntax
        depends_on: <resource ID or list of ID>
        update_policy: <update policy>
        deletion_policy: <deletion policy>
+       external_id: <external resource ID>
 
 resource ID
     A resource ID which must be unique within the ``resources`` section of the
@@ -670,6 +671,16 @@ deletion_policy
     ``delete``, ``retain``, and ``snapshot`` are also allowed.
     This attribute is optional; the default policy is to delete the physical
     resource when deleting a resource from the stack.
+
+external_id
+   Allows for specifying the resource_id for an existing external
+   (to the stack) resource. External resources can not depend on other
+   resources, but we allow other resources depend on external resource.
+   This attribute is optional.
+   Note: when this is specified, properties will not be used for building the
+   resource and the resource is not managed by Heat. This is not possible to
+   update that attribute. Also resource won't be deleted by heat when stack
+   is deleted.
 
 Depending on the type of resource, the resource block might include more
 resource specific data.

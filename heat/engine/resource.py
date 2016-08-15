@@ -573,10 +573,10 @@ class Resource(object):
                                     if k in immutable_set]
 
         if update_replace_forbidden:
-            mesg = _("Update to properties %(props)s of %(name)s (%(res)s)"
-                     ) % {'props': ", ".join(sorted(update_replace_forbidden)),
-                          'res': self.type(), 'name': self.name}
-            raise exception.NotSupported(feature=mesg)
+            msg = _("Update to properties %(props)s of %(name)s (%(res)s)"
+                    ) % {'props': ", ".join(sorted(update_replace_forbidden)),
+                         'res': self.type(), 'name': self.name}
+            raise exception.NotSupported(feature=msg)
 
         if changed_properties_set and self.needs_replace_with_prop_diff(
                 changed_properties_set,
@@ -865,6 +865,13 @@ class Resource(object):
         Subclasses should provide a handle_create() method to customise
         creation.
         """
+        external = self.t.external_id()
+        if external is not None:
+            yield self._do_action(self.ADOPT,
+                                  resource_data={'resource_id': external})
+            self.check()
+            return
+
         action = self.CREATE
         if (self.action, self.status) != (self.INIT, self.COMPLETE):
             exc = exception.Error(_('State %s invalid for create')
@@ -1198,8 +1205,18 @@ class Resource(object):
         if before is None:
             before = self.frozen_definition()
 
-        after_props, before_props = self._prepare_update_props(
-            after, before)
+        external = after.external_id()
+        if before.external_id() != external:
+            msg = _("Update to property %(prop)s of %(name)s (%(res)s)"
+                    ) % {'prop': hot_tmpl.HOTemplate20161014.RES_EXTERNAL_ID,
+                         'res': self.type(), 'name': self.name}
+            exc = exception.NotSupported(feature=msg)
+            raise exception.ResourceFailure(exc, self, action)
+        elif external is not None:
+            LOG.debug("Skip update on external resource.")
+            return
+
+        after_props, before_props = self._prepare_update_props(after, before)
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_PRE_UPDATE)
