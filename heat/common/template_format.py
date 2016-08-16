@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
-import re
+import collections
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils
@@ -23,28 +22,40 @@ from heat.common import exception
 from heat.common.i18n import _
 
 if hasattr(yaml, 'CSafeLoader'):
-    yaml_loader = yaml.CSafeLoader
+    _yaml_loader_base = yaml.CSafeLoader
 else:
-    yaml_loader = yaml.SafeLoader
+    _yaml_loader_base = yaml.SafeLoader
+
+
+class yaml_loader(_yaml_loader_base):
+    def _construct_yaml_str(self, node):
+        # Override the default string handling function
+        # to always return unicode objects
+        return self.construct_scalar(node)
+
 
 if hasattr(yaml, 'CSafeDumper'):
-    yaml_dumper = yaml.CSafeDumper
+    _yaml_dumper_base = yaml.CSafeDumper
 else:
-    yaml_dumper = yaml.SafeDumper
+    _yaml_dumper_base = yaml.SafeDumper
 
 
-def _construct_yaml_str(self, node):
-    # Override the default string handling function
-    # to always return unicode objects
-    return self.construct_scalar(node)
+class yaml_dumper(_yaml_dumper_base):
+    def represent_ordered_dict(self, data):
+        return self.represent_dict(data.items())
 
-yaml_loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
+
+yaml_loader.add_constructor(u'tag:yaml.org,2002:str',
+                            yaml_loader._construct_yaml_str)
 # Unquoted dates like 2013-05-23 in yaml files get loaded as objects of type
 # datetime.data which causes problems in API layer when being processed by
 # openstack.common.jsonutils. Therefore, make unicode string out of timestamps
 # until jsonutils can handle dates.
 yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
-                            _construct_yaml_str)
+                            yaml_loader._construct_yaml_str)
+
+yaml_dumper.add_representer(collections.OrderedDict,
+                            yaml_dumper.represent_ordered_dict)
 
 
 def simple_parse(tmpl_str):
@@ -115,32 +126,17 @@ def convert_json_to_yaml(json_str):
     :returns: the equivalent string containing the Heat YAML format.
     """
 
-    # Replace AWS format version with Heat format version
-    json_str = re.sub('"AWSTemplateFormatVersion"\s*:\s*"[^"]+"\s*,',
-                      '', json_str)
-
-    # insert a sortable order into the key to preserve file ordering
-    key_order = itertools.count()
-
-    def order_key(matchobj):
-        key = '%s"__%05d__order__%s" :' % (
-            matchobj.group(1),
-            next(key_order),
-            matchobj.group(2))
-        return key
-    key_re = re.compile('(\s*)"([^"]+)"\s*:')
-    json_str = key_re.sub(order_key, json_str)
-
     # parse the string as json to a python structure
-    tpl = yaml.load(json_str, Loader=yaml_loader)
+    tpl = jsonutils.loads(json_str, object_pairs_hook=collections.OrderedDict)
+
+    # Replace AWS format version with Heat format version
+    def top_level_items(tpl):
+        yield ("HeatTemplateFormatVersion", '2012-12-12')
+
+        for k, v in six.iteritems(tpl):
+            if k != 'AWSTemplateFormatVersion':
+                yield k, v
 
     # dump python structure to yaml
-    tpl["HeatTemplateFormatVersion"] = '2012-12-12'
-    yml = yaml.dump(tpl, Dumper=yaml_dumper)
-
-    # remove ordering from key names
-    yml = re.sub('__\d*__order__', '', yml)
-
-    # convert integer keys back to string
-    yml = re.sub('([\s,{])(\d+)(\s*):', r"\1'\2'\3:", yml)
-    return yml
+    return yaml.dump(collections.OrderedDict(top_level_items(tpl)),
+                     Dumper=yaml_dumper)
