@@ -156,11 +156,9 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
                                                      physical_resource_id)
 
 
-def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
-              eager_load=False):
+def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
     return IMPL.stack_get(context, stack_id, show_deleted=show_deleted,
-                          tenant_safe=tenant_safe,
-                          eager_load=eager_load)
+                          tenant_safe=tenant_safe)
 
 
 def stack_get_status(context, stack_id):

@@ -415,28 +415,26 @@ def resource_get_all_by_root_stack(context, stack_id, filters=None):
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = soft_delete_aware_query(
         context, models.Stack
-    ).filter(sqlalchemy.or_(
-             models.Stack.tenant == context.tenant_id,
-             models.Stack.stack_user_project_id == context.tenant_id)
-             ).filter_by(name=stack_name).filter_by(owner_id=owner_id)
+    ).options(orm.joinedload("raw_template")).filter(sqlalchemy.or_(
+        models.Stack.tenant == context.tenant_id,
+        models.Stack.stack_user_project_id == context.tenant_id)
+    ).filter_by(name=stack_name).filter_by(owner_id=owner_id)
     return query.first()
 
 
 def stack_get_by_name(context, stack_name):
     query = soft_delete_aware_query(
         context, models.Stack
-    ).filter(sqlalchemy.or_(
-             models.Stack.tenant == context.tenant_id,
-             models.Stack.stack_user_project_id == context.tenant_id)
-             ).filter_by(name=stack_name)
+    ).options(orm.joinedload("raw_template")).filter(sqlalchemy.or_(
+        models.Stack.tenant == context.tenant_id,
+        models.Stack.stack_user_project_id == context.tenant_id)
+    ).filter_by(name=stack_name)
     return query.first()
 
 
-def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
-              eager_load=False):
-    query = context.session.query(models.Stack)
-    if eager_load:
-        query = query.options(orm.joinedload("raw_template"))
+def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
+    query = context.session.query(models.Stack).options(
+        orm.joinedload("raw_template"))
     result = query.get(stack_id)
 
     deleted_ok = show_deleted or context.show_deleted
@@ -569,6 +567,7 @@ def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                                  show_hidden=show_hidden, tags=tags,
                                  tags_any=tags_any, not_tags=not_tags,
                                  not_tags_any=not_tags_any)
+    query = query.options(orm.joinedload("raw_template"))
     return _filter_and_page_query(context, query, limit, sort_keys,
                                   marker, sort_dir, filters).all()
 

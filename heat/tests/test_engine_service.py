@@ -1385,8 +1385,8 @@ class StackServiceTest(common.HeatTestCase):
                                              tenant_safe=False,
                                              show_nested=True)
         mock_get_by_id.assert_has_calls([
-            mock.call(self.ctx, 'foo', tenant_safe=False, eager_load=True),
-            mock.call(self.ctx, 'bar', tenant_safe=False, eager_load=True),
+            mock.call(self.ctx, 'foo', tenant_safe=False),
+            mock.call(self.ctx, 'bar', tenant_safe=False),
         ])
         mock_stack_load.assert_called_once_with(self.ctx,
                                                 stack=db_stack,
