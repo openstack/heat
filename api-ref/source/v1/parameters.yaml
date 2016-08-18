@@ -92,13 +92,6 @@ type_name:
   type: string
 
 # variables in query
-action_3:
-  description: |
-    Filters the stack list by an action. Use this
-    filter multiple times to filter by multiple actions.
-  in: query
-  required: false
-  type: string
 deployment_server_id_query:
   description: |
     The UUID of the target server.
@@ -107,19 +100,13 @@ deployment_server_id_query:
   type: string
 global_tenant:
   description: |
-    Set to ``true`` to include stacks from all
-    tenants in the stack list. Specify policy requirements in the
-    Orchestration ``policy.json`` file. Default is ``false``.
+    Set to ``true`` to include stacks from all tenants (projects) in the stack
+    list. Specify policy requirements in the Orchestration ``policy.json``
+    file.
   in: query
   required: false
+  default: false
   type: boolean
-id_4:
-  description: |
-    Filters the stack list by a stack ID. Use this
-    filter multiple times to filter by multiple IDs.
-  in: query
-  required: false
-  type: string
 ignore_errors:
   description: |
     List of comma separated error codes to ignore.
@@ -130,20 +117,18 @@ ignore_errors:
   type: string
 limit:
   description: |
-    Requests a page size of items. Returns a number
-    of items up to a limit value. Use the ``limit`` parameter to make
-    an initial limited request and use the ID of the last-seen item
-    from the response as the ``marker`` parameter value in a
-    subsequent limited request.
+    Requests a page size of items. Returns a number of items up to a limit
+    value. Use the ``limit`` parameter to make an initial limited request and
+    use the ID of the last-seen item from the response as the ``marker``
+    parameter value in a subsequent limited request.
   in: query
   required: false
   type: integer
 marker:
   description: |
-    The ID of the last-seen item. Use the ``limit``
-    parameter to make an initial limited request and use the ID of the
-    last-seen item from the response as the ``marker`` parameter value
-    in a subsequent limited request.
+    The ID of the last-seen item. Use the ``limit`` parameter to make an
+    initial limited request and use the ID of the last-seen item from the
+    response as the ``marker`` parameter value in a subsequent limited request.
   in: query
   required: false
   type: string
@@ -151,13 +136,6 @@ name:
   description: |
     Filters the response by a resource type name. You
     can set this value to a regular expression. Use this filter
-    multiple times to filter by multiple names.
-  in: query
-  required: false
-  type: string
-name_4:
-  description: |
-    Filters the stack list by a name. Use this filter
     multiple times to filter by multiple names.
   in: query
   required: false
@@ -171,30 +149,36 @@ nested_depth:
   type: integer
 not_tags:
   description: |
-    Lists stacks that do not contain one or more
-    simple string tags. To specify multiple tags, separate the tags
-    with commas. For example, ``tag1,tag2``. The boolean AND
-    expression is used to combine multiple tags.
+    Lists stacks that do not contain one or more simple string tags. To
+    specify multiple tags, separate the tags with commas. For example,
+    ``tag1,tag2``. The boolean AND expression is used to combine multiple tags.
   in: query
   required: false
   type: string
 not_tags_any:
   description: |
-    Lists stacks that do not contain one or more
-    simple string tags. To specify multiple tags, separate the tags
-    with commas. For example, ``tag1,tag2``. The boolean OR expression
-    is used to combine multiple tags.
+    Lists stacks that do not contain one or more simple string tags. To specify
+    multiple tags, separate the tags with commas. For example, ``tag1,tag2``.
+    The boolean OR expression is used to combine multiple tags.
   in: query
   required: false
   type: string
-owner_id:
+owner_id_query:
   description: |
-    Filters the stack list by an owner ID, which is
-    the ID of the parent stack of listed stack. Use this filter
-    multiple times to filter by multiple owner IDs.
+    Filters the stack list by an owner ID, which is the ID of the parent stack
+    of listed stack. Use this filter multiple times to filter by multiple
+    owner IDs.
   in: query
   required: false
   type: string
+resolve_outputs:
+  description: |
+    A boolean indicating whether the outputs section of a stack should be
+    resolved.
+  in: query
+  required: false
+  default: true
+  type: boolean
 resource_action:
   description: |
     Stack resource action. Valid resource actions are ``ADOPT``, ``CHECK``,
@@ -226,24 +210,22 @@ resource_type:
   type: string
 show_deleted:
   description: |
-    Set to ``true`` to include deleted stacks in the
-    list. Default is ``false``, which excludes deleted stacks from the
-    list.
+    Set to ``true`` to include deleted stacks in the list.
   in: query
   required: false
+  default: false
   type: boolean
 show_nested:
   description: |
-    Set to ``true`` to include nested stacks in the
-    list. Default is ``false``, which excludes nested stacks from the
-    list.
+    Set to ``true`` to include nested stacks in the list.
   in: query
   required: false
+  default: false
   type: boolean
 sort_dir:
   description: |
-    The sort direction of the list. A valid value is
-    ``asc`` (ascending) or ``desc`` (descending).
+    The sort direction of the list. A valid value is ``asc`` (ascending) or
+    ``desc`` (descending).
   in: query
   required: false
   type: string
@@ -254,17 +236,52 @@ sort_keys:
   in: query
   required: false
   type: string
-sort_keys_1:
+stack_action_query:
   description: |
-    Sorts the stack list by ``stack_name``,
-    ``stack_status``, ``creation_time``, or ``updated_time`` key.
+    Filters the stack list by an action. Use this filter multiple times to
+    filter by multiple actions.
   in: query
   required: false
   type: string
-status_5:
+stack_id_query:
   description: |
-    Filters the stack list by a status. Use this
-    filter multiple times to filter by multiple statuses.
+    Filters the stack list by a stack ID. Use this filter multiple times to
+    filter by multiple IDs.
+  in: query
+  required: false
+  type: string
+stack_name_query:
+  description: |
+    Filters the stack list by a name. Use this filter multiple times to filter
+    by multiple names.
+  in: query
+  required: false
+  type: string
+stack_sort_keys:
+  description: |
+    Sorts the stack list by ``stack_name``, ``stack_status``,
+    ``creation_time``, or ``updated_time`` key.
+  in: query
+  required: false
+  type: string
+stack_status_query:
+  description: |
+    Filters the stack list by a status. Use this filter multiple times to
+    filter by multiple statuses.
+  in: query
+  required: false
+  type: string
+stack_tenant_query:
+  description: |
+    Filters the stack list by a tenant. Use this filter multiple times to
+    filter by multiple tenants.
+  in: query
+  required: false
+  type: string
+stack_user_query:
+  description: |
+    Filters the stack list by a user name. Use this filter multiple times to
+    filter by multiple user names.
   in: query
   required: false
   type: string
@@ -278,35 +295,19 @@ support_status_1:
   in: query
   required: false
   type: string
-tags_1:
-  description: |
-    Lists stacks that contain one or more simple
-    string tags. To specify multiple tags, separate the tags with
-    commas. For example, ``tag1,tag2``. The boolean AND expression is
-    used to combine multiple tags.
-  in: query
-  required: false
-  type: string
 tags_any:
   description: |
-    Lists stacks that contain one or more simple
-    string tags. To specify multiple tags, separate the tags with
-    commas. For example, ``tag1,tag2``. The boolean OR expression is
-    used to combine multiple tags.
+    Lists stacks that contain one or more simple string tags. To specify
+    multiple tags, separate the tags with commas. For example, ``tag1,tag2``.
+    The boolean OR expression is used to combine multiple tags.
   in: query
   required: false
   type: string
-tenant:
+tags_query:
   description: |
-    Filters the stack list by a tenant. Use this
-    filter multiple times to filter by multiple tenants.
-  in: query
-  required: false
-  type: string
-username:
-  description: |
-    Filters the stack list by a user name. Use this
-    filter multiple times to filter by multiple user names.
+    Lists stacks that contain one or more simple string tags. To specify
+    multiple tags, separate the tags with commas. For example, ``tag1,tag2``.
+    The boolean AND expression is used to combine multiple tags.
   in: query
   required: false
   type: string
@@ -320,11 +321,11 @@ version:
   type: string
 with_count:
   description: |
-    Set to ``true`` to include a count key in the
-    response. The count key value is the number of stacks that match
-    the query criteria. Default is ``false``.
+    Set to ``true`` to include a count key in the response. The ``count`` key
+    value is the number of stacks that match the query criteria.
   in: query
   required: false
+  default: false
   type: boolean
 with_description:
   description: |
@@ -430,6 +431,12 @@ check:
     Specify the ``check`` action in the request body.
   in: body
   required: true
+  type: string
+code:
+  description: |
+    The response code to a resource find request. e.g. ``302 Found``.
+  in: body
+  required: True
   type: string
 config:
   description: |
@@ -607,7 +614,7 @@ deployment_updated_time:
   type: string
 description:
   description: |
-    The description of the resource.
+    The description of the stack resource.
   in: body
   required: true
   type: string
@@ -776,6 +783,12 @@ links:
 logical_resource_id:
   description: |
     The ID of the logical stack resource.
+  in: body
+  required: true
+  type: string
+message:
+  description: |
+    The message in the response to a resource find request.
   in: body
   required: true
   type: string
@@ -1095,6 +1108,13 @@ stack:
   in: body
   required: true
   type: object
+stack_disable_rollback:
+  description: |
+    Whether deletion of all stack resources when stack creation fails is
+    enabled.
+  in: body
+  required: true
+  type: boolean
 stack_id:
   description: |
     The UUID of the stack.
@@ -1121,7 +1141,7 @@ stack_outputs:
   type: array
 stack_owner:
   description: |
-    The owner of the stack
+    The owner of the stack.
   in: body
   required: true
   type: string
@@ -1145,12 +1165,6 @@ stack_stack_user_project_id:
   required: true
   type: string
 stack_status:
-  description: |
-    The status of the active stack.
-  in: body
-  required: true
-  type: string
-stack_status_1:
   description: |
     The status of the stack.
   in: body
@@ -1181,6 +1195,12 @@ stack_user_project_id:
   in: body
   required: false
   type: string
+stacks:
+  description: |
+    A list of ``stack`` object.
+  in: body
+  required: true
+  type: array
 status:
   description: |
     The status of the heat engine.
@@ -1277,6 +1297,12 @@ timeout_mins:
   in: body
   required: false
   type: integer
+title:
+  description: |
+    The title of the response to a resource find request. e.g. ``Found``.
+  in: body
+  required: true
+  type: string
 topic:
   description: |
     The topic of the heat engine.

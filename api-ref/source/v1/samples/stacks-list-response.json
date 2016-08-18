@@ -2,6 +2,7 @@
     "stacks": [
         {
             "creation_time": "2014-06-03T20:59:46Z",
+            "deletion_time": null,
             "description": "sample stack",
             "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
             "links": [
@@ -10,15 +11,14 @@
                     "rel": "self"
                 }
             ],
+            "parent": null,
             "stack_name": "simple_stack",
+            "stack_owner": null,
             "stack_status": "CREATE_COMPLETE",
             "stack_status_reason": "Stack CREATE completed successfully",
-            "updated_time": "",
-            "tags": null,
-            "parent": null,
-            "stack_owner": null,
             "stack_user_project_id": "71510cbd459a49ac989ca1055de7038b",
-            "deletion_time": null
+            "tags": null,
+            "updated_time": null
         }
     ]
 }

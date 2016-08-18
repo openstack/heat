@@ -2,6 +2,7 @@
     "stack": {
         "capabilities": [],
         "creation_time": "2014-06-03T20:59:46Z",
+        "deletion_time": null,
         "description": "sample stack",
         "disable_rollback": true,
         "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
@@ -18,15 +19,15 @@
             "OS::stack_id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
             "OS::stack_name": "simple_stack"
         },
+        "parent": null,
         "stack_name": "simple_stack",
         "stack_owner": "simple_username",
         "stack_status": "CREATE_COMPLETE",
         "stack_status_reason": "Stack CREATE completed successfully",
-        "template_description": "sample stack",
         "stack_user_project_id": "65728b74-cfe7-4f17-9c15-11d4f686e591",
-        "timeout_mins": "",
-        "updated_time": "",
-        "parent": "",
-        "tags": ""
+        "tags": null,
+        "template_description": "sample stack",
+        "timeout_mins": null,
+        "updated_time": null
     }
 }
