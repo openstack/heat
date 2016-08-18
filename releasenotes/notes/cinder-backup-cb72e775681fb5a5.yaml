@@ -1,0 +1,10 @@
+---
+upgrade:
+  - New config section ``volumes`` with new config option
+    ``[volumes]backups_enabled`` (defaults to ``True``).
+    Operators that do not have Cinder backup service deployed in their cloud
+    are encouraged to set this option to ``False``.
+fixes:
+  - Allow to configure Heat service to forbid creation of stacks containing
+    Volume resources with ``deletion_policy`` set to ``Snapshot`` when there
+    is no Cinder backup service available.
