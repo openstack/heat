@@ -924,10 +924,17 @@ class Stack(collections.Mapping):
             self._send_notification_and_add_event()
             if self.convergence:
                 # do things differently for convergence
+                exp_trvsl = self.current_traversal
+                if self.status == self.FAILED:
+                    self.current_traversal = ''
+                    values['current_traversal'] = self.current_traversal
+
                 updated = stack_object.Stack.select_and_update(
                     self.context, self.id, values,
-                    exp_trvsl=self.current_traversal)
+                    exp_trvsl=exp_trvsl)
+
                 return updated
+
             else:
                 stack.update_and_save(values)
 
@@ -2008,17 +2015,13 @@ class Stack(collections.Mapping):
        """
         resource_objects.Resource.purge_deleted(self.context, self.id)
 
-        exp_trvsl = self.current_traversal
-        if self.status == self.FAILED:
-            self.current_traversal = ''
-
         prev_tmpl_id = None
         if (self.prev_raw_template_id is not None and
                 self.status != self.FAILED):
             prev_tmpl_id = self.prev_raw_template_id
             self.prev_raw_template_id = None
 
-        stack_id = self.store(exp_trvsl=exp_trvsl)
+        stack_id = self.store()
         if stack_id is None:
             # Failed concurrent update
             LOG.warning(_LW("Failed to store stack %(name)s with traversal ID "
