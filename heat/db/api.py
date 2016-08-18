@@ -142,6 +142,10 @@ def resource_get_all_by_root_stack(context, stack_id, filters=None):
     return IMPL.resource_get_all_by_root_stack(context, stack_id, filters)
 
 
+def engine_get_all_locked_by_stack(context, stack_id):
+    return IMPL.engine_get_all_locked_by_stack(context, stack_id)
+
+
 def resource_purge_deleted(context, stack_id):
     return IMPL.resource_purge_deleted(context, stack_id)
 
