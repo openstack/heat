@@ -341,7 +341,19 @@ Update stack
 
 Updates a stack.
 
-Error response codes:404,202,500,401,400,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -351,19 +363,38 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
-   - files: files
+   - clear_parameters: clear_parameters
    - disable_rollback: disable_rollback
+   - environment: environment
+   - environment_files: environment_files
+   - existing: existing
+   - files: files
    - parameters: parameters
    - tags: tags
-   - environment: environment
-   - template_url: template_url
    - template: template
+   - template_url: template_url
    - timeout_mins: timeout_mins
 
 Request Example
 ---------------
 
 .. literalinclude:: samples/stack-update-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - code: code
+   - message: message
+   - title: title
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-update-response.json
    :language: javascript
 
 
@@ -374,8 +405,19 @@ Preview stack update
 
 Previews an update for a stack.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -385,12 +427,17 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
+   - clear_parameters: clear_parameters
+   - disable_rollback: disable_rollback
+   - environment: environment
+   - environment_files: environment_files
+   - existing: existing
    - files: files
    - parameters: parameters
+   - show_nested: update_show_nested
    - tags: tags
-   - environment: environment
-   - template_url: template_url
    - template: template
+   - template_url: template_url
    - timeout_mins: timeout_mins
 
 Request Example
@@ -399,10 +446,72 @@ Request Example
 .. literalinclude:: samples/stack-update-request.json
    :language: javascript
 
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - resource_changes: resource_changes
+   - added: preview_added
+   - deleted: preview_deleted
+   - replaced: preview_replaced
+   - unchanged: preview_unchanged
+   - updated: preview_updated
+
 Response Example
 ----------------
 
 .. literalinclude:: samples/stack-update-preview-response.json
+   :language: javascript
+
+
+Find stack for deletion
+=======================
+
+.. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_name}
+
+Find the canonical URL for a stack for deletion. This request returns a status
+code of ``302`` pointing to the location where a DELETE request can be sent to
+request a stack deletion.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 302
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+
+Reponse Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - location: location
+   - code: code
+   - message: message
+   - title: title
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-find-delete-response.json
    :language: javascript
 
 
@@ -411,10 +520,21 @@ Delete stack
 
 .. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_name}/{stack_id}
 
-Deletes a stack and its snapshots.
+Deletes a stack. If a stack has snapshots, those snapshots are deleted as well.
 
-Error response codes:500,404,204,401,400,
+Response Codes
+--------------
 
+.. rest_status_code:: success status.yaml
+
+   - 204
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -424,6 +544,11 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
+
+Reponse Parameters
+------------------
+
+This request does not return anything in the response body.
 
 
 Abandon stack
