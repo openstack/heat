@@ -4,8 +4,8 @@
 Stack Snapshots
 ===============
 
-Snapshot stack
-==============
+Snapshot a stack
+================
 
 .. rest_method::  POST /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/snapshots
 
@@ -19,10 +19,10 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - name: name
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - name: name
 
 Request Example
 ---------------
@@ -65,10 +65,10 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
-   - snapshot_id: snapshot_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - snapshot_id: snapshot_id_url
 
 Response Parameters
 -------------------
@@ -107,9 +107,9 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
 
 Response Parameters
 -------------------
@@ -145,10 +145,10 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
-   - snapshot_id: snapshot_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - snapshot_id: snapshot_id_url
 
 Restore snapshot
 ================
@@ -167,7 +167,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
-   - snapshot_id: snapshot_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - snapshot_id: snapshot_id_url

@@ -34,7 +34,7 @@ deployment_server_id_url:
   in: path
   required: true
   type: string
-event_id:
+event_id_url:
   description: |
     The UUID of the event that is related to the
     resource in the stack.
@@ -47,13 +47,13 @@ output_key_1:
   in: path
   required: false
   type: string
-resource_name:
+resource_name_url:
   description: |
     The name of a resource in the stack.
   in: path
   required: false
   type: string
-snapshot_id:
+snapshot_id_url:
   description: |
     The UUID of the snapshot.
   in: path
@@ -203,11 +203,10 @@ resource_action:
   in: query
   required: false
   type: string
-resource_name_2:
+resource_name_query:
   description: |
-    Filters the event list by a resource name. You
-    can use this filter multiple times to filter by multiple resource
-    names.
+    Filters the result list by a resource name. You can use this filter
+    multiple times to filter by multiple resource names.
   in: query
   required: false
   type: string
@@ -990,7 +989,7 @@ resource_description:
   in: body
   required: false
   type: string
-resource_name_1:
+resource_name:
   description: |
     The name of the resource.
   in: body
@@ -1265,6 +1264,13 @@ template_url:
   in: body
   required: false
   type: string
+template_versions:
+  description: |
+    A list of template version object each describes the type name and version
+    information for a template version.
+  in: body
+  required: true
+  type: array
 timeout_mins:
   description: |
     The timeout for stack creation in minutes.
