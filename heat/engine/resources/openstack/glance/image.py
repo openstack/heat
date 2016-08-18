@@ -30,12 +30,17 @@ class GlanceImage(resource.Resource):
 
     PROPERTIES = (
         NAME, IMAGE_ID, IS_PUBLIC, MIN_DISK, MIN_RAM, PROTECTED,
-        DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS, EXTRA_PROPERTIES
+        DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS, EXTRA_PROPERTIES,
+        ARCHITECTURE, KERNEL_ID, OS_DISTRO, OWNER, RAMDISK_ID
     ) = (
         'name', 'id', 'is_public', 'min_disk', 'min_ram', 'protected',
         'disk_format', 'container_format', 'location', 'tags',
-        'extra_properties'
+        'extra_properties', 'architecture', 'kernel_id', 'os_distro',
+        'owner', 'ramdisk_id'
     )
+
+    glance_id_pattern = ('^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}'
+                         '-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$')
 
     properties_schema = {
         NAME: properties.Schema(
@@ -118,6 +123,45 @@ class GlanceImage(resource.Resource):
             update_allowed=True,
             default={},
             support_status=support.SupportStatus(version='7.0.0')
+        ),
+        ARCHITECTURE: properties.Schema(
+            properties.Schema.STRING,
+            _('Operating system architecture.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0')
+        ),
+        KERNEL_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('ID of image stored in Glance that should be used as '
+              'the kernel when booting an AMI-style image.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0'),
+            constraints=[
+                constraints.AllowedPattern(glance_id_pattern)
+            ]
+        ),
+        OS_DISTRO: properties.Schema(
+            properties.Schema.STRING,
+            _('The common name of the operating system distribution '
+              'in lowercase.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0')
+        ),
+        OWNER: properties.Schema(
+            properties.Schema.STRING,
+            _('Owner of the image.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0')
+        ),
+        RAMDISK_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('ID of image stored in Glance that should be used as '
+              'the ramdisk when booting an AMI-style image.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='7.0.0'),
+            constraints=[
+                constraints.AllowedPattern(glance_id_pattern)
+            ]
         )
     }
 
@@ -131,8 +175,23 @@ class GlanceImage(resource.Resource):
 
         tags = args.pop(self.TAGS, [])
         args['properties'] = args.pop(self.EXTRA_PROPERTIES, {})
+        architecture = args.pop(self.ARCHITECTURE, None)
+        kernel_id = args.pop(self.KERNEL_ID, None)
+        os_distro = args.pop(self.OS_DISTRO, None)
+        ramdisk_id = args.pop(self.RAMDISK_ID, None)
+
         image_id = self.client().images.create(**args).id
         self.resource_id_set(image_id)
+
+        v2_images = self.client(version=self.client_plugin().V2).images
+        if architecture is not None:
+            v2_images.update(image_id, architecture=architecture)
+        if kernel_id is not None:
+            v2_images.update(image_id, kernel_id=kernel_id)
+        if os_distro is not None:
+            v2_images.update(image_id, os_distro=os_distro)
+        if ramdisk_id is not None:
+            v2_images.update(image_id, ramdisk_id=ramdisk_id)
 
         for tag in tags:
             self.client(
@@ -149,7 +208,7 @@ class GlanceImage(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff and self.TAGS in prop_diff:
             existing_tags = self.properties.get(self.TAGS) or []
-            diff_tags = prop_diff[self.TAGS] or []
+            diff_tags = prop_diff.pop(self.TAGS) or []
 
             new_tags = set(diff_tags) - set(existing_tags)
             for tag in new_tags:
@@ -166,18 +225,20 @@ class GlanceImage(resource.Resource):
                         self.resource_id,
                         tag)
 
+        v2_images = self.client(version=self.client_plugin().V2).images
+
         if self.EXTRA_PROPERTIES in prop_diff:
             old_properties = self.properties.get(self.EXTRA_PROPERTIES) or {}
-            new_properties = prop_diff[self.EXTRA_PROPERTIES]
+            new_properties = prop_diff.pop(self.EXTRA_PROPERTIES)
+            prop_diff.update(new_properties)
             remove_props = list(set(old_properties) - set(new_properties))
 
             # Though remove_props defaults to None within the glanceclient,
             # setting it to a list (possibly []) every time ensures only one
             # calling format to images.update
-            self.client(version=self.client_plugin().V2).images.update(
-                self.resource_id,
-                remove_props,
-                **new_properties)
+            v2_images.update(self.resource_id, remove_props, **prop_diff)
+        else:
+            v2_images.update(self.resource_id, **prop_diff)
 
     def _show_resource(self):
         if self.glance().version == 1.0:
