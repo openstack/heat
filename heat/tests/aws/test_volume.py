@@ -736,3 +736,14 @@ class VolumeTest(vt_base.BaseVolumeTest):
                       six.text_type(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
+
+    def test_vaildate_deletion_policy(self):
+        cfg.CONF.set_override('backups_enabled', False, group='volumes')
+        stack_name = 'test_volume_validate_deletion_policy'
+        self.t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        rsrc = self.get_volume(self.t, stack, 'DataVolume')
+        self.assertRaisesRegex(
+            exception.StackValidationFailed,
+            'volume backup service is not enabled',
+            rsrc.validate)

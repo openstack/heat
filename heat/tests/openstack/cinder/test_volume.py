@@ -16,6 +16,7 @@ import copy
 import json
 
 from cinderclient import exceptions as cinder_exp
+from oslo_config import cfg
 import six
 
 from heat.common import exception
@@ -1201,3 +1202,14 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             stack.t.resource_definitions(stack)['volume'],
             stack)
         self.assertIsNone(rsrc.handle_delete_snapshot(mock_vs))
+
+    def test_vaildate_deletion_policy(self):
+        cfg.CONF.set_override('backups_enabled', False, group='volumes')
+        stack_name = 'test_volume_validate_deletion_policy'
+        self.t['resources']['volume']['deletion_policy'] = 'Snapshot'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        rsrc = self.get_volume(self.t, stack, 'volume')
+        self.assertRaisesRegex(
+            exception.StackValidationFailed,
+            'volume backup service is not enabled',
+            rsrc.validate)

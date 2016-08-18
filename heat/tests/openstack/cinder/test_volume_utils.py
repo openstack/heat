@@ -64,16 +64,20 @@ class BaseVolumeTest(common.HeatTestCase):
         self.cinder_fc.volumes.get(fva.id).AndReturn(fv_ready)
         return fv_ready
 
-    def create_volume(self, t, stack, resource_name):
+    def get_volume(self, t, stack, resource_name):
         if self.use_cinder:
             Volume = os_vol.CinderVolume
         else:
             data = t['Resources'][resource_name]
             data['Properties']['AvailabilityZone'] = 'nova'
             Volume = aws_vol.Volume
-        rsrc = Volume(resource_name,
-                      stack.t.resource_definitions(stack)[resource_name],
-                      stack)
+        vol = Volume(resource_name,
+                     stack.t.resource_definitions(stack)[resource_name],
+                     stack)
+        return vol
+
+    def create_volume(self, t, stack, resource_name):
+        rsrc = self.get_volume(t, stack, resource_name)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

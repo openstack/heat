@@ -344,6 +344,14 @@ revision_opts = [
                       'separately, you can move this section to a different '
                       'file and add it as another config option.'))]
 
+volumes_group = cfg.OptGroup('volumes')
+volumes_opts = [
+    cfg.BoolOpt('backups_enabled',
+                default=True,
+                help=_("Indicate if cinder-backup service is enabled. "
+                       "This is a temporary workaround until cinder-backup "
+                       "service becomes discoverable, see LP#1334856."))]
+
 
 def startup_sanity_check():
     if (not cfg.CONF.stack_user_domain_id and
@@ -377,6 +385,7 @@ def list_opts():
     yield paste_deploy_group.name, paste_deploy_opts
     yield auth_password_group.name, auth_password_opts
     yield revision_group.name, revision_opts
+    yield volumes_group.name, volumes_opts
     yield profiler.list_opts()[0]
     yield 'clients', default_clients_opts
 
