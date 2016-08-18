@@ -13,10 +13,12 @@
 
 import mock
 
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import role
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
+from heat.tests import fakes
 from heat.tests import utils
 
 keystone_role_template = {
@@ -47,9 +49,11 @@ class KeystoneRoleTest(common.HeatTestCase):
 
         self.test_role = self.stack['test_role']
 
-        self.keystoneclient = mock.MagicMock()
-        self.test_role.client = mock.MagicMock()
-        self.test_role.client.return_value = self.keystoneclient
+        # Mock client
+        self.keystoneclient = mock.Mock()
+        self.patchobject(resource.Resource, 'client',
+                         return_value=fakes.FakeKeystoneClient(
+                             client=self.keystoneclient))
         self.roles = self.keystoneclient.roles
 
     def _get_mock_role(self):
