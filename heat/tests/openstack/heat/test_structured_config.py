@@ -16,8 +16,10 @@ import mock
 from heat.common import exception
 from heat.engine.resources.openstack.heat import structured_config as sc
 from heat.engine import rsrc_defn
+from heat.engine import software_config_io as swc_io
 from heat.engine import stack as parser
 from heat.engine import template
+from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import utils
 
@@ -171,13 +173,15 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
         source = {
             'config': {"foo": {"get_input": "bar"}}
         }
-        inputs = [{'name': 'bar', 'value': 'baz'}]
+        inputs = [swc_io.InputConfig(name='bar', value='baz')]
         result = self.deployment._build_derived_config(
             'CREATE', source, inputs, {})
         self.assertEqual({"foo": "baz"}, result)
 
     def test_build_derived_config_params_with_empty_config(self):
         source = {}
+        source[rpc_api.SOFTWARE_CONFIG_INPUTS] = []
+        source[rpc_api.SOFTWARE_CONFIG_OUTPUTS] = []
         result = self.deployment._build_derived_config_params(
             'CREATE', source)
         self.assertEqual('Heat::Ungrouped', result['group'])
@@ -187,7 +191,7 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
         self.assertIn({'name': 'bar', 'type': 'String', 'value': 'baz'},
                       result['inputs'])
         self.assertIsNone(result['options'])
-        self.assertIsNone(result['outputs'])
+        self.assertEqual([], result['outputs'])
 
 
 class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
@@ -207,8 +211,8 @@ class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
         self.source = {'config':
                        {'foo': [{"get_input": "bar"},
                                 {"get_input": "barz"}]}}
-        self.inputs = [{'name': 'bar', 'value': 'baz'},
-                       {'name': 'barz', 'value': 'baz2'}]
+        self.inputs = [swc_io.InputConfig(name='bar', value='baz'),
+                       swc_io.InputConfig(name='barz', value='baz2')]
 
     def _stack_with_template(self, template_def):
         self.ctx = utils.dummy_context()
@@ -221,11 +225,10 @@ class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
         props = {'input_values_validate': 'STRICT'}
         self.template['Resources']['deploy_mysql']['Properties'] = props
         self._stack_with_template(self.template)
-        inputs = [{'name': 'bar', 'value': 'baz'}]
 
         self.assertRaises(exception.UserParameterMissing,
                           self.deployment._build_derived_config,
-                          'CREATE', self.source, inputs, {})
+                          'CREATE', self.source, self.inputs[:1], {})
 
     def test_build_derived_config_success(self):
         props = {'input_values_validate': 'STRICT'}

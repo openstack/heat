@@ -142,7 +142,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
         input_key = self.properties[self.INPUT_KEY]
         check_input_val = self.properties[self.INPUT_VALUES_VALIDATE]
 
-        inputs = dict((i['name'], i['value']) for i in derived_inputs)
+        inputs = dict(i.input_data() for i in derived_inputs)
 
         return self.parse(inputs, input_key, cfg, check_input_val)
 

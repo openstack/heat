@@ -236,7 +236,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'outputs': [],
         }
-        self.rpc_client.show_software_config.return_value = config
+
+        def copy_config(*args, **kwargs):
+            return config.copy()
+
+        self.rpc_client.show_software_config.side_effect = copy_config
+
         return config
 
     def mock_software_component(self):
@@ -285,7 +290,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'outputs': [],
         }
-        self.rpc_client.show_software_config.return_value = config
+
+        def copy_config(*args, **kwargs):
+            return config.copy()
+
+        self.rpc_client.show_software_config.side_effect = copy_config
         return config
 
     def mock_derived_software_config(self):
@@ -420,7 +429,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'value': 'bar'
             }],
             'options': None,
-            'outputs': None
+            'outputs': [],
         }, call_arg)
 
         self.assertEqual(
