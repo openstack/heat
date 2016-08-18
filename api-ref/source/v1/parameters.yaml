@@ -1,4 +1,18 @@
 # variables in header
+location:
+  type: string
+  in: header
+  required: True
+  description: |
+    For asynchronous resource operations, the ``location`` header contains a
+    URI that can be checked to track resource status changes.
+
+request_id:
+  type: UUID
+  in: header
+  description: |
+    A unique ID for tracking service request. The request ID associated
+    with the request by default appears in the service logs.
 
 # variables in path
 config_id_url:
@@ -45,13 +59,13 @@ snapshot_id:
   in: path
   required: false
   type: string
-stack_id:
+stack_id_url:
   description: |
     The UUID of the stack.
   in: path
   required: false
   type: string
-stack_name:
+stack_name_url:
   description: |
     The name of a stack.
   in: path
@@ -66,9 +80,9 @@ template_version:
 tenant_id:
   description: |
     The UUID of the tenant. A tenant is also known as
-    an account or project.
+    a project.
   in: path
-  required: false
+  required: True
   type: string
 type_name:
   description: |
@@ -355,8 +369,7 @@ ParameterGroups:
   type: array
 Parameters:
   description: |
-    Key and value pairs that contain template
-    parameters.
+    Key and value pairs that contain template parameters.
   in: body
   required: true
   type: object
@@ -474,100 +487,8 @@ created_at:
   type: string
 creation_time:
   description: |
-    The date and time when the stack resource was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-  in: body
-  required: true
-  type: string
-creation_time_1:
-  description: |
-    The date and time when the software was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-  in: body
-  required: true
-  type: string
-creation_time_2:
-  description: |
-    The date and time when the resource was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-  in: body
-  required: true
-  type: string
-creation_time_3:
-  description: |
-    The date and time when the snapshot was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-  in: body
-  required: true
-  type: string
-creation_time_4:
-  description: |
-    The date and time when the software was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2016-03-30T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-  in: body
-  required: true
-  type: string
-creation_time_5:
-  description: |
-    The date and time when the stack was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
+    The date and time when the resource was created. The date and time stamp
+    format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_:
 
     ::
 
@@ -601,6 +522,21 @@ deleted_at:
 
     The ``±hh:mm`` value, if included, is the time zone as an offset
     from UTC. In the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+deletion_time:
+  description: |
+    The date and time when the resource was (soft-) deleted. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_:
+
+    ::
+
+       CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``.
+
+    The ``±hh:mm`` value, if included, is the time zone as an offset from UTC.
   in: body
   required: true
   type: string
@@ -672,73 +608,18 @@ deployment_updated_time:
   type: string
 description:
   description: |
-    The description of the stack resource.
-  in: body
-  required: true
-  type: string
-description_1:
-  description: |
-    The description of the resource attribute.
-  in: body
-  required: true
-  type: string
-description_2:
-  description: |
-    The description of a stack output.
-  in: body
-  required: true
-  type: string
-description_3:
-  description: |
-    The description of the active stack.
-  in: body
-  required: true
-  type: string
-description_4:
-  description: |
-    A description of the stack.
-  in: body
-  required: true
-  type: string
-description_5:
-  description: |
-    The description of the stack.
-  in: body
-  required: true
-  type: string
-description_6:
-  description: |
-    The description of the stack template.
+    The description of the resource.
   in: body
   required: true
   type: string
 disable_rollback:
   description: |
-    Enables or disables deletion of all stack
-    resources when stack creation fails. Set to ``true`` to keep all
-    resources when stack creation fails. Set to ``false`` to delete
-    all resources when stack creation fails. Default is ``true``.
+    Enables or disables deletion of all stack resources when stack creation
+    fails. Set to ``true`` to keep all resources when stack creation fails.
+    Set to ``false`` to delete all resources when stack creation fails.
   in: body
   required: false
-  type: boolean
-disable_rollback_1:
-  description: |
-    Enables or disables deletion of all previously-
-    created stack resources when stack creation fails. Set to ``true``
-    to keep all previously-created stack resources when stack creation
-    fails. Set to ``false`` to delete all previously-created stack
-    resources when stack creation fails. Default is ``true``.
-  in: body
-  required: false
-  type: boolean
-disable_rollback_2:
-  description: |
-    Enables or disables stack rollback when stack
-    creation fails. Set to ``true`` to rollback the stack when stack
-    creation fails. Set to ``false`` to disable stack rollback when
-    stack creation fails. Default is ``true``.
-  in: body
-  required: true
+  default: True
   type: boolean
 engine_id:
   description: |
@@ -749,6 +630,12 @@ engine_id:
 environment:
   description: |
     A JSON environment for the stack.
+  in: body
+  required: false
+  type: object
+environment_files:
+  description: |
+    An ordered list of names for environment files found in the ``files`` dict.
   in: body
   required: false
   type: object
@@ -859,12 +746,6 @@ id_3:
   in: body
   required: true
   type: string
-id_5:
-  description: |
-    The UUID of the stack.
-  in: body
-  required: true
-  type: string
 input_values:
   description: |
     A dict comprises of input data as key-value pairs.
@@ -886,17 +767,10 @@ inputs_1:
   type: array
 links:
   description: |
-    A list of URLs for the stack. Each URL is a JSON
-    object with an ``href`` key indicating the URL and a ``rel`` key
-    indicating its relationship to the stack in question. There may be
-    multiple links returned. The ``self`` relationship identifies the
-    URL of the stack itself.
-  in: body
-  required: true
-  type: array
-links_1:
-  description: |
-    A list of stack links.
+    A list of URLs for the stack. Each URL is a JSON object with an ``href``
+    key indicating the URL and a ``rel`` key indicating its relationship to
+    the stack in question. There may be multiple links returned. The ``self``
+    relationship identifies the URL of the stack itself.
   in: body
   required: true
   type: array
@@ -972,12 +846,6 @@ outputs:
 outputs_1:
   description: |
     A list of software configuration output data.
-  in: body
-  required: true
-  type: array
-outputs_2:
-  description: |
-    A list of stack outputs.
   in: body
   required: true
   type: array
@@ -1064,72 +932,9 @@ parameters:
   in: body
   required: false
   type: object
-parameters_1:
-  description: |
-    Key and value pairs that contain stack
-    parameters.
-  in: body
-  required: true
-  type: object
-parameters_2:
-  description: |
-    Key and value pairs that contain template
-    parameters.
-  in: body
-  required: true
-  type: object
-parameters_3:
-  description: "Supplies updated arguments for parameters that are defined in the\n\
-    stack template.\n\nThe value is a JSON object, where each key is the name of a\n\
-    parameter defined in the template and the associated value is the\nargument to\
-    \ use for that parameter when instantiating the template.\nThe following code\
-    \ shows the general structure of this parameter.\nIn the example, ``a`` and ``b``\
-    \ are the names of two parameters\ndefined in the template.\n\n.. code-block::\
-    \ json\n\n   { ...\n                         \"parameters\": {\n             \
-    \            \"a\": \"Value\",\n                         \"b\": \"3\"\n      \
-    \                   }\n                         ... }\n                     \n\
-    \nWhile the service accepts JSON numbers for parameters with the type\n``number``\
-    \ and JSON objects for parameters with the type ``json``,\nall parameter values\
-    \ are converted to their string representation\nfor storage in the created Stack.\
-    \ Clients are encouraged to send\nall parameter values using their string representation\
-    \ for\nconsistency between requests and responses from the Orchestration\nservice.\n\
-    \nYou must specify a value for each template parameter that does not\nhave a default\
-    \ value. However, this parameter cannot contain JSON\nproperties with names that\
-    \ do not match a parameter that is defined\nin the template.\n"
-  in: body
-  required: false
-  type: object
-parameters_4:
-  description: "This parameter supplies updated arguments for parameters defined in\n\
-    the stack template.\n\nThe value is a JSON object, where each key is the name\
-    \ of a\nparameter defined in the template and the associated value is the\nargument\
-    \ to use for that parameter when instantiating the template.\nThe following code\
-    \ shows the general structure of this parameter.\nIn the example, ``a`` and ``b``\
-    \ are the names of two parameters\ndefined in the template.\n\n.. code-block::\
-    \ json\n\n   { ...\n                        \"parameters\": {\n              \
-    \          \"a\": \"Value\",\n                        \"b\": \"3\"\n         \
-    \               }\n                        ... }\n                  \n\nWhile\
-    \ the service accepts JSON numbers for parameters with the type\n``number`` and\
-    \ JSON objects for parameters with the type ``json``,\nall parameter values are\
-    \ converted to their string representation\nfor storage in the created Stack.\
-    \ Clients are encouraged to send\nall parameter values using their string representation\
-    \ for\nconsistency between requests and responses from the Orchestration\nservice.\n\
-    \nYou must specify a value for each template parameter that does not\nhave a default\
-    \ value. However, this parameter cannot contain JSON\nproperties with names that\
-    \ do not match a parameter that is defined\nin the template.\n"
-  in: body
-  required: false
-  type: object
 parent:
   description: |
-    The stack ID of the parent stack, if this is a
-    nested stack.
-  in: body
-  required: true
-  type: string
-parent_1:
-  description: |
-    The parent of the stack.
+    The stack ID of the parent stack, if this is a nested stack.
   in: body
   required: true
   type: string
@@ -1215,12 +1020,6 @@ resources:
   in: body
   required: true
   type: array
-resources_1:
-  description: |
-    List of stack resources.
-  in: body
-  required: true
-  type: array
 resources_2:
   description: |
     The snapshot resources.
@@ -1297,45 +1096,52 @@ stack:
   in: body
   required: true
   type: object
-stack_name_1:
+stack_id:
   description: |
-    A name for the new stack.  The value must be
-    unique within a project. The name must start with an ASCII letter
-    and can contain ASCII letters, digits, underscores, periods, and
-    hyphens. Specifically, the name must match the
-    ``^[a-zA-Z][a-zA-Z0-9_.-]*$`` regular expression.  When you delete
-    or abandon a stack, its name will not become available for reuse
-    until the deletion completes successfully.
+    The UUID of the stack.
   in: body
   required: true
   type: string
-stack_name_2:
+stack_name:
   description: |
-    A name for the new stack.  This value must be
-    unique within a project. The name must start with an ASCII letter
-    and can contain ASCII letters, digits, underscores, periods, and
-    hyphens. Specifically, the name must match the
-    ``^[a-zA-Z][a-zA-Z0-9_.-]*$`` regular expression.  When you delete
-    or abandon a stack, its name will not become available for reuse
-    until the deletion completes successfully.
+    A name for the stack. The value must be unique within a project.
+    The name must start with an ASCII letter and can contain ASCII letters,
+    digits, underscores, periods, and hyphens. Specifically, the name must
+    match the ``^[a-zA-Z][a-zA-Z0-9_.-]*$`` regular expression.
+
+    When you delete or abandon a stack, its name will not become available
+    for reuse until the deletion completes successfully.
   in: body
   required: true
   type: string
-stack_name_3:
+stack_outputs:
   description: |
-    The name of the active stack.
+    A list of stack outputs.
   in: body
   required: true
-  type: string
+  type: array
 stack_owner:
   description: |
-    Stack owner name.
+    The owner of the stack
   in: body
   required: true
   type: string
-stack_owner_1:
+stack_parameters:
   description: |
-    The owner of the stack.
+    A group of key-value pairs where each key contains either a user-provided
+    parameter name or a built-in parameter name (e.g. ``OS::project_id``).
+  in: body
+  required: true
+  type: object
+stack_resources:
+  description: |
+    List of stack resources.
+  in: body
+  required: true
+  type: array
+stack_stack_user_project_id:
+  description: |
+    The project UUID of the stack user.
   in: body
   required: true
   type: string
@@ -1357,18 +1163,24 @@ stack_status_reason:
   in: body
   required: true
   type: string
+stack_tags:
+  description: |
+    The stack tags.
+  in: body
+  required: true
+  type: string
+stack_timeout_mins:
+  description: |
+    The timeout for stack creation in minutes.
+  in: body
+  required: true
+  type: integer
 stack_user_project_id:
   description: |
     Authentication project ID, which can also perform
     operations on this deployment.
   in: body
   required: false
-  type: string
-stack_user_project_id_1:
-  description: |
-    The project UUID of the stack user.
-  in: body
-  required: true
   type: string
 status:
   description: |
@@ -1410,72 +1222,34 @@ suspend:
   type: string
 tags:
   description: |
-    One or more simple string tags to associate with
-    the stack. To associate multiple tags with a stack, separate the
-    tags with commas. For example, ``tag1,tag2``.
+    One or more simple string tags to associate with the stack. To associate
+    multiple tags with a stack, separate the tags with commas.
+    For example, ``tag1,tag2``.
   in: body
   required: false
-  type: string
-tags_2:
-  description: |
-    The stack tags.
-  in: body
-  required: true
   type: string
 template:
   description: |
     The stack template on which to perform the operation.
 
-    This parameter is always provided as a ``string`` in the JSON
-    request body. The content of the string is a JSON- or YAML-
-    formatted Orchestration template. For example:
+    This parameter is always provided as a ``string`` in the JSON request body.
+    The content of the string is a JSON- or YAML-formatted Orchestration
+    template. For example:
 
     .. code-block:: json
 
        "template": {
            "heat_template_version": "2013-05-23",
-           ...}
+           ...
+       }
 
     This parameter is required only when you omit the ``template_url``
     parameter. If you specify both parameters, this value overrides the
     ``template_url`` parameter value.
   in: body
-  required: true
-  type: object
-template_1:
-  description: |
-    Information about the template.
-  in: body
-  required: true
-  type: object
-template_2:
-  description: |
-    The stack template on which to perform the operation.
-
-    This parameter is always provided as a ``string`` in the JSON
-    request body. The content of the string is a JSON- or YAML-
-    formatted Orchestration template. For example:
-
-    .. code-block:: json
-
-       "template": {
-           "heat_template_version": "2013-05-23",
-           ...}
-
-    This parameter is required only when you omit the ``template_url``
-    parameter. If you specify both parameters, this value overrides the
-    ``template_url`` parameter value.
-  in: body
-  required: false
+  required: False
   type: object
 template_description:
-  description: |
-    A description of the template that defines the
-    stack.
-  in: body
-  required: true
-  type: string
-template_description_1:
   description: |
     The description of the stack template.
   in: body
@@ -1483,12 +1257,11 @@ template_description_1:
   type: string
 template_url:
   description: |
-    A URI to the location containing the stack
-    template on which to perform the operation.  See the description
-    of the ``template`` parameter for information about the expected
-    template content located at the URI.  This parameter is only
-    required when you omit the ``template`` parameter. If you specify
-    both parameters, this parameter is ignored.
+    A URI to the location containing the stack template on which to perform
+    the operation.  See the description of the ``template`` parameter for
+    information about the expected template content located at the URI.
+    This parameter is only required when you omit the ``template`` parameter.
+    If you specify both parameters, this parameter is ignored.
   in: body
   required: false
   type: string
@@ -1498,18 +1271,6 @@ timeout_mins:
   in: body
   required: false
   type: integer
-timeout_mins_1:
-  description: |
-    Time-lines for stack creation.
-  in: body
-  required: true
-  type: integer
-timeout_mins_2:
-  description: |
-    The timeout, in minutes.
-  in: body
-  required: true
-  type: string
 topic:
   description: |
     The topic of the heat engine.
@@ -1551,10 +1312,8 @@ updated_at:
   type: string
 updated_time:
   description: |
-    The date and time when the stack resource was updated.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
+    The date and time when the object was updated. The date and time stamp
+    format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_:
 
     ::
 
@@ -1562,32 +1321,7 @@ updated_time:
 
     For example, ``2015-08-27T09:49:58-05:00``.
 
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-
-    If the ``updated_at`` date and time stamp is not set, its value is
-    ``null``.
-  in: body
-  required: true
-  type: string
-updated_time_1:
-  description: |
-    The date and time when the stack resource was updated.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2016-03-30T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-
-    If the ``updated_at`` date and time stamp is not set, its value is
-    ``null``.
+    The ``±hh:mm`` value, if included, is the time zone as an offset from UTC.
   in: body
   required: true
   type: string

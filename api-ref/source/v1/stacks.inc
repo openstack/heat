@@ -11,23 +11,34 @@ Create stack
 
 Creates a stack.
 
-Error response codes:201,500,409,401,400,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 201
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 409
 
 Request Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - files: files
-   - disable_rollback: disable_rollback
-   - parameters: parameters
-   - tags: tags
-   - stack_name: stack_name
-   - environment: environment
-   - template_url: template_url
-   - template: template
-   - timeout_mins: timeout_mins
    - tenant_id: tenant_id
+   - disable_rollback: disable_rollback
+   - environment: environment
+   - files: files
+   - parameters: parameters
+   - stack_name: stack_name
+   - tags: tags
+   - template: template
+   - template_url: template_url
+   - timeout_mins: timeout_mins
 
 Request Example
 ---------------
@@ -40,9 +51,17 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - location: location
+   - X-Openstack-Reqeuest-Id: request_id
+   - stack: stack
    - id: id
    - links: links
-   - stack: stack
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-create-response.json
+   :language: javascript
 
 
 Preview stack
@@ -52,20 +71,35 @@ Preview stack
 
 Previews a stack.
 
-Normal response codes: 200
-Error response codes:500,409,401,400,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 409
+   - 500
 
 Request Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - files: files
-   - stack_name: stack_name
-   - template_url: template_url
-   - template: template
-   - parameters: parameters
    - tenant_id: tenant_id
+   - disable_rollback: disable_rollback
+   - environment: environment
+   - files: files
+   - parameters: parameters
+   - stack_name: stack_name
+   - tags: tags
+   - template: template
+   - template_url: template_url
+   - timeout_mins: timeout_mins
 
 Request Example
 ---------------
@@ -78,22 +112,27 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - parent: parent
-   - disable_rollback: disable_rollback
-   - description: description
-   - links: links
-   - stack_name: stack_name
-   - timeout_mins: timeout_mins
-   - creation_time: creation_time
+   - X-Openstack-Reqeuest-Id: request_id
    - capabilities: capabilities
+   - creation_time: creation_time
+   - deletion_time: deletion_time
+   - description: description
+   - disable_rollback: disable_rollback
+   - id: stack_id
+   - links: links
    - notification_topics: notification_topics
-   - updated_time: updated_time
-   - stack_owner: stack_owner
-   - stack: stack
-   - parameters: parameters
-   - id: id
+   - outputs: stack_outputs
+   - parameters: stack_parameters
+   - parent: parent
    - resources: resources
+   - stack: stack
+   - stack_name: stack_name
+   - stack_owner: stack_owner
+   - stack_user_project_id: stack_stack_user_project_id
+   - tags: stack_tags
    - template_description: template_description
+   - timeout_mins: timeout_mins
+   - updated_time: updated_time
 
 Response Example
 ----------------
