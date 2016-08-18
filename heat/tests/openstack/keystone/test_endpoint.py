@@ -17,10 +17,12 @@ import mock
 
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import endpoint
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
+from heat.tests import fakes
 from heat.tests import utils
 
 keystone_endpoint_template = {
@@ -50,7 +52,10 @@ class KeystoneEndpointTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # Mock client
-        self.keystoneclient = mock.MagicMock()
+        self.keystoneclient = mock.Mock()
+        self.patchobject(resource.Resource, 'client',
+                         return_value=fakes.FakeKeystoneClient(
+                             client=self.keystoneclient))
         self.endpoints = self.keystoneclient.endpoints
 
         # Mock client plugin
