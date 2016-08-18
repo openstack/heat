@@ -14,7 +14,7 @@
 import copy
 import mock
 
-from heat.common.exception import StackValidationFailed
+from heat.common import exception
 from heat.common import grouputils
 from heat.engine.resources.openstack.heat import resource_chain
 from heat.engine import rsrc_defn
@@ -144,7 +144,7 @@ class ResourceChainTest(common.HeatTestCase):
         try:
             chain.validate_nested_stack()
             self.fail('Exception expected')
-        except StackValidationFailed as e:
+        except exception.StackValidationFailed as e:
             self.assertTrue('unknown property group' in e.message.lower())
 
     def test_validate_fake_resource_type(self):
@@ -160,7 +160,7 @@ class ResourceChainTest(common.HeatTestCase):
         try:
             chain.validate_nested_stack()
             self.fail('Exception expected')
-        except StackValidationFailed as e:
+        except exception.StackValidationFailed as e:
             self.assertTrue('could not be found' in e.message.lower())
             self.assertTrue('foo' in e.message)
 

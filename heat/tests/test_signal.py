@@ -20,8 +20,8 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os.heat_plugin import HeatClientPlugin
-from heat.engine.clients.os.swift import SwiftClientPlugin
+from heat.engine.clients.os import heat_plugin
+from heat.engine.clients.os import swift
 from heat.engine import scheduler
 from heat.engine import stack as stk
 from heat.engine import template
@@ -148,7 +148,7 @@ class SignalTest(common.HeatTestCase):
             rsrc, 'user_id')
         self.assertEqual('1234', rsrc._get_user_id())
 
-    @mock.patch.object(HeatClientPlugin, 'get_heat_cfn_url')
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_cfn_url')
     def test_FnGetAtt_alarm_url(self, mock_get):
         # Setup
         stack_id = stack_name = 'FnGetAtt-alarm-url'
@@ -214,7 +214,7 @@ class SignalTest(common.HeatTestCase):
         mock_has.assert_called_once_with('signal_handler')
         self.assertEqual(second_url, 'cached')
 
-    @mock.patch.object(HeatClientPlugin, 'get_heat_url')
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_url')
     def test_FnGetAtt_heat_signal(self, mock_get):
         # Setup
         stack = self._create_stack(TEMPLATE_HEAT_TEMPLATE_SIGNAL)
@@ -310,7 +310,7 @@ class SignalTest(common.HeatTestCase):
 
     @mock.patch('swiftclient.client.Connection.put_container')
     @mock.patch('swiftclient.client.Connection.put_object')
-    @mock.patch.object(SwiftClientPlugin, 'get_temp_url')
+    @mock.patch.object(swift.SwiftClientPlugin, 'get_temp_url')
     def test_FnGetAtt_swift_signal(self, mock_get_url,
                                    mock_put_object, mock_put_container):
         # Setup
@@ -333,7 +333,7 @@ class SignalTest(common.HeatTestCase):
 
     @mock.patch('swiftclient.client.Connection.put_container')
     @mock.patch('swiftclient.client.Connection.put_object')
-    @mock.patch.object(SwiftClientPlugin, 'get_temp_url')
+    @mock.patch.object(swift.SwiftClientPlugin, 'get_temp_url')
     @mock.patch.object(stk.Stack, 'cache_data_resource_attribute')
     @mock.patch.object(stk.Stack, 'has_cache_data')
     def test_FnGetAtt_swift_signal_is_cached(self, mock_has, mock_get,
@@ -368,7 +368,7 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual(1, mock_put_object.call_count)
         self.assertEqual(1, mock_get_url.call_count)
 
-    @mock.patch.object(HeatClientPlugin, 'get_heat_cfn_url')
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_cfn_url')
     def test_FnGetAtt_delete(self, mock_get):
         # Setup
         mock_get.return_value = 'http://server.test:8000/v1'
@@ -390,7 +390,7 @@ class SignalTest(common.HeatTestCase):
 
         self.assertEqual(2, mock_get.call_count)
 
-    @mock.patch.object(HeatClientPlugin, 'get_heat_url')
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_url')
     def test_FnGetAtt_heat_signal_delete(self, mock_get):
         # Setup
         mock_get.return_value = 'http://server.test:8004/v1'
@@ -417,7 +417,7 @@ class SignalTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.delete_container')
     @mock.patch('swiftclient.client.Connection.delete_object')
     @mock.patch('swiftclient.client.Connection.get_container')
-    @mock.patch.object(SwiftClientPlugin, 'get_temp_url')
+    @mock.patch.object(swift.SwiftClientPlugin, 'get_temp_url')
     @mock.patch('swiftclient.client.Connection.head_container')
     @mock.patch('swiftclient.client.Connection.put_container')
     @mock.patch('swiftclient.client.Connection.put_object')

@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common.exception import NotFound
+from heat.common import exception
 from oslo_utils import timeutils
 import six
 
@@ -67,5 +67,5 @@ class CooldownMixin(object):
         metadata['scaling_in_progress'] = False
         try:
             self.metadata_set(metadata)
-        except NotFound:
+        except exception.NotFound:
             pass
