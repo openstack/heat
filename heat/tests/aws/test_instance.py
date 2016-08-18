@@ -399,6 +399,19 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual(expected_az, actual_az)
         self.m.VerifyAll()
 
+    def test_instance_create_resolve_az_attribute_nova_az_ext_disabled(self):
+        return_server = self.fc.servers.list()[1]
+        delattr(return_server, 'OS-EXT-AZ:availability_zone')
+        instance = self._setup_test_instance(return_server,
+                                             'create_resolve_az_attribute')
+        self.patchobject(self.fc.servers, 'get',
+                         return_value=return_server)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(instance.create)()
+
+        self.assertIsNone(instance._availability_zone())
+        self.m.VerifyAll()
+
     def test_instance_create_image_name_err(self):
         stack_name = 'test_instance_create_image_name_err_stack'
         (tmpl, stack) = self._setup_test_stack(stack_name)

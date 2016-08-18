@@ -382,13 +382,12 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         if availability_zone is None:
             try:
                 server = self.client().servers.get(self.resource_id)
-                availability_zone = getattr(server,
-                                            'OS-EXT-AZ:availability_zone')
             except Exception as e:
                 self.client_plugin().ignore_not_found(e)
                 return
-
-        return availability_zone
+        # Default to None if Nova's
+        # OS-EXT-AZ:availability_zone extension is disabled
+        return getattr(server, 'OS-EXT-AZ:availability_zone', None)
 
     def _resolve_attribute(self, name):
         res = None
