@@ -472,7 +472,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.mistral.workflows.update.return_value = new_workflows
         self.mistral.workflows.delete.return_value = None
 
-        err = self.assertRaises(exception.UpdateReplace,
+        err = self.assertRaises(resource.UpdateReplace,
                                 scheduler.TaskRunner(wf.update,
                                                      new_workflow))
         msg = 'The Resource workflow requires replacement.'

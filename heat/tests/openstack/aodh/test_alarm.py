@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import aodh
 from heat.engine.clients.os import ceilometer
+from heat.engine import resource
 from heat.engine.resources.openstack.aodh import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -239,7 +240,7 @@ class AodhAlarmTest(common.HeatTestCase):
                                                properties)
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_mem_alarm_suspend_resume(self):
         """Tests suspending and resuming of the alarm.

@@ -396,7 +396,7 @@ class StackUpdateTest(common.HeatTestCase):
 
         def check_and_raise(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-            raise exception.UpdateReplace
+            raise resource.UpdateReplace
 
         mock_upd = self.patchobject(generic_rsrc.ResourceWithProps,
                                     'update_template_diff',

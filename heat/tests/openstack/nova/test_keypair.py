@@ -18,6 +18,7 @@ import six
 
 from heat.common import exception
 from heat.engine.clients.os import nova
+from heat.engine import resource
 from heat.engine.resources.openstack.nova import keypair
 from heat.engine import scheduler
 from heat.tests import common
@@ -153,7 +154,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.fake_keypairs.delete('my_key')
         self.m.ReplayAll()
         updater = scheduler.TaskRunner(res.update, res.t)
-        self.assertRaises(exception.UpdateReplace, updater)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         self.m.ReplayAll()
 

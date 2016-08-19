@@ -16,6 +16,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine.resources.openstack.manila import security_service
 from heat.engine import scheduler
 from heat.engine import template
@@ -138,7 +139,7 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
         rsrc_defns = template.Template(t).resource_definitions(self.stack)
         new_ss = rsrc_defns['security_service']
         self.assertEqual(0, self.client.security_services.update.call_count)
-        err = self.assertRaises(exception.UpdateReplace,
+        err = self.assertRaises(resource.UpdateReplace,
                                 scheduler.TaskRunner(ss.update, new_ss))
         msg = 'The Resource security_service requires replacement.'
         self.assertEqual(msg, six.text_type(err))

@@ -449,7 +449,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 if inp.input_data() != old_inputs[name].input_data():
                     LOG.debug('Replacing SW Deployment due to change in '
                               'input "%s"', name)
-                    raise exception.UpdateReplace
+                    raise resource.UpdateReplace
 
         return self._handle_action(self.UPDATE, config=config)
 

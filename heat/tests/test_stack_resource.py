@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine.resources import stack_resource
 from heat.engine import stack as parser
 from heat.engine import template as templatem
@@ -539,7 +540,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.state_set(self.parent_resource.INIT,
                                        self.parent_resource.FAILED)
         self.parent_resource._nested = None
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           self.parent_resource._needs_update,
                           self.parent_resource.t,
                           self.parent_resource.t,
@@ -556,7 +557,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.state_set(self.parent_resource.INIT,
                                        self.parent_resource.COMPLETE)
         self.parent_resource._nested = None
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           self.parent_resource._needs_update,
                           self.parent_resource.t,
                           self.parent_resource.t,
@@ -577,7 +578,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.nested = mock.MagicMock(return_value=self.nested)
         self.parent_resource._nested = self.nested
 
-        self.assertRaises(exception.UpdateReplace,
+        self.assertRaises(resource.UpdateReplace,
                           self.parent_resource._needs_update,
                           self.parent_resource.t,
                           self.parent_resource.t,

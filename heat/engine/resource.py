@@ -61,6 +61,10 @@ def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
 
 
+# Attention developers about to move/delete this: STOP IT!!!
+UpdateReplace = exception.UpdateReplace
+
+
 class PollDelay(Exception):
     """Exception to delay polling of the resource.
 
@@ -582,10 +586,10 @@ class Resource(object):
                 changed_properties_set,
                 after_props,
                 before_props):
-            raise exception.UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if not changed_properties_set.issubset(update_allowed_set):
-            raise exception.UpdateReplace(self.name)
+            raise UpdateReplace(self.name)
 
         return dict((k, after_props.get(k)) for k in changed_properties_set)
 
@@ -1054,14 +1058,14 @@ class Resource(object):
                       prev_resource, check_init_complete=True):
         if self.status == self.FAILED or (self.stack.convergence and (
                 self.action, self.status) == (self.DELETE, self.COMPLETE)):
-            raise exception.UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if check_init_complete and (self.action == self.INIT
                                     and self.status == self.COMPLETE):
-            raise exception.UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if self.needs_replace(after_props):
-            raise exception.UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if before != after.freeze():
             return True
@@ -1078,7 +1082,7 @@ class Resource(object):
             self._add_event(self.UPDATE, self.FAILED, six.text_type(ex))
             raise failure
         else:
-            raise exception.UpdateReplace(self.name)
+            raise UpdateReplace(self.name)
 
     def update_convergence(self, template_id, resource_data, engine_id,
                            timeout, new_stack):
@@ -1138,7 +1142,7 @@ class Resource(object):
                               prev_resource, check_init_complete):
             tmpl_diff = self.update_template_diff(after.freeze(), before)
             if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
-                raise exception.UpdateReplace(self)
+                raise UpdateReplace(self)
 
             self.update_template_diff_properties(after_props, before_props)
             return True
@@ -1160,7 +1164,7 @@ class Resource(object):
                 if 'update' in actions:
                     raise exception.ResourceActionRestricted(action='update')
                 return True
-        except exception.UpdateReplace:
+        except UpdateReplace:
             if 'replace' in actions:
                 raise exception.ResourceActionRestricted(action='replace')
             raise
@@ -1179,7 +1183,7 @@ class Resource(object):
 
         if cfg.CONF.observe_on_update and before_props:
             if not self.resource_id:
-                raise exception.UpdateReplace(self)
+                raise UpdateReplace(self)
 
             try:
                 resource_reality = self.get_live_state(before_props)
@@ -1187,7 +1191,7 @@ class Resource(object):
                     self._update_properties_with_live_state(before_props,
                                                             resource_reality)
             except exception.EntityNotFound:
-                raise exception.UpdateReplace(self)
+                raise UpdateReplace(self)
             except Exception as ex:
                 LOG.warning(_LW("Resource cannot be updated with it's "
                                 "live state in case of next "
@@ -1268,12 +1272,12 @@ class Resource(object):
 
             self.updated_time = datetime.utcnow()
 
-            with self._action_recorder(action, exception.UpdateReplace):
+            with self._action_recorder(action, UpdateReplace):
                 after_props.validate()
 
                 tmpl_diff = self.update_template_diff(after.freeze(), before)
                 if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
-                    raise exception.UpdateReplace(self)
+                    raise UpdateReplace(self)
 
                 prop_diff = self.update_template_diff_properties(after_props,
                                                                  before_props)
@@ -1291,7 +1295,7 @@ class Resource(object):
             failure = exception.ResourceFailure(ae, self, action)
             self._add_event(action, self.FAILED, six.text_type(ae))
             raise failure
-        except exception.UpdateReplace:
+        except UpdateReplace:
             # catch all UpdateReplace exceptions
             self._prepare_update_replace(action)
             raise
@@ -2116,7 +2120,7 @@ class Resource(object):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            raise exception.UpdateReplace(self.name)
+            raise UpdateReplace(self.name)
 
     def metadata_update(self, new_metadata=None):
         """No-op for resources which don't explicitly override this method."""

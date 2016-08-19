@@ -18,6 +18,7 @@ from heat.common import exception
 from heat.common.i18n import _LI
 from heat.common.i18n import repr_wrapper
 from heat.engine import dependencies
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.objects import resource as resource_objects
 
@@ -158,7 +159,7 @@ class StackUpdate(object):
                 try:
                     yield self._update_in_place(existing_res,
                                                 new_res)
-                except exception.UpdateReplace:
+                except resource.UpdateReplace:
                     pass
                 else:
                     # Save updated resource definition to backup stack
@@ -268,7 +269,7 @@ class StackUpdate(object):
                                               updated_props, current_props,
                                               None):
                     updated_keys.append(key)
-            except exception.UpdateReplace:
+            except resource.UpdateReplace:
                 replaced_keys.append(key)
 
         return {
