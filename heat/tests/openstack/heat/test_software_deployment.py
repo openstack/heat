@@ -233,6 +233,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'name': 'bar',
                 'type': 'String',
                 'default': 'baz',
+            }, {
+                'name': 'trigger_replace',
+                'type': 'String',
+                'default': 'default_value',
+                'replace_on_change': True,
             }],
             'outputs': [],
         }
@@ -332,6 +337,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'name': 'bar',
                 'type': 'String',
                 'value': 'baz'
+            }, {
+                'default': 'default_value',
+                'name': 'trigger_replace',
+                'replace_on_change': True,
+                'type': 'String',
+                'value': 'default_value'
             }, {
                 'name': 'bink',
                 'type': 'String',
@@ -783,6 +794,75 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'status': 'IN_PROGRESS',
             'status_reason': u'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
+
+    def test_handle_update_no_replace_on_change(self):
+        self._create_stack(self.template)
+
+        self.mock_software_config()
+        self.mock_derived_software_config()
+        mock_sd = self.mock_deployment()
+        rsrc = self.stack['deployment_mysql']
+
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
+        prop_diff = {
+            'input_values': {'trigger_replace': 'default_value'},
+        }
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        self.deployment.handle_update(snippet, None, prop_diff)
+
+        self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
+            'action': 'UPDATE',
+            'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
+            'input_values': {'trigger_replace': 'default_value'},
+            'status': 'IN_PROGRESS',
+            'status_reason': u'Deploy data available'},
+            self.rpc_client.update_software_deployment.call_args[1])
+
+        self.assertEqual([
+            {
+                'default': 'baa',
+                'name': 'foo',
+                'type': 'String',
+                'value': 'baa'
+            }, {
+                'default': 'baz',
+                'name': 'bar',
+                'type': 'String',
+                'value': 'baz'
+            }, {
+                'default': 'default_value',
+                'name': 'trigger_replace',
+                'replace_on_change': True,
+                'type': 'String',
+                'value': 'default_value'
+            }],
+            self.rpc_client.create_software_config.call_args[1]['inputs'][:3])
+
+    def test_handle_update_replace_on_change(self):
+        self._create_stack(self.template)
+
+        self.mock_software_config()
+        self.mock_derived_software_config()
+        mock_sd = self.mock_deployment()
+        rsrc = self.stack['deployment_mysql']
+
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
+        prop_diff = {
+            'input_values': {'trigger_replace': 'new_value'},
+        }
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        self.assertRaises(exc.UpdateReplace,
+                          self.deployment.handle_update,
+                          snippet, None, prop_diff)
 
     def test_handle_suspend_resume(self):
         self._create_stack(self.template_delete_suspend_resume)

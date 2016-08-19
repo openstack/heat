@@ -921,6 +921,7 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
         name = 'foo'
         inp = swc_io.InputConfig(name=name)
         self.assertIsNone(inp.default())
+        self.assertIs(False, inp.replace_on_change())
         self.assertEqual(name, inp.name())
         self.assertEqual({'name': name, 'type': 'String'}, inp.as_dict())
         self.assertEqual((name, None), inp.input_data())
@@ -928,11 +929,13 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
     def test_input_config(self):
         name = 'bar'
         inp = swc_io.InputConfig(name=name, description='test', type='Number',
-                                 default=0)
+                                 default=0, replace_on_change=True)
         self.assertEqual('0', inp.default())
+        self.assertIs(True, inp.replace_on_change())
         self.assertEqual(name, inp.name())
         self.assertEqual({'name': name, 'type': 'Number',
-                          'description': 'test', 'default': '0'},
+                          'description': 'test', 'default': '0',
+                          'replace_on_change': True},
                          inp.as_dict())
         self.assertEqual((name, None), inp.input_data())
 
@@ -941,6 +944,7 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
         inp = swc_io.InputConfig(name=name, type='Number',
                                  default=0, value=42)
         self.assertEqual('0', inp.default())
+        self.assertIs(False, inp.replace_on_change())
         self.assertEqual(name, inp.name())
         self.assertEqual({'name': name, 'type': 'Number',
                           'default': '0', 'value': 42},

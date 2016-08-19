@@ -27,11 +27,11 @@ from heat.engine import properties
 
 (
     IO_NAME, DESCRIPTION, TYPE,
-    DEFAULT, VALUE,
+    DEFAULT, REPLACE_ON_CHANGE, VALUE,
     ERROR_OUTPUT,
 ) = (
     'name', 'description', 'type',
-    'default', 'value',
+    'default', 'replace_on_change', 'value',
     'error_output',
 )
 
@@ -61,6 +61,12 @@ input_config_schema = {
     DEFAULT: properties.Schema(
         properties.Schema.STRING,
         _('Default value for the input if none is specified.'),
+    ),
+    REPLACE_ON_CHANGE: properties.Schema(
+        properties.Schema.BOOLEAN,
+        _('Replace the deployment instead of updating it when the input '
+          'value changes.'),
+        default=False,
     ),
 }
 
@@ -127,9 +133,14 @@ class InputConfig(IOConfig):
         """Return the default value of the input."""
         return self._props[DEFAULT]
 
+    def replace_on_change(self):
+        return self._props[REPLACE_ON_CHANGE]
+
     def as_dict(self):
         """Return a dict representation suitable for persisting."""
         d = super(InputConfig, self).as_dict()
+        if not self._props[REPLACE_ON_CHANGE]:
+            del d[REPLACE_ON_CHANGE]
         if self._value is not _no_value:
             d[VALUE] = self._value
         return d
