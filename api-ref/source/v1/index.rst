@@ -32,4 +32,4 @@ Orchestration Service API v1
 .. include:: stack-templates.inc
 .. include:: software-config.inc
 .. include:: resource-types.inc
-.. include:: service-status.inc
+.. include:: services.inc

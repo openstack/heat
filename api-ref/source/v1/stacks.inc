@@ -54,7 +54,7 @@ Response Parameters
    - location: location
    - X-Openstack-Reqeuest-Id: request_id
    - stack: stack
-   - id: id
+   - id: stack_id
    - links: links
 
 Response Example
@@ -666,7 +666,7 @@ Response Parameters
    - location: location
    - X-Openstack-Reqeuest-Id: request_id
    - stack: stack
-   - id: id
+   - id: stack_id
    - links: links
 
 Response Example

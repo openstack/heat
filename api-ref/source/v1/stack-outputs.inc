@@ -11,28 +11,37 @@ List outputs
 
 Lists outputs for a stack.
 
+Response Codes
+--------------
 
-Normal response codes: 200
-Error response codes:
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
 
 Response Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - output_value: output_value
-   - output_error: output_error
-   - description: description
+   - X-Openstack-Request-Id: request_id
+   - outputs: stack_outputs
    - output_key: output_key
+   - description: output_description
 
 Response Example
 ----------------
@@ -48,31 +57,43 @@ Show output
 
 Shows details for a stack output.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
-   - output_key: output_key
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - output_key: output_key_url
 
 Response Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - output_value: output_value
-   - output_error: output_error
-   - description: description
+   - X-Openstack-Reqeuest-Id: request_id
+   - output: output
    - output_key: output_key
+   - output_value: output_value
+   - description: output_description
+   - output_error: output_error
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/stack-show-output-response.json
+.. literalinclude:: samples/stack-output-show-response.json
    :language: javascript

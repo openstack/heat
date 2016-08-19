@@ -35,12 +35,12 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
+   - status: snapshot_status
    - name: snapshot_name
    - status_reason: status_reason
    - creation_time: creation_time
    - data: data
-   - id: id
+   - id: snapshot_id
 
 Response Example
 ----------------
@@ -75,7 +75,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
+   - status: snapshot_status
    - name: snapshot_name
    - status_reason: status_reason
    - creation_time: creation_time
@@ -83,7 +83,7 @@ Response Parameters
    - template: template
    - project_id: project_id
    - data: data
-   - id: id
+   - id: snapshot_id
    - resources: resources
 
 Response Example
@@ -116,13 +116,13 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: status
+   - status: snapshot_status
    - name: snapshot_name
    - status_reason: status_reason
    - creation_time: creation_time
    - snapshots: snapshots
    - data: data
-   - id: id
+   - id: snapshot_id
 
 Response Example
 ----------------

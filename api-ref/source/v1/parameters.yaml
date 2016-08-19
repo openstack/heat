@@ -42,7 +42,7 @@ event_id_url:
   in: path
   required: false
   type: string
-output_key_1:
+output_key_url:
   description: |
     The key of a stack output.
   in: path
@@ -369,7 +369,7 @@ attributes:
   type: object
 binary:
   description: |
-    The name of the binary form of the heat engine.
+    The name of the binary executable of the heat engine.
   in: body
   required: true
   type: string
@@ -461,19 +461,7 @@ config_name:
   type: string
 created_at:
   description: |
-    The date and time when the resource was created.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
+    The date and time when the service engine was created.
   in: body
   required: true
   type: string
@@ -501,19 +489,7 @@ data:
   type: object
 deleted_at:
   description: |
-    The date and time when the resource was deleted.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC. In the previous example, the offset value is ``-05:00``.
+    The date and time when the service engine was deleted.
   in: body
   required: true
   type: string
@@ -621,7 +597,20 @@ disable_rollback:
   type: boolean
 engine_id:
   description: |
-    The ID of engine service.
+    The UUID of the engine service.
+  in: body
+  required: true
+  type: string
+engine_record_id:
+  description: |
+    The UUID of the heat engine service record. Note that each service engine
+    may have multiple records in the service registry.
+  in: body
+  required: true
+  type: string
+engine_status:
+  description: |
+    The status of the heat engine.
   in: body
   required: true
   type: string
@@ -740,25 +729,13 @@ HeatTemplateFormatVersion:
   type: string
 host:
   description: |
-    The host for the service.
+    The host on which the service engine is or was running.
   in: body
   required: true
   type: string
 hostname:
   description: |
-    The name of the host for the service.
-  in: body
-  required: true
-  type: string
-id:
-  description: |
-    The UUID of the heat engine.
-  in: body
-  required: true
-  type: string
-id_3:
-  description: |
-    The UUID of the snapshot.
+    The name of the host for the service engine.
   in: body
   required: true
   type: string
@@ -827,11 +804,24 @@ options:
   in: body
   required: false
   type: string
-output_error:
+output:
   description: |
-    The error in a stack output.
+    An output record for the specified key.
   in: body
   required: true
+  type: object
+output_description:
+  description: |
+    A textual description of a stack output.
+  in: body
+  required: true
+  type: string
+output_error:
+  description: |
+    The error in a stack output. This key only appears when an output has
+    problem in resolving its value.
+  in: body
+  required: false
   type: string
 output_key:
   description: |
@@ -1009,8 +999,8 @@ properties:
   type: object
 report_interval:
   description: |
-    The polling interval, in seconds. The API reports
-    events at this interval until heat engine creation completes.
+    The polling interval, in seconds. The API reports events at this interval
+    until heat engine creation completes.
   in: body
   required: true
   type: integer
@@ -1134,9 +1124,21 @@ snapshot:
   in: body
   required: true
   type: object
+snapshot_id:
+  description: |
+    The UUID of the snapshot.
+  in: body
+  required: true
+  type: string
 snapshot_name:
   description: |
     The name of the snapshot.
+  in: body
+  required: true
+  type: string
+snapshot_status:
+  description: |
+    The status of the snapshot.
   in: body
   required: true
   type: string
@@ -1305,18 +1307,6 @@ stacks:
   in: body
   required: true
   type: array
-status:
-  description: |
-    The status of the heat engine.
-  in: body
-  required: true
-  type: string
-status_4:
-  description: |
-    The status of the snapshot.
-  in: body
-  required: true
-  type: string
 status_reason:
   description: |
     Error description for the last status change,
@@ -1428,7 +1418,7 @@ title:
   type: string
 topic:
   description: |
-    The topic of the heat engine.
+    The messaging topic of the heat engine.
   in: body
   required: true
   type: string
@@ -1453,22 +1443,7 @@ update_show_nested:
   type: boolean
 updated_at:
   description: |
-    The date and time when the resource was updated.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC. In the previous example, the offset value is ``-05:00``.
-
-    If the ``updated_at`` date and time stamp is not set, its value is
-    ``null``.
+    The date and time when the service engine was updated.
   in: body
   required: true
   type: string
