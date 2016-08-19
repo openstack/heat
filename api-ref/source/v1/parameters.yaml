@@ -64,7 +64,13 @@ stack_id_url:
   description: |
     The UUID of the stack.
   in: path
-  required: false
+  required: true
+  type: string
+stack_identity:
+  description: |
+    The UUID or the name of a stack.
+  in: path
+  required: true
   type: string
 stack_name_url:
   description: |
