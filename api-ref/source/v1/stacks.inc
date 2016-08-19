@@ -243,9 +243,9 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
 
 Response Parameters
 -------------------
@@ -293,6 +293,9 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
    - files: files
    - disable_rollback: disable_rollback
    - parameters: parameters
@@ -301,9 +304,6 @@ Request Parameters
    - template_url: template_url
    - template: template
    - timeout_mins: timeout_mins
-   - stack_name: stack_name
-   - tenant_id: tenant_id
-   - stack_id: stack_id
 
 Request Example
 ---------------
@@ -327,6 +327,9 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
    - files: files
    - parameters: parameters
    - tags: tags
@@ -334,9 +337,6 @@ Request Parameters
    - template_url: template_url
    - template: template
    - timeout_mins: timeout_mins
-   - stack_name: stack_name
-   - tenant_id: tenant_id
-   - stack_id: stack_id
 
 Request Example
 ---------------
@@ -366,9 +366,9 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
 
 
 Abandon stack
@@ -390,9 +390,9 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
 
 Response Example
 ----------------
@@ -415,6 +415,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - tenant_id: tenant_id
    - files: files
    - disable_rollback: disable_rollback
    - parameters: parameters
@@ -422,7 +423,6 @@ Request Parameters
    - adopt_stack_data: adopt_stack_data
    - environment: environment
    - timeout_mins: timeout_mins
-   - tenant_id: tenant_id
 
 Request Example
 ---------------
@@ -438,3 +438,41 @@ Response Parameters
    - id: id
    - links: links
    - stack: stack
+
+
+Get stack template
+==================
+
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/template
+
+Gets a template for a stack.
+
+
+Normal response codes: 200
+Error response codes:404,500,401,400,
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - outputs: outputs
+   - heat_template_version: heat_template_version
+   - description: description
+   - parameters: parameters
+   - resources: resources
+
+Response Example
+----------------
+
+.. literalinclude:: samples/template-show-response.json
+   :language: javascript

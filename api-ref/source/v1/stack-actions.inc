@@ -7,7 +7,6 @@ Stack actions
 Performs non-lifecycle operations on the stack. Specify the action
 in the request body.
 
-
 Suspend stack
 =============
 
@@ -15,20 +14,18 @@ Suspend stack
 
 Suspends a stack.
 
-
 Normal response codes: 200
 Error response codes:
-
 
 Request
 -------
 
 .. rest_parameters:: parameters.yaml
 
-   - suspend: suspend
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_id: stack_id_url
+   - stack_name: stack_name_url
+   - suspend: suspend
 
 Request Example
 ---------------
@@ -36,15 +33,10 @@ Request Example
 .. literalinclude:: samples/stack-action-suspend-request.json
    :language: javascript
 
-
-
-
-
 Response Example
 ----------------
 
 This operation does not return a response body.
-
 
 
 Resume stack
@@ -54,20 +46,18 @@ Resume stack
 
 Resumes a suspended stack.
 
-
 Normal response codes: 200
 Error response codes:
-
 
 Request
 -------
 
 .. rest_parameters:: parameters.yaml
 
-   - resume: resume
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_id: stack_id_url
+   - stack_name: stack_name_url
+   - resume: resume
 
 Request Example
 ---------------
@@ -75,16 +65,10 @@ Request Example
 .. literalinclude:: samples/stack-action-resume-request.json
    :language: javascript
 
-
-
-
-
 Response Example
 ----------------
 
 This operation does not return a response body.
-
-
 
 
 Cancel stack update
@@ -94,20 +78,18 @@ Cancel stack update
 
 Cancels a currently running update of a stack.
 
-
 Normal response codes: 200
 Error response codes:
-
 
 Request
 -------
 
 .. rest_parameters:: parameters.yaml
 
-   - cancel_update: cancel_update
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_id: stack_id_url
+   - stack_name: stack_name_url
+   - cancel_update: cancel_update
 
 Request Example
 ---------------
@@ -115,15 +97,10 @@ Request Example
 .. literalinclude:: samples/stack-action-cancel-update-request.json
    :language: javascript
 
-
-
-
-
 Response Example
 ----------------
 
 This operation does not return a response body.
-
 
 
 Check stack resources
@@ -133,20 +110,18 @@ Check stack resources
 
 Checks whether the resources are in expected states for a stack.
 
-
 Normal response codes: 200
 Error response codes:
-
 
 Request
 -------
 
 .. rest_parameters:: parameters.yaml
 
-   - check: check
-   - stack_name: stack_name
    - tenant_id: tenant_id
-   - stack_id: stack_id
+   - stack_id: stack_id_url
+   - stack_name: stack_name_url
+   - check: check
 
 Request Example
 ---------------
@@ -154,14 +129,7 @@ Request Example
 .. literalinclude:: samples/stack-action-check-request.json
    :language: javascript
 
-
-
-
-
 Response Example
 ----------------
 
 This operation does not return a response body.
-
-
-

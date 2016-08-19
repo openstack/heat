@@ -23,6 +23,7 @@ Orchestration Service API v1
 .. include:: build-info.inc
 .. include:: general-info.inc
 .. include:: heat-versions.inc
+.. include:: resource-types.inc
 .. include:: service-status.inc
 .. include:: software-config.inc
 .. include:: stack-actions.inc
@@ -30,3 +31,5 @@ Orchestration Service API v1
 .. include:: stack-resources.inc
 .. include:: stack-templates.inc
 .. include:: stacks.inc
+.. include:: stack-outputs.inc
+.. include:: stack-snapshots.inc
