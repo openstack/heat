@@ -2,6 +2,7 @@
     "stack": {
         "capabilities": [],
         "creation_time": "2015-01-31T15:12:36Z",
+        "deletion_time": null,
         "description": "HOT template for Nova Server resource.\n",
         "disable_rollback": true,
         "id": "None",
@@ -12,6 +13,7 @@
             }
         ],
         "notification_topics": [],
+        "outputs": [],
         "parameters": {
             "OS::project_id": "6e18cc2bdbeb48a5basad2dc499f6804",
             "OS::stack_id": "None",
@@ -160,7 +162,8 @@
             }
         ],
         "stack_name": "test_stack",
-        "stack_owner": "admin",
+        "stack_owner": null,
+        "tags": null,
         "template_description": "HOT template for Nova Server resource.\n",
         "timeout_mins": null,
         "updated_time": null
