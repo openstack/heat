@@ -206,7 +206,7 @@ class CheckResource(object):
                     stack.adopt_stack_data)
 
             check_stack_complete(cnxt, stack, current_traversal,
-                                 resource_id, deps, is_update)
+                                 graph_key[0], deps, graph_key[1])
         except exception.EntityNotFound as e:
             if e.entity == "Sync Point":
                 # Reload the stack to determine the current traversal, and

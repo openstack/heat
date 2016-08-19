@@ -336,6 +336,26 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_rcr.assert_called_once_with(self.ctx, self.is_update,
                                          self.resource.id, updated_stack)
 
+    def test_check_stack_complete_is_invoked_for_replaced_resource(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+        resC = self.stack['C']
+        # lets say C is update-replaced
+        is_update = True
+        replacementC_id = resC.make_replacement(self.stack.t.id)
+        replacementC, stack, _ = resource.Resource.load(self.ctx,
+                                                        replacementC_id,
+                                                        is_update, {})
+        self.cr._initiate_propagate_resource(self.ctx, replacementC_id,
+                                             self.stack.current_traversal,
+                                             is_update, replacementC,
+                                             self.stack)
+        # check_stack_complete should be called with resC.id not
+        # replacementC.id
+        mock_csc.assert_called_once_with(self.ctx, self.stack,
+                                         self.stack.current_traversal,
+                                         resC.id, mock.ANY,
+                                         is_update)
+
     @mock.patch.object(sync_point, 'sync')
     def test_retrigger_check_resource(self, mock_sync, mock_cru, mock_crc,
                                       mock_pcr, mock_csc, mock_cid):
