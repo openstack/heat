@@ -54,7 +54,7 @@ Request Parameters
    - with_detail: with_detail
    - name: resource_name_query
    - status: resource_status
-   - type: resource_type
+   - type: resource_type_query
    - action: resource_action
    - id: logical_resource_id
    - physical_resource_id: physical_resource_id

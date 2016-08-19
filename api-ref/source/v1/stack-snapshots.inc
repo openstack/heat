@@ -22,7 +22,7 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
-   - name: name
+   - name: snapshot_name
 
 Request Example
 ---------------
@@ -36,7 +36,7 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
    - status: status
-   - name: name
+   - name: snapshot_name
    - status_reason: status_reason
    - creation_time: creation_time
    - data: data
@@ -76,7 +76,7 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
    - status: status
-   - name: name
+   - name: snapshot_name
    - status_reason: status_reason
    - creation_time: creation_time
    - snapshot: snapshot
@@ -117,7 +117,7 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
    - status: status
-   - name: name
+   - name: snapshot_name
    - status_reason: status_reason
    - creation_time: creation_time
    - snapshots: snapshots

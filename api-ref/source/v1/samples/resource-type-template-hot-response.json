@@ -1,0 +1,57 @@
+{
+    "description": "Initial template of KeyPair",
+    "heat_template_version": "2016-10-14",
+    "outputs": {
+        "private_key": {
+            "description": "The private key if it has been saved.",
+            "value": "{\"get_attr\": [\"KeyPair\", \"private_key\"]}"
+        },
+        "public_key": {
+            "description": "The public key.",
+            "value": "{\"get_attr\": [\"KeyPair\", \"public_key\"]}"
+        },
+        "show": {
+            "description": "Detailed information about resource.",
+            "value": "{\"get_attr\": [\"KeyPair\", \"show\"]}"
+        }
+    },
+    "parameters": {
+        "name": {
+            "constraints": [
+                {
+                    "length": {
+                        "max": 255,
+                        "min": 1
+                    }
+                }
+            ],
+            "description": "The name of the key pair.",
+            "type": "string"
+        },
+        "public_key": {
+            "description": "The optional public key. This allows users to supply the public key from a pre-existing key pair. If not supplied, a new key pair will be generated.",
+            "type": "string"
+        },
+        "save_private_key": {
+            "default": false,
+            "description": "True if the system should remember a generated private key; False otherwise.",
+            "type": "boolean"
+        }
+    },
+    "resources": {
+        "KeyPair": {
+            "properties": {
+                "name": {
+                    "get_param": "name"
+                },
+                "public_key": {
+                    "get_param": "public_key"
+                },
+                "save_private_key": {
+                    "get_param": "save_private_key"
+                }
+            },
+            "type": "OS::Nova::KeyPair"
+        }
+    }
+}

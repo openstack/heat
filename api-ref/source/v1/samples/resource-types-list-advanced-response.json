@@ -1,0 +1,24 @@
+{
+    "resource_types": [
+        {
+            "description": "No description given",
+            "resource_type": "AWS::EC2::Instance"
+        },
+        {
+            "description": "Resource for defining which resources can be accessed by users.\n\nNOTE: Now this resource is actually associated with an AWS user resource,\nnot any OS:: resource though it is registered under the OS namespace below.\n\nResource for defining resources that users are allowed to access by the\nDescribeStackResource API.\n",
+            "resource_type": "OS::Heat::AccessPolicy"
+        },
+        {
+            "description": "A resource to manage scaling of `OS::Heat::AutoScalingGroup`.\n\n**Note** while it may incidentally support\n`AWS::AutoScaling::AutoScalingGroup` for now, please do not use it for that\npurpose and use `AWS::AutoScaling::ScalingPolicy` instead.\n\nResource to manage scaling for `OS::Heat::AutoScalingGroup`, i.e. define\nwhich metric should be scaled and scaling adjustment, set cooldown etc.\n",
+            "resource_type": "OS::Heat::ScalingPolicy"
+        },
+        {
+            "description": "Represents a child stack to allow composition of templates.",
+            "resource_type": "AWS::CloudFormation::Stack"
+        },
+        {
+            "description": "Heat Template Resource for Keystone Group.\n\nGroups are a container representing a collection of users. A group itself\nmust be owned by a specific domain, and hence all group names are not\nglobally unique, but only unique to their domain.\n",
+            "resource_type": "OS::Keystone::Group"
+        }
+    ]
+}
