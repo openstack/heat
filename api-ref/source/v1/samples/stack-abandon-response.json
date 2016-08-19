@@ -1,7 +1,24 @@
 {
-    "status": "COMPLETE",
+    "action": "CREATE",
+    "environment": {},
+    "files": {},
+    "id": "16934ca3-40e0-4fb2-a289-a700662ec05a",
     "name": "g",
-    "dry_run": true,
+    "project_id": "369166a68a3a49b78b4e138531556e55",
+    "resources": {
+        "server": {
+            "status": "COMPLETE",
+            "name": "server",
+            "resource_data": {},
+            "resource_id": "39d5dad7-7d7a-4cc8-bd84-851e9e2ff4ea",
+            "action": "CREATE",
+            "type": "OS::Nova::Server",
+            "metadata": {}
+        }
+    },
+    "stack_user_project_id": "9bbd353467bc4f069a3692d223a48aac",
+    "status": "COMPLETE",
+    "tags": null,
     "template": {
         "outputs": {
             "instance_ip": {
@@ -51,19 +68,6 @@
                 "default": "m1.small",
                 "type": "string"
             }
-        }
-    },
-    "action": "CREATE",
-    "id": "16934ca3-40e0-4fb2-a289-a700662ec05a",
-    "resources": {
-        "server": {
-            "status": "COMPLETE",
-            "name": "server",
-            "resource_data": {},
-            "resource_id": "39d5dad7-7d7a-4cc8-bd84-851e9e2ff4ea",
-            "action": "CREATE",
-            "type": "OS::Nova::Server",
-            "metadata": {}
         }
     }
 }

@@ -388,9 +388,8 @@ Resources:
   type: object
 adopt_stack_data:
   description: |
-    Existing resources data to adopt a stack. Data
-    returned by abandon stack could be provided as
-    ``adopt_stack_data``.
+    Existing resources data to adopt a stack. Data returned by abandon
+    stack could be provided as ``adopt_stack_data``.
   in: body
   required: true
   type: object
@@ -881,12 +880,6 @@ outputs_1:
   in: body
   required: true
   type: array
-outputs_3:
-  description: |
-    Key and value pairs that contain output data.
-  in: body
-  required: true
-  type: object
 parameters:
   description: |
     Supplies arguments for parameters defined in the stack template.
@@ -1100,10 +1093,9 @@ resources_2:
   in: body
   required: true
   type: object
-resources_3:
+resources_abandon:
   description: |
-    The required sources for creating the stack
-    template.
+    The required sources for creating the stack template.
   in: body
   required: true
   type: object
@@ -1170,16 +1162,9 @@ stack:
   in: body
   required: true
   type: object
-stack_disable_rollback:
+stack_action:
   description: |
-    Whether deletion of all stack resources when stack creation fails is
-    enabled.
-  in: body
-  required: true
-  type: boolean
-stack_id:
-  description: |
-    The UUID of the stack.
+    The current action on the stack.
   in: body
   required: true
   type: string
@@ -1190,7 +1175,37 @@ stack_disable_rollback:
   in: body
   required: true
   type: boolean
+stack_environment:
+  description: |
+    A JSON environment for the stack.
+  in: body
+  required: true
+  type: object
+stack_files:
+  description: |
+    A map containing the name and content of files used by the stack.
+  in: body
+  required: true
+  type: object
+stack_id:
+  description: |
+    The UUID of the stack.
+  in: body
+  required: true
+  type: string
 stack_name:
+  description: |
+    A name for the stack. The value must be unique within a project.
+    The name must start with an ASCII letter and can contain ASCII letters,
+    digits, underscores, periods, and hyphens. Specifically, the name must
+    match the ``^[a-zA-Z][a-zA-Z0-9_.-]*$`` regular expression.
+
+    When you delete or abandon a stack, its name will not become available
+    for reuse until the deletion completes successfully.
+  in: body
+  required: true
+  type: string
+stack_name_request:
   description: |
     A name for the stack. The value must be unique within a project.
     The name must start with an ASCII letter and can contain ASCII letters,
@@ -1251,6 +1266,12 @@ stack_tags:
   in: body
   required: true
   type: string
+stack_template:
+  description: |
+    The template used to create the stack.
+  in: body
+  required: true
+  type: object
 stack_timeout_mins:
   description: |
     The timeout for stack creation in minutes.
@@ -1343,6 +1364,31 @@ template_description:
   in: body
   required: true
   type: string
+template_description_show:
+  description: |
+    The description of the stack template.
+  in: body
+  required: false
+  type: string
+template_outputs:
+  description: |
+    Key and value pairs that contain output data.
+  in: body
+  required: true
+  type: object
+template_parameters:
+  description: |
+    Key and value pairs that contain the schemas of parameters acceptable by
+    the template.
+  in: body
+  required: true
+  type: object
+template_resources:
+  description: |
+    Key and value pairs that contain definition of resources in the template.
+  in: body
+  required: true
+  type: object
 template_url:
   description: |
     A URI to the location containing the stack template on which to perform

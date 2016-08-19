@@ -34,7 +34,7 @@ Request Parameters
    - environment: environment
    - files: files
    - parameters: parameters
-   - stack_name: stack_name
+   - stack_name: stack_name_request
    - tags: tags
    - template: template
    - template_url: template_url
@@ -95,7 +95,7 @@ Request Parameters
    - environment: environment
    - files: files
    - parameters: parameters
-   - stack_name: stack_name
+   - stack_name: stack_name_request
    - tags: tags
    - template: template
    - template_url: template_url
@@ -558,12 +558,25 @@ Abandon stack
 
 Deletes a stack but leaves its resources intact, and returns data that describes the stack and its resources.
 
-This method can be disabled from the server side. If it is
-disabled, this call throws an exception.
+This is a preview feature which has to be explicitly enabled by setting the
+following option in the ``heat.conf`` file::
 
+  [DEFAULT]
+  enable_stack_abandon = True
 
-Normal response codes: 200
-Error response codes:404,500,401,400,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -573,6 +586,23 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - action: stack_action
+   - environment: stack_environment
+   - files: stack_files
+   - id: stack_id
+   - stack_name: stack_name
+   - project_id: project_id
+   - resources: resources_abandon
+   - stack_user_project_id: stack_stack_user_project_id
+   - status: stack_status
+   - tags: stack_tags
+   - template: stack_template
 
 Response Example
 ----------------
@@ -588,7 +618,25 @@ Adopt stack
 
 Creates a stack from existing resources.
 
-Error response codes:201,500,409,401,400,
+This is a preview feature which has to be explicitly enabled by setting the
+following option in the ``heat.conf`` file::
+
+  [DEFAULT]
+  enable_stack_adopt = True
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 201
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 409
+   - 500
 
 Request Parameters
 ------------------
@@ -596,12 +644,12 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - files: files
+   - adopt_stack_data: adopt_stack_data
    - disable_rollback: disable_rollback
+   - environment: environment
+   - files: files
    - parameters: parameters
    - stack_name: stack_name
-   - adopt_stack_data: adopt_stack_data
-   - environment: environment
    - timeout_mins: timeout_mins
 
 Request Example
@@ -615,9 +663,17 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - location: location
+   - X-Openstack-Reqeuest-Id: request_id
+   - stack: stack
    - id: id
    - links: links
-   - stack: stack
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-create-response.json
+   :language: javascript
 
 
 Get stack template
@@ -627,12 +683,22 @@ Get stack template
 
 Gets a template for a stack.
 
+Response Codes
+--------------
 
-Normal response codes: 200
-Error response codes:404,500,401,400,
+.. rest_status_code:: success status.yaml
 
-Request
--------
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -645,11 +711,12 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - outputs: outputs
+   - X-Openstack-Reqeuest-Id: request_id
    - heat_template_version: heat_template_version
-   - description: description
-   - parameters: parameters
-   - resources: resources
+   - outputs: template_outputs
+   - parameters: template_parameters
+   - description: template_description_show
+   - resources: template_resources
 
 Response Example
 ----------------
