@@ -460,6 +460,12 @@ class KeystoneUserRoleAssignmentTest(common.HeatTestCase):
             user='user_1',
             project='project_1')
 
+    def test_user_role_assignment_delete_user_not_found(self):
+        self.keystone_client_plugin.get_user_id.side_effect = [
+            exception.EntityNotFound]
+        self.assertIsNone(self.test_role_assignment.handle_delete())
+        self.roles.revoke.assert_not_called()
+
 
 class KeystoneGroupRoleAssignmentTest(common.HeatTestCase):
 
@@ -573,3 +579,9 @@ class KeystoneGroupRoleAssignmentTest(common.HeatTestCase):
             role='role_1',
             group='group_1',
             project='project_1')
+
+    def test_group_role_assignment_delete_group_not_found(self):
+        self.keystone_client_plugin.get_group_id.side_effect = [
+            exception.EntityNotFound]
+        self.assertIsNone(self.test_role_assignment.handle_delete())
+        self.roles.revoke.assert_not_called()
