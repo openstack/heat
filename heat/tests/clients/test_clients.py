@@ -594,6 +594,14 @@ class TestIsNotFound(common.HeatTestCase):
             plugin='keystone',
             exception=lambda: keystone_exc.NotFound(details='gone'),
         )),
+        ('keystone_entity_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='keystone',
+            exception=lambda: exception.EntityNotFound(),
+        )),
         ('keystone_exception', dict(
             is_not_found=False,
             is_over_limit=False,
