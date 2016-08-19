@@ -4,9 +4,6 @@
 Stack resources
 ===============
 
-
-
-
 Show resource metadata
 ======================
 
@@ -18,9 +15,8 @@ Shows metadata for a resource.
 Normal response codes: 200
 Error response codes:
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -29,16 +25,11 @@ Request
    - tenant_id: tenant_id
    - stack_id: stack_id
 
-
-
-
 Response Example
 ----------------
 
 .. literalinclude:: samples/resource-metadata-response.json
    :language: javascript
-
-
 
 
 Show resource data
@@ -52,9 +43,8 @@ Shows data for a resource.
 Normal response codes: 200
 Error response codes:404,401,400,
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -62,7 +52,6 @@ Request
    - stack_name: stack_name
    - tenant_id: tenant_id
    - stack_id: stack_id
-
 
 Response Parameters
 -------------------
@@ -81,18 +70,11 @@ Response Parameters
    - physical_resource_id: physical_resource_id
    - resource_type: resource_type
 
-
-
 Response Example
 ----------------
 
 .. literalinclude:: samples/resource-show-response.json
    :language: javascript
-
-
-
-
-
 
 
 List resources
@@ -104,13 +86,11 @@ Lists resources in a stack based on filtering parameters like resource
 name, status, type, action, id and physical_resource_id. These parameters could
 be used multiple times.
 
-
 Normal response codes: 200
 Error response codes:404,401,400,
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -144,18 +124,35 @@ Response Parameters
    - physical_resource_id: physical_resource_id
    - resource_type: resource_type
 
-
-
 Response Example
 ----------------
 
 .. literalinclude:: samples/resources-list-response.json
    :language: javascript
 
+Find stack resources
+====================
 
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/resources
 
+Finds the canonical URL for a resource list of a stack.
 
+The canonical URL is returned for only non-deleted stacks. To fetch
+the resource list for deleted stacks, use the following endpoint:
 
+::
+
+   /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources
+
+Error response codes:302,
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - stack_name: stack_name
+   - tenant_id: tenant_id
 
 
 Send a signal to a resource
@@ -175,9 +172,8 @@ they return a 400 error code.
 Normal response codes: 200
 Error response codes:
 
-
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -186,13 +182,7 @@ Request
    - tenant_id: tenant_id
    - stack_id: stack_id
 
-
-
-
 Response Example
 ----------------
 
 This operation does not return a response body.
-
-
-
