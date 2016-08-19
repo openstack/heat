@@ -432,6 +432,14 @@ check:
   in: body
   required: true
   type: string
+clear_parameters:
+  description: |
+    A list of parameters, if specified, to be removed from the set of
+    parameters of the current stack. The default values in the template will
+    be used.
+  in: body
+  required: false
+  type: array
 code:
   description: |
     The response code to a resource find request. e.g. ``302 Found``.
@@ -645,6 +653,18 @@ environment_files:
   in: body
   required: false
   type: object
+existing:
+  description:
+    A boolean specifying whether the service is about to reuse the existing
+    stack template, parameters and environment. If ``template`` parameter is
+    not provided, the existing template is used. If ``template_files`` is not
+    provided, the existing environment is used. Parameters specified in the
+    ``parameters`` key will patch over the existing values in the current
+    stack. Parameters omitted will keep the existing values.
+  in: body
+  required: false
+  default: false
+  type: boolean
 files:
   description: |
     Supplies the contents of files referenced in the template or the
@@ -956,6 +976,41 @@ physical_resource_id:
   in: body
   required: true
   type: string
+preview_added:
+  description: |
+    A list of resource objects that will be added if a stack update is
+    performed.
+  in: body
+  required: true
+  type: array
+preview_deleted:
+  description: |
+    A list of resource objects that will be deleted if a stack update is
+    performed.
+  in: body
+  required: true
+  type: array
+preview_replaced:
+  description: |
+    A list of resource objects that will be replaced if a stack update is
+    performed.
+  in: body
+  required: true
+  type: array
+preview_unchanged:
+  description: |
+    A list of resource objects that will remain unchanged if a stack update is
+    performed.
+  in: body
+  required: true
+  type: array
+preview_updated:
+  description: |
+    A list of resource objects that will have their properties updated in place
+    if a stack update is performed.
+  in: body
+  required: true
+  type: array
 project_id:
   description: |
     The UUID of the project.
@@ -993,6 +1048,13 @@ resource:
   description: |
     Key and value pairs that contain stack resource
     properties.
+  in: body
+  required: true
+  type: object
+resource_changes:
+  description: |
+    An map that describes what resources will be added, deleted, replaced,
+    updated or remain unchanged.
   in: body
   required: true
   type: object
@@ -1121,6 +1183,13 @@ stack_id:
   in: body
   required: true
   type: string
+stack_disable_rollback:
+  description: |
+    Whether deletion of all stack resources when stack creation fails is
+    enabled.
+  in: body
+  required: true
+  type: boolean
 stack_name:
   description: |
     A name for the stack. The value must be unique within a project.
@@ -1321,6 +1390,13 @@ update_allowed:
   in: body
   required: true
   type: boolean
+update_show_nested:
+  description: |
+    Set to ``true`` to include nested stacks in the preview result.
+  in: body
+  required: false
+  default: false
+  type: boolean
 updated_at:
   description: |
     The date and time when the resource was updated.
@@ -1357,3 +1433,4 @@ updated_time:
   in: body
   required: true
   type: string
+
