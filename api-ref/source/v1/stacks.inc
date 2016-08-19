@@ -131,7 +131,7 @@ Response Parameters
    - stack_user_project_id: stack_stack_user_project_id
    - tags: stack_tags
    - template_description: template_description
-   - timeout_mins: timeout_mins
+   - timeout_mins: stack_timeout_mins
    - updated_time: updated_time
 
 Response Example
@@ -148,8 +148,18 @@ List stacks
 
 Lists active stacks.
 
-Normal response codes: 200
-Error response codes:500,401,400,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 500
 
 Request Parameters
 ------------------
@@ -157,23 +167,23 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - id: id
-   - status: status
-   - name: name
-   - action: action
-   - tenant: tenant
-   - username: username
-   - owner_id: owner_id
+   - id: stack_id_query
+   - status: stack_status_query
+   - name: stack_name_query
+   - action: stack_action_query
+   - tenant: stack_tenant_query
+   - username: stack_user_query
+   - owner_id: owner_id_query
    - limit: limit
    - marker: marker
+   - sort_keys: stack_sort_keys
+   - sort_dir: sort_dir
    - show_deleted: show_deleted
    - show_nested: show_nested
-   - sort_keys: sort_keys
-   - tags: tags
+   - tags: tags_query
    - tags_any: tags_any
    - not_tags: not_tags
    - not_tags_any: not_tags_any
-   - sort_dir: sort_dir
    - global_tenant: global_tenant
    - with_count: with_count
 
@@ -182,19 +192,20 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - X-Openstack-Request-Id: request_id
+   - stacks: stacks
+   - creation_time: creation_time
+   - deletion_time: deletion_time
    - description: description
    - links: links
-   - stack_status_reason: stack_status_reason
-   - stack_name: stack_name
-   - tags: tags
-   - creation_time: creation_time
-   - updated_time: updated_time
-   - deletion_time: deleted_at
-   - stack_status: stack_status
-   - stack_owner: owner_id
-   - stack_user_project_id: stack_user_project_id
    - parent: parent
-   - id: id
+   - stack_name: stack_name
+   - stack_owner: stack_owner
+   - stack_status: stack_status
+   - stack_status_reason: stack_status_reason
+   - tags: stack_tags
+   - updated_time: updated_time
+   - stack_user_project_id: stack_stack_user_project_id
 
 Response Example
 ----------------
@@ -210,23 +221,52 @@ Find stack
 
 Finds the canonical URL for a stack.
 
-Also works with verbs other than GET , so that you can perform PUT
-and DELETE operations on a current stack. Set your client to follow
-redirects. When redirecting, the request method should not change
-as defined in RFC2626. However, in many clients the default
-behavior is to change the method to GET when you receive a ``302``
-response code because this behavior is ubiquitous in web browsers.
+Also works with verbs other than GET, so that you can perform PUT and DELETE
+operations on a current stack. Set your client to follow redirects. When
+redirecting, the request method should not change as defined in RFC2626.
+However, in many clients the default behavior is to change the method to GET
+when you receive a ``302`` response code because this behavior is ubiquitous
+in web browsers.
 
-Error response codes:302,404,500,401,400,
+Response Codes
+--------------
 
+.. rest_status_code:: success status.yaml
+
+   - 302
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - stack_name: stack_name
    - tenant_id: tenant_id
+   - stack_name: stack_name_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+   - X-Openstack-Request-Id: request_id
+   - code: code
+   - message: message
+   - title: title
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-find-response.json
+   :language: javascript
+
 
 Show stack details
 ==================
@@ -235,8 +275,19 @@ Show stack details
 
 Shows details for a stack.
 
-Normal response codes: 200
-Error response codes:404,500,401,400,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -246,31 +297,35 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
+   - resolve_outputs: resolve_outputs
 
 Response Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - parent: parent
-   - updated_time: updated_time
-   - description: description
-   - links: links
-   - stack_status_reason: stack_status_reason
-   - stack_name: stack_name
-   - outputs: outputs
-   - tags: tags
-   - creation_time: creation_time
+   - X-Openstack-Request-Id: request_id
+   - stack: stack
    - capabilities: capabilities
+   - creation_time: creation_time
+   - deletion_time: deletion_time
+   - description: description
+   - disable_rollback: stack_disable_rollback
+   - id: stack_id
+   - links: links
    - notification_topics: notification_topics
-   - timeout_mins: timeout_mins
+   - outputs: stack_outputs
+   - parameters: stack_parameters
+   - parent: parent
+   - stack_name: stack_name
    - stack_owner: stack_owner
    - stack_status: stack_status
-   - stack: stack
-   - parameters: parameters
-   - id: id
-   - stack_user_project_id: stack_user_project_id
+   - stack_status_reason: stack_status_reason
+   - stack_user_project_id: stack_stack_user_project_id
+   - tags: stack_tags
    - template_description: template_description
+   - timeout_mins: stack_timeout_mins
+   - updated_time: updated_time
 
 Response Example
 ----------------

@@ -19,6 +19,11 @@
   default: |
     There are multiple choices for resources. The request has to be more
     specific to successfully retrieve one of these resources.
+302:
+  default: |
+    The response is about a redirection hint. The header of the response
+    usually contains a 'location' value where requesters can check to track
+    the real location of the resource.
 
 #################
 #  Error Codes  #
