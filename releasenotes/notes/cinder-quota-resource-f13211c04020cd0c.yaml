@@ -1,0 +1,5 @@
+---
+features:
+  - New resource ``OS::Cinder::Quota`` is added to manage cinder quotas.
+    Cinder quotas are operational limits to projects on cinder block storage
+    resources. These include gigabytes, snapshots, and volumes.
