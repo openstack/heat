@@ -1,17 +1,24 @@
 # variables in header
 
 # variables in path
-config_id:
+config_id_url:
   description: |
     The UUID of the configuration.
   in: path
   required: false
   type: string
-deployment_id:
+deployment_id_url:
   description: |
     The UUID of the deployment.
   in: path
   required: false
+  type: string
+deployment_server_id_url:
+  description: |
+    The UUID of the server for which to fetch
+    server configuration metadata.
+  in: path
+  required: true
   type: string
 event_id:
   description: |
@@ -29,13 +36,6 @@ output_key_1:
 resource_name:
   description: |
     The name of a resource in the stack.
-  in: path
-  required: false
-  type: string
-server_id_2:
-  description: |
-    The UUID of the server for which to fetch
-    configuration metadata.
   in: path
   required: false
   type: string
@@ -57,6 +57,12 @@ stack_name:
   in: path
   required: false
   type: string
+template_version:
+  description: |
+    The version of the heat template.
+  in: path
+  required: true
+  type: string
 tenant_id:
   description: |
     The UUID of the tenant. A tenant is also known as
@@ -70,18 +76,18 @@ type_name:
   in: path
   required: false
   type: string
-template_version:
-  description: |
-    The version of the heat template.
-  in: path
-  required: true
-  type: string
 
 # variables in query
 action_3:
   description: |
     Filters the stack list by an action. Use this
     filter multiple times to filter by multiple actions.
+  in: query
+  required: false
+  type: string
+deployment_server_id_query:
+  description: |
+    The UUID of the target server.
   in: query
   required: false
   type: string
@@ -97,6 +103,14 @@ id_4:
   description: |
     Filters the stack list by a stack ID. Use this
     filter multiple times to filter by multiple IDs.
+  in: query
+  required: false
+  type: string
+ignore_errors:
+  description: |
+    List of comma separated error codes to ignore.
+# TODO(kanagaraj-manickam) add the cross reference to the API to retrieve the
+# list of error code supported, once its made available in heat.
   in: query
   required: false
   type: string
@@ -299,6 +313,12 @@ with_count:
   in: query
   required: false
   type: boolean
+with_description:
+  description: |
+    Either display resource type's description or not. Default is ``false``
+  in: query
+  required: false
+  type: boolean
 with_detail:
   description: |
     Enables detailed resource information for each
@@ -306,14 +326,6 @@ with_detail:
   in: query
   required: false
   type: boolean
-ignore_errors:
-  description: |
-    List of comma separated error codes to ignore.
-# TODO(kanagaraj-manickam) add the cross reference to the API to retrieve the
-# list of error code supported, once its made available in heat.
-  in: query
-  required: false
-  type: string
 
 # variables in body
 Description:
@@ -361,26 +373,6 @@ Resources:
   in: body
   required: true
   type: object
-action:
-  description: |
-    The current stack action that triggers this
-    deployment resource.
-  in: body
-  required: true
-  type: string
-action_1:
-  description: |
-    The deployment action.
-  in: body
-  required: true
-  type: string
-action_2:
-  description: |
-    Current stack action in which this deployment
-    resource is being triggered.
-  in: body
-  required: true
-  type: string
 adopt_stack_data:
   description: |
     Existing resources data to adopt a stack. Data
@@ -440,14 +432,7 @@ config_1:
   in: body
   required: true
   type: string
-config_id_1:
-  description: |
-    The UUID of the software configuration resource
-    that runs when applying to the server.
-  in: body
-  required: true
-  type: string
-config_id_2:
+config_id:
   description: |
     The UUID of the configuration.
   in: body
@@ -460,6 +445,12 @@ config_id_3:
     same configuration UUID with which the deployment was created
     because ephemeral configurations are created throughout the life
     cycle of the deployment.
+  in: body
+  required: true
+  type: string
+config_name:
+  description: |
+    The name of the software configuration.
   in: body
   required: true
   type: string
@@ -613,6 +604,72 @@ deleted_at:
   in: body
   required: true
   type: string
+deployment_action:
+  description: |
+    The stack action that triggers this deployment resource.
+  in: body
+  required: false
+  type: string
+deployment_config_id:
+  description: |
+    The UUID of the software configuration resource
+    that runs when applying to the server.
+  in: body
+  required: true
+  type: string
+deployment_id:
+  description: |
+    The UUID of the software deployment.
+  in: body
+  required: true
+  type: string
+deployment_metadata:
+  description: |
+    The metadata about a software deployment.
+  in: body
+  required: true
+  type: array
+deployment_output_values:
+  description: |
+    A dict comprised of the output data from a software deployment.
+  in: body
+  required: true
+  type: object
+deployment_status:
+  description: |
+    Current status of the deployment. A valid value
+    is ``COMPLETE``, ``IN_PROGRESS``, or ``FAILED``.
+  in: body
+  required: false
+  type: string
+deployment_status_reason:
+  description: |
+    The reason for the current deployment status.
+  in: body
+  required: false
+  type: string
+
+deployment_updated_time:
+  description: |
+    The date and time when the software deployment was updated.
+
+    The date and time stamp format is `ISO 8601
+    <https://en.wikipedia.org/wiki/ISO_8601>`_:
+
+    ::
+
+       CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``.
+
+    The ``±hh:mm`` value, if included, is the time zone as an offset
+    from UTC.
+
+    If the ``updated_at`` date and time stamp is not set, its value is
+    ``null``.
+  in: body
+  required: false 
+  type: string
 description:
   description: |
     The description of the stack resource.
@@ -683,6 +740,12 @@ disable_rollback_2:
   in: body
   required: true
   type: boolean
+engine_id:
+  description: |
+    The ID of engine service.
+  in: body
+  required: true
+  type: string
 environment:
   description: |
     A JSON environment for the stack.
@@ -772,39 +835,21 @@ heat_template_version:
   in: body
   required: true
   type: string
-hostname:
-  description: |
-    The name of the host for the service.
-  in: body
-  required: true
-  type: string
 host:
   description: |
     The host for the service.
   in: body
   required: true
   type: string
-engine_id:
+hostname:
   description: |
-    The ID of engine service.
+    The name of the host for the service.
   in: body
   required: true
   type: string
 id:
   description: |
     The UUID of the heat engine.
-  in: body
-  required: true
-  type: string
-id_1:
-  description: |
-    The UUID of the software deployment.
-  in: body
-  required: true
-  type: string
-id_2:
-  description: |
-    The UUID of the system-assigned stack.
   in: body
   required: true
   type: string
@@ -822,10 +867,10 @@ id_5:
   type: string
 input_values:
   description: |
-    A list of input data.
+    A dict comprises of input data as key-value pairs.
   in: body
-  required: true
-  type: array
+  required: false
+  type: object
 inputs:
   description: |
     Schema that represents the inputs that this
@@ -867,12 +912,6 @@ name_1:
   in: body
   required: false
   type: string
-name_2:
-  description: |
-    The name of the software configuration.
-  in: body
-  required: true
-  type: string
 name_3:
   description: |
     The name of the snapshot.
@@ -898,13 +937,6 @@ options:
   in: body
   required: false
   type: string
-options_1:
-  description: |
-    The options, if any, to include in the code. For
-    example any dependent flags.
-  in: body
-  required: true
-  type: string
 output_error:
   description: |
     The error in a stack output.
@@ -923,18 +955,12 @@ output_value:
   in: body
   required: true
   type: string
-output_values:
-  description: |
-    A list of output data.
-  in: body
-  required: true
-  type: array
 output_values_1:
   description: |
     Map of output values for the deployment, as
     signaled from the server.
   in: body
-  required: false
+  required: 
   type: object
 outputs:
   description: |
@@ -1153,6 +1179,12 @@ resource:
   in: body
   required: true
   type: object
+resource_description:
+  description: |
+    Displays resource type's description.
+  in: body
+  required: false
+  type: string
 resource_name_1:
   description: |
     The name of the resource.
@@ -1213,12 +1245,6 @@ server_id:
   description: |
     The UUID of the compute server to which the
     configuration applies.
-  in: body
-  required: true
-  type: string
-server_id_1:
-  description: |
-    The UUID of the server.
   in: body
   required: true
   type: string
@@ -1350,27 +1376,6 @@ status:
   in: body
   required: true
   type: string
-status_1:
-  description: |
-    Current status of the deployment. A valid value
-    is ``COMPLETE``, ``IN_PROGRESS``, or ``FAILED``.
-  in: body
-  required: false
-  type: string
-status_2:
-  description: |
-    The status of the software deployment. The value
-    is ``INPROGRESS`` or ``COMPLETE``.
-  in: body
-  required: true
-  type: string
-status_3:
-  description: |
-    Current status of the deployment. Value is
-    ``IN_PROGRESS``, ``COMPLETE``, or ``FAILED``.
-  in: body
-  required: false
-  type: string
 status_4:
   description: |
     The status of the snapshot.
@@ -1383,12 +1388,6 @@ status_reason:
     which is ``FAILED`` status.
   in: body
   required: false
-  type: string
-status_reason_1:
-  description: |
-    The debug information for the current status.
-  in: body
-  required: true
   type: string
 status_reason_2:
   description: |
@@ -1591,45 +1590,4 @@ updated_time_1:
     ``null``.
   in: body
   required: true
-  type: string
-updated_time_2:
-  description: |
-    Time of last stack update in the following
-    format: ``YYYY-MM- DDThh:mm:ssTZD``, where ``TZD`` is the time
-    zone designator.
-  in: body
-  required: true
-  type: string
-updated_time_3:
-  description: |
-    The date and time when the stack was updated.
-
-    The date and time stamp format is `ISO 8601
-    <https://en.wikipedia.org/wiki/ISO_8601>`_:
-
-    ::
-
-       CCYY-MM-DDThh:mm:ss±hh:mm
-
-    For example, ``2015-08-27T09:49:58-05:00``.
-
-    The ``±hh:mm`` value, if included, is the time zone as an offset
-    from UTC.
-
-    If the ``updated_at`` date and time stamp is not set, its value is
-    ``null``.
-  in: body
-  required: true
-  type: string
-with_description:
-  description: |
-    Either display resource type's description or not. Default is ``false``
-  in: query
-  required: false
-  type: boolean
-resource_description:
-  description: |
-    Displays resource type's description.
-  in: body
-  required: false
   type: string
