@@ -9,10 +9,22 @@ Snapshot a stack
 
 .. rest_method::  POST /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/snapshots
 
-Takes a snapshot of all resources in a stack. All snapshots are deleted when the stack is deleted.
+Takes a snapshot of all resources in a stack. All snapshots are deleted when
+the stack is deleted.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -35,17 +47,67 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: snapshot_status
-   - name: snapshot_name
-   - status_reason: status_reason
+   - X-Openstack-Request-Id: request_id
    - creation_time: creation_time
-   - data: data
+   - data: snapshot_data
    - id: snapshot_id
+   - name: snapshot_name
+   - status: snapshot_status
+   - status_reason: snapshot_status_reason
 
 Response Example
 ----------------
 
 .. literalinclude:: samples/stack-snapshot-response.json
+   :language: javascript
+
+
+List snapshots
+==============
+
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/snapshots
+
+Lists snapshots for a stack.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 404
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - snapshots: snapshots
+   - creation_time: creation_time
+   - data: snapshot_data
+   - id: snapshot_id
+   - name: snapshot_name
+   - status: snapshot_status
+   - status_reason: snapshot_status_reason
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-snapshots-list-response.json
    :language: javascript
 
 
@@ -56,9 +118,17 @@ Show snapshot
 
 Shows details for a snapshot.
 
+Response Codes
+--------------
 
-Normal response codes: 200
-Error response codes:
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 404
 
 Request Parameters
 ------------------
@@ -75,80 +145,21 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - status: snapshot_status
-   - name: snapshot_name
-   - status_reason: status_reason
-   - creation_time: creation_time
+   - X-Openstack-Request-Id: request_id
    - snapshot: snapshot
-   - template: template
-   - project_id: project_id
-   - data: data
-   - id: snapshot_id
-   - resources: resources
-
-Response Example
-----------------
-
-.. literalinclude:: samples/stack-show-snapshot-response.json
-   :language: javascript
-
-List snapshots
-==============
-
-.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/snapshots
-
-Lists snapshots for a stack.
-
-Normal response codes: 200
-Error response codes:
-
-Request Parameters
-------------------
-
-.. rest_parameters:: parameters.yaml
-
-   - tenant_id: tenant_id
-   - stack_name: stack_name_url
-   - stack_id: stack_id_url
-
-Response Parameters
--------------------
-
-.. rest_parameters:: parameters.yaml
-
-   - status: snapshot_status
-   - name: snapshot_name
-   - status_reason: status_reason
    - creation_time: creation_time
-   - snapshots: snapshots
-   - data: data
+   - data: snapshot_data
    - id: snapshot_id
+   - name: snapshot_name
+   - status: snapshot_status
+   - status_reason: snapshot_status_reason
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/stack-snapshots-list-response.json
+.. literalinclude:: samples/stack-snapshot-show-response.json
    :language: javascript
 
-
-Delete snapshot
-===============
-
-.. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/snapshots/{snapshot_id}
-
-Deletes a stack snapshot.
-
-Error response codes:204,
-
-Request Parameters
-------------------
-
-.. rest_parameters:: parameters.yaml
-
-   - tenant_id: tenant_id
-   - stack_name: stack_name_url
-   - stack_id: stack_id_url
-   - snapshot_id: snapshot_id_url
 
 Restore snapshot
 ================
@@ -157,10 +168,20 @@ Restore snapshot
 
 Restores a stack snapshot.
 
-You can restore only active stacks from a snapshot. You must
-recreate deleted stacks.
+You can restore only active stacks from a snapshot. You must recreate deleted
+stacks.
 
-Error response codes:202,
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 404
 
 Request Parameters
 ------------------
@@ -171,3 +192,62 @@ Request Parameters
    - stack_name: stack_name_url
    - stack_id: stack_id_url
    - snapshot_id: snapshot_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - code: restore_code
+   - message: restore_message
+   - title: restore_title
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-snapshot-restore-response.json
+   :language: javascript
+
+
+Delete a snapshot
+=================
+
+.. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/snapshots/{snapshot_id}
+
+Deletes a stack snapshot.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 204
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - snapshot_id: snapshot_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+
+Response Example
+----------------
+
+The response to this API does not have a body.

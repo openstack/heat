@@ -172,6 +172,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - tenant_id: tenant_id
    - action: deployment_action
    - config_id: deployment_config_id
    - input_values: input_values
@@ -179,7 +180,6 @@ Request Parameters
    - stack_user_project_id: stack_user_project_id
    - status: deployment_status
    - status_reason: deployment_status_reason
-   - tenant_id: tenant_id
 
 Request Example
 ---------------
@@ -201,7 +201,7 @@ Response Parameters
    - server_id: server_id
    - software_deployment: software_deployment
    - status: deployment_status
-   - status_reason: status_reason
+   - status_reason: deployment_status_reason
    - updated_time: deployment_updated_time
 
 Response Example
@@ -227,8 +227,8 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - server_id: deployment_server_id_query
    - tenant_id: tenant_id
+   - server_id: deployment_server_id_query
 
 Response Parameters
 -------------------
@@ -244,7 +244,7 @@ Response Parameters
    - server_id: server_id
    - software_deployments: software_deployments
    - status: deployment_status
-   - status_reason: status_reason
+   - status_reason: deployment_status_reason
    - updated_time: deployment_updated_time
 
 Response Example
@@ -252,6 +252,7 @@ Response Example
 
 .. literalinclude:: samples/deployments-list-response.json
    :language: javascript
+
 
 Show deployment details
 =======================
@@ -269,8 +270,8 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - deployment_id: deployment_id_url
    - tenant_id: tenant_id
+   - deployment_id: deployment_id_url
 
 Response Parameters
 -------------------
@@ -286,7 +287,7 @@ Response Parameters
    - server_id: server_id
    - software_deployment: software_deployment
    - status: deployment_status
-   - status_reason: status_reason
+   - status_reason: deployment_status_reason
    - updated_time: deployment_updated_time
 
 Response Example
@@ -294,6 +295,7 @@ Response Example
 
 .. literalinclude:: samples/deployment-show-response.json
    :language: javascript
+
 
 Update deployment
 =================
@@ -311,14 +313,14 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
+   - tenant_id: tenant_id
+   - deployment_id: deployment_id_url
    - action: deployment_action
    - config_id: deployment_config_id
-   - deployment_id: deployment_id_url
    - input_values: input_values
    - output_values: deployment_output_values
    - status: deployment_status
-   - status_reason: status_reason
-   - tenant_id: tenant_id
+   - status_reason: deployment_status_reason
 
 Request Example
 ---------------
@@ -340,7 +342,7 @@ Response Parameters
    - server_id: server_id
    - software_deployments: software_deployments
    - status: deployment_status
-   - status_reason: status_reason
+   - status_reason: deployment_status_reason
    - updated_time: deployment_updated_time
 
 Response Example
