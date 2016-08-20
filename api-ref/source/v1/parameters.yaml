@@ -141,10 +141,11 @@ marker:
   type: string
 nested_depth:
   description: |
-    Includes resources from nested stacks up to the
-    ``nested_depth`` levels of recursion.
+    Includes resources from nested stacks up to the ``nested_depth`` levels
+    of recursion.
   in: query
   required: false
+  default: 0
   type: integer
 not_tags:
   description: |
@@ -170,6 +171,14 @@ owner_id_query:
   in: query
   required: false
   type: string
+physical_resource_id_query:
+  description: |
+    Filters the resource list by the ID of physical resource represented by
+    a stack resource. Use this filter multiple times to filter by multiple
+    physical resource IDs.
+  in: query
+  required: false
+  type: string
 resolve_outputs:
   description: |
     A boolean indicating whether the outputs section of a stack should be
@@ -178,11 +187,18 @@ resolve_outputs:
   required: false
   default: true
   type: boolean
-resource_action:
+resource_action_query:
   description: |
     Stack resource action. Valid resource actions are ``ADOPT``, ``CHECK``,
     ``CREATE``, ``DELETE``, ``INIT``, ``RESTORE``, ``RESUME``,
     ``ROLLBACK``, ``SNAPSHOT``, ``SUSPEND``, and ``UPDATE``.
+  in: query
+  required: false
+  type: string
+resource_id_query:
+  description: |
+    Filters the resource list by the logical ID of stack resources. Use this
+    filter multiple times to filter by multiple resource IDs.
   in: query
   required: false
   type: string
@@ -193,17 +209,20 @@ resource_name_query:
   in: query
   required: false
   type: string
-resource_status:
+resource_status_query:
   description: |
     Stack resource status. Valid resource statuses are ``COMPLETE``,
-    ``FAILED`` and ``IN_PROGRESS``.
+    ``FAILED`` and ``IN_PROGRESS``. This can be specified more than once to
+    filter the results by multiple resource statuses.
   in: query
   required: false
   type: string
 resource_type_query:
   description: |
     Stack resource type. Valid resource types include ``OS::Cinder::Volume``,
-    ``OS::Nova::Server``, ``OS::Neutron::Port`` and so on.
+    ``OS::Nova::Server``, ``OS::Neutron::Port`` and so on. This parameter
+    can be specified more than once to filter results by multiple resource
+    types.
   in: query
   required: false
   type: string
@@ -330,6 +349,13 @@ type_version_query:
   in: query
   required: false
   type: string
+with_attr:
+  description: |
+    Includes detailed resource information for the resource.
+  in: query
+  required: false
+  default: false
+  type: boolean
 with_count:
   description: |
     Set to ``true`` to include a count key in the response. The ``count`` key
@@ -347,10 +373,11 @@ with_description:
   type: boolean
 with_detail:
   description: |
-    Enables detailed resource information for each
-    resource in list of resources.
+    Enables detailed resource information for each resource in list of
+    resources.
   in: query
   required: false
+  default: false
   type: boolean
 
 # variables in body
@@ -773,12 +800,25 @@ logical_resource_id:
   in: body
   required: true
   type: string
+mark_unhealthy:
+  description: |
+    A boolean indicating whether the target resource should be marked as
+    unhealthy.
+  in: body
+  required: true
+  type: boolean
 message:
   description: |
     The message in the response to a resource find request.
   in: body
   required: true
   type: string
+metadata:
+  description: |
+    The metadata of a resource.
+  in: body
+  required: true
+  type: object
 name_1:
   description: |
     The name of the configuration to create.
@@ -1012,15 +1052,13 @@ required:
   type: boolean
 required_by:
   description: |
-    The list of resources that require this stack
-    resource.
+    The list of resources that require this stack resource.
   in: body
   required: true
   type: array
 resource:
   description: |
-    Key and value pairs that contain stack resource
-    properties.
+    Key and value pairs that contain stack resource properties.
   in: body
   required: true
   type: object
@@ -1031,13 +1069,22 @@ resource_changes:
   in: body
   required: true
   type: object
+resource_links:
+  description: |
+    A list of URLs for the resource. Each URL is a JSON object with an ``href``
+    key indicating the URL and a ``rel`` key indicating its relationship to
+    the resource in question. There may be multiple links returned. The
+    ``self`` relationship identifies the URL of the resource itself.
+  in: body
+  required: true
+  type: array
 resource_name:
   description: |
     The name of the resource.
   in: body
   required: true
   type: string
-resource_status_1:
+resource_status:
   description: |
     The status of the resource.
   in: body
@@ -1074,6 +1121,13 @@ resource_types_simple:
   in: body
   required: true
   type: array
+resource_upudate_status_reason:
+  description: |
+    The reason for the current stack resource state.
+  in: body
+  required: false
+  default: ''
+  type: string
 resources:
   description: |
     A map of resource names and their properties.
@@ -1098,6 +1152,12 @@ resources_abandon:
   in: body
   required: true
   type: object
+resources_list:
+  description: |
+    A list of resource objects.
+  in: body
+  required: true
+  type: array
 resume:
   description: |
     Specify the ``resume`` action in the request

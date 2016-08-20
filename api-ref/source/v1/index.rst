@@ -24,7 +24,7 @@ Orchestration Service API v1
 .. include:: general-info.inc
 .. include:: versions.inc
 .. include:: stacks.inc
-.. include:: stack-resources.inc
+.. include:: resources.inc
 .. include:: stack-outputs.inc
 .. include:: stack-snapshots.inc
 .. include:: stack-actions.inc

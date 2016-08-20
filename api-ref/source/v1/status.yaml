@@ -32,6 +32,8 @@
 400:
   default: |
     Some content in the request was invalid.
+  resource_signal: |
+    The target resource doesn't support receiving a signal.
 401:
   default: |
     User must authenticate before making a request.
