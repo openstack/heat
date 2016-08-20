@@ -1,0 +1,5 @@
+{
+    "code": "302 Found",
+    "message": "The resource was found at <a href=\"http://192.168.42.11:8004/v1/369166a68a3a49b78b4e138531556e55/stacks/s1/da778f26-6d25-4634-9531-d438188e48fd/events?sort_dir=asc\">http://192.168.42.11:8004/v1/369166a68a3a49b78b4e138531556e55/stacks/s1/da778f26-6d25-4634-9531-d438188e48fd/events?sort_dir=asc</a>;\nyou should be redirected automatically.\n\n",
+    "title": "Found"
+}

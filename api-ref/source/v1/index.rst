@@ -28,7 +28,7 @@ Orchestration Service API v1
 .. include:: stack-outputs.inc
 .. include:: stack-snapshots.inc
 .. include:: stack-actions.inc
-.. include:: stack-events.inc
+.. include:: events.inc
 .. include:: stack-templates.inc
 .. include:: software-config.inc
 .. include:: resource-types.inc
