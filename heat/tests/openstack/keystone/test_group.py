@@ -15,10 +15,12 @@ import mock
 
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import group
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
+from heat.tests import fakes
 from heat.tests import utils
 
 keystone_group_template = {
@@ -52,9 +54,10 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.test_group = self.stack['test_group']
 
         # Mock client
-        self.keystoneclient = mock.MagicMock()
-        self.test_group.client = mock.MagicMock()
-        self.test_group.client.return_value = self.keystoneclient
+        self.keystoneclient = mock.Mock()
+        self.patchobject(resource.Resource, 'client',
+                         return_value=fakes.FakeKeystoneClient(
+                             client=self.keystoneclient))
         self.groups = self.keystoneclient.groups
 
         # Mock client plugin

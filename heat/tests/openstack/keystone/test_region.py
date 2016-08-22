@@ -14,10 +14,12 @@
 import mock
 from six.moves.urllib import parse
 
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import region
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
+from heat.tests import fakes
 from heat.tests import utils
 
 KEYSTONE_REGION_TEMPLATE = {
@@ -52,9 +54,10 @@ class KeystoneRegionTest(common.HeatTestCase):
         self.test_region = self.stack['test_region']
 
         # Mock client
-        self.keystoneclient = mock.MagicMock()
-        self.test_region.client = mock.MagicMock()
-        self.test_region.client.return_value = self.keystoneclient
+        self.keystoneclient = mock.Mock()
+        self.patchobject(resource.Resource, 'client',
+                         return_value=fakes.FakeKeystoneClient(
+                             client=self.keystoneclient))
         self.regions = self.keystoneclient.regions
 
         keystone_client_plugin = mock.MagicMock()
