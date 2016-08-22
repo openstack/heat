@@ -28,7 +28,7 @@ Request
    - resource_action: resource_action
    - resource_status: resource_status
    - resource_name: resource_name_query
-   - resource_type: resource_type
+   - resource_type: resource_type_query
    - limit: limit
    - marker: marker
    - sort_keys: sort_keys
@@ -113,7 +113,7 @@ Request
    - resource_name: resource_name_url
    - resource_action: resource_action
    - resource_status: resource_status
-   - resource_type: resource_type
+   - resource_type: resource_type_query
    - limit: limit
    - marker: marker
    - sort_keys: sort_keys

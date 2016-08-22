@@ -2,7 +2,7 @@
 location:
   type: string
   in: header
-  required: True
+  required: true
   description: |
     For asynchronous resource operations, the ``location`` header contains a
     URI that can be checked to track resource status changes.
@@ -10,6 +10,7 @@ location:
 request_id:
   type: UUID
   in: header
+  required: true
   description: |
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
@@ -82,13 +83,13 @@ tenant_id:
     The UUID of the tenant. A tenant is also known as
     a project.
   in: path
-  required: True
+  required: true
   type: string
 type_name:
   description: |
     The name of a resource type.
   in: path
-  required: false
+  required: true
   type: string
 
 # variables in query
@@ -129,14 +130,6 @@ marker:
     The ID of the last-seen item. Use the ``limit`` parameter to make an
     initial limited request and use the ID of the last-seen item from the
     response as the ``marker`` parameter value in a subsequent limited request.
-  in: query
-  required: false
-  type: string
-name:
-  description: |
-    Filters the response by a resource type name. You
-    can set this value to a regular expression. Use this filter
-    multiple times to filter by multiple names.
   in: query
   required: false
   type: string
@@ -201,7 +194,7 @@ resource_status:
   in: query
   required: false
   type: string
-resource_type:
+resource_type_query:
   description: |
     Stack resource type. Valid resource types include ``OS::Cinder::Volume``,
     ``OS::Nova::Server``, ``OS::Neutron::Port`` and so on.
@@ -285,13 +278,11 @@ stack_user_query:
   in: query
   required: false
   type: string
-support_status_1:
+support_status_query:
   description: |
-    Filters the response by resource types by a
-    support status. Valid support status values are ``UNKNOWN``,
-    ``SUPPORTED``, ``DEPRECATED``, ``UNSUPPORTED``, and ``HIDDEN``.
-    Use this filter multiple times to filter by multiple support
-    statuses.
+    Filters the response by resource types by a support status. Valid support
+    status values are ``UNKNOWN``, ``SUPPORTED``, ``DEPRECATED``,
+    ``UNSUPPORTED``, and ``HIDDEN``.
   in: query
   required: false
   type: string
@@ -311,11 +302,25 @@ tags_query:
   in: query
   required: false
   type: string
-version:
+template_type:
   description: |
-    Filters the response by resource types by heat
-    version. For example, ``2016.1`` or ``5.0.0``. Use this filter
-    multiple times to filter by multiple versions.
+    Specify the resource template type. The valid types are: ``cfn``, ``hot``.
+  in: query
+  required: false
+  default: cfn
+  type: string
+type_name_query:
+  description: |
+    Filters the response by a resource type name. You can set this value to a
+    regular expression. Use this filter multiple times to filter by multiple
+    names.
+  in: query
+  required: false
+  type: string
+type_version_query:
+  description: |
+    Filters the list of resource types by heat version. For example,
+    ``2016.1`` or ``5.0.0``.
   in: query
   required: false
   type: string
@@ -329,9 +334,10 @@ with_count:
   type: boolean
 with_description:
   description: |
-    Either display resource type's description or not. Default is ``false``
+    Either display resource type's description or not.
   in: query
   required: false
+  default: false
   type: boolean
 with_detail:
   description: |
@@ -342,50 +348,6 @@ with_detail:
   type: boolean
 
 # variables in body
-Description:
-  description: |
-    The description specified in the template.
-  in: body
-  required: true
-  type: string
-HeatTemplateFormatVersion:
-  description: |
-    The version of the heat template.
-  in: body
-  required: true
-  type: string
-Outputs:
-  description: |
-    Key and value pairs that contain output data.
-  in: body
-  required: true
-  type: object
-ParameterGroups:
-  description: |
-    A list of parameter groups. Each group contains a
-    list of parameter names.
-  in: body
-  required: false
-  type: array
-Parameters:
-  description: |
-    Key and value pairs that contain template parameters.
-  in: body
-  required: true
-  type: object
-Parameters_1:
-  description: |
-    An object that defines all input parameters that
-    are defined in the template. Indexed by parameter name.
-  in: body
-  required: true
-  type: object
-Resources:
-  description: |
-    Contain ``KeyPair`` for resource template.
-  in: body
-  required: true
-  type: object
 adopt_stack_data:
   description: |
     Existing resources data to adopt a stack. Data returned by abandon
@@ -395,8 +357,7 @@ adopt_stack_data:
   type: object
 attributes:
   description: |
-    Key and value pairs that contain resource
-    attributes.
+    Key and value pairs that contain resource attributes.
   in: body
   required: true
   type: object
@@ -406,6 +367,18 @@ binary:
   in: body
   required: true
   type: string
+build_api:
+  description: |
+    The orchestration API revsion information.
+  in: body
+  required: true
+  type: object
+build_engine:
+  description: |
+    The orchestration engine revsion information.
+  in: body
+  required: true
+  type: object
 cancel_update:
   description: |
     Specify the ``cancel_update`` action in the
@@ -617,7 +590,13 @@ deployment_updated_time:
     If the ``updated_at`` date and time stamp is not set, its value is
     ``null``.
   in: body
-  required: false 
+  required: false
+  type: string
+Description:
+  description: |
+    The description specified in the CFN template.
+  in: body
+  required: true
   type: string
 description:
   description: |
@@ -743,7 +722,13 @@ group_1:
   type: string
 heat_template_version:
   description: |
-    The version of the heat template.
+    The version of the orchestration HOT template.
+  in: body
+  required: true
+  type: string
+HeatTemplateFormatVersion:
+  description: |
+    The version of the orchestration CFN template.
   in: body
   required: true
   type: string
@@ -817,12 +802,6 @@ name_1:
   in: body
   required: false
   type: string
-name_3:
-  description: |
-    The name of the snapshot.
-  in: body
-  required: true
-  type: string
 notification_topics:
   description: |
     List of notification topics for stack.
@@ -860,12 +839,11 @@ output_value:
   in: body
   required: true
   type: string
-output_values_1:
+Outputs:
   description: |
-    Map of output values for the deployment, as
-    signaled from the server.
+    Key and value pairs that contain output data for a CFN template.
   in: body
-  required: 
+  required: true
   type: object
 outputs:
   description: |
@@ -874,12 +852,19 @@ outputs:
   in: body
   required: false
   type: array
-outputs_1:
+ParameterGroups:
   description: |
-    A list of software configuration output data.
+    A list of parameter groups. Each group contains a
+    list of parameter names.
+  in: body
+  required: false
+  type: array
+Parameters:
+  description: |
+    Key and value pairs that contain CFN template parameters.
   in: body
   required: true
-  type: array
+  type: object
 parameters:
   description: |
     Supplies arguments for parameters defined in the stack template.
@@ -1012,8 +997,7 @@ project_id:
   type: string
 properties:
   description: |
-    The properties of the resource. Includes
-    description, type, and so on.
+    The properties of the resource. Includes description, type, and so on.
   in: body
   required: true
   type: object
@@ -1051,12 +1035,6 @@ resource_changes:
   in: body
   required: true
   type: object
-resource_description:
-  description: |
-    Displays resource type's description.
-  in: body
-  required: false
-  type: string
 resource_name:
   description: |
     The name of the resource.
@@ -1075,18 +1053,43 @@ resource_status_reason:
   in: body
   required: true
   type: string
-resource_type_1:
+resource_type:
   description: |
-    The type of the resource.
+    The type name of the resource.
   in: body
   required: true
   type: string
-resources:
+resource_type_description:
   description: |
-    A list of resources and their properties.
+    The textual description of the resource type.
+  in: body
+  required: true
+  type: string
+resource_types_advanced:
+  description: |
+    A list of objects each of which provides the resource type name and a
+    textual description about the type.
   in: body
   required: true
   type: array
+resource_types_simple:
+  description: |
+    A list of resource type names.
+  in: body
+  required: true
+  type: array
+resources:
+  description: |
+    A map of resource names and their properties.
+  in: body
+  required: true
+  type: array
+Resources:
+  description: |
+    A map containging all resource definitions for the resource template.
+  in: body
+  required: true
+  type: object
 resources_2:
   description: |
     The snapshot resources.
@@ -1121,11 +1124,16 @@ services:
   type: array
 snapshot:
   description: |
-    Key and value pairs that contain snapshot
-    properties.
+    Key and value pairs that contain snapshot properties.
   in: body
   required: true
   type: object
+snapshot_name:
+  description: |
+    The name of the snapshot.
+  in: body
+  required: true
+  type: string
 snapshots:
   description: |
     A list of snapshots and their properties.
@@ -1318,7 +1326,7 @@ status_reason_2:
   type: string
 support_status:
   description: |
-    Information about the current status.
+    Information about the current support status of a resource type.
   in: body
   required: true
   type: object
@@ -1363,12 +1371,6 @@ template_description:
     The description of the stack template.
   in: body
   required: true
-  type: string
-template_description_show:
-  description: |
-    The description of the stack template.
-  in: body
-  required: false
   type: string
 template_outputs:
   description: |
@@ -1479,4 +1481,11 @@ updated_time:
   in: body
   required: true
   type: string
-
+versions:
+  description: |
+    A list of all orchestration API versions. Each object in the list provides
+    information about a supported API version such as ``id``, ``status`` and
+    ``links``, among other fields.
+  in: body
+  required: true
+  type: array

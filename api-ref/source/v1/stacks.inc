@@ -715,7 +715,7 @@ Response Parameters
    - heat_template_version: heat_template_version
    - outputs: template_outputs
    - parameters: template_parameters
-   - description: template_description_show
+   - description: template_description
    - resources: template_resources
 
 Response Example
