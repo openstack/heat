@@ -1,0 +1,8 @@
+---
+features:
+  - OS::Nova::Server now supports ephemeral_size and ephemeral_format
+    properties for block_device_mapping_v2 property. Property ephemeral_size is
+    integer, that require flavor with ephemeral disk size greater that 0.
+    Property ephemeral_format is string with allowed values ext2, ext3, ext4,
+    xfs and ntfs for Windows guests; it is optional and if has no value, uses
+    default, defined in nova config file.

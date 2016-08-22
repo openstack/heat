@@ -2727,6 +2727,18 @@ class ServersTest(common.HeatTestCase):
             {'device_name': ''}
         ]))
 
+        self.assertEqual([
+            {'source_type': 'blank',
+             'destination_type': 'local',
+             'boot_index': -1,
+             'delete_on_termination': True,
+             'volume_size': 1,
+             'guest_format': 'ext4'}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'ephemeral_size': 1,
+             'ephemeral_format': 'ext4'}
+        ]))
+
     def test_block_device_mapping_v2_image_resolve(self):
         (tmpl, stack) = self._setup_test_stack('mapping',
                                                test_templ=bdm_v2_template)
@@ -2801,8 +2813,8 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
-        msg = ('Either volume_id, snapshot_id, image_id or swap_size must '
-               'be specified.')
+        msg = ('Either volume_id, snapshot_id, image_id, swap_size, '
+               'ephemeral_size or ephemeral_format must be specified.')
         self.assertEqual(msg, six.text_type(exc))
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
