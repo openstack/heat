@@ -11,15 +11,38 @@ List template versions
 
 Lists all available template versions.
 
-Normal response codes: 200
-Error response codes:404,500,401,400,
+Response Codes
+--------------
 
-Request
--------
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request_id: request_id
+   - template_versions: template_versions
+   - alias: template_version_alias
+   - type: template_type
+   - version: template_version
+
 
 Response Example
 ----------------
@@ -35,18 +58,37 @@ List template functions
 
 Lists all available functions for a template version.
 
+Response Codes
+--------------
 
-Normal response codes: 200
-Error response codes:401,400,
+.. rest_status_code:: success status.yaml
 
+   - 200
 
-Request
--------
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - template_version: template_version
+   - template_version: template_version_url
+
+Reponse Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - template_functions: template_functions
+   - description: template_description
+   - functions: functions
 
 Response Example
 ----------------
@@ -62,19 +104,31 @@ Validate template
 
 Validates a template.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
 
-Request
--------
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 500
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
-   - environment: environment
-   - template_url: template_url
-   - template: template
    - tenant_id: tenant_id
+   - environment: environment
+   - environment_files: environment_files
+   - files: files
    - ignore_errors: ignore_errors
+   - show_nested: show_nested
+   - template: template
+   - template_url: template_url
 
 Request Example
 ---------------
@@ -87,8 +141,9 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - ParameterGroups: ParameterGroups
+   - X-Openstack-Request-Id: request_id
    - Description: Description
+   - ParameterGroups: ParameterGroups
    - Parameters: Parameters
 
 Response Example
