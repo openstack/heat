@@ -334,6 +334,8 @@ class Property(object):
             _value = self._get_list(value, validate)
         elif t == Schema.BOOLEAN:
             _value = self._get_bool(value)
+        elif t == Schema.ANY:
+            _value = value
 
         if validate:
             self.schema.validate_constraints(_value, self.context,
