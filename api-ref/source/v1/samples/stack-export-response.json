@@ -1,0 +1,60 @@
+{
+    "action": "SUSPEND",
+    "environment": {
+        "event_sinks": [],
+        "parameter_defaults": {},
+        "parameters": {},
+        "resource_registry": {
+            "resources": {}
+        }
+    },
+    "files": {},
+    "id": "da778f26-6d25-4634-9531-d438188e48fd",
+    "name": "s1",
+    "project_id": "369166a68a3a49b78b4e138531556e55",
+    "resources": {
+        "random": {
+            "action": "SUSPEND",
+            "metadata": {},
+            "name": "random",
+            "resource_data": {
+                "value": "wCPWWoGJH5SZKtNFAgqGcbiWokCkRgam"
+            },
+            "resource_id": "s1-random-pzuzs6pbjhho",
+            "status": "COMPLETE",
+            "type": "OS::Heat::RandomString"
+        }
+    },
+    "stack_user_project_id": "a4e6fd443f5b4d4694331ff441ad2397",
+    "status": "COMPLETE",
+    "tags": null,
+    "template": {
+        "heat_template_version": "2014-10-16",
+        "outputs": {
+            "result": {
+                "value": {
+                    "get_attr": [
+                        "random",
+                        "value"
+                    ]
+                }
+            }
+        },
+        "parameters": {
+            "str_length": {
+                "default": 32,
+                "type": "number"
+            }
+        },
+        "resources": {
+            "random": {
+                "properties": {
+                    "length": {
+                        "get_param": "str_length"
+                    }
+                },
+                "type": "OS::Heat::RandomString"
+            }
+        }
+    }
+}

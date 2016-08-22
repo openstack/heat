@@ -4,8 +4,8 @@
 Stack actions
 =============
 
-Performs non-lifecycle operations on the stack. Specify the action
-in the request body.
+Performs non-lifecycle operations on the stack. Specify the action in the
+request body.
 
 Suspend stack
 =============
@@ -14,17 +14,27 @@ Suspend stack
 
 Suspends a stack.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
 
-Request
--------
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - stack_id: stack_id_url
    - stack_name: stack_name_url
+   - stack_id: stack_id_url
    - suspend: suspend
 
 Request Example
@@ -32,6 +42,13 @@ Request Example
 
 .. literalinclude:: samples/stack-action-suspend-request.json
    :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
 
 Response Example
 ----------------
@@ -46,17 +63,27 @@ Resume stack
 
 Resumes a suspended stack.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
 
-Request
--------
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - stack_id: stack_id_url
    - stack_name: stack_name_url
+   - stack_id: stack_id_url
    - resume: resume
 
 Request Example
@@ -64,6 +91,13 @@ Request Example
 
 .. literalinclude:: samples/stack-action-resume-request.json
    :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
 
 Response Example
 ----------------
@@ -78,17 +112,27 @@ Cancel stack update
 
 Cancels a currently running update of a stack.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
 
-Request
--------
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - stack_id: stack_id_url
    - stack_name: stack_name_url
+   - stack_id: stack_id_url
    - cancel_update: cancel_update
 
 Request Example
@@ -96,6 +140,13 @@ Request Example
 
 .. literalinclude:: samples/stack-action-cancel-update-request.json
    :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
 
 Response Example
 ----------------
@@ -110,17 +161,27 @@ Check stack resources
 
 Checks whether the resources are in expected states for a stack.
 
-Normal response codes: 200
-Error response codes:
+Response Codes
+--------------
 
-Request
--------
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - stack_id: stack_id_url
    - stack_name: stack_name_url
+   - stack_id: stack_id_url
    - check: check
 
 Request Example
@@ -128,6 +189,13 @@ Request Example
 
 .. literalinclude:: samples/stack-action-check-request.json
    :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
 
 Response Example
 ----------------

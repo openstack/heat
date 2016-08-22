@@ -676,6 +676,64 @@ Response Example
    :language: javascript
 
 
+Export stack
+============
+
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/export
+
+Gets the stack data in JSON format.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 409
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+
+Response Parameters
+-------------------
+
+The body of the response contains a map of file names and file contents.
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Reqeuest-Id: request_id
+   - action: action
+   - environment: stack_environment
+   - files: stack_files
+   - id: stack_id
+   - name: stack_name
+   - project_id: project_id
+   - resources: resources
+   - stack_user_project_id: stack_stack_user_project_id
+   - status: stack_status
+   - tags: stack_tags
+   - template: stack_template
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-export-response.json
+   :language: javascript
+
+
 Get stack template
 ==================
 
@@ -722,4 +780,99 @@ Response Example
 ----------------
 
 .. literalinclude:: samples/template-show-response.json
+   :language: javascript
+
+
+Get stack environment
+=====================
+
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/environment
+
+Gets the environment for a stack.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Reqeuest-Id: request_id
+   - encrypted_param_names: encrypted_param_names
+   - event_sinks: event_sinks
+   - parameter_defaults: parameter_defaults
+   - parameters: parameters
+   - resource_registry: resource_registry
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-environment-show-response.json
+   :language: javascript
+
+
+Get stack files
+===============
+
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/files
+
+Gets the files associated with a stack.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+
+Response Parameters
+-------------------
+
+The body of the response contains a map of file names and file contents.
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Reqeuest-Id: request_id
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-files-show-response.json
    :language: javascript

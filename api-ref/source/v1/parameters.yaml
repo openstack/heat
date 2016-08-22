@@ -380,6 +380,12 @@ with_detail:
   type: boolean
 
 # variables in body
+action:
+  description: |
+    The last action executed on the stack.
+  in: body
+  required: true
+  type: string
 adopt_stack_data:
   description: |
     Existing resources data to adopt a stack. Data returned by abandon
@@ -615,6 +621,12 @@ disable_rollback:
   required: false
   default: True
   type: boolean
+encrypted_param_names:
+  description: |
+    A list of parameter names whose values are encrypted.
+  in: body
+  required: true
+  type: array
 engine_id:
   description: |
     The UUID of the engine service.
@@ -664,6 +676,12 @@ event_links:
     key indicating the URL and a ``rel`` key indicating its relationship to
     the event in question. There may be multiple links returned. The ``self``
     relationship identifies the URL of the event itself.
+  in: body
+  required: true
+  type: array
+event_sinks:
+  description: |
+    A list of event sinks.
   in: body
   required: true
   type: array
@@ -910,6 +928,12 @@ outputs:
   in: body
   required: false
   type: array
+parameter_defaults:
+  description: |
+    A map of parameters and their default values defined for the stack.
+  in: body
+  required: true
+  type: object
 ParameterGroups:
   description: |
     A list of parameter groups. Each group contains a
@@ -999,6 +1023,12 @@ parameters:
        }
   in: body
   required: false
+  type: object
+parameters_show:
+  description: |
+    A map of parameters defined for the stack.
+  in: body
+  required: true
   type: object
 parent:
   description: |
@@ -1109,6 +1139,13 @@ resource_name:
 resource_properties:
   description: |
     A map containing the properties of the resource associated with the event.
+  in: body
+  required: true
+  type: object
+resource_registry:
+  description: |
+    A map containing customized resource definitions. This map contains at
+    least a dict of ``resources`` registered for the stack.
   in: body
   required: true
   type: object
@@ -1433,8 +1470,7 @@ support_status:
   type: object
 suspend:
   description: |
-    Specify the ``suspend`` action in the request
-    body.
+    Specify the ``suspend`` action in the request body.
   in: body
   required: true
   type: string

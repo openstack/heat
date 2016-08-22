@@ -260,8 +260,8 @@ Response Example
 This operation does not return a response body.
 
 
-Mark a resource unhealthy
-===========================
+Mark a resource as unhealthy
+============================
 
 .. rest_method::  PATCH /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources/{resource_name}
 
