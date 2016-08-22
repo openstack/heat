@@ -89,8 +89,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         else:
             self.verify_cert = self.conf.ca_file or True
 
-    def setup_clients(self, conf):
-        self.manager = clients.ClientManager(conf)
+    def setup_clients(self, conf, admin_credentials=False):
+        self.manager = clients.ClientManager(conf, admin_credentials)
         self.identity_client = self.manager.identity_client
         self.orchestration_client = self.manager.orchestration_client
         self.compute_client = self.manager.compute_client
@@ -102,15 +102,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.client = self.orchestration_client
 
     def setup_clients_for_admin(self):
-        self.assertIsNotNone(self.conf.admin_username,
-                             'No admin username configured')
-        self.assertIsNotNone(self.conf.admin_password,
-                             'No admin password configured')
-        conf = config.init_conf().heat_plugin
-        conf.username = self.conf.admin_username
-        conf.password = self.conf.admin_password
-        conf.tenant_name = self.conf.admin_tenant_name
-        self.setup_clients(conf)
+        self.setup_clients(self.conf, True)
 
     def get_remote_client(self, server_or_ip, username, private_key=None):
         if isinstance(server_or_ip, six.string_types):
