@@ -63,7 +63,6 @@ class StackLock(object):
             return
 
         stack = stack_object.Stack.get_by_id(self.context, self.stack_id,
-                                             tenant_safe=False,
                                              show_deleted=True)
         if (lock_engine_id == self.engine_id or
                 service_utils.engine_alive(self.context, lock_engine_id)):

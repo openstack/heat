@@ -62,14 +62,12 @@ class StackWatch(object):
                 sid=stack_id)
 
     def check_stack_watches(self, sid):
-        # Retrieve the stored credentials & create context
-        # Require tenant_safe=False to the stack_get to defeat tenant
+        # Use admin_context for stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
         LOG.debug("Periodic watcher task for stack %s" % sid)
         admin_context = context.get_admin_context()
         db_stack = stack_object.Stack.get_by_id(admin_context,
-                                                sid,
-                                                tenant_safe=False)
+                                                sid)
         if not db_stack:
             LOG.error(_LE("Unable to retrieve stack %s for periodic task"),
                       sid)

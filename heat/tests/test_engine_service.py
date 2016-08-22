@@ -494,7 +494,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=marker,
                                                    sort_dir=sort_dir,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -513,7 +512,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=filters,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -533,43 +531,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=translated,
-                                                   tenant_safe=mock.ANY,
-                                                   show_deleted=mock.ANY,
-                                                   show_nested=mock.ANY,
-                                                   show_hidden=mock.ANY,
-                                                   tags=mock.ANY,
-                                                   tags_any=mock.ANY,
-                                                   not_tags=mock.ANY,
-                                                   not_tags_any=mock.ANY)
-
-    @mock.patch.object(stack_object.Stack, 'get_all')
-    def test_stack_list_tenant_safe_defaults_to_true(self, mock_stack_get_all):
-        self.eng.list_stacks(self.ctx)
-        mock_stack_get_all.assert_called_once_with(self.ctx,
-                                                   limit=mock.ANY,
-                                                   sort_keys=mock.ANY,
-                                                   marker=mock.ANY,
-                                                   sort_dir=mock.ANY,
-                                                   filters=mock.ANY,
-                                                   tenant_safe=True,
-                                                   show_deleted=mock.ANY,
-                                                   show_nested=mock.ANY,
-                                                   show_hidden=mock.ANY,
-                                                   tags=mock.ANY,
-                                                   tags_any=mock.ANY,
-                                                   not_tags=mock.ANY,
-                                                   not_tags_any=mock.ANY)
-
-    @mock.patch.object(stack_object.Stack, 'get_all')
-    def test_stack_list_passes_tenant_safe_info(self, mock_stack_get_all):
-        self.eng.list_stacks(self.ctx, tenant_safe=False)
-        mock_stack_get_all.assert_called_once_with(self.ctx,
-                                                   limit=mock.ANY,
-                                                   sort_keys=mock.ANY,
-                                                   marker=mock.ANY,
-                                                   sort_dir=mock.ANY,
-                                                   filters=mock.ANY,
-                                                   tenant_safe=False,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -587,7 +548,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=True,
                                                    show_hidden=mock.ANY,
@@ -605,7 +565,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=True,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -623,7 +582,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=True,
@@ -641,7 +599,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -659,7 +616,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -677,7 +633,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -695,7 +650,6 @@ class StackServiceTest(common.HeatTestCase):
                                                    marker=mock.ANY,
                                                    sort_dir=mock.ANY,
                                                    filters=mock.ANY,
-                                                   tenant_safe=mock.ANY,
                                                    show_deleted=mock.ANY,
                                                    show_nested=mock.ANY,
                                                    show_hidden=mock.ANY,
@@ -709,35 +663,6 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.count_stacks(self.ctx, filters={'foo': 'bar'})
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters={'foo': 'bar'},
-                                                     tenant_safe=mock.ANY,
-                                                     show_deleted=False,
-                                                     show_nested=False,
-                                                     show_hidden=False,
-                                                     tags=None,
-                                                     tags_any=None,
-                                                     not_tags=None,
-                                                     not_tags_any=None)
-
-    @mock.patch.object(stack_object.Stack, 'count_all')
-    def test_count_stacks_tenant_safe_default_true(self, mock_stack_count_all):
-        self.eng.count_stacks(self.ctx)
-        mock_stack_count_all.assert_called_once_with(mock.ANY,
-                                                     filters=mock.ANY,
-                                                     tenant_safe=True,
-                                                     show_deleted=False,
-                                                     show_nested=False,
-                                                     show_hidden=False,
-                                                     tags=None,
-                                                     tags_any=None,
-                                                     not_tags=None,
-                                                     not_tags_any=None)
-
-    @mock.patch.object(stack_object.Stack, 'count_all')
-    def test_count_stacks_passes_tenant_safe_info(self, mock_stack_count_all):
-        self.eng.count_stacks(self.ctx, tenant_safe=False)
-        mock_stack_count_all.assert_called_once_with(mock.ANY,
-                                                     filters=mock.ANY,
-                                                     tenant_safe=False,
                                                      show_deleted=False,
                                                      show_nested=False,
                                                      show_hidden=False,
@@ -751,7 +676,6 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.count_stacks(self.ctx, show_nested=True)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
-                                                     tenant_safe=True,
                                                      show_deleted=False,
                                                      show_nested=True,
                                                      show_hidden=False,
@@ -765,7 +689,6 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.count_stacks(self.ctx, show_deleted=True)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
-                                                     tenant_safe=True,
                                                      show_deleted=True,
                                                      show_nested=False,
                                                      show_hidden=False,
@@ -779,7 +702,6 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.count_stacks(self.ctx, show_hidden=True)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
-                                                     tenant_safe=True,
                                                      show_deleted=False,
                                                      show_nested=False,
                                                      show_hidden=True,
@@ -1382,11 +1304,10 @@ class StackServiceTest(common.HeatTestCase):
         }
         mock_get_all.assert_called_once_with(self.ctx,
                                              filters=filters,
-                                             tenant_safe=False,
                                              show_nested=True)
         mock_get_by_id.assert_has_calls([
-            mock.call(self.ctx, 'foo', tenant_safe=False),
-            mock.call(self.ctx, 'bar', tenant_safe=False),
+            mock.call(self.ctx, 'foo'),
+            mock.call(self.ctx, 'bar'),
         ])
         mock_stack_load.assert_called_once_with(self.ctx,
                                                 stack=db_stack,

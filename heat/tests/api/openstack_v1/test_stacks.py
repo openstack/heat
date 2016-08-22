@@ -20,6 +20,7 @@ import webob.exc
 
 import heat.api.middleware.fault as fault
 import heat.api.openstack.v1.stacks as stacks
+from heat.common import context
 from heat.common import exception as heat_exc
 from heat.common import identifier
 from heat.common import policy
@@ -294,13 +295,13 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         }
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None, 'tenant_safe': True,
+                        'sort_dir': None, 'filters': None,
                         'show_deleted': False, 'show_nested': False,
                         'show_hidden': False, 'tags': None,
                         'tags_any': None, 'not_tags': None,
                         'not_tags_any': None}
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', default_args), version='1.8')
+            req.context, ('list_stacks', default_args), version='1.33')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
@@ -319,13 +320,12 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(13, len(engine_args))
+        self.assertEqual(12, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
-        self.assertIn('tenant_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -463,17 +463,18 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                         scope=self.controller.REQUEST_SCOPE,
                                         context=self.context)
 
-    def test_global_index_sets_tenant_safe_to_false(self, mock_enforce):
+    def test_global_index_uses_admin_context(self, mock_enforce):
         rpc_client = self.controller.rpc_client
         rpc_client.list_stacks = mock.Mock(return_value=[])
         rpc_client.count_stacks = mock.Mock()
 
+        mock_admin_ctxt = self.patchobject(context, 'get_admin_context')
         params = {'global_tenant': 'True'}
         req = self._get('/stacks', params=params)
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.list_stacks.assert_called_once_with(mock.ANY,
-                                                       filters=mock.ANY,
-                                                       tenant_safe=False)
+                                                       filters=mock.ANY)
+        self.assertEqual(1, mock_admin_ctxt.call_count)
 
     def test_global_index_show_deleted_false(self, mock_enforce):
         rpc_client = self.controller.rpc_client
@@ -485,7 +486,6 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.list_stacks.assert_called_once_with(mock.ANY,
                                                        filters=mock.ANY,
-                                                       tenant_safe=True,
                                                        show_deleted=False)
 
     def test_global_index_show_deleted_true(self, mock_enforce):
@@ -498,7 +498,6 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.list_stacks.assert_called_once_with(mock.ANY,
                                                        filters=mock.ANY,
-                                                       tenant_safe=True,
                                                        show_deleted=True)
 
     def test_global_index_show_nested_false(self, mock_enforce):
@@ -511,7 +510,6 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.list_stacks.assert_called_once_with(mock.ANY,
                                                        filters=mock.ANY,
-                                                       tenant_safe=True,
                                                        show_nested=False)
 
     def test_global_index_show_nested_true(self, mock_enforce):
@@ -524,7 +522,6 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.list_stacks.assert_called_once_with(mock.ANY,
                                                        filters=mock.ANY,
-                                                       tenant_safe=True,
                                                        show_nested=True)
 
     def test_index_show_deleted_True_with_count_True(self, mock_enforce):
@@ -539,11 +536,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(0, result['count'])
         rpc_client.list_stacks.assert_called_once_with(mock.ANY,
                                                        filters=mock.ANY,
-                                                       tenant_safe=True,
                                                        show_deleted=True)
         rpc_client.count_stacks.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
-                                                        tenant_safe=True,
                                                         show_deleted=True,
                                                         show_nested=False,
                                                         show_hidden=False,
@@ -607,13 +602,13 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None, 'tenant_safe': True,
+                        'sort_dir': None, 'filters': None,
                         'show_deleted': False, 'show_nested': False,
                         'show_hidden': False, 'tags': None,
                         'tags_any': None, 'not_tags': None,
                         'not_tags_any': None}
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', default_args), version='1.8')
+            req.context, ('list_stacks', default_args), version='1.33')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_rmt_aterr(self, mock_call, mock_enforce):
@@ -629,7 +624,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('AttributeError', resp.json['error']['type'])
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', mock.ANY), version='1.8')
+            req.context, ('list_stacks', mock.ANY), version='1.33')
 
     def test_index_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -657,7 +652,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual(500, resp.json['code'])
         self.assertEqual('Exception', resp.json['error']['type'])
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', mock.ANY), version='1.8')
+            req.context, ('list_stacks', mock.ANY), version='1.33')
 
     def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)

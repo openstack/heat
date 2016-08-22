@@ -163,13 +163,13 @@ class CfnStackControllerTest(common.HeatTestCase):
                        u'StackStatus': u'CREATE_COMPLETE'}]}}}
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None, 'tenant_safe': True,
+                        'sort_dir': None, 'filters': None,
                         'show_deleted': False, 'show_nested': False,
                         'show_hidden': False, 'tags': None,
                         'tags_any': None, 'not_tags': None,
                         'not_tags_any': None}
         mock_call.assert_called_once_with(
-            dummy_req.context, ('list_stacks', default_args), version='1.8')
+            dummy_req.context, ('list_stacks', default_args), version='1.33')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_list_rmt_aterr(self, mock_call):
@@ -185,7 +185,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         result = self.controller.list(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
         mock_call.assert_called_once_with(
-            dummy_req.context, ('list_stacks', mock.ANY), version='1.8')
+            dummy_req.context, ('list_stacks', mock.ANY), version='1.33')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_list_rmt_interr(self, mock_call):
@@ -201,7 +201,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         result = self.controller.list(dummy_req)
         self.assertIsInstance(result, exception.HeatInternalFailureError)
         mock_call.assert_called_once_with(
-            dummy_req.context, ('list_stacks', mock.ANY), version='1.8')
+            dummy_req.context, ('list_stacks', mock.ANY), version='1.33')
 
     def test_describe_last_updated_time(self):
         params = {'Action': 'DescribeStacks'}

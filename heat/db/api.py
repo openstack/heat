@@ -156,9 +156,8 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
                                                      physical_resource_id)
 
 
-def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
-    return IMPL.stack_get(context, stack_id, show_deleted=show_deleted,
-                          tenant_safe=tenant_safe)
+def stack_get(context, stack_id, show_deleted=False):
+    return IMPL.stack_get(context, stack_id, show_deleted=show_deleted)
 
 
 def stack_get_status(context, stack_id):
@@ -175,12 +174,12 @@ def stack_get_by_name(context, stack_name):
 
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
-                  sort_dir=None, filters=None, tenant_safe=True,
+                  sort_dir=None, filters=None,
                   show_deleted=False, show_nested=False, show_hidden=False,
                   tags=None, tags_any=None, not_tags=None,
                   not_tags_any=None):
     return IMPL.stack_get_all(context, limit, sort_keys,
-                              marker, sort_dir, filters, tenant_safe,
+                              marker, sort_dir, filters,
                               show_deleted, show_nested, show_hidden,
                               tags, tags_any, not_tags, not_tags_any)
 
@@ -189,12 +188,11 @@ def stack_get_all_by_owner_id(context, owner_id):
     return IMPL.stack_get_all_by_owner_id(context, owner_id)
 
 
-def stack_count_all(context, filters=None, tenant_safe=True,
+def stack_count_all(context, filters=None,
                     show_deleted=False, show_nested=False, show_hidden=False,
                     tags=None, tags_any=None, not_tags=None,
                     not_tags_any=None):
     return IMPL.stack_count_all(context, filters=filters,
-                                tenant_safe=tenant_safe,
                                 show_deleted=show_deleted,
                                 show_nested=show_nested,
                                 show_hidden=show_hidden,
@@ -342,12 +340,10 @@ def software_config_get(context, config_id):
     return IMPL.software_config_get(context, config_id)
 
 
-def software_config_get_all(context, limit=None, marker=None,
-                            tenant_safe=True):
+def software_config_get_all(context, limit=None, marker=None):
     return IMPL.software_config_get_all(context,
                                         limit=limit,
-                                        marker=marker,
-                                        tenant_safe=tenant_safe)
+                                        marker=marker)
 
 
 def software_config_delete(context, config_id):
