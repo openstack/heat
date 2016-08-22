@@ -47,9 +47,10 @@ class JsonToYamlTest(common.HeatTestCase):
             if template_test_count >= self.expected_test_count:
                 break
 
-        self.assertTrue(template_test_count >= self.expected_test_count,
-                        'Expected at least %d templates to be tested, not %d' %
-                        (self.expected_test_count, template_test_count))
+        self.assertGreaterEqual(
+            template_test_count, self.expected_test_count,
+            'Expected at least %d templates to be tested, not %d' %
+            (self.expected_test_count, template_test_count))
 
     def compare_json_vs_yaml(self, json_str, yml_str):
         yml = template_format.parse(yml_str)
@@ -103,7 +104,7 @@ class YamlMinimalTest(common.HeatTestCase):
             config.cfg.CONF.max_template_size / 3)
         limit = config.cfg.CONF.max_template_size
         long_yaml = yaml.safe_dump(template)
-        self.assertTrue(len(long_yaml) > limit)
+        self.assertGreater(len(long_yaml), limit)
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                template_format.parse, long_yaml)
         msg = ('Request limit exceeded: Template size (%(actual_len)s '

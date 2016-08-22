@@ -4229,7 +4229,7 @@ class TestResourceMapping(common.HeatTestCase):
             type_elements = r_type.split('::')
             # type has fixed format
             # Platform type::Service/Type::Optional Sub-sections::Name
-            self.assertTrue(len(type_elements) >= 3)
+            self.assertGreaterEqual(len(type_elements), 3)
             # type should be OS or AWS
             self.assertIn(type_elements[0], ('AWS', 'OS'))
             # check that value is a class object
@@ -4257,4 +4257,4 @@ class TestResourceMapping(common.HeatTestCase):
         # that there is no regressions
         # It's soft check and should not be a cause of the merge conflict
         # Feel free to update it in some separate patch
-        self.assertTrue(num_of_types >= 137)
+        self.assertGreaterEqual(num_of_types, 137)

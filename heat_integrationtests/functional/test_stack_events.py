@@ -74,7 +74,7 @@ outputs:
                 stack_event.resource_name)
 
             # Resource events are a subset of the original stack event list
-            self.assertTrue(len(resource_events) < len(stack_events))
+            self.assertLess(len(resource_events), len(stack_events))
 
             # Get the event details for each resource event
             for resource_event in resource_events:

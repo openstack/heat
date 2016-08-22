@@ -100,7 +100,7 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
             res1['result'])
         self.assertEqual(0, res1['status_code'])
         self.assertEqual('Output to stderr\n', res1['stderr'])
-        self.assertTrue(len(res1['stdout']) > 0)
+        self.assertGreater(len(res1['stdout']), 0)
 
         res2 = self._stack_output(stack, 'res2')
         self.assertEqual(
@@ -118,7 +118,7 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
             res3['result'])
         self.assertEqual(0, res3['status_code'])
         self.assertEqual('', res3['stderr'])
-        self.assertTrue(len(res1['stdout']) > 0)
+        self.assertGreater(len(res1['stdout']), 0)
 
         dep1_resource = self.client.resources.get(sid, 'dep1')
         dep1_id = dep1_resource.physical_resource_id

@@ -61,8 +61,8 @@ class ResourceTypeConstraintTest(common.HeatTestCase):
 
         # Verify
         self.assertFalse(result)
-        self.assertTrue('OS::Heat::None,OS::Heat::RandomString'
-                        in self.constraint._error_message)
+        self.assertIn('OS::Heat::None,OS::Heat::RandomString',
+                      self.constraint._error_message)
         self.mock_env.get_class.assert_has_calls([mock.call(value[0]),
                                                   mock.call(value[1])])
 

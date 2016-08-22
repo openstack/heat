@@ -512,7 +512,7 @@ class WatchRuleTest(common.HeatTestCase):
         actions = wr.evaluate()
         self.assertEqual('ALARM', wr.state)
         self.assertEqual(['DummyAction'], actions)
-        self.assertTrue(mock_get_resource.call_count > 0)
+        self.assertGreater(mock_get_resource.call_count, 0)
 
     @mock.patch('heat.engine.stack.Stack.resource_by_refid')
     def test_rule_actions_alarm_two_actions(self, mock_get_resource):
@@ -542,7 +542,7 @@ class WatchRuleTest(common.HeatTestCase):
         actions = wr.evaluate()
         self.assertEqual('ALARM', wr.state)
         self.assertEqual(['DummyAction', 'DummyAction'], actions)
-        self.assertTrue(mock_get_resource.call_count > 0)
+        self.assertGreater(mock_get_resource.call_count, 0)
 
     @mock.patch('heat.engine.stack.Stack.resource_by_refid')
     def test_rule_actions_ok_alarm(self, mock_get_resource):
@@ -583,7 +583,7 @@ class WatchRuleTest(common.HeatTestCase):
         actions = wr.evaluate()
         self.assertEqual('NORMAL', wr.state)
         self.assertEqual(['DummyAction'], actions)
-        self.assertTrue(mock_get_resource.call_count > 0)
+        self.assertGreater(mock_get_resource.call_count, 0)
 
     @mock.patch('heat.engine.stack.Stack.resource_by_refid')
     def test_rule_actions_nodata(self, mock_get_resource):
@@ -622,7 +622,7 @@ class WatchRuleTest(common.HeatTestCase):
         actions = wr.evaluate()
         self.assertEqual('NODATA', wr.state)
         self.assertEqual(['DummyAction'], actions)
-        self.assertTrue(mock_get_resource.call_count > 0)
+        self.assertGreater(mock_get_resource.call_count, 0)
 
     @mock.patch('heat.engine.stack.Stack.resource_by_refid')
     def test_to_ceilometer(self, mock_get_resource):
@@ -951,7 +951,7 @@ class WatchRuleTest(common.HeatTestCase):
 
         actions = wr.set_watch_state(watchrule.WatchRule.ALARM)
         self.assertEqual(['DummyAction'], actions)
-        self.assertTrue(mock_get_resource.call_count > 0)
+        self.assertGreater(mock_get_resource.call_count, 0)
 
     def test_set_watch_state_invalid(self):
         # Setup

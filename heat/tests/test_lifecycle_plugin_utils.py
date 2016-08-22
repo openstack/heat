@@ -56,7 +56,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         self.assertIsNotNone(pp_cinstances)
         self.assertTrue(self.is_iterable(pp_cinstances),
                         "not iterable: %s" % pp_cinstances)
-        self.assertTrue(len(pp_cinstances) == 1)
+        self.assertEqual(1, len(pp_cinstances))
         self.assertEqual(TestLifecycleCallout1, pp_cinstances[0].__class__)
 
     def test_do_pre_and_post_callouts(self):

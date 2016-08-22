@@ -365,8 +365,8 @@ class TestClientPluginsInitialise(common.HeatTestCase):
             self.assertEqual({}, plugin._client_instances)
             self.assertTrue(clients.has_client(plugin_name))
             self.assertIsInstance(plugin.service_types, list)
-            self.assertTrue(len(plugin.service_types) >= 1,
-                            'service_types is not defined for plugin')
+            self.assertGreaterEqual(len(plugin.service_types), 1,
+                                    'service_types is not defined for plugin')
 
     @mock.patch.object(client_plugin.ClientPlugin, 'invalidate')
     def test_invalidate_all_clients(self, mock_invalidate):

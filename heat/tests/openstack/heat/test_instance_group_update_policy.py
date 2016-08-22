@@ -181,7 +181,8 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertEqual(1, len(grp.update_policy))
         self.assertIn('RollingUpdate', grp.update_policy)
         policy = grp.update_policy['RollingUpdate']
-        self.assertTrue(policy and len(policy) > 0)
+        self.assertIsNotNone(policy)
+        self.assertGreater(len(policy), 0)
         self.assertEqual(1, int(policy['MinInstancesInService']))
         self.assertEqual(2, int(policy['MaxBatchSize']))
         self.assertEqual('PT1S', policy['PauseTime'])
@@ -196,7 +197,8 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertEqual(1, len(grp.update_policy))
         self.assertIn('RollingUpdate', grp.update_policy)
         policy = grp.update_policy['RollingUpdate']
-        self.assertTrue(policy and len(policy) > 0)
+        self.assertIsNotNone(policy)
+        self.assertGreater(len(policy), 0)
         self.assertEqual(0, int(policy['MinInstancesInService']))
         self.assertEqual(1, int(policy['MaxBatchSize']))
         self.assertEqual('PT0S', policy['PauseTime'])

@@ -183,7 +183,7 @@ class dependenciesTest(common.HeatTestCase):
         for n in ('last', 'middle'):
             self.assertIn(n, order,
                           "'%s' not found in dependency order" % n)
-        self.assertTrue(order.index('last') > order.index('middle'))
+        self.assertGreater(order.index('last'), order.index('middle'))
 
     def test_simple_multilevel_partial(self):
         d = dependencies.Dependencies([('last', 'middle'),
