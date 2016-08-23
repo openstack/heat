@@ -78,7 +78,7 @@ stack_name_url:
   in: path
   required: false
   type: string
-template_version:
+template_version_url:
   description: |
     The version of the heat template.
   in: path
@@ -602,7 +602,7 @@ deployment_updated_time:
   type: string
 Description:
   description: |
-    The description specified in the CFN template.
+    The description specified in the template.
   in: body
   required: true
   type: string
@@ -767,6 +767,18 @@ files:
   in: body
   required: false
   type: object
+function_description:
+  description: |
+    The textual description about the usage of the template function.
+  in: body
+  required: true
+  type: string
+functions:
+  description: |
+    The name of a function supported by the specified template version.
+  in: body
+  required: true
+  type: string
 group:
   description: |
     Namespace that groups this software configuration
@@ -936,8 +948,7 @@ parameter_defaults:
   type: object
 ParameterGroups:
   description: |
-    A list of parameter groups. Each group contains a
-    list of parameter names.
+    A list of parameter groups. Each group contains a list of parameter names.
   in: body
   required: false
   type: array
@@ -1509,6 +1520,12 @@ template_description:
   in: body
   required: true
   type: string
+template_functions:
+  descriptions: |
+    A list of template function descriptors.
+  in: body
+  required: true
+  type: array
 template_outputs:
   description: |
     Key and value pairs that contain output data.
@@ -1528,6 +1545,12 @@ template_resources:
   in: body
   required: true
   type: object
+template_type:
+  description: |
+    The type of the template version which can be ``cfn`` or ``hot``.
+  in: body
+  required: true
+  type: string
 template_url:
   description: |
     A URI to the location containing the stack template on which to perform
@@ -1538,6 +1561,22 @@ template_url:
   in: body
   required: false
   type: string
+template_version:
+  description: |
+    The version string of the template format.
+  in: body
+  required: true
+  type: string
+template_version_alias:
+  description: |
+    The alias of a template version. For newer template versions supported,
+    the orchestration service is moving away from template versioning using
+    release date (which is hard to remember). Newer versions are named after
+    the OpenStack release code name. For example,
+    ``heat_template_version.newton``.
+  in: body
+  required: true
+  type: list
 template_versions:
   description: |
     A list of template version object each describes the type name and version
