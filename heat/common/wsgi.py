@@ -77,7 +77,7 @@ api_opts = [
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('workers', default=0,
+    cfg.IntOpt('workers', min=0, default=0,
                help=_("Number of workers for Heat service. "
                       "Default value 0 means, that service will start number "
                       "of workers equal number of cores on server."),
@@ -117,7 +117,7 @@ api_cfn_opts = [
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('workers', default=1,
+    cfg.IntOpt('workers', min=0, default=1,
                help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('max_header_line', default=16384,
@@ -155,7 +155,7 @@ api_cw_opts = [
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.IntOpt('workers', default=1,
+    cfg.IntOpt('workers', min=0, default=1,
                help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('max_header_line', default=16384,
@@ -302,9 +302,6 @@ class Server(object):
 
     def start_wsgi(self):
         workers = self.conf.workers
-        # raise error if workers is incorrect value
-        if workers < 0:
-            raise ValueError("Number of workers should be more or equal '0'!")
         # childs == num of cores
         if workers == 0:
             childs_num = processutils.get_worker_count()
