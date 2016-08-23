@@ -249,8 +249,7 @@ sort_dir:
   type: string
 sort_keys:
   description: |
-    Sorts the list by the ``resource_type`` or
-    ``created_at`` key.
+    Sorts the result list by keys specified in this parameter.
   in: query
   required: false
   type: string
@@ -647,6 +646,35 @@ environment_files:
   in: body
   required: false
   type: object
+event:
+  description: |
+    An map containing the name and values of event properties.
+  in: body
+  required: true
+  type: object
+event_id:
+  description: |
+    The UUID of the event object.
+  in: body
+  required: true
+  type: string
+event_links:
+  description: |
+    A list of URLs for the event. Each URL is a JSON object with an ``href``
+    key indicating the URL and a ``rel`` key indicating its relationship to
+    the event in question. There may be multiple links returned. The ``self``
+    relationship identifies the URL of the event itself.
+  in: body
+  required: true
+  type: array
+event_time:
+  description: |
+    The date and time when the event was created. The date and time stamp
+    format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_:
+    ``CCYY-MM-DDThh:mm:ss``, for example, ``2015-08-27T09:49:58``.
+  in: body
+  required: true
+  type: string
 existing:
   description:
     A boolean specifying whether the service is about to reuse the existing
@@ -1078,6 +1106,12 @@ resource_name:
   in: body
   required: true
   type: string
+resource_properties:
+  description: |
+    A map containing the properties of the resource associated with the event.
+  in: body
+  required: true
+  type: object
 resource_status:
   description: |
     The status of the resource.
