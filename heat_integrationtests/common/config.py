@@ -16,6 +16,8 @@ from oslo_config import cfg
 
 import heat_integrationtests
 
+_CONF = None
+
 service_available_group = cfg.OptGroup(name="service_available",
                                        title="Available OpenStack Services")
 
@@ -162,6 +164,9 @@ HeatGroup = [
 
 
 def init_conf(read_conf=True):
+    global _CONF
+    if _CONF:
+        return _CONF
 
     default_config_files = None
     if read_conf:
@@ -171,13 +176,13 @@ def init_conf(read_conf=True):
         if os.path.isfile(confpath):
             default_config_files = [confpath]
 
-    conf = cfg.ConfigOpts()
-    conf(args=[], project='heat_integrationtests',
-         default_config_files=default_config_files)
+    _CONF = cfg.ConfigOpts()
+    _CONF(args=[], project='heat_integrationtests',
+          default_config_files=default_config_files)
 
     for group, opts in list_opts():
-        conf.register_opts(opts, group=group)
-    return conf
+        _CONF.register_opts(opts, group=group)
+    return _CONF
 
 
 def list_opts():
