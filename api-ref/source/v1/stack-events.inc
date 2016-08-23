@@ -25,8 +25,8 @@ Request
    - tenant_id: tenant_id
    - stack_id: stack_id_url
    - stack_name: stack_name_url
-   - resource_action: resource_action
-   - resource_status: resource_status
+   - resource_action: resource_action_query
+   - resource_status: resource_status_query
    - resource_name: resource_name_query
    - resource_type: resource_type_query
    - limit: limit
@@ -111,8 +111,8 @@ Request
    - stack_id: stack_id_url
    - stack_name: stack_name_url
    - resource_name: resource_name_url
-   - resource_action: resource_action
-   - resource_status: resource_status
+   - resource_action: resource_action_query
+   - resource_status: resource_status_query
    - resource_type: resource_type_query
    - limit: limit
    - marker: marker
