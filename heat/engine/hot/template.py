@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import six
 
 from heat.common import exception
@@ -219,50 +218,6 @@ class HOTemplate20130523(template_common.CommonTemplate):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
-    def validate_resource_definitions(self, stack):
-        resources = self.t.get(self.RESOURCES) or {}
-        allowed_keys = set(self._RESOURCE_KEYS)
-
-        try:
-            for name, snippet in resources.items():
-                path = '.'.join([self.RESOURCES, name])
-                data = self.parse(stack, snippet, path)
-
-                if not self.validate_resource_key_type(self.RES_TYPE,
-                                                       six.string_types,
-                                                       'string',
-                                                       allowed_keys,
-                                                       name, data):
-                    args = {'name': name, 'type_key': self.RES_TYPE}
-                    msg = _('Resource %(name)s is missing '
-                            '"%(type_key)s"') % args
-                    raise KeyError(msg)
-                self._validate_resource_key_types(allowed_keys, name, data)
-        except (TypeError, ValueError) as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
-
-    def _validate_resource_key_types(self, allowed_keys, name, data):
-                self.validate_resource_key_type(
-                    self.RES_PROPERTIES,
-                    (collections.Mapping, function.Function),
-                    'object', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_METADATA,
-                    (collections.Mapping, function.Function),
-                    'object', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_DEPENDS_ON,
-                    collections.Sequence,
-                    'list or string', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_DELETION_POLICY,
-                    (six.string_types, function.Function),
-                    'string', allowed_keys, name, data)
-                self.validate_resource_key_type(
-                    self.RES_UPDATE_POLICY,
-                    (collections.Mapping, function.Function),
-                    'object', allowed_keys, name, data)
-
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
         parsed_resources = self.parse(stack, resources)
@@ -439,14 +394,6 @@ class HOTemplate20161014(HOTemplate20160408):
     _RESOURCE_HOT_TO_CFN_ATTRS.update({RES_EXTERNAL_ID: None})
     extra_rsrc_defn = HOTemplate20160408.extra_rsrc_defn + (RES_EXTERNAL_ID,)
 
-    def _validate_resource_key_types(self, allowed_keys, name, data):
-        super(HOTemplate20161014, self)._validate_resource_key_types(
-            allowed_keys, name, data)
-        self.validate_resource_key_type(
-            self.RES_EXTERNAL_ID,
-            (six.string_types, function.Function),
-            'string', allowed_keys, name, data)
-
     deletion_policies = {
         'Delete': rsrc_defn.ResourceDefinition.DELETE,
         'Retain': rsrc_defn.ResourceDefinition.RETAIN,
@@ -514,3 +461,12 @@ class HOTemplate20161014(HOTemplate20160408):
 
     def get_condition_definitions(self):
         return self[self.CONDITIONS]
+
+    def validate_resource_definition(self, name, data):
+        super(HOTemplate20161014, self).validate_resource_definition(
+            name, data)
+
+        self.validate_resource_key_type(
+            self.RES_EXTERNAL_ID,
+            (six.string_types, function.Function),
+            'string', self._RESOURCE_KEYS, name, data)
