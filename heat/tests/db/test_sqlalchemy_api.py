@@ -1881,6 +1881,36 @@ class DBAPIStackTest(common.HeatTestCase):
                                                            parent_stack2.id)
         self.assertEqual(2, len(stack2_children))
 
+    def test_stack_get_all_by_root_owner_id(self):
+        parent_stack1 = create_stack(self.ctx, self.template, self.user_creds)
+        parent_stack2 = create_stack(self.ctx, self.template, self.user_creds)
+        for i in range(3):
+            lvl1_st = create_stack(self.ctx, self.template, self.user_creds,
+                                   owner_id=parent_stack1.id)
+            for j in range(2):
+                create_stack(self.ctx, self.template, self.user_creds,
+                             owner_id=lvl1_st.id)
+        for i in range(2):
+            lvl1_st = create_stack(self.ctx, self.template, self.user_creds,
+                                   owner_id=parent_stack2.id)
+            for j in range(4):
+                lvl2_st = create_stack(self.ctx, self.template,
+                                       self.user_creds, owner_id=lvl1_st.id)
+                for k in range(3):
+                    create_stack(self.ctx, self.template,
+                                 self.user_creds, owner_id=lvl2_st.id)
+
+        stack1_children = db_api.stack_get_all_by_root_owner_id(
+            self.ctx,
+            parent_stack1.id)
+        # 3 stacks on the first level + 6 stack on the second
+        self.assertEqual(9, len(list(stack1_children)))
+        stack2_children = db_api.stack_get_all_by_root_owner_id(
+            self.ctx,
+            parent_stack2.id)
+        # 2 + 8 + 24
+        self.assertEqual(34, len(list(stack2_children)))
+
     def test_stack_get_all_with_regular_tenant(self):
         values = [
             {'tenant': UUID1},

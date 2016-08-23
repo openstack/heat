@@ -603,7 +603,8 @@ class Stack(collections.Mapping):
         return stack
 
     @profiler.trace('Stack.store', hide_args=False)
-    def store(self, backup=False, exp_trvsl=None):
+    def store(self, backup=False, exp_trvsl=None,
+              ignore_traversal_check=False):
         """Store the stack in the database and return its ID.
 
         If self.id is set, we update the existing stack.
@@ -619,7 +620,7 @@ class Stack(collections.Mapping):
             s['raw_template_id'] = self.t.id
 
         if self.id:
-            if exp_trvsl is None:
+            if exp_trvsl is None and not ignore_traversal_check:
                 exp_trvsl = self.current_traversal
 
             if self.convergence:
@@ -1352,6 +1353,16 @@ class Stack(collections.Mapping):
                 rsrcs[existing_rsrc_db.name] = existing_rsrc_db
         return rsrcs
 
+    def set_resource_deps(self):
+        curr_name_translated_dep = self.dependencies.translate(lambda res:
+                                                               res.id)
+        ext_rsrcs_db = self.db_active_resources_get()
+        for r in self.dependencies:
+            r.needed_by = list(curr_name_translated_dep.required_by(r.id))
+            r.requires = list(curr_name_translated_dep.requires(r.id))
+            resource.Resource.set_needed_by(ext_rsrcs_db[r.id], r.needed_by)
+            resource.Resource.set_requires(ext_rsrcs_db[r.id], r.requires)
+
     def _compute_convg_dependencies(self, existing_resources,
                                     current_template_deps, current_resources):
         def make_graph_key(rsrc):
@@ -2064,3 +2075,19 @@ class Stack(collections.Mapping):
             return self.time_elapsed() > self.timeout_secs()
 
         return False
+
+    def migrate_to_convergence(self):
+        values = {'current_template_id': self.t.id}
+        db_rsrcs = self.db_active_resources_get()
+        if db_rsrcs is not None:
+            for res in db_rsrcs.values():
+                res.update_and_save(values=values)
+        self.set_resource_deps()
+        self.current_traversal = uuidutils.generate_uuid()
+        self.convergence = True
+        prev_raw_template_id = self.prev_raw_template_id
+        self.prev_raw_template_id = None
+        self.store(ignore_traversal_check=True)
+        if prev_raw_template_id:
+            raw_template_object.RawTemplate.delete(self.context,
+                                                   prev_raw_template_id)

@@ -56,6 +56,7 @@ class EngineClient(object):
         1.32 - Add get_files call
         1.33 - Remove tenant_safe from list_stacks, count_stacks
                and list_software_configs
+        1.34 - Add migrate_convergence_1 call
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -846,3 +847,14 @@ class EngineClient(object):
                          self.make_msg('export_stack',
                                        stack_identity=stack_identity),
                          version='1.22')
+
+    def migrate_convergence_1(self, ctxt, stack_id):
+        """Migrate the stack to convergence engine
+
+        :param ctxt: RPC context
+        :param stack_name: Name of the stack you want to migrate
+        """
+        return self.call(ctxt,
+                         self.make_msg('migrate_convergence_1',
+                                       stack_id=stack_id),
+                         version='1.34')

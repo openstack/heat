@@ -22,11 +22,14 @@ from oslo_log import log
 from six import moves
 
 from heat.common import context
+from heat.common import exception
 from heat.common.i18n import _
+from heat.common import messaging
 from heat.common import service_utils
 from heat.db import api as db_api
 from heat.db import utils
 from heat.objects import service as service_objects
+from heat.rpc import client as rpc_client
 from heat import version
 
 
@@ -111,6 +114,21 @@ def do_reset_stack_status():
     db_api.reset_stack_status(ctxt, CONF.command.stack_id)
 
 
+def do_migrate():
+    messaging.setup()
+    client = rpc_client.EngineClient()
+    ctxt = context.get_admin_context()
+    try:
+        client.migrate_convergence_1(ctxt, CONF.command.stack_id)
+    except exception.NotFound:
+        raise Exception(_("Stack with id %s can not be found.")
+                        % CONF.command.stack_id)
+    except exception.ActionInProgress:
+        raise Exception(_("The stack or some of its nested stacks are "
+                          "in progress. Note, that all the stacks should be "
+                          "in COMPLETE state in order to be migrated."))
+
+
 def purge_deleted():
     """Remove database records that have been previously soft deleted."""
     utils.purge_deleted(CONF.command.age,
@@ -140,6 +158,11 @@ def add_command_parsers(subparsers):
     parser.set_defaults(func=do_db_sync)
     # positional parameter, can be skipped. default=None
     parser.add_argument('version', nargs='?')
+
+    # migrate-stacks parser
+    parser = subparsers.add_parser('migrate-convergence-1')
+    parser.set_defaults(func=do_migrate)
+    parser.add_argument('stack_id')
 
     # purge_deleted parser
     parser = subparsers.add_parser('purge_deleted')

@@ -188,6 +188,10 @@ def stack_get_all_by_owner_id(context, owner_id):
     return IMPL.stack_get_all_by_owner_id(context, owner_id)
 
 
+def stack_get_all_by_root_owner_id(context, owner_id):
+    return IMPL.stack_get_all_by_root_owner_id(context, owner_id)
+
+
 def stack_count_all(context, filters=None,
                     show_deleted=False, show_nested=False, show_hidden=False,
                     tags=None, tags_any=None, not_tags=None,

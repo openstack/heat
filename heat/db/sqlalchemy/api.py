@@ -224,7 +224,7 @@ def resource_purge_deleted(context, stack_id):
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     session = context.session
-    with session.begin():
+    with session.begin(subtransactions=True):
         if atomic_key is None:
             values['atomic_key'] = 1
         else:
@@ -469,6 +469,13 @@ def stack_get_all_by_owner_id(context, owner_id):
     return results
 
 
+def stack_get_all_by_root_owner_id(context, owner_id):
+    for stack in stack_get_all_by_owner_id(context, owner_id):
+        yield stack
+        for ch_st in stack_get_all_by_root_owner_id(context, stack.id):
+            yield ch_st
+
+
 def _get_sort_keys(sort_keys, mapping):
     """Returns an array containing only whitelisted keys
 
@@ -627,7 +634,7 @@ def stack_update(context, stack_id, values, exp_trvsl=None):
 
     session = context.session
 
-    with session.begin():
+    with session.begin(subtransactions=True):
         rows_updated = (session.query(models.Stack)
                         .filter(models.Stack.id == stack.id)
                         .filter(models.Stack.current_traversal
