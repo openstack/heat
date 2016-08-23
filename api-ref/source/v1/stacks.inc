@@ -217,7 +217,7 @@ Response Example
 Find stack
 ==========
 
-.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_name}
+.. rest_method::  GET /v1/{tenant_id}/stacks/{stack_identity}
 
 Finds the canonical URL for a stack.
 
@@ -248,7 +248,7 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - stack_name: stack_name_url
+   - stack_identity: stack_identity
 
 Response Parameters
 -------------------
@@ -469,7 +469,7 @@ Response Example
 Find stack for deletion
 =======================
 
-.. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_name}
+.. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_identity}
 
 Find the canonical URL for a stack for deletion. This request returns a status
 code of ``302`` pointing to the location where a DELETE request can be sent to
@@ -495,7 +495,7 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - stack_name: stack_name_url
+   - stack_identity: stack_identity
 
 Reponse Parameters
 ------------------
