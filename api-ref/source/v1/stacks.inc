@@ -124,7 +124,7 @@ Response Parameters
    - outputs: stack_outputs
    - parameters: stack_parameters
    - parent: parent
-   - resources: resources
+   - resources: stack_resources
    - stack: stack
    - stack_name: stack_name
    - stack_owner: stack_owner
@@ -398,6 +398,72 @@ Response Example
    :language: javascript
 
 
+Update stack (PATCH)
+====================
+
+.. rest_method::  PATCH /v1/{tenant_id}/stacks/{stack_name}/{stack_id}
+
+Updates a stack using the ``PATCH`` verb. The logic is identical to stack
+update with a ``PUT`` verb except that the ``existing`` parameter is always
+set to True.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - clear_parameters: clear_parameters
+   - disable_rollback: disable_rollback
+   - environment: environment
+   - environment_files: environment_files
+   - existing: existing_patch
+   - files: files
+   - parameters: parameters
+   - tags: tags
+   - template: template
+   - template_url: template_url
+   - timeout_mins: timeout_mins
+
+Request Example
+---------------
+
+.. literalinclude:: samples/stack-update-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - code: code
+   - message: message
+   - title: title
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-update-response.json
+   :language: javascript
+
+
 Preview stack update
 ====================
 
@@ -432,6 +498,76 @@ Request Parameters
    - environment: environment
    - environment_files: environment_files
    - existing: existing
+   - files: files
+   - parameters: parameters
+   - show_nested: update_show_nested
+   - tags: tags
+   - template: template
+   - template_url: template_url
+   - timeout_mins: timeout_mins
+
+Request Example
+---------------
+
+.. literalinclude:: samples/stack-update-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+   - resource_changes: resource_changes
+   - added: preview_added
+   - deleted: preview_deleted
+   - replaced: preview_replaced
+   - unchanged: preview_unchanged
+   - updated: preview_updated
+
+Response Example
+----------------
+
+.. literalinclude:: samples/stack-update-preview-response.json
+   :language: javascript
+
+
+Preview stack update (PATCH)
+============================
+
+.. rest_method::  PATCH /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/preview
+
+Previews an update for a stack using the ``PATCH`` verb. The logic is the same
+as that of stack update preview with a ``PUT`` verb except that the
+``existing`` parameter is always set to True.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - clear_parameters: clear_parameters
+   - disable_rollback: disable_rollback
+   - environment: environment
+   - environment_files: environment_files
+   - existing: existing_patch
    - files: files
    - parameters: parameters
    - show_nested: update_show_nested
@@ -556,7 +692,8 @@ Abandon stack
 
 .. rest_method::  DELETE /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/abandon
 
-Deletes a stack but leaves its resources intact, and returns data that describes the stack and its resources.
+Deletes a stack but leaves its resources intact, and returns data that
+describes the stack and its resources.
 
 This is a preview feature which has to be explicitly enabled by setting the
 following option in the ``heat.conf`` file::

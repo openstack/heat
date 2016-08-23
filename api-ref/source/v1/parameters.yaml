@@ -326,7 +326,7 @@ tags_query:
   in: query
   required: false
   type: string
-template_type:
+template_type_query:
   description: |
     Specify the resource template type. The valid types are: ``cfn``, ``hot``.
   in: query
@@ -430,12 +430,6 @@ capabilities:
   in: body
   required: true
   type: array
-capabilities_1:
-  description: |
-    A list of stack capabilities.
-  in: body
-  required: true
-  type: array
 check:
   description: |
     Specify the ``check`` action in the request body.
@@ -463,25 +457,9 @@ config:
   in: body
   required: false
   type: string
-config_1:
-  description: |
-    The configuration code.
-  in: body
-  required: true
-  type: string
 config_id:
   description: |
     The UUID of the configuration.
-  in: body
-  required: true
-  type: string
-config_id_3:
-  description: |
-    The UUID of the software configuration resource
-    to run when applying to the server. This UUID might not be the
-    same configuration UUID with which the deployment was created
-    because ephemeral configurations are created throughout the life
-    cycle of the deployment.
   in: body
   required: true
   type: string
@@ -705,6 +683,20 @@ existing:
   required: false
   default: false
   type: boolean
+existing_patch:
+  description:
+    This parameter can be specified but it will be ignored. When using the
+    ``PATCH`` verb to update a stack,the orchestration service will try reuse
+    the existing stack template, parameters and environment. If ``template``
+    parameter is not provided, the existing template is used. If
+    ``template_files`` is not provided, the existing environment is used.
+    Parameters specified in the ``parameters`` key will patch over the
+    existing values in the current stack. Parameters omitted will keep the
+    existing values.
+  in: body
+  required: false
+  default: true
+  type: boolean
 files:
   description: |
     Supplies the contents of files referenced in the template or the
@@ -787,13 +779,6 @@ group:
   in: body
   required: false
   type: string
-group_1:
-  description: |
-    The name of the group in which the software is
-    configured.
-  in: body
-  required: true
-  type: string
 heat_template_version:
   description: |
     The version of the orchestration HOT template.
@@ -831,12 +816,6 @@ inputs:
   in: body
   required: false
   type: array
-inputs_1:
-  description: |
-    A list of inputs to configure the software.
-  in: body
-  required: true
-  type: array
 links:
   description: |
     A list of URLs for the stack. Each URL is a JSON object with an ``href``
@@ -871,21 +850,9 @@ metadata:
   in: body
   required: true
   type: object
-name_1:
-  description: |
-    The name of the configuration to create.
-  in: body
-  required: false
-  type: string
 notification_topics:
   description: |
     List of notification topics for stack.
-  in: body
-  required: true
-  type: array
-notification_topics_1:
-  description: |
-    A list of stack notifications.
   in: body
   required: true
   type: array
@@ -1034,12 +1001,6 @@ parameters:
        }
   in: body
   required: false
-  type: object
-parameters_show:
-  description: |
-    A map of parameters defined for the stack.
-  in: body
-  required: true
   type: object
 parent:
   description: |
@@ -1213,12 +1174,6 @@ resources:
 Resources:
   description: |
     A map containging all resource definitions for the resource template.
-  in: body
-  required: true
-  type: object
-resources_2:
-  description: |
-    The snapshot resources.
   in: body
   required: true
   type: object
@@ -1608,12 +1563,6 @@ type:
   in: body
   required: true
   type: string
-update_allowed:
-  description: |
-    If set to ``true``, update is allowed.
-  in: body
-  required: true
-  type: boolean
 update_show_nested:
   description: |
     Set to ``true`` to include nested stacks in the preview result.
