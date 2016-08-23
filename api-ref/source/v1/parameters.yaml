@@ -508,12 +508,6 @@ creation_time:
   in: body
   required: true
   type: string
-data:
-  description: |
-    The snapshot data.
-  in: body
-  required: true
-  type: object
 deleted_at:
   description: |
     The date and time when the service engine was deleted.
@@ -1121,7 +1115,7 @@ resource_types_simple:
   in: body
   required: true
   type: array
-resource_upudate_status_reason:
+resource_update_status_reason:
   description: |
     The reason for the current stack resource state.
   in: body
@@ -1158,6 +1152,24 @@ resources_list:
   in: body
   required: true
   type: array
+restore_code:
+  description: |
+    HTTP status code for a restore request. Usually ``202 Accepted``.
+  in: body
+  required: true
+  type: string
+restore_message:
+  description: |
+    The message in the response to a stack restore request.
+  in: body
+  required: true
+  type: string
+restore_title:
+  description: |
+    The title of the response to a stack restore request. e.g. ``Accepted``.
+  in: body
+  required: true
+  type: string
 resume:
   description: |
     Specify the ``resume`` action in the request
@@ -1184,6 +1196,12 @@ snapshot:
   in: body
   required: true
   type: object
+snapshot_data:
+  description: |
+    The snapshot data.
+  in: body
+  required: true
+  type: object
 snapshot_id:
   description: |
     The UUID of the snapshot.
@@ -1199,6 +1217,12 @@ snapshot_name:
 snapshot_status:
   description: |
     The status of the snapshot.
+  in: body
+  required: true
+  type: string
+snapshot_status_reason:
+  description: |
+    The reason for the current snapshot status.
   in: body
   required: true
   type: string
@@ -1367,19 +1391,6 @@ stacks:
   in: body
   required: true
   type: array
-status_reason:
-  description: |
-    Error description for the last status change,
-    which is ``FAILED`` status.
-  in: body
-  required: false
-  type: string
-status_reason_2:
-  description: |
-    The reason for the current snapshot status.
-  in: body
-  required: true
-  type: string
 support_status:
   description: |
     Information about the current support status of a resource type.
