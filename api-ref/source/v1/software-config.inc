@@ -11,9 +11,18 @@ Create configuration
 
 Creates a software configuration.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:404,401,400,
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
 
 Request Parameters
 ------------------
@@ -64,9 +73,19 @@ List configs
 
 Lists all available software configurations.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes: 404,500,401,400
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -102,9 +121,18 @@ Show configuration details
 
 Shows details for a software configuration.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes: 404,401,400
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
 
 Request Parameters
 ------------------
@@ -145,7 +173,18 @@ Delete config
 
 Deletes a software configuration.
 
-Normal response codes: 204
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 204
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
 
 Request Parameters
 ------------------
@@ -163,9 +202,18 @@ Create deployment
 
 Creates a software deployment.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 500
 
 Request Parameters
 ------------------
@@ -218,9 +266,19 @@ List deployments
 
 Lists all available software deployments.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes: 404,500,401,400
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -261,9 +319,19 @@ Show deployment details
 
 Shows details for a software deployment.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -304,9 +372,19 @@ Update deployment
 
 Updates a software deployment.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -358,7 +436,19 @@ Delete deployment
 
 Deletes a software deployment.
 
-Normal response codes: 204
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 204
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
@@ -378,9 +468,19 @@ Shows the deployment configuration metadata for a server.
 Use the ``group`` property to specify the configuration hook to
 which the pass the metadata item.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+   - 500
 
 Request Parameters
 ------------------
