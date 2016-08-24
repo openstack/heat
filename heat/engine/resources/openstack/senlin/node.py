@@ -177,8 +177,7 @@ class Node(resource.Resource):
         return True
 
     def _resolve_attribute(self, name):
-        node = self.client().get_node(self.resource_id,
-                                      args={'show_details': True})
+        node = self.client().get_node(self.resource_id, details=True)
         return getattr(node, name, None)
 
 
