@@ -13,8 +13,7 @@
 # under the License.
 
 # This script creates required cloud resources and sets test options
-# in heat_integrationtests.conf.
-# Credentials are required for creating nova flavors and glance images.
+# in tempest.conf.
 
 set -e
 
@@ -24,7 +23,9 @@ source $DEST/devstack/inc/ini-config
 
 set -x
 
-conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
+conf_file=$DEST/tempest/etc/tempest.conf
+
+iniset_multiline $conf_file service_available heat_plugin True
 
 source $DEST/devstack/openrc demo demo
 # user creds
@@ -39,6 +40,7 @@ iniset $conf_file heat_plugin region $OS_REGION_NAME
 source $DEST/devstack/openrc admin admin
 iniset $conf_file heat_plugin admin_username $OS_USERNAME
 iniset $conf_file heat_plugin admin_password $OS_PASSWORD
+
 
 # Register the flavors for booting test servers
 iniset $conf_file heat_plugin instance_type m1.heat_int

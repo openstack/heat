@@ -35,6 +35,7 @@ function _heat_set_user {
 
 function create {
     # run heat_integrationtests instead of tempest smoke before create
+    # TODO(sbaker) run with tempest after the next major release
     pushd $BASE_DEVSTACK_DIR/../heat
     conf_file=heat_integrationtests/heat_integrationtests.conf
     iniset $conf_file heat_plugin username $OS_USERNAME
