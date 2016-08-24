@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -41,12 +40,6 @@ class Node(resource.Resource):
         INIT, ACTIVE, CREATING,
     ) = (
         'INIT', 'ACTIVE', 'CREATING',
-    )
-
-    _ACTION_STATUS = (
-        ACTION_SUCCEEDED, ACTION_FAILED,
-    ) = (
-        'SUCCEEDED', 'FAILED',
     )
 
     ATTRIBUTES = (
@@ -127,46 +120,20 @@ class Node(resource.Resource):
         return node.to_dict()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        updaters = dict()
-        UPDATE_PROPS = [self.NAME, self.METADATA, self.PROFILE]
-        if any(p in prop_diff for p in UPDATE_PROPS):
-            params = dict((k, v) for k, v in prop_diff.items()
-                          if k in UPDATE_PROPS)
-            if self.PROFILE in params:
-                params['profile_id'] = params.pop(self.PROFILE)
-            updaters['profile_update'] = {
-                'params': params,
-                'finished': False,
-            }
+        action_id = None
+        if prop_diff:
+            if self.PROFILE in prop_diff:
+                prop_diff['profile_id'] = prop_diff.pop(self.PROFILE)
+            node = self.client().update_node(
+                self.resource_id, **prop_diff)
+            action_id = node.location.split('/')[-1]
 
-        return updaters
+        return action_id
 
-    def check_update_complete(self, updaters):
-        def check_action(updater, set_key):
-            action = self.client().get_action(updater['action'])
-            if action.status == self.ACTION_SUCCEEDED:
-                updater[set_key] = True
-            elif action.status == self.ACTION_FAILED:
-                raise exception.ResourceInError(
-                    status_reason=action.status_reason,
-                    resource_status=action.status,
-                )
-
-        if not updaters:
+    def check_update_complete(self, action_id):
+        if action_id is None:
             return True
-        profile_update = updaters.get('profile_update')
-        if profile_update and not profile_update['finished']:
-            if 'action' not in profile_update:
-                resp = self.client().update_node(
-                    self.resource_id, **profile_update['params'])
-                profile_update['action'] = resp.location.split('/')[-1]
-                return False
-            else:
-                check_action(profile_update, 'finished')
-                if not profile_update['finished']:
-                    return False
-
-        return True
+        return self.client_plugin().check_action_status(action_id)
 
     def _resolve_attribute(self, name):
         node = self.client().get_node(self.resource_id,
