@@ -21,6 +21,7 @@ from oslo_serialization import jsonutils as json
 import six
 
 from heat.common import context
+from heat.common import environment_util as env_util
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
@@ -1165,7 +1166,7 @@ class StackServiceTest(common.HeatTestCase):
                                self._preview_stack)
         self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
 
-    @mock.patch.object(service.EngineService, '_merge_environments')
+    @mock.patch.object(env_util, 'merge_environments')
     def test_preview_environment_files(self, mock_merge):
         # Setup
         environment_files = ['env_1']
