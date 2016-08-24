@@ -52,6 +52,7 @@ class FakeNode(object):
         self.profile_id = "fake_profile"
         self.cluster_id = "fake_cluster"
         self.details = {'id': 'physical_object_id'}
+        self.location = "actions/fake_action"
 
     def to_dict(self):
         return {
@@ -70,6 +71,8 @@ class SenlinNodeTest(common.HeatTestCase):
         super(SenlinNodeTest, self).setUp()
         self.senlin_mock = mock.MagicMock()
         self.patchobject(sn.Node, 'client', return_value=self.senlin_mock)
+        self.patchobject(senlin.SenlinClientPlugin, 'client',
+                         return_value=self.senlin_mock)
         self.patchobject(senlin.ProfileConstraint, 'validate',
                          return_value=True)
         self.patchobject(senlin.ClusterConstraint, 'validate',
@@ -99,17 +102,18 @@ class SenlinNodeTest(common.HeatTestCase):
         }
         self.senlin_mock.create_node.assert_called_once_with(
             **expect_kwargs)
-        self.senlin_mock.get_node.assert_called_once_with(self.fake_node.id)
 
     def test_node_create_error(self):
         cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         self.senlin_mock.create_node.return_value = self.fake_node
-        self.senlin_mock.get_node.return_value = FakeNode(
-            status='ERROR')
+        mock_action = mock.MagicMock()
+        mock_action.status = 'FAILED'
+        mock_action.status_reason = 'oops'
+        self.senlin_mock.get_action.return_value = mock_action
         create_task = scheduler.TaskRunner(self.node.create)
         ex = self.assertRaises(exception.ResourceFailure, create_task)
         expected = ('ResourceInError: resources.senlin-node: '
-                    'Went to status ERROR due to "Unknown"')
+                    'Went to status FAILED due to "oops"')
         self.assertEqual(expected, six.text_type(ex))
 
     def test_node_delete_success(self):
@@ -147,8 +151,7 @@ class SenlinNodeTest(common.HeatTestCase):
         }
         self.senlin_mock.update_node.assert_called_once_with(
             node.resource_id, **node_update_kwargs)
-        self.senlin_mock.get_action.assert_called_once_with(
-            'fake-action')
+        self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_node_update_failed(self):
         node = self._create_node()
@@ -167,8 +170,7 @@ class SenlinNodeTest(common.HeatTestCase):
                     'status FAILED due to "oops"')
         self.assertEqual(expected, six.text_type(ex))
         self.assertEqual((node.UPDATE, node.FAILED), node.state)
-        self.senlin_mock.get_action.assert_called_once_with(
-            'fake-action')
+        self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_cluster_resolve_attribute(self):
         excepted_show = {

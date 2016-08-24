@@ -98,20 +98,12 @@ class Node(resource.Resource):
         }
 
         node = self.client().create_node(**params)
+        action_id = node.location.split('/')[-1]
         self.resource_id_set(node.id)
-        return node.id
+        return action_id
 
-    def check_create_complete(self, resource_id):
-        node = self.client().get_node(resource_id)
-        if node.status == self.ACTIVE:
-            return True
-        elif node.status in [self.INIT, self.CREATING]:
-            return False
-        else:
-            raise exception.ResourceInError(
-                status_reason=node.status_reason,
-                resource_status=node.status,
-            )
+    def check_create_complete(self, action_id):
+        return self.client_plugin().check_action_status(action_id)
 
     def handle_delete(self):
         if self.resource_id is not None:
