@@ -314,21 +314,21 @@ class Stack(collections.Mapping):
         return self._resources
 
     def _find_filtered_resources(self, filters):
-        for rsc in six.itervalues(
-                resource_objects.Resource.get_all_by_stack(
-                    self.context, self.id, filters)):
-            yield self.resources[rsc.name]
+        template_cache = {self.t.id: self.t}
+        if filters:
+            resources = resource_objects.Resource.get_all_by_stack(
+                self.context, self.id, filters)
+        else:
+            resources = self._db_resources_get()
+        for rsc in six.itervalues(resources):
+            yield self._resource_from_db_resource(rsc, template_cache)
 
     def iter_resources(self, nested_depth=0, filters=None):
         """Iterates over all the resources in a stack.
 
         Iterating includes nested stacks up to `nested_depth` levels below.
         """
-        if not filters:
-            resources = six.itervalues(self.resources)
-        else:
-            resources = self._find_filtered_resources(filters)
-        for res in resources:
+        for res in self._find_filtered_resources(filters):
             yield res
 
         for res in six.itervalues(self.resources):
@@ -350,20 +350,27 @@ class Stack(collections.Mapping):
     def db_resource_get(self, name):
         if not self.id:
             return None
+        return self._db_resources_get().get(name)
+
+    def _db_resources_get(self):
         if self._db_resources is None:
             _db_resources = resource_objects.Resource.get_all_by_stack(
                 self.context, self.id)
             if not _db_resources:
-                return None
+                return {}
             self._db_resources = _db_resources
-        return self._db_resources.get(name)
+        return self._db_resources
 
-    def _resource_from_db_resource(self, db_res):
+    def _resource_from_db_resource(self, db_res, template_cache=None):
         tid = db_res.current_template_id
-        if tid == self.t.id:
+        if tid is None or tid == self.t.id:
             t = self.t
+        elif template_cache and tid in template_cache:
+            t = template_cache[tid]
         else:
             t = tmpl.Template.load(self.context, tid)
+            if template_cache:
+                template_cache[tid] = t
 
         res_defn = t.resource_definitions(self)[db_res.name]
         return resource.Resource(db_res.name, res_defn, self)
