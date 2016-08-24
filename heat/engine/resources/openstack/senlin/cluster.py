@@ -59,12 +59,6 @@ class Cluster(resource.Resource):
         'CREATING', 'DELETING', 'UPDATING'
     )
 
-    _ACTION_STATUS = (
-        ACTION_SUCCEEDED, ACTION_FAILED,
-    ) = (
-        'SUCCEEDED', 'FAILED',
-    )
-
     properties_schema = {
         PROFILE: properties.Schema(
             properties.Schema.STRING,
@@ -231,14 +225,10 @@ class Cluster(resource.Resource):
                 updater['action'] = action_id
                 updater['start'] = True
             else:
-                action = self.client().get_action(updater['action'])
-                if action.status == self.ACTION_SUCCEEDED:
+                ret = self.client_plugin().check_action_status(
+                    updater['action'])
+                if ret:
                     del updaters[k]
-                elif action.status == self.ACTION_FAILED:
-                    raise exception.ResourceInError(
-                        status_reason=action.status_reason,
-                        resource_status=self.FAILED,
-                    )
             return False
 
     def validate(self):
