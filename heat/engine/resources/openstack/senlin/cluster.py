@@ -160,20 +160,12 @@ class Cluster(resource.Resource):
             'timeout': self.properties[self.TIMEOUT]
         }
         cluster = self.client().create_cluster(**params)
+        action_id = cluster.location.split('/')[-1]
         self.resource_id_set(cluster.id)
-        return cluster.id
+        return action_id
 
-    def check_create_complete(self, resource_id):
-        cluster = self.client().get_cluster(resource_id)
-        if cluster.status in [self.CLUSTER_ACTIVE, self.CLUSTER_WARNING]:
-            return True
-        elif cluster.status in [self.CLUSTER_INIT, self.CLUSTER_CREATING]:
-            return False
-        else:
-            raise exception.ResourceInError(
-                status_reason=cluster.status_reason,
-                resource_status=cluster.status
-            )
+    def check_create_complete(self, action_id):
+        return self.client_plugin().check_action_status(action_id)
 
     def handle_delete(self):
         if self.resource_id is not None:
