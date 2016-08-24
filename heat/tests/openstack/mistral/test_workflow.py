@@ -257,6 +257,20 @@ resources:
           action: std.noop
 """
 
+workflow_template_concurrency_no_with_items = """
+heat_template_version: 2013-05-23
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      params: {'test':'param_value'}
+      type: direct
+      tasks:
+        - name: hello
+          action: std.echo output='Good morning!'
+          concurrency: 9001
+"""
+
 workflow_template_update_replace = """
 heat_template_version: 2013-05-23
 resources:
@@ -305,6 +319,28 @@ resources:
          retry:
              delay: 6
              count: 16
+"""
+
+workflow_template_policies_translation = """
+heat_template_version: 2016-10-14
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      name: translation_done
+      type: direct
+      tasks:
+        - name: check_dat_thing
+          action: nova.servers_list
+          policies:
+            retry:
+              delay: 5
+              count: 15
+            wait_before: 5
+            wait_after: 5
+            pause_before: 5
+            timeout: 42
+            concurrency: 5
 """
 
 
@@ -432,7 +468,14 @@ class TestMistralWorkflow(common.HeatTestCase):
                      "in 'params' in case of reverse type workflow.")
         self._test_validation_failed(workflow_template_bad_reverse, error_msg)
 
-    def _test_validation_failed(self, templatem, error_msg):
+    def test_with_items_concurrency_failed_validate(self):
+        error_msg = "concurrency cannot be specified without with_items."
+        self._test_validation_failed(
+            workflow_template_concurrency_no_with_items,
+            error_msg,
+            error_cls=exception.ResourcePropertyDependency)
+
+    def _test_validation_failed(self, templatem, error_msg, error_cls=None):
         tmpl = template_format.parse(templatem)
         stack = utils.parse_stack(tmpl)
 
@@ -440,8 +483,10 @@ class TestMistralWorkflow(common.HeatTestCase):
 
         wf = workflow.Workflow('workflow', rsrc_defns, stack)
 
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                wf.validate)
+        if error_cls is None:
+            error_cls = exception.StackValidationFailed
+
+        exc = self.assertRaises(error_cls, wf.validate)
         self.assertEqual(error_msg, six.text_type(exc))
 
     def test_create_wrong_definition(self):
@@ -717,11 +762,19 @@ class TestMistralWorkflow(common.HeatTestCase):
             lambda *args, **kw: self.verify_params(*args, **kw))
         scheduler.TaskRunner(wf.signal, details)()
 
-    def test_duplicate_attribute_validation_error(self):
-        error_msg = ("Property policies and retry cannot be "
-                     "used both at one time.")
-        self._test_validation_failed(workflow_template_duplicate_polices,
-                                     error_msg)
+    def test_duplicate_attribute_translation_error(self):
+        tmpl = template_format.parse(workflow_template_duplicate_polices)
+        stack = utils.parse_stack(tmpl)
+
+        rsrc_defns = stack.t.resource_definitions(stack)['workflow']
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               workflow.Workflow, 'workflow', rsrc_defns,
+                               stack)
+        error_msg = ("Property error: resources.workflow.properties: Cannot "
+                     "define the following properties at the same time: "
+                     "['retry', 'policies'].")
+        self.assertEqual(error_msg, six.text_type(ex))
 
     def validate_json_inputs(self, actual_input, expected_input):
         actual_json_input = jsonutils.loads(actual_input)
@@ -776,3 +829,18 @@ class TestMistralWorkflow(common.HeatTestCase):
                                   cache_data=cache_data)
         rsrc = stack['workflow']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
+
+    def test_policies_translation_successful(self):
+        tmpl = template_format.parse(workflow_template_policies_translation)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['workflow']
+        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+
+        self.assertEqual([{'name': 'check_dat_thing',
+                           'action': 'nova.servers_list',
+                           'retry': {'delay': 5, 'count': 15},
+                           'wait_before': 5,
+                           'wait_after': 5,
+                           'pause_before': 5,
+                           'timeout': 42,
+                           'concurrency': 5}], wf.properties.data['tasks'])
