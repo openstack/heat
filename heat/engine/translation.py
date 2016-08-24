@@ -358,5 +358,5 @@ class TranslationRule(object):
             for item in translation_data:
                 if item.get(translation_key) is not None:
                     del item[translation_key]
-        else:
+        elif translation_data.get(translation_key) is not None:
             del translation_data[translation_key]
