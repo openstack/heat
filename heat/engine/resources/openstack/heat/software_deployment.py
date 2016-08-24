@@ -224,10 +224,17 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.context, **derived_params)
         return derived_config[rpc_api.SOFTWARE_CONFIG_ID]
 
-    def _load_config(self):
-        if self.properties.get(self.CONFIG):
-            config = self.rpc_client().show_software_config(
-                self.context, self.properties.get(self.CONFIG))
+    def _get_derived_config_id(self):
+        sd = self.rpc_client().show_software_deployment(self.context,
+                                                        self.resource_id)
+        return sd[rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID]
+
+    def _load_config(self, config_id=None):
+        if config_id is None:
+            config_id = self.properties.get(self.CONFIG)
+        if config_id:
+            config = self.rpc_client().show_software_config(self.context,
+                                                            config_id)
         else:
             config = {}
 
@@ -430,17 +437,15 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        old_config_id = self.properties.get(self.CONFIG)
-        config = self._load_config()
+        old_config = self._load_config(self._get_derived_config_id())
         old_inputs = {i.name(): i
-                      for i in self._build_derived_inputs(self.UPDATE, config)}
+                      for i in self._build_derived_inputs(self.UPDATE,
+                                                          old_config)}
 
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
 
-        new_config_id = self.properties.get(self.CONFIG)
-        if old_config_id != new_config_id:
-            config = self._load_config()
+        config = self._load_config()
         new_inputs = {i.name(): i
                       for i in self._build_derived_inputs(self.UPDATE, config)}
 
@@ -476,9 +481,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         derived_config_id = None
         if self.resource_id is not None:
             try:
-                sd = self.rpc_client().show_software_deployment(
-                    self.context, self.resource_id)
-                derived_config_id = sd[rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID]
+                derived_config_id = self._get_derived_config_id()
                 self.rpc_client().delete_software_deployment(
                     self.context, self.resource_id)
             except Exception as ex:
