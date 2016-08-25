@@ -700,8 +700,10 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'str_replace': {'tmpl': 'Template var1 string var2',
                                    'parms': {'var1': 'foo', 'var2': 'bar'}}}
 
-        self.assertRaises(exception.StackValidationFailed,
-                          self.resolve, snippet, tmpl)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.resolve, snippet, tmpl)
+        self.assertIn('"str_replace" syntax should be str_replace:\\n',
+                      six.text_type(ex))
 
     def test_str_replace_invalid_param_types(self):
         """Test str_replace function parameter values.

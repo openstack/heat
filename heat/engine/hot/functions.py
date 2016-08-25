@@ -373,13 +373,13 @@ class Replace(function.Function):
             mapping = self.args['params']
             string = self.args['template']
         except (KeyError, TypeError):
-            example = ('''str_replace:
+            example = _('''%s:
               template: This is var1 template var2
               params:
                 var1: a
-                var2: string''')
-            raise KeyError(_('"str_replace" syntax should be %s') %
-                           example)
+                var2: string''') % self.fn_name
+            raise KeyError(_('"%(fn_name)s" syntax should be %(example)s') %
+                           {'fn_name': self.fn_name, 'example': example})
         else:
             return mapping, string
 
