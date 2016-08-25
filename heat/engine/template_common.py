@@ -103,4 +103,37 @@ class CommonTemplate(template.Template):
         return result
 
     def get_condition_definitions(self):
+        """Return the condition definitions of template."""
         return {}
+
+    def has_condition_section(self, snippet):
+        return False
+
+    def get_res_condition(self, stack, res_data, res_name):
+        """Return the value of condition referenced by resource."""
+
+        path = ''
+        if self.has_condition_section(res_data):
+            path = '.'.join([res_name, self.RES_CONDITION])
+
+        return self.get_condition(res_data, stack, path)
+
+    def get_condition(self, snippet, stack, path=''):
+        # if specify condition return the resolved condition value,
+        # true or false if don't specify condition, return true
+        if self.has_condition_section(snippet):
+            cd_key = snippet[self.CONDITION]
+            cds = self.conditions(stack)
+            if cd_key not in cds:
+                raise exception.InvalidConditionReference(
+                    cd=cd_key, path=path)
+            cd = cds[cd_key]
+            return cd
+
+        return True
+
+    def conditions(self, stack):
+        if self._conditions is None:
+            self._conditions = self.resolve_conditions(stack)
+
+        return self._conditions

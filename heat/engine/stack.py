@@ -1456,6 +1456,7 @@ class Stack(collections.Mapping):
             updater = scheduler.TaskRunner(update_task)
 
             self.parameters = newstack.parameters
+            self.t._conditions = newstack.t.conditions(newstack)
             self.t.files = newstack.t.files
             self.t.env = newstack.t.env
             self.disable_rollback = newstack.disable_rollback
@@ -1519,8 +1520,10 @@ class Stack(collections.Mapping):
                 # and new stack resources, we should have user params of both.
                 existing_params.load(newstack.t.env.user_env_as_dict())
                 self.t.env = existing_params
+                self.t.merge_snippets(newstack.t)
                 self.t.store(self.context)
                 backup_stack.t.env = existing_params
+                backup_stack.t.merge_snippets(newstack.t)
                 backup_stack.t.store(self.context)
             self.store()
 
