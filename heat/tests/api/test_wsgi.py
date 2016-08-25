@@ -22,7 +22,6 @@ import six
 import socket
 import webob
 
-from mox import stubout
 from oslo_config import cfg
 
 from heat.api.aws import exception as aws_exception
@@ -34,7 +33,6 @@ from heat.tests import common
 class RequestTest(common.HeatTestCase):
 
     def setUp(self):
-        self.stubs = stubout.StubOutForTesting()
         super(RequestTest, self).setUp()
 
     def test_content_type_missing(self):
@@ -94,10 +92,9 @@ class RequestTest(common.HeatTestCase):
         def fake_best_match(self, offers, default_match=None):
             # Best match on an unknown locale returns None
             return None
-
-        self.stubs.SmartSet(request.accept_language,
-                            'best_match', fake_best_match)
-
+        with mock.patch.object(request.accept_language,
+                               'best_match') as mock_match:
+            mock_match.side_effect = fake_best_match
         self.assertIsNone(request.best_match_language())
 
         # If Accept-Language is missing or empty, match should be None
@@ -110,7 +107,6 @@ class RequestTest(common.HeatTestCase):
 class ResourceTest(common.HeatTestCase):
 
     def setUp(self):
-        self.stubs = stubout.StubOutForTesting()
         super(ResourceTest, self).setUp()
 
     def test_get_action_args(self):
@@ -202,11 +198,16 @@ class ResourceTest(common.HeatTestCase):
                               resource, request)
         self.assertIsInstance(e.exc, webob.exc.HTTPBadRequest)
 
-    def test_resource_call_error_handle_localized(self):
+    @mock.patch.object(wsgi, 'translate_exception')
+    def test_resource_call_error_handle_localized(self, mock_translate):
         class Controller(object):
             def delete(self, req, identity):
                 return (req, identity)
 
+        def fake_translate_exception(ex, locale):
+            return translated_ex
+
+        mock_translate.side_effect = fake_translate_exception
         actions = {'action': 'delete', 'id': 12, 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
@@ -217,17 +218,9 @@ class ResourceTest(common.HeatTestCase):
         resource = wsgi.Resource(Controller(),
                                  wsgi.JSONRequestDeserializer(),
                                  None)
-
-        def fake_translate_exception(ex, locale):
-            return translated_ex
-
-        self.stubs.SmartSet(wsgi,
-                            'translate_exception', fake_translate_exception)
-
         e = self.assertRaises(exception.HTTPExceptionDisguise,
                               resource, request)
         self.assertEqual(message_es, six.text_type(e.exc))
-        self.m.VerifyAll()
 
 
 class ResourceExceptionHandlingTest(common.HeatTestCase):
