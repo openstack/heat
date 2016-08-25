@@ -115,7 +115,7 @@ class CommonTemplate(template.Template):
 
         path = ''
         if self.has_condition_section(res_data):
-            path = '.'.join([res_name, self.RES_CONDITION])
+            path = '.'.join([self.RESOURCES, res_name, self.RES_CONDITION])
 
         return self.get_condition(res_data, stack, path)
 
