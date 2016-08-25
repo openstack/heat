@@ -375,16 +375,16 @@ class TestTemplateConditionParser(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_res_invalid_condition', tmpl)
         res_snippet = tmpl.t.get('resources')['r1']
         ex = self.assertRaises(exception.InvalidConditionReference,
-                               tmpl.get_condition,
-                               res_snippet, stk, 'r1.condition')
-        self.assertIn('Invalid condition "invalid_cd" (in r1.condition)',
-                      six.text_type(ex))
+                               tmpl.get_res_condition,
+                               stk, res_snippet, 'r1')
+        self.assertIn('Invalid condition "invalid_cd" '
+                      '(in resources.r1.condition)', six.text_type(ex))
         # test condition name is not string
         tmpl.t['resources']['r1']['condition'] = 111
         ex = self.assertRaises(exception.InvalidConditionReference,
-                               tmpl.get_condition,
-                               res_snippet, stk, 'r1.condition')
-        self.assertIn('Invalid condition "111" (in r1.condition)',
+                               tmpl.get_res_condition,
+                               stk, res_snippet, 'r1')
+        self.assertIn('Invalid condition "111" (in resources.r1.condition)',
                       six.text_type(ex))
 
     def test_parse_output_condition_invalid(self):
