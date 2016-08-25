@@ -345,6 +345,9 @@ class KeystoneUserRoleAssignment(resource.Resource,
     def __init__(self, *args, **kwargs):
         super(KeystoneUserRoleAssignment, self).__init__(*args, **kwargs)
 
+    def client(self):
+        return super(KeystoneUserRoleAssignment, self).client().client
+
     @property
     def user_id(self):
         return (self.client_plugin().get_user_id(
@@ -398,6 +401,9 @@ class KeystoneGroupRoleAssignment(resource.Resource,
 
     def __init__(self, *args, **kwargs):
         super(KeystoneGroupRoleAssignment, self).__init__(*args, **kwargs)
+
+    def client(self):
+        return super(KeystoneGroupRoleAssignment, self).client().client
 
     @property
     def group_id(self):

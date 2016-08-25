@@ -13,10 +13,12 @@
 
 import mock
 
+from heat.engine import resource
 from heat.engine.resources.openstack.keystone import user
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
+from heat.tests import fakes
 from heat.tests import utils
 
 keystone_user_template = {
@@ -56,9 +58,10 @@ class KeystoneUserTest(common.HeatTestCase):
         self.test_user = self.stack['test_user']
 
         # Mock client
-        self.keystoneclient = mock.MagicMock()
-        self.test_user.client = mock.MagicMock()
-        self.test_user.client.return_value = self.keystoneclient
+        self.keystoneclient = mock.Mock()
+        self.patchobject(resource.Resource, 'client',
+                         return_value=fakes.FakeKeystoneClient(
+                             client=self.keystoneclient))
         self.users = self.keystoneclient.users
 
         # Mock client plugin

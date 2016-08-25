@@ -95,7 +95,7 @@ class FakeKeystoneClient(object):
                  user_id='1234', access='4567', secret='8901',
                  credential_id='abcdxyz', auth_token='abcd1234',
                  context=None, stack_domain_id='4321', roles=None,
-                 user_domain_id=None, project_domain_id=None):
+                 user_domain_id=None, project_domain_id=None, client=None):
         self.username = username
         self.password = password
         self.user_id = user_id
@@ -110,6 +110,7 @@ class FakeKeystoneClient(object):
         self.roles = roles or []
         self.user_domain_id = user_domain_id
         self.project_domain_id = project_domain_id
+        self.client = client
 
         class FakeCred(object):
             id = self.credential_id
