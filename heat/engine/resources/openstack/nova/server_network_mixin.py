@@ -110,6 +110,9 @@ class ServerNetworkMixin(object):
 
         extra_props = net_data.get(self.NETWORK_PORT_EXTRA)
         if extra_props is not None:
+            specs = extra_props.pop(neutron_port.Port.VALUE_SPECS)
+            if specs:
+                kwargs.update(specs)
             port_extra_keys = list(neutron_port.Port.EXTRA_PROPERTIES)
             port_extra_keys.remove(neutron_port.Port.ALLOWED_ADDRESS_PAIRS)
             for key in port_extra_keys:
