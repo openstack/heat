@@ -299,6 +299,12 @@ class TestTemplateConditionParser(common.HeatTestCase):
                     'type': 'GenericResourceType',
                     'condition': 'prod_env'
                 }
+            },
+            'outputs': {
+                'foo': {
+                    'condition': 'prod_env',
+                    'value': {'get_attr': ['r1', 'foo']}
+                }
             }
         }
 
@@ -379,6 +385,27 @@ class TestTemplateConditionParser(common.HeatTestCase):
                                tmpl.get_condition,
                                res_snippet, stk, 'r1.condition')
         self.assertIn('Invalid condition "111" (in r1.condition)',
+                      six.text_type(ex))
+
+    def test_parse_output_condition_invalid(self):
+        stk = stack.Stack(self.ctx,
+                          'test_output_invalid_condition',
+                          self.tmpl)
+
+        # test condition name is invalid
+        stk.outputs['foo']['condition'] = 'invalid_cd'
+        ex = self.assertRaises(exception.InvalidConditionReference,
+                               self.tmpl.parse_outputs_conditions,
+                               stk.outputs, stk)
+        self.assertIn('Invalid condition "invalid_cd" '
+                      '(in outputs.foo.condition)',
+                      six.text_type(ex))
+        # test condition name is not string
+        stk.outputs['foo']['condition'] = 222
+        ex = self.assertRaises(exception.InvalidConditionReference,
+                               self.tmpl.parse_outputs_conditions,
+                               stk.outputs, stk)
+        self.assertIn('Invalid condition "222" (in outputs.foo.condition)',
                       six.text_type(ex))
 
 

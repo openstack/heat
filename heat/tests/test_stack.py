@@ -2730,7 +2730,7 @@ class StackTest(common.HeatTestCase):
         stc = stack.Stack(self.ctx, utils.random_name(),
                           tmpl, resolve_data=False)
         expected_exception = self.assertRaises(AssertionError,
-                                               stc.resolve_static_data,
+                                               stc.resolve_outputs_data,
                                                None)
         self.assertEqual(expected_message, six.text_type(expected_exception))
 

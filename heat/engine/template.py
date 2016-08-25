@@ -135,6 +135,10 @@ class Template(collections.Mapping):
                 self.t[s] = {}
             self.t[s].update(other.t[s])
 
+    def parse_outputs_conditions(self, outputs, stack):
+        """Return a dictionary of outputs data which resolved conditions."""
+        return outputs
+
     @classmethod
     def load(cls, context, template_id, t=None):
         """Retrieve a Template with the given ID from the database."""

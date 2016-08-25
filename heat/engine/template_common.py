@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import copy
 
 import six
 
@@ -118,6 +119,11 @@ class CommonTemplate(template.Template):
 
         return self.get_condition(res_data, stack, path)
 
+    def get_output_condition(self, stack, o_data, o_key):
+        path = '.'.join([self.OUTPUTS, o_key, self.OUTPUT_CONDITION])
+
+        return self.get_condition(o_data, stack, path)
+
     def get_condition(self, snippet, stack, path=''):
         # if specify condition return the resolved condition value,
         # true or false if don't specify condition, return true
@@ -137,3 +143,14 @@ class CommonTemplate(template.Template):
             self._conditions = self.resolve_conditions(stack)
 
         return self._conditions
+
+    def parse_outputs_conditions(self, outputs, stack):
+        copy_outputs = copy.deepcopy(outputs)
+        for key, snippet in six.iteritems(copy_outputs):
+            if self.has_condition_section(snippet):
+                cd = self.get_output_condition(stack, snippet, key)
+                snippet[self.OUTPUT_CONDITION] = cd
+                if not cd:
+                    snippet[self.OUTPUT_VALUE] = None
+
+        return copy_outputs
