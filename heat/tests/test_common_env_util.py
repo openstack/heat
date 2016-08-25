@@ -83,6 +83,45 @@ class TestMergeEnvironments(common.HeatTestCase):
         }}
         self.assertEqual(expected, params)
 
+    def test_merge_environments_deep_merge(self):
+        # Setup
+        params = {'parameters': {
+            'p0': 'CORRECT',
+            'p1': ['CORRECT1'],
+            'p2': {'A': ['CORRECT1', 'CORRECT2']},
+            'p3': 'CORRECT1,CORRECT2'}
+        }
+        env_1 = '''
+        {'parameters' : {
+            'p1': ['CORRECT2', 'CORRECT3'],
+            'p2': {'B': ['CORRECT3', 'CORRECT4'],
+                   'C': [CORRECT5]},
+            'p3': 'CORRECT3,CORRECT4'
+        }}'''
+        env_2 = '''
+        {'parameters': {
+        'p2': {'C': ['CORRECT6']},
+        'p3': 'CORRECT5,CORRECT6'
+        }}'''
+
+        files = {'env_1': env_1, 'env_2': env_2}
+        environment_files = ['env_1', 'env_2']
+
+        # Test
+        env_util.merge_environments(environment_files, files, params)
+
+        # Verify
+        # Does not work for comma_delimited_list.
+        expected = {'parameters': {
+            'p0': 'CORRECT',
+            'p1': ['CORRECT1', 'CORRECT2', 'CORRECT3'],
+            'p2': {'A': ['CORRECT1', 'CORRECT2'],
+                   'B': ['CORRECT3', 'CORRECT4'],
+                   'C': ['CORRECT5', 'CORRECT6']},
+            'p3': 'CORRECT5,CORRECT6'
+        }}
+        self.assertEqual(expected, params)
+
     def test_merge_environments_no_env_files(self):
         params = {'parameters': {'p0': 'CORRECT'}}
         env_1 = '''
