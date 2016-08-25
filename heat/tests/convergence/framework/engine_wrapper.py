@@ -22,6 +22,17 @@ from heat.tests.convergence.framework import scenario_template
 from heat.tests import utils
 
 
+class SynchronousThreadGroupManager(service.ThreadGroupManager):
+    """Wrapper for thread group manager.
+
+    The start method of thread group manager needs to be overriden to
+    run the function synchronously so that the convergence scenario
+    tests can run.
+    """
+    def start(self, stack_id, func, *args, **kwargs):
+        func(*args, **kwargs)
+
+
 class Engine(message_processor.MessageProcessor):
     """Wrapper to the engine service.
 
@@ -63,8 +74,7 @@ class Engine(message_processor.MessageProcessor):
     def create_stack(self, stack_name, scenario_tmpl):
         cnxt = utils.dummy_context()
         srv = service.EngineService("host", "engine")
-        thread_group_mgr = service.ThreadGroupManager()
-        srv.thread_group_mgr = thread_group_mgr
+        srv.thread_group_mgr = SynchronousThreadGroupManager()
         hot_tmpl = self.scenario_template_to_hot(scenario_tmpl)
         srv.create_stack(cnxt, stack_name, hot_tmpl,
                          params={}, files={}, environment_files=None, args={})
@@ -74,8 +84,7 @@ class Engine(message_processor.MessageProcessor):
         cnxt = utils.dummy_context()
         db_stack = db_api.stack_get_by_name(cnxt, stack_name)
         srv = service.EngineService("host", "engine")
-        thread_group_mgr = service.ThreadGroupManager()
-        srv.thread_group_mgr = thread_group_mgr
+        srv.thread_group_mgr = SynchronousThreadGroupManager()
         hot_tmpl = self.scenario_template_to_hot(scenario_tmpl)
         stack_identity = {'stack_name': stack_name,
                           'stack_id': db_stack.id,
@@ -93,6 +102,7 @@ class Engine(message_processor.MessageProcessor):
                           'tenant': db_stack.tenant,
                           'path': ''}
         srv = service.EngineService("host", "engine")
+        srv.thread_group_mgr = SynchronousThreadGroupManager()
         srv.delete_stack(cnxt, stack_identity)
 
     @message_processor.asynchronous
