@@ -104,7 +104,7 @@ Request Parameters
 
    - tenant_id: tenant_id
    - type_name: type_name
-   - template_type: template_type
+   - template_type: template_type_query
 
 Response Parameters
 -------------------

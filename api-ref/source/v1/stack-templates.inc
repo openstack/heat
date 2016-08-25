@@ -87,7 +87,7 @@ Reponse Parameters
 
    - X-Openstack-Request-Id: request_id
    - template_functions: template_functions
-   - description: template_description
+   - description: function_description
    - functions: functions
 
 Response Example
