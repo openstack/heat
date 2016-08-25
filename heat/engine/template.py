@@ -23,6 +23,7 @@ from stevedore import extension
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import environment
+from heat.engine import function
 from heat.engine import template_files
 from heat.objects import raw_template as template_object
 
@@ -258,10 +259,11 @@ class Template(collections.Mapping):
             self.t.update({self.RESOURCES: {}})
 
     def parse(self, stack, snippet, path=''):
-        return parse(self.functions, stack, snippet, path)
+        return parse(self.functions, stack, snippet, path, self)
 
     def parse_condition(self, stack, snippet):
-        return parse(self._parser_condition_functions, stack, snippet)
+        return parse(self._parser_condition_functions, stack, snippet,
+                     template=self)
 
     def validate(self):
         """Validate the template.
@@ -329,8 +331,8 @@ class Template(collections.Mapping):
             return cls(tmpl)
 
 
-def parse(functions, stack, snippet, path=''):
-    recurse = functools.partial(parse, functions, stack)
+def parse(functions, stack, snippet, path='', template=None):
+    recurse = functools.partial(parse, functions, stack, template=template)
 
     if isinstance(snippet, collections.Mapping):
         def mkpath(key):
@@ -342,7 +344,12 @@ def parse(functions, stack, snippet, path=''):
             if Func is not None:
                 try:
                     path = '.'.join([path, fn_name])
-                    return Func(stack, fn_name, recurse(args, path))
+                    if issubclass(Func, function.Macro):
+                        return Func(stack, fn_name, args,
+                                    functools.partial(recurse, path=path),
+                                    template)
+                    else:
+                        return Func(stack, fn_name, recurse(args, path))
                 except (ValueError, TypeError, KeyError,
                         exception.InvalidTemplateVersion) as e:
                     raise exception.StackValidationFailed(
