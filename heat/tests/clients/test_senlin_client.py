@@ -20,21 +20,29 @@ from senlinclient.common import exc
 
 
 class SenlinClientPluginTest(common.HeatTestCase):
+    def setUp(self):
+        super(SenlinClientPluginTest, self).setUp()
+        context = utils.dummy_context()
+        self.plugin = context.clients.client_plugin('senlin')
+        self.client = self.plugin.client()
 
     def test_cluster_get(self):
-        context = utils.dummy_context()
-        plugin = context.clients.client_plugin('senlin')
-        client = plugin.client()
-        self.assertIsNotNone(client.clusters)
+        self.assertIsNotNone(self.client.clusters)
 
     def test_is_bad_request(self):
-        context = utils.dummy_context()
-        plugin = context.clients.client_plugin('senlin')
-        self.assertTrue(plugin.is_bad_request(
+        self.assertTrue(self.plugin.is_bad_request(
             exc.sdkexc.HttpException(http_status=400)))
-        self.assertFalse(plugin.is_bad_request(Exception))
-        self.assertFalse(plugin.is_bad_request(
+        self.assertFalse(self.plugin.is_bad_request(Exception))
+        self.assertFalse(self.plugin.is_bad_request(
             exc.sdkexc.HttpException(http_status=404)))
+
+    def test_check_action_success(self):
+        mock_action = mock.MagicMock()
+        mock_action.status = 'SUCCEEDED'
+        mock_get = self.patchobject(self.client, 'get_action')
+        mock_get.return_value = mock_action
+        self.assertTrue(self.plugin.check_action_status('fake_id'))
+        mock_get.assert_called_once_with('fake_id')
 
 
 class ProfileConstraintTest(common.HeatTestCase):

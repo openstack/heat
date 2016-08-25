@@ -44,6 +44,17 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         spec['type'], spec['version'] = spec_type.split('-')
         return spec
 
+    def check_action_status(self, action_id):
+        action = self.client().get_action(action_id)
+        if action.status == 'SUCCEEDED':
+            return True
+        elif action.status == 'FAILED':
+            raise exception.ResourceInError(
+                status_reason=action.status_reason,
+                resource_status=action.status,
+            )
+        return False
+
     def is_not_found(self, ex):
         return isinstance(ex, exc.sdkexc.ResourceNotFound)
 
