@@ -598,7 +598,7 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual(properties.Schema.LIST, schema.type)
         self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
-        self.assertFalse(schema.allow_conversion)
+        self.assertTrue(schema.allow_conversion)
 
         props = properties.Properties({'test': schema}, {})
         props.validate()
@@ -902,6 +902,13 @@ class PropertyTest(common.HeatTestCase):
     def test_list_dict(self):
         p = properties.Property({'Type': 'List'})
         self.assertRaises(TypeError, p.get_value, {'foo': 'bar'})
+
+    def test_list_is_delimited(self):
+        p = properties.Property({'Type': 'List'})
+        self.assertRaises(TypeError, p.get_value, 'foo,bar')
+        p.schema.allow_conversion = True
+        self.assertEqual(['foo', 'bar'], p.get_value('foo,bar'))
+        self.assertEqual(['foo'], p.get_value('foo'))
 
     def test_list_maxlength_good(self):
         schema = {'Type': 'List',

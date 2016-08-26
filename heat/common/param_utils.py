@@ -28,6 +28,16 @@ def extract_bool(name, value):
     return strutils.bool_from_string(value, strict=True)
 
 
+def delim_string_to_list(value):
+    if value is None:
+        return None
+
+    if value == '':
+        return []
+
+    return value.split(',')
+
+
 def extract_int(name, value, allow_zero=True, allow_negative=False):
     if value is None:
         return None

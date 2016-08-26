@@ -21,6 +21,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import param_utils
 from heat.engine import constraints as constr
 
 
@@ -376,10 +377,7 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
         if isinstance(value, list):
             return [(six.text_type(x)) for x in value]
         try:
-            if value is not None:
-                if value == '':
-                    return []
-                return value.split(',')
+            return param_utils.delim_string_to_list(value)
         except (KeyError, AttributeError) as err:
             message = _('Value must be a comma-delimited list string: %s')
             raise ValueError(message % six.text_type(err))
