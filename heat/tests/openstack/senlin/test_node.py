@@ -187,3 +187,5 @@ class SenlinNodeTest(common.HeatTestCase):
                          node._show_resource())
         self.assertEqual(self.fake_node.details,
                          node._resolve_attribute('details'))
+        self.senlin_mock.get_node.assert_called_with(
+            node.resource_id, details=True)
