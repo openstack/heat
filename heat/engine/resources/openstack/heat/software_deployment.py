@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-import six
 import uuid
 
 from oslo_config import cfg
@@ -439,17 +438,15 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         old_config = self._load_config(self._get_derived_config_id())
         old_inputs = {i.name(): i
-                      for i in self._build_derived_inputs(self.UPDATE,
-                                                          old_config)}
+                      for i in old_config[rpc_api.SOFTWARE_CONFIG_INPUTS]}
 
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
 
         config = self._load_config()
-        new_inputs = {i.name(): i
-                      for i in self._build_derived_inputs(self.UPDATE, config)}
 
-        for name, inp in six.iteritems(new_inputs):
+        for inp in self._build_derived_inputs(self.UPDATE, config):
+            name = inp.name()
             if inp.replace_on_change() and name in old_inputs:
                 if inp.input_data() != old_inputs[name].input_data():
                     LOG.debug('Replacing SW Deployment due to change in '
