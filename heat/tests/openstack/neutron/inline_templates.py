@@ -171,3 +171,19 @@ resources:
       listener: 123
       position: 1
 '''
+
+L7RULE_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Template to test L7Rule Neutron resource
+resources:
+  l7rule:
+    type: OS::Neutron::LBaaS::L7Rule
+    properties:
+      admin_state_up: True
+      l7policy: 123
+      type: HEADER
+      compare_type: ENDS_WITH
+      key: test_key
+      value: test_value
+      invert: False
+'''
