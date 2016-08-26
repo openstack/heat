@@ -363,3 +363,33 @@ Usage
 
 Returns true if the param 'env_type' equals to 'prod',
 otherwise returns false.
+
+------
+Fn::If
+------
+Returns one value if the specified condition evaluates to true and
+another value if the specified condition evaluates to false.
+
+Parameters
+~~~~~~~~~~
+condition_name:
+    A reference to a condition in the ``Conditions`` section.
+
+value_if_true:
+    A value to be returned if the specified condition evaluates
+    to true.
+
+value_if_false:
+    A value to be returned if the specified condition evaluates
+    to false.
+
+Usage
+~~~~~
+
+.. code-block:: yaml
+
+  {'Fn::If': ['create_prod', 'value_true', 'value_false']}
+
+
+Returns 'value_true' if the condition 'create_prod' evaluates to true,
+otherwise returns 'value_false'.

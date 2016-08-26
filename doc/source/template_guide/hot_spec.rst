@@ -221,9 +221,10 @@ for the ``heat_template_version`` key:
     The key with value ``2016-10-14`` or ``newton`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
     up until the Newton release.  This version adds the ``yaql`` function which
-    can be used for evaluation of complex expressions, and the ``map_replace``
-    function that can do key/value replacements on a mapping. The complete list
-    of supported functions is::
+    can be used for evaluation of complex expressions, the ``map_replace``
+    function that can do key/value replacements on a mapping, and the ``if``
+    function which can be used to return corresponding value based on condition
+    evaluation. The complete list of supported functions is::
 
       digest
       get_attr
@@ -238,8 +239,9 @@ for the ``heat_template_version`` key:
       str_replace
       str_split
       yaql
+      if
 
-    This version also adds ``equals`` condition function which can be used
+    This version adds ``equals`` condition function which can be used
     to compare whether two values are equal. The complete list of supported
     condition functions is::
 
@@ -1509,3 +1511,37 @@ For example
 
 If param 'env_type' equals to 'prod', this function returns true,
 otherwise returns false.
+
+if
+--
+The ``if`` function returns the corresponding value based on the
+evaluation of a condition.
+
+The syntax of the ``if`` function is
+
+.. code-block:: yaml
+
+    if: [condition_name, value_if_true, value_if_false]
+
+For example
+
+.. code-block:: yaml
+
+    conditions:
+      create_prod_res: {equals : [{get_param: env_type}, "prod"]}
+
+    resources:
+      test_server:
+        type: OS::Nova::Server
+        properties:
+          name: {if: ["create_prod_res", "s_prod", "s_test"]}
+
+The 'name' property is set to 's_prod' if the condition
+"create_prod_res" evaluates to true (if parameter 'env_type' is 'prod'),
+and is set to 's_test' if the condition "create_prod_res" evaluates
+to false (if parameter 'env_type' isn't 'prod').
+
+Note: You define all conditions in the ``conditions`` section of a
+template except for ``if`` conditions. You can use the ``if`` condition
+in the property values in the ``resources`` section and ``outputs`` sections
+of a template.
