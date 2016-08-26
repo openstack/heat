@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -111,6 +112,29 @@ class CinderEncryptedVolumeType(resource.Resource):
             self.client().volume_encryption_types.update(
                 volume_type=self.resource_id, specs=prop_diff
             )
+
+    def get_live_resource_data(self):
+        try:
+            resource_data = self._show_resource()
+            if not resource_data:
+                # use attribute error, e.g. API call get raises AttributeError,
+                # when evt is not exists or not ready (cinder bug 1562024).
+                raise AttributeError()
+        except Exception as ex:
+            if (self.client_plugin().is_not_found(ex) or
+                    isinstance(ex, AttributeError)):
+                raise exception.EntityNotFound(entity='Resource',
+                                               name=self.name)
+            raise
+        return resource_data
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        resource_reality = {}
+
+        for key in set(self.PROPERTIES) - {self.VOLUME_TYPE}:
+            resource_reality.update({key: resource_data.get(key)})
+
+        return resource_reality
 
 
 def resource_mapping():
