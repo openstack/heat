@@ -60,6 +60,7 @@ class FakeCluster(object):
         self.timeout = 3600
         self.max_size = -1
         self.min_size = 0
+        self.location = 'actions/fake-action'
 
     def to_dict(self):
         return {
@@ -81,6 +82,8 @@ class SenlinClusterTest(common.HeatTestCase):
         super(SenlinClusterTest, self).setUp()
         self.senlin_mock = mock.MagicMock()
         self.patchobject(sc.Cluster, 'client', return_value=self.senlin_mock)
+        self.patchobject(senlin.SenlinClientPlugin, 'client',
+                         return_value=self.senlin_mock)
         self.patchobject(senlin.ProfileConstraint, 'validate',
                          return_value=True)
         self.fake_cl = FakeCluster()
@@ -95,6 +98,8 @@ class SenlinClusterTest(common.HeatTestCase):
         cluster = self._init_cluster(template)
         self.senlin_mock.create_cluster.return_value = self.fake_cl
         self.senlin_mock.get_cluster.return_value = self.fake_cl
+        self.senlin_mock.get_action.return_value = mock.Mock(
+            status='SUCCEEDED')
         scheduler.TaskRunner(cluster.create)()
         self.assertEqual((cluster.CREATE, cluster.COMPLETE),
                          cluster.state)
@@ -114,18 +119,20 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.create_cluster.assert_called_once_with(
             **expect_kwargs)
-        self.senlin_mock.get_cluster.assert_called_once_with(self.fake_cl.id)
+        self.senlin_mock.get_action.assert_called_once_with('fake-action')
 
     def test_cluster_create_error(self):
         cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
         cluster = self._init_cluster(self.t)
         self.senlin_mock.create_cluster.return_value = self.fake_cl
-        self.senlin_mock.get_cluster.return_value = FakeCluster(
-            status='ERROR')
+        mock_action = mock.MagicMock()
+        mock_action.status = 'FAILED'
+        mock_action.status_reason = 'oops'
+        self.senlin_mock.get_action.return_value = mock_action
         create_task = scheduler.TaskRunner(cluster.create)
         ex = self.assertRaises(exception.ResourceFailure, create_task)
         expected = ('ResourceInError: resources.senlin-cluster: '
-                    'Went to status ERROR due to "Unknown"')
+                    'Went to status FAILED due to "oops"')
         self.assertEqual(expected, six.text_type(ex))
 
     def test_cluster_delete_success(self):
@@ -165,8 +172,7 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.update_cluster.assert_called_once_with(
             cluster.resource_id, **cluster_update_kwargs)
-        self.senlin_mock.get_action.assert_called_once_with(
-            'fake-action')
+        self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_desire_capacity(self):
         cluster = self._create_cluster(self.t)
@@ -187,8 +193,7 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.cluster_resize.assert_called_once_with(
             cluster.resource_id, **cluster_resize_kwargs)
-        self.senlin_mock.get_action.assert_called_once_with(
-            'fake-action')
+        self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_failed(self):
         cluster = self._create_cluster(self.t)
