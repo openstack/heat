@@ -12,7 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 "true" '''\'
-if hash python3 2>/dev/null; then
+# NOTE(vgridnev): ubuntu trusty by default has python3,
+# but pkg_resources can't be imported.
+echo "import pkg_resources" | python3 2>/dev/null
+has_py3=$?
+if [ $has_py3 = 0 ]; then
     interpreter="python3"
 else
     interpreter="python"
