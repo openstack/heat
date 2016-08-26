@@ -150,6 +150,40 @@ class CinderVolumeType(resource.Resource):
                          'if the volume type is public.') % self.PROJECTS)
                 raise exception.StackValidationFailed(message=msg)
 
+    def get_live_resource_data(self):
+        try:
+            resource_object = self.client().volume_types.get(self.resource_id)
+            resource_data = resource_object.to_dict()
+        except Exception as ex:
+            if self.client_plugin().is_not_found(ex):
+                raise exception.EntityNotFound(entity='Resource',
+                                               name=self.name)
+            raise
+        return resource_object, resource_data
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        resource_reality = {}
+        resource_object, resource_data = resource_data
+
+        resource_reality.update({
+            self.NAME: resource_data.get(self.NAME),
+            self.DESCRIPTION: resource_data.get(self.DESCRIPTION)
+        })
+
+        metadata = resource_object.get_keys()
+        resource_reality.update({self.METADATA: metadata or {}})
+
+        is_public = resource_data.get(self.IS_PUBLIC)
+        resource_reality.update({self.IS_PUBLIC: is_public})
+        projects = []
+        if not is_public:
+            accesses = self.client().volume_type_access.list(self.resource_id)
+            for access in accesses:
+                projects.append(access._info.get('project_id'))
+        resource_reality.update({self.PROJECTS: projects})
+
+        return resource_reality
+
 
 def resource_mapping():
     return {
