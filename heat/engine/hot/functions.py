@@ -682,6 +682,8 @@ class Repeat(function.Function):
             return dict((self._do_replacement(keys, values, k),
                          self._do_replacement(keys, values, v))
                         for (k, v) in template.items())
+        else:
+            return template
 
     def result(self):
         for_each = function.resolve(self._for_each)
