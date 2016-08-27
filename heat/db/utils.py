@@ -43,8 +43,8 @@ IMPL = LazyPluggable('backend',
                      sqlalchemy='heat.db.sqlalchemy.api')
 
 
-def purge_deleted(age, granularity='days', project_id=None):
-    IMPL.purge_deleted(age, granularity, project_id)
+def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
+    IMPL.purge_deleted(age, granularity, project_id, batch_size)
 
 
 def encrypt_parameters_and_properties(ctxt, encryption_key, verbose):

@@ -133,7 +133,8 @@ def purge_deleted():
     """Remove database records that have been previously soft deleted."""
     utils.purge_deleted(CONF.command.age,
                         CONF.command.granularity,
-                        CONF.command.project_id)
+                        CONF.command.project_id,
+                        CONF.command.batch_size)
 
 
 def do_crypt_parameters_and_properties():
@@ -179,6 +180,13 @@ def add_command_parsers(subparsers):
     parser.add_argument(
         '-p', '--project-id',
         help=_('Project ID to purge deleted stacks.'))
+    # optional parameter, can be skipped. default='20'
+    parser.add_argument(
+        '-b', '--batch_size', default='20',
+        help=_('Number of stacks to delete at a time (per transaction). '
+               'Note that a single stack may have many db rows '
+               '(events, etc.) associated with it.'))
+
     # update_params parser
     parser = subparsers.add_parser('update_params')
     parser.set_defaults(func=do_crypt_parameters_and_properties)

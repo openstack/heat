@@ -2171,6 +2171,18 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertIsNone(db_api.user_creds_get(
                 self.ctx, stacks[s].user_creds_id))
 
+    def test_purge_deleted_batch_arg(self):
+        now = timeutils.utcnow()
+        delta = datetime.timedelta(seconds=3600)
+        deleted = now - delta
+        for i in range(7):
+            create_stack(self.ctx, self.template, self.user_creds,
+                         deleted_at=deleted)
+
+        with mock.patch('heat.db.sqlalchemy.api._purge_stacks') as mock_ps:
+            db_api.purge_deleted(age=0, batch_size=2)
+            self.assertEqual(4, mock_ps.call_count)
+
     def test_stack_get_root_id(self):
         root = create_stack(self.ctx, self.template, self.user_creds,
                             name='root stack')
