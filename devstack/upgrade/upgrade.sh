@@ -48,13 +48,19 @@ set -o errexit
 # Upgrade Heat
 # ============
 
+# Locate heat devstack plugin, the directory above the
+# grenade plugin.
+HEAT_DEVSTACK_DIR=$(dirname $(dirname $0))
+
 # Duplicate some setup bits from target DevStack
 source $TARGET_DEVSTACK_DIR/functions
 source $TARGET_DEVSTACK_DIR/stackrc
 source $TARGET_DEVSTACK_DIR/lib/tls
 source $TARGET_DEVSTACK_DIR/lib/stack
 source $TARGET_DEVSTACK_DIR/lib/apache
-source $TARGET_DEVSTACK_DIR/lib/heat
+
+# Get heat functions from devstack plugin
+source $HEAT_DEVSTACK_DIR/lib/heat
 
 # Print the commands being run so that we can see the command that triggers
 # an error.  It is also useful for following allowing as the install occurs.
@@ -63,10 +69,8 @@ set -o xtrace
 # Save current config files for posterity
 [[ -d $SAVE_DIR/etc.heat ]] || cp -pr $HEAT_CONF_DIR $SAVE_DIR/etc.heat
 
-# install_heat()
-stack_install_service heat
-install_heatclient
-install_heat_other
+# Install the target heat
+source $HEAT_DEVSTACK_DIR/plugin.sh stack install
 
 # calls upgrade-heat for specific release
 upgrade_project heat $RUN_DIR $BASE_DEVSTACK_BRANCH $TARGET_DEVSTACK_BRANCH
@@ -78,7 +82,7 @@ HEAT_BIN_DIR=$(dirname $(which heat-manage))
 $HEAT_BIN_DIR/heat-manage --config-file $HEAT_CONF db_sync || die $LINENO "DB sync error"
 
 # Start Heat
-start_heat
+start_heat_with_plugin
 
 # Don't succeed unless the services come up
 ensure_services_started heat-api heat-engine heat-api-cloudwatch heat-api-cfn
