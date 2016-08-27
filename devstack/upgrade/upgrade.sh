@@ -82,7 +82,7 @@ HEAT_BIN_DIR=$(dirname $(which heat-manage))
 $HEAT_BIN_DIR/heat-manage --config-file $HEAT_CONF db_sync || die $LINENO "DB sync error"
 
 # Start Heat
-start_heat_with_plugin
+start_heat
 
 # Don't succeed unless the services come up
 ensure_services_started heat-api heat-engine heat-api-cloudwatch heat-api-cfn

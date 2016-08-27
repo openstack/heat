@@ -23,16 +23,16 @@ if is_heat_enabled; then
         configure_heat
 
         if is_service_enabled key; then
-            create_heat_accounts_with_plugin
+            create_heat_accounts
         fi
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         # Initialize heat
-        init_heat_with_plugin
+        init_heat
 
         # Start the heat API and heat taskmgr components
         echo_summary "Starting heat"
-        start_heat_with_plugin
+        start_heat
     fi
 
     if [[ "$1" == "unstack" ]]; then
