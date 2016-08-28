@@ -86,7 +86,7 @@ class ProfileTypeConstraint(constraints.BaseCustomConstraint):
     def validate_with_client(self, client, value):
         senlin_client = client.client(CLIENT_NAME)
         type_list = senlin_client.profile_types()
-        names = [pt['name'] for pt in type_list]
+        names = [pt.name for pt in type_list]
         if value not in names:
             not_found_message = (
                 _("Unable to find senlin profile type '%(pt)s', "
@@ -103,7 +103,7 @@ class PolicyTypeConstraint(constraints.BaseCustomConstraint):
     def validate_with_client(self, client, value):
         senlin_client = client.client(CLIENT_NAME)
         type_list = senlin_client.policy_types()
-        names = [pt['name'] for pt in type_list]
+        names = [pt.name for pt in type_list]
         if value not in names:
             not_found_message = (
                 _("Unable to find senlin policy type '%(pt)s', "

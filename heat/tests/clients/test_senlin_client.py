@@ -99,9 +99,12 @@ class ProfileTypeConstraintTest(common.HeatTestCase):
         super(ProfileTypeConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
+        heat_profile_type = mock.MagicMock()
+        heat_profile_type.name = 'os.heat.stack-1.0'
+        nova_profile_type = mock.MagicMock()
+        nova_profile_type.name = 'os.nova.server-1.0'
         self.mock_profile_types = mock.Mock(
-            return_value=[{'name': 'os.heat.stack-1.0'},
-                          {'name': 'os.nova.server-1.0'}])
+            return_value=[heat_profile_type, nova_profile_type])
         self.ctx.clients.client(
             'senlin').profile_types = self.mock_profile_types
         self.constraint = senlin_plugin.ProfileTypeConstraint()
@@ -121,9 +124,12 @@ class PolicyTypeConstraintTest(common.HeatTestCase):
         super(PolicyTypeConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
+        deletion_policy_type = mock.MagicMock()
+        deletion_policy_type.name = 'senlin.policy.deletion-1.0'
+        lb_policy_type = mock.MagicMock()
+        lb_policy_type.name = 'senlin.policy.loadbalance-1.0'
         self.mock_policy_types = mock.Mock(
-            return_value=[{'name': 'senlin.policy.deletion-1.0'},
-                          {'name': 'senlin.policy.loadbalance-1.0'}])
+            return_value=[deletion_policy_type, lb_policy_type])
         self.ctx.clients.client(
             'senlin').policy_types = self.mock_policy_types
         self.constraint = senlin_plugin.PolicyTypeConstraint()
