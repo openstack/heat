@@ -21,6 +21,7 @@ from osprofiler import profiler
 from heat.common import context
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
 from heat.engine import check_resource
 from heat.engine import sync_point
@@ -87,6 +88,22 @@ class WorkerService(service.Service):
                       {'topic': self.topic, 'exc': e})
 
         super(WorkerService, self).stop()
+
+    def stop_traversal(self, stack):
+        """Update current traversal to stop workers from propagating.
+
+        Marks the stack as FAILED due to cancellation, but, allows all
+        in_progress resources to complete normally; no worker is stopped
+        abruptly.
+        """
+        reason = 'User cancelled stack %s ' % stack.action
+        # state_set will update the current traversal to '' for FAILED state
+        old_trvsl = stack.current_traversal
+        updated = stack.state_set(stack.action, stack.FAILED, reason)
+        if not updated:
+            LOG.warning(_LW("Failed to stop traversal %(trvsl)s of stack "
+                            "%(name)s while cancelling the operation."),
+                        {'name': stack.name, 'trvsl': old_trvsl})
 
     @context.request_context
     def check_resource(self, cnxt, resource_id, current_traversal, data,

@@ -13,6 +13,7 @@
 
 import collections
 import datetime
+import functools
 import itertools
 import os
 import socket
@@ -1115,6 +1116,16 @@ class EngineService(service.Service):
             msg = _("Cancelling update when stack is %s") % str(state)
             raise exception.NotSupported(feature=msg)
         LOG.info(_LI('Starting cancel of updating stack %s'), db_stack.name)
+
+        if current_stack.convergence:
+            if cancel_with_rollback:
+                func = current_stack.rollback
+            else:
+                func = functools.partial(self.worker_service.stop_traversal,
+                                         current_stack)
+            self.thread_group_mgr.start(current_stack.id, func)
+            return
+
         # stop the running update and take the lock
         # as we cancel only running update, the acquire_result is
         # always some engine_id, not None

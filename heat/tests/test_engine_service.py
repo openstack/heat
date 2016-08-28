@@ -1419,3 +1419,57 @@ class StackServiceTest(common.HeatTestCase):
         stack = self.eng._parse_template_and_validate_stack(
             self.ctx, 'stack_name', template, {}, {}, None, args)
         self.assertEqual(1, stack.parameters['volsize'])
+
+    @mock.patch('heat.engine.service.ThreadGroupManager',
+                return_value=mock.Mock())
+    @mock.patch.object(stack_object.Stack, 'get_by_id')
+    @mock.patch.object(parser.Stack, 'load')
+    def test_stack_cancel_update_convergence_with_no_rollback(
+            self, mock_load, mock_get_by_id, mock_tg):
+        stk = mock.MagicMock()
+        stk.id = 1
+        stk.UPDATE = 'UPDATE'
+        stk.IN_PROGRESS = 'IN_PROGRESS'
+        stk.state = ('UPDATE', 'IN_PROGRESS')
+        stk.status = stk.IN_PROGRESS
+        stk.action = stk.UPDATE
+        stk.convergence = True
+        mock_load.return_value = stk
+        self.patchobject(self.eng, '_get_stack')
+        self.eng.thread_group_mgr.start = mock.MagicMock()
+        with mock.patch.object(self.eng, 'worker_service') as mock_ws:
+            mock_ws.stop_traversal = mock.Mock()
+            # with rollback as false
+            self.eng.stack_cancel_update(self.ctx, 1,
+                                         cancel_with_rollback=False)
+            self.assertTrue(self.eng.thread_group_mgr.start.called)
+            call_args, _ = self.eng.thread_group_mgr.start.call_args
+            # test ID of stack
+            self.assertEqual(call_args[0], 1)
+            # ensure stop_traversal should be called with stack
+            self.assertEqual(call_args[1].func, mock_ws.stop_traversal)
+            self.assertEqual(call_args[1].args[0], stk)
+
+    @mock.patch('heat.engine.service.ThreadGroupManager',
+                return_value=mock.Mock())
+    @mock.patch.object(stack_object.Stack, 'get_by_id')
+    @mock.patch.object(parser.Stack, 'load')
+    def test_stack_cancel_update_convergence_with_rollback(
+            self, mock_load, mock_get_by_id, mock_tg):
+        stk = mock.MagicMock()
+        stk.id = 1
+        stk.UPDATE = 'UPDATE'
+        stk.IN_PROGRESS = 'IN_PROGRESS'
+        stk.state = ('UPDATE', 'IN_PROGRESS')
+        stk.status = stk.IN_PROGRESS
+        stk.action = stk.UPDATE
+        stk.convergence = True
+        stk.rollback = mock.MagicMock(return_value=None)
+        mock_load.return_value = stk
+        self.patchobject(self.eng, '_get_stack')
+        self.eng.thread_group_mgr.start = mock.MagicMock()
+        # with rollback as true
+        self.eng.stack_cancel_update(self.ctx, 1,
+                                     cancel_with_rollback=True)
+        self.eng.thread_group_mgr.start.assert_called_once_with(
+            1, stk.rollback)
