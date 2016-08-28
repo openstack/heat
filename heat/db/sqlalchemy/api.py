@@ -433,6 +433,22 @@ def engine_get_all_locked_by_stack(context, stack_id):
     return set(i[0] for i in query.all())
 
 
+def resource_prop_data_create(context, values):
+    obj_ref = models.ResourcePropertiesData()
+    obj_ref.update(values)
+    obj_ref.save(context.session)
+    return obj_ref
+
+
+def resource_prop_data_get(context, resource_prop_data_id):
+    result = context.session.query(models.ResourcePropertiesData).get(
+        resource_prop_data_id)
+    if result is None:
+        raise exception.NotFound(
+            _('ResourcePropertiesData with id %s not found') % id)
+    return result
+
+
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = soft_delete_aware_query(
         context, models.Stack
