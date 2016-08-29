@@ -30,7 +30,6 @@ from sqlalchemy import and_
 from sqlalchemy import func
 from sqlalchemy import orm
 from sqlalchemy.orm import aliased as orm_aliased
-from sqlalchemy.orm import session as orm_session
 
 from heat.common import crypt
 from heat.common import exception
@@ -160,8 +159,7 @@ def raw_template_files_create(context, values):
 
 
 def raw_template_files_get(context, files_id):
-    session = context.session if context else get_session()
-    result = session.query(models.RawTemplateFiles).get(files_id)
+    result = context.session.query(models.RawTemplateFiles).get(files_id)
     if not result:
         raise exception.NotFound(
             _("raw_template_files with files_id %d not found") %
@@ -787,9 +785,8 @@ def user_creds_delete(context, user_creds_id):
         raise exception.NotFound(
             _('Attempt to delete user creds with id '
               '%(id)s that does not exist') % {'id': user_creds_id})
-    session = orm_session.Session.object_session(creds)
-    with session.begin():
-        session.delete(creds)
+    with context.session.begin():
+        context.session.delete(creds)
 
 
 def event_get(context, event_id):
@@ -956,11 +953,10 @@ def watch_rule_delete(context, watch_id):
                                  '%(id)s %(msg)s') % {
                                      'id': watch_id,
                                      'msg': 'that does not exist'})
-    session = orm_session.Session.object_session(wr)
-    with session.begin():
+    with context.session.begin():
         for d in wr.watch_data:
-            session.delete(d)
-        session.delete(wr)
+            context.session.delete(d)
+        context.session.delete(wr)
 
 
 def watch_data_create(context, values):
@@ -1017,9 +1013,8 @@ def software_config_delete(context, config_id):
         msg = (_("Software config with id %s can not be deleted as "
                  "it is referenced.") % config_id)
         raise exception.InvalidRestrictedAction(message=msg)
-    session = orm_session.Session.object_session(config)
-    with session.begin():
-        session.delete(config)
+    with context.session.begin():
+        context.session.delete(config)
 
 
 def software_deployment_create(context, values):
@@ -1109,9 +1104,8 @@ def snapshot_update(context, snapshot_id, values):
 
 def snapshot_delete(context, snapshot_id):
     snapshot = snapshot_get(context, snapshot_id)
-    session = orm_session.Session.object_session(snapshot)
-    with session.begin():
-        session.delete(snapshot)
+    with context.session.begin():
+        context.session.delete(snapshot)
 
 
 def snapshot_get_all(context, stack_id):
