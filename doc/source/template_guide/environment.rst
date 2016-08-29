@@ -37,6 +37,21 @@ The environment is a yaml text file that contains two main sections:
 ``resource_registry``
     Definition of custom resources.
 
+It also can contain some other sections:
+
+``parameter_defaults``
+    Default parameters passed to all template resources.
+
+``encrypted_parameters``
+    List of encrypted parameters.
+
+``event_sinks``
+    List of endpoints that would receive stack events.
+
+``parameter_merge_strategies``
+    Merge strategies for merging parameters and parameter defaults from the
+    environment file.
+
 Use the :option:`-e` option of the :command:`heat stack-create` command to
 create a stack using the environment defined in such a file.
 
@@ -48,6 +63,39 @@ file and an extra parameter is provided using the :option:`-P` option::
 
    $ heat stack-create my_stack -e my_env.yaml -P "param1=val1;param2=val2" -f my_tmpl.yaml
 
+Environment Merging
+~~~~~~~~~~~~~~~~~~~
+
+Parameters and their defaults (``parameter_defaults``) are merged based on merge
+strategies in an environment file.
+
+There are three merge strategy types:
+
+  ``overwrite``
+      Overwrites a parameter, existing parameter values are replaced.
+
+  ``merge``
+      Merges the existing parameter value and the new value. String values
+      are concatenated, comma delimited lists are extended and json values
+      are updated.
+
+  ``deep_merge``
+      Json values are deep merged. Not useful for other types like comma
+      delimited lists and strings. If specified for them, it falls back to
+      ``merge``.
+
+You can provide a default merge strategy and/or parameter specific merge strategies
+per environment file. Parameter specific merge strategy is only used for that
+parameter. An example of ``parameter_merge_strategies`` section in an environment file::
+
+  parameter_merge_strategies:
+    default: merge
+    param1: overwrite
+    param2: deep_merge
+
+If no merge strategy is provided in an environment file, ``overwrite`` becomes the
+default merge strategy for all ``parameters`` and ``parameter_defaults`` in that
+environment file.
 
 Global and effective environments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
