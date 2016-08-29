@@ -1199,6 +1199,15 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
 
+    def test_repeat_dict_with_no_replacement(self):
+        snippet = {'repeat': {'template': {'SERVICE_enabled': True},
+                              'for_each': {'SERVICE': ['x', 'y', 'z']}}}
+        snippet_resolved = [{'x_enabled': True},
+                            {'y_enabled': True},
+                            {'z_enabled': True}]
+        tmpl = template.Template(hot_newton_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
     def test_repeat_dict_template(self):
         """Test repeat function with a dictionary as a template."""
         snippet = {'repeat': {'template': {'key-%var%': 'this is %var%'},
