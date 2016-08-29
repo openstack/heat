@@ -11,8 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 from heat.common import environment_util as env_util
 from heat.tests import common
+from heat.tests import utils
 
 
 class TestEnvironmentUtil(common.HeatTestCase):
@@ -51,89 +54,175 @@ class TestEnvironmentUtil(common.HeatTestCase):
 
 
 class TestMergeEnvironments(common.HeatTestCase):
-
-    def test_merge_environments(self):
+    def setUp(self):
+        super(TestMergeEnvironments, self).setUp()
+        self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
         # Setup
-        params = {'parameters': {
-            'p0': 'CORRECT',
-            'p1': 'INCORRECT',
-            'p2': 'INCORRECT'}
+        self.params = {'parameters': {
+            'str_value1': "test1",
+            'str_value2': "test2",
+            'del_lst_value1': '',
+            'del_lst_value2': '',
+            'lst_value1': [],
+            'lst_value2': [],
+            'json_value1': {},
+            'json_value2': {}},
+            'resource_registry': {}
         }
-        env_1 = '''
-        {'parameters' : {
-            'p1': 'CORRECT',
-            'p2': 'INCORRECT-ENV-1',
-        }}'''
-        env_2 = '''
-        {'parameters': {
-            'p2': 'CORRECT'
-        }}'''
 
-        files = {'env_1': env_1, 'env_2': env_2}
+        self.env_1 = {'parameters': {
+            'str_value1': "string1",
+            'str_value2': "string2",
+            'del_lst_value1': '1,2',
+            'del_lst_value2': '3,4',
+            'lst_value1': [1, 2],
+            'lst_value2': [3, 4],
+            'json_value1': {"1": ["str1", "str2"]},
+            'json_value2': {"2": ["test1", "test2"]}},
+            'resource_registry': {
+                'test::R1': "OS::Heat::RandomString",
+                'test::R2': "BROKEN"}
+        }
+        self.env_2 = {'parameters': {
+            'str_value1': "string3",
+            'str_value2': "string4",
+            'del_lst_value1': '5,6',
+            'del_lst_value2': '7,8',
+            'lst_value1': [5, 6],
+            'lst_value2': [7, 8],
+            'json_value1': {"3": ["str3", "str4"]},
+            'json_value2': {"4": ["test3", "test4"]}},
+            'resource_registry': {
+                'test::R2': "OS::Heat::None"}
+        }
+
+        class mock_schema(object):
+            types = (MAP, LIST, STRING, NUMBER) = (
+                'json', 'comma_delimited_list', 'string', 'number')
+
+            def __init__(self, d):
+                self.__dict__ = d
+
+        self.param_schemata = {
+            'str_value1': mock_schema({
+                'type': "string"}),
+            'str_value2': mock_schema({
+                'type': "string"}),
+            'del_lst_value1': mock_schema({
+                'type': "comma_delimited_list"}),
+            'del_lst_value2': mock_schema({
+                'type': "comma_delimited_list"}),
+            'lst_value1': mock_schema({
+                'type': "comma_delimited_list"}),
+            'lst_value2': mock_schema({
+                'type': "comma_delimited_list"}),
+            'json_value1': mock_schema({
+                'type': "json"}),
+            'json_value2': mock_schema({
+                'type': "json"})
+        }
+
+    def test_merge_envs_with_param_default_merge_strategy(self):
+        files = {'env_1': json.dumps(self.env_1),
+                 'env_2': json.dumps(self.env_2)}
         environment_files = ['env_1', 'env_2']
 
         # Test
-        env_util.merge_environments(environment_files, files, params)
+        env_util.merge_environments(environment_files, files, self.params,
+                                    self.param_schemata)
 
         # Verify
         expected = {'parameters': {
-            'p0': 'CORRECT',
-            'p1': 'CORRECT',
-            'p2': 'CORRECT',
-        }}
-        self.assertEqual(expected, params)
+                    'json_value1': {u'3': [u'str3', u'str4']},
+                    'json_value2': {u'4': [u'test3', u'test4']},
+                    'del_lst_value1': '5,6',
+                    'del_lst_value2': '7,8',
+                    'lst_value1': [5, 6],
+                    'lst_value2': [7, 8],
+                    'str_value1': u'string3',
+                    'str_value2': u'string4'},
+                    'resource_registry': {
+                        'test::R1': "OS::Heat::RandomString",
+                        'test::R2': "OS::Heat::None"}}
+        self.assertEqual(expected, self.params)
 
-    def test_merge_environments_deep_merge(self):
-        # Setup
-        params = {'parameters': {
-            'p0': 'CORRECT',
-            'p1': ['CORRECT1'],
-            'p2': {'A': ['CORRECT1', 'CORRECT2']},
-            'p3': 'CORRECT1,CORRECT2'}
-        }
-        env_1 = '''
-        {'parameters' : {
-            'p1': ['CORRECT2', 'CORRECT3'],
-            'p2': {'B': ['CORRECT3', 'CORRECT4'],
-                   'C': [CORRECT5]},
-            'p3': 'CORRECT3,CORRECT4'
-        }}'''
-        env_2 = '''
-        {'parameters': {
-        'p2': {'C': ['CORRECT6']},
-        'p3': 'CORRECT5,CORRECT6'
-        }}'''
-
-        files = {'env_1': env_1, 'env_2': env_2}
+    def test_merge_envs_with_specified_default(self):
+        merge_strategies = {'default': 'deep_merge'}
+        self.env_2['parameter_merge_strategies'] = merge_strategies
+        files = {'env_1': json.dumps(self.env_1),
+                 'env_2': json.dumps(self.env_2)}
         environment_files = ['env_1', 'env_2']
 
         # Test
-        env_util.merge_environments(environment_files, files, params)
+        env_util.merge_environments(environment_files, files, self.params,
+                                    self.param_schemata)
 
         # Verify
-        # Does not work for comma_delimited_list.
         expected = {'parameters': {
-            'p0': 'CORRECT',
-            'p1': ['CORRECT1', 'CORRECT2', 'CORRECT3'],
-            'p2': {'A': ['CORRECT1', 'CORRECT2'],
-                   'B': ['CORRECT3', 'CORRECT4'],
-                   'C': ['CORRECT5', 'CORRECT6']},
-            'p3': 'CORRECT5,CORRECT6'
-        }}
-        self.assertEqual(expected, params)
+                    'json_value1': {u'3': [u'str3', u'str4'],
+                                    u'1': [u'str1', u'str2']},  # added
+                    'json_value2': {u'4': [u'test3', u'test4'],
+                                    u'2': [u'test1', u'test2']},
+                    'del_lst_value1': '1,2,5,6',
+                    'del_lst_value2': '3,4,7,8',
+                    'lst_value1': [1, 2, 5, 6],  # added
+                    'lst_value2': [3, 4, 7, 8],
+                    'str_value1': u'string1string3',
+                    'str_value2': u'string2string4'},
+                    'resource_registry': {
+                        'test::R1': "OS::Heat::RandomString",
+                        'test::R2': "OS::Heat::None"}}
+        self.assertEqual(expected, self.params)
+
+    def test_merge_envs_with_param_specific_merge_strategy(self):
+        merge_strategies = {
+            'default': "overwrite",
+            'lst_value1': "merge",
+            'json_value1': "deep_merge"}
+
+        self.env_2['parameter_merge_strategies'] = merge_strategies
+
+        files = {'env_1': json.dumps(self.env_1),
+                 'env_2': json.dumps(self.env_2)}
+        environment_files = ['env_1', 'env_2']
+
+        # Test
+        env_util.merge_environments(environment_files, files, self.params,
+                                    self.param_schemata)
+
+        # Verify
+        expected = {'parameters': {
+                    'json_value1': {u'3': [u'str3', u'str4'],
+                                    u'1': [u'str1', u'str2']},  # added
+                    'json_value2': {u'4': [u'test3', u'test4']},
+                    'del_lst_value1': '5,6',
+                    'del_lst_value2': '7,8',
+                    'lst_value1': [1, 2, 5, 6],  # added
+                    'lst_value2': [7, 8],
+                    'str_value1': u'string3',
+                    'str_value2': u'string4'},
+                    'resource_registry': {
+                        'test::R1': 'OS::Heat::RandomString',
+                        'test::R2': 'OS::Heat::None'}}
+        self.assertEqual(expected, self.params)
 
     def test_merge_environments_no_env_files(self):
-        params = {'parameters': {'p0': 'CORRECT'}}
-        env_1 = '''
-        {'parameters' : {
-            'p0': 'INCORRECT',
-        }}'''
-
-        files = {'env_1': env_1}
+        files = {'env_1': json.dumps(self.env_1)}
 
         # Test - Should ignore env_1 in files
-        env_util.merge_environments(None, files, params)
+        env_util.merge_environments(None, files, self.params,
+                                    self.param_schemata)
 
         # Verify
-        expected = {'parameters': {'p0': 'CORRECT'}}
-        self.assertEqual(expected, params)
+        expected = {'parameters': {
+            'str_value1': "test1",
+            'str_value2': "test2",
+            'del_lst_value1': '',
+            'del_lst_value2': '',
+            'lst_value1': [],
+            'lst_value2': [],
+            'json_value1': {},
+            'json_value2': {}},
+            'resource_registry': {}}
+
+        self.assertEqual(expected, self.params)
