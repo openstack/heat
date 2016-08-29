@@ -19,6 +19,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_functions
+from heat.engine.cfn import parameters as cfn_param
 from heat.engine import check_resource as cr
 from heat.engine import conditions
 from heat.engine import environment
@@ -26,7 +27,6 @@ from heat.engine import function
 from heat.engine.hot import functions as hot_functions
 from heat.engine.hot import parameters as hot_param
 from heat.engine.hot import template as hot_template
-from heat.engine import parameters
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
@@ -2763,7 +2763,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 foo: bar
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual("Invalid key 'foo' for parameter (param1)",
                          six.text_type(error))
@@ -2776,7 +2776,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 description: Hi!
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual("Missing parameter type for parameter: param1",
                          six.text_type(error))
@@ -2789,7 +2789,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 type: Unicode
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid type (Unicode)", six.text_type(error))
@@ -2805,7 +2805,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid key 'allowed_valus' for parameter constraints",
@@ -2821,7 +2821,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid parameter constraints for parameter param1, "
@@ -2837,7 +2837,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid parameter constraints, expected a mapping",
@@ -2854,7 +2854,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual("No constraint expressed", six.text_type(error))
 
@@ -2869,7 +2869,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid range constraint, expected a mapping",
@@ -2886,7 +2886,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: 1
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid key 'foo' for range constraint", six.text_type(error))
@@ -2902,7 +2902,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid length constraint, expected a mapping",
@@ -2919,7 +2919,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "Invalid key 'foo' for length constraint", six.text_type(error))
@@ -2935,7 +2935,7 @@ class HOTParamValidatorTest(common.HeatTestCase):
                 default: foo
         ''')
         error = self.assertRaises(
-            exception.InvalidSchemaError, parameters.Parameters,
+            exception.InvalidSchemaError, cfn_param.CfnParameters,
             "stack_testit", template.Template(hot_tpl))
         self.assertEqual(
             "AllowedPattern must be a string", six.text_type(error))

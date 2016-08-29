@@ -11,8 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
 import collections
 import itertools
+import warnings
 
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
@@ -472,18 +474,13 @@ class JsonParam(ParsedParameter):
         self.schema.validate_value(parsed, context=context, template=template)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class Parameters(collections.Mapping):
     """Parameters of a stack.
 
     The parameters of a stack, with type checking, defaults, etc. specified by
     the stack's template.
     """
-
-    PSEUDO_PARAMETERS = (
-        PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
-    ) = (
-        'AWS::StackId', 'AWS::StackName', 'AWS::Region'
-    )
 
     def __init__(self, stack_identifier, tmpl, user_params=None,
                  param_defaults=None):
@@ -569,18 +566,22 @@ class Parameters(collections.Mapping):
                 raise exception.UnknownUserParameter(key=param)
 
     def _pseudo_parameters(self, stack_identifier):
+        warnings.warn("Parameters._pseudo_parameters() is deprecated and "
+                      "will become an abstract method in future. Subclasses "
+                      "should override it to provide their own pseudo "
+                      "parameters.", DeprecationWarning)
         stack_id = (stack_identifier.arn()
                     if stack_identifier is not None else 'None')
         stack_name = stack_identifier and stack_identifier.stack_name
 
-        yield Parameter(self.PARAM_STACK_ID,
+        yield Parameter('AWS::StackId',
                         Schema(Schema.STRING, _('Stack ID'),
                                default=str(stack_id)))
         if stack_name:
-            yield Parameter(self.PARAM_STACK_NAME,
+            yield Parameter('AWS::StackName',
                             Schema(Schema.STRING, _('Stack Name'),
                                    default=stack_name))
-            yield Parameter(self.PARAM_REGION,
+            yield Parameter('AWS::Region',
                             Schema(Schema.STRING,
                                    default='ap-southeast-1',
                                    constraints=[

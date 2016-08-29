@@ -23,12 +23,12 @@ from stevedore import extension
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine.cfn import parameters as cfn_p
 from heat.engine.cfn import template as cfn_t
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import template as hot_t
-from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
@@ -888,7 +888,7 @@ class TemplateTest(common.HeatTestCase):
         tmpl = template.Template(parameter_template, env=env)
         stk = stack.Stack(self.ctx, 'test', tmpl)
         tmpl.env = environment.Environment({})
-        stk.parameters = parameters.Parameters(stk.identifier(), tmpl)
+        stk.parameters = cfn_p.CfnParameters(stk.identifier(), tmpl)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
                           self.resolve,
