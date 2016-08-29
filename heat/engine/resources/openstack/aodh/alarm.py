@@ -201,6 +201,18 @@ class AodhAlarm(alarm_base.BaseAlarm):
             self.client().alarm.update(self.resource_id,
                                        self.get_alarm_props(kwargs))
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        record_reality = {}
+        threshold_data = resource_data.get('threshold_rule').copy()
+        threshold_data.update(resource_data)
+        props_upd_allowed = set(
+            self.PROPERTIES + alarm_base.COMMON_PROPERTIES) - {
+            self.METER_NAME, alarm_base.TIME_CONSTRAINTS}
+        for key in props_upd_allowed:
+            record_reality.update({key: threshold_data.get(key)})
+
+        return record_reality
+
     def handle_delete(self):
         try:
             wr = watchrule.WatchRule.load(
