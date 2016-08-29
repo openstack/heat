@@ -215,7 +215,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         except Exception as ex:
             self.rpc_client().ignore_error_named(ex, 'NotFound')
 
-    def _get_derived_config(self, action, source_config):
+    def _create_derived_config(self, action, source_config):
 
         derived_params = self._build_derived_config_params(
             action, source_config)
@@ -248,7 +248,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
         return config
 
-    def _handle_action(self, action, config=None):
+    def _handle_action(self, action, config=None, prev_derived_config=None):
         if config is None:
             config = self._load_config()
 
@@ -262,7 +262,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             return
 
         props = self._build_properties(
-            self._get_derived_config(action, config),
+            self._create_derived_config(action, config),
             action)
 
         if self.resource_id is None:
@@ -275,9 +275,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 stack_user_project_id=self.stack.stack_user_project_id,
                 **props)
         else:
-            sd = self.rpc_client().show_software_deployment(
-                self.context, self.resource_id)
-            prev_derived_config = sd[rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID]
+            if prev_derived_config is None:
+                prev_derived_config = self._get_derived_config_id()
             sd = self.rpc_client().update_software_deployment(
                 self.context,
                 deployment_id=self.resource_id,
@@ -436,7 +435,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        old_config = self._load_config(self._get_derived_config_id())
+        prev_derived_config = self._get_derived_config_id()
+        old_config = self._load_config(prev_derived_config)
         old_inputs = {i.name(): i
                       for i in old_config[rpc_api.SOFTWARE_CONFIG_INPUTS]}
 
@@ -453,7 +453,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                               'input "%s"', name)
                     raise resource.UpdateReplace
 
-        return self._handle_action(self.UPDATE, config=config)
+        return self._handle_action(self.UPDATE, config=config,
+                                   prev_derived_config=prev_derived_config)
 
     def check_update_complete(self, sd):
         if not sd:
