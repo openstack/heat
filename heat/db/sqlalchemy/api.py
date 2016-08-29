@@ -1401,81 +1401,85 @@ def db_version(engine):
 def _db_encrypt_or_decrypt_template_params(
         ctxt, encryption_key, encrypt=False, batch_size=50, verbose=False):
     from heat.engine import template
+    session = ctxt.session
     if encrypt:
         crypt_action = _('encrypt')
     else:
         crypt_action = _('decrypt')
 
     excs = []
-    with db_context.writer.independent.using(ctxt) as session:
-        query = session.query(models.RawTemplate)
+    query = session.query(models.RawTemplate)
+    template_batches = _get_batch(
+        session, ctxt=ctxt, query=query, model=models.RawTemplate,
+        batch_size=batch_size)
+    next_batch = list(itertools.islice(template_batches, batch_size))
+    while next_batch:
+        with session.begin(subtransactions=True):
+            for raw_template in next_batch:
+                try:
+                    if verbose:
+                        LOG.info(_LI("Processing raw_template %(id)d..."),
+                                 {'id': raw_template.id})
+                    env = raw_template.environment
+                    needs_update = False
 
-        for raw_template in _get_batch(
-                session=session, ctxt=ctxt, query=query,
-                model=models.RawTemplate, batch_size=batch_size):
-            try:
-                if verbose:
-                    LOG.info(_LI("Processing raw_template %(id)d..."),
-                             {'id': raw_template.id})
-                env = raw_template.environment
-                needs_update = False
-
-                # using "in env.keys()" so an exception is raised
-                # if env is something weird like a string.
-                if env is None or 'parameters' not in env.keys():
-                    continue
-                if 'encrypted_param_names' in env:
-                    encrypted_params = env['encrypted_param_names']
-                else:
-                    encrypted_params = []
-
-                if encrypt:
-                    tmpl = template.Template.load(
-                        ctxt, raw_template.id, raw_template)
-                    param_schemata = tmpl.param_schemata()
-                    if not param_schemata:
+                    # using "in env.keys()" so an exception is raised
+                    # if env is something weird like a string.
+                    if env is None or 'parameters' not in env.keys():
                         continue
+                    if 'encrypted_param_names' in env:
+                        encrypted_params = env['encrypted_param_names']
+                    else:
+                        encrypted_params = []
 
-                    for param_name, param_val in env['parameters'].items():
-                        if (param_name in encrypted_params or
-                                param_name not in param_schemata or
-                                not param_schemata[param_name].hidden):
+                    if encrypt:
+                        tmpl = template.Template.load(
+                            ctxt, raw_template.id, raw_template)
+                        param_schemata = tmpl.param_schemata()
+                        if not param_schemata:
                             continue
-                        encrypted_val = crypt.encrypt(six.text_type(param_val),
-                                                      encryption_key)
-                        env['parameters'][param_name] = encrypted_val
-                        encrypted_params.append(param_name)
-                        needs_update = True
-                    if needs_update:
-                        environment = env.copy()
-                        environment['encrypted_param_names'] = encrypted_params
-                else:  # decrypt
-                    for param_name in encrypted_params:
-                        method, value = env['parameters'][param_name]
-                        decrypted_val = crypt.decrypt(method, value,
-                                                      encryption_key)
-                        env['parameters'][param_name] = decrypted_val
-                        needs_update = True
-                    if needs_update:
-                        environment = env.copy()
-                        environment['encrypted_param_names'] = []
 
-                if needs_update:
-                    raw_template_update(ctxt, raw_template.id,
-                                        {'environment': environment})
-            except Exception as exc:
-                LOG.exception(
-                    _LE('Failed to %(crypt_action)s parameters of raw '
-                        'template %(id)d'), {'id': raw_template.id,
-                                             'crypt_action': crypt_action})
-                excs.append(exc)
-                continue
-            finally:
-                if verbose:
-                    LOG.info(_LI("Finished %(crypt_action)s processing of "
-                                 "raw_template %(id)d."),
-                             {'id': raw_template.id,
-                              'crypt_action': crypt_action})
+                        for param_name, param_val in env['parameters'].items():
+                            if (param_name in encrypted_params or
+                                    param_name not in param_schemata or
+                                    not param_schemata[param_name].hidden):
+                                continue
+                            encrypted_val = crypt.encrypt(
+                                six.text_type(param_val), encryption_key)
+                            env['parameters'][param_name] = encrypted_val
+                            encrypted_params.append(param_name)
+                            needs_update = True
+                        if needs_update:
+                            newenv = env.copy()
+                            newenv['encrypted_param_names'] = encrypted_params
+                    else:  # decrypt
+                        for param_name in encrypted_params:
+                            method, value = env['parameters'][param_name]
+                            decrypted_val = crypt.decrypt(method, value,
+                                                          encryption_key)
+                            env['parameters'][param_name] = decrypted_val
+                            needs_update = True
+                        if needs_update:
+                            newenv = env.copy()
+                            newenv['encrypted_param_names'] = []
+
+                    if needs_update:
+                        raw_template_update(ctxt, raw_template.id,
+                                            {'environment': newenv})
+                except Exception as exc:
+                    LOG.exception(
+                        _LE('Failed to %(crypt_action)s parameters of raw '
+                            'template %(id)d'), {'id': raw_template.id,
+                                                 'crypt_action': crypt_action})
+                    excs.append(exc)
+                    continue
+                finally:
+                    if verbose:
+                        LOG.info(_LI("Finished %(crypt_action)s processing of "
+                                     "raw_template %(id)d."),
+                                 {'id': raw_template.id,
+                                  'crypt_action': crypt_action})
+        next_batch = list(itertools.islice(template_batches, batch_size))
     return excs
 
 
@@ -1491,35 +1495,41 @@ def _db_encrypt_or_decrypt_resource_prop_data(
     # so update those as needed
     query = session.query(models.Resource).filter(
         models.Resource.properties_data_encrypted.isnot(encrypt))
-    for resource in _get_batch(
-            session=session, ctxt=ctxt, query=query, model=models.Resource,
-            batch_size=batch_size):
-        if not resource.properties_data:
-            continue
-        try:
-            if verbose:
-                LOG.info(_LI("Processing resource %(id)d..."),
-                         {'id': resource.id})
-            if encrypt:
-                result = crypt.encrypted_dict(resource.properties_data,
-                                              encryption_key)
-            else:
-                result = crypt.decrypted_dict(resource.properties_data,
-                                              encryption_key)
-            resource_update(ctxt, resource.id,
-                            {'properties_data': result,
-                             'properties_data_encrypted': encrypt},
-                            resource.atomic_key)
-        except Exception as exc:
-            LOG.exception(_LE('Failed to %(crypt_action)s properties_data of '
-                              'resource %(id)d') %
-                          {'id': resource.id, 'crypt_action': crypt_action})
-            excs.append(exc)
-            continue
-        finally:
-            if verbose:
-                LOG.info(_LI("Finished processing resource "
-                             "%(id)d."), {'id': resource.id})
+    resource_batches = _get_batch(
+        session=session, ctxt=ctxt, query=query, model=models.Resource,
+        batch_size=batch_size)
+    next_batch = list(itertools.islice(resource_batches, batch_size))
+    while next_batch:
+        with session.begin(subtransactions=True):
+            for resource in next_batch:
+                if not resource.properties_data:
+                    continue
+                try:
+                    if verbose:
+                        LOG.info(_LI("Processing resource %(id)d..."),
+                                 {'id': resource.id})
+                    if encrypt:
+                        result = crypt.encrypted_dict(resource.properties_data,
+                                                      encryption_key)
+                    else:
+                        result = crypt.decrypted_dict(resource.properties_data,
+                                                      encryption_key)
+                    resource_update(ctxt, resource.id,
+                                    {'properties_data': result,
+                                     'properties_data_encrypted': encrypt},
+                                    resource.atomic_key)
+                except Exception as exc:
+                    LOG.exception(_LE('Failed to %(crypt_action)s '
+                                      'properties_data of resource %(id)d') %
+                                  {'id': resource.id,
+                                   'crypt_action': crypt_action})
+                    excs.append(exc)
+                    continue
+                finally:
+                    if verbose:
+                        LOG.info(_LI("Finished processing resource "
+                                     "%(id)d."), {'id': resource.id})
+        next_batch = list(itertools.islice(resource_batches, batch_size))
     return excs
 
 
