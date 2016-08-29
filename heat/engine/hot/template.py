@@ -465,6 +465,7 @@ class HOTemplate20161014(HOTemplate20160408):
     condition_functions = {
         'get_param': hot_funcs.GetParam,
         'equals': hot_funcs.Equals,
+        'not': hot_funcs.Not
     }
 
     def __init__(self, tmpl, template_id=None, files=None, env=None):

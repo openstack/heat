@@ -393,3 +393,35 @@ Usage
 
 Returns 'value_true' if the condition 'create_prod' evaluates to true,
 otherwise returns 'value_false'.
+
+-------
+Fn::Not
+-------
+Acts as a NOT operator.
+
+The syntax of the ``Fn::Not`` function is
+
+.. code-block:: yaml
+
+  {'Fn::Not': [condition]}
+
+Returns true for a condition that evaluates to false or returns false
+for a condition that evaluates to true.
+
+Parameters
+~~~~~~~~~~
+condition:
+    A condition such as ``Fn::Equals`` that evaluates to true or false
+    can be defined in this function, also we can set a boolean value
+    as a condition.
+
+Usage
+~~~~~
+
+.. code-block:: yaml
+
+  {'Fn::Not': [{'Fn::Equals': [{'Ref': env_type'}, 'prod']}]}
+
+
+Returns false if the param 'env_type' equals to 'prod',
+otherwise returns true.

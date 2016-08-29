@@ -242,11 +242,13 @@ for the ``heat_template_version`` key:
       if
 
     This version adds ``equals`` condition function which can be used
-    to compare whether two values are equal. The complete list of supported
+    to compare whether two values are equal, the ``not`` condition function
+    which acts as a NOT operator. The complete list of supported
     condition functions is::
 
       equals
       get_param
+      not
 
 .. _hot_spec_parameter_groups:
 
@@ -830,6 +832,7 @@ expression
 
       equals
       get_param
+      not
 
     Note: In condition functions, you can reference a value from an input
     parameter, but you cannot reference resource or its attribute.
@@ -840,8 +843,17 @@ An example of conditions section definition
 
    conditions:
      cd1: True
-     cd2: {get_param: param1}
-     cd3: {equals: [{get_param: param2}, "yes"]}
+     cd2:
+       get_param: param1
+     cd3:
+       equals:
+       - get_param: param2
+       - yes
+     cd4:
+       not:
+         equals:
+         - get_param: param3
+         - yes
 
 The example below shows how to associate condition with resources
 
@@ -1545,3 +1557,40 @@ Note: You define all conditions in the ``conditions`` section of a
 template except for ``if`` conditions. You can use the ``if`` condition
 in the property values in the ``resources`` section and ``outputs`` sections
 of a template.
+
+not
+---
+The ``not`` function acts as a NOT operator.
+
+The syntax of the ``not`` function is
+
+.. code-block:: yaml
+
+    not: condition
+
+Note: A condition such as ``equals`` that evaluates to true or false
+can be defined in ``not`` function, also we can set a boolean
+value as condition.
+
+Returns true for a condition that evaluates to false or
+returns false for a condition that evaluates to true.
+
+For example
+
+.. code-block:: yaml
+
+    not:
+      equals:
+      - get_param: env_type
+      - prod
+
+If param 'env_type' equals to 'prod', this function returns false,
+otherwise returns true.
+
+Another example
+
+.. code-block:: yaml
+
+    not: True
+
+This function returns false.
