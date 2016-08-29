@@ -37,3 +37,27 @@ class CryptTest(common.HeatTestCase):
         exp_msg = ('heat.conf misconfigured, auth_encryption_key '
                    'must be 32 characters')
         self.assertIn(exp_msg, six.text_type(err))
+
+    def _test_encrypt_decrypt_dict(self, encryption_key=None):
+        data = {'p1': u'happy',
+                '2': [u'a', u'little', u'blue'],
+                'p3': {u'really': u'exited', u'ok int': 9},
+                '4': u'',
+                'p5': True,
+                '6': 7}
+        encrypted_data = crypt.encrypted_dict(data, encryption_key)
+        for k in encrypted_data:
+            self.assertEqual('cryptography_decrypt_v1',
+                             encrypted_data[k][0])
+            self.assertEqual(2, len(encrypted_data[k]))
+        # the keys remain the same
+        self.assertEqual(set(data), set(encrypted_data))
+
+        decrypted_data = crypt.decrypted_dict(encrypted_data, encryption_key)
+        self.assertEqual(data, decrypted_data)
+
+    def test_encrypt_decrypt_dict_custom_enc_key(self):
+        self._test_encrypt_decrypt_dict('just for testing not so great re')
+
+    def test_encrypt_decrypt_dict_default_enc_key(self):
+        self._test_encrypt_decrypt_dict()

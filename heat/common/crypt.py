@@ -17,6 +17,7 @@ import sys
 from Crypto.Cipher import AES
 from cryptography import fernet
 from oslo_config import cfg
+from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
 
@@ -90,6 +91,31 @@ def decrypt(method, data, encryption_key=None):
     value = decryptor(data, encryption_key)
     if value is not None:
         return encodeutils.safe_decode(value, 'utf-8')
+
+
+def encrypted_dict(data, encryption_key=None):
+    'Return an encrypted dict. Values converted to json before encrypted'
+    return_data = {}
+    if not data:
+        return return_data
+    for prop_name, prop_value in data.items():
+        prop_string = jsonutils.dumps(prop_value)
+        encrypted_value = encrypt(prop_string, encryption_key)
+        return_data[prop_name] = encrypted_value
+    return return_data
+
+
+def decrypted_dict(data, encryption_key=None):
+    'Return a decrypted dict. Assume input values are encrypted json fields.'
+    return_data = {}
+    if not data:
+        return return_data
+    for prop_name, prop_value in data.items():
+        method, value = prop_value
+        decrypted_value = decrypt(method, value, encryption_key)
+        prop_string = jsonutils.loads(decrypted_value)
+        return_data[prop_name] = prop_string
+    return return_data
 
 
 def oslo_decrypt_v1(value, encryption_key=None):
