@@ -46,6 +46,8 @@ class AutoscalingLoadBalancerv2Test(scenario_base.ScenarioTestsBase):
             # skip unsuccessful requests
             if r.status_code == 200:
                 resp.add(r.text)
+                if len(resp) == expected_num:
+                    break
         self.assertEqual(expected_num, len(resp))
 
     def test_autoscaling_loadbalancer_neutron(self):
