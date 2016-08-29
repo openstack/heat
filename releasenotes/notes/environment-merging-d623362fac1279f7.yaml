@@ -1,0 +1,11 @@
+---
+prelude: >
+  Previously 'parameters' and 'parameter_defaults' specified in an
+  environment file used to overwrite their existing values.
+features:
+- A new 'parameter_merge_strategies' section can be added to the
+  environment file,  where 'default' and/or parameter specific
+  merge strategies can be specified.
+- Parameters and parameter defaults specified in the environment
+  file would be merged as per their specified strategies.
+
