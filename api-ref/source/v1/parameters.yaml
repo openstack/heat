@@ -8,7 +8,7 @@ location:
     URI that can be checked to track resource status changes.
 
 request_id:
-  type: UUID
+  type: string
   in: header
   required: true
   description: |
