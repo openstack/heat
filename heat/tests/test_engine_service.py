@@ -235,8 +235,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, owner_id=None,
@@ -280,8 +279,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
 
         self._stub_update_mocks(s, old_stack)
 
-        templatem.Template(template, files=None,
-                           env=stack.env).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
@@ -1175,7 +1173,7 @@ class StackServiceTest(common.HeatTestCase):
         self._preview_stack(environment_files=environment_files)
 
         # Verify
-        mock_merge.assert_called_once_with(environment_files, None, {})
+        mock_merge.assert_called_once_with(environment_files, None, {}, {})
 
     @mock.patch.object(stack_object.Stack, 'get_by_name')
     def test_validate_new_stack_checks_existing_stack(self, mock_stack_get):

@@ -80,7 +80,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         self.assertEqual([msgq_mock], self.man.thread_group_mgr.msg_queues)
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
@@ -131,7 +131,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                               environment_files=environment_files)
 
         # Verify
-        mock_merge.assert_called_once_with(environment_files, None, params)
+        mock_merge.assert_called_once_with(environment_files, None,
+                                           params, mock.ANY)
 
     def test_stack_update_nested(self):
         stack_name = 'service_update_nested_test_stack'
@@ -458,7 +459,7 @@ resources:
         self.assertTrue(result['stack_id'])
 
         mock_validate.assert_called_once_with()
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_stack.assert_called_once_with(
@@ -572,7 +573,7 @@ resources:
         root_stack_id = old_stack.root_stack_id()
         self.assertEqual(3, old_stack.total_resources(root_stack_id))
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
@@ -688,7 +689,7 @@ resources:
 
         # assertions
         self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
@@ -751,7 +752,7 @@ resources:
 
         mock_get.assert_called_once_with(self.ctx, stk.identifier())
 
-        mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
+        mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
             self.ctx, stk.name, stk.t,
@@ -1017,13 +1018,13 @@ resources:
             strict_validate=True, tenant_id='test_tenant_id', timeout_mins=60,
             user_creds_id=u'1', username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
-        mock_tmpl.assert_called_once_with(new_template, files=None,
-                                          env=stk.env)
+        mock_tmpl.assert_called_once_with(new_template, files=None)
         mock_env.assert_called_once_with(params)
         mock_validate.assert_called_once_with()
 
         if environment_files:
-            mock_merge.assert_called_once_with(environment_files, None, params)
+            mock_merge.assert_called_once_with(environment_files, None,
+                                               params, mock.ANY)
 
         return result
 
