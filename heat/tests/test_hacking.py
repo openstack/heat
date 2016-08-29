@@ -25,7 +25,7 @@ class HackingTestCase(common.HeatTestCase):
             "obj.items()"))))
 
         self.assertEqual(0, len(list(checks.check_python3_no_iteritems(
-            "six.iteritems(ob))"))))
+            "six.iteritems(obj)"))))
 
     def test_dict_iterkeys(self):
         self.assertEqual(1, len(list(checks.check_python3_no_iterkeys(
@@ -35,7 +35,7 @@ class HackingTestCase(common.HeatTestCase):
             "obj.keys()"))))
 
         self.assertEqual(0, len(list(checks.check_python3_no_iterkeys(
-            "six.iterkeys(ob))"))))
+            "six.iterkeys(obj)"))))
 
     def test_dict_itervalues(self):
         self.assertEqual(1, len(list(checks.check_python3_no_itervalues(
@@ -45,4 +45,4 @@ class HackingTestCase(common.HeatTestCase):
             "obj.values()"))))
 
         self.assertEqual(0, len(list(checks.check_python3_no_itervalues(
-            "six.itervalues(ob))"))))
+            "six.itervalues(obj)"))))
