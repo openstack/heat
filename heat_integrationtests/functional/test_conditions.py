@@ -38,6 +38,14 @@ Conditions:
     - Fn::Equals:
       - Ref: zone
       - beijing
+  Fujian_Zone:
+    Fn::Or:
+    - Fn::Equals:
+      - Ref: zone
+      - fuzhou
+    - Fn::Equals:
+      - Ref: zone
+      - xiamen
 Resources:
   test_res:
     Type: OS::Heat::TestResource
@@ -58,6 +66,11 @@ Resources:
     Properties:
       value: beijing_prod_res
     Condition: Beijing_Prod
+  fujian_res:
+    Type: OS::Heat::TestResource
+    Condition: Fujian_Zone
+    Properties:
+      value: fujian_res
 Outputs:
   res_value:
     Value: {"Fn::GetAtt": [prod_res, output]}
@@ -99,6 +112,14 @@ conditions:
     - equals:
       - get_param: env_type
       - prod
+  fujian_zone:
+    or:
+    - equals:
+      - get_param: zone
+      - fuzhou
+    - equals:
+      - get_param: zone
+      - xiamen
 resources:
   test_res:
     type: OS::Heat::TestResource
@@ -119,6 +140,11 @@ resources:
     properties:
       value: beijing_prod_res
     condition: beijing_prod
+  fujian_res:
+    type: OS::Heat::TestResource
+    condition: fujian_zone
+    properties:
+      value: fujian_res
 outputs:
   res_value:
     value: {get_attr: [prod_res, output]}
@@ -140,19 +166,30 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
     def setUp(self):
         super(CreateUpdateResConditionTest, self).setUp()
 
-    def res_assert_for_prod(self, resources, bj_prod=True):
+    def res_assert_for_prod(self, resources, bj_prod=True, fj_zone=False):
         res_names = [res.resource_name for res in resources]
         if bj_prod:
             self.assertEqual(3, len(resources))
             self.assertIn('beijing_prod_res', res_names)
+        elif fj_zone:
+            self.assertEqual(3, len(resources))
+            self.assertIn('fujian_res', res_names)
+            self.assertNotIn('beijing_prod_res', res_names)
         else:
             self.assertEqual(2, len(resources))
         self.assertIn('prod_res', res_names)
         self.assertIn('test_res', res_names)
 
-    def res_assert_for_test(self, resources):
-        self.assertEqual(2, len(resources))
+    def res_assert_for_test(self, resources, fj_zone=False):
         res_names = [res.resource_name for res in resources]
+
+        if fj_zone:
+            self.assertEqual(3, len(resources))
+            self.assertIn('fujian_res', res_names)
+        else:
+            self.assertEqual(2, len(resources))
+            self.assertNotIn('fujian_res', res_names)
+
         self.assertIn('test_res', res_names)
         self.assertIn('test_res1', res_names)
         self.assertNotIn('prod_res', res_names)
@@ -210,6 +247,15 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         self.res_assert_for_test(resources)
         self.output_assert_for_test(stack_identifier)
 
+        parms = {'zone': 'fuzhou'}
+        self.update_stack(stack_identifier,
+                          template=cfn_template,
+                          parameters=parms)
+
+        resources = self.client.resources.list(stack_identifier)
+        self.res_assert_for_test(resources, fj_zone=True)
+        self.output_assert_for_test(stack_identifier)
+
         parms = {'env_type': 'prod'}
         self.update_stack(stack_identifier,
                           template=cfn_template,
@@ -229,6 +275,16 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         self.res_assert_for_prod(resources, False)
         self.output_assert_for_prod(stack_identifier, False)
 
+        parms = {'env_type': 'prod',
+                 'zone': 'xiamen'}
+        self.update_stack(stack_identifier,
+                          template=cfn_template,
+                          parameters=parms)
+
+        resources = self.client.resources.list(stack_identifier)
+        self.res_assert_for_prod(resources, bj_prod=False, fj_zone=True)
+        self.output_assert_for_prod(stack_identifier, False)
+
     def test_stack_create_update_cfn_template_prod_to_test(self):
         parms = {'env_type': 'prod'}
         stack_identifier = self.stack_create(template=cfn_template,
@@ -237,6 +293,16 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         self.res_assert_for_prod(resources)
         self.output_assert_for_prod(stack_identifier)
 
+        parms = {'zone': 'xiamen',
+                 'env_type': 'prod'}
+        self.update_stack(stack_identifier,
+                          template=cfn_template,
+                          parameters=parms)
+
+        resources = self.client.resources.list(stack_identifier)
+        self.res_assert_for_prod(resources, bj_prod=False, fj_zone=True)
+        self.output_assert_for_prod(stack_identifier, bj_prod=False)
+
         parms = {'env_type': 'test'}
         self.update_stack(stack_identifier,
                           template=cfn_template,
@@ -244,6 +310,16 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_test(resources)
+        self.output_assert_for_test(stack_identifier)
+
+        parms = {'env_type': 'test',
+                 'zone': 'fuzhou'}
+        self.update_stack(stack_identifier,
+                          template=cfn_template,
+                          parameters=parms)
+
+        resources = self.client.resources.list(stack_identifier)
+        self.res_assert_for_test(resources, fj_zone=True)
         self.output_assert_for_test(stack_identifier)
 
     def test_stack_create_update_hot_template_test_to_prod(self):

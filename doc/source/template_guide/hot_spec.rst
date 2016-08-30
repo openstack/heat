@@ -244,13 +244,16 @@ for the ``heat_template_version`` key:
     This version adds ``equals`` condition function which can be used
     to compare whether two values are equal, the ``not`` condition function
     which acts as a NOT operator, the ``and`` condition function which acts
-    as an AND operator to evaluate all the specified conditions. The complete
-    list of supported condition functions is::
+    as an AND operator to evaluate all the specified conditions, the ``or``
+    condition function which acts as an OR operator to evaluate all the
+    specified conditions. The complete list of supported condition
+    functions is::
 
       equals
       get_param
       not
       and
+      or
 
 .. _hot_spec_parameter_groups:
 
@@ -836,6 +839,7 @@ expression
       get_param
       not
       and
+      or
 
     Note: In condition functions, you can reference a value from an input
     parameter, but you cannot reference resource or its attribute.
@@ -866,6 +870,14 @@ An example of conditions section definition
            equals:
            - get_param: zone
            - beijing
+     cd6:
+       or:
+       - equals:
+         - get_param: zone
+         - shanghai
+       - equals:
+         - get_param: zone
+         - beijing
 
 The example below shows how to associate condition with resources
 
@@ -1639,4 +1651,38 @@ For example
         - beijing
 
 If param 'env_type' equals to 'prod', and param 'zone' is not equal to
+'beijing', this function returns true, otherwise returns false.
+
+or
+--
+The ``or`` function acts as an OR operator to evaluate all the
+specified conditions.
+
+The syntax of the ``or`` function is
+
+.. code-block:: yaml
+
+    or: [{condition_1}, {condition_2}, ... {condition_n}}]
+
+Note: A condition such as ``equals`` or ``not`` that evaluates to true or
+false can be defined in ``or`` function, also we can set a boolean
+value as condition.
+
+Returns true if any one of the specified conditions evaluate to true,
+or returns false if all of the conditions evaluates to false.
+
+For example
+
+.. code-block:: yaml
+
+    or:
+    - equals:
+      - get_param: env_type
+      - prod
+    - not:
+        equals:
+        - get_param: zone
+        - beijing
+
+If param 'env_type' equals to 'prod', or the param 'zone' is not equal to
 'beijing', this function returns true, otherwise returns false.
