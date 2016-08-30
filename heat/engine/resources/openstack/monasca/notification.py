@@ -11,6 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
+from six.moves import urllib
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -38,6 +41,10 @@ class MonascaNotification(resource.Resource):
     default_client_name = 'monasca'
 
     entity = 'notifications'
+
+    # NOTE(sirushti): To conform to the autoscaling behaviour in heat, we set
+    # the default period interval during create/update to 60 for webhooks only.
+    _default_period_interval = 60
 
     NOTIFICATION_TYPES = (
         EMAIL, WEBHOOK, PAGERDUTY
@@ -73,21 +80,26 @@ class MonascaNotification(resource.Resource):
               'address, url or service key based on notification type.'),
             update_allowed=True,
             required=True,
+            constraints=[constraints.Length(max=512)]
         ),
         PERIOD: properties.Schema(
             properties.Schema.INTEGER,
             _('Interval in seconds to invoke webhooks if the alarm state '
-              'does not transition away from the defined trigger state. The '
-              'default value is a period interval of 60 seconds. A '
+              'does not transition away from the defined trigger state. A '
               'value of 0 will disable continuous notifications. This '
               'property is only applicable for the webhook notification '
-              'type.'),
+              'type and has default period interval of 60 seconds.'),
             support_status=support.SupportStatus(version='7.0.0'),
             update_allowed=True,
-            constraints=[constraints.AllowedValues([0, 60])],
-            default=60,
+            constraints=[constraints.AllowedValues([0, 60])]
         )
     }
+
+    def _period_interval(self):
+        period = self.properties[self.PERIOD]
+        if period is None:
+            period = self._default_period_interval
+        return period
 
     def validate(self):
         super(MonascaNotification, self).validate()
@@ -95,6 +107,41 @@ class MonascaNotification(resource.Resource):
                 self.properties[self.TYPE] != self.WEBHOOK):
             msg = _('The period property can only be specified against a '
                     'Webhook Notification type.')
+            raise exception.StackValidationFailed(message=msg)
+        if self.properties[self.TYPE] == self.WEBHOOK:
+            address = self.properties[self.ADDRESS]
+            try:
+                parsed_address = urllib.parse.urlparse(address)
+            except Exception:
+                msg = _('Address "%(addr)s" should have correct format '
+                        'required by "%(wh)s" type of "%(type)s" '
+                        'property') % {
+                    'addr': address,
+                    'wh': self.WEBHOOK,
+                    'type': self.TYPE}
+                raise exception.StackValidationFailed(message=msg)
+            if not parsed_address.scheme:
+                msg = _('Address "%s" doesn\'t have required URL '
+                        'scheme') % address
+                raise exception.StackValidationFailed(message=msg)
+            if not parsed_address.netloc:
+                msg = _('Address "%s" doesn\'t have required network '
+                        'location') % address
+                raise exception.StackValidationFailed(message=msg)
+            if parsed_address.scheme not in ['http', 'https']:
+                msg = _('Address "%(addr)s" doesn\'t satisfies '
+                        'allowed schemes: %(schemes)s') % {
+                    'addr': address,
+                    'schemes': ', '.join(['http', 'https'])
+                }
+                raise exception.StackValidationFailed(message=msg)
+        elif (self.properties[self.TYPE] == self.EMAIL and
+              not re.match('^.+@.+$', self.properties[self.ADDRESS])):
+            msg = _('Address "%(addr)s" doesn\'t satisfies allowed format for '
+                    '"%(email)s" type of "%(type)s" property') % {
+                'addr': self.properties[self.ADDRESS],
+                'email': self.EMAIL,
+                'type': self.TYPE}
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
@@ -105,7 +152,7 @@ class MonascaNotification(resource.Resource):
             address=self.properties[self.ADDRESS],
         )
         if args['type'] == self.WEBHOOK:
-            args['period'] = self.properties[self.PERIOD]
+            args['period'] = self._period_interval()
 
         notification = self.client().notifications.create(**args)
         self.resource_id_set(notification['id'])
@@ -125,7 +172,7 @@ class MonascaNotification(resource.Resource):
         if args['type'] == self.WEBHOOK:
             updated_period = prop_diff.get(self.PERIOD)
             args['period'] = (updated_period if updated_period is not None
-                              else self.properties[self.PERIOD])
+                              else self._period_interval())
 
         self.client().notifications.update(**args)
 

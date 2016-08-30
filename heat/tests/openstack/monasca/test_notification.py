@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+import six
 
 from heat.common import exception
 from heat.engine.clients.os import monasca as client_plugin
@@ -80,6 +81,49 @@ class MonascaNotificationTest(common.HeatTestCase):
         self.assertRaises(exception.StackValidationFailed,
                           self.test_resource.validate)
 
+    def test_validate_no_scheme_address_for_webhook(self):
+        self.test_resource.properties.data['type'] = self.test_resource.WEBHOOK
+        self.test_resource.properties.data['address'] = 'abc@def.com'
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.test_resource.validate)
+        self.assertEqual('Address "abc@def.com" doesn\'t have '
+                         'required URL scheme', six.text_type(ex))
+
+    def test_validate_no_netloc_address_for_webhook(self):
+        self.test_resource.properties.data['type'] = self.test_resource.WEBHOOK
+        self.test_resource.properties.data['address'] = 'https://'
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.test_resource.validate)
+        self.assertEqual('Address "https://" doesn\'t have '
+                         'required network location', six.text_type(ex))
+
+    def test_validate_prohibited_address_for_webhook(self):
+        self.test_resource.properties.data['type'] = self.test_resource.WEBHOOK
+        self.test_resource.properties.data['address'] = 'ftp://127.0.0.1'
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.test_resource.validate)
+        self.assertEqual('Address "ftp://127.0.0.1" doesn\'t satisfies '
+                         'allowed schemes: http, https', six.text_type(ex))
+
+    def test_validate_incorrect_address_for_email(self):
+        self.test_resource.properties.data['type'] = self.test_resource.EMAIL
+        self.test_resource.properties.data['address'] = 'abc#def.com'
+        self.test_resource.properties.data.pop('period')
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.test_resource.validate)
+        self.assertEqual('Address "abc#def.com" doesn\'t satisfies allowed '
+                         'format for "email" type of "type" property',
+                         six.text_type(ex))
+
+    def test_validate_invalid_address_parsing(self):
+        self.test_resource.properties.data['type'] = self.test_resource.WEBHOOK
+        self.test_resource.properties.data['address'] = "https://example.com]"
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.test_resource.validate)
+        self.assertEqual('Address "https://example.com]" should have correct '
+                         'format required by "webhook" type of "type" '
+                         'property', six.text_type(ex))
+
     def test_resource_handle_create(self):
         mock_notification_create = self.test_client.notifications.create
         mock_resource = self._get_mock_resource()
@@ -130,6 +174,20 @@ class MonascaNotificationTest(common.HeatTestCase):
         )
         mock_notification_create.assert_called_once_with(**args)
 
+    def test_resource_handle_create_no_period(self):
+        self.test_resource.properties.data.pop('period')
+        self.test_resource.properties.data['type'] = 'email'
+        self.test_resource.properties.data['address'] = 'abc@def.com'
+        mock_notification_create = self.test_client.notifications.create
+        self.test_resource.handle_create()
+
+        args = dict(
+            name='test-notification',
+            type='email',
+            address='abc@def.com'
+        )
+        mock_notification_create.assert_called_once_with(**args)
+
     def test_resource_handle_update(self):
         mock_notification_update = self.test_client.notifications.update
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
@@ -173,6 +231,28 @@ class MonascaNotificationTest(common.HeatTestCase):
             type='webhook',
             address='http://localhost:1234/',
             period=60
+        )
+        mock_notification_update.assert_called_once_with(**args)
+
+    def test_resource_handle_update_no_period(self):
+        mock_notification_update = self.test_client.notifications.update
+        self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        self.test_resource.properties.data.pop('period')
+
+        prop_diff = {notification.MonascaNotification.ADDRESS:
+                     'abc@def.com',
+                     notification.MonascaNotification.NAME: 'name-updated',
+                     notification.MonascaNotification.TYPE: 'email'}
+
+        self.test_resource.handle_update(json_snippet=None,
+                                         tmpl_diff=None,
+                                         prop_diff=prop_diff)
+
+        args = dict(
+            notification_id=self.test_resource.resource_id,
+            name='name-updated',
+            type='email',
+            address='abc@def.com'
         )
         mock_notification_update.assert_called_once_with(**args)
 
