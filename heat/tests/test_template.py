@@ -1116,11 +1116,11 @@ class TemplateTest(common.HeatTestCase):
 
         self.assertIn(error_msg, six.text_type(exc))
 
-        snippet = {'Fn::Or': ['cd1', True]}
+        snippet = {'Fn::Or': ['invalid_cd', True]}
         exc = self.assertRaises(ValueError,
                                 self.resolve_condition, snippet, tmpl)
         error_msg = ('The condition value should be boolean, '
-                     'after resolved the value is: cd1')
+                     'after resolved the value is: invalid_cd')
         self.assertIn(error_msg, six.text_type(exc))
 
     def test_join(self):
