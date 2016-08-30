@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from keystoneclient import exceptions as kc_exceptions
+from keystoneauth1 import exceptions as kc_exceptions
 import six
 
 from heat.common import exception

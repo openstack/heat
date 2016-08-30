@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import keystoneclient.exceptions as kc_exception
+import keystoneauth1.exceptions as kc_exception
 from oslo_log import log as logging
 
 from heat.common import exception

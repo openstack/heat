@@ -66,7 +66,7 @@ class Ec2TokenTest(common.HeatTestCase):
         cfg.CONF.set_default('auth_uri', None, group='ec2authtoken')
         cfg.CONF.set_default('auth_uri', 'http://192.0.2.9',
                              group='clients_keystone')
-        with mock.patch('keystoneclient.discover.Discover') as discover:
+        with mock.patch('keystoneauth1.discover.Discover') as discover:
             class MockDiscover(object):
                 def url_for(self, endpoint):
                     return 'http://192.0.2.9/v3/'
