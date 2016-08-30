@@ -13,15 +13,18 @@
 
 import argparse
 import re
-
-import six
 import sys
 
+from oslo_log import log
+import six
+
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import constraints
 from heat.engine import resources
 from heat.engine import support
 
+LOG = log.getLogger(__name__)
 
 class HeatCustomGuidelines(object):
 
@@ -149,7 +152,12 @@ class HeatCustomGuidelines(object):
 
     def check_trailing_spaces(self):
         for cls in self.resources_classes:
-            cls_file = open(cls.__module__.replace('.', '/') + '.py')
+            try:
+                cls_file = open(cls.__module__.replace('.', '/') + '.py')
+            except IOError as ex:
+                LOG.warning(_LW('Cannot perform trailing spaces check on '
+                                'resource module: %s') % six.text_type(ex))
+                continue
             lines = [line.strip() for line in cls_file.readlines()]
             idx = 0
             kwargs = {'path': cls.__module__}
