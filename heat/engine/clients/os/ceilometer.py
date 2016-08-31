@@ -40,7 +40,8 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
             'cacert': self._get_client_option('ceilometer', 'ca_file'),
             'cert_file': self._get_client_option('ceilometer', 'cert_file'),
             'key_file': self._get_client_option('ceilometer', 'key_file'),
-            'insecure': self._get_client_option('ceilometer', 'insecure')
+            'insecure': self._get_client_option('ceilometer', 'insecure'),
+            'aodh_endpoint': endpoint
         }
 
         return cc.get_client('2', **args)

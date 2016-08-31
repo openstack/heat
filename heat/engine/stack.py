@@ -190,6 +190,10 @@ class Stack(collections.Mapping):
             self.context = self.stored_context()
             self.context.roles = self.context.clients.client(
                 'keystone').auth_ref.role_names
+            self.context.user_domain = self.context.clients.client(
+                'keystone').auth_ref.user_domain_id
+            self.context.project_domain = self.context.clients.client(
+                'keystone').auth_ref.project_domain_id
 
         self.clients = self.context.clients
 

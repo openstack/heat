@@ -99,7 +99,8 @@ class FakeKeystoneClient(object):
     def __init__(self, username='test_username', password='password',
                  user_id='1234', access='4567', secret='8901',
                  credential_id='abcdxyz', auth_token='abcd1234',
-                 context=None, stack_domain_id='4321', roles=None):
+                 context=None, stack_domain_id='4321', roles=None,
+                 user_domain_id=None, project_domain_id=None):
         self.username = username
         self.password = password
         self.user_id = user_id
@@ -112,6 +113,8 @@ class FakeKeystoneClient(object):
         self.v3_endpoint = 'http://localhost:5000/v3'
         self.stack_domain_id = stack_domain_id
         self.roles = roles or []
+        self.user_domain_id = user_domain_id
+        self.project_domain_id = project_domain_id
 
         class FakeCred(object):
             id = self.credential_id
@@ -199,16 +202,28 @@ class FakeKeystoneClient(object):
 
     @property
     def auth_ref(self):
-        return FakeAccessInfo(roles=self.roles)
+        return FakeAccessInfo(roles=self.roles,
+                              user_domain=self.user_domain_id,
+                              project_domain=self.project_domain_id)
 
 
 class FakeAccessInfo(object):
-    def __init__(self, roles):
+    def __init__(self, roles, user_domain, project_domain):
         self.roles = roles
+        self.user_domain = user_domain
+        self.project_domain = project_domain
 
     @property
     def role_names(self):
         return self.roles
+
+    @property
+    def user_domain_id(self):
+        return self.user_domain
+
+    @property
+    def project_domain_id(self):
+        return self.project_domain
 
 
 class FakeEventSink(object):
