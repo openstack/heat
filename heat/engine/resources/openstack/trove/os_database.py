@@ -193,9 +193,9 @@ class OSDBInstance(resource.Resource):
                         required=True,
                         constraints=[
                             constraints.Length(max=64),
-                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
-                                                       r'[a-zA-Z0-9_@?#\s]*'
-                                                       r'[a-zA-Z0-9_]+'),
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_\-]+'
+                                                       r'[a-zA-Z0-9_@?#\s\-]*'
+                                                       r'[a-zA-Z0-9_\-]+'),
                         ]
                     ),
                 },

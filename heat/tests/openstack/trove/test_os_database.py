@@ -469,6 +469,19 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.assertRaises(exception.StackValidationFailed, instance.validate)
         self.m.VerifyAll()
 
+    def test_osdatabase_prop_validation_db_name_hyphens(self):
+        t = template_format.parse(db_template)
+        t['Resources']['MySqlCloudDB']['Properties']['databases'] = [
+            {"name": "-foo-bar-"}]
+        t['Resources']['MySqlCloudDB']['Properties']['users'] = [
+            {"name": "testuser",
+             "password": "pass",
+             "databases": ["-foo-bar-"]}]
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_validate(instance)
+        self.assertIsNone(instance.validate())
+        self.m.VerifyAll()
+
     def test_osdatabase_prop_validation_users_none(self):
         t = template_format.parse(db_template)
         t['Resources']['MySqlCloudDB']['Properties']['users'] = []
