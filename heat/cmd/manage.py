@@ -148,6 +148,11 @@ def do_crypt_parameters_and_properties():
             ctxt, prev_encryption_key, CONF.command.verbose_update_params)
 
 
+def do_properties_data_migrate():
+    ctxt = context.get_admin_context()
+    db_api.db_properties_data_migrate(ctxt)
+
+
 def add_command_parsers(subparsers):
     # db_version parser
     parser = subparsers.add_parser('db_version')
@@ -214,6 +219,10 @@ def add_command_parsers(subparsers):
     parser.set_defaults(func=do_reset_stack_status)
     parser.add_argument('stack_id',
                         help=_('Stack id'))
+
+    # migrate properties_data parser
+    parser = subparsers.add_parser('migrate_properties_data')
+    parser.set_defaults(func=do_properties_data_migrate)
 
     ServiceManageCommand.add_service_parsers(subparsers)
 

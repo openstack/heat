@@ -1439,9 +1439,11 @@ def create_resource_prop_data(ctx, **kwargs):
     return db_api.resource_prop_data_create(ctx, **values)
 
 
-def create_event(ctx, **kwargs):
-    rpd = db_api.resource_prop_data_create(ctx, {'data': {'name': 'foo'},
-                                                 'encrypted': False})
+def create_event(ctx, legacy_prop_data=False, **kwargs):
+    if not legacy_prop_data:
+        rpd = db_api.resource_prop_data_create(ctx,
+                                               {'data': {'foo2': 'ev_bar'},
+                                                'encrypted': False})
     values = {
         'stack_id': 'test_stack_id',
         'resource_action': 'create',
@@ -1449,8 +1451,11 @@ def create_event(ctx, **kwargs):
         'resource_name': 'res',
         'physical_resource_id': UUID1,
         'resource_status_reason': "create_complete",
-        'rsrc_prop_data': rpd,
     }
+    if not legacy_prop_data:
+        values['rsrc_prop_data'] = rpd
+    else:
+        values['resource_properties'] = {'foo2': 'ev_bar'}
     values.update(kwargs)
     return db_api.event_create(ctx, values)
 
@@ -2721,7 +2726,7 @@ class DBAPIEventTest(common.HeatTestCase):
         self.assertEqual('res', ret_event.resource_name)
         self.assertEqual(UUID1, ret_event.physical_resource_id)
         self.assertEqual('create_complete', ret_event.resource_status_reason)
-        self.assertEqual({'name': 'foo'}, ret_event.rsrc_prop_data.data)
+        self.assertEqual({'foo2': 'ev_bar'}, ret_event.rsrc_prop_data.data)
 
     def test_event_get_all(self):
         self.stack1 = create_stack(self.ctx, self.template, self.user_creds,
@@ -3292,6 +3297,86 @@ class DBAPISyncPointTest(common.HeatTestCase):
                                   stack_id=self.stack.id,
                                   traversal_id=self.stack.current_traversal)
             self.assertEqual(len(self.resources) * 4, add.call_count)
+
+
+class DBAPIMigratePropertiesDataTest(common.HeatTestCase):
+    def setUp(self):
+        super(DBAPIMigratePropertiesDataTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        templ = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, templ, user_creds)
+        stack2 = create_stack(self.ctx, templ, user_creds)
+        create_resource(self.ctx, stack, True, name='res1')
+        create_resource(self.ctx, stack2, True, name='res2')
+        create_event(self.ctx, True)
+        create_event(self.ctx, True)
+
+    def _test_migrate_resource(self, batch_size=50):
+        resources = self.ctx.session.query(models.Resource).all()
+        self.assertEqual(2, len(resources))
+        for resource in resources:
+            self.assertEqual('bar1', resource.properties_data['foo1'])
+
+        db_api.db_properties_data_migrate(self.ctx, batch_size=batch_size)
+        for resource in resources:
+            self.assertEqual('bar1', resource.rsrc_prop_data.data['foo1'])
+            self.assertFalse(resource.rsrc_prop_data.encrypted)
+            self.assertIsNone(resource.properties_data)
+            self.assertIsNone(resource.properties_data_encrypted)
+
+    def _test_migrate_event(self, batch_size=50):
+        events = self.ctx.session.query(models.Event).all()
+        self.assertEqual(2, len(events))
+        for event in events:
+            self.assertEqual('ev_bar', event.resource_properties['foo2'])
+
+        db_api.db_properties_data_migrate(self.ctx, batch_size=batch_size)
+        self.ctx.session.expire_all()
+        events = self.ctx.session.query(models.Event).all()
+        for event in events:
+            self.assertEqual('ev_bar', event.rsrc_prop_data.data['foo2'])
+            self.assertFalse(event.rsrc_prop_data.encrypted)
+            self.assertIsNone(event.resource_properties)
+
+    def test_migrate_event(self):
+        self._test_migrate_event()
+
+    def test_migrate_event_in_batches(self):
+        self._test_migrate_event(batch_size=1)
+
+    def test_migrate_resource(self):
+        self._test_migrate_resource()
+
+    def test_migrate_resource_in_batches(self):
+        self._test_migrate_resource(batch_size=1)
+
+    def test_migrate_encrypted_resource(self):
+        resources = self.ctx.session.query(models.Resource).all()
+        db_api.db_encrypt_parameters_and_properties(
+            self.ctx, 'i have a key for you if you want')
+
+        encrypted_data_pre_migration = resources[0].properties_data['foo1'][1]
+        db_api.db_properties_data_migrate(self.ctx)
+        resources = self.ctx.session.query(models.Resource).all()
+
+        self.assertTrue(resources[0].rsrc_prop_data.encrypted)
+        self.assertIsNone(resources[0].properties_data)
+        self.assertIsNone(resources[0].properties_data_encrypted)
+        self.assertEqual('cryptography_decrypt_v1',
+                         resources[0].rsrc_prop_data.data['foo1'][0])
+        self.assertEqual(encrypted_data_pre_migration,
+                         resources[0].rsrc_prop_data.data['foo1'][1])
+
+        db_api.db_decrypt_parameters_and_properties(
+            self.ctx, 'i have a key for you if you want')
+        self.ctx.session.expire_all()
+        resources = self.ctx.session.query(models.Resource).all()
+
+        self.assertEqual('bar1', resources[0].rsrc_prop_data.data['foo1'])
+        self.assertFalse(resources[0].rsrc_prop_data.encrypted)
+        self.assertIsNone(resources[0].properties_data)
+        self.assertIsNone(resources[0].properties_data_encrypted)
 
 
 class DBAPICryptParamsPropsTest(common.HeatTestCase):
