@@ -27,7 +27,7 @@
 
 import base64
 
-from Crypto.Hash import HMAC
+from Crypto import Hash
 from Crypto import Random
 from oslo_utils import importutils
 import six
@@ -82,7 +82,7 @@ class HKDF(object):
         if salt is None:
             salt = b'\x00' * self.hashfn.digest_size
 
-        return HMAC.new(salt, ikm, self.hashfn).digest()
+        return Hash.HMAC.new(salt, ikm, self.hashfn).digest()
 
     def expand(self, prk, info, length):
         """An expand function that will return arbitrary length output that can
@@ -101,7 +101,8 @@ class HKDF(object):
         okm = b""
         tmp = b""
         for block in range(1, N + 1):
-            tmp = HMAC.new(prk, tmp + info + bchr(block), self.hashfn).digest()
+            tmp = Hash.HMAC.new(
+                prk, tmp + info + bchr(block), self.hashfn).digest()
             okm += tmp
 
         return okm[:length]
@@ -190,7 +191,7 @@ class SymmetricCrypto(object):
 
         :returns out: a base64 encoded signature.
         """
-        h = HMAC.new(key, msg, self.hashfn)
+        h = Hash.HMAC.new(key, msg, self.hashfn)
         out = h.digest()
         if b64encode:
             out = base64.b64encode(out)

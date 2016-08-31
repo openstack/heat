@@ -21,8 +21,8 @@ from heat.engine import environment
 from heat.engine.resources.aws.cfn.wait_condition_handle import (
     WaitConditionHandle)
 from heat.engine.resources.aws.ec2 import instance
-from heat.engine.resources.openstack.nova.server import Server
-from heat.engine.scheduler import TaskRunner
+from heat.engine.resources.openstack.nova import server
+from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack as stk
 from heat.engine import template as tmpl
@@ -215,7 +215,7 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
     @mock.patch.object(instance.Instance, 'is_service_available')
-    @mock.patch.object(TaskRunner, '_sleep')
+    @mock.patch.object(scheduler.TaskRunner, '_sleep')
     @mock.patch.object(WaitConditionHandle, 'identifier')
     def test_wait_metadata(self, mock_identifier, mock_sleep, mock_available,
                            mock_check, mock_handle, *args):
@@ -295,9 +295,9 @@ class MetadataRefreshServerTest(common.HeatTestCase):
                        return_value=1)
     @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
                        return_value=1)
-    @mock.patch.object(Server, 'handle_create')
-    @mock.patch.object(Server, 'check_create_complete')
-    @mock.patch.object(Server, 'FnGetAtt')
+    @mock.patch.object(server.Server, 'handle_create')
+    @mock.patch.object(server.Server, 'check_create_complete')
+    @mock.patch.object(server.Server, 'FnGetAtt')
     def test_FnGetAtt_metadata_update(self, mock_get, mock_check,
                                       mock_handle, *args):
         temp = template_format.parse(TEST_TEMPLATE_SERVER)
