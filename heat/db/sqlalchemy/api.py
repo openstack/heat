@@ -17,7 +17,7 @@ import sys
 
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
-from oslo_db.sqlalchemy import session as db_session
+from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -49,21 +49,31 @@ CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_group('profiler', 'heat.common.config')
 
 _facade = None
+db_context = enginefacade.transaction_context()
 
 LOG = logging.getLogger(__name__)
 
 
+# TODO(sbaker): fix tests so that sqlite_fk=True can be passed to configure
+db_context.configure()
+
+
 def get_facade():
     global _facade
+    if _facade is None:
 
-    if not _facade:
-        _facade = db_session.EngineFacade.from_config(CONF)
+        # FIXME: get_facade() is called by the test suite startup,
+        # but will not be called normally for API calls.
+        # osprofiler / oslo_db / enginefacade currently don't have hooks
+        # to talk to each other, however one needs to be added to oslo.db
+        # to allow access to the Engine once constructed.
+        db_context.configure(**CONF.database)
         if CONF.profiler.enabled:
             if CONF.profiler.trace_sqlalchemy:
                 osprofiler.sqlalchemy.add_tracing(sqlalchemy,
                                                   _facade.get_engine(),
                                                   "db")
-
+        _facade = db_context.get_legacy_facade()
     return _facade
 
 
@@ -659,8 +669,7 @@ def stack_delete(context, stack_id):
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
                            retry_interval=0.5, inc_retry_interval=True)
 def stack_lock_create(context, stack_id, engine_id):
-    session = get_session()
-    with session.begin():
+    with db_context.writer.independent.using(context) as session:
         lock = session.query(models.StackLock).get(stack_id)
         if lock is not None:
             return lock.engine_id
@@ -668,8 +677,7 @@ def stack_lock_create(context, stack_id, engine_id):
 
 
 def stack_lock_get_engine_id(context, stack_id):
-    session = get_session()
-    with session.begin():
+    with db_context.reader.independent.using(context) as session:
         lock = session.query(models.StackLock).get(stack_id)
         if lock is not None:
             return lock.engine_id
@@ -692,8 +700,7 @@ def persist_state_and_release_lock(context, stack_id, engine_id, values):
 
 
 def stack_lock_steal(context, stack_id, old_engine_id, new_engine_id):
-    session = get_session()
-    with session.begin():
+    with db_context.writer.independent.using(context) as session:
         lock = session.query(models.StackLock).get(stack_id)
         rows_affected = session.query(
             models.StackLock
@@ -704,8 +711,7 @@ def stack_lock_steal(context, stack_id, old_engine_id, new_engine_id):
 
 
 def stack_lock_release(context, stack_id, engine_id):
-    session = get_session()
-    with session.begin():
+    with db_context.writer.independent.using(context) as session:
         rows_affected = session.query(
             models.StackLock
         ).filter_by(stack_id=stack_id, engine_id=engine_id).delete()
@@ -1354,8 +1360,7 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
     :return: list of exceptions encountered during encryption
     """
     from heat.engine import template
-    session = get_session()
-    with session.begin():
+    with db_context.writer.independent.using(ctxt) as session:
         query = session.query(models.RawTemplate)
         excs = []
         for raw_template in _get_batch(
@@ -1455,9 +1460,8 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
                     resource begins or ends
     :return: list of exceptions encountered during decryption
     """
-    session = get_session()
     excs = []
-    with session.begin():
+    with db_context.writer.independent.using(ctxt) as session:
         query = session.query(models.RawTemplate)
         for raw_template in _get_batch(
                 session=session, ctxt=ctxt, query=query,
