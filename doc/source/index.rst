@@ -84,7 +84,7 @@ API Documentation
 
 -  `Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`_
 
-   .. _`Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`: http://api.openstack.org/api-ref-orchestration-v1.html
+   .. _`Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`: http://developer.openstack.org/api-ref/orchestration/v1/
 
 
 Code Documentation
