@@ -22,6 +22,7 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils as heat_timeutils
+from heat.db.sqlalchemy import models
 from heat.engine import api
 from heat.engine import event
 from heat.engine import parameters
@@ -42,7 +43,8 @@ class FormatTest(common.HeatTestCase):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
-                'generic1': {'Type': 'GenericResourceType'},
+                'generic1': {'Type': 'GenericResourceType',
+                             'Properties': {'k1': 'v1'}},
                 'generic2': {
                     'Type': 'GenericResourceType',
                     'DependsOn': 'generic1'},
@@ -54,12 +56,12 @@ class FormatTest(common.HeatTestCase):
         self.stack = parser.Stack(self.context, 'test_stack',
                                   tmpl, stack_id=str(uuid.uuid4()))
 
-    def _dummy_event(self):
+    def _dummy_event(self, res_properties=None):
         resource = self.stack['generic1']
         ev = event.Event(self.context, self.stack, 'CREATE',
                          'COMPLETE', 'state changed',
                          'z3455xyc-9f88-404d-a85b-5315293e67de',
-                         resource.properties, resource.name, resource.type(),
+                         res_properties, resource.name, resource.type(),
                          uuid='abc123yc-9f88-404d-a85b-531529456xyz')
         event_id = ev.store()
         return event_object.Event.get_by_id(self.context, event_id)
@@ -311,6 +313,31 @@ class FormatTest(common.HeatTestCase):
             'stack_name': 'test_stack',
             'tenant': 'test_tenant_id'
         }, event_id_formatted)
+
+    def test_format_event_prop_data(self):
+        resource = self.stack['generic1']
+        resource._update_stored_properties()
+        resource._store()
+        event = self._dummy_event(res_properties=resource._rsrc_prop_data)
+        formatted = api.format_event(event, self.stack.identifier())
+        self.assertEqual({'k1': 'v1'}, formatted[rpc_api.EVENT_RES_PROPERTIES])
+
+    def test_format_event_legacy_prop_data(self):
+        event = self._dummy_event(res_properties=None)
+        # legacy location
+        db_obj = self.stack.context.session.query(
+            models.Event).filter_by(id=event.id).first()
+        db_obj.update({'resource_properties': {'legacy_k1': 'legacy_v1'}})
+        db_obj.save(self.stack.context.session)
+        event_legacy = event_object.Event.get_by_id(self.context, event.id)
+        formatted = api.format_event(event_legacy, self.stack.identifier())
+        self.assertEqual({'legacy_k1': 'legacy_v1'},
+                         formatted[rpc_api.EVENT_RES_PROPERTIES])
+
+    def test_format_event_empty_prop_data(self):
+        event = self._dummy_event(res_properties=None)
+        formatted = api.format_event(event, self.stack.identifier())
+        self.assertEqual({}, formatted[rpc_api.EVENT_RES_PROPERTIES])
 
     @mock.patch.object(api, 'format_stack_resource')
     def test_format_stack_preview(self, mock_fmt_resource):

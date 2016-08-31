@@ -919,16 +919,35 @@ def _delete_event_rows(context, stack_id, limit):
     # So we must manually supply the IN() values.
     # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
     # confirmed via integration tests.
+    query = _query_all_by_stack(context, stack_id)
     session = context.session
-    res = session.query(models.Event.id).filter_by(
-        stack_id=stack_id).order_by(models.Event.id).limit(limit).all()
-    if not res:
+    id_pairs = [(e.id, e.rsrc_prop_data_id) for e in query.order_by(
+        models.Event.id).limit(limit).all()]
+    if id_pairs is None:
         return 0
-    (max_id, ) = res[-1]
-    return session.query(models.Event).filter(
+    (ids, rsrc_prop_ids) = zip(*id_pairs)
+    max_id = ids[-1]
+    # delete the events
+    retval = session.query(models.Event.id).filter(
         models.Event.id <= max_id).filter(
             models.Event.stack_id == stack_id).delete(
                 synchronize_session=False)
+
+    # delete unreferenced resource_properties_data
+    rsrc_prop_ids = set(rsrc_prop_ids)
+    if rsrc_prop_ids:
+        still_ref_ids_from_events = [e.rsrc_prop_data_id for e
+                                     in _query_all_by_stack(
+                                         context, stack_id).all()]
+        still_ref_ids_from_rsrcs = [r.rsrc_prop_data_id for r
+                                    in context.session.query(models.Resource).
+                                    filter_by(stack_id=stack_id).all()]
+        rsrc_prop_ids = rsrc_prop_ids - set(still_ref_ids_from_events) \
+            - set(still_ref_ids_from_rsrcs)
+        q_rpd = session.query(models.ResourcePropertiesData.id).filter(
+            models.ResourcePropertiesData.id.in_(rsrc_prop_ids))
+        q_rpd.delete(synchronize_session=False)
+    return retval
 
 
 def event_create(context, values):
@@ -1275,6 +1294,8 @@ def _purge_stacks(stack_infos, engine, meta):
     stack_tag = sqlalchemy.Table('stack_tag', meta, autoload=True)
     resource = sqlalchemy.Table('resource', meta, autoload=True)
     resource_data = sqlalchemy.Table('resource_data', meta, autoload=True)
+    resource_properties_data = sqlalchemy.Table(
+        'resource_properties_data', meta, autoload=True)
     event = sqlalchemy.Table('event', meta, autoload=True)
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
     raw_template_files = sqlalchemy.Table('raw_template_files', meta,
@@ -1285,6 +1306,9 @@ def _purge_stacks(stack_infos, engine, meta):
     stack_info_str = ','.join([str(i) for i in stack_infos])
     LOG.info("Purging stacks %s" % stack_info_str)
 
+    # TODO(cwolfe): find a way to make this re-entrant with
+    # reasonably sized transactions (good luck), or add
+    # a cleanup for orphaned rows.
     stack_ids = [stack_info[0] for stack_info in stack_infos]
     # delete stack locks (just in case some got stuck)
     stack_lock_del = stack_lock.delete().where(
@@ -1300,68 +1324,94 @@ def _purge_stacks(stack_infos, engine, meta):
     res_data_del = resource_data.delete().where(
         resource_data.c.resource_id.in_(res_where))
     engine.execute(res_data_del)
-    # delete resources (normally there shouldn't be any)
-    res_del = resource.delete().where(resource.c.stack_id.in_(stack_ids))
-    engine.execute(res_del)
-    # delete events
-    event_del = event.delete().where(event.c.stack_id.in_(stack_ids))
-    engine.execute(event_del)
     # clean up any sync_points that may have lingered
     sync_del = syncpoint.delete().where(
         syncpoint.c.stack_id.in_(stack_ids))
     engine.execute(sync_del)
 
-    conn = engine.connect()
-    with conn.begin():  # these deletes in a transaction
-        # delete the stacks
-        stack_del = stack.delete().where(stack.c.id.in_(stack_ids))
-        conn.execute(stack_del)
-        # delete orphaned raw templates
-        raw_template_ids = [i[1] for i in stack_infos if i[1] is not None]
-        raw_template_ids.extend(i[2] for i in stack_infos if i[2] is not None)
-        if raw_template_ids:  # keep those still referenced
-            raw_tmpl_sel = sqlalchemy.select([stack.c.raw_template_id]).where(
-                stack.c.raw_template_id.in_(raw_template_ids))
-            raw_tmpl = [i[0] for i in conn.execute(raw_tmpl_sel)]
-            raw_template_ids = set(raw_template_ids) - set(raw_tmpl)
-        if raw_template_ids:  # keep those still referenced (previous tmpl)
-            raw_tmpl_sel = sqlalchemy.select(
-                [stack.c.prev_raw_template_id]).where(
-                stack.c.prev_raw_template_id.in_(raw_template_ids))
-            raw_tmpl = [i[0] for i in conn.execute(raw_tmpl_sel)]
-            raw_template_ids = raw_template_ids - set(raw_tmpl)
-        if raw_template_ids:  # delete raw_templates if we have any
+    # get rsrc_prop_data_ids to delete
+    rsrc_prop_data_where = sqlalchemy.select(
+        [resource.c.rsrc_prop_data_id]).where(
+            resource.c.stack_id.in_(stack_ids))
+    rsrc_prop_data_ids = set(
+        [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
+    rsrc_prop_data_where = sqlalchemy.select(
+        [event.c.rsrc_prop_data_id]).where(
+            event.c.stack_id.in_(stack_ids))
+    rsrc_prop_data_ids.update(
+        [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
+    # delete events
+    event_del = event.delete().where(event.c.stack_id.in_(stack_ids))
+    engine.execute(event_del)
+    # delete resources (normally there shouldn't be any)
+    res_del = resource.delete().where(resource.c.stack_id.in_(stack_ids))
+    engine.execute(res_del)
+    # delete resource_properties_data
+    if rsrc_prop_data_ids:  # keep rpd's in events
+        rsrc_prop_data_where = sqlalchemy.select(
+            [event.c.rsrc_prop_data_id]).where(
+                event.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
+        ids = list(engine.execute(rsrc_prop_data_where))
+        rsrc_prop_data_ids.difference_update([i[0] for i in ids])
+    if rsrc_prop_data_ids:  # keep rpd's in resources
+        rsrc_prop_data_where = sqlalchemy.select(
+            [resource.c.rsrc_prop_data_id]).where(
+                resource.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
+        ids = list(engine.execute(rsrc_prop_data_where))
+        rsrc_prop_data_ids.difference_update([i[0] for i in ids])
+    if rsrc_prop_data_ids:  # delete if we have any
+        rsrc_prop_data_del = resource_properties_data.delete().where(
+            resource_properties_data.c.id.in_(rsrc_prop_data_ids))
+        engine.execute(rsrc_prop_data_del)
+    # delete the stacks
+    stack_del = stack.delete().where(stack.c.id.in_(stack_ids))
+    engine.execute(stack_del)
+    # delete orphaned raw templates
+    raw_template_ids = [i[1] for i in stack_infos if i[1] is not None]
+    raw_template_ids.extend(i[2] for i in stack_infos if i[2] is not None)
+    if raw_template_ids:  # keep those still referenced
+        raw_tmpl_sel = sqlalchemy.select([stack.c.raw_template_id]).where(
+            stack.c.raw_template_id.in_(raw_template_ids))
+        raw_tmpl = [i[0] for i in engine.execute(raw_tmpl_sel)]
+        raw_template_ids = set(raw_template_ids) - set(raw_tmpl)
+    if raw_template_ids:  # keep those still referenced (previous tmpl)
+        raw_tmpl_sel = sqlalchemy.select(
+            [stack.c.prev_raw_template_id]).where(
+            stack.c.prev_raw_template_id.in_(raw_template_ids))
+        raw_tmpl = [i[0] for i in engine.execute(raw_tmpl_sel)]
+        raw_template_ids = raw_template_ids - set(raw_tmpl)
+    if raw_template_ids:  # delete raw_templates if we have any
+        raw_tmpl_file_sel = sqlalchemy.select(
+            [raw_template.c.files_id]).where(
+                raw_template.c.id.in_(raw_template_ids))
+        raw_tmpl_file_ids = [i[0] for i in engine.execute(
+            raw_tmpl_file_sel)]
+        raw_templ_del = raw_template.delete().where(
+            raw_template.c.id.in_(raw_template_ids))
+        engine.execute(raw_templ_del)
+        if raw_tmpl_file_ids:  # keep _files still referenced
             raw_tmpl_file_sel = sqlalchemy.select(
                 [raw_template.c.files_id]).where(
-                    raw_template.c.id.in_(raw_template_ids))
-            raw_tmpl_file_ids = [i[0] for i in conn.execute(
+                    raw_template.c.files_id.in_(raw_tmpl_file_ids))
+            raw_tmpl_files = [i[0] for i in engine.execute(
                 raw_tmpl_file_sel)]
-            raw_templ_del = raw_template.delete().where(
-                raw_template.c.id.in_(raw_template_ids))
-            conn.execute(raw_templ_del)
-            if raw_tmpl_file_ids:  # keep _files still referenced
-                raw_tmpl_file_sel = sqlalchemy.select(
-                    [raw_template.c.files_id]).where(
-                        raw_template.c.files_id.in_(raw_tmpl_file_ids))
-                raw_tmpl_files = [i[0] for i in conn.execute(
-                    raw_tmpl_file_sel)]
-                raw_tmpl_file_ids = set(raw_tmpl_file_ids) \
-                    - set(raw_tmpl_files)
-            if raw_tmpl_file_ids:  # delete _files if we have any
-                raw_tmpl_file_del = raw_template_files.delete().where(
-                    raw_template_files.c.id.in_(raw_tmpl_file_ids))
-                conn.execute(raw_tmpl_file_del)
-        # purge any user creds that are no longer referenced
-        user_creds_ids = [i[3] for i in stack_infos if i[3] is not None]
-        if user_creds_ids:  # keep those still referenced
-            user_sel = sqlalchemy.select([stack.c.user_creds_id]).where(
-                stack.c.user_creds_id.in_(user_creds_ids))
-            users = [i[0] for i in conn.execute(user_sel)]
-            user_creds_ids = set(user_creds_ids) - set(users)
-        if user_creds_ids:  # delete if we have any
-            usr_creds_del = user_creds.delete().where(
-                user_creds.c.id.in_(user_creds_ids))
-            conn.execute(usr_creds_del)
+            raw_tmpl_file_ids = set(raw_tmpl_file_ids) \
+                - set(raw_tmpl_files)
+        if raw_tmpl_file_ids:  # delete _files if we have any
+            raw_tmpl_file_del = raw_template_files.delete().where(
+                raw_template_files.c.id.in_(raw_tmpl_file_ids))
+            engine.execute(raw_tmpl_file_del)
+    # purge any user creds that are no longer referenced
+    user_creds_ids = [i[3] for i in stack_infos if i[3] is not None]
+    if user_creds_ids:  # keep those still referenced
+        user_sel = sqlalchemy.select([stack.c.user_creds_id]).where(
+            stack.c.user_creds_id.in_(user_creds_ids))
+        users = [i[0] for i in engine.execute(user_sel)]
+        user_creds_ids = set(user_creds_ids) - set(users)
+    if user_creds_ids:  # delete if we have any
+        usr_creds_del = user_creds.delete().where(
+            user_creds.c.id.in_(user_creds_ids))
+        engine.execute(usr_creds_del)
 
 
 def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
@@ -1414,15 +1464,16 @@ def db_version(engine):
     return migration.db_version(engine)
 
 
+def _crypt_action(encrypt):
+    if encrypt:
+        return _('encrypt')
+    return _('decrypt')
+
+
 def _db_encrypt_or_decrypt_template_params(
         ctxt, encryption_key, encrypt=False, batch_size=50, verbose=False):
     from heat.engine import template
     session = ctxt.session
-    if encrypt:
-        crypt_action = _('encrypt')
-    else:
-        crypt_action = _('decrypt')
-
     excs = []
     query = session.query(models.RawTemplate)
     template_batches = _get_batch(
@@ -1483,10 +1534,10 @@ def _db_encrypt_or_decrypt_template_params(
                         raw_template_update(ctxt, raw_template.id,
                                             {'environment': newenv})
                 except Exception as exc:
-                    LOG.exception(
-                        _LE('Failed to %(crypt_action)s parameters of raw '
-                            'template %(id)d'), {'id': raw_template.id,
-                                                 'crypt_action': crypt_action})
+                    LOG.exception(_LE('Failed to %(crypt_action)s parameters '
+                                      'of raw template %(id)d'),
+                                  {'id': raw_template.id,
+                                   'crypt_action': _crypt_action(encrypt)})
                     excs.append(exc)
                     continue
                 finally:
@@ -1494,19 +1545,16 @@ def _db_encrypt_or_decrypt_template_params(
                         LOG.info(_LI("Finished %(crypt_action)s processing of "
                                      "raw_template %(id)d."),
                                  {'id': raw_template.id,
-                                  'crypt_action': crypt_action})
+                                  'crypt_action': _crypt_action(encrypt)})
         next_batch = list(itertools.islice(template_batches, batch_size))
     return excs
 
 
-def _db_encrypt_or_decrypt_resource_prop_data(
+def _db_encrypt_or_decrypt_resource_prop_data_legacy(
         ctxt, encryption_key, encrypt=False, batch_size=50, verbose=False):
     session = ctxt.session
     excs = []
-    if encrypt:
-        crypt_action = _('encrypt')
-    else:
-        crypt_action = _('decrypt')
+
     # Older resources may have properties_data in the legacy column,
     # so update those as needed
     query = session.query(models.Resource).filter(
@@ -1538,7 +1586,7 @@ def _db_encrypt_or_decrypt_resource_prop_data(
                     LOG.exception(_LE('Failed to %(crypt_action)s '
                                       'properties_data of resource %(id)d') %
                                   {'id': resource.id,
-                                   'crypt_action': crypt_action})
+                                   'crypt_action': _crypt_action(encrypt)})
                     excs.append(exc)
                     continue
                 finally:
@@ -1546,6 +1594,53 @@ def _db_encrypt_or_decrypt_resource_prop_data(
                         LOG.info(_LI("Finished processing resource "
                                      "%(id)d."), {'id': resource.id})
         next_batch = list(itertools.islice(resource_batches, batch_size))
+    return excs
+
+
+def _db_encrypt_or_decrypt_resource_prop_data(
+        ctxt, encryption_key, encrypt=False, batch_size=50, verbose=False):
+    session = ctxt.session
+    excs = []
+
+    # Older resources may have properties_data in the legacy column,
+    # so update those as needed
+    query = session.query(models.ResourcePropertiesData).filter(
+        models.ResourcePropertiesData.encrypted.isnot(encrypt))
+    rpd_batches = _get_batch(
+        session=session, ctxt=ctxt, query=query,
+        model=models.ResourcePropertiesData, batch_size=batch_size)
+    next_batch = list(itertools.islice(rpd_batches, batch_size))
+    while next_batch:
+        with session.begin(subtransactions=True):
+            for rpd in next_batch:
+                if not rpd.data:
+                    continue
+                try:
+                    if verbose:
+                        LOG.info(_LI("Processing resource_properties_data "
+                                     "%(id)d..."), {'id': rpd.id})
+                    if encrypt:
+                        result = crypt.encrypted_dict(rpd.data,
+                                                      encryption_key)
+                    else:
+                        result = crypt.decrypted_dict(rpd.data,
+                                                      encryption_key)
+                    rpd.update({'data': result,
+                                'encrypted': encrypt})
+                except Exception as exc:
+                    LOG.exception(
+                        _LE("Failed to %(crypt_action)s "
+                            "data of resource_properties_data %(id)d") %
+                        {'id': rpd.id,
+                         'crypt_action': _crypt_action(encrypt)})
+                    excs.append(exc)
+                    continue
+                finally:
+                    if verbose:
+                        LOG.info(
+                            _LI("Finished processing resource_properties_data"
+                                " %(id)d."), {'id': rpd.id})
+        next_batch = list(itertools.islice(rpd_batches, batch_size))
     return excs
 
 
@@ -1568,6 +1663,8 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
         ctxt, encryption_key, True, batch_size, verbose))
     excs.extend(_db_encrypt_or_decrypt_resource_prop_data(
         ctxt, encryption_key, True, batch_size, verbose))
+    excs.extend(_db_encrypt_or_decrypt_resource_prop_data_legacy(
+        ctxt, encryption_key, True, batch_size, verbose))
     return excs
 
 
@@ -1589,6 +1686,8 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
     excs.extend(_db_encrypt_or_decrypt_template_params(
         ctxt, encryption_key, False, batch_size, verbose))
     excs.extend(_db_encrypt_or_decrypt_resource_prop_data(
+        ctxt, encryption_key, False, batch_size, verbose))
+    excs.extend(_db_encrypt_or_decrypt_resource_prop_data_legacy(
         ctxt, encryption_key, False, batch_size, verbose))
     return excs
 

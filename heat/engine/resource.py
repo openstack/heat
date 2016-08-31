@@ -44,6 +44,7 @@ from heat.engine import scheduler
 from heat.engine import support
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
+from heat.objects import resource_properties_data as rpd_objects
 from heat.objects import stack as stack_objects
 from heat.rpc import client as rpc_client
 
@@ -249,6 +250,7 @@ class Resource(object):
         self.uuid = None
         self._data = None
         self._rsrc_metadata = None
+        self._rsrc_prop_data = None
         self._stored_properties_data = None
         self.created_time = stack.created_time
         self.updated_time = stack.updated_time
@@ -291,6 +293,7 @@ class Resource(object):
             self._data = {}
         self._rsrc_metadata = resource.rsrc_metadata
         self._stored_properties_data = resource.properties_data
+        self._rsrc_prop_data = resource.rsrc_prop_data
         self.created_time = resource.created_at
         self.updated_time = resource.updated_at
         self.needed_by = resource.needed_by
@@ -350,7 +353,7 @@ class Resource(object):
         # Don't set physical_resource_id so that a create is triggered.
         rs = {'stack_id': self.stack.id,
               'name': self.name,
-              'properties_data': self._stored_properties_data,
+              'rsrc_prop_data_id': self._create_or_replace_rsrc_prop_data(),
               'needed_by': self.needed_by,
               'requires': self.requires,
               'replaces': self.id,
@@ -858,7 +861,10 @@ class Resource(object):
             yield self.action_handler_task(action, args=handler_args)
 
     def _update_stored_properties(self):
+        old_props = self._stored_properties_data
         self._stored_properties_data = function.resolve(self.properties.data)
+        if self._stored_properties_data != old_props:
+            self._rsrc_prop_data = None
 
     def preview(self):
         """Default implementation of Resource.preview.
@@ -1721,10 +1727,6 @@ class Resource(object):
 
     def _store(self, metadata=None):
         """Create the resource in the database."""
-
-        properties_data_encrypted, properties_data = (
-            resource_objects.Resource.encrypt_properties_data(
-                self._stored_properties_data))
         if not self.root_stack_id:
             self.root_stack_id = self.stack.root_stack_id()
         try:
@@ -1735,8 +1737,8 @@ class Resource(object):
                   'physical_resource_id': self.resource_id,
                   'name': self.name,
                   'rsrc_metadata': metadata,
-                  'properties_data': properties_data,
-                  'properties_data_encrypted': properties_data_encrypted,
+                  'rsrc_prop_data_id':
+                      self._create_or_replace_rsrc_prop_data(),
                   'needed_by': self.needed_by,
                   'requires': self.requires,
                   'replaces': self.replaces,
@@ -1744,7 +1746,6 @@ class Resource(object):
                   'current_template_id': self.current_template_id,
                   'stack_name': self.stack.name,
                   'root_stack_id': self.root_stack_id}
-
             new_rs = resource_objects.Resource.create(self.context, rs)
             self.id = new_rs.id
             self.uuid = new_rs.uuid
@@ -1757,7 +1758,7 @@ class Resource(object):
         """Add a state change event to the database."""
         physical_res_id = self.resource_id or self.physical_resource_name()
         ev = event.Event(self.context, self.stack, action, status, reason,
-                         physical_res_id, self.properties,
+                         physical_res_id, self._rsrc_prop_data,
                          self.name, self.type())
 
         ev.store()
@@ -1769,18 +1770,15 @@ class Resource(object):
         self.status = status
         self.status_reason = reason
 
-        properties_data_encrypted, properties_data = (
-            resource_objects.Resource.encrypt_properties_data(
-                self._stored_properties_data))
         data = {
             'action': self.action,
             'status': self.status,
             'status_reason': reason,
             'stack_id': self.stack.id,
             'updated_at': self.updated_time,
-            'properties_data': properties_data,
-            'properties_data_encrypted': properties_data_encrypted,
             'needed_by': self.needed_by,
+            'rsrc_prop_data_id': self._create_or_replace_rsrc_prop_data(),
+            'properties_data': None,
             'requires': self.requires,
             'replaces': self.replaces,
             'replaced_by': self.replaced_by,
@@ -2285,6 +2283,18 @@ class Resource(object):
             # force fetch all resource data from the database again
             self._data = None
             return True
+
+    def _create_or_replace_rsrc_prop_data(self):
+        if self._rsrc_prop_data is not None:
+            return self._rsrc_prop_data.id
+
+        if not self._stored_properties_data:
+            return None
+
+        self._rsrc_prop_data = \
+            rpd_objects.ResourcePropertiesData(self.context).create(
+                self.context, self._stored_properties_data)
+        return self._rsrc_prop_data.id
 
     def is_using_neutron(self):
         try:
