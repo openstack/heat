@@ -853,8 +853,7 @@ class Yaql(function.Function):
 
     def __init__(self, stack, fn_name, args):
         super(Yaql, self).__init__(stack, fn_name, args)
-        self.parser = self.get_yaql_parser()
-        self.context = yaql.create_context()
+        self._yaql_context = yaql.create_context()
 
         if not isinstance(self.args, collections.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map.') %
@@ -863,9 +862,8 @@ class Yaql(function.Function):
         try:
             self._expression = self.args['expression']
             self._data = self.args.get('data', {})
-            for arg in six.iterkeys(self.args):
-                if arg not in ['expression', 'data']:
-                    raise KeyError
+            if set(self.args) - set(['expression', 'data']):
+                raise KeyError
         except (KeyError, TypeError):
             example = ('''%s:
               expression: $.data.var1.sum()
@@ -873,37 +871,25 @@ class Yaql(function.Function):
                 var1: [3, 2, 1]''') % self.fn_name
             raise KeyError(_('"%(name)s" syntax should be %(example)s') % {
                 'name': self.fn_name, 'example': example})
-        self.validate_args()
 
-    def validate_expression(self, expression):
+        if not isinstance(self._expression, function.Function):
+            self._parse(self._expression)
+
+    def _parse(self, expression):
+        if not isinstance(expression, six.string_types):
+            raise TypeError(_('The "expression" argument to %s must '
+                              'contain a string.') % self.fn_name)
+
+        parse = self.get_yaql_parser()
         try:
-            self.parser(expression)
+            return parse(expression)
         except exceptions.YaqlException as yex:
             raise ValueError(_('Bad expression %s.') % yex)
 
-    def validate_args(self):
-        if not isinstance(self._data,
-                          (collections.Mapping, function.Function)):
-            raise TypeError(_('The "data" argument to "%s" must contain '
-                              'a map.') % self.fn_name)
-        if not isinstance(self._expression,
-                          (six.string_types, function.Function)):
-            raise TypeError(_('The "expression" argument to %s must '
-                              'contain a string or a '
-                              'function.') % self.fn_name)
-        if isinstance(self._expression, six.string_types):
-            self.validate_expression(self._expression)
-
     def result(self):
+        statement = self._parse(function.resolve(self._expression))
         data = function.resolve(self._data)
-        if not isinstance(data, collections.Mapping):
-            raise TypeError(_('The "data" argument to "%s" must contain '
-                              'a map.') % self.fn_name)
-        if not isinstance(self._expression, six.string_types):
-            self._expression = function.resolve(self._expression)
-            self.validate_expression(self._expression)
-        return self.parser(self._expression).evaluate({'data': data},
-                                                      self.context)
+        return statement.evaluate({'data': data}, self._yaql_context)
 
 
 class Equals(function.Function):
