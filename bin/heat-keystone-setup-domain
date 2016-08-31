@@ -20,6 +20,7 @@ from keystoneclient.v3 import client
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from heat.common.i18n import _
 from heat import version
 
 logger = logging.getLogger(__name__)
@@ -33,25 +34,25 @@ TENANT_NAME = os.environ.get('OS_TENANT_NAME')
 opts = [
     cfg.StrOpt('stack-user-domain-name',
                default="heat",
-               help="Name of domain to create for stack users."),
+               help=_("Name of domain to create for stack users.")),
     cfg.StrOpt('stack-domain-admin',
                default="heat_stack_admin",
-               help="Keystone username with roles sufficient to manage users"
-                    " and projects in the stack-user-domain"),
+               help=_("Keystone username with roles sufficient to manage users"
+                    " and projects in the stack-user-domain")),
     cfg.StrOpt('stack-domain-admin-password',
                secret=True,
-               help="Password to set for stack-domain-admin"),
+               help=_("Password to set for stack-domain-admin")),
     cfg.BoolOpt('insecure',
                 default=False,
-                help="If set, then the server's certificate will not "
-                     "be verified."),
+                help=_("If set, then the server's certificate will not "
+                     "be verified.")),
     cfg.StrOpt('os-cacert',
-               help='Optional CA cert file to use in SSL connections.'),
+               help=_('Optional CA cert file to use in SSL connections.')),
     cfg.StrOpt('os-cert',
-               help='Optional PEM-formatted certificate chain file.'),
+               help=_('Optional PEM-formatted certificate chain file.')),
     cfg.StrOpt('os-key',
-               help='Optional PEM-formatted file that contains the '
-                    'private key.'),
+               help=_('Optional PEM-formatted file that contains the '
+                    'private key.')),
 
 ]
 

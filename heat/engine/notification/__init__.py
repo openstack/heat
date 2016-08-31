@@ -13,6 +13,7 @@
 
 from oslo_config import cfg
 
+from heat.common.i18n import _
 from heat.common import messaging
 
 SERVICE = 'orchestration'
@@ -22,9 +23,10 @@ ERROR = 'ERROR'
 notifier_opts = [
     cfg.StrOpt('default_notification_level',
                default=INFO,
-               help='Default notification level for outgoing notifications.'),
+               help=_('Default notification level for outgoing'
+                      'notifications.')),
     cfg.StrOpt('default_publisher_id',
-               help='Default publisher_id for outgoing notifications.'),
+               help=_('Default publisher_id for outgoing notifications.')),
 ]
 CONF = cfg.CONF
 CONF.register_opts(notifier_opts)
