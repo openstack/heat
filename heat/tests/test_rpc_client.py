@@ -20,7 +20,6 @@ Unit Tests for heat.rpc.client
 import copy
 
 import mock
-from mox import stubout
 from oslo_messaging._drivers import common as rpc_common
 from oslo_utils import reflection
 
@@ -35,7 +34,6 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def setUp(self):
         super(EngineRpcAPITestCase, self).setUp()
-        self.stubs = stubout.StubOutForTesting()
         self.identity = dict(identifier.HeatIdentifier('engine_test_tenant',
                                                        '6',
                                                        'wordpress'))
