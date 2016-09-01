@@ -44,7 +44,9 @@ class CommonTemplate(template.Template):
         else:
             return False
 
-    def validate_resource_definition(self, name, data):
+    def _validate_resource_definition(self, name, data):
+        """Validate a resource definition snippet given the parsed data."""
+
         if not self.validate_resource_key_type(self.RES_TYPE,
                                                six.string_types,
                                                'string',
@@ -78,19 +80,6 @@ class CommonTemplate(template.Template):
             self.RES_DESCRIPTION,
             six.string_types,
             'string', name, data)
-
-    def validate_resource_definitions(self, stack):
-        """Check section's type of ResourceDefinitions."""
-
-        resources = self.t.get(self.RESOURCES) or {}
-
-        try:
-            for name, snippet in resources.items():
-                path = '.'.join([self.RESOURCES, name])
-                data = self.parse(stack, snippet, path)
-                self.validate_resource_definition(name, data)
-        except (TypeError, ValueError, KeyError) as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
 
     def validate_condition_definitions(self, stack):
         """Check conditions section."""

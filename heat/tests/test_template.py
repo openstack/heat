@@ -136,9 +136,6 @@ class TestTemplatePluginManager(common.HeatTestCase):
                            param_defaults=None):
                 pass
 
-            def validate_resource_definitions(self, stack):
-                pass
-
             def validate_condition_definitions(self, stack):
                 pass
 

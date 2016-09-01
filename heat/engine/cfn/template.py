@@ -113,7 +113,12 @@ class CfnTemplateBase(template_common.CommonTemplate):
         resources = self.t.get(self.RESOURCES) or {}
 
         def rsrc_defn_item(name, snippet):
-            data = self.parse(stack, snippet)
+            try:
+                data = self.parse(stack, snippet)
+                self._validate_resource_definition(name, data)
+            except (TypeError, ValueError, KeyError) as ex:
+                msg = six.text_type(ex)
+                raise exception.StackValidationFailed(message=msg)
 
             depends = data.get(self.RES_DEPENDS_ON)
             if isinstance(depends, six.string_types):
@@ -221,8 +226,8 @@ class CfnTemplate(CfnTemplateBase):
 
         return False
 
-    def validate_resource_definition(self, name, data):
-        super(CfnTemplate, self).validate_resource_definition(name, data)
+    def _validate_resource_definition(self, name, data):
+        super(CfnTemplate, self)._validate_resource_definition(name, data)
 
         self.validate_resource_key_type(self.RES_CONDITION,
                                         (six.string_types, bool),

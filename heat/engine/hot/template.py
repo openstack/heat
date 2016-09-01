@@ -218,9 +218,9 @@ class HOTemplate20130523(template_common.CommonTemplate):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
-    def validate_resource_definition(self, name, data):
-        super(HOTemplate20130523, self).validate_resource_definition(name,
-                                                                     data)
+    def _validate_resource_definition(self, name, data):
+        super(HOTemplate20130523, self)._validate_resource_definition(name,
+                                                                      data)
 
         invalid_keys = set(data) - set(self._RESOURCE_KEYS)
         if invalid_keys:
@@ -231,7 +231,12 @@ class HOTemplate20130523(template_common.CommonTemplate):
         resources = self.t.get(self.RESOURCES) or {}
 
         def rsrc_defn_from_snippet(name, snippet):
-            data = self.parse(stack, snippet)
+            try:
+                data = self.parse(stack, snippet)
+                self._validate_resource_definition(name, data)
+            except (TypeError, ValueError, KeyError) as ex:
+                msg = six.text_type(ex)
+                raise exception.StackValidationFailed(message=msg)
             return self.rsrc_defn_from_snippet(name, data)
 
         return dict(
@@ -498,8 +503,8 @@ class HOTemplate20161014(HOTemplate20160408):
     def get_condition_definitions(self):
         return self.t.get(self.CONDITIONS, {})
 
-    def validate_resource_definition(self, name, data):
-        super(HOTemplate20161014, self).validate_resource_definition(
+    def _validate_resource_definition(self, name, data):
+        super(HOTemplate20161014, self)._validate_resource_definition(
             name, data)
 
         self.validate_resource_key_type(self.RES_EXTERNAL_ID,
