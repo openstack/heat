@@ -162,28 +162,6 @@ class ClientPlugin(object):
         """Raises the exception unless it is a conflict or not-found."""
         return self.is_conflict(ex) or self.is_not_found(ex)
 
-    def _get_client_args(self,
-                         service_name,
-                         service_type):
-        endpoint_type = self._get_client_option(service_name,
-                                                'endpoint_type')
-        endpoint = self.url_for(service_type=service_type,
-                                endpoint_type=endpoint_type)
-        args = {
-            'auth_url': self.context.auth_url,
-            'service_type': service_type,
-            'project_id': self.context.tenant_id,
-            'token': self.context.keystone_session.get_token(),
-            'endpoint_type': endpoint_type,
-            'os_endpoint': endpoint,
-            'cacert': self._get_client_option(service_name, 'ca_file'),
-            'cert_file': self._get_client_option(service_name, 'cert_file'),
-            'key_file': self._get_client_option(service_name, 'key_file'),
-            'insecure': self._get_client_option(service_name, 'insecure')
-        }
-
-        return args
-
     def does_endpoint_exist(self,
                             service_type,
                             service_name):
