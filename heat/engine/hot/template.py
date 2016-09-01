@@ -218,6 +218,15 @@ class HOTemplate20130523(template_common.CommonTemplate):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
+    def validate_resource_definition(self, name, data):
+        super(HOTemplate20130523, self).validate_resource_definition(name,
+                                                                     data)
+
+        invalid_keys = set(data) - set(self._RESOURCE_KEYS)
+        if invalid_keys:
+            raise ValueError(_('Invalid keyword(s) inside a resource '
+                               'definition: %s') % ', '.join(invalid_keys))
+
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
 
@@ -493,14 +502,12 @@ class HOTemplate20161014(HOTemplate20160408):
         super(HOTemplate20161014, self).validate_resource_definition(
             name, data)
 
-        self.validate_resource_key_type(
-            self.RES_EXTERNAL_ID,
-            (six.string_types, function.Function),
-            'string', self._RESOURCE_KEYS, name, data)
-        self.validate_resource_key_type(
-            self.RES_CONDITION,
-            (six.string_types, bool),
-            'string or boolean', self._RESOURCE_KEYS, name, data)
+        self.validate_resource_key_type(self.RES_EXTERNAL_ID,
+                                        (six.string_types, function.Function),
+                                        'string', name, data)
+        self.validate_resource_key_type(self.RES_CONDITION,
+                                        (six.string_types, bool),
+                                        'string or boolean', name, data)
 
     def has_condition_section(self, snippet):
         if snippet and self.CONDITION in snippet:
