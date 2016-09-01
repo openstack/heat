@@ -208,9 +208,6 @@ class CfnTemplate(CfnTemplateBase):
     def __init__(self, tmpl, template_id=None, files=None, env=None):
         super(CfnTemplate, self).__init__(tmpl, template_id, files, env)
 
-        self._parser_condition_functions = dict(
-            (n, function.Invalid) for n in self.functions)
-        self._parser_condition_functions.update(self.condition_functions)
         self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
     def get_condition_definitions(self):
