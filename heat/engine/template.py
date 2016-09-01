@@ -89,7 +89,15 @@ def get_template_class(template_data):
 
 
 class Template(collections.Mapping):
-    """A stack template."""
+    """Abstract base class for template format plugins.
+
+    All template formats (both internal and third-party) should derive from
+    Template and implement the abstract functions to provide resource
+    definitions and other data.
+
+    This is a stable third-party API. Do not add implementations that are
+    specific to internal template formats. Do not add new abstract methods.
+    """
 
     condition_functions = {}
     functions = {}
@@ -229,7 +237,6 @@ class Template(collections.Mapping):
         """Check section's type of ResourceDefinitions."""
         pass
 
-    @abc.abstractmethod
     def validate_condition_definitions(self, stack):
         """Check conditions section."""
         pass
