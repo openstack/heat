@@ -268,6 +268,13 @@ class ResourceDefinitionCore(object):
         """Return the external resource id."""
         return function.resolve(self._external_id)
 
+    def condition_name(self):
+        """Return the name of the conditional inclusion rule, if any.
+
+        Returns None if the resource is included unconditionally.
+        """
+        return self._condition
+
     def render_hot(self):
         """Return a HOT snippet for the resource definition."""
         if self._rendering is None:
