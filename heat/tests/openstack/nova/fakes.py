@@ -47,9 +47,8 @@ class FakeClient(fakes.FakeClient, Client):
 class FakeHTTPClient(base_client.HTTPClient):
 
     def __init__(self, **kwargs):
-        self.username = 'username'
-        self.password = 'password'
-        self.auth_url = 'auth_url'
+        super(FakeHTTPClient, self).__init__('username', 'password',
+                                             'project_id', 'auth_url')
         self.callstack = []
 
     def _cs_request(self, url, method, **kwargs):
