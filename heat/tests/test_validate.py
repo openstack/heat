@@ -1654,6 +1654,46 @@ class ValidateTest(common.HeatTestCase):
         self.assertEqual('Resource Resource Type type must be string',
                          six.text_type(ex))
 
+    def test_validate_resource_invalid_key(self):
+        t = template_format.parse("""
+        heat_template_version: 2013-05-23
+        resources:
+          resource:
+              type: OS::Heat::TestResource
+              wibble: bar
+        """)
+        template = tmpl.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
+        self.assertIn('wibble', six.text_type(ex))
+
+    def test_validate_resource_invalid_cfn_key_in_hot(self):
+        t = template_format.parse("""
+        heat_template_version: 2013-05-23
+        resources:
+          resource:
+              type: OS::Heat::TestResource
+              Properties: {foo: bar}
+        """)
+        template = tmpl.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
+        self.assertIn('Properties', six.text_type(ex))
+
+    def test_validate_resource_invalid_key_cfn(self):
+        t = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          Resource:
+            Type: OS::Heat::TestResource
+            Wibble: bar
+        """)
+        template = tmpl.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        # We have always allowed unknown keys in CFN-style templates, so we
+        # more or less have to keep allowing it.
+        self.assertIsNone(stack.validate())
+
     def test_validate_is_service_available(self):
         t = template_format.parse(
             """
