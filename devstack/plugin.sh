@@ -11,13 +11,16 @@ source $DEST/heat/devstack/lib/heat
 if is_heat_enabled; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing heat"
-        install_heat
+        # Use stack_install_service here to account for vitualenv
+        stack_install_service heat
         echo_summary "Installing heatclient"
         install_heatclient
         echo_summary "Installing heat other"
         install_heat_other
-        cleanup_heat
+
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
+        echo_summary "Cleaning up heat"
+        cleanup_heat
         echo_summary "Configuring heat"
         configure_heat
 
