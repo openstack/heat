@@ -170,6 +170,8 @@ class CfnTemplate(CfnTemplateBase):
     CONDITION = 'Condition'
     CONDITIONS = 'Conditions'
     SECTIONS = CfnTemplateBase.SECTIONS + (CONDITIONS,)
+    SECTIONS_NO_DIRECT_ACCESS = (CfnTemplateBase.SECTIONS_NO_DIRECT_ACCESS |
+                                 set([CONDITIONS]))
 
     RES_CONDITION = CONDITION
     _RESOURCE_KEYS = CfnTemplateBase._RESOURCE_KEYS + (RES_CONDITION,)
@@ -211,7 +213,7 @@ class CfnTemplate(CfnTemplateBase):
         self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
     def get_condition_definitions(self):
-        return self[self.CONDITIONS]
+        return self.t.get(self.CONDITIONS, {})
 
     def has_condition_section(self, snippet):
         if snippet and self.CONDITION in snippet:
