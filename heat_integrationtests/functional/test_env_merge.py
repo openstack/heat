@@ -92,4 +92,4 @@ class EnvironmentMergingTests(functional_base.FunctionalTestsBase):
         # by checking to see that it has a value
         r3b = self.client.resources.get(stack_id, 'r3b')
         r3b_attrs = r3b.attributes
-        self.assertTrue('value' in r3b_attrs)
+        self.assertIn('value', r3b_attrs)

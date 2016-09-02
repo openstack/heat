@@ -48,7 +48,7 @@ class ResourceTypeConstraintTest(common.HeatTestCase):
 
         # Verify
         self.assertFalse(result)
-        self.assertTrue('OS::Heat::None' in self.constraint._error_message)
+        self.assertIn('OS::Heat::None', self.constraint._error_message)
         self.mock_env.get_class.assert_called_once_with(value[0])
 
     def test_validate_multiple_failures(self):

@@ -121,7 +121,7 @@ class ResourceChainTest(common.HeatTestCase):
         # No error, but no resources to create
         self.assertTrue('resources' not in tmpl)
         # Sanity check that it's actually a template
-        self.assertTrue('heat_template_version' in tmpl)
+        self.assertIn('heat_template_version', tmpl)
 
     def test_validate_nested_stack(self):
         # Test - should not raise exception
@@ -145,7 +145,7 @@ class ResourceChainTest(common.HeatTestCase):
             chain.validate_nested_stack()
             self.fail('Exception expected')
         except exception.StackValidationFailed as e:
-            self.assertTrue('unknown property group' in e.message.lower())
+            self.assertIn('unknown property group', e.message.lower())
 
     def test_validate_fake_resource_type(self):
         # Setup
@@ -161,8 +161,8 @@ class ResourceChainTest(common.HeatTestCase):
             chain.validate_nested_stack()
             self.fail('Exception expected')
         except exception.StackValidationFailed as e:
-            self.assertTrue('could not be found' in e.message.lower())
-            self.assertTrue('foo' in e.message)
+            self.assertIn('could not be found', e.message.lower())
+            self.assertIn('foo', e.message)
 
     @mock.patch.object(resource_chain.ResourceChain, 'create_with_template')
     def test_handle_create(self, mock_create):
