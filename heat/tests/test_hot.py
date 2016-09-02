@@ -1028,24 +1028,43 @@ class HOTemplateTest(common.HeatTestCase):
 
     def test_yaql(self):
         snippet = {'yaql': {'expression': '$.data.var1.sum()',
-                   'data': {'var1': [1, 2, 3, 4]}}}
+                            'data': {'var1': [1, 2, 3, 4]}}}
         tmpl = template.Template(hot_newton_tpl_empty)
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
         resolved = self.resolve(snippet, tmpl, stack=stack)
 
         self.assertEqual(10, resolved)
 
-    def test_yaql_invalid_data(self):
-        snippet = {'yaql': {'expression': '$.data.var1.sum()',
-                   'data': 'mustbeamap'}}
+    def test_yaql_list_input(self):
+        snippet = {'yaql': {'expression': '$.data.sum()',
+                            'data': [1, 2, 3, 4]}}
         tmpl = template.Template(hot_newton_tpl_empty)
-        msg = '.yaql: The "data" argument to "yaql" must contain a map.'
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg, self.resolve, snippet, tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual(10, resolved)
+
+    def test_yaql_string_input(self):
+        snippet = {'yaql': {'expression': '$.data',
+                            'data': 'whynotastring'}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual('whynotastring', resolved)
+
+    def test_yaql_int_input(self):
+        snippet = {'yaql': {'expression': '$.data + 2',
+                            'data': 2}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual(4, resolved)
 
     def test_yaql_bogus_keys(self):
         snippet = {'yaql': {'expression': '1 + 3',
-                            'data': 'mustbeamap',
+                            'data': {'var1': [1, 2, 3, 4]},
                             'bogus': ""}}
         tmpl = template.Template(hot_newton_tpl_empty)
         self.assertRaises(exception.StackValidationFailed,
@@ -1053,7 +1072,7 @@ class HOTemplateTest(common.HeatTestCase):
 
     def test_yaql_invalid_syntax(self):
         snippet = {'yaql': {'wrong': 'wrong_expr',
-                   'wrong_data': 'mustbeamap'}}
+                            'wrong_data': 'mustbeamap'}}
         tmpl = template.Template(hot_newton_tpl_empty)
         self.assertRaises(exception.StackValidationFailed,
                           self.resolve, snippet, tmpl)
@@ -1074,10 +1093,7 @@ class HOTemplateTest(common.HeatTestCase):
 
     def test_yaql_data_as_function(self):
         snippet = {'yaql': {'expression': '$.data.var1.len()',
-                   'data': {
-                       'var1': {'list_join': ['', ['1', '2']]}
-                   }
-        }}
+                            'data': {'var1': {'list_join': ['', ['1', '2']]}}}}
         tmpl = template.Template(hot_newton_tpl_empty)
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
         resolved = self.resolve(snippet, tmpl, stack=stack)
