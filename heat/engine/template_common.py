@@ -90,16 +90,15 @@ class CommonTemplate(template.Template):
     def resolve_conditions(self, stack):
         cd_snippet = self.get_condition_definitions()
         result = {}
-        if cd_snippet:
-            for cd_key, cd_value in six.iteritems(cd_snippet):
-                # hasn't been resolved yet
-                if not isinstance(cd_value, bool):
-                    condition_func = self.parse_condition(
-                        stack, cd_value)
-                    resolved_cd_value = function.resolve(condition_func)
-                    result[cd_key] = resolved_cd_value
-                else:
-                    result[cd_key] = cd_value
+        for cd_key, cd_value in six.iteritems(cd_snippet):
+            # hasn't been resolved yet
+            if not isinstance(cd_value, bool):
+                condition_func = self.parse_condition(
+                    stack, cd_value)
+                resolved_cd_value = function.resolve(condition_func)
+                result[cd_key] = resolved_cd_value
+            else:
+                result[cd_key] = cd_value
 
         return result
 

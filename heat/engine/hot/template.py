@@ -393,6 +393,9 @@ class HOTemplate20161014(HOTemplate20160408):
 
     SECTIONS = HOTemplate20160408.SECTIONS + (CONDITIONS,)
 
+    SECTIONS_NO_DIRECT_ACCESS = (HOTemplate20160408.SECTIONS_NO_DIRECT_ACCESS |
+                                 set([CONDITIONS]))
+
     _CFN_TO_HOT_SECTIONS = HOTemplate20160408._CFN_TO_HOT_SECTIONS
     _CFN_TO_HOT_SECTIONS.update({
         cfn_template.CfnTemplate.CONDITIONS: CONDITIONS})
@@ -484,7 +487,7 @@ class HOTemplate20161014(HOTemplate20160408):
         self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
     def get_condition_definitions(self):
-        return self[self.CONDITIONS]
+        return self.t.get(self.CONDITIONS, {})
 
     def validate_resource_definition(self, name, data):
         super(HOTemplate20161014, self).validate_resource_definition(
