@@ -92,7 +92,6 @@ class Template(collections.Mapping):
     """A stack template."""
 
     condition_functions = {}
-    _parser_condition_functions = {}
     functions = {}
 
     def __new__(cls, template, *args, **kwargs):
@@ -123,6 +122,10 @@ class Template(collections.Mapping):
 
         self.version = get_version(self.t, _template_classes.keys())
         self.t_digest = None
+
+        condition_functions = {n: function.Invalid for n in self.functions}
+        condition_functions.update(self.condition_functions)
+        self._parser_condition_functions = condition_functions
 
     def __deepcopy__(self, memo):
         return Template(copy.deepcopy(self.t, memo), files=self.files,
