@@ -899,12 +899,11 @@ class Yaql(function.Function):
         if not isinstance(data, collections.Mapping):
             raise TypeError(_('The "data" argument to "%s" must contain '
                               'a map.') % self.fn_name)
-        ctxt = {'data': data}
-        self.context['$'] = ctxt
         if not isinstance(self._expression, six.string_types):
             self._expression = function.resolve(self._expression)
             self.validate_expression(self._expression)
-        return self.parser(self._expression).evaluate(context=self.context)
+        return self.parser(self._expression).evaluate({'data': data},
+                                                      self.context)
 
 
 class Equals(function.Function):

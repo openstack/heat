@@ -1084,6 +1084,16 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual(2, resolved)
 
+    def test_yaql_merge(self):
+        snippet = {'yaql': {'expression': '$.data.d.reduce($1.mergeWith($2))',
+                            'data': {'d': [{'a': [1]}, {'a': [2]},
+                                           {'a': [3]}]}}}
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual({'a': [1, 2, 3]}, resolved)
+
     def test_equals(self):
         hot_tpl = template_format.parse('''
         heat_template_version: 2016-10-14
