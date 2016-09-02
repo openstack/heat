@@ -102,10 +102,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         vt_id = None
         volume_type_list = self.client().volume_types.list()
         for vt in volume_type_list:
-            if vt.name == volume_type:
-                vt_id = vt.id
-                break
-            if vt.id == volume_type:
+            if volume_type in [vt.name, vt.id]:
                 vt_id = vt.id
                 break
         if vt_id is None:
@@ -113,6 +110,13 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
                                            name=volume_type)
 
         return vt_id
+
+    def get_qos_specs(self, qos_specs):
+        try:
+            qos = self.client().qos_specs.get(qos_specs)
+        except exceptions.NotFound:
+            qos = self.client().qos_specs.find(name=qos_specs)
+        return qos.id
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)
@@ -191,3 +195,10 @@ class VolumeTypeConstraint(BaseCinderConstraint):
 class VolumeBackupConstraint(BaseCinderConstraint):
 
     resource_getter_name = 'get_volume_backup'
+
+
+class QoSSpecsConstraint(BaseCinderConstraint):
+
+    expected_exceptions = (exceptions.NotFound,)
+
+    resource_getter_name = 'get_qos_specs'
