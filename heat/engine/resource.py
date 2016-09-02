@@ -1727,8 +1727,9 @@ class Resource(object):
 
     def _add_event(self, action, status, reason):
         """Add a state change event to the database."""
+        physical_res_id = self.resource_id or self.physical_resource_name()
         ev = event.Event(self.context, self.stack, action, status, reason,
-                         self.resource_id, self.properties,
+                         physical_res_id, self.properties,
                          self.name, self.type())
 
         ev.store()

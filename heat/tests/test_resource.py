@@ -3393,6 +3393,7 @@ class ResourceHookTest(common.HeatTestCase):
                                                'GenericResourceType')
         res = resource.Resource('res', snippet, self.stack)
         res.id = '1234'
+        res.uuid = uuid.uuid4()
         task = scheduler.TaskRunner(res.create)
         task.start()
         task.step()
@@ -3409,6 +3410,7 @@ class ResourceHookTest(common.HeatTestCase):
         res = resource.Resource('res', snippet, self.stack)
         res.id = '1234'
         res.action = 'CREATE'
+        res.uuid = uuid.uuid4()
         self.stack.action = 'DELETE'
         task = scheduler.TaskRunner(res.delete)
         task.start()
@@ -3425,6 +3427,7 @@ class ResourceHookTest(common.HeatTestCase):
                                                'GenericResourceType')
         res = resource.Resource('res', snippet, self.stack)
         res.id = '1234'
+        res.uuid = uuid.uuid4()
         task = scheduler.TaskRunner(res.create)
         task.start()
         task.step()
@@ -3440,6 +3443,7 @@ class ResourceHookTest(common.HeatTestCase):
                                                'GenericResourceType')
         res = resource.Resource('res', snippet, self.stack)
         res.id = '1234'
+        res.uuid = uuid.uuid4()
         res.action = 'CREATE'
         self.stack.action = 'DELETE'
         task = scheduler.TaskRunner(res.delete)
