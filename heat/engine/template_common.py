@@ -81,18 +81,7 @@ class CommonTemplate(template.Template):
             six.string_types,
             'string', name, data)
 
-    def validate_condition_definitions(self, stack):
-        """Check conditions section."""
-
-        resolved_cds = self.resolve_conditions(stack)
-        if resolved_cds:
-            for cd_key, cd_value in six.iteritems(resolved_cds):
-                if not isinstance(cd_value, bool):
-                    raise exception.InvalidConditionDefinition(
-                        cd=cd_key,
-                        definition=cd_value)
-
-    def resolve_conditions(self, stack):
+    def _resolve_conditions(self, stack):
         cd_snippet = self.get_condition_definitions()
         result = {}
         for cd_key, cd_value in six.iteritems(cd_snippet):
@@ -135,7 +124,15 @@ class CommonTemplate(template.Template):
 
     def conditions(self, stack):
         if self._conditions is None:
-            self._conditions = self.resolve_conditions(stack)
+            resolved_cds = self._resolve_conditions(stack)
+            if resolved_cds:
+                for cd_key, cd_value in six.iteritems(resolved_cds):
+                    if not isinstance(cd_value, bool):
+                        raise exception.InvalidConditionDefinition(
+                            cd=cd_key,
+                            definition=cd_value)
+
+            self._conditions = resolved_cds
 
         return self._conditions
 

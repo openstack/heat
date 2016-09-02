@@ -137,9 +137,6 @@ class TestTemplatePluginManager(common.HeatTestCase):
                            param_defaults=None):
                 pass
 
-            def validate_condition_definitions(self, stack):
-                pass
-
             def resource_definitions(self, stack):
                 pass
 
@@ -326,7 +323,7 @@ class TestTemplateConditionParser(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl,
                           resolve_data=False)
         ex = self.assertRaises(exception.InvalidConditionFunction,
-                               tmpl.resolve_conditions, stk)
+                               tmpl._resolve_conditions, stk)
         self.assertIn('The function is not supported in condition: get_attr',
                       six.text_type(ex))
 
@@ -335,7 +332,7 @@ class TestTemplateConditionParser(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl,
                           resolve_data=False)
         ex = self.assertRaises(exception.InvalidConditionFunction,
-                               tmpl.resolve_conditions, stk)
+                               tmpl._resolve_conditions, stk)
         self.assertIn('The function is not supported in condition: '
                       'get_resource', six.text_type(ex))
 
@@ -344,7 +341,7 @@ class TestTemplateConditionParser(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl,
                           resolve_data=False)
         ex = self.assertRaises(exception.InvalidConditionFunction,
-                               tmpl.resolve_conditions, stk)
+                               tmpl._resolve_conditions, stk)
         self.assertIn('The function is not supported in condition: get_attr',
                       six.text_type(ex))
 
@@ -365,7 +362,7 @@ class TestTemplateConditionParser(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_condition_not_boolean', tmpl)
 
         ex = self.assertRaises(exception.InvalidConditionDefinition,
-                               tmpl.validate_condition_definitions, stk)
+                               tmpl.conditions, stk)
         self.assertIn('The definition of condition (prod_env) is invalid',
                       six.text_type(ex))
 
