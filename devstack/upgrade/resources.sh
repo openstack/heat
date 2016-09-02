@@ -45,7 +45,7 @@ function create {
     iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
-    tox -eintegration heat_integrationtests.functional.test_create_update
+    tox -eintegration -- '(test_create_update.CreateStackTest|test_create_update.UpdateStackTest)'
     popd
 
     # creates a tenant for the server
