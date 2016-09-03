@@ -20,8 +20,8 @@ SUPPORT_STATUSES = (UNKNOWN, SUPPORTED, DEPRECATED, UNSUPPORTED, HIDDEN
 
 class SupportStatus(object):
 
-    def __init__(self, status=SUPPORTED, message=None, version=None,
-                 previous_status=None):
+    def __init__(self, status=SUPPORTED, message=None,
+                 version=None, previous_status=None, substitute_class=None):
         """Use SupportStatus for current status of object.
 
         :param status: current status of object.
@@ -29,8 +29,10 @@ class SupportStatus(object):
                     valid. It may be None, but need to be defined for correct
                     doc generating.
         :param message: specific status message for object.
+        :param substitute_class: assign substitute class.
         """
         self.status = status
+        self.substitute_class = substitute_class
         self.message = message
         self.version = version
         self.previous_status = previous_status
@@ -57,6 +59,12 @@ class SupportStatus(object):
                     'version': self.version,
                     'previous_status': self.previous_status.to_dict()
                     if self.previous_status is not None else None}
+
+    def is_substituted(self, substitute_class):
+        if self.substitute_class is None:
+            return False
+
+        return substitute_class is self.substitute_class
 
 
 def is_valid_status(status):

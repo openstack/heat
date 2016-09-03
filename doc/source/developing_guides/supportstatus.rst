@@ -45,6 +45,11 @@ which has follow options:
     - UNSUPPORTED. Resources with UNSUPPORTED status are not supported by Heat
       team, i.e. user can use it, but it may be broken.
 
+*substitute_class*:
+  Assign substitute class for object. If replacing the object with new object
+  which inherited (or extended) from the substitute class will transfer the
+  object to new class type gracefully (without calling update replace).
+
 *version*:
   Release name, since which current status is active. Parameter is optional,
   but should be defined or changed any time SupportStatus is specified or
@@ -78,9 +83,9 @@ Creating process of object
 ++++++++++++++++++++++++++
 During creating object there is a reason to add support status. So new
 object should contains *support_status* parameter equals to ``SupportStatus``
-class with defined version of object and, maybe, some message. This parameter
-allows user to understand, from which this object OpenStack release this object
-is available and can be used.
+class with defined version of object and, maybe, *substitute_class* or some
+message. This parameter allows user to understand, from which OpenStack
+release this object is available and can be used.
 
 Deprecating process of object
 +++++++++++++++++++++++++++++
@@ -91,7 +96,8 @@ parameter, need to add one with current release otherwise move current status
 to *previous_status* and add to *version* current release as value. If some new
 object replaces old object, it will be good decision to add some information
 about new object to *support_status* message of old object, e.g. 'Use property
-new_property instead.'.
+new_property instead.'. If old object is directly replaceable by new object,
+we should add *substitute_class* to *support_status* in old object.
 
 Removing process of object
 ++++++++++++++++++++++++++
@@ -149,7 +155,7 @@ next steps:
 
 1. If there is some support_status in object, add `previous_status` parameter
    with current ``SupportStatus`` value and change all other parameters for
-   current `status`, `version` and, maybe, `message`.
+   current `status`, `version` and, maybe, `substitute_class` or `message`.
 
 2. If there is no support_status option, add new one with parameters status
    equals to current status, `version` equals to current release note and,
@@ -164,6 +170,7 @@ Using Support Status during resource deprecating looks like:
        support_status=support.SupportStatus(
            status=support.DEPRECATED,
            version='5.0.0',
+           substitute_class=SubstituteResourceWithType,
            message=_('Optional message'),
            previous_status=support.SupportStatus(version='2014.2')
        )
@@ -199,6 +206,7 @@ status should be moved to *previous_status*, e.g.:
         previous_status=support.SupportStatus(
             status=support.DEPRECATED,
             version='2015.1',
+            substitute_class=SubstituteResourceWithType,
             previous_status=support.SupportStatus(version='2014.2')
         )
     )
