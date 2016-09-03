@@ -425,7 +425,7 @@ class StackTest(common.HeatTestCase):
         stack.Stack.__init__(self.ctx, stk.name, t, stack_id=stk.id,
                              action=stk.action, status=stk.status,
                              status_reason=stk.status_reason,
-                             timeout_mins=stk.timeout, resolve_data=True,
+                             timeout_mins=stk.timeout,
                              disable_rollback=stk.disable_rollback,
                              parent_resource='parent', owner_id=None,
                              stack_user_project_id=None,
@@ -2717,7 +2717,7 @@ class StackTest(common.HeatTestCase):
             mock_dependency.validate.assert_called_once_with()
 
         stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)
-        stc.outputs = {'foo': {'Value': 'bar'}}
+        stc._outputs = {'foo': {'Value': 'bar'}}
         func_val.side_effect = AssertionError(expected_msg)
         expected_exception = self.assertRaises(AssertionError, stc.validate)
         self.assertEqual(expected_msg, six.text_type(expected_exception))
@@ -2727,8 +2727,7 @@ class StackTest(common.HeatTestCase):
         expected_message = 'Expected Assertion Error'
         tmpl.parse.side_effect = AssertionError(expected_message)
 
-        stc = stack.Stack(self.ctx, utils.random_name(),
-                          tmpl, resolve_data=False)
+        stc = stack.Stack(self.ctx, utils.random_name(), tmpl)
         expected_exception = self.assertRaises(AssertionError,
                                                stc.resolve_outputs_data,
                                                None)

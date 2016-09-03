@@ -1622,8 +1622,9 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_invalid_outputs(self):
         t = template_format.parse(test_template_invalid_outputs)
         template = tmpl.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
-                                parser.Stack, self.ctx, 'test_stack', template)
+                                stack.validate)
         error_message = ('outputs.string.value.get_attr: Arguments to '
                          '"get_attr" must be of the form '
                          '[resource_name, attribute, (path), ...]')

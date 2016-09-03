@@ -118,7 +118,7 @@ class Stack(collections.Mapping):
 
     def __init__(self, context, stack_name, tmpl,
                  stack_id=None, action=None, status=None,
-                 status_reason='', timeout_mins=None, resolve_data=True,
+                 status_reason='', timeout_mins=None,
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
@@ -168,6 +168,7 @@ class Stack(collections.Mapping):
         self.disable_rollback = disable_rollback
         self.parent_resource_name = parent_resource
         self._parent_stack = None
+        self._outputs = None
         self._resources = None
         self._dependencies = None
         self._access_allowed_handlers = {}
@@ -226,12 +227,6 @@ class Stack(collections.Mapping):
             user_params=self.env.params,
             param_defaults=self.env.param_defaults)
         self._set_param_stackid()
-
-        if resolve_data:
-            self.outputs = self.resolve_outputs_data(
-                self.t[self.t.OUTPUTS], path=self.t.OUTPUTS)
-        else:
-            self.outputs = {}
 
     @property
     def tags(self):
@@ -298,6 +293,13 @@ class Stack(collections.Mapping):
         else:
             msg = _("Attempt to use stored_context with no user_creds")
             raise exception.Error(msg)
+
+    @property
+    def outputs(self):
+        if self._outputs is None:
+            self._outputs = self.resolve_outputs_data(self.t[self.t.OUTPUTS],
+                                                      path=self.t.OUTPUTS)
+        return self._outputs
 
     @property
     def resources(self):
@@ -484,7 +486,7 @@ class Stack(collections.Mapping):
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
              use_stored_context=False, force_reload=False, cache_data=None,
-             resolve_data=True, service_check_defer=False,
+             service_check_defer=False,
              resource_validate=True):
         """Retrieve a Stack from the database."""
         if stack is None:
@@ -501,14 +503,14 @@ class Stack(collections.Mapping):
 
         return cls._from_db(context, stack,
                             use_stored_context=use_stored_context,
-                            cache_data=cache_data, resolve_data=resolve_data,
+                            cache_data=cache_data,
                             service_check_defer=service_check_defer,
                             resource_validate=resource_validate)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
                  sort_dir=None, filters=None,
-                 show_deleted=False, resolve_data=True,
+                 show_deleted=False,
                  show_nested=False, show_hidden=False, tags=None,
                  tags_any=None, not_tags=None, not_tags_any=None):
         stacks = stack_object.Stack.get_all(
@@ -527,14 +529,14 @@ class Stack(collections.Mapping):
             not_tags_any=not_tags_any)
         for stack in stacks:
             try:
-                yield cls._from_db(context, stack, resolve_data=resolve_data)
+                yield cls._from_db(context, stack)
             except exception.NotFound:
                 # We're in a different transaction than the get_all, so a stack
                 # returned above can be deleted by the time we try to load it.
                 pass
 
     @classmethod
-    def _from_db(cls, context, stack, resolve_data=True,
+    def _from_db(cls, context, stack,
                  use_stored_context=False, cache_data=None,
                  service_check_defer=False, resource_validate=True):
         template = tmpl.Template.load(
@@ -544,7 +546,6 @@ class Stack(collections.Mapping):
                    action=stack.action, status=stack.status,
                    status_reason=stack.status_reason,
                    timeout_mins=stack.timeout,
-                   resolve_data=resolve_data,
                    disable_rollback=stack.disable_rollback,
                    parent_resource=stack.parent_resource_name,
                    owner_id=stack.owner_id,
@@ -1517,9 +1518,7 @@ class Stack(collections.Mapping):
             # flip the template to the newstack values
             previous_template_id = self.t.id
             self.t = newstack.t
-            template_outputs = self.t[self.t.OUTPUTS]
-            self.outputs = self.resolve_outputs_data(
-                template_outputs, path=self.t.OUTPUTS)
+            self._outputs = None
         finally:
             if should_rollback:
                 # Already handled in rollback task
