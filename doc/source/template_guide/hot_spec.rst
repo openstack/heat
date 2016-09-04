@@ -888,7 +888,7 @@ The example below shows how to associate condition with resources
        default: test
        type: string
    conditions:
-     create_prod_res: {equals : [{get_param: env_type}, "prod"]
+     create_prod_res: {equals : [{get_param: env_type}, "prod"]}
    resources:
      volume:
        type: OS::Cinder::Volume
@@ -1156,7 +1156,7 @@ will be appended to the previous lists to join.
 
 For example::
 
-   list_join: [', ', ['one', 'two'], ['three', 'four']]]
+   list_join: [', ', ['one', 'two'], ['three', 'four']]
 
 This resolve to the string ``one, two, three, four``.
 
@@ -1628,7 +1628,7 @@ The syntax of the ``and`` function is
 
 .. code-block:: yaml
 
-    and: [{condition_1}, {condition_2}, ... {condition_n}}]
+    and: [{condition_1}, {condition_2}, ... {condition_n}]
 
 Note: A condition such as ``equals`` or ``not`` that evaluates to true or
 false can be defined in ``and`` function, also we can set a boolean
@@ -1662,7 +1662,7 @@ The syntax of the ``or`` function is
 
 .. code-block:: yaml
 
-    or: [{condition_1}, {condition_2}, ... {condition_n}}]
+    or: [{condition_1}, {condition_2}, ... {condition_n}]
 
 Note: A condition such as ``equals`` or ``not`` that evaluates to true or
 false can be defined in ``or`` function, also we can set a boolean
