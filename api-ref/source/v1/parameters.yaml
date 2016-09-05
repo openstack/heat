@@ -1531,7 +1531,7 @@ template_version_alias:
     ``heat_template_version.newton``.
   in: body
   required: true
-  type: list
+  type: array
 template_versions:
   description: |
     A list of template version object each describes the type name and version
