@@ -206,7 +206,7 @@ class SignalTest(common.HeatTestCase):
 
         # Test
         first_url = rsrc.FnGetAtt('signal')
-        self.assertTrue('alarm_url' in first_url)
+        self.assertIn('alarm_url', first_url)
         mock_has.assert_called_once_with('signal_handler')
         mock_has.reset_mock()  # reset the count for the next check
 
@@ -355,7 +355,7 @@ class SignalTest(common.HeatTestCase):
 
         # Test
         first_url = rsrc.FnGetAtt('signal')
-        self.assertTrue('alarm_url' in first_url)
+        self.assertIn('alarm_url', first_url)
         mock_has.assert_called_once_with('signal_handler')
         mock_has.reset_mock()  # reset the count for the next check
 
