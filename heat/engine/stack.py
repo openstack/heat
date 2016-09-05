@@ -301,9 +301,6 @@ class Stack(collections.Mapping):
 
     @property
     def resources(self):
-        return self._find_resources()
-
-    def _find_resources(self):
         if self._resources is None:
             res_defns = self.t.resource_definitions(self)
 
@@ -788,11 +785,25 @@ class Stack(collections.Mapping):
         # Validate condition definition of conditions section
         self.t.validate_condition_definitions(self)
 
-        # Validate types of sections in ResourceDefinitions
+        # Continue to call this function, since old third-party Template
+        # plugins may depend on it being called to validate the resource
+        # definitions before actually generating them.
+        if (type(self.t).validate_resource_definitions !=
+                tmpl.Template.validate_resource_definitions):
+            warnings.warn("The Template.validate_resource_definitions() "
+                          "method is deprecated and will no longer be called "
+                          "in future versions of Heat. Template subclasses "
+                          "should validate resource definitions in the "
+                          "resource_definitions() method.",
+                          DeprecationWarning)
         self.t.validate_resource_definitions(self)
 
+        # Load the resources definitions (success of which implies the
+        # definitions are valid)
+        resources = self.resources
+
         # Check duplicate names between parameters and resources
-        dup_names = set(self.parameters) & set(self.keys())
+        dup_names = set(self.parameters) & set(resources)
 
         if dup_names:
             LOG.debug("Duplicate names %s" % dup_names)
