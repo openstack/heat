@@ -70,7 +70,6 @@ class HOTemplate20130523(template_common.CommonTemplate):
     _HOT_TO_CFN_ATTRS.update(
         {OUTPUT_VALUE: cfn_template.CfnTemplate.OUTPUT_VALUE})
 
-    extra_rsrc_defn = ()
     functions = {
         'Fn::GetAZs': cfn_funcs.GetAZs,
         'get_param': hot_funcs.GetParam,
@@ -258,6 +257,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
                 raise exception.StackValidationFailed(message=msg)
             else:
                 deletion_policy = cls.deletion_policies[deletion_policy]
+
         kwargs = {
             'resource_type': data.get(cls.RES_TYPE),
             'properties': data.get(cls.RES_PROPERTIES),
@@ -267,8 +267,11 @@ class HOTemplate20130523(template_common.CommonTemplate):
             'update_policy': data.get(cls.RES_UPDATE_POLICY),
             'description': None
         }
-        for key in cls.extra_rsrc_defn:
-            kwargs[key] = data.get(key)
+        if hasattr(cls, 'RES_EXTERNAL_ID'):
+            kwargs['external_id'] = data.get(cls.RES_EXTERNAL_ID)
+        if hasattr(cls, 'RES_CONDITION'):
+            kwargs['condition'] = data.get(cls.RES_CONDITION)
+
         return rsrc_defn.ResourceDefinition(name, **kwargs)
 
     def add_resource(self, definition, name=None):
@@ -401,10 +404,7 @@ class HOTemplate20160408(HOTemplate20151015):
 
 class HOTemplate20161014(HOTemplate20160408):
 
-    CONDITION = 'condition'
-    RES_CONDITION = CONDITION
     CONDITIONS = 'conditions'
-
     SECTIONS = HOTemplate20160408.SECTIONS + (CONDITIONS,)
 
     SECTIONS_NO_DIRECT_ACCESS = (HOTemplate20160408.SECTIONS_NO_DIRECT_ACCESS |
@@ -414,18 +414,17 @@ class HOTemplate20161014(HOTemplate20160408):
     _CFN_TO_HOT_SECTIONS.update({
         cfn_template.CfnTemplate.CONDITIONS: CONDITIONS})
 
+    CONDITION = 'condition'
+
     _RESOURCE_KEYS = HOTemplate20160408._RESOURCE_KEYS
-    _EXT_KEY = (RES_EXTERNAL_ID,) = ('external_id',)
-    _RESOURCE_KEYS += _EXT_KEY
-    _RESOURCE_KEYS += (RES_CONDITION,)
+    _EXTRA_KEYS = (RES_EXTERNAL_ID, RES_CONDITION) = ('external_id', CONDITION)
+    _RESOURCE_KEYS += _EXTRA_KEYS
 
     _RESOURCE_HOT_TO_CFN_ATTRS = HOTemplate20160408._RESOURCE_HOT_TO_CFN_ATTRS
-    _RESOURCE_HOT_TO_CFN_ATTRS.update({RES_EXTERNAL_ID: None})
-    _RESOURCE_HOT_TO_CFN_ATTRS.update(
-        {CONDITION: cfn_template.CfnTemplate.CONDITION})
-
-    extra_rsrc_defn = HOTemplate20160408.extra_rsrc_defn + (
-        RES_EXTERNAL_ID, RES_CONDITION,)
+    _RESOURCE_HOT_TO_CFN_ATTRS.update({
+        RES_EXTERNAL_ID: None,
+        RES_CONDITION: cfn_template.CfnTemplate.RES_CONDITION,
+    })
 
     OUTPUT_CONDITION = CONDITION
     OUTPUT_KEYS = HOTemplate20160408.OUTPUT_KEYS + (OUTPUT_CONDITION,)

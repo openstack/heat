@@ -50,7 +50,6 @@ class CfnTemplateBase(template_common.CommonTemplate):
         'DeletionPolicy', 'UpdatePolicy', 'Description',
     )
 
-    extra_rsrc_defn = ()
     functions = {
         'Fn::FindInMap': cfn_funcs.FindInMap,
         'Fn::GetAZs': cfn_funcs.GetAZs,
@@ -143,8 +142,8 @@ class CfnTemplateBase(template_common.CommonTemplate):
                 'description': data.get(self.RES_DESCRIPTION) or ''
             }
 
-            for key in self.extra_rsrc_defn:
-                kwargs[key.lower()] = data.get(key)
+            if hasattr(self, 'RES_CONDITION'):
+                kwargs['condition'] = data.get(self.RES_CONDITION)
 
             defn = rsrc_defn.ResourceDefinition(name, **kwargs)
             return name, defn
@@ -172,18 +171,17 @@ class CfnTemplateBase(template_common.CommonTemplate):
 
 class CfnTemplate(CfnTemplateBase):
 
-    CONDITION = 'Condition'
     CONDITIONS = 'Conditions'
     SECTIONS = CfnTemplateBase.SECTIONS + (CONDITIONS,)
     SECTIONS_NO_DIRECT_ACCESS = (CfnTemplateBase.SECTIONS_NO_DIRECT_ACCESS |
                                  set([CONDITIONS]))
 
+    CONDITION = 'Condition'
+
     RES_CONDITION = CONDITION
     _RESOURCE_KEYS = CfnTemplateBase._RESOURCE_KEYS + (RES_CONDITION,)
     HOT_TO_CFN_RES_ATTRS = CfnTemplateBase.HOT_TO_CFN_RES_ATTRS
     HOT_TO_CFN_RES_ATTRS.update({'condition': RES_CONDITION})
-
-    extra_rsrc_defn = CfnTemplateBase.extra_rsrc_defn + (RES_CONDITION,)
 
     OUTPUT_CONDITION = CONDITION
     OUTPUT_KEYS = CfnTemplateBase.OUTPUT_KEYS + (OUTPUT_CONDITION,)
