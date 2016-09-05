@@ -224,10 +224,9 @@ class CfnTemplate(CfnTemplateBase):
     def validate_resource_definition(self, name, data):
         super(CfnTemplate, self).validate_resource_definition(name, data)
 
-        self.validate_resource_key_type(
-            self.RES_CONDITION,
-            (six.string_types, bool),
-            'string or boolean', self._RESOURCE_KEYS, name, data)
+        self.validate_resource_key_type(self.RES_CONDITION,
+                                        (six.string_types, bool),
+                                        'string or boolean', name, data)
 
 
 class HeatTemplate(CfnTemplateBase):

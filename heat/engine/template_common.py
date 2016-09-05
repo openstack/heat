@@ -25,13 +25,29 @@ from heat.engine import template
 class CommonTemplate(template.Template):
     """A class of the common implementation for HOT and CFN templates."""
 
-    def validate_resource_definition(self, name, data):
-        allowed_keys = set(self._RESOURCE_KEYS)
+    @classmethod
+    def validate_resource_key_type(cls, key, valid_types, typename,
+                                   rsrc_name, rsrc_data):
+        """Validate the type of the value provided for a specific resource key.
 
+        Used in _validate_resource_definition() to validate correctness of
+        user input data.
+        """
+        if key in rsrc_data:
+            if not isinstance(rsrc_data[key], valid_types):
+                args = {'name': rsrc_name, 'key': key,
+                        'typename': typename}
+                message = _('Resource %(name)s %(key)s type '
+                            'must be %(typename)s') % args
+                raise TypeError(message)
+            return True
+        else:
+            return False
+
+    def validate_resource_definition(self, name, data):
         if not self.validate_resource_key_type(self.RES_TYPE,
                                                six.string_types,
                                                'string',
-                                               allowed_keys,
                                                name,
                                                data):
             args = {'name': name, 'type_key': self.RES_TYPE}
@@ -41,27 +57,27 @@ class CommonTemplate(template.Template):
         self.validate_resource_key_type(
             self.RES_PROPERTIES,
             (collections.Mapping, function.Function),
-            'object', allowed_keys, name, data)
+            'object', name, data)
         self.validate_resource_key_type(
             self.RES_METADATA,
             (collections.Mapping, function.Function),
-            'object', allowed_keys, name, data)
+            'object', name, data)
         self.validate_resource_key_type(
             self.RES_DEPENDS_ON,
             collections.Sequence,
-            'list or string', allowed_keys, name, data)
+            'list or string', name, data)
         self.validate_resource_key_type(
             self.RES_DELETION_POLICY,
             (six.string_types, function.Function),
-            'string', allowed_keys, name, data)
+            'string', name, data)
         self.validate_resource_key_type(
             self.RES_UPDATE_POLICY,
             (collections.Mapping, function.Function),
-            'object', allowed_keys, name, data)
+            'object', name, data)
         self.validate_resource_key_type(
             self.RES_DESCRIPTION,
             six.string_types,
-            'string', allowed_keys, name, data)
+            'string', name, data)
 
     def validate_resource_definitions(self, stack):
         """Check section's type of ResourceDefinitions."""

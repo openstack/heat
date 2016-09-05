@@ -16,6 +16,7 @@ import collections
 import copy
 import functools
 import hashlib
+import warnings
 
 import six
 from stevedore import extension
@@ -212,11 +213,22 @@ class Template(collections.Mapping):
     @classmethod
     def validate_resource_key_type(cls, key, valid_types, typename,
                                    allowed_keys, rsrc_name, rsrc_data):
-        """Validation type of the specific resource key.
+        """Validate the type of the value provided for a specific resource key.
 
-        Used in validate_resource_definition and check correctness of
-        key's type.
+        This method is deprecated. This is a utility function previously used
+        by the HOT and CFN template implementations. Its API makes no sense
+        since it attempts to check both properties of user-provided keys
+        (i.e. whether they're valid keys) and properties that must necessarily
+        be associated with a pre-defined whitelist of keys (i.e. knowing what
+        types the values should be associated with). This method will be
+        removed in a future version of Heat.
         """
+        warnings.warn("The validate_resource_key_type() method doesn't make "
+                      "any sense and will be removed in a future version of "
+                      "Heat. Template subclasses should define any "
+                      "validation utility functions they need themselves.",
+                      DeprecationWarning)
+
         if key not in allowed_keys:
             raise ValueError(_('"%s" is not a valid '
                                'keyword inside a resource '
