@@ -33,7 +33,7 @@ resources:
     type: OS::Cinder::Quota
     properties:
       project: demo
-      gigabytes: 1
+      gigabytes: 5
       snapshots: 2
       volumes: 3
 '''
@@ -63,6 +63,19 @@ class CinderQuotaTest(common.HeatTestCase):
         self.quota_set = mock.MagicMock()
         self.quotas.update.return_value = self.quota_set
         self.quotas.delete.return_value = self.quota_set
+
+        class FakeVolumeOrSnapshot(object):
+            def __init__(self, size=1):
+                self.size = size
+        self.fv = FakeVolumeOrSnapshot
+        f_v = self.fv()
+        self.volume_snapshots = self.cinderclient.volume_snapshots
+        self.volume_snapshots.list.return_value = [f_v, f_v]
+        self.volumes = self.cinderclient.volumes
+        self.volumes.list.return_value = [f_v, f_v, f_v]
+        self.err_msg = ("Invalid quota %(property)s value(s): %(value)s. "
+                        "Can not be less than the current usage value(s): "
+                        "%(total)s.")
 
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -106,7 +119,7 @@ class CinderQuotaTest(common.HeatTestCase):
         self.my_quota.handle_create()
         self.quotas.update.assert_called_once_with(
             'some_project_id',
-            gigabytes=1,
+            gigabytes=5,
             snapshots=2,
             volumes=3
         )
@@ -115,7 +128,7 @@ class CinderQuotaTest(common.HeatTestCase):
     def test_quota_handle_update(self):
         tmpl_diff = mock.MagicMock()
         prop_diff = mock.MagicMock()
-        props = {'project': 'some_project_id', 'gigabytes': 2,
+        props = {'project': 'some_project_id', 'gigabytes': 6,
                  'volumes': 4}
         json_snippet = rsrc_defn.ResourceDefinition(
             self.my_quota.name,
@@ -125,7 +138,7 @@ class CinderQuotaTest(common.HeatTestCase):
         self.my_quota.handle_update(json_snippet, tmpl_diff, prop_diff)
         self.quotas.update.assert_called_once_with(
             'some_project_id',
-            gigabytes=2,
+            gigabytes=6,
             volumes=4
         )
 
@@ -133,3 +146,37 @@ class CinderQuotaTest(common.HeatTestCase):
         self.my_quota.reparse()
         self.my_quota.handle_delete()
         self.quotas.delete.assert_called_once_with('some_project_id')
+
+    def test_quota_with_invalid_gigabytes(self):
+        fake_v = self.fv(2)
+        self.volumes.list.return_value = [fake_v, fake_v]
+        self.my_quota.physical_resource_name = mock.MagicMock(
+            return_value='some_resource_id')
+        self.my_quota.reparse()
+        err = self.assertRaises(ValueError, self.my_quota.handle_create)
+        self.assertEqual(
+            self.err_msg % {'property': 'gigabytes', 'value': 5, 'total': 6},
+            six.text_type(err))
+
+    def test_quota_with_invalid_volumes(self):
+        fake_v = self.fv(0)
+        self.volumes.list.return_value = [fake_v, fake_v, fake_v, fake_v]
+        self.my_quota.physical_resource_name = mock.MagicMock(
+            return_value='some_resource_id')
+        self.my_quota.reparse()
+        err = self.assertRaises(ValueError, self.my_quota.handle_create)
+        self.assertEqual(
+            self.err_msg % {'property': 'volumes', 'value': 3, 'total': 4},
+            six.text_type(err))
+
+    def test_quota_with_invalid_snapshots(self):
+        fake_v = self.fv(0)
+        self.volume_snapshots.list.return_value = [fake_v, fake_v, fake_v,
+                                                   fake_v]
+        self.my_quota.physical_resource_name = mock.MagicMock(
+            return_value='some_resource_id')
+        self.my_quota.reparse()
+        err = self.assertRaises(ValueError, self.my_quota.handle_create)
+        self.assertEqual(
+            self.err_msg % {'property': 'snapshots', 'value': 2, 'total': 4},
+            six.text_type(err))
