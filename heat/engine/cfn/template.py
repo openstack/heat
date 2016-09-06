@@ -111,14 +111,7 @@ class CfnTemplateBase(template_common.CommonTemplate):
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
 
-        def rsrc_defn_item(name, snippet):
-            try:
-                data = self.parse(stack, snippet)
-                self._validate_resource_definition(name, data)
-            except (TypeError, ValueError, KeyError) as ex:
-                msg = six.text_type(ex)
-                raise exception.StackValidationFailed(message=msg)
-
+        def build_rsrc_defn(name, data):
             depends = data.get(self.RES_DEPENDS_ON)
             if isinstance(depends, six.string_types):
                 depends = [depends]
@@ -145,13 +138,33 @@ class CfnTemplateBase(template_common.CommonTemplate):
             if hasattr(self, 'RES_CONDITION'):
                 kwargs['condition'] = data.get(self.RES_CONDITION)
 
-            defn = rsrc_defn.ResourceDefinition(name, **kwargs)
-            return name, defn
+            return rsrc_defn.ResourceDefinition(name, **kwargs)
 
-        return dict(
-            rsrc_defn_item(name, data)
-            for name, data in resources.items() if self.get_res_condition(
-                stack, data, name))
+        conditions = template_common.Conditions(self.conditions(stack))
+
+        def defns():
+            for name, snippet in resources.items():
+                try:
+                    data = self.parse(stack, snippet)
+                    self._validate_resource_definition(name, data)
+                except (TypeError, ValueError, KeyError) as ex:
+                    msg = six.text_type(ex)
+                    raise exception.StackValidationFailed(message=msg)
+
+                defn = build_rsrc_defn(name, data)
+                cond_name = defn.condition_name()
+
+                if cond_name is not None:
+                    path = '.'.join([self.RESOURCES,
+                                     name,
+                                     self.RES_CONDITION])
+
+                    if not conditions.is_enabled(cond_name, path):
+                        continue
+
+                yield name, defn
+
+        return dict(defns())
 
     def add_resource(self, definition, name=None):
         if name is None:

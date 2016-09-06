@@ -229,19 +229,30 @@ class HOTemplate20130523(template_common.CommonTemplate):
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
 
-        def rsrc_defn_from_snippet(name, snippet):
-            try:
-                data = self.parse(stack, snippet)
-                self._validate_resource_definition(name, data)
-            except (TypeError, ValueError, KeyError) as ex:
-                msg = six.text_type(ex)
-                raise exception.StackValidationFailed(message=msg)
-            return self.rsrc_defn_from_snippet(name, data)
+        conditions = template_common.Conditions(self.conditions(stack))
 
-        return dict(
-            (name, rsrc_defn_from_snippet(name, data))
-            for name, data in resources.items() if self.get_res_condition(
-                stack, data, name))
+        def defns():
+            for name, snippet in six.iteritems(resources):
+                try:
+                    data = self.parse(stack, snippet)
+                    self._validate_resource_definition(name, data)
+                except (TypeError, ValueError, KeyError) as ex:
+                    msg = six.text_type(ex)
+                    raise exception.StackValidationFailed(message=msg)
+
+                defn = self.rsrc_defn_from_snippet(name, data)
+                cond_name = defn.condition_name()
+
+                if cond_name is not None:
+                    path = '.'.join([self.RESOURCES,
+                                     name,
+                                     self.RES_CONDITION])
+                    if not conditions.is_enabled(cond_name, path):
+                        continue
+
+                yield name, defn
+
+        return dict(defns())
 
     @classmethod
     def rsrc_defn_from_snippet(cls, name, data):

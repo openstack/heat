@@ -114,15 +114,6 @@ class CommonTemplate(template.Template):
     def has_condition_section(self, snippet):
         return False
 
-    def get_res_condition(self, stack, res_data, res_name):
-        """Return the value of condition referenced by resource."""
-
-        path = ''
-        if self.has_condition_section(res_data):
-            path = '.'.join([self.RESOURCES, res_name, self.RES_CONDITION])
-
-        return self.get_condition(res_data, stack, path)
-
     def get_output_condition(self, stack, o_data, o_key):
         path = '.'.join([self.OUTPUTS, o_key, self.OUTPUT_CONDITION])
 
@@ -158,3 +149,18 @@ class CommonTemplate(template.Template):
                     snippet[self.OUTPUT_VALUE] = None
 
         return copy_outputs
+
+
+class Conditions(object):
+    def __init__(self, conditions_dict):
+        self._conditions = conditions_dict
+
+    def is_enabled(self, condition_name, path):
+        if condition_name is None:
+            return True
+
+        if condition_name not in self._conditions:
+            raise exception.InvalidConditionReference(cd=condition_name,
+                                                      path=path)
+
+        return self._conditions[condition_name]

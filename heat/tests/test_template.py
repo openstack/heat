@@ -32,6 +32,7 @@ from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
+from heat.engine import template_common
 from heat.tests import common
 from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -371,19 +372,18 @@ class TestTemplateConditionParser(common.HeatTestCase):
     def test_get_res_condition_invalid(self):
         tmpl = copy.deepcopy(self.tmpl)
         # test condition name is invalid
-        tmpl.t['resources']['r1']['condition'] = 'invalid_cd'
         stk = stack.Stack(self.ctx, 'test_res_invalid_condition', tmpl)
-        res_snippet = tmpl.t.get('resources')['r1']
+
+        conds = template_common.Conditions(tmpl.conditions(stk))
         ex = self.assertRaises(exception.InvalidConditionReference,
-                               tmpl.get_res_condition,
-                               stk, res_snippet, 'r1')
+                               conds.is_enabled, 'invalid_cd',
+                               'resources.r1.condition')
         self.assertIn('Invalid condition "invalid_cd" '
                       '(in resources.r1.condition)', six.text_type(ex))
         # test condition name is not string
-        tmpl.t['resources']['r1']['condition'] = 111
         ex = self.assertRaises(exception.InvalidConditionReference,
-                               tmpl.get_res_condition,
-                               stk, res_snippet, 'r1')
+                               conds.is_enabled, 111,
+                               'resources.r1.condition')
         self.assertIn('Invalid condition "111" (in resources.r1.condition)',
                       six.text_type(ex))
 
