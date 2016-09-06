@@ -47,7 +47,7 @@ class AuthUrlFilterTest(common.HeatTestCase):
         mock_cfg.clients_keystone.auth_uri = 'foobar'
         mock_cfg.keystone_authtoken.auth_uri = 'this-should-be-ignored'
         mock_cfg.auth_password.multi_cloud = False
-        with mock.patch('keystoneclient.discover.Discover') as discover:
+        with mock.patch('keystoneauth1.discover.Discover') as discover:
             class MockDiscover(object):
                 def url_for(self, endpoint):
                     return 'foobar/v3'

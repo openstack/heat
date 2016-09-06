@@ -13,7 +13,8 @@
 #
 #    Copyright 2015 IBM Corp.
 
-from keystoneclient import discover as ks_discover
+from keystoneauth1 import discover as ks_discover
+from keystoneauth1 import session as ks_session
 from oslo_config import cfg
 from oslo_utils import importutils
 
@@ -25,12 +26,10 @@ def get_auth_uri(v3=True):
     # check the [clients_keystone] section, and if it is not set we
     # look in [keystone_authtoken]
     if cfg.CONF.clients_keystone.auth_uri:
+        session = ks_session.Session(**config.get_ssl_options('keystone'))
         discover = ks_discover.Discover(
-            auth_url=cfg.CONF.clients_keystone.auth_uri,
-            cacert=config.get_client_option('keystone', 'ca_file'),
-            insecure=config.get_client_option('keystone', 'insecure'),
-            cert=config.get_client_option('keystone', 'cert_file'),
-            key=config.get_client_option('keystone', 'key_file'))
+            session=session,
+            url=cfg.CONF.clients_keystone.auth_uri)
         return discover.url_for('3.0')
     else:
         # Import auth_token to have keystone_authtoken settings setup.
