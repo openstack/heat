@@ -1357,10 +1357,14 @@ class EngineService(service.Service):
         self.resource_enforcer.enforce_stack(stack)
 
         if stack.convergence and cfg.CONF.convergence_engine:
-            template = templatem.Template.create_empty_template(
-                from_template=stack.t)
-            stack.thread_group_mgr = self.thread_group_mgr
-            stack.converge_stack(template=template, action=stack.DELETE)
+            def convergence_delete():
+                stack.thread_group_mgr = self.thread_group_mgr
+                self.worker_service.stop_all_workers(stack)
+                template = templatem.Template.create_empty_template(
+                    from_template=stack.t)
+                stack.converge_stack(template=template, action=stack.DELETE)
+
+            self.thread_group_mgr.start(stack.id, convergence_delete)
             return
 
         lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)

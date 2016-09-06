@@ -41,8 +41,9 @@ class Engine(message_processor.MessageProcessor):
 
     queue = message_queue.MessageQueue('engine')
 
-    def __init__(self):
+    def __init__(self, worker):
         super(Engine, self).__init__('engine')
+        self.worker = worker
 
     def scenario_template_to_hot(self, scenario_tmpl):
         """Converts the scenario template into hot template."""
@@ -75,6 +76,7 @@ class Engine(message_processor.MessageProcessor):
         cnxt = utils.dummy_context()
         srv = service.EngineService("host", "engine")
         srv.thread_group_mgr = SynchronousThreadGroupManager()
+        srv.worker_service = self.worker
         hot_tmpl = self.scenario_template_to_hot(scenario_tmpl)
         srv.create_stack(cnxt, stack_name, hot_tmpl,
                          params={}, files={}, environment_files=None, args={})
@@ -85,6 +87,7 @@ class Engine(message_processor.MessageProcessor):
         db_stack = db_api.stack_get_by_name(cnxt, stack_name)
         srv = service.EngineService("host", "engine")
         srv.thread_group_mgr = SynchronousThreadGroupManager()
+        srv.worker_service = self.worker
         hot_tmpl = self.scenario_template_to_hot(scenario_tmpl)
         stack_identity = {'stack_name': stack_name,
                           'stack_id': db_stack.id,
@@ -103,6 +106,7 @@ class Engine(message_processor.MessageProcessor):
                           'path': ''}
         srv = service.EngineService("host", "engine")
         srv.thread_group_mgr = SynchronousThreadGroupManager()
+        srv.worker_service = self.worker
         srv.delete_stack(cnxt, stack_identity)
 
     @message_processor.asynchronous
