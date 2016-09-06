@@ -85,6 +85,24 @@ New resource should be marked from which OpenStack release it will be available
 with *support_status* option. For more details, see
 :ref:`supportstatus`.
 
+Resource description
+********************
+
+An important part of future resources is a concisely written description. It
+should be in class docstring and contain information about the resource and
+how it could be useful to the end-user. The docstring description is used in
+documentation generation and should be always defined, if resource is designed
+for public use. Docstring should follows `PEP 257
+<https://www.python.org/dev/peps/pep-0257/>`_.
+
+.. code-block:: python
+
+    class CustomResource(resource.Resource):
+        """This custom resource has description.
+
+        Now end-users could understand the meaning of the resource existing
+        and will use it correctly without any additional questions.
+        """
 
 Properties and Attributes
 +++++++++++++++++++++++++
@@ -185,6 +203,10 @@ reference nested schema definitions.  Following are the parameters to the
   ``True`` means updates are not supported, resource update will fail on
   every change of this property. ``False`` otherwise. Default is ``False``.
 
+*support_status*:
+  Defines current status of the property. Read :ref:`supportstatus` for
+  details.
+
 Accessing property values of the plug-in at runtime is then a simple call to:
 
 .. code-block:: python
@@ -239,29 +261,57 @@ Defining Resource Attributes
 Attributes communicate runtime state of the physical resource. Note that some
 plug-ins do not define any attributes and doing so is optional. If the plug-in
 needs to expose attributes, it will define an ``attributes_schema`` similar to
-the properties schema described above. This schema, however, is much simpler
-to define as each item in the dictionary only defines the attribute name and
-a description of the attribute.
+the properties schema described above. Each item in the schema dictionary
+consists of an attribute name and an attribute Schema object.
 
 .. code-block:: python
 
         attributes_schema = {
-            "foo": _("The foo attribute"),
-            "bar": _("The bar attribute"),
-            "baz": _("The baz attribute")
+            "foo": attributes.Schema(
+                _("The foo attribute"),
+                type=attribute.Schema.STRING
+            ),
+            "bar": attributes.Schema(
+                _("The bar attribute"),
+                type=attribute.Schema.STRING
+            ),
+            "baz": attributes.Schema(
+                _("The baz attribute"),
+                type=attribute.Schema.STRING
+            )
         }
+
+Following are the parameters to the Schema.
+
+*description*
+  A description of the attribute; also used in documentation
+  generation.  Default is ``None`` --- but you should always provide a
+  description.
+
+*type*
+  Defines the type of attribute value. The valid types are
+  the members of the list ``attributes.Schema.TYPES``, currently
+  ``STRING``, ``NUMBER``, ``BOOLEAN``, ``MAP``, and ``LIST``; please use
+  those symbolic names rather than the literals to which they are equated.
+
+*support_status*
+  Defines current status of the attribute. Read :ref:`supportstatus` for
+  details.
 
 If attributes are defined, their values must also be resolved by the plug-in.
 The simplest way to do this is to override the ``_resolve_attribute`` method
-from the ``Resource`` class::
+from the ``Resource`` class:
+
+.. code-block:: python
 
         def _resolve_attribute(self, name):
-            # _example_get_physical_resource is just an example and is not defined
-            # in the Resource class
+            # _example_get_physical_resource is just an example and is not
+            # defined in the Resource class
             phys_resource = self._example_get_physical_resource()
             if phys_resource:
                 if not hasattr(phys_resource, name):
-                        # this is usually not needed, but this is a simple example
+                        # this is usually not needed, but this is a simple
+                        # example
                         raise exception.InvalidTemplateAttribute(name)
                 return getattr(phys_resource, name)
             return None
@@ -270,6 +320,29 @@ If the plug-in needs to be more sophisticated in its attribute resolution, the
 plug-in may instead choose to override ``FnGetAtt``. However, if this method is
 chosen, validation and accessibility of the attribute would be the plug-in's
 responsibility.
+
+Also, each resource has ``show`` attribute by default. The attribute uses
+default implementation from ``heat.engine.resource.Resource`` class, but if
+resource has different way of resolving ``show`` attribute, the
+``_show_resource`` method from the ``Resource`` class will need to be
+overridden:
+
+.. code-block:: python
+
+       def _show_resource(self):
+           """Default implementation; should be overridden by resources.
+
+           :returns: the map of resource information or None
+           """
+           if self.entity:
+               try:
+                   obj = getattr(self.client(), self.entity)
+                   resource = obj.get(self.resource_id)
+                   return resource.to_dict()
+                except AttributeError as ex:
+                    LOG.warning(_LW("Resolving 'show' attribute has "
+                                    "failed : %s"), ex)
+                    return None
 
 Property and Attribute Example
 ******************************
@@ -295,8 +368,15 @@ Assume the following simple property and attribute definition:
         }
 
         attributes_schema = {
-            'Attr_1': 'The first attribute',
-            'Attr_2': 'The second attribute'
+            'Attr_1': attributes.Schema(
+                _('The first attribute'),
+                support_status=support.Status('5.0.0'),
+                type=attributes.Schema.STRING
+            ),
+            'Attr_2': attributes.Schema(
+                _('The second attribute'),
+                type=attributes.Schema.MAP
+            )
         }
 
 Also assume the plug-in defining the above has been registered under the
@@ -429,7 +509,7 @@ physical resource supports suspending*
   :raise: any ``Exception`` if the suspend operation failed.
 
 Resume (Optional)
-******************
+*****************
 *These handler functions are optional and only need to be implemented if the
 physical resource supports resuming from a suspended state*
 
