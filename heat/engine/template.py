@@ -255,10 +255,6 @@ class Template(collections.Mapping):
         """
         pass
 
-    def validate_condition_definitions(self, stack):
-        """Check conditions section."""
-        pass
-
     def conditions(self, stack):
         """Return a dictionary of resolved conditions."""
         return {}

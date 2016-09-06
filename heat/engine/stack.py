@@ -782,9 +782,6 @@ class Stack(collections.Mapping):
         parameter_groups = param_groups.ParameterGroups(self.t)
         parameter_groups.validate()
 
-        # Validate condition definition of conditions section
-        self.t.validate_condition_definitions(self)
-
         # Continue to call this function, since old third-party Template
         # plugins may depend on it being called to validate the resource
         # definitions before actually generating them.
