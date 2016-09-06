@@ -29,22 +29,18 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
     VERSION = '2_0'
 
     def _create(self):
-        args = self._get_client_args(service_name=CLIENT_NAME,
-                                     service_type=self.MONITORING)
-
+        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
+        endpoint = self.url_for(service_type=self.MONITORING,
+                                endpoint_type=interface)
+        # Change this to use session once it's supported by monascaclient
         return client.Client(
             self.VERSION,
-            endpoint=args['os_endpoint'],
-            endpoint_type=args['endpoint_type'],
-            auth_url=args['auth_url'],
-            token=args['token'](),
-            project_id=args['project_id'],
-            service_type=args['service_type'],
-            os_cacert=args['cacert'],
-            cert_file=args['cert_file'],
-            key_file=args['key_file'],
-            insecure=args['insecure']
-        )
+            token=self.context.keystone_session.get_token(),
+            endpoint=endpoint,
+            cacert=self._get_client_option(CLIENT_NAME, 'ca_file'),
+            cert_file=self._get_client_option(CLIENT_NAME, 'cert_file'),
+            key_file=self._get_client_option(CLIENT_NAME, 'key_file'),
+            insecure=self._get_client_option(CLIENT_NAME, 'insecure'))
 
     def is_not_found(self, ex):
         return isinstance(ex, monasca_exc.NotFound)

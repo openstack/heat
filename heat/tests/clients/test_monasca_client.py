@@ -17,6 +17,7 @@ import six
 from heat.common import exception as heat_exception
 from heat.engine.clients.os import monasca as client_plugin
 from heat.tests import common
+from heat.tests import utils
 
 
 class MonascaNotificationConstraintTest(common.HeatTestCase):
@@ -40,54 +41,11 @@ class MonascaNotificationConstraintTest(common.HeatTestCase):
 
 
 class MonascaClientPluginTest(common.HeatTestCase):
-    @mock.patch('heat.engine.clients.os.monasca.client')
-    @mock.patch.object(client_plugin.MonascaClientPlugin,
-                       '_get_client_args')
-    def test_client(self,
-                    mock_get_client_args,
-                    mock_monasca_client):
-        with mock.patch.object(mock_monasca_client,
-                               'Client') as mock_client:
-            args = dict(
-                os_endpoint='endpoint',
-                endpoint_type='endpoint_type',
-                auth_url='auth_url',
-                project_id='project_id',
-                token=lambda: '',
-                service_type='service_type',
-                cacert='os_cacert',
-                cert_file='cert_file',
-                insecure='insecure',
-                key_file='key_file'
-            )
-
-            mock_get_client_args.return_value = args
-
-            _plugin = client_plugin.MonascaClientPlugin(
-                context=mock.MagicMock()
-            )
-            _plugin.client()
-
-            # Make sure the right args are created
-            mock_get_client_args.assert_called_once_with(
-                service_name='monasca',
-                service_type='monitoring'
-            )
-
-            # Make sure proper client_plugin is created with expected args
-            mock_client.assert_called_once_with(
-                '2_0',
-                endpoint=args['os_endpoint'],
-                endpoint_type=args['endpoint_type'],
-                auth_url=args['auth_url'],
-                token=args['token'](),
-                project_id=args['project_id'],
-                service_type=args['service_type'],
-                os_cacert=args['cacert'],
-                cert_file=args['cert_file'],
-                key_file=args['key_file'],
-                insecure=args['insecure']
-            )
+    def test_client(self):
+        context = utils.dummy_context()
+        plugin = context.clients.client_plugin('monasca')
+        client = plugin.client()
+        self.assertIsNotNone(client.metrics)
 
 
 class MonascaClientPluginNotificationTest(common.HeatTestCase):
