@@ -182,9 +182,6 @@ class TranslationRule(object):
 
     def _resolve_param(self, param):
         """Check whether given item is param and resolve, if it is."""
-        # NOTE(prazumovsky): If property uses removed in HOT function,
-        # we should not translate it for correct validating and raising
-        # validation error.
         if isinstance(param, (hot_funcs.GetParam, cfn_funcs.ParamRef)):
             try:
                 return function.resolve(param)

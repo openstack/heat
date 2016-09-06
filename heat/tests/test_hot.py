@@ -1089,8 +1089,8 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'yaql': {'expression': 'invalid(',
                    'data': {'var1': [1, 2, 3, 4]}}}
         tmpl = template.Template(hot_newton_tpl_empty)
-        self.assertRaises(exception.StackValidationFailed,
-                          tmpl.parse, None, snippet)
+        yaql = tmpl.parse(None, snippet)
+        self.assertRaises(ValueError, function.validate, yaql)
 
     def test_yaql_data_as_function(self):
         snippet = {'yaql': {'expression': '$.data.var1.len()',
@@ -1320,8 +1320,8 @@ class HOTemplateTest(common.HeatTestCase):
         # for_each is not a map
         snippet = {'repeat': {'template': 'this is %var%',
                               'for_each': '%var%'}}
-        self.assertRaises(exception.StackValidationFailed,
-                          tmpl.parse, None, snippet)
+        repeat = tmpl.parse(None, snippet)
+        self.assertRaises(TypeError, function.validate, repeat)
 
     def test_digest(self):
         snippet = {'digest': ['md5', 'foobar']}
@@ -1564,8 +1564,9 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'Fn::GetAZs': ''}
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_juno_tpl_empty))
-        error = self.assertRaises(exception.StackValidationFailed,
-                                  stack.t.parse, stack, snippet)
+        error = self.assertRaises(exception.InvalidTemplateVersion,
+                                  function.validate,
+                                  stack.t.parse(stack, snippet))
         self.assertIn(next(iter(snippet)), six.text_type(error))
 
     def test_add_resource(self):
