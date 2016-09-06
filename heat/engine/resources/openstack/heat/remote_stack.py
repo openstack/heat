@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
 
@@ -25,8 +24,6 @@ from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import template
-
-LOG = logging.getLogger(__name__)
 
 
 class RemoteStack(resource.Resource):
