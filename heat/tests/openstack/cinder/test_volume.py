@@ -16,6 +16,7 @@ import copy
 import json
 
 from cinderclient import exceptions as cinder_exp
+import mock
 from oslo_config import cfg
 import six
 
@@ -101,7 +102,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=size, availability_zone='nova',
             description='test_description',
             name='test_name',
-            metadata={'key': 'value'}).AndReturn(fv)
+            metadata={'key': 'value'},
+            multiattach=False
+        ).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume(final_status, id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -131,7 +134,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             description='test_description',
             name='test_name',
             metadata={'key': 'value'},
-            volume_type='lvm').AndReturn(fv)
+            volume_type='lvm',
+            multiattach=False).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -161,7 +165,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone='nova',
             description='ImageVolumeDescription',
             name='ImageVolume',
-            imageRef=image_id).AndReturn(fv)
+            imageRef=image_id,
+            multiattach=False).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -189,7 +194,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
             description='ImageVolumeDescription',
-            name='ImageVolume').AndReturn(fv)
+            name='ImageVolume',
+            multiattach=False).AndReturn(fv)
 
         update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
                                                 'update_readonly_flag')
@@ -223,7 +229,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
             description=None,
-            name=vol_name).AndReturn(fv)
+            name=vol_name,
+            multiattach=False
+        ).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -588,6 +596,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone='nova',
             description='test_description',
             name='test_name',
+            multiattach=False,
             metadata={u'key': u'value'}).AndReturn(fv)
 
         update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
@@ -694,7 +703,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
             description='test_description',
-            name='test_name'
+            name='test_name',
+            multiattach=False
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
@@ -712,6 +722,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(t, stack_name=stack_name)
 
         rsrc = stack['volume']
+        self.patchobject(rsrc, '_store_config_default_properties')
         scheduler.TaskRunner(rsrc.create)()
 
         scheduler.TaskRunner(rsrc.snapshot)()
@@ -731,7 +742,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
             description='test_description',
-            name='test_name'
+            name='test_name',
+            multiattach=False
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
@@ -750,6 +762,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(t, stack_name=stack_name)
 
         rsrc = stack['volume']
+        self.patchobject(rsrc, '_store_config_default_properties')
         scheduler.TaskRunner(rsrc.create)()
 
         self.assertRaises(exception.ResourceFailure,
@@ -818,7 +831,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=2, availability_zone='nova',
             description=None,
-            name=vol2_name).AndReturn(fv2)
+            name=vol2_name,
+            multiattach=False
+        ).AndReturn(fv2)
         self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
         fv2 = vt_base.FakeVolume('available', id=fv2.id)
         self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
@@ -933,7 +948,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, name='test_name', description=None,
             availability_zone='nova',
-            scheduler_hints={'hint1': 'good_advice'}).AndReturn(fv)
+            scheduler_hints={'hint1': 'good_advice'},
+            multiattach=False
+        ).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -942,6 +959,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         stack_name = 'test_cvolume_scheduler_hints_stack'
         stack = utils.parse_stack(self.t, stack_name=stack_name)
+        self.patchobject(stack['volume3'], '_store_config_default_properties')
         self.create_volume(self.t, stack, 'volume3')
 
         self.m.VerifyAll()
@@ -986,6 +1004,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, name='test_name', description='test_description',
             availability_zone=None,
+            multiattach=False,
             scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
                              shm.HEAT_STACK_ID: stack.id,
                              shm.HEAT_STACK_NAME: stack.name,
@@ -997,6 +1016,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
         self.m.ReplayAll()
+        self.patchobject(rsrc, '_store_config_default_properties')
         scheduler.TaskRunner(rsrc.create)()
         # this makes sure the auto increment worked on volume creation
         self.assertTrue(rsrc.id > 0)
@@ -1136,7 +1156,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
             description='test_description',
-            name='test_name'
+            name='test_name',
+            multiattach=False
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
@@ -1164,6 +1185,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         t = template_format.parse(single_cinder_volume_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
+        self.patchobject(stack['volume'], '_store_config_default_properties')
+
         scheduler.TaskRunner(stack.create)()
 
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
@@ -1213,3 +1236,58 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             exception.StackValidationFailed,
             'volume backup service is not enabled',
             rsrc.validate)
+
+    def test_volume_get_live_state(self):
+        tmpl = """
+        heat_template_version: 2013-05-23
+        description: Cinder volume
+        resources:
+          volume:
+            type: OS::Cinder::Volume
+            properties:
+              size: 1
+              name: test_name
+              description: test_description
+              image: 1234
+              scheduler_hints:
+                'consistencygroup_id': 4444
+        """
+        t = template_format.parse(tmpl)
+        stack = utils.parse_stack(t, stack_name='get_live_state')
+        rsrc = stack['volume']
+        rsrc._availability_zone = 'nova'
+        rsrc.resource_id = '1234'
+
+        vol_resp = {
+            'attachments': [],
+            'availability_zone': 'nova',
+            'snapshot_id': None,
+            'size': 1,
+            'metadata': {'test': 'test_value', 'read_only': False},
+            'consistencygroup_id': '4444',
+            'volume_image_metadata': {'image_id': '1234',
+                                      'image_name': 'test'},
+            'description': None,
+            'multiattach': False,
+            'source_volid': None,
+            'name': 'test-volume-jbdbgdsy3vyg',
+            'volume_type': 'lvmdriver-1'
+        }
+        vol = mock.MagicMock()
+        vol.to_dict.return_value = vol_resp
+        rsrc.client().volumes = mock.MagicMock()
+        rsrc.client().volumes.get = mock.MagicMock(return_value=vol)
+        rsrc.client().volume_api_version = 2
+        rsrc.data = mock.MagicMock(return_value={'volume_type': 'lvmdriver-1'})
+
+        reality = rsrc.get_live_state(rsrc.properties)
+        expected = {
+            'size': 1,
+            'metadata': {'test': 'test_value'},
+            'description': None,
+            'name': 'test-volume-jbdbgdsy3vyg',
+            'backup_id': None,
+            'read_only': False,
+        }
+
+        self.assertEqual(expected, reality)
