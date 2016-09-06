@@ -814,8 +814,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_TEMP_URL
 
     def transport_zaqar_message(self, props):
-        return props.get(
-            self.SOFTWARE_CONFIG_TRANSPORT) == self.ZAQAR_MESSAGE
+        return props[
+            self.SOFTWARE_CONFIG_TRANSPORT] == self.ZAQAR_MESSAGE
 
     def get_software_config(self, ud_content):
         try:
