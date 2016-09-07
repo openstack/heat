@@ -1,0 +1,6 @@
+---
+features:
+  - OS::Cinder::QoSSpecs resource plugin added to support cinder QoS Specs,
+    which is provided by cinder ``qos-specs`` API extension.
+  - cinder.qos_specs constraint added to support to validate QoS Specs
+    attribute.
