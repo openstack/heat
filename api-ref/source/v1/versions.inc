@@ -23,13 +23,16 @@ Request Parameters
 
 This operation does not accept a request body.
 
-Request Parameters
+Response Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
    - X-Openstack-Request-Id: request_id
    - versions: versions
+   - id: version_id
+   - status: version_status
+   - links: links
 
 Response Example
 ----------------
