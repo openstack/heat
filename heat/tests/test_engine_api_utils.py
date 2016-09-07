@@ -21,6 +21,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.common import timeutils as heat_timeutils
 from heat.engine import api
 from heat.engine import event
 from heat.engine import parameters
@@ -94,9 +95,9 @@ class FormatTest(common.HeatTestCase):
 
         formatted = api.format_stack_resource(res, False)
         self.assertEqual(resource_keys, set(formatted.keys()))
-        self.assertEqual(self.stack.created_time.isoformat(),
+        self.assertEqual(heat_timeutils.isotime(self.stack.created_time),
                          formatted[rpc_api.RES_CREATION_TIME])
-        self.assertEqual(self.stack.updated_time.isoformat(),
+        self.assertEqual(heat_timeutils.isotime(self.stack.updated_time),
                          formatted[rpc_api.RES_UPDATED_TIME])
         self.assertEqual(res.INIT, formatted[rpc_api.RES_ACTION])
 
@@ -347,7 +348,7 @@ class FormatTest(common.HeatTestCase):
                   'stacks/test_stack/' + self.stack.id)
         expected_stack_info = {
             'capabilities': [],
-            'creation_time': '1970-01-01T00:00:00',
+            'creation_time': '1970-01-01T00:00:00Z',
             'deletion_time': None,
             'description': 'No description',
             'disable_rollback': True,
@@ -387,7 +388,7 @@ class FormatTest(common.HeatTestCase):
 
         self.stack.updated_time = datetime(1970, 1, 1)
         info = api.format_stack(self.stack)
-        self.assertEqual('1970-01-01T00:00:00', info['updated_time'])
+        self.assertEqual('1970-01-01T00:00:00Z', info['updated_time'])
 
     @mock.patch.object(api, 'format_stack_outputs')
     def test_format_stack_adds_outputs(self, mock_fmt_outputs):
@@ -1053,7 +1054,8 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
         self.assertEqual([{'name': 'result'}], result['outputs'])
         self.assertEqual([{'name': 'result'}], result['outputs'])
         self.assertEqual({}, result['options'])
-        self.assertEqual(self.now.isoformat(), result['creation_time'])
+        self.assertEqual(heat_timeutils.isotime(self.now),
+                         result['creation_time'])
 
     def test_format_software_config_none(self):
         self.assertIsNone(api.format_software_config(None))
@@ -1070,8 +1072,10 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
         self.assertEqual(deployment.action, result['action'])
         self.assertEqual(deployment.status, result['status'])
         self.assertEqual(deployment.status_reason, result['status_reason'])
-        self.assertEqual(self.now.isoformat(), result['creation_time'])
-        self.assertEqual(self.now.isoformat(), result['updated_time'])
+        self.assertEqual(heat_timeutils.isotime(self.now),
+                         result['creation_time'])
+        self.assertEqual(heat_timeutils.isotime(self.now),
+                         result['updated_time'])
 
     def test_format_software_deployment_none(self):
         self.assertIsNone(api.format_software_deployment(None))
