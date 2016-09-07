@@ -155,10 +155,7 @@ class CfnTemplateBase(template_common.CommonTemplate):
                 cond_name = defn.condition_name()
 
                 if cond_name is not None:
-                    path = '.'.join([self.RESOURCES,
-                                     name,
-                                     self.RES_CONDITION])
-
+                    path = [self.RESOURCES, name, self.RES_CONDITION]
                     if not conditions.is_enabled(cond_name, path):
                         continue
 

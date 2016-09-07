@@ -321,26 +321,25 @@ class TestTemplateConditionParser(common.HeatTestCase):
         # test with get_attr in equals
         tmpl = template.Template(t)
         stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
-        ex = self.assertRaises(exception.InvalidConditionFunction,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                tmpl._resolve_conditions, stk)
-        self.assertIn('The function is not supported in condition: get_attr',
+        self.assertIn('"get_attr" is invalid', six.text_type(ex))
+        self.assertIn('conditions.prod_env.equals[1].get_attr',
                       six.text_type(ex))
 
         # test with get_resource in top level of a condition
         tmpl.t['conditions']['prod_env'] = {'get_resource': 'R1'}
         stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
-        ex = self.assertRaises(exception.InvalidConditionFunction,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                tmpl._resolve_conditions, stk)
-        self.assertIn('The function is not supported in condition: '
-                      'get_resource', six.text_type(ex))
+        self.assertIn('"get_resource" is invalid', six.text_type(ex))
 
         # test with get_attr in top level of a condition
         tmpl.t['conditions']['prod_env'] = {'get_attr': [None, 'att']}
         stk = stack.Stack(self.ctx, 'test_condition_with_get_attr_func', tmpl)
-        ex = self.assertRaises(exception.InvalidConditionFunction,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                tmpl._resolve_conditions, stk)
-        self.assertIn('The function is not supported in condition: get_attr',
-                      six.text_type(ex))
+        self.assertIn('"get_attr" is invalid', six.text_type(ex))
 
     def test_condition_resolved_not_boolean(self):
         t = {
@@ -358,9 +357,9 @@ class TestTemplateConditionParser(common.HeatTestCase):
         tmpl = template.Template(t)
         stk = stack.Stack(self.ctx, 'test_condition_not_boolean', tmpl)
 
-        ex = self.assertRaises(exception.InvalidConditionDefinition,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                tmpl.conditions, stk)
-        self.assertIn('The definition of condition (prod_env) is invalid',
+        self.assertIn('The definition of condition "prod_env" is invalid',
                       six.text_type(ex))
 
     def test_get_res_condition_invalid(self):
@@ -369,17 +368,17 @@ class TestTemplateConditionParser(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_res_invalid_condition', tmpl)
 
         conds = template_common.Conditions(tmpl.conditions(stk))
-        ex = self.assertRaises(exception.InvalidConditionReference,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                conds.is_enabled, 'invalid_cd',
                                'resources.r1.condition')
-        self.assertIn('Invalid condition "invalid_cd" '
-                      '(in resources.r1.condition)', six.text_type(ex))
+        self.assertIn('Invalid condition "invalid_cd"', six.text_type(ex))
+        self.assertIn('resources.r1.condition', six.text_type(ex))
         # test condition name is not string
-        ex = self.assertRaises(exception.InvalidConditionReference,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                conds.is_enabled, 111,
                                'resources.r1.condition')
-        self.assertIn('Invalid condition "111" (in resources.r1.condition)',
-                      six.text_type(ex))
+        self.assertIn('Invalid condition "111"', six.text_type(ex))
+        self.assertIn('resources.r1.condition', six.text_type(ex))
 
     def test_parse_output_condition_invalid(self):
         stk = stack.Stack(self.ctx,
@@ -388,17 +387,16 @@ class TestTemplateConditionParser(common.HeatTestCase):
 
         # test condition name is invalid
         self.tmpl.t['outputs']['foo']['condition'] = 'invalid_cd'
-        ex = self.assertRaises(exception.InvalidConditionReference,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                lambda: stk.outputs)
-        self.assertIn('Invalid condition "invalid_cd" '
-                      '(in outputs.foo.condition)',
-                      six.text_type(ex))
+        self.assertIn('Invalid condition "invalid_cd"', six.text_type(ex))
+        self.assertIn('outputs.foo.condition', six.text_type(ex))
         # test condition name is not string
         self.tmpl.t['outputs']['foo']['condition'] = 222
-        ex = self.assertRaises(exception.InvalidConditionReference,
+        ex = self.assertRaises(exception.StackValidationFailed,
                                lambda: stk.outputs)
-        self.assertIn('Invalid condition "222" (in outputs.foo.condition)',
-                      six.text_type(ex))
+        self.assertIn('Invalid condition "222"', six.text_type(ex))
+        self.assertIn('outputs.foo.condition', six.text_type(ex))
 
 
 class TestTemplateValidate(common.HeatTestCase):
