@@ -538,6 +538,9 @@ class TestTranslationRule(common.HeatTestCase):
         class rsrc(object):
             action = INIT = "INIT"
 
+            def FnGetRefId(self):
+                return 'resource_id'
+
         class DummyStack(dict):
             pass
 
@@ -615,6 +618,9 @@ class TestTranslationRule(common.HeatTestCase):
 
         class rsrc(object):
             action = INIT = "INIT"
+
+            def FnGetRefId(self):
+                return 'resource_id'
 
         class DummyStack(dict):
             pass
