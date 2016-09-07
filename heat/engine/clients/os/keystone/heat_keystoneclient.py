@@ -42,7 +42,8 @@ _default_keystone_backend = (
 keystone_opts = [
     cfg.StrOpt('keystone_backend',
                default=_default_keystone_backend,
-               help="Fully qualified class name to use as a keystone backend.")
+               help=_("Fully qualified class name to use as a "
+                      "keystone backend."))
 ]
 cfg.CONF.register_opts(keystone_opts)
 

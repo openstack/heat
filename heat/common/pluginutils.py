@@ -13,12 +13,14 @@
 
 from oslo_log import log as logging
 
+from heat.common.i18n import _LW
+
 LOG = logging.getLogger(__name__)
 
 
 def log_fail_msg(manager, entrypoint, exception):
-    LOG.warning('Encountered exception while loading %(module_name)s: '
-                '"%(message)s". Not using %(name)s.' %
+    LOG.warning(_LW('Encountered exception while loading %(module_name)s: '
+                '"%(message)s". Not using %(name)s.'),
                 {'module_name': entrypoint.module_name,
                  'message': exception.message,
                  'name': entrypoint.name})
