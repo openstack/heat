@@ -510,10 +510,9 @@ class EngineService(service.Service):
         """
         if stack_identity is not None:
             db_stack = self._get_stack(cnxt, stack_identity, show_deleted=True)
-            stacks = [parser.Stack.load(cnxt, stack=db_stack,
-                                        resolve_data=resolve_outputs)]
+            stacks = [parser.Stack.load(cnxt, stack=db_stack)]
         else:
-            stacks = parser.Stack.load_all(cnxt, resolve_data=resolve_outputs)
+            stacks = parser.Stack.load_all(cnxt)
 
         return [api.format_stack(
             stack, resolve_outputs=resolve_outputs) for stack in stacks]
@@ -1307,7 +1306,7 @@ class EngineService(service.Service):
         :return: list of stack outputs in defined format.
         """
         s = self._get_stack(cntx, stack_identity)
-        stack = parser.Stack.load(cntx, stack=s, resolve_data=False)
+        stack = parser.Stack.load(cntx, stack=s)
 
         return api.format_stack_outputs(stack, stack.t[stack.t.OUTPUTS])
 
@@ -1321,7 +1320,7 @@ class EngineService(service.Service):
         :return: dict with output key, value and description in defined format.
         """
         s = self._get_stack(cntx, stack_identity)
-        stack = parser.Stack.load(cntx, stack=s, resolve_data=False)
+        stack = parser.Stack.load(cntx, stack=s)
 
         outputs = stack.t[stack.t.OUTPUTS]
 
@@ -1329,9 +1328,6 @@ class EngineService(service.Service):
             raise exception.NotFound(_('Specified output key %s not '
                                        'found.') % output_key)
         output = stack.resolve_outputs_data({output_key: outputs[output_key]})
-
-        if not stack.outputs:
-            stack.outputs.update(output)
 
         return api.format_stack_output(stack, output, output_key)
 
@@ -2332,8 +2328,7 @@ class EngineService(service.Service):
 
                     stk = parser.Stack.load(cnxt, stack=s,
                                             service_check_defer=True,
-                                            resource_validate=False,
-                                            resolve_data=False)
+                                            resource_validate=False)
                     LOG.info(_LI('Engine %(engine)s went down when stack '
                                  '%(stack_id)s was in action %(action)s'),
                              {'engine': engine_id, 'action': stk.action,

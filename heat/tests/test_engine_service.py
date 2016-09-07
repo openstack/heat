@@ -1027,8 +1027,7 @@ class StackServiceTest(common.HeatTestCase):
         t['outputs'] = {'test': {'value': 'first', 'description': 'sec'},
                         'test2': {'value': 'sec'}}
         tmpl = templatem.Template(t)
-        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl,
-                             resolve_data=False)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl)
 
         self.patchobject(self.eng, '_get_stack')
         self.patchobject(parser.Stack, 'load', return_value=stack)
@@ -1050,8 +1049,7 @@ class StackServiceTest(common.HeatTestCase):
         t = template_format.parse(tools.wp_template)
         t['outputs'] = {'test': {'value': 'first', 'description': 'sec'}}
         tmpl = templatem.Template(t)
-        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl,
-                             resolve_data=False)
+        stack = parser.Stack(self.ctx, 'service_list_outputs_stack', tmpl)
 
         self.patchobject(self.eng, '_get_stack')
         self.patchobject(parser.Stack, 'load', return_value=stack)
@@ -1311,8 +1309,7 @@ class StackServiceTest(common.HeatTestCase):
         mock_stack_load.assert_called_once_with(self.ctx,
                                                 stack=db_stack,
                                                 service_check_defer=True,
-                                                resource_validate=False,
-                                                resolve_data=False)
+                                                resource_validate=False)
         self.assertTrue(lock2.release.called)
         mock_thread.start_with_acquired_lock.assert_called_once_with(
             fake_stack, lock1,
