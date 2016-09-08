@@ -576,7 +576,7 @@ class ResourceFacade(function.Function):
             return self.stack.parent_resource.t.deletion_policy()
 
 
-class Not(function.Macro):
+class Not(function.Function):
     """A function acts as a NOT operator.
 
     Takes the form::
@@ -587,7 +587,8 @@ class Not(function.Macro):
     returns false for a condition that evaluates to true.
     """
 
-    def parse_args(self, parse_func):
+    def __init__(self, stack, fn_name, args):
+        super(Not, self).__init__(stack, fn_name, args)
         try:
             if (not self.args or
                     not isinstance(self.args, collections.Sequence) or
@@ -595,21 +596,14 @@ class Not(function.Macro):
                 raise ValueError()
             if len(self.args) != 1:
                 raise ValueError()
-            condition = self.args[0]
+            self.condition = self.args[0]
         except ValueError:
             msg = _('Arguments to "%s" must be of the form: '
                     '[condition]')
             raise ValueError(msg % self.fn_name)
 
-        if isinstance(condition, six.string_types):
-            cd_snippets = self.template.get_condition_definitions()
-            if condition in cd_snippets:
-                condition = cd_snippets[condition]
-
-        return parse_func(condition)
-
     def result(self):
-        resolved_value = function.resolve(self.parsed)
+        resolved_value = function.resolve(self.condition)
         if not isinstance(resolved_value, bool):
             msg = _('The condition value should be boolean, '
                     'after resolved the value is: %s')
