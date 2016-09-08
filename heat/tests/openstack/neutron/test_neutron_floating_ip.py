@@ -22,8 +22,8 @@ from neutronclient.v2_0 import client as neutronclient
 from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils
-from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.clients.os import neutron
+from heat.engine.hot import functions as hot_funcs
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -498,7 +498,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         t = template_format.parse(neutron_floating_no_assoc_template)
         stack = utils.parse_stack(t)
 
-        p_result = self.patchobject(cfn_funcs.ResourceRef, 'result')
+        p_result = self.patchobject(hot_funcs.GetResource, 'result')
         p_result.return_value = 'subnet_uuid'
         # check dependencies for fip resource
         required_by = set(stack.dependencies.required_by(
@@ -515,7 +515,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         p_show = self.patchobject(neutronclient.Client, 'show_network')
         p_show.return_value = {'network': {'subnets': ['subnet_uuid']}}
 
-        p_result = self.patchobject(cfn_funcs.ResourceRef, 'result',
+        p_result = self.patchobject(hot_funcs.GetResource, 'result',
                                     autospec=True)
 
         def return_uuid(self):

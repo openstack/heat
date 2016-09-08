@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import itertools
 
 from oslo_serialization import jsonutils
 import six
@@ -21,6 +20,7 @@ from heat.api.aws import utils as aws_utils
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import function
+from heat.engine.hot import functions as hot_funcs
 
 
 class FindInMap(function.Function):
@@ -88,31 +88,6 @@ class ParamRef(function.Function):
                                                      key='unknown')
 
 
-class ResourceRef(function.Function):
-    """A function for resolving resource references.
-
-    Takes the form::
-
-        { "Ref" : "<resource_name>" }
-    """
-
-    def _resource(self, path='unknown'):
-        resource_name = function.resolve(self.args)
-
-        try:
-            return self.stack[resource_name]
-        except KeyError:
-            raise exception.InvalidTemplateReference(resource=resource_name,
-                                                     key=path)
-
-    def dependencies(self, path):
-        return itertools.chain(super(ResourceRef, self).dependencies(path),
-                               [self._resource(path)])
-
-    def result(self):
-        return self._resource().FnGetRefId()
-
-
 def Ref(stack, fn_name, args):
     """A function for resolving parameters or resource references.
 
@@ -125,25 +100,20 @@ def Ref(stack, fn_name, args):
         { "Ref" : "<resource_name>" }
     """
     if args in stack:
-        RefClass = ResourceRef
+        RefClass = hot_funcs.GetResource
     else:
         RefClass = ParamRef
     return RefClass(stack, fn_name, args)
 
 
-class GetAtt(function.Function):
+class GetAtt(hot_funcs.GetAttThenSelect):
     """A function for resolving resource attributes.
 
     Takes the form::
 
         { "Fn::GetAtt" : [ "<resource_name>",
-                           "<attribute_name" ] }
+                           "<attribute_name>" ] }
     """
-
-    def __init__(self, stack, fn_name, args):
-        super(GetAtt, self).__init__(stack, fn_name, args)
-
-        self._resource_name, self._attribute = self._parse_args()
 
     def _parse_args(self):
         try:
@@ -152,62 +122,7 @@ class GetAtt(function.Function):
             raise ValueError(_('Arguments to "%s" must be of the form '
                                '[resource_name, attribute]') % self.fn_name)
 
-        return resource_name, attribute
-
-    def _resource(self, path='unknown'):
-        resource_name = function.resolve(self._resource_name)
-
-        try:
-            return self.stack[resource_name]
-        except KeyError:
-            raise exception.InvalidTemplateReference(resource=resource_name,
-                                                     key=path)
-
-    def dep_attrs(self, resource_name):
-        if self._resource().name == resource_name:
-            attrs = [function.resolve(self._attribute)]
-        else:
-            attrs = []
-        return itertools.chain(super(GetAtt, self).dep_attrs(resource_name),
-                               attrs)
-
-    def dependencies(self, path):
-        return itertools.chain(super(GetAtt, self).dependencies(path),
-                               [self._resource(path)])
-
-    def _allow_without_attribute_name(self):
-        return False
-
-    def validate(self):
-        super(GetAtt, self).validate()
-        res = self._resource()
-
-        if self._allow_without_attribute_name():
-            # if allow without attribute_name, then don't check
-            # when attribute_name is None
-            if self._attribute is None:
-                return
-
-        attr = function.resolve(self._attribute)
-        from heat.engine import resource
-        if (type(res).get_attribute == resource.Resource.get_attribute and
-                attr not in res.attributes_schema):
-            raise exception.InvalidTemplateAttribute(
-                resource=self._resource_name, key=attr)
-
-    def result(self):
-        attribute = function.resolve(self._attribute)
-
-        r = self._resource()
-        if r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
-                        r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
-            return r.FnGetAtt(attribute)
-        # NOTE(sirushtim): Add r.INIT to states above once convergence
-        # is the default.
-        elif r.stack.has_cache_data(r.name) and r.action == r.INIT:
-            return r.FnGetAtt(attribute)
-        else:
-            return None
+        return resource_name, attribute, []
 
 
 class Select(function.Function):
@@ -217,7 +132,7 @@ class Select(function.Function):
 
         { "Fn::Select" : [ "<index>", [ "<value_1>", "<value_2>", ... ] ] }
 
-    Takes the form (for a map lookup)::
+    or (for a map lookup)::
 
         { "Fn::Select" : [ "<index>", { "<key_1>": "<value_1>", ... } ] }
 
@@ -283,7 +198,7 @@ class Select(function.Function):
                         self.fn_name)
 
 
-class Join(function.Function):
+class Join(hot_funcs.Join):
     """A function for joining strings.
 
     Takes the form::
@@ -294,47 +209,6 @@ class Join(function.Function):
 
         "<string_1><delim><string_2><delim>..."
     """
-
-    def __init__(self, stack, fn_name, args):
-        super(Join, self).__init__(stack, fn_name, args)
-
-        example = '"%s" : [ " ", [ "str1", "str2"]]' % self.fn_name
-        fmt_data = {'fn_name': self.fn_name,
-                    'example': example}
-
-        if not isinstance(self.args, list):
-            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
-                              'should be: %(example)s') % fmt_data)
-
-        try:
-            self._delim, self._strings = self.args
-        except ValueError:
-            raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
-                               'should be: %(example)s') % fmt_data)
-
-    def result(self):
-        strings = function.resolve(self._strings)
-        if strings is None:
-            strings = []
-        if (isinstance(strings, six.string_types) or
-                not isinstance(strings, collections.Sequence)):
-            raise TypeError(_('"%s" must operate on a list') % self.fn_name)
-
-        delim = function.resolve(self._delim)
-        if not isinstance(delim, six.string_types):
-            raise TypeError(_('"%s" delimiter must be a string') %
-                            self.fn_name)
-
-        def ensure_string(s):
-            if s is None:
-                return ''
-            if not isinstance(s, six.string_types):
-                raise TypeError(
-                    _('Items to join must be strings not %s'
-                      ) % (repr(s)[:200]))
-            return s
-
-        return delim.join(ensure_string(s) for s in strings)
 
 
 class Split(function.Function):
@@ -379,7 +253,7 @@ class Split(function.Function):
         return strings.split(self._delim)
 
 
-class Replace(function.Function):
+class Replace(hot_funcs.Replace):
     """A function for performing string substitutions.
 
     Takes the form::
@@ -397,15 +271,6 @@ class Replace(function.Function):
     substituted before shorter ones, but the order in which replacements are
     performed is otherwise undefined.
     """
-
-    def __init__(self, stack, fn_name, args):
-        super(Replace, self).__init__(stack, fn_name, args)
-
-        self._mapping, self._string = self._parse_args()
-        if not isinstance(self._mapping,
-                          (collections.Mapping, function.Function)):
-            raise TypeError(_('"%s" parameters must be a mapping') %
-                            self.fn_name)
 
     def _parse_args(self):
 
@@ -426,39 +291,6 @@ class Replace(function.Function):
                                'should be: %(example)s') % fmt_data)
         else:
             return mapping, string
-
-    def result(self):
-        template = function.resolve(self._string)
-        mapping = function.resolve(self._mapping)
-
-        if not isinstance(template, six.string_types):
-            raise TypeError(_('"%s" template must be a string') % self.fn_name)
-
-        if not isinstance(mapping, collections.Mapping):
-            raise TypeError(_('"%s" params must be a map') % self.fn_name)
-
-        def replace(string, change):
-            placeholder, value = change
-
-            if not isinstance(placeholder, six.string_types):
-                raise TypeError(_('"%s" param placeholders must be strings') %
-                                self.fn_name)
-
-            if value is None:
-                value = ''
-
-            if not isinstance(value,
-                              (six.string_types, six.integer_types,
-                               float, bool)):
-                raise TypeError(_('"%s" params must be strings or numbers') %
-                                self.fn_name)
-
-            return string.replace(placeholder, six.text_type(value))
-
-        mapping = collections.OrderedDict(sorted(mapping.items(),
-                                                 key=lambda t: len(t[0]),
-                                                 reverse=True))
-        return six.moves.reduce(replace, six.iteritems(mapping), template)
 
 
 class Base64(function.Function):
@@ -535,7 +367,7 @@ class MemberListToMap(function.Function):
                                              valuename=self._valuename)
 
 
-class ResourceFacade(function.Function):
+class ResourceFacade(hot_funcs.ResourceFacade):
     """A function for retrieving data in a parent provider template.
 
     A function for obtaining data from the facade resource from within the
@@ -555,40 +387,46 @@ class ResourceFacade(function.Function):
         'Metadata', 'DeletionPolicy', 'UpdatePolicy'
     )
 
-    def __init__(self, stack, fn_name, args):
-        super(ResourceFacade, self).__init__(stack, fn_name, args)
 
-        if self.args not in self._RESOURCE_ATTRIBUTES:
-            fmt_data = {'fn_name': self.fn_name,
-                        'allowed': ', '.join(self._RESOURCE_ATTRIBUTES)}
-            raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
-                               'should be one of: %(allowed)s') % fmt_data)
-
-    def result(self):
-        attr = function.resolve(self.args)
-
-        if attr == self.METADATA:
-            return self.stack.parent_resource.metadata_get()
-        elif attr == self.UPDATE_POLICY:
-            up = self.stack.parent_resource.t._update_policy or {}
-            return function.resolve(up)
-        elif attr == self.DELETION_POLICY:
-            return self.stack.parent_resource.t.deletion_policy()
-
-
-class Not(function.Function):
-    """A function acts as a NOT operator.
+class If(hot_funcs.If):
+    """A function to return corresponding value based on condition evaluation.
 
     Takes the form::
 
-        { "Fn::Not" : [condition] }
+        { "Fn::If" : [ "<condition_name>",
+                       "<value_if_true>",
+                       "<value_if_false>" ] }
+
+    The value_if_true to be returned if the specified condition evaluates
+    to true, the value_if_false to be returned if the specified condition
+    evaluates to false.
+    """
+
+
+class Equals(hot_funcs.Equals):
+    """A function for comparing whether two values are equal.
+
+    Takes the form::
+
+        { "Fn::Equals" : [ "<value_1>", "<value_2>" ] }
+
+    The value can be any type that you want to compare. Returns true
+    if the two values are equal or false if they aren't.
+    """
+
+
+class Not(hot_funcs.Not):
+    """A function that acts as a NOT operator on a condition.
+
+    Takes the form::
+
+        { "Fn::Not" : [ "<condition>" ] }
 
     Returns true for a condition that evaluates to false or
     returns false for a condition that evaluates to true.
     """
 
-    def __init__(self, stack, fn_name, args):
-        super(Not, self).__init__(stack, fn_name, args)
+    def _get_condition(self):
         try:
             if (not self.args or
                     not isinstance(self.args, collections.Sequence) or
@@ -596,7 +434,7 @@ class Not(function.Function):
                 raise ValueError()
             if len(self.args) != 1:
                 raise ValueError()
-            self.condition = self.args[0]
+            return self.args[0]
         except ValueError:
             msg = _('Arguments to "%s" must be of the form: '
                     '[condition]')
@@ -609,3 +447,29 @@ class Not(function.Function):
                     'after resolved the value is: %s')
             raise ValueError(msg % resolved_value)
         return not resolved_value
+
+
+class And(hot_funcs.And):
+    """A function that acts as an AND operator on conditions.
+
+    Takes the form::
+
+        { "Fn::And" : [ "<condition_1>", "<condition_2>", ... ] }
+
+    Returns true if all the specified conditions evaluate to true, or returns
+    false if any one of the conditions evaluates to false. The minimum number
+    of conditions that you can include is 2.
+    """
+
+
+class Or(hot_funcs.Or):
+    """A function that acts as an OR operator on conditions.
+
+    Takes the form::
+
+        { "Fn::Or" : [ "<condition_1>", "<condition_2>", ... ] }
+
+    Returns true if any one of the specified conditions evaluate to true,
+    or returns false if all of the conditions evaluates to false. The minimum
+    number of conditions that you can include is 2.
+    """

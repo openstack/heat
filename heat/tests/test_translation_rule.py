@@ -530,7 +530,7 @@ class TestTranslationRule(common.HeatTestCase):
             pass
 
         stack = DummyStack(another_res=rsrc())
-        ref = cfn_funcs.ResourceRef(stack, 'get_resource',
+        ref = hot_funcs.GetResource(stack, 'get_resource',
                                     'another_res')
         data = {
             'far': [{'red': ref}],
@@ -608,7 +608,7 @@ class TestTranslationRule(common.HeatTestCase):
             pass
 
         stack = DummyStack(another_res=rsrc())
-        ref = cfn_funcs.ResourceRef(stack, 'get_resource',
+        ref = hot_funcs.GetResource(stack, 'get_resource',
                                     'another_res')
         data = {'far': ref}
         props = properties.Properties(schema, data)
