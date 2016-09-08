@@ -962,22 +962,20 @@ class TemplateTest(common.HeatTestCase):
         exc = self.assertRaises(ValueError,
                                 self.resolve_condition, snippet, tmpl)
 
-        error_msg = ('The condition value should be boolean, '
-                     'after resolved the value is: invalid_arg')
+        error_msg = ('The condition value must be a boolean: '
+                     'invalid_arg')
         self.assertIn(error_msg, six.text_type(exc))
         # test invalid type
         snippet = {'Fn::Not': 'invalid'}
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-        error_msg = ('.Fn::Not: Arguments to "Fn::Not" must be '
-                     'of the form: [condition]')
+        error_msg = 'Arguments to "Fn::Not" must be '
         self.assertIn(error_msg, six.text_type(exc))
 
         snippet = {'Fn::Not': ['cd1', 'cd2']}
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-        error_msg = ('.Fn::Not: Arguments to "Fn::Not" must be '
-                     'of the form: [condition]')
+        error_msg = 'Arguments to "Fn::Not" must be '
         self.assertIn(error_msg, six.text_type(exc))
 
     def test_and(self):
@@ -1024,27 +1022,25 @@ class TemplateTest(common.HeatTestCase):
     def test_and_invalid_args(self):
         tmpl = template.Template(aws_empty_template)
 
+        error_msg = ('The minimum number of condition arguments to "Fn::And" '
+                     'is 2.')
         snippet = {'Fn::And': ['invalid_arg']}
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-
-        error_msg = ('.Fn::And: Arguments to "Fn::And" must be '
-                     'of the form: [{condition_1}, {condition_2}, {...}, '
-                     '{condition_n}]')
-
         self.assertIn(error_msg, six.text_type(exc))
+
+        error_msg = 'Arguments to "Fn::And" must be'
         # test invalid type
         snippet = {'Fn::And': 'invalid'}
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-
         self.assertIn(error_msg, six.text_type(exc))
 
         snippet = {'Fn::And': ['cd1', True]}
         exc = self.assertRaises(ValueError,
                                 self.resolve_condition, snippet, tmpl)
-        error_msg = ('The condition value should be boolean, '
-                     'after resolved the value is: cd1')
+        error_msg = ('The condition value must be a boolean: '
+                     'cd1')
         self.assertIn(error_msg, six.text_type(exc))
 
     def test_or(self):
@@ -1087,27 +1083,25 @@ class TemplateTest(common.HeatTestCase):
     def test_or_invalid_args(self):
         tmpl = template.Template(aws_empty_template)
 
+        error_msg = ('The minimum number of condition arguments to "Fn::Or" '
+                     'is 2.')
         snippet = {'Fn::Or': ['invalid_arg']}
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-
-        error_msg = ('.Fn::Or: Arguments to "Fn::Or" must be '
-                     'of the form: [{condition_1}, {condition_2}, {...}, '
-                     '{condition_n}]')
-
         self.assertIn(error_msg, six.text_type(exc))
+
+        error_msg = 'Arguments to "Fn::Or" must be'
         # test invalid type
         snippet = {'Fn::Or': 'invalid'}
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-
         self.assertIn(error_msg, six.text_type(exc))
 
         snippet = {'Fn::Or': ['invalid_cd', True]}
         exc = self.assertRaises(ValueError,
                                 self.resolve_condition, snippet, tmpl)
-        error_msg = ('The condition value should be boolean, '
-                     'after resolved the value is: invalid_cd')
+        error_msg = ('The condition value must be a boolean: '
+                     'invalid_cd')
         self.assertIn(error_msg, six.text_type(exc))
 
     def test_join(self):

@@ -1162,7 +1162,31 @@ class If(function.Macro):
         return self.template.conditions(self.stack).is_enabled(cd_name)
 
 
-class Not(function.Function):
+class ConditionBoolean(function.Function):
+    """Abstract parent class of boolean condition functions."""
+
+    def __init__(self, stack, fn_name, args):
+        super(ConditionBoolean, self).__init__(stack, fn_name, args)
+        self._check_args()
+
+    def _check_args(self):
+        if not (isinstance(self.args, collections.Sequence) and
+                not isinstance(self.args, six.string_types)):
+            msg = _('Arguments to "%s" must be a list of conditions')
+            raise ValueError(msg % self.fn_name)
+        if not self.args or len(self.args) < 2:
+            msg = _('The minimum number of condition arguments to "%s" is 2.')
+            raise ValueError(msg % self.fn_name)
+
+    def _get_condition(self, arg):
+        if isinstance(arg, bool):
+            return arg
+
+        msg = _('The condition value must be a boolean: %s')
+        raise ValueError(msg % arg)
+
+
+class Not(ConditionBoolean):
     """A function that acts as a NOT operator on a condition.
 
     Takes the form::
@@ -1173,30 +1197,18 @@ class Not(function.Function):
     returns false for a condition that evaluates to true.
     """
 
-    def __init__(self, stack, fn_name, args):
-        super(Not, self).__init__(stack, fn_name, args)
-        self.condition = self._get_condition()
-
-    def _get_condition(self):
-        try:
-            if not self.args:
-                raise ValueError()
-            return self.args
-        except ValueError:
-            msg = _('Arguments to "%s" must be of the form: '
-                    'condition')
+    def _check_args(self):
+        self.condition = self.args
+        if self.args is None:
+            msg = _('Argument to "%s" must be a condition')
             raise ValueError(msg % self.fn_name)
 
     def result(self):
-        resolved_value = function.resolve(self.condition)
-        if not isinstance(resolved_value, bool):
-            msg = _('The condition value should be boolean, '
-                    'after resolved the value is: %s')
-            raise ValueError(msg % resolved_value)
-        return not resolved_value
+        cd = function.resolve(self.condition)
+        return not self._get_condition(cd)
 
 
-class And(function.Function):
+class And(ConditionBoolean):
     """A function that acts as an AND operator on conditions.
 
     Takes the form::
@@ -1211,31 +1223,12 @@ class And(function.Function):
     of conditions that you can include is 2.
     """
 
-    def __init__(self, stack, fn_name, args):
-        super(And, self).__init__(stack, fn_name, args)
-        if (not self.args or
-                not (isinstance(self.args, collections.Sequence) and
-                     not isinstance(self.args, six.string_types)) or
-                len(self.args) < 2):
-            msg = _('Arguments to "%s" must be of the form: '
-                    '[{condition_1}, {condition_2}, {...}, {condition_n}], '
-                    'the minimum number of conditions is 2.')
-            raise ValueError(msg % self.fn_name)
-
     def result(self):
-        for cd in self.args:
-            resolved_value = function.resolve(cd)
-            if not isinstance(resolved_value, bool):
-                msg = _('The condition value should be boolean, '
-                        'after resolved the value is: %s')
-                raise ValueError(msg % resolved_value)
-            if not resolved_value:
-                return False
-
-        return True
+        return all(self._get_condition(cd)
+                   for cd in function.resolve(self.args))
 
 
-class Or(function.Function):
+class Or(ConditionBoolean):
     """A function that acts as an OR operator on conditions.
 
     Takes the form::
@@ -1250,25 +1243,6 @@ class Or(function.Function):
     number of conditions that you can include is 2.
     """
 
-    def __init__(self, stack, fn_name, args):
-        super(Or, self).__init__(stack, fn_name, args)
-        if (not self.args or
-                not (isinstance(self.args, collections.Sequence) and
-                     not isinstance(self.args, six.string_types)) or
-                len(self.args) < 2):
-            msg = _('Arguments to "%s" must be of the form: '
-                    '[{condition_1}, {condition_2}, {...}, {condition_n}], '
-                    'the minimum number of conditions is 2.')
-            raise ValueError(msg % self.fn_name)
-
     def result(self):
-        for cd in self.args:
-            resolved_value = function.resolve(cd)
-            if not isinstance(resolved_value, bool):
-                msg = _('The condition value should be boolean, '
-                        'after resolved the value is: %s')
-                raise ValueError(msg % resolved_value)
-            if resolved_value:
-                return True
-
-        return False
+        return any(self._get_condition(cd)
+                   for cd in function.resolve(self.args))
