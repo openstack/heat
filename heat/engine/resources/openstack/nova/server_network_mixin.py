@@ -17,7 +17,7 @@ import eventlet
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import netutils
-import retrying
+import tenacity
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -431,7 +431,7 @@ class ServerNetworkMixin(object):
                                  'server %(server)s.')
                              % {'port': port['id'],
                                 'server': existing_server_id})
-            except retrying.RetryError:
+            except tenacity.RetryError:
                 raise exception.InterfaceDetachFailed(
                     port=port['id'], server=existing_server_id)
 
@@ -448,7 +448,7 @@ class ServerNetworkMixin(object):
                                  'server %(server)s')
                              % {'port': port['id'],
                                 'server': prev_server_id})
-            except retrying.RetryError:
+            except tenacity.RetryError:
                 raise exception.InterfaceAttachFailed(
                     port=port['id'], server=prev_server_id)
 

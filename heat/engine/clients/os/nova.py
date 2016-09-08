@@ -25,9 +25,9 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
-from retrying import retry
 import six
 from six.moves.urllib import parse as urlparse
+import tenacity
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -96,8 +96,12 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         return (isinstance(ex, exceptions.ClientException) and
                 http_status == 422)
 
-    @retry(stop_max_attempt_number=max(cfg.CONF.client_retry_limit + 1, 0),
-           retry_on_exception=client_plugin.retry_if_connection_err)
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(
+            max(cfg.CONF.client_retry_limit + 1, 0)),
+        retry=tenacity.retry_if_exception(
+            client_plugin.retry_if_connection_err),
+        reraise=True)
     def get_server(self, server):
         """Return fresh server object.
 
@@ -544,8 +548,12 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 if len(server.networks[n]) > 0:
                     return server.networks[n][0]
 
-    @retry(stop_max_attempt_number=max(cfg.CONF.client_retry_limit + 1, 0),
-           retry_on_exception=client_plugin.retry_if_connection_err)
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(
+            max(cfg.CONF.client_retry_limit + 1, 0)),
+        retry=tenacity.retry_if_exception(
+            client_plugin.retry_if_connection_err),
+        reraise=True)
     def absolute_limits(self):
         """Return the absolute limits as a dictionary."""
         limits = self.client().limits.get()
@@ -676,9 +684,11 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         else:
             return False
 
-    @retry(stop_max_attempt_number=cfg.CONF.max_interface_check_attempts,
-           wait_fixed=500,
-           retry_on_result=client_plugin.retry_if_result_is_false)
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(
+            cfg.CONF.max_interface_check_attempts),
+        wait=tenacity.wait_fixed(0.5),
+        retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
     def check_interface_detach(self, server_id, port_id):
         server = self.fetch_server(server_id)
         if server:
@@ -688,9 +698,11 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                     return False
         return True
 
-    @retry(stop_max_attempt_number=cfg.CONF.max_interface_check_attempts,
-           wait_fixed=500,
-           retry_on_result=client_plugin.retry_if_result_is_false)
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(
+            cfg.CONF.max_interface_check_attempts),
+        wait=tenacity.wait_fixed(0.5),
+        retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
     def check_interface_attach(self, server_id, port_id):
         server = self.fetch_server(server_id)
         if server:

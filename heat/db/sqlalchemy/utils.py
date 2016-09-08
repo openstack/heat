@@ -13,9 +13,9 @@
 
 # SQLAlchemy helper functions
 
-import retrying
 import sqlalchemy
 from sqlalchemy.orm import exc
+import tenacity
 
 
 def clone_table(name, parent, meta, newcols=None, ignorecols=None,
@@ -91,8 +91,8 @@ def migrate_data(migrate_engine,
 
 
 def retry_on_stale_data_error(func):
-    def is_staledata_error(ex):
-        return isinstance(ex, exc.StaleDataError)
-    wrapper = retrying.retry(stop_max_attempt_number=3,
-                             retry_on_exception=is_staledata_error)
+    wrapper = tenacity.retry(
+        stop=tenacity.stop_after_attempt(3),
+        retry=tenacity.retry_if_exception_type(exc.StaleDataError),
+        reraise=True)
     return wrapper(func)

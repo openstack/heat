@@ -21,8 +21,8 @@ from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
-import retrying
 import six
+import tenacity
 
 from heat.common import crypt
 from heat.common import exception
@@ -36,11 +36,12 @@ cfg.CONF.import_opt('encrypt_parameters_and_properties', 'heat.common.config')
 
 
 def retry_on_conflict(func):
-    def is_conflict(ex):
-        return isinstance(ex, exception.ConcurrentTransaction)
-    wrapper = retrying.retry(stop_max_attempt_number=11,
-                             wait_random_min=0.0, wait_random_max=2.0,
-                             retry_on_exception=is_conflict)
+    wrapper = tenacity.retry(
+        stop=tenacity.stop_after_attempt(11),
+        wait=tenacity.wait_random(max=0.002),
+        retry=tenacity.retry_if_exception_type(
+            exception.ConcurrentTransaction),
+        reraise=True)
     return wrapper(func)
 
 
