@@ -793,6 +793,8 @@ class Stack(collections.Mapping):
                           DeprecationWarning)
         self.t.validate_resource_definitions(self)
 
+        self.t.conditions(self).validate()
+
         # Load the resources definitions (success of which implies the
         # definitions are valid)
         resources = self.resources
@@ -808,7 +810,7 @@ class Stack(collections.Mapping):
         if validate_by_deps:
             iter_rsc = self.dependencies
         else:
-            iter_rsc = six.itervalues(self.resources)
+            iter_rsc = six.itervalues(resources)
 
         for res in iter_rsc:
             try:

@@ -23,6 +23,7 @@ from stevedore import extension
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.engine import conditions
 from heat.engine import environment
 from heat.engine import function
 from heat.engine import output
@@ -254,7 +255,7 @@ class Template(collections.Mapping):
 
     def conditions(self, stack):
         """Return a dictionary of resolved conditions."""
-        return {}
+        return conditions.Conditions({})
 
     def outputs(self, stack):
         warnings.warn("The default implementation of the outputs() method "

@@ -950,15 +950,11 @@ class If(function.Macro):
                     '[condition_name, value_if_true, value_if_false]')
             raise ValueError(msg % self.fn_name)
 
-        cd = self.get_condition(cd_name)
+        cd = self._get_condition(cd_name)
         return parse_func(value_if_true if cd else value_if_false)
 
-    def get_condition(self, cd_name):
-        conditions = self.template.conditions(self.stack)
-        if cd_name not in conditions:
-            raise KeyError(_('Invalid condition name "%s"') % cd_name)
-
-        return conditions[cd_name]
+    def _get_condition(self, cd_name):
+        return self.template.conditions(self.stack).is_enabled(cd_name)
 
 
 class Not(function.Function):

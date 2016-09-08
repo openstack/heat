@@ -140,7 +140,7 @@ class CfnTemplateBase(template_common.CommonTemplate):
 
             return rsrc_defn.ResourceDefinition(name, **kwargs)
 
-        conditions = template_common.Conditions(self.conditions(stack))
+        conditions = self.conditions(stack)
 
         def defns():
             for name, snippet in resources.items():
@@ -155,8 +155,14 @@ class CfnTemplateBase(template_common.CommonTemplate):
                 cond_name = defn.condition_name()
 
                 if cond_name is not None:
-                    path = [self.RESOURCES, name, self.RES_CONDITION]
-                    if not conditions.is_enabled(cond_name, path):
+                    try:
+                        enabled = conditions.is_enabled(cond_name)
+                    except ValueError as exc:
+                        path = [self.RESOURCES, name, self.RES_CONDITION]
+                        message = six.text_type(exc)
+                        raise exception.StackValidationFailed(path=path,
+                                                              message=message)
+                    if not enabled:
                         continue
 
                 yield name, defn
