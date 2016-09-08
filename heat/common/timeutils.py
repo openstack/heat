@@ -85,3 +85,13 @@ def round_to_seconds(dt):
         rounding = 1
     return dt + datetime.timedelta(0, rounding,
                                    -dt.microsecond)
+
+
+def isotime(at):
+    """Stringify UTC time in ISO 8601 format.
+
+    :param at: Timestamp in UTC to format.
+    """
+    if at is None:
+        return None
+    return at.strftime('%Y-%m-%dT%H:%M:%SZ')

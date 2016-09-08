@@ -14,6 +14,7 @@
 import mock
 from oslo_utils import timeutils
 
+from heat.common import timeutils as heat_timeutils
 from heat.engine import notification
 from heat.tests import common
 from heat.tests import utils
@@ -54,11 +55,11 @@ class StackTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': created_time.isoformat(),
+             'create_at': heat_timeutils.isotime(created_time),
              'state': 'x_f',
              'description': 'for test',
              'tags': ['tag1', 'tag2'],
-             'updated_at': updated_time.isoformat()})
+             'updated_at': heat_timeutils.isotime(updated_time)})
 
 
 class AutoScaleTest(common.HeatTestCase):
@@ -106,10 +107,10 @@ class AutoScaleTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': stack.created_time.isoformat(),
+             'create_at': heat_timeutils.isotime(stack.created_time),
              'description': 'for test',
              'tags': ['tag1', 'tag2'],
-             'updated_at': stack.updated_time.isoformat(),
+             'updated_at': heat_timeutils.isotime(stack.updated_time),
              'state': 'x_f', 'adjustment_type': 'y',
              'groupname': 'c', 'capacity': '5',
              'message': 'fred', 'adjustment': 'x'})
@@ -132,10 +133,10 @@ class AutoScaleTest(common.HeatTestCase):
              'stack_identity': 'hay-are-en',
              'stack_name': 'fred',
              'tenant_id': 'test_tenant_id',
-             'create_at': stack.created_time.isoformat(),
+             'create_at': heat_timeutils.isotime(stack.created_time),
              'description': 'for test',
              'tags': ['tag1', 'tag2'],
-             'updated_at': stack.updated_time.isoformat(),
+             'updated_at': heat_timeutils.isotime(stack.updated_time),
              'state': 'x_f', 'adjustment_type': 'y',
              'groupname': 'c', 'capacity': '5',
              'message': 'error', 'adjustment': 'x'})
