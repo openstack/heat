@@ -425,11 +425,12 @@ class HOTemplate20161014(HOTemplate20160408):
     _CFN_TO_HOT_SECTIONS.update({
         cfn_template.CfnTemplate.CONDITIONS: CONDITIONS})
 
-    CONDITION = 'condition'
-
-    _RESOURCE_KEYS = HOTemplate20160408._RESOURCE_KEYS
-    _EXTRA_KEYS = (RES_EXTERNAL_ID, RES_CONDITION) = ('external_id', CONDITION)
-    _RESOURCE_KEYS += _EXTRA_KEYS
+    _EXTRA_RES_KEYS = (
+        RES_EXTERNAL_ID, RES_CONDITION
+    ) = (
+        'external_id', 'condition'
+    )
+    _RESOURCE_KEYS = HOTemplate20160408._RESOURCE_KEYS + _EXTRA_RES_KEYS
 
     _RESOURCE_HOT_TO_CFN_ATTRS = HOTemplate20160408._RESOURCE_HOT_TO_CFN_ATTRS
     _RESOURCE_HOT_TO_CFN_ATTRS.update({
@@ -437,7 +438,7 @@ class HOTemplate20161014(HOTemplate20160408):
         RES_CONDITION: cfn_template.CfnTemplate.RES_CONDITION,
     })
 
-    OUTPUT_CONDITION = CONDITION
+    OUTPUT_CONDITION = 'condition'
     OUTPUT_KEYS = HOTemplate20160408.OUTPUT_KEYS + (OUTPUT_CONDITION,)
 
     deletion_policies = {
@@ -510,7 +511,7 @@ class HOTemplate20161014(HOTemplate20160408):
         self._parser_condition_functions.update(self.condition_functions)
         self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
-    def get_condition_definitions(self):
+    def _get_condition_definitions(self):
         return self.t.get(self.CONDITIONS, {})
 
     def _validate_resource_definition(self, name, data):
@@ -523,9 +524,3 @@ class HOTemplate20161014(HOTemplate20160408):
         self.validate_resource_key_type(self.RES_CONDITION,
                                         (six.string_types, bool),
                                         'string or boolean', name, data)
-
-    def has_condition_section(self, snippet):
-        if snippet and self.CONDITION in snippet:
-            return True
-
-        return False
