@@ -1180,6 +1180,35 @@ class HOTemplateTest(common.HeatTestCase):
             resolved = self.resolve(snippet, tmpl, stack)
             self.assertEqual('value_if_false', resolved)
 
+    def test_if_using_boolean_condition(self):
+        snippet = {'if': [True, 'value_if_true', 'value_if_false']}
+        # when condition is true, if function resolve to value_if_true
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_if_using_boolean_condition', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertEqual('value_if_true', resolved)
+        # when condition is false, if function resolve to value_if_false
+        snippet = {'if': [False, 'value_if_true', 'value_if_false']}
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertEqual('value_if_false', resolved)
+
+    def test_if_using_condition_function(self):
+        tmpl_with_conditions = template_format.parse('''
+heat_template_version: 2016-10-14
+conditions:
+  create_prod: False
+''')
+        snippet = {'if': [{'not': 'create_prod'},
+                          'value_if_true', 'value_if_false']}
+
+        tmpl = template.Template(tmpl_with_conditions)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_if_using_condition_function', tmpl)
+
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertEqual('value_if_true', resolved)
+
     def test_if_invalid_args(self):
         snippet = {'if': ['create_prod', 'one_value']}
         tmpl = template.Template(hot_newton_tpl_empty)

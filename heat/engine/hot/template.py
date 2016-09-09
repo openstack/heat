@@ -241,7 +241,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
                     raise exception.StackValidationFailed(message=msg)
 
                 defn = rsrc_defn.ResourceDefinition(name, **defn_data)
-                cond_name = defn.condition_name()
+                cond_name = defn.condition()
 
                 if cond_name is not None:
                     try:
@@ -494,9 +494,7 @@ class HOTemplate20161014(HOTemplate20160408):
             yield arg
 
         parse = functools.partial(self.parse, stack)
-
-        def no_parse(field, path):
-            return field
+        parse_cond = functools.partial(self.parse_condition, stack)
 
         yield ('external_id',
                self._parse_resource_field(self.RES_EXTERNAL_ID,
@@ -507,6 +505,7 @@ class HOTemplate20161014(HOTemplate20160408):
 
         yield ('condition',
                self._parse_resource_field(self.RES_CONDITION,
-                                          (six.string_types, bool),
-                                          'string or boolean',
-                                          name, data, no_parse))
+                                          (six.string_types, bool,
+                                           function.Function),
+                                          'string_or_boolean',
+                                          name, data, parse_cond))

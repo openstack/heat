@@ -297,7 +297,7 @@ class TestTemplateConditionParser(common.HeatTestCase):
             'outputs': {
                 'foo': {
                     'condition': 'prod_env',
-                    'value': {'get_attr': ['r1', 'foo']}
+                    'value': 'show me'
                 }
             }
         }
@@ -400,6 +400,15 @@ class TestTemplateConditionParser(common.HeatTestCase):
         ex = self.assertRaises(ValueError, conds.is_enabled, 111)
         self.assertIn('Invalid condition "111"', six.text_type(ex))
 
+    def test_res_condition_using_boolean(self):
+        tmpl = copy.deepcopy(self.tmpl)
+        # test condition name is boolean
+        stk = stack.Stack(self.ctx, 'test_res_cd_boolean', tmpl)
+
+        conds = tmpl.conditions(stk)
+        self.assertTrue(conds.is_enabled(True))
+        self.assertFalse(conds.is_enabled(False))
+
     def test_parse_output_condition_invalid(self):
         stk = stack.Stack(self.ctx,
                           'test_output_invalid_condition',
@@ -440,6 +449,31 @@ class TestTemplateConditionParser(common.HeatTestCase):
                                conds.is_enabled, 'first_cond')
         self.assertIn('Circular definition for condition "first_cond"',
                       six.text_type(ex))
+
+    def test_parse_output_condition_boolean(self):
+        t = copy.deepcopy(self.tmpl.t)
+        t['outputs']['foo']['condition'] = True
+        stk = stack.Stack(self.ctx,
+                          'test_output_cd_boolean',
+                          template.Template(t))
+
+        self.assertEqual('show me', stk.outputs['foo'].get_value())
+
+        t = copy.deepcopy(self.tmpl.t)
+        t['outputs']['foo']['condition'] = False
+        stk = stack.Stack(self.ctx,
+                          'test_output_cd_boolean',
+                          template.Template(t))
+        self.assertIsNone(stk.outputs['foo'].get_value())
+
+    def test_parse_output_condition_function(self):
+        t = copy.deepcopy(self.tmpl.t)
+        t['outputs']['foo']['condition'] = {'not': 'prod_env'}
+        stk = stack.Stack(self.ctx,
+                          'test_output_cd_function',
+                          template.Template(t))
+
+        self.assertEqual('show me', stk.outputs['foo'].get_value())
 
 
 class TestTemplateValidate(common.HeatTestCase):

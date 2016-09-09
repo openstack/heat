@@ -644,7 +644,7 @@ the following syntax
        update_policy: <update policy>
        deletion_policy: <deletion policy>
        external_id: <external resource ID>
-       condition: <condition name>
+       condition: <condition name or expression or boolean>
 
 resource ID
     A resource ID which must be unique within the ``resources`` section of the
@@ -775,7 +775,7 @@ according to the following syntax
      <parameter name>:
        description: <description>
        value: <parameter value>
-       condition: <condition name>
+       condition: <condition name or expression or boolean>
 
 parameter name
     The output parameter name, which must be unique within the ``outputs``

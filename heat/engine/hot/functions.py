@@ -1149,17 +1149,22 @@ class If(function.Macro):
                     not isinstance(self.args, collections.Sequence) or
                     isinstance(self.args, six.string_types)):
                 raise ValueError()
-            cd_name, value_if_true, value_if_false = self.args
+            condition, value_if_true, value_if_false = self.args
         except ValueError:
             msg = _('Arguments to "%s" must be of the form: '
                     '[condition_name, value_if_true, value_if_false]')
             raise ValueError(msg % self.fn_name)
 
-        cd = self._get_condition(cd_name)
+        cond = self.template.parse_condition(self.stack, condition,
+                                             self.fn_name)
+        cd = self._get_condition(function.resolve(cond))
         return parse_func(value_if_true if cd else value_if_false)
 
-    def _get_condition(self, cd_name):
-        return self.template.conditions(self.stack).is_enabled(cd_name)
+    def _get_condition(self, cond):
+        if isinstance(cond, bool):
+            return cond
+
+        return self.template.conditions(self.stack).is_enabled(cond)
 
 
 class ConditionBoolean(function.Function):
