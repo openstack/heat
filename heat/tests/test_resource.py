@@ -1193,7 +1193,7 @@ class ResourceTest(common.HeatTestCase):
         prop_diff = {'Foo': 'xyz'}
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         generic_rsrc.ResourceWithProps.handle_update(
-            utmpl, tmpl_diff, prop_diff).AndRaise(NotImplemented)
+            utmpl, tmpl_diff, prop_diff).AndRaise(NotImplementedError)
         self.m.ReplayAll()
         updater = scheduler.TaskRunner(res.update, utmpl)
         self.assertRaises(exception.ResourceFailure, updater)
