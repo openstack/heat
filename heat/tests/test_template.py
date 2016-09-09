@@ -387,18 +387,16 @@ class TestTemplateConditionParser(common.HeatTestCase):
                           self.tmpl)
 
         # test condition name is invalid
-        stk.outputs['foo']['condition'] = 'invalid_cd'
+        self.tmpl.t['outputs']['foo']['condition'] = 'invalid_cd'
         ex = self.assertRaises(exception.InvalidConditionReference,
-                               self.tmpl.parse_outputs_conditions,
-                               stk.outputs, stk)
+                               lambda: stk.outputs)
         self.assertIn('Invalid condition "invalid_cd" '
                       '(in outputs.foo.condition)',
                       six.text_type(ex))
         # test condition name is not string
-        stk.outputs['foo']['condition'] = 222
+        self.tmpl.t['outputs']['foo']['condition'] = 222
         ex = self.assertRaises(exception.InvalidConditionReference,
-                               self.tmpl.parse_outputs_conditions,
-                               stk.outputs, stk)
+                               lambda: stk.outputs)
         self.assertIn('Invalid condition "222" (in outputs.foo.condition)',
                       six.text_type(ex))
 

@@ -25,6 +25,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import environment
 from heat.engine import function
+from heat.engine import output
 from heat.engine import template_files
 from heat.objects import raw_template as template_object
 
@@ -258,6 +259,36 @@ class Template(collections.Mapping):
     def conditions(self, stack):
         """Return a dictionary of resolved conditions."""
         return {}
+
+    def outputs(self, stack):
+        resolve_outputs = self.parse_outputs_conditions(self[self.OUTPUTS],
+                                                        stack)
+        outputs = self.parse(stack, resolve_outputs, path=self.OUTPUTS)
+
+        def get_outputs():
+            for key, val in outputs.items():
+                if not isinstance(val, collections.Mapping):
+                    message = _('Outputs must contain Output. '
+                                'Found a [%s] instead') % type(val)
+                    raise exception.StackValidationFailed(
+                        error='Output validation error',
+                        path=[self.OUTPUTS, key],
+                        message=message)
+
+                if self.OUTPUT_VALUE not in val:
+                    message = _('Each output must contain '
+                                'a %s key.') % self.OUTPUT_VALUE
+                    raise exception.StackValidationFailed(
+                        error='Output validation error',
+                        path=[self.OUTPUTS, key],
+                        message=message)
+
+                value_def = val[self.OUTPUT_VALUE]
+                description = val.get(self.OUTPUT_DESCRIPTION)
+
+                yield key, output.OutputDefinition(key, value_def, description)
+
+        return dict(get_outputs())
 
     @abc.abstractmethod
     def resource_definitions(self, stack):

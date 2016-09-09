@@ -427,8 +427,7 @@ class FormatTest(common.HeatTestCase):
         stack.status = 'COMPLETE'
         stack['generic'].action = 'CREATE'
         stack['generic'].status = 'COMPLETE'
-        info = api.format_stack_outputs(stack, stack.outputs,
-                                        resolve_value=True)
+        info = api.format_stack_outputs(stack.outputs, resolve_value=True)
         expected = [{'description': 'No description given',
                      'output_error': 'The Referenced Attribute (generic Bar) '
                                      'is incorrect.',
@@ -463,7 +462,7 @@ class FormatTest(common.HeatTestCase):
         stack.status = 'COMPLETE'
         stack['generic'].action = 'CREATE'
         stack['generic'].status = 'COMPLETE'
-        info = api.format_stack_outputs(stack, stack.outputs)
+        info = api.format_stack_outputs(stack.outputs)
         expected = [{'description': 'No description given',
                      'output_key': 'incorrect_output'},
                     {'description': 'Good output',

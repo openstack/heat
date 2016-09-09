@@ -42,7 +42,6 @@ from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import event
-from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parameter_groups as param_groups
 from heat.engine import resource
@@ -297,8 +296,7 @@ class Stack(collections.Mapping):
     @property
     def outputs(self):
         if self._outputs is None:
-            self._outputs = self.resolve_outputs_data(self.t[self.t.OUTPUTS],
-                                                      path=self.t.OUTPUTS)
+            self._outputs = self.t.outputs(self)
         return self._outputs
 
     @property
@@ -458,8 +456,7 @@ class Stack(collections.Mapping):
         """
         attr_lists = itertools.chain((res.dep_attrs(resource_name)
                                       for res in resources),
-                                     (function.dep_attrs(
-                                         out.get(value_sec, ''), resource_name)
+                                     (out.dep_attrs(resource_name)
                                       for out in six.itervalues(outputs)))
         return set(itertools.chain.from_iterable(attr_lists))
 
@@ -834,32 +831,16 @@ class Stack(collections.Mapping):
             if result:
                 raise exception.StackValidationFailed(message=result)
 
-        for key, val in self.outputs.items():
-            if not isinstance(val, collections.Mapping):
-                message = _('Outputs must contain Output. '
-                            'Found a [%s] instead') % type(val)
-                raise exception.StackValidationFailed(
-                    error='Output validation error',
-                    path=[self.t.OUTPUTS],
-                    message=message)
+        for op_name, output in six.iteritems(self.outputs):
             try:
-                if not val or self.t.OUTPUT_VALUE not in val:
-                    message = _('Each Output must contain '
-                                'a Value key.')
-                    raise exception.StackValidationFailed(
-                        error='Output validation error',
-                        path=[self.t.OUTPUTS, key],
-                        message=message)
-                function.validate(val.get(self.t.OUTPUT_VALUE))
+                output.validate()
             except exception.StackValidationFailed as ex:
                 raise
             except AssertionError:
                 raise
             except Exception as ex:
                 raise exception.StackValidationFailed(
-                    error='Output validation error',
-                    path=[self.t.OUTPUTS, key,
-                          self.t.OUTPUT_VALUE],
+                    error='Validation error in output "%s"' % op_name,
                     message=six.text_type(ex))
 
     def requires_deferred_auth(self):
@@ -1900,16 +1881,6 @@ class Stack(collections.Mapping):
                                        action=self.RESTORE)
         updater()
 
-    @profiler.trace('Stack.output', hide_args=False)
-    def output(self, key):
-        """Get the value of the specified stack output."""
-        value = self.outputs[key].get(self.t.OUTPUT_VALUE, '')
-        try:
-            return function.resolve(value)
-        except Exception as ex:
-            self.outputs[key]['error_msg'] = six.text_type(ex)
-            return None
-
     def restart_resource(self, resource_name):
         """Restart the resource specified by resource_name.
 
@@ -1985,15 +1956,10 @@ class Stack(collections.Mapping):
 
     def resolve_static_data(self, snippet, path=''):
         warnings.warn('Stack.resolve_static_data() is deprecated and '
-                      'will be removed in the Ocata release. Use the '
-                      'Stack.resolve_outputs_data() instead.',
+                      'will be removed in the Ocata release.',
                       DeprecationWarning)
 
         return self.t.parse(self, snippet, path=path)
-
-    def resolve_outputs_data(self, outputs, path=''):
-        resolve_outputs = self.t.parse_outputs_conditions(outputs, self)
-        return self.t.parse(self, resolve_outputs, path=path)
 
     def reset_resource_attributes(self):
         # nothing is cached if no resources exist

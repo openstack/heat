@@ -298,7 +298,7 @@ class TemplateResource(stack_resource.StackResource):
             return six.text_type(self.name)
 
         if 'OS::stack_id' in self.nested().outputs:
-            return self.nested().output('OS::stack_id')
+            return self.nested().outputs['OS::stack_id'].get_value()
 
         return self.nested().identifier().arn()
 
