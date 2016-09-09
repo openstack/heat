@@ -37,8 +37,8 @@ class Event(
         'physical_resource_id': fields.StringField(nullable=True),
         'resource_status_reason': fields.StringField(nullable=True),
         'resource_type': fields.StringField(nullable=True),
-        'rsrc_prop_data': fields.ObjectField(
-            rpd.ResourcePropertiesData),
+        'rsrc_prop_data_id': fields.ObjectField(
+            fields.IntegerField(nullable=True)),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
     }
@@ -46,13 +46,13 @@ class Event(
     @staticmethod
     def _from_db_object(context, event, db_event):
         for field in event.fields:
+            if field == 'resource_status_reason':
+                # this works whether db_event is a dict or db ref
+                event[field] = db_event['_resource_status_reason']
+            else:
                 event[field] = db_event[field]
-        if db_event['rsrc_prop_data']:
-            event['rsrc_prop_data'] = \
-                rpd.ResourcePropertiesData._from_db_object(
-                    rpd.ResourcePropertiesData(context), context,
-                    db_event['rsrc_prop_data'])
-            event._resource_properties = event['rsrc_prop_data'].data
+        if db_event['rsrc_prop_data_id'] is not None:
+            event._resource_properties = None
         else:
             event._resource_properties = db_event['resource_properties'] or {}
         event._context = context
@@ -61,6 +61,10 @@ class Event(
 
     @property
     def resource_properties(self):
+        if self._resource_properties is None:
+            rpd_obj = rpd.ResourcePropertiesData.get_by_id(
+                self._context, self.rsrc_prop_data_id)
+            self._resource_properties = rpd_obj.data or {}
         return self._resource_properties
 
     @classmethod
@@ -92,8 +96,11 @@ class Event(
 
     @classmethod
     def create(cls, context, values):
-        return cls._from_db_object(context, cls(),
-                                   db_api.event_create(context, values))
+        # Using dict() allows us to be done with the sqlalchemy/model
+        # layer in one call, rather than hitting that layer for every
+        # field in _from_db_object().
+        return cls._from_db_object(context, cls(context=context),
+                                   dict(db_api.event_create(context, values)))
 
     def identifier(self, stack_identifier):
         """Return a unique identifier for the event."""

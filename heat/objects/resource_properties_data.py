@@ -46,6 +46,11 @@ class ResourcePropertiesData(
         elif db_rpd['encrypted'] and rpd['data'] is not None:
             rpd['data'] = crypt.decrypted_dict(rpd['data'])
 
+        # TODO(cwolfe) setting the context here should go away, that
+        # should have been done with the initialisation of the rpd
+        # object. For now, maintaining consistency with other
+        # _from_db_object methods.
+        rpd._context = context
         rpd.obj_reset_changes()
         return rpd
 
@@ -68,3 +73,9 @@ class ResourcePropertiesData(
                 result[prop_name] = encrypted_value
             return (True, result)
         return (False, data)
+
+    @staticmethod
+    def get_by_id(context, id):
+        db_ref = db_api.resource_prop_data_get(context, id)
+        return ResourcePropertiesData._from_db_object(
+            ResourcePropertiesData(context=context), context, db_ref)

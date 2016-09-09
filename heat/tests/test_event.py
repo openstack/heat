@@ -261,11 +261,11 @@ class EventTest(EventCommon):
             self.ctx,
             {'stack_id': self.stack.id,
              'uuid': str(uuid.uuid4()),
-             'rsrc_prop_data': rpd_db_obj})
+             'rsrc_prop_data_id': rpd_db_obj.id})
         e_obj = event_object.Event().get_by_id(utils.dummy_context(),
                                                e_obj.id)
         # properties data appears unencrypted to event object
-        self.assertEqual(data, e_obj.rsrc_prop_data.data)
+        self.assertEqual(data, e_obj.resource_properties)
 
 
 class EventEncryptedTest(EventCommon):
@@ -282,7 +282,7 @@ class EventEncryptedTest(EventCommon):
 
         # verify the resource_properties_data db data is encrypted
         e_obj = event_object.Event.get_by_id(self.resource.context, e.id)
-        rpd_id = e_obj['rsrc_prop_data'].id
+        rpd_id = e_obj['rsrc_prop_data_id']
         results = self.resource.context.session.query(
             models.ResourcePropertiesData).filter_by(
                 id=rpd_id)
@@ -293,4 +293,4 @@ class EventEncryptedTest(EventCommon):
         # verify encrypted data is decrypted when retrieved through
         # heat object layer
         ev = event_object.Event.get_by_id(self.ctx, e.id)
-        self.assertEqual({'Foo': 'goo'}, ev.rsrc_prop_data.data)
+        self.assertEqual({'Foo': 'goo'}, ev.resource_properties)
