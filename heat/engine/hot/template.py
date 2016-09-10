@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+
 import six
 
 from heat.common import exception
@@ -217,29 +219,28 @@ class HOTemplate20130523(template_common.CommonTemplate):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
-    def _validate_resource_definition(self, name, data):
-        super(HOTemplate20130523, self)._validate_resource_definition(name,
-                                                                      data)
-
-        invalid_keys = set(data) - set(self._RESOURCE_KEYS)
-        if invalid_keys:
-            raise ValueError(_('Invalid keyword(s) inside a resource '
-                               'definition: %s') % ', '.join(invalid_keys))
-
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
         conditions = self.conditions(stack)
 
+        valid_keys = frozenset(self._RESOURCE_KEYS)
+
         def defns():
             for name, snippet in six.iteritems(resources):
                 try:
-                    data = self.parse(stack, snippet)
-                    self._validate_resource_definition(name, data)
+                    invalid_keys = set(snippet) - valid_keys
+                    if invalid_keys:
+                        raise ValueError(_('Invalid keyword(s) inside a '
+                                           'resource definition: '
+                                           '%s') % ', '.join(invalid_keys))
+
+                    defn_data = dict(self._rsrc_defn_args(stack, name,
+                                                          snippet))
                 except (TypeError, ValueError, KeyError) as ex:
                     msg = six.text_type(ex)
                     raise exception.StackValidationFailed(message=msg)
 
-                defn = self.rsrc_defn_from_snippet(name, data)
+                defn = rsrc_defn.ResourceDefinition(name, **defn_data)
                 cond_name = defn.condition_name()
 
                 if cond_name is not None:
@@ -256,37 +257,6 @@ class HOTemplate20130523(template_common.CommonTemplate):
                 yield name, defn
 
         return dict(defns())
-
-    @classmethod
-    def rsrc_defn_from_snippet(cls, name, data):
-        depends = data.get(cls.RES_DEPENDS_ON)
-        if isinstance(depends, six.string_types):
-            depends = [depends]
-
-        deletion_policy = function.resolve(
-            data.get(cls.RES_DELETION_POLICY))
-        if deletion_policy is not None:
-            if deletion_policy not in cls.deletion_policies:
-                msg = _('Invalid deletion policy "%s"') % deletion_policy
-                raise exception.StackValidationFailed(message=msg)
-            else:
-                deletion_policy = cls.deletion_policies[deletion_policy]
-
-        kwargs = {
-            'resource_type': data.get(cls.RES_TYPE),
-            'properties': data.get(cls.RES_PROPERTIES),
-            'metadata': data.get(cls.RES_METADATA),
-            'depends': depends,
-            'deletion_policy': deletion_policy,
-            'update_policy': data.get(cls.RES_UPDATE_POLICY),
-            'description': None
-        }
-        if hasattr(cls, 'RES_EXTERNAL_ID'):
-            kwargs['external_id'] = data.get(cls.RES_EXTERNAL_ID)
-        if hasattr(cls, 'RES_CONDITION'):
-            kwargs['condition'] = data.get(cls.RES_CONDITION)
-
-        return rsrc_defn.ResourceDefinition(name, **kwargs)
 
     def add_resource(self, definition, name=None):
         if name is None:
@@ -517,13 +487,26 @@ class HOTemplate20161014(HOTemplate20160408):
     def _get_condition_definitions(self):
         return self.t.get(self.CONDITIONS, {})
 
-    def _validate_resource_definition(self, name, data):
-        super(HOTemplate20161014, self)._validate_resource_definition(
-            name, data)
+    def _rsrc_defn_args(self, stack, name, data):
+        for arg in super(HOTemplate20161014, self)._rsrc_defn_args(stack,
+                                                                   name,
+                                                                   data):
+            yield arg
 
-        self.validate_resource_key_type(self.RES_EXTERNAL_ID,
-                                        (six.string_types, function.Function),
-                                        'string', name, data)
-        self.validate_resource_key_type(self.RES_CONDITION,
-                                        (six.string_types, bool),
-                                        'string or boolean', name, data)
+        parse = functools.partial(self.parse, stack)
+
+        def no_parse(field, path):
+            return field
+
+        yield ('external_id',
+               self._parse_resource_field(self.RES_EXTERNAL_ID,
+                                          (six.string_types,
+                                           function.Function),
+                                          'string',
+                                          name, data, parse))
+
+        yield ('condition',
+               self._parse_resource_field(self.RES_CONDITION,
+                                          (six.string_types, bool),
+                                          'string or boolean',
+                                          name, data, no_parse))

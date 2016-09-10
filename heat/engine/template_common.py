@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import functools
 import weakref
 
 import six
@@ -37,60 +38,92 @@ class CommonTemplate(template.Template):
         self._conditions_cache = None, None
 
     @classmethod
-    def validate_resource_key_type(cls, key, valid_types, typename,
-                                   rsrc_name, rsrc_data):
-        """Validate the type of the value provided for a specific resource key.
+    def _parse_resource_field(cls, key, valid_types, typename,
+                              rsrc_name, rsrc_data, parse_func):
+        """Parse a field in a resource definition.
 
-        Used in _validate_resource_definition() to validate correctness of
-        user input data.
+        :param key: The name of the key
+        :param valid_types: Valid types for the parsed output
+        :param typename: Description of valid type to include in error output
+        :param rsrc_name: The resource name
+        :param rsrc_data: The unparsed resource definition data
+        :param parse_func: A function to parse the data, which takes the
+            contents of the field and its path in the template as arguments.
         """
         if key in rsrc_data:
-            if not isinstance(rsrc_data[key], valid_types):
+            data = parse_func(rsrc_data[key], '.'.join([cls.RESOURCES,
+                                                        rsrc_name,
+                                                        key]))
+            if not isinstance(data, valid_types):
                 args = {'name': rsrc_name, 'key': key,
                         'typename': typename}
                 message = _('Resource %(name)s %(key)s type '
                             'must be %(typename)s') % args
                 raise TypeError(message)
-            return True
+            return data
         else:
-            return False
+            return None
 
-    def _validate_resource_definition(self, name, data):
-        """Validate a resource definition snippet given the parsed data."""
-
-        if not self.validate_resource_key_type(self.RES_TYPE,
-                                               six.string_types,
-                                               'string',
-                                               name,
-                                               data):
+    def _rsrc_defn_args(self, stack, name, data):
+        if self.RES_TYPE not in data:
             args = {'name': name, 'type_key': self.RES_TYPE}
             msg = _('Resource %(name)s is missing "%(type_key)s"') % args
             raise KeyError(msg)
 
-        self.validate_resource_key_type(
-            self.RES_PROPERTIES,
-            (collections.Mapping, function.Function),
-            'object', name, data)
-        self.validate_resource_key_type(
-            self.RES_METADATA,
-            (collections.Mapping, function.Function),
-            'object', name, data)
-        self.validate_resource_key_type(
-            self.RES_DEPENDS_ON,
-            collections.Sequence,
-            'list or string', name, data)
-        self.validate_resource_key_type(
-            self.RES_DELETION_POLICY,
-            (six.string_types, function.Function),
-            'string', name, data)
-        self.validate_resource_key_type(
-            self.RES_UPDATE_POLICY,
-            (collections.Mapping, function.Function),
-            'object', name, data)
-        self.validate_resource_key_type(
-            self.RES_DESCRIPTION,
-            six.string_types,
-            'string', name, data)
+        parse = functools.partial(self.parse, stack)
+
+        def no_parse(field, path):
+            return field
+
+        yield ('resource_type',
+               self._parse_resource_field(self.RES_TYPE,
+                                          six.string_types, 'string',
+                                          name, data, parse))
+
+        yield ('properties',
+               self._parse_resource_field(self.RES_PROPERTIES,
+                                          (collections.Mapping,
+                                           function.Function), 'object',
+                                          name, data, parse))
+
+        yield ('metadata',
+               self._parse_resource_field(self.RES_METADATA,
+                                          (collections.Mapping,
+                                           function.Function), 'object',
+                                          name, data, parse))
+
+        depends = self._parse_resource_field(self.RES_DEPENDS_ON,
+                                             collections.Sequence,
+                                             'list or string',
+                                             name, data, no_parse)
+        if isinstance(depends, six.string_types):
+            depends = [depends]
+        yield 'depends', depends
+
+        del_policy = self._parse_resource_field(self.RES_DELETION_POLICY,
+                                                (six.string_types,
+                                                 function.Function),
+                                                'string',
+                                                name, data, parse)
+        deletion_policy = function.resolve(del_policy)
+        if deletion_policy is not None:
+            if deletion_policy not in self.deletion_policies:
+                msg = _('Invalid deletion policy "%s"') % deletion_policy
+                raise exception.StackValidationFailed(message=msg)
+            else:
+                deletion_policy = self.deletion_policies[deletion_policy]
+        yield 'deletion_policy', deletion_policy
+
+        yield ('update_policy',
+               self._parse_resource_field(self.RES_UPDATE_POLICY,
+                                          (collections.Mapping,
+                                           function.Function), 'object',
+                                          name, data, parse))
+
+        yield ('description',
+               self._parse_resource_field(self.RES_DESCRIPTION,
+                                          six.string_types, 'string',
+                                          name, data, no_parse))
 
     def _get_condition_definitions(self):
         """Return the condition definitions of template."""

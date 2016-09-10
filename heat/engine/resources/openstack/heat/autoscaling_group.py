@@ -16,10 +16,26 @@ from heat.common import grouputils
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
+from heat.engine.hot import template
 from heat.engine import properties
 from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
+from heat.engine import rsrc_defn
 from heat.engine import support
-from heat.engine import template
+
+
+class HOTInterpreter(template.HOTemplate20150430):
+    def __new__(cls):
+        return object.__new__(cls)
+
+    def __init__(self):
+        version = {'heat_template_version': '2015-04-30'}
+        super(HOTInterpreter, self).__init__(version)
+
+    def parse(self, stack, snippet, path=''):
+        return snippet
+
+    def parse_conditions(self, stack, snippet, path=''):
+        return snippet
 
 
 class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
@@ -155,12 +171,11 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     }
     update_policy_schema = {}
 
-    def _get_resource_definition(self,
-                                 template_version=('heat_template_version',
-                                                   '2015-04-30')):
-        tmpl = template.Template(dict([template_version]))
-        return tmpl.rsrc_defn_from_snippet(None,
-                                           self.properties[self.RESOURCE])
+    def _get_resource_definition(self):
+        resource_def = self.properties[self.RESOURCE]
+        defn_data = dict(HOTInterpreter()._rsrc_defn_args(None, 'member',
+                                                          resource_def))
+        return rsrc_defn.ResourceDefinition(None, **defn_data)
 
     def _try_rolling_update(self, prop_diff):
         if self.RESOURCE in prop_diff:

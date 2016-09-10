@@ -16,7 +16,6 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
-from heat.engine import function
 from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import template_common
@@ -110,47 +109,18 @@ class CfnTemplateBase(template_common.CommonTemplate):
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
 
-        def build_rsrc_defn(name, data):
-            depends = data.get(self.RES_DEPENDS_ON)
-            if isinstance(depends, six.string_types):
-                depends = [depends]
-
-            deletion_policy = function.resolve(
-                data.get(self.RES_DELETION_POLICY))
-            if deletion_policy is not None:
-                if deletion_policy not in self.deletion_policies:
-                    msg = _('Invalid deletion policy "%s"') % deletion_policy
-                    raise exception.StackValidationFailed(message=msg)
-                else:
-                    deletion_policy = self.deletion_policies[deletion_policy]
-
-            kwargs = {
-                'resource_type': data.get(self.RES_TYPE),
-                'properties': data.get(self.RES_PROPERTIES),
-                'metadata': data.get(self.RES_METADATA),
-                'depends': depends,
-                'deletion_policy': deletion_policy,
-                'update_policy': data.get(self.RES_UPDATE_POLICY),
-                'description': data.get(self.RES_DESCRIPTION) or ''
-            }
-
-            if hasattr(self, 'RES_CONDITION'):
-                kwargs['condition'] = data.get(self.RES_CONDITION)
-
-            return rsrc_defn.ResourceDefinition(name, **kwargs)
-
         conditions = self.conditions(stack)
 
         def defns():
             for name, snippet in resources.items():
                 try:
-                    data = self.parse(stack, snippet)
-                    self._validate_resource_definition(name, data)
+                    defn_data = dict(self._rsrc_defn_args(stack, name,
+                                                          snippet))
                 except (TypeError, ValueError, KeyError) as ex:
                     msg = six.text_type(ex)
                     raise exception.StackValidationFailed(message=msg)
 
-                defn = build_rsrc_defn(name, data)
+                defn = rsrc_defn.ResourceDefinition(name, **defn_data)
                 cond_name = defn.condition_name()
 
                 if cond_name is not None:
@@ -231,12 +201,18 @@ class CfnTemplate(CfnTemplateBase):
     def _get_condition_definitions(self):
         return self.t.get(self.CONDITIONS, {})
 
-    def _validate_resource_definition(self, name, data):
-        super(CfnTemplate, self)._validate_resource_definition(name, data)
+    def _rsrc_defn_args(self, stack, name, data):
+        for arg in super(CfnTemplate, self)._rsrc_defn_args(stack, name, data):
+            yield arg
 
-        self.validate_resource_key_type(self.RES_CONDITION,
-                                        (six.string_types, bool),
-                                        'string or boolean', name, data)
+        def no_parse(field, path):
+            return field
+
+        yield ('condition',
+               self._parse_resource_field(self.RES_CONDITION,
+                                          (six.string_types, bool),
+                                          'string or boolean',
+                                          name, data, no_parse))
 
 
 class HeatTemplate(CfnTemplateBase):
