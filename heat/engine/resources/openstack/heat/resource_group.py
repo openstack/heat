@@ -24,9 +24,9 @@ from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
-from heat.engine.hot import template
 from heat.engine import properties
 from heat.engine.resources import stack_resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
 from heat.scaling import rolling_update
@@ -453,12 +453,15 @@ class ResourceGroup(stack_resource.StackResource):
 
     def build_resource_definition(self, res_name, res_defn):
         res_def = copy.deepcopy(res_defn)
+
         props = res_def.get(self.RESOURCE_DEF_PROPERTIES)
         if props:
-            repl_props = self._handle_repl_val(res_name, props)
-            res_def[self.RESOURCE_DEF_PROPERTIES] = repl_props
-        return template.HOTemplate20130523.rsrc_defn_from_snippet(res_name,
-                                                                  res_def)
+            props = self._handle_repl_val(res_name, props)
+
+        res_type = res_def[self.RESOURCE_DEF_TYPE]
+        meta = res_def[self.RESOURCE_DEF_METADATA]
+
+        return rsrc_defn.ResourceDefinition(res_name, res_type, props, meta)
 
     def get_resource_def(self, include_all=False):
         """Returns the resource definition portion of the group.

@@ -17,9 +17,9 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
 from heat.engine import attributes
-from heat.engine.hot import template
 from heat.engine import properties
 from heat.engine.resources import stack_resource
+from heat.engine import rsrc_defn
 from heat.engine import support
 from heat.scaling import template as scl_template
 
@@ -130,7 +130,7 @@ class ResourceChain(stack_resource.StackResource):
 
             depends_on = None
             if index > 0 and not self.properties[self.CONCURRENT]:
-                depends_on = resource_names[index - 1]
+                depends_on = [resource_names[index - 1]]
 
             t = (name, self._build_resource_definition(name, rt,
                                                        depends_on=depends_on))
@@ -184,18 +184,9 @@ class ResourceChain(stack_resource.StackResource):
         :rtype: heat.engine.rsrc_defn.ResourceDefinition
         """
 
-        resource_def = {
-            template.HOTemplate20130523.RES_TYPE: resource_type,
-            template.HOTemplate20130523.RES_PROPERTIES: self.properties[
-                self.RESOURCE_PROPERTIES],
-        }
-
-        if depends_on is not None:
-            resource_def[
-                template.HOTemplate20130523.RES_DEPENDS_ON] = depends_on
-
-        return template.HOTemplate20130523.rsrc_defn_from_snippet(
-            resource_name, resource_def)
+        properties = self.properties[self.RESOURCE_PROPERTIES]
+        return rsrc_defn.ResourceDefinition(resource_name, resource_type,
+                                            properties, depends=depends_on)
 
 
 def resource_mapping():
