@@ -842,8 +842,7 @@ expression
       or
 
     Note: In condition functions, you can reference a value from an input
-    parameter, but you cannot reference resource or its attribute.  We support
-    referencing other conditions (by condition name) in condition functions.
+    parameter, but you cannot reference resource or its attribute.
 
 An example of conditions section definition
 
@@ -879,12 +878,6 @@ An example of conditions section definition
        - equals:
          - get_param: zone
          - beijing
-     cd7:
-       not: cd4
-     cd8:
-       and:
-       - cd1
-       - cd2
 
 The example below shows how to associate condition with resources
 
@@ -1599,9 +1592,9 @@ The syntax of the ``not`` function is
 
     not: condition
 
-Note: A condition can be an expression such as ``equals``, ``or`` and ``and``
-that evaluates to true or false, can be a boolean, and can be other condition
-name defined in ``conditions`` section of template.
+Note: A condition such as ``equals`` that evaluates to true or false
+can be defined in ``not`` function, also we can set a boolean
+value as condition.
 
 Returns true for a condition that evaluates to false or
 returns false for a condition that evaluates to true.
@@ -1618,22 +1611,13 @@ For example
 If param 'env_type' equals to 'prod', this function returns false,
 otherwise returns true.
 
-Another example with boolean value definition
+Another example
 
 .. code-block:: yaml
 
     not: True
 
 This function returns false.
-
-Another example reference other condition name
-
-.. code-block:: yaml
-
-    not: my_other_condition
-
-This function returns false if my_other_condition evaluates to true,
-otherwise returns true.
 
 and
 ---
@@ -1646,9 +1630,9 @@ The syntax of the ``and`` function is
 
     and: [{condition_1}, {condition_2}, ... {condition_n}]
 
-Note: A condition can be an expression such as ``equals``, ``or`` and ``not``
-that evaluates to true or false, can be a boolean, and can be other condition
-names defined in ``conditions`` section of template.
+Note: A condition such as ``equals`` or ``not`` that evaluates to true or
+false can be defined in ``and`` function, also we can set a boolean
+value as condition.
 
 Returns true if all the specified conditions evaluate to true, or returns
 false if any one of the conditions evaluates to false.
@@ -1669,17 +1653,6 @@ For example
 If param 'env_type' equals to 'prod', and param 'zone' is not equal to
 'beijing', this function returns true, otherwise returns false.
 
-Another example reference with other conditions
-
-.. code-block:: yaml
-
-    and:
-    - other_condition_1
-    - other_condition_2
-
-This function returns true if other_condition_1 and other_condition_2
-evaluate to true both, otherwise returns false.
-
 or
 --
 The ``or`` function acts as an OR operator to evaluate all the
@@ -1691,9 +1664,9 @@ The syntax of the ``or`` function is
 
     or: [{condition_1}, {condition_2}, ... {condition_n}]
 
-Note: A condition can be an expression such as ``equals``, ``and`` and ``not``
-that evaluates to true or false, can be a boolean, and can be other condition
-names defined in ``conditions`` section of template.
+Note: A condition such as ``equals`` or ``not`` that evaluates to true or
+false can be defined in ``or`` function, also we can set a boolean
+value as condition.
 
 Returns true if any one of the specified conditions evaluate to true,
 or returns false if all of the conditions evaluates to false.
@@ -1713,14 +1686,3 @@ For example
 
 If param 'env_type' equals to 'prod', or the param 'zone' is not equal to
 'beijing', this function returns true, otherwise returns false.
-
-Another example reference other conditions
-
-.. code-block:: yaml
-
-    or:
-    - other_condition_1
-    - other_condition_2
-
-This function returns true if any one of other_condition_1 or
-other_condition_2 evaluate to true, otherwise returns false.
