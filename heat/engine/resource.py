@@ -332,7 +332,7 @@ class Resource(object):
 
     def make_replacement(self, new_tmpl_id):
         # 1. create the replacement with "replaces" = self.id
-        #  Don't set physical_resource_id so that a create is triggered.
+        # Don't set physical_resource_id so that a create is triggered.
         rs = {'stack_id': self.stack.id,
               'name': self.name,
               'properties_data': self._stored_properties_data,
@@ -1355,7 +1355,7 @@ class Resource(object):
         """Checks that the physical resource is in its expected state.
 
         Gets the current status of the physical resource and updates the
-        database accordingly.  If check is not supported by the resource,
+        database accordingly. If check is not supported by the resource,
         default action is to fail and revert the resource's status to its
         original state with the added message that check was not performed.
         """
