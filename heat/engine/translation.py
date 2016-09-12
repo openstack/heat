@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from oslo_utils import encodeutils
 
 from heat.common import exception
@@ -51,7 +53,7 @@ class TranslationRule(object):
 
     def __init__(self, properties, rule, translation_path, value=None,
                  value_name=None, value_path=None, client_plugin=None,
-                 finder=None, entity=None):
+                 finder=None, entity=None, custom_value_path=None):
         """Add new rule for translating mechanism.
 
         :param properties: properties of resource
@@ -66,6 +68,8 @@ class TranslationRule(object):
         :param finder: finder method of the client plugin
         :param entity: some generic finders require an entity to resolve ex.
                neutron finder function.
+        :param custom_value_path: list-type value path to translate property,
+               which has no schema.
         """
         self.properties = properties
         self.rule = rule
@@ -76,6 +80,7 @@ class TranslationRule(object):
         self.client_plugin = client_plugin
         self.finder = finder
         self.entity = entity
+        self.custom_value_path = custom_value_path
 
         self.validate()
 
@@ -112,6 +117,8 @@ class TranslationRule(object):
             self._prepare_data(self.properties.data, self.translation_path,
                                self.properties.props)
             if self.value_path:
+                if self.custom_value_path:
+                    self.value_path.extend(self.custom_value_path)
                 self._prepare_data(self.properties.data, self.value_path,
                                    self.properties.props)
                 (value_key,
@@ -199,6 +206,30 @@ class TranslationRule(object):
         else:
             return param
 
+    def resolve_custom_value_path(self, translation_data, translation_key):
+        new_value = translation_data[self.value_name]
+        for key in self.custom_value_path[:-1]:
+            if isinstance(new_value, (list, six.string_types)):
+                raise ValueError(
+                    _('Incorrectly specified custom_value_path - '
+                      'cannot pull out required value from '
+                      'data of %s type.') % type(new_value))
+            if new_value.get(key) is None:
+                return
+            new_value = self._resolve_param(new_value[key])
+        resolved_value = self._resolve_param(
+            new_value.get(self.custom_value_path[-1]))
+        if resolved_value is None:
+            return
+        if self.rule == self.REPLACE:
+            translation_data[translation_key] = resolved_value
+            del new_value[self.custom_value_path[-1]]
+        elif self.rule == self.ADD:
+            if isinstance(resolved_value, list):
+                translation_data[translation_key].extend(resolved_value)
+            else:
+                translation_data[translation_key].append(resolved_value)
+
     def translate_property(self, path, data, return_value=False, value=None,
                            value_data=None, value_key=None,
                            client_resolve=True):
@@ -240,16 +271,19 @@ class TranslationRule(object):
         if not isinstance(translation_data[translation_key], list):
             raise ValueError(_('Add rule must be used only for '
                                'lists.'))
-        if (self.value_name is not None and
-                translation_data.get(self.value_name) is not None):
-            if isinstance(translation_data[self.value_name], list):
+        if value is not None:
+            translation_data[translation_key].extend(value)
+        elif (self.value_name is not None and
+              translation_data.get(self.value_name) is not None):
+            if self.custom_value_path:
+                self.resolve_custom_value_path(translation_data,
+                                               translation_key)
+            elif isinstance(translation_data[self.value_name], list):
                 translation_data[translation_key].extend(
                     translation_data[self.value_name])
             else:
                 translation_data[translation_key].append(
                     translation_data[self.value_name])
-        else:
-            translation_data[translation_key].extend(value)
 
     def _exec_replace(self, translation_key, translation_data,
                       value_key, value_data, value):
@@ -259,6 +293,13 @@ class TranslationRule(object):
                 value_ind = value_key
             elif translation_data.get(self.value_name) is not None:
                 value_ind = self.value_name
+                if self.custom_value_path is not None:
+                    data = translation_data.get(self.value_name)
+                    for key in self.custom_value_path:
+                        data = data.get(key)
+                        if data is None:
+                            value_ind = None
+                            break
 
         if value_ind is not None:
             raise exception.ResourcePropertyConflict(props=[translation_key,
@@ -267,9 +308,13 @@ class TranslationRule(object):
             translation_data[translation_key] = value
         elif (self.value_name is not None and
                 translation_data.get(self.value_name) is not None):
-            translation_data[
-                translation_key] = translation_data[self.value_name]
-            del translation_data[self.value_name]
+            if self.custom_value_path:
+                self.resolve_custom_value_path(translation_data,
+                                               translation_key)
+            else:
+                translation_data[
+                    translation_key] = translation_data[self.value_name]
+                del translation_data[self.value_name]
 
         # If value defined with value_path, need to delete value_path
         # property data after it's replacing.
