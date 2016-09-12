@@ -205,6 +205,13 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(0, self.stack.total_resources(self.stack.id))
         self.assertEqual(0, self.stack.total_resources())
 
+    @mock.patch.object(db_api, 'stack_count_total_resources')
+    def test_total_resources_not_stored(self, sctr):
+        self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
+                                 status_reason='flimflam')
+        self.assertEqual(0, self.stack.total_resources())
+        sctr.assert_not_called()
+
     def test_total_resources_not_found(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
                                  status_reason='flimflam')
