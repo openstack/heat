@@ -25,11 +25,15 @@ from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
+from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import sync_point
+from heat.rpc import api as rpc_api
 from heat.rpc import worker_client as rpc_client
 
 LOG = logging.getLogger(__name__)
+
+CANCEL_RETRIES = 3
 
 
 @profiler.trace_cls("rpc")
@@ -107,6 +111,26 @@ class WorkerService(service.Service):
                             "%(name)s while cancelling the operation."),
                         {'name': stack.name, 'trvsl': old_trvsl})
 
+    def stop_all_workers(self, stack):
+        # stop the traversal
+        if stack.status == stack.IN_PROGRESS:
+            self.stop_traversal(stack)
+
+        # cancel existing workers
+        cancelled = _cancel_workers(stack, self.thread_group_mgr,
+                                    self.engine_id, self._rpc_client)
+        if not cancelled:
+            LOG.error(_LE("Failed to stop all workers of stack %(name)s "
+                          ", stack cancel not complete"),
+                      {'name': stack.name})
+            return False
+
+        LOG.info(_LI('[%(name)s(%(id)s)] Stopped all active workers for stack '
+                     '%(action)s'),
+                 {'name': stack.name, 'id': stack.id, 'action': stack.action})
+
+        return True
+
     @context.request_context
     def check_resource(self, cnxt, resource_id, current_traversal, data,
                        is_update, adopt_stack_data):
@@ -145,5 +169,42 @@ class WorkerService(service.Service):
         All the workers running for the given stack will be
         cancelled.
         """
-        # TODO(ananta): Implement cancel check-resource
-        LOG.debug('Cancelling workers for stack [%s]', stack_id)
+        _cancel_check_resource(stack_id, self.engine_id, self.thread_group_mgr)
+
+
+def _cancel_check_resource(stack_id, engine_id, tgm):
+    LOG.debug('Cancelling workers for stack [%s] in engine [%s]',
+              stack_id, engine_id)
+    tgm.send(stack_id, rpc_api.THREAD_CANCEL)
+
+
+def _wait_for_cancellation(stack, wait=5):
+    # give enough time to wait till cancel is completed
+    retries = CANCEL_RETRIES
+    while retries > 0:
+        retries -= 1
+        eventlet.sleep(wait)
+        engines = db_api.engine_get_all_locked_by_stack(
+            stack.context, stack.id)
+        if not engines:
+            return True
+
+    return False
+
+
+def _cancel_workers(stack, tgm, local_engine_id, rpc_client):
+    engines = db_api.engine_get_all_locked_by_stack(stack.context, stack.id)
+
+    if not engines:
+        return True
+
+    # cancel workers running locally
+    if local_engine_id in engines:
+        _cancel_check_resource(stack.id, local_engine_id, tgm)
+        engines.remove(local_engine_id)
+
+    # cancel workers on remote engines
+    for engine_id in engines:
+        rpc_client.cancel_check_resource(stack.context, stack.id, engine_id)
+
+    return _wait_for_cancellation(stack)

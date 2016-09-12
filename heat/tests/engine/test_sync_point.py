@@ -22,6 +22,11 @@ from heat.tests import utils
 
 
 class SyncPointTestCase(common.HeatTestCase):
+    def setUp(self):
+        super(SyncPointTestCase, self).setUp()
+        self.dummy_event = mock.MagicMock()
+        self.dummy_event.ready.return_value = False
+
     def test_sync_waiting(self):
         ctx = utils.dummy_context()
         stack = tools.get_stack('test_stack', utils.dummy_context(),

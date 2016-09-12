@@ -410,6 +410,15 @@ def resource_get_all_by_root_stack(context, stack_id, filters=None):
     return dict((res.id, res) for res in results)
 
 
+def engine_get_all_locked_by_stack(context, stack_id):
+    query = context.session.query(
+        func.distinct(models.Resource.engine_id)
+    ).filter(
+        models.Resource.stack_id == stack_id,
+        models.Resource.engine_id.isnot(None))
+    return set(i[0] for i in query.all())
+
+
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = soft_delete_aware_query(
         context, models.Stack

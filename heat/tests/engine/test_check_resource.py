@@ -108,11 +108,13 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.resource.id,
             mock.ANY, True)
 
+    @mock.patch.object(resource.Resource, 'load')
     @mock.patch.object(resource.Resource, 'make_replacement')
     @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_update_traversal_raise_update_replace(
-            self, tr, mock_mr, mock_cru, mock_crc, mock_pcr, mock_csc,
-            mock_cid):
+            self, tr, mock_mr, mock_load, mock_cru, mock_crc, mock_pcr,
+            mock_csc, mock_cid):
+        mock_load.return_value = self.resource, self.stack, self.stack
         mock_cru.side_effect = resource.UpdateReplace
         tr.return_value = 317
         self.worker.check_resource(
@@ -550,10 +552,13 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         self.is_update = False
         self.graph_key = (self.resource.id, self.is_update)
 
+    @mock.patch.object(resource.Resource, 'load')
     @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_cleanup_traversal(
-            self, tr, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, tr, mock_load, mock_cru, mock_crc, mock_pcr, mock_csc,
+            mock_cid):
         tr.return_value = 317
+        mock_load.return_value = self.resource, self.stack, self.stack
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)

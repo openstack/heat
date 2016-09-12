@@ -15,8 +15,10 @@
 
 import mock
 
+from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import worker
+from heat.rpc import worker_client as wc
 from heat.tests import common
 from heat.tests import utils
 
@@ -44,11 +46,11 @@ class WorkerServiceTest(common.HeatTestCase):
                            target_class,
                            rpc_server_method
                            ):
+
         self.worker = worker.WorkerService('host-1',
                                            'topic-1',
                                            'engine_id',
                                            mock.Mock())
-
         self.worker.start()
 
         # Make sure target is called with proper parameters
@@ -133,3 +135,88 @@ class WorkerServiceTest(common.HeatTestCase):
         self.assertTrue(mock_tgm.add_msg_queue.called)
         # ensure remove is also called
         self.assertTrue(mock_tgm.remove_msg_queue.called)
+
+    @mock.patch.object(worker, '_wait_for_cancellation')
+    @mock.patch.object(worker, '_cancel_check_resource')
+    @mock.patch.object(wc.WorkerClient, 'cancel_check_resource')
+    @mock.patch.object(db_api, 'engine_get_all_locked_by_stack')
+    def test_cancel_workers_when_no_resource_found(self, mock_get_locked,
+                                                   mock_ccr, mock_wccr,
+                                                   mock_wc):
+        mock_tgm = mock.Mock()
+        _worker = worker.WorkerService('host-1', 'topic-1', 'engine-001',
+                                       mock_tgm)
+        stack = mock.MagicMock()
+        stack.id = 'stack_id'
+        mock_get_locked.return_value = []
+        worker._cancel_workers(stack, mock_tgm, 'engine-001',
+                               _worker._rpc_client)
+        self.assertFalse(mock_wccr.called)
+        self.assertFalse(mock_ccr.called)
+
+    @mock.patch.object(worker, '_wait_for_cancellation')
+    @mock.patch.object(worker, '_cancel_check_resource')
+    @mock.patch.object(wc.WorkerClient, 'cancel_check_resource')
+    @mock.patch.object(db_api, 'engine_get_all_locked_by_stack')
+    def test_cancel_workers_with_resources_found(self, mock_get_locked,
+                                                 mock_ccr, mock_wccr,
+                                                 mock_wc):
+        mock_tgm = mock.Mock()
+        _worker = worker.WorkerService('host-1', 'topic-1', 'engine-001',
+                                       mock_tgm)
+        stack = mock.MagicMock()
+        stack.id = 'stack_id'
+        mock_get_locked.return_value = ['engine-001', 'engine-007',
+                                        'engine-008']
+        worker._cancel_workers(stack, mock_tgm, 'engine-001',
+                               _worker._rpc_client)
+        mock_wccr.assert_called_once_with(stack.id, 'engine-001', mock_tgm)
+        self.assertEqual(2, mock_ccr.call_count)
+        calls = [mock.call(stack.context, stack.id, 'engine-007'),
+                 mock.call(stack.context, stack.id, 'engine-008')]
+        mock_ccr.assert_has_calls(calls, any_order=True)
+        self.assertTrue(mock_wc.called)
+
+    @mock.patch.object(worker, '_cancel_workers')
+    @mock.patch.object(worker.WorkerService, 'stop_traversal')
+    def test_stop_all_workers_when_stack_in_progress(self, mock_st, mock_cw):
+        mock_tgm = mock.Mock()
+        _worker = worker.WorkerService('host-1', 'topic-1', 'engine-001',
+                                       mock_tgm)
+        stack = mock.MagicMock()
+        stack.IN_PROGRESS = 'IN_PROGRESS'
+        stack.status = stack.IN_PROGRESS
+        stack.id = 'stack_id'
+        stack.rollback = mock.MagicMock()
+        _worker.stop_all_workers(stack)
+        mock_st.assert_called_once_with(stack)
+        mock_cw.assert_called_once_with(stack, mock_tgm, 'engine-001',
+                                        _worker._rpc_client)
+        self.assertFalse(stack.rollback.called)
+
+    @mock.patch.object(worker, '_cancel_workers')
+    @mock.patch.object(worker.WorkerService, 'stop_traversal')
+    def test_stop_all_workers_when_stack_not_in_progress(self, mock_st,
+                                                         mock_cw):
+        mock_tgm = mock.Mock()
+        _worker = worker.WorkerService('host-1', 'topic-1', 'engine-001',
+                                       mock_tgm)
+        stack = mock.MagicMock()
+        stack.FAILED = 'FAILED'
+        stack.status = stack.FAILED
+        stack.id = 'stack_id'
+        stack.rollback = mock.MagicMock()
+        _worker.stop_all_workers(stack)
+        self.assertFalse(mock_st.called)
+        mock_cw.assert_called_once_with(stack, mock_tgm, 'engine-001',
+                                        _worker._rpc_client)
+        self.assertFalse(stack.rollback.called)
+
+        # test when stack complete
+        stack.FAILED = 'FAILED'
+        stack.status = stack.FAILED
+        _worker.stop_all_workers(stack)
+        self.assertFalse(mock_st.called)
+        mock_cw.assert_called_with(stack, mock_tgm, 'engine-001',
+                                   _worker._rpc_client)
+        self.assertFalse(stack.rollback.called)

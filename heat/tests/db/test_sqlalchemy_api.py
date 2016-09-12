@@ -2436,6 +2436,35 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.resource_get,
                           self.ctx, resource.id)
 
+    def test_engine_get_all_locked_by_stack(self):
+        values = [
+            {'name': 'res1', 'action': rsrc.Resource.DELETE,
+             'root_stack_id': self.stack.id,
+             'status': rsrc.Resource.COMPLETE},
+            {'name': 'res2', 'action': rsrc.Resource.DELETE,
+             'root_stack_id': self.stack.id,
+             'status': rsrc.Resource.IN_PROGRESS, 'engine_id': 'engine-001'},
+            {'name': 'res3', 'action': rsrc.Resource.UPDATE,
+             'root_stack_id': self.stack.id,
+             'status': rsrc.Resource.IN_PROGRESS, 'engine_id': 'engine-002'},
+            {'name': 'res4', 'action': rsrc.Resource.CREATE,
+             'root_stack_id': self.stack.id,
+             'status': rsrc.Resource.COMPLETE},
+            {'name': 'res5', 'action': rsrc.Resource.INIT,
+             'root_stack_id': self.stack.id,
+             'status': rsrc.Resource.COMPLETE},
+            {'name': 'res6', 'action': rsrc.Resource.CREATE,
+             'root_stack_id': self.stack.id,
+             'status': rsrc.Resource.IN_PROGRESS, 'engine_id': 'engine-001'},
+            {'name': 'res6'},
+        ]
+        for val in values:
+            create_resource(self.ctx, self.stack, **val)
+
+        engines = db_api.engine_get_all_locked_by_stack(self.ctx,
+                                                        self.stack.id)
+        self.assertEqual({'engine-001', 'engine-002'}, engines)
+
 
 class DBAPIStackLockTest(common.HeatTestCase):
     def setUp(self):
