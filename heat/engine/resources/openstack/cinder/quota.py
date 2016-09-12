@@ -103,12 +103,59 @@ class CinderQuota(resource.Resource):
         self._set_quota(json_snippet.properties(self.properties_schema,
                                                 self.context))
 
+    @classmethod
+    def _validate_quota(cls, quota_property, quota_size, total_size):
+        err_message = _("Invalid quota %(property)s value(s): %(value)s. "
+                        "Can not be less than the current usage value(s): "
+                        "%(total)s.")
+        if quota_size < total_size:
+            message_format = {'property': quota_property, 'value':
+                              quota_size, 'total': total_size}
+            raise ValueError(err_message % message_format)
+
+    def validate_quotas(self, project, **kwargs):
+        search_opts = {'all_tenants': True, 'project_id': project}
+        volume_list = None
+        snapshot_list = None
+        for key in kwargs:
+            if kwargs[key] == -1:
+                del kwargs[key]
+
+        if self.GIGABYTES in kwargs:
+            quota_size = kwargs[self.GIGABYTES]
+            volume_list = self.client().volumes.list(search_opts=search_opts)
+            snapshot_list = self.client().volume_snapshots.list(
+                search_opts=search_opts)
+            total_size = sum(item.size for item in (
+                volume_list + snapshot_list))
+            self._validate_quota(self.GIGABYTES, quota_size, total_size)
+
+        if self.VOLUMES in kwargs:
+            quota_size = kwargs[self.VOLUMES]
+            if volume_list is None:
+                volume_list = self.client().volumes.list(
+                    search_opts=search_opts)
+            total_size = len(volume_list)
+            self._validate_quota(self.VOLUMES, quota_size, total_size)
+
+        if self.SNAPSHOTS in kwargs:
+            quota_size = kwargs[self.SNAPSHOTS]
+            if snapshot_list is None:
+                snapshot_list = self.client().volume_snapshots.list(
+                    search_opts=search_opts)
+            total_size = len(snapshot_list)
+            self._validate_quota(self.SNAPSHOTS, quota_size, total_size)
+
     def _set_quota(self, props=None):
         if props is None:
             props = self.properties
 
         args = copy.copy(props.data)
         project = args.pop(self.PROJECT)
+        # TODO(ricolin): Move this to stack validate stage. In some cases
+        # we still can't get project or other properties form other resources
+        # at validate stage.
+        self.validate_quotas(project, **args)
         self.client().quotas.update(project, **args)
 
     def handle_delete(self):
