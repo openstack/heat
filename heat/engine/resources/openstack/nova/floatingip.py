@@ -98,6 +98,8 @@ class NovaFloatingIp(resource.Resource):
         self._floating_ip = floating_ip
 
     def _resolve_attribute(self, key):
+        if self.resource_id is None:
+            return
         floating_ip = self._get_resource()
         attributes = {
             self.POOL_ATTR: getattr(floating_ip, self.POOL_ATTR, None),

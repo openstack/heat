@@ -289,6 +289,8 @@ class RemoteStack(resource.Resource):
         return self._check_action_complete(action=self.CHECK)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         stack = self.heat().stacks.get(stack_id=self.resource_id)
         if name == self.NAME_ATTR:
             value = getattr(stack, name, None)

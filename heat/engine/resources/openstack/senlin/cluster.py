@@ -254,6 +254,8 @@ class Cluster(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         cluster = self.client().get_cluster(self.resource_id)
         return getattr(cluster, name, None)
 

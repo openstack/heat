@@ -498,6 +498,7 @@ class ServersTest(common.HeatTestCase):
         server = self._setup_test_server(return_server,
                                          server_name,
                                          override_name=True)
+        server.resource_id = '1234'
 
         interfaces = [
             self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),

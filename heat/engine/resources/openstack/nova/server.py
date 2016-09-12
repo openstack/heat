@@ -1117,6 +1117,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         return nets
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         if name == self.FIRST_ADDRESS:
             return self.client_plugin().server_to_ipaddress(
                 self.resource_id) or ''

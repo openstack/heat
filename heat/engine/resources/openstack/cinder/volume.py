@@ -281,6 +281,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         return arguments
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         cinder = self.client()
         vol = cinder.volumes.get(self.resource_id)
         if name == self.METADATA_ATTR:

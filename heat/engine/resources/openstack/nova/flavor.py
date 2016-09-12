@@ -155,6 +155,8 @@ class NovaFlavor(resource.Resource):
                 flavor.set_keys(new_keys)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         flavor = self.client().flavors.get(self.resource_id)
         if name == self.IS_PUBLIC_ATTR:
             return getattr(flavor, name)

@@ -279,6 +279,8 @@ class SaharaCluster(resource.Resource):
         return False
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         cluster = self.client().clusters.get(self.resource_id)
         return getattr(cluster, name, None)
 

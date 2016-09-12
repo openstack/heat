@@ -674,6 +674,8 @@ class OSDBInstance(resource.Resource):
         return self._href
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         if name == self.HOSTNAME:
             return self.dbinstance.hostname
         elif name == self.HREF:

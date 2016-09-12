@@ -95,6 +95,8 @@ class NeutronResource(resource.Resource):
                 result=_('Resource is not built'))
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         attributes = self._show_resource()
         return attributes[name]
 
